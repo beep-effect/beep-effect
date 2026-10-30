@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "a7ffc01125a38900ef8ec40f1541303c61990ca56de643869b8b55681cdd5599",
+  "specSha256": "de743393b37e2e810547c01663d2d71d3c05bf5f1d3442410341e818399861ab",
   "acceptance": [
     {
       "id": "AC-01",
@@ -244,5 +244,11 @@
   "priorSpecSha256AtPublishedHeadIdentity": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
   "publicationHeadIdentityCheckpoint": "research/published-head-identity-checkpoint.json",
   "priorSpecSha256BeforePublicationRepairHostedEscape": "d1c909a293cfdecfb08dd544dc40d6f5c0af8b50add3eea31adcbd0eb1338ad4",
-  "priorSpecSha256BeforeProveFirstReview": "021bfb72be90e48429519d047dbb29be25474e13f10c54827ad3e1fc7c198d58"
+  "priorSpecSha256BeforeProveFirstReview": "021bfb72be90e48429519d047dbb29be25474e13f10c54827ad3e1fc7c198d58",
+  "priorSpecSha256AtMarkdownIsolation": "c1ca04ceb9afeb4c353345ac349487ce3f03b28081a1724abe8f8eaff76903e6",
+  "markdownCoverageIsolationCheckpoint": "research/markdown-coverage-isolation-checkpoint.json",
+  "priorSpecSha256AtAcceptedConformanceMerge": {
+    "local": "a7ffc01125a38900ef8ec40f1541303c61990ca56de643869b8b55681cdd5599",
+    "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+  }
 }

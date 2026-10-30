@@ -59,7 +59,8 @@
     "research/remaining-persistent-service-disposition-review.json",
     "research/external-verdict-source-review.json",
     "research/generator-boundary-source-review.json",
-    "research/published-head-identity-checkpoint.json"
+    "research/published-head-identity-checkpoint.json",
+    "research/markdown-coverage-isolation-checkpoint.json"
   ],
   "agentLaunchers": [
     {

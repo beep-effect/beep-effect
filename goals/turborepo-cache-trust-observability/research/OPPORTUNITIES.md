@@ -1138,3 +1138,25 @@ the next complete publication. Preserve the failed verdict; no gate is waived.
   shared direct-server fixture. Preserve that failure and the passing serial
   Node replay. A separate main fix will reuse the existing loopback bind-event
   and bounded retry path, then dependent lanes consume the accepted fix once.
+### Reuse the bind-safe loopback path in conformance tests, 2026-10-30
+
+- An overlapping Node/Bun replay failed with `EADDRINUSE` in the shared
+  conformance test server before its assertion. The same Node source passed
+  serially. The direct Bun server bypassed the existing scoped bind-event and
+  bounded address-in-use retry path.
+- Reuse `serveCacheLoopback`, retain the original 128 MiB body limit, and
+  qualify recovery against an actually occupied socket in both runtimes.
+  Production trust, credentials and cache activation remain unchanged.
+
+### Preserve partial evidence when joining accepted components
+
+- Work: merge accepted conformance and Markdown repairs into the owned producer
+  lane. Both sides append decisions and report references.
+- A strict complete-row equality check rejected additional partial evidence.
+  Preserve those references and compare requirements and unproven status
+  independently. An overly broad text merge also dropped a local section in
+  the uncommitted working copy; Git union over preserved stages restored every
+  original section before staging.
+- Prevention: use the canonical merge algorithm for additive text, assert both
+  original section sets survive, recompute SPEC hashes and regenerate the
+  existing Effect inventory. Never choose one evidence side wholesale.

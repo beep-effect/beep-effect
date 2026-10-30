@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "e8f5fb1ba06b92ab6a9dcd291b3ae8f97291cce4e2569e92669ccec93357cf04",
+  "specSha256": "1da8a724ee58f1981f1db893cd28ff568bc04aac4428eecf6dd83466a8e773ba",
   "acceptance": [
     {
       "id": "AC-01",
@@ -421,5 +421,10 @@
   "priorSpecSha256AtSingletonFrameRepair": "db20fe6452e70de776fb9f700b145b3ef13acaf8c5a94d55d3d698446577d10e",
   "producerExecutionCoverageRepairCheckpoint": "research/producer-execution-coverage-repair.json",
   "priorSpecSha256BeforeUploadLifetimeReview": "cbd4f88340be9925375e47cf644399f2fcc7453ac6e4f4af6bcd117ed9f38cf3",
-  "producerUploadLifetimeCheckpoint": "research/producer-upload-lifetime-checkpoint.json"
+  "producerUploadLifetimeCheckpoint": "research/producer-upload-lifetime-checkpoint.json",
+  "priorSpecSha256AtConformanceBindRepair": "821f7a7284c14e49f484d784caa09eea41d9d9c70e1e631bcedbec59a7fe874b",
+  "priorSpecSha256AtAcceptedConformanceMerge": {
+    "local": "e8f5fb1ba06b92ab6a9dcd291b3ae8f97291cce4e2569e92669ccec93357cf04",
+    "accepted": "4abd0d6fc7c4e0401893ee5cc581053bf33db9d07fd4be48804a922dc873c21e"
+  }
 }
