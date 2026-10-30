@@ -506,3 +506,7 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   binds the current admitted lifecycle, unchanged backend caps, seventy focused
   cases per runtime and exact-restored regression controls. The inert peer and
   controlled admission do not prove actual R2 grants or protected publication.
+
+- [Owned approval refusal checkpoint](producer-approval-refusal-checkpoint.json):
+  immutable hosted gap, current exact source hashes, admission-order negative
+  control, and 176-case Node/Bun runner coverage. Local controlled evidence only.

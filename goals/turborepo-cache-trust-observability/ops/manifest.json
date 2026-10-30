@@ -101,7 +101,8 @@
     "research/producer-integration-policy-review.json",
     "research/producer-fallow-repair-checkpoint.json",
     "research/producer-execution-coverage-repair.json",
-    "research/producer-upload-lifetime-checkpoint.json"
+    "research/producer-upload-lifetime-checkpoint.json",
+    "research/producer-approval-refusal-checkpoint.json"
   ],
   "agentLaunchers": [
     {

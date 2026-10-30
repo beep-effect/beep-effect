@@ -691,3 +691,15 @@ with its bounded `EADDRINUSE` retry, preserving the previous 128 MiB body limit.
 This fixes an inherited parallel-test bind race without adding a second retry
 implementation. Reverting the fixture call reverses the change; no runtime
 cache, credential or production policy changes are involved.
+
+### Independent upload approval refusal, 2026-10-30
+
+The owned upload rejects absent independent backend approval before quality
+admission, adapter acquisition, socket creation or worker execution. The current
+regression asserts both the error and the absence of those effects. Reordering
+admission before the approval check must fail the test. The private worker capture
+requires its issuer option explicitly: both internal callers already supply it,
+and the public experiment retains its existing optional argument and default.
+This removes an unreachable private fallback, not a safety check or coverage floor.
+The reversal path is the preceding producer-execution commit; no deployment or
+credential change accompanies this repair. Whole-goal acceptance remains unproven.

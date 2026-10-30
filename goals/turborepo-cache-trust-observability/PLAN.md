@@ -714,3 +714,11 @@ controls fail the intended assertions and restore exact source. See the
 [source-bound checkpoint](research/producer-upload-lifetime-checkpoint.json).
 Generated inventory/catalog, complete current package/final proof and hosted
 review remain required. This component activates no cache or credential.
+
+### Owned approval refusal coverage repair
+
+`research/producer-approval-refusal-checkpoint.json` binds the current test and
+private worker contract repair to the hosted gap and its immutable coverage
+artifacts. The admission-reordering control fails once for the intended reason;
+176 cases pass per local provider with full scoped runner-file coverage. Current
+full/hosted proof and all nine whole-goal criteria remain unproven.

@@ -319,6 +319,25 @@ it.layer(
   ),
   { timeout: "30 seconds" }
 )("signed pilot supervisor", (it) => {
+  it.effect("rejects missing backend approval before admission or supervisor side effects", () =>
+    Effect.gen(function* () {
+      const f = yield* ownedUploadFixture("none");
+      const error = yield* runCacheProducerUploadExperiment(
+        f.root,
+        f.request,
+        f.runtime,
+        CacheProducerBinding.make({ ...f.binding, uploadApproval: O.none() }),
+        [f.binding.key.computation],
+        f.issuer
+      ).pipe(Effect.flip);
+      expect(error.message).toBe("Owned upload requires its independent backend approval.");
+      expect(f.admission).not.toHaveBeenCalled();
+      expect(f.adapter).not.toHaveBeenCalled();
+      expect(f.adapterStarted).not.toHaveBeenCalled();
+      expect(f.listener).not.toHaveBeenCalled();
+      expect(f.process).not.toHaveBeenCalled();
+    })
+  );
   it.effect("joins the owned worker summary to the complete parent upload capture", () =>
     Effect.gen(function* () {
       const f = yield* ownedUploadFixture("none");

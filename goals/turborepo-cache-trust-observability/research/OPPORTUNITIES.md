@@ -1160,3 +1160,29 @@ the next complete publication. Preserve the failed verdict; no gate is waived.
 - Prevention: use the canonical merge algorithm for additive text, assert both
   original section sets survive, recompute SPEC hashes and regenerate the
   existing Effect inventory. Never choose one evidence side wholesale.
+
+### 2026-10-30: hosted coverage exposes an untested upload approval refusal
+
+- Work: accepted-base producer execution verification at `189d1966b0`.
+- Evidence: hosted Coverage Regression reports one uncovered function and line in
+  `Cache.pilot.runner.ts`: functions 95%, lines/statements 98.85%, branches 100%.
+  Both immutable repo-cli coverage artifacts identify the missing callback at
+  line 384: refusal of absent independent backend approval.
+- Response: stop the exact owned obsolete local full proof before editing; add a
+  refusal test that checks the error and proves admission, adapter, listener and
+  worker invocation remain untouched. Preserve every coverage floor.
+- Separate environment failures: earlyoom killed this proof's JSDoc child; the
+  hosted Lint Policy job carries the lost-runner communication annotation, and
+  an automatic attempt is already active. Do not duplicate that retry or use
+  either environment failure to excuse the real missing test.
+- Command friction: the first focused invocation combined a package `--root`
+  with the repository-relative `--config`, duplicating the package path before
+  test startup. Run from the package with `--config vitest.config.ts`; the failed
+  invocation is not test evidence.
+
+- Follow-through: both internal capture callers explicitly supply the issuer
+  option. Removing only that unreachable private default preserves the public
+  default and produces 87/87 lines/statements, 20/20 functions and 39/39 branches
+  under both local providers. No coverage floor or safety check changed. The
+  current admission-reordering control still fails exactly once after refinement,
+  and source restoration is byte-exact.

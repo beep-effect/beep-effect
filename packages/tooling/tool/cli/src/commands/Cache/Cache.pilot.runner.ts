@@ -156,7 +156,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
   runnerRoot: string,
   request: CacheSignedPilotRequest,
   decodeReport: (text: string) => Effect.Effect<Report, S.SchemaError>,
-  protectedIssuerMaterial: O.Option<string> = O.none(),
+  protectedIssuerMaterial: O.Option<string>,
   upload: O.Option<UploadSupervisor> = O.none()
 ) {
   return yield* Effect.scoped(
