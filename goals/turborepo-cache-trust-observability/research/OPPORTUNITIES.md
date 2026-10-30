@@ -887,3 +887,16 @@ in a real isolated bwrap/Bun process, supervisor controls cover the storage
 refusal and cleanup, and removal of that guard fails the intended control.
 These component observations do not replace a current native comparison matrix.
 See `private-pilot-storage-checkpoint.json` for source bindings and exact scope.
+
+
+### Include orchestration consumers after storage changes
+
+The earlier76-test focused replay missed the orchestration file. The full
+package audit and CI each reported15 introduced failures because its cleanup
+checks still read `.beep/cache/experiments`. Include filesystem consumers when
+a storage boundary moves. Observe the allocated private directories and test
+their removal directly; do not restore source-visible storage to satisfy an
+obsolete assertion. The deliberate scope-removal control fails the new cleanup
+check. The first filesystem observer also needed a named Effect.fn, caught by
+the package type check and repaired before publication. Existing floors and
+qualification state remain unchanged.

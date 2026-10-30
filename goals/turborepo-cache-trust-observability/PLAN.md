@@ -553,3 +553,15 @@ the private storage repair. Original PR2361/2363 branches and proof are retained
 checks, lint/type check, intended guard-removal failure and isolated imports.
 Complete default package, final, hosted and native/deployed acceptance are still
 required. No phase or full-goal criterion is completed by this component work.
+
+
+### Private orchestration cleanup regression
+
+The complete combined package audit and hosted Property Laws/unit shard found
+15 introduced assertions still reading the removed source-contained experiment
+directory. The repaired tests observe actual private allocations, verify their
+permissions and location while live, then prove cleanup after success and
+faults. Both runtime integrations pass101 tests in7 files; removing the owning
+cleanup scope fails the intended assertion and source bytes restore exactly.
+See [the repair checkpoint](research/private-orchestration-cleanup-checkpoint.json).
+Fresh complete package, final and hosted acceptance remain required.

@@ -56,6 +56,7 @@ import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -688,24 +689,40 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     inspect: uncalled,
     transition: uncalled,
   });
+  const privateDirectories = MutableHashSet.empty<string>();
+  const observedFs = FileSystem.FileSystem.of({
+    ...fs,
+    makeTempDirectoryScoped: Effect.fn("PilotOrchestrationTest.makeTempDirectoryScoped")((options) =>
+      fs.makeTempDirectoryScoped(options).pipe(
+        Effect.tap((directory) =>
+          Effect.gen(function* () {
+            MutableHashSet.add(privateDirectories, directory);
+            expect(Str.startsWith(`${root}/`)(directory)).toBe(false);
+            expect((yield* fs.stat(directory)).mode & 0o777).toBe(0o700);
+          })
+        )
+      )
+    ),
+  });
   const run = (changed = request) =>
     runCachePilotForTesting(root, changed).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-      Effect.provideService(CacheQualificationService, service)
+      Effect.provideService(CacheQualificationService, service),
+      Effect.provideService(FileSystem.FileSystem, observedFs)
     );
   const runSigned = (changed = request, interfaces = "lo", issuer: O.Option<string> = O.none()) =>
     runCacheSignedPilotWorker(root, changed, issuer).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service),
       Effect.provideService(FileSystem.FileSystem, {
-        ...fs,
+        ...observedFs,
         readFileString: (file, encoding) =>
           file === "/proc/net/dev"
             ? Effect.succeed(`header\nheader\n${interfaces}: 0\n`)
             : fs.readFileString(file, encoding),
       })
     );
-  return { root, fs, path, run, runSigned, request, calls, preview, sourceRoots, profileMutations };
+  return { root, fs, path, run, runSigned, request, calls, preview, sourceRoots, profileMutations, privateDirectories };
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -802,7 +819,7 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
   it.effect(
     "binds fresh/replay controls to native summaries, validates mutations and cleans overlays",
     Effect.fnUntraced(function* () {
-      const { root, fs, path, run, sourceRoots } = yield* fixture();
+      const { root, fs, path, run, sourceRoots, privateDirectories } = yield* fixture();
       const receipt = yield* run();
       expect(A.filter(receipt.checks, (check) => !check.passed)).toEqual([]);
       expect(receipt.shadowDecisions).toHaveLength(10);
@@ -816,7 +833,9 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(decoded.runtimeLinker).toEqual(receipt.runtimeLinker);
       const historical = yield* decodePilotReceipt(Struct.omit(encoded, ["runtimeLinker"]));
       assertNone(historical.runtimeLinker);
-      expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
+      expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+      expect(A.fromIterable(privateDirectories).length).toBeGreaterThan(0);
+      for (const directory of privateDirectories) expect(yield* fs.exists(directory)).toBe(false);
       for (const source of sourceRoots)
         expect(yield* fs.readFileString(path.join(source, identityDirectory, "src/index.ts"))).toBe(
           "export const fixture = 1;\n"
@@ -843,8 +862,9 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
     it.effect(
       `rejects ${closureFault} dependencies before creating an experiment`,
       Effect.fnUntraced(function* () {
-        const { root, fs, path, run } = yield* fixture("none", linker, false, true, closureFault);
+        const { root, fs, path, run, privateDirectories } = yield* fixture("none", linker, false, true, closureFault);
         (yield* run().pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        expect(A.fromIterable(privateDirectories)).toHaveLength(0);
         expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
       })
     );
@@ -869,7 +889,7 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
     it.effect(
       `rejects ${fault} without producing a receipt`,
       Effect.fnUntraced(function* () {
-        const { root, fs, path, run } = yield* fixture(fault);
+        const { root, fs, path, run, privateDirectories } = yield* fixture(fault);
         const failure = yield* run().pipe(Effect.flip);
         if (fault === "dependency-link-write")
           expect(failure.message).toBe("Read-only pilot package source changed during execution.");
@@ -880,7 +900,9 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
           expect(failure.message).not.toContain("different lint observation");
           expect(failure.message).not.toContain(root);
         }
-        expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
+        expect(yield* fs.exists(path.join(root, ".beep/cache/experiments"))).toBe(false);
+        expect(A.fromIterable(privateDirectories).length).toBeGreaterThan(0);
+        for (const directory of privateDirectories) expect(yield* fs.exists(directory)).toBe(false);
       })
     );
   }
