@@ -565,6 +565,8 @@ const readPrivateProducerRecord = Effect.fn("Producer.readPrivateRecord")(functi
  * console.assert(Effect.isEffect(approvedWorkflow))
  * ```
  *
+ * @param directory - Independently selected owner-only issuer directory.
+ * @returns The bounded decoded approval, or a typed failure for missing or unsafe storage.
  * @internal
  * @category queries
  * @since 0.0.0

@@ -8,8 +8,8 @@
     "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts": "a11454355bf0f69cf476b9fac5965df09a4560e58e03748994b58f0430df2280",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.ts": "38ef3ee7be92deaa77dbeb462827fb694ea95ec3f1fd810acc6dccfa8397e5f8",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "a3b2edf5deceaf7d042782a2b2eb5b521f373bef54075d0cb499280c68d7751a",
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "2f1149642027c1ad23cc15b3ecd7d658a6dfa9c649500ad8dde0ccf40a881c58",
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "3c6d9509bbd5833004a9880e375c91fe09e6a0813db928e4d75b6e1ee2f110b9",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "f3e598182a5a8dd2079f4d659504d9d414d88b40bb72e5e5c66ce5016f83e408",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "53a3d6975ffb28a81abef61dfa1e641b9d611daf12921a7d81bf0d431de8aa01",
     "packages/tooling/tool/cli/src/commands/Cache/index.ts": "4ef672c96ea78538e44127af92168178c387147ea8f87bb7087e114f9e39a89e",
     "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": "3b9c75db5736aab4097cd78364d7e972e798935e1376e5651b84dfb33147d247",
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "f6e2f07459cb88eab2325bb99969332201853e208fa4b4cec0629364a1127708",
@@ -184,5 +184,10 @@
       "finishedAt": "2026-10-30T18:06:24.625803+00:00"
     }
   },
-  "proofScope": "The 222-case dual-runtime functional replay preceded documentation-only example refinements. Current examples compile; canonical writers and exact-restored guard controls bind the documented source. Default package and final/hosted proof remain required."
+  "proofScope": "The 222-case dual-runtime functional replay preceded documentation-only example refinements. Current examples compile; canonical writers and exact-restored guard controls bind the documented source. Default package and final/hosted proof remain required.",
+  "documentationFollowup": {
+    "reason": "The commit hook requested param/returns documentation for the lazy metadata factory. Added those tags and the corresponding private-reader contract; examples and runtime code are unchanged.",
+    "metadataStatus": "Comment-only source anchors changed after the retained canonical writers. Regenerate canonical inventories once after accepted-parent replay before final publication.",
+    "priorComponentCommit": "9ebb915d5e"
+  }
 }

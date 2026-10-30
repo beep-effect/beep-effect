@@ -849,3 +849,11 @@ Actual protected publisher execution, independent publication-approval
 provisioning, successful human bootstrap, role/epoch/rollback qualification,
 all eligible computation and feature reviews, and real seven/seven/fourteen-day
 observations remain open. No acceptance criterion or phase is completed here.
+
+
+The component commit's hook requested explicit private-directory parameter and
+lazy-result tags. Those contracts are now documented. These comment-only anchor
+changes do not alter the compiled examples or runtime behavior; refresh the
+canonical inventories after accepted-parent replay before final publication.
+The default package proof runs on the updated source; no stale inventory is
+claimed as a passing combined final proof.

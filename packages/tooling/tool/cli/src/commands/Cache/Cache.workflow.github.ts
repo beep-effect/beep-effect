@@ -61,6 +61,8 @@ import type { CacheHostedProducerRunReference } from "./Cache.workflow.github.sc
  * console.assert(Effect.isEffect(workflow))
  * ```
  *
+ * @param directory - Independently selected private issuer directory used for identity routing.
+ * @returns Lazy GitHub client/content services whose credentials resolve only when built.
  * @internal
  * @category layers
  * @since 0.0.0
