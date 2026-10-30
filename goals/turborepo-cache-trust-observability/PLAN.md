@@ -920,3 +920,11 @@ so fresh per-run private paths are required. Final formatted-source Node/Bun rep
 checking passes. Canonical metadata and Fallow pass with zero introduced
 findings. The new complete default package proof remains pending.
 No protected run, R2 activation, credential or qualification change occurred.
+
+The first private-output implementation at `c99a60cb49` passed the complete
+default audit and Docgen in1068.659 seconds. A subsequent explicit type-contract
+check exposed an unintended filesystem dependency on public warming. The
+producer now selects that capability at its own boundary; both typed warming
+examples compile again. The refined source passes the current96-case Node/Bun replay, quick checking,
+canonical metadata and the repeated exclusivity control. Its complete package
+evidence remains pending; the earlier pass retains its exact source scope.

@@ -1494,3 +1494,19 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   rather than repeated graph rebuilds; current package checking covers the
   shared writer environment. The initial quick replay found only introduced
   help-text formatting; canonical formatting repairs it without weakening gates.
+
+### A conditional IO branch can widen an unrelated public Effect
+
+- Work: keep producer reports private in the shared encoded writer. Yielding
+  FileSystem in its optional branch changed the inferred warming environment
+  even for ordinary callers. The existing broad checks passed, but explicit
+  warming example types fail with TS2375 under that implementation.
+- Prevention: select the existing filesystem service at the producer boundary
+  and pass the concrete capability to the writer. Retain compile assertions
+  for the previous service-free public contract. The intended failing check
+  and repaired successful compile both use the real package example compiler.
+
+- Secret-scan friction: two public revision/digest fields whose names contained
+  API matched the generic-key rule. Verified their bytes against Git and the
+  prior SPEC, then named the fields for the writer service boundary. Values,
+  source evidence and scanner rules are preserved; no ignore or bypass is used.

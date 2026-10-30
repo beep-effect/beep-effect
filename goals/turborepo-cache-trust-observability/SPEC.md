@@ -917,3 +917,10 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
 - Reverse by removing the still-unpublished producer caller if these file
   semantics cannot be supported; retain private evidence and trust boundaries.
   No ordinary R2 service or signing activation changes with this repair.
+
+- Keep the generic writer and public warming service requirements unchanged.
+  Read the filesystem at the producer command boundary and pass its optional
+  concrete capability to the shared writer. Typed public/testing warming
+  examples enforce their existing service-free Effect contract. The initial
+  boolean branch widened that contract; an intended compile failure demonstrates
+  why the dependency must stay at the producer boundary.

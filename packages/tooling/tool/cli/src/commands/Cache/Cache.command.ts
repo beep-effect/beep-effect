@@ -175,15 +175,14 @@ const writeEncoded = Effect.fn("Cache.writeEncoded")(function* <A>(
   output: O.Option<string>,
   print = true,
   maxBytes: O.Option<number> = O.none(),
-  privateOutput = false
+  privateOutput: O.Option<FileSystem.FileSystem> = O.none()
 ) {
   const encoded = yield* codec.encode(value).pipe(CacheCommandError.mapError("Failed to encode cache report."));
   if (O.exists(maxBytes, (limit) => new TextEncoder().encode(encoded).byteLength + 1 > limit))
     return yield* CacheCommandError.new("Cache report exceeds its configured byte bound.");
   if (O.isSome(output)) {
-    if (privateOutput) {
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs
+    if (O.isSome(privateOutput)) {
+      yield* privateOutput.value
         .writeFileString(output.value, `${encoded}\n`, { flag: "wx", mode: 0o600 })
         .pipe(CacheCommandError.mapError(`Failed to write new private report ${output.value}.`));
     } else
@@ -300,11 +299,11 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
  * **Example** (Build the warm program)
  *
  * ```ts
- * import { runCacheWarm } from "@beep/repo-cli/commands/Cache"
+ * import { CacheCommandError, CacheWarmReceipt, runCacheWarm } from "@beep/repo-cli/commands/Cache"
  * import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
  * import * as Option from "effect/Option";
- * console.log(Effect.isEffect(runCacheWarm(".", Option.none()))) // true
+ * const warm: Effect.Effect<CacheWarmReceipt, CacheCommandError> = runCacheWarm(".", Option.none())
+ * console.log(Effect.isEffect(warm)) // true
  * ```
  *
  * @category use-cases
@@ -320,15 +319,15 @@ export const runCacheWarm = Effect.fn("Cache.runCacheWarm")(function* (repoRoot:
  * **Example** (Build a cache-warm test effect)
  *
  * ```ts
- * import { CacheWarmLane } from "@beep/repo-cli/commands/Cache"
+ * import { CacheCommandError, CacheWarmLane, CacheWarmReceipt } from "@beep/repo-cli/commands/Cache"
  * import { runCacheWarmForTesting } from "@beep/repo-cli/test/Cache"
  * import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"
  *
  * const runner = () =>
  *   Effect.succeed(CacheWarmLane.make({ command: [], durationMs: 0, exitCode: 0 }))
- * const warm = runCacheWarmForTesting("/repo", O.none(), runner)
+ * const warm: Effect.Effect<CacheWarmReceipt, CacheCommandError> =
+ *   runCacheWarmForTesting("/repo", O.none(), runner)
  *
  * console.log(Effect.isEffect(warm)) // true
  * ```
@@ -967,13 +966,14 @@ const cacheProducerRunCommand = Command.make(
             Effect.asSome
           ),
       });
+      const privateOutput = O.some(yield* FileSystem.FileSystem);
       yield* writeEncoded(
         observation,
         JsonStringCodec(CacheProducerObservation),
         output,
         O.isNone(output),
         O.some(8 * 1024 * 1024),
-        true
+        privateOutput
       );
       if (O.isSome(hosted))
         yield* writeEncoded(
@@ -982,7 +982,7 @@ const cacheProducerRunCommand = Command.make(
           O.some(hosted.value[0]),
           false,
           O.some(64 * 1024),
-          true
+          privateOutput
         );
     }).pipe(renderCacheFailure)
 ).pipe(

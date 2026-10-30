@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-30T21:38:38.236Z",
+  "generatedAt": "2026-10-30T22:21:01.533Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -474491,8 +474491,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 313,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-313-runcachewarm",
+          "line": 312,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-312-runcachewarm",
           "currentTags": [
             "@category",
             "@since"
@@ -474519,8 +474519,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-340-runcachewarmfortesting",
+          "line": 339,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-339-runcachewarmfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -474542,8 +474542,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 362,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-362-runcachewarmlanefortesting",
+          "line": 361,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-361-runcachewarmlanefortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -474565,8 +474565,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 512,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-512-buildcachedashboard",
+          "line": 511,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-511-buildcachedashboard",
           "currentTags": [
             "@category",
             "@since"
@@ -474593,8 +474593,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 567,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-567-runcacherestorationprobe",
+          "line": 566,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-566-runcacherestorationprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -474615,8 +474615,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 685,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-685-runcachepolicyaudit",
+          "line": 684,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-684-runcachepolicyaudit",
           "currentTags": [
             "@category",
             "@since"
