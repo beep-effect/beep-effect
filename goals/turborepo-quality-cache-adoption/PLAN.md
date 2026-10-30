@@ -263,3 +263,10 @@ eighteen synthetic outcomes and both real dry-only invalidation/restore results.
 The current reports now bind the actual driver bytes. This repairs source
 provenance; current feature acceptance, computation qualification and all
 production obligations remain separately open.
+
+### Replay binding repair, 2026-10-30
+
+Both retained input drivers generate the path/digest binding in their reports.
+Fresh output reproduces eighteen synthetic executions and six real dry plans;
+tracked JSON is copied unchanged from that output. Current committed-head
+publication, final proof and hosted acceptance remain required for this repair.

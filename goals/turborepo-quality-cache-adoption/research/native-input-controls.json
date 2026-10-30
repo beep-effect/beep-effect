@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-native-feature-input-controls/v1",
-  "recordedAt": "2026-10-30T11:19:34.709463+00:00",
+  "recordedAt": "2026-10-30T12:18:45.690570+00:00",
   "authority": "synthetic-native-feature-observation-only",
   "bunVersion": "1.4.4",
   "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
@@ -209,10 +209,10 @@
     "These controls do not establish complete semantic inputs for any real Beep computation.",
     "No production cache, key, namespace, credential or task setting changed."
   ],
-  "driverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
-  "allOwnedFixturesRemoved": true,
+  "driverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
   "driver": {
     "path": "goals/turborepo-quality-cache-adoption/research/native-input-controls.py",
-    "sha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85"
-  }
+    "sha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694"
+  },
+  "allOwnedFixturesRemoved": true
 }

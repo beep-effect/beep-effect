@@ -333,3 +333,15 @@ binds changed runner source bytes. Historical claims above keep their dates.
   configuration bytes; earlier counts/hashes remain historical in Git.
   These fresh replays repair driver provenance and establish no qualification,
   production activation or representative observation window.
+
+### Replay-generated driver bindings, 2026-10-30
+
+The native input and actual ignored-input drivers now emit their own repository
+relative path and exact source digest before writing each report. The ignored
+input driver also records the observed commit, configuration digests and the
+unchanged source status around its dry-only observation. The tracked reports
+are byte-for-byte copies of generated output; no binding is added afterward.
+Eighteen synthetic executions and six real dry plans were replayed. The latter
+also ran from outside the checkout, restored each owned fixture and recovered
+each baseline hash. These remain bounded observations, without qualification
+or deployment authority.

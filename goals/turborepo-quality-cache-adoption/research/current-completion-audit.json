@@ -242,15 +242,21 @@
   "retainedDriverReplays": {
     "nativeInputControls": {
       "path": "research/native-input-controls.json",
-      "driverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
-      "cases": 18
+      "driverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+      "cases": 18,
+      "priorDriverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
+      "replayedAt": "2026-10-30T12:18:45.690570+00:00",
+      "bindingGeneratedByDriver": true
     },
     "actualIgnoredInput": {
       "path": "research/actual-ignored-input-observation.json",
-      "driverSha256": "098afa7cd4088e7cc68f0dd2ad08cf06698c9c5423a89ee22885d8b2e5963c82",
+      "driverSha256": "48f955724c7c7ea13a6802355cbd1ca98d293cabcae695d094b88263b12a8fac",
       "clients": 2,
       "taskExecution": false,
-      "remoteUse": false
+      "remoteUse": false,
+      "priorDriverSha256": "098afa7cd4088e7cc68f0dd2ad08cf06698c9c5423a89ee22885d8b2e5963c82",
+      "replayedAt": "2026-10-30T12:18:46.651280+00:00",
+      "bindingGeneratedByDriver": true
     },
     "authority": "Fresh retained-driver observations only. No acceptance criterion or qualification transition is completed."
   }

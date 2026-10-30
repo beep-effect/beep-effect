@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-actual-ignored-input-dry-observation/v1",
-  "recordedAt": "2026-10-30T11:22:07.465008+00:00",
+  "recordedAt": "2026-10-30T12:18:46.651280+00:00",
   "authority": "native-dry-input-observation-only",
   "observations": [
     {
@@ -9,7 +9,7 @@
       "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
       "computation": "@beep/identity#lint",
       "beforeHash": "5aa02fa2ebecd93d",
-      "duringHash": "33452da188c3608c",
+      "duringHash": "cace58cfed7e9093",
       "afterHash": "5aa02fa2ebecd93d",
       "beforeInputs": 1155,
       "duringInputs": 1156,
@@ -25,7 +25,7 @@
       "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
       "computation": "@beep/identity#lint",
       "beforeHash": "5aa02fa2ebecd93d",
-      "duringHash": "55523249f7527884",
+      "duringHash": "92f30d80be047570",
       "afterHash": "5aa02fa2ebecd93d",
       "beforeInputs": 1155,
       "duringInputs": 1156,
@@ -38,8 +38,12 @@
   ],
   "remoteUse": false,
   "taskExecution": false,
-  "sourceRevision": "1ed7bfa943d60159d4cad916de238a1bc745818f",
-  "sourceWorkingTree": "Clean before and after the dry-only observation; no task execution or remote reuse.",
+  "sourceRevision": "b597e9c824a3e685de1866f08f26a299b484368d",
+  "sourceWorkingTree": {
+    "statusEntries": 2,
+    "statusUnchanged": true,
+    "configurationUnchanged": true
+  },
   "configurationSourceSha256": {
     "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
     "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
@@ -48,6 +52,6 @@
   },
   "driver": {
     "path": "goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py",
-    "sha256": "098afa7cd4088e7cc68f0dd2ad08cf06698c9c5423a89ee22885d8b2e5963c82"
+    "sha256": "48f955724c7c7ea13a6802355cbd1ca98d293cabcae695d094b88263b12a8fac"
   }
 }

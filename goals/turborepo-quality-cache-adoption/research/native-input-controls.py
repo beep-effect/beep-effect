@@ -15,7 +15,9 @@ import tempfile
 from pathlib import Path
 
 if sys.flags.optimize:
-    print("Native input verification requires Python assertions; optimized execution is refused.")
+    print(
+        "Native input verification requires Python assertions; optimized execution is refused."
+    )
     raise SystemExit(64)
 
 repo = Path(__file__).resolve().parents[3]
@@ -224,6 +226,10 @@ finally:
         ],
     }
     report["driverSha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    report["driver"] = {
+        "path": Path(__file__).resolve().relative_to(repo).as_posix(),
+        "sha256": report["driverSha256"],
+    }
     report["allOwnedFixturesRemoved"] = True
     (base / "native-input-controls.json").write_text(
         json.dumps(report, indent=2) + "\n"
