@@ -49,6 +49,35 @@ export class CacheHostedProducerApproval extends S.Opaque<
 ) {}
 
 /**
+ * Unverified run identity available before its artifact is uploaded.
+ *
+ * **Details**
+ * A producer can publish its run and attempt without inventing a future artifact
+ * identifier. These numbers grant no workflow or publication authority.
+ *
+ * **Example** (Prepare a run identity before upload)
+ * ```ts
+ * import { CacheHostedProducerRunReference } from "@beep/repo-cli/test/Cache"
+ * const run = CacheHostedProducerRunReference.make({ runId: 1, attempt: 2 })
+ * console.assert(run.attempt === 2)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheHostedProducerRunReference extends S.Opaque<
+  CacheHostedProducerRunReference,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ runId: Identifier, attempt: Identifier }).pipe(
+    $I.annoteSchema("CacheHostedProducerRunReference", {
+      description: "Run and attempt carried before upload; authenticated artifact selection remains a later boundary.",
+    })
+  )
+) {}
+
+/**
  * Exact immutable Actions artifact and attempt to inspect.
  *
  * **Example** (Select an artifact without a report-supplied URL)
@@ -65,7 +94,7 @@ export class CacheHostedProducerReference extends S.Opaque<
   CacheHostedProducerReference,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ runId: Identifier, attempt: Identifier, artifactId: Identifier }).pipe(
+  S.Struct({ ...CacheHostedProducerRunReference.fields, artifactId: Identifier }).pipe(
     $I.annoteSchema("CacheHostedProducerReference", {
       description: "Database identifiers only; no caller-selected endpoint, workflow approval or archive member.",
     })

@@ -823,3 +823,8 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   production qualification claim; no verified boolean or new trust store is added.
 - Reversal leaves complete-observation consumption disabled and retains the
   legacy upload-only decoder. No endpoint, credential, signing or epoch changes.
+
+- Publication preparation takes only an independently configured run/attempt,
+  which exists before upload. Reuse that schema inside the later artifact
+  reference, whose real artifact ID remains mandatory during verification.
+  No placeholder identity is introduced and the report wire format is unchanged.

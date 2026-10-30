@@ -16,6 +16,7 @@ import {
   CacheHostedProducerCompleteReport,
   CacheHostedProducerReference,
   CacheHostedProducerReport,
+  CacheHostedProducerRunReference,
   CacheProducerObservation,
   CacheRuntimeProcess,
   verifyCacheHostedProducerObservation,
@@ -82,6 +83,10 @@ const zipReport = Effect.fn("HostedProducerTest.zip")(function* (
 
 const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedReference = reference) {
   const now = yield* Clock.currentTimeMillis;
+  const runReference = CacheHostedProducerRunReference.make({
+    runId: selectedReference.runId,
+    attempt: selectedReference.attempt,
+  });
   const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
     ...input.pilot,
     protocolClient: input.protocol.observation.client,
@@ -210,11 +215,11 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
     };
   });
   const complete = Effect.fn("HostedProducerTest.complete")(function* () {
-    const report = yield* buildCacheHostedProducerCompleteReport(observation, selectedReference);
+    const report = yield* buildCacheHostedProducerCompleteReport(observation, runReference);
     const packed = yield* repack(yield* encodeCompleteReport(report));
     return { report, ...packed };
   });
-  return { approval, report, observation, contents, archive, run, artifact, verify, repack, complete };
+  return { approval, report, observation, contents, archive, run, runReference, artifact, verify, repack, complete };
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted producer evidence", (it) => {
@@ -342,7 +347,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted produc
         ...f.observation,
         observation: CacheProducerBundle.make({ ...f.observation.observation, upload: O.none() }),
       });
-      const buildError = yield* buildCacheHostedProducerCompleteReport(observation, reference).pipe(Effect.flip);
+      const buildError = yield* buildCacheHostedProducerCompleteReport(observation, f.runReference).pipe(Effect.flip);
       expect(buildError.message).toContain("owned upload");
       const joinError = yield* f.verify({ observation }).pipe(Effect.flip);
       expect(joinError.message).toContain("owned upload");

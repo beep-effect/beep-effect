@@ -819,3 +819,10 @@ Quick verification, Effect Vitest (zero introduced findings) and Fallow pass.
 retains the exact limits and remaining work. No real protected publication or
 acceptance consumer is claimed: both must use this join, retain independent MAC
 verification, and pass fresh combined-source/hosted proof after the parent lands.
+
+The report builder now takes only run/attempt identity before upload; authenticated
+verification still requires the actual artifact ID returned afterward. The refined
+source again passes32 cases per runtime and all three causal guard controls.
+Current source inspection confirms issuer exclusion already covers the actual
+worker mounts and `/usr`; the owned protected workflow must also stage and clear
+its temporary raw provisioning transfer before launching workers.

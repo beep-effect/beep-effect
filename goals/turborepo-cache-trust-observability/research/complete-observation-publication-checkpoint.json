@@ -1,55 +1,56 @@
 {
   "schemaVersion": "cache-complete-observation-publication-checkpoint/v1",
-  "recordedAt": "2026-10-30T13:25:16.203354+00:00",
+  "recordedAt": "2026-10-30T14:00:12.621403+00:00",
   "authority": "Unpublished local component proof only; no real protected GitHub publication, issuer authentication, task qualification or production activation.",
-  "sourceParent": "3618baccb3d99c0f28aa0d936aca13f614fd780b",
+  "sourceParent": "b58fe55da32a7ec8a1958db18c495586597331dd",
   "sourceSha256": {
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts": "c144585753a31365757b833f30243b14012549a4a7dcfee958673447374625d2",
-    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d",
-    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "2405a6dbc717a73ad074cffdbe57faf4e5d35600c5be1040fb90571e3efcfa45",
-    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "1a71333e49aca5b931dfde63bc5dfb942e1faf1b1cf617873ce10c9b3ca4d9b9"
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts": "2286e7838c05b2436b0adb7cfd59c80f78f16e80532a401a008144dbac52c89f",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "a0093f1841d481dede46e658ab5af78cd2c2af4ae1f87471a5826890439c5f00",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "4b1f3767fcf40643b7b055fbf6ef1846de888d0f85ac2e848d0e621f9ea2cbaa",
+    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "e04f9cb960af41c96740926040b476a5eabc1214cec80a38db314138ada4d13f"
   },
   "implementation": [
     "Add a v2 hosted report binding the canonical schema encoding of the complete observation, including envelope and both native matrices, to exactly one owned upload.",
     "Retain v1 upload-only decoding; the strict complete-observation verifier refuses that legacy report.",
     "Reuse independent repository/workflow/source approval and authenticated immutable ZIP metadata; preserve all existing parser, size, freshness and race checks.",
     "Require matching complete-observation digest, independent computation binding and exact owned upload.",
-    "Take a private decoded observation snapshot before asynchronous metadata reads. No verified boolean, new trust store or qualification transition is added."
+    "Take a private decoded observation snapshot before asynchronous metadata reads. No verified boolean, new trust store or qualification transition is added.",
+    "Build from run/attempt before artifact upload; reuse that identity inside the later authenticated artifact reference. No placeholder artifact ID is required."
   ],
   "verification": {
     "node": {
       "exit": 0,
-      "elapsedSeconds": 7.497,
-      "finishedAt": "2026-10-30T13:09:37.857688+00:00",
+      "elapsedSeconds": 4.61,
+      "finishedAt": "2026-10-30T13:49:54.190739+00:00",
       "tests": 32
     },
     "bun": {
       "exit": 0,
-      "elapsedSeconds": 2.312,
-      "finishedAt": "2026-10-30T13:18:38.031068+00:00",
+      "elapsedSeconds": 2.408,
+      "finishedAt": "2026-10-30T13:49:51.445963+00:00",
       "tests": 32
     },
     "quick": {
       "exit": 0,
-      "elapsedSeconds": 13.419,
-      "finishedAt": "2026-10-30T13:09:44.196136+00:00"
+      "elapsedSeconds": 12.333,
+      "finishedAt": "2026-10-30T13:50:02.385680+00:00"
     },
     "effectVitest": {
       "exit": 0,
-      "elapsedSeconds": 39.371,
-      "finishedAt": "2026-10-30T13:19:14.534076+00:00"
+      "elapsedSeconds": 39.348,
+      "finishedAt": "2026-10-30T13:55:30.679067+00:00"
     },
     "fallowAudit": {
       "exit": 0,
-      "elapsedSeconds": 11.158,
-      "finishedAt": "2026-10-30T13:18:47.273950+00:00"
+      "elapsedSeconds": 9.225,
+      "finishedAt": "2026-10-30T13:55:00.983712+00:00"
     }
   },
   "causalControls": {
     "schemaVersion": "cache-complete-observation-controls/v1",
-    "recordedAt": "2026-10-30T13:14:03.147688+00:00",
+    "recordedAt": "2026-10-30T13:51:43.803421+00:00",
     "authority": "Controlled local ZIP and mocked authenticated metadata boundary only. No real GitHub producer, issuer authentication or qualification proof.",
-    "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d",
+    "sourceSha256": "a0093f1841d481dede46e658ab5af78cd2c2af4ae1f87471a5826890439c5f00",
     "rows": [
       {
         "control": "digest",
@@ -57,8 +58,8 @@
         "test": "rejects substituted complete matrices or envelope bytes with the same approved upload",
         "removedGuardExit": 1,
         "oneSelectedCaseFailed": true,
-        "logSha256": "7deffd4b696c50e2b34f831e436cb89a390ed3538fa130cb1aa1ce8c788db0fc",
-        "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d"
+        "logSha256": "e748ca02bd994ae8dcfb1cb3dba29851e7cb6b6ac0775542cdf67e0f67d65f84",
+        "sourceSha256": "a0093f1841d481dede46e658ab5af78cd2c2af4ae1f87471a5826890439c5f00"
       },
       {
         "control": "upload",
@@ -66,8 +67,8 @@
         "test": "rejects a contradictory published upload even when its complete observation digest matches",
         "removedGuardExit": 1,
         "oneSelectedCaseFailed": true,
-        "logSha256": "833ef054cab2d5c675aaaeb4126c694f8bcbc070db611338bae8ef29dc7832ad",
-        "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d"
+        "logSha256": "1c04bbaab248cfaaea8be15faeb39c88429d7aad74eb441862ccb53621f9ffcb",
+        "sourceSha256": "a0093f1841d481dede46e658ab5af78cd2c2af4ae1f87471a5826890439c5f00"
       },
       {
         "control": "snapshot",
@@ -75,8 +76,8 @@
         "test": "compares a private observation snapshot despite mutation during hosted metadata reads",
         "removedGuardExit": 1,
         "oneSelectedCaseFailed": true,
-        "logSha256": "8b33aeae40cc6159ba3499e73a8537dfaff41f72c4f2807063bcb5b51bb9a9ee",
-        "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d"
+        "logSha256": "20d91866116b7ea022beae94a86cd86c1ba6512251f35994ab420ccc3069b90e",
+        "sourceSha256": "a0093f1841d481dede46e658ab5af78cd2c2af4ae1f87471a5826890439c5f00"
       }
     ],
     "sourceRestoredExactly": true
@@ -94,6 +95,7 @@
   "remaining": [
     "Replay unpublished producer commits onto the accepted producer-execution parent and refresh combined source/generated metadata.",
     "Have the closed protected producer publish this report from its actual owned observation and independently configured current run reference.",
+    "Compose the protected workflow with scoped temporary provisioning inputs released before any worker starts; verify actual denial and cleanup.",
     "Integrate the strict hosted join with the existing issuer-authenticated acceptance importer and operational rereads; preserve live source, expiry and revocation checks.",
     "Complete fresh combined-source package/final/hosted/review acceptance; current focused tests do not prove real GitHub or native R2 execution.",
     "Verify the actual human bootstrap, safely transport independent issuer material, execute the bounded signed trial and prove role/epoch/rollback behavior.",
@@ -108,23 +110,31 @@
       "exit": 0,
       "elapsedSeconds": 7.32,
       "finishedAt": "2026-10-30T13:27:05.248421+00:00"
+    },
+    "check": {
+      "exit": 0,
+      "elapsedSeconds": 7.548,
+      "finishedAt": "2026-10-30T13:54:58.360831+00:00"
     }
   },
   "packetChecks": {
     "doctor": {
       "exit": 0,
-      "elapsedSeconds": 2.073,
-      "finishedAt": "2026-10-30T13:27:02.265819+00:00"
+      "elapsedSeconds": 1.93,
+      "finishedAt": "2026-10-30T14:00:15.200955+00:00"
     },
     "explore": {
       "exit": 0,
-      "elapsedSeconds": 1.429,
-      "finishedAt": "2026-10-30T13:27:02.098003+00:00"
+      "elapsedSeconds": 1.394,
+      "finishedAt": "2026-10-30T14:00:15.168875+00:00"
     },
     "reflectionArtifacts": {
       "exit": 0,
       "elapsedSeconds": 1.747,
       "finishedAt": "2026-10-30T13:27:01.392867+00:00"
     }
-  }
+  },
+  "priorCheckpointCommit": "b58fe55da32a7ec8a1958db18c495586597331dd",
+  "materialPlacementReview": "Existing issuer guards already exclude actual source/worktree/Git/dependency/tool mounts and /usr. The owned workflow must still stage and clear its raw provisioning transfer before workers start; this source review is not deployed proof.",
+  "packetChecksScope": "Current doctor/explore checks pass. The unchanged reflection artifacts retain their preceding successful validation."
 }

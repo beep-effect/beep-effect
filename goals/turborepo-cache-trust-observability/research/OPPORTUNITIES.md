@@ -1390,3 +1390,15 @@ in the owning producer PR; preserve it until the accepted-parent replay.
 - Prevention: use the exact grep result and live test barrel for wrapped exports
   when the symbol graph cannot resolve the call edge. No graph upgrade, duplicate
   index or alternate memory service is needed for this source inspection.
+
+### Run identity exists before artifact identity, 2026-10-30
+
+- Doing: connect the complete-report builder to the actual protected publisher.
+- Evidence: its first input used the artifact reference, which requires an ID
+  that GitHub returns only after the report is uploaded. Unit fixtures already
+  had an artifact ID and did not expose this integration mismatch.
+- Repair: derive the existing artifact reference from a separate run/attempt
+  schema and require only that earlier identity when building publication.
+  Keep the full artifact ID mandatory at authenticated verification.
+- Prevention: trace the real producer/consumer ordering before fixing an input
+  contract; never invent a placeholder artifact identifier.

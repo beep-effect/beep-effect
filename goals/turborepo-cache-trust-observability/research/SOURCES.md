@@ -522,3 +522,8 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
 - The existing issuer, acceptance importer and live-source policy owners remain
   required; actual publisher/consumer wiring, renewal and production observations
   are explicitly unfinished.
+
+- The publisher input separates run/attempt from the artifact identity allocated
+  after upload. The current report builder needs no invented future artifact ID;
+  authenticated verification retains that required identity. Fresh Node/Bun
+  replays and digest/upload/snapshot controls cover the refined source.

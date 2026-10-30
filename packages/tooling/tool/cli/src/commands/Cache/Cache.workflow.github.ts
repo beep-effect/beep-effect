@@ -29,6 +29,7 @@ import {
   CacheHostedProducerUpload,
 } from "./Cache.workflow.github.schemas.ts";
 import { CacheProducerObservation } from "./Cache.workflow.schemas.ts";
+import type { CacheHostedProducerRunReference } from "./Cache.workflow.github.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github");
 const id = CacheHostedProducerReference.fields.runId;
@@ -290,7 +291,7 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
  * Prepare the bounded report from a complete observation's own upload.
  *
  * **Details**
- * The enclosing approved workflow supplies the run reference. This function
+ * The enclosing approved workflow supplies the run identity before upload. This function
  * derives the binding, complete canonical digest and upload from the observation;
  * it accepts no replacement upload rows. It neither authenticates the envelope
  * nor publishes an artifact or grants qualification.
@@ -299,11 +300,11 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
  * ```ts
  * import {
  *   buildCacheHostedProducerCompleteReport,
- *   type CacheHostedProducerReference,
+ *   type CacheHostedProducerRunReference,
  *   type CacheProducerObservation,
  * } from "@beep/repo-cli/test/Cache"
  *
- * const prepare = (observation: CacheProducerObservation, run: CacheHostedProducerReference) =>
+ * const prepare = (observation: CacheProducerObservation, run: CacheHostedProducerRunReference) =>
  *   buildCacheHostedProducerCompleteReport(observation, run)
  * ```
  *
@@ -313,7 +314,7 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
  */
 export const buildCacheHostedProducerCompleteReport = Effect.fn("CacheWorkflow.buildCompleteHostedReport")(function* (
   observation: CacheProducerObservation,
-  reference: CacheHostedProducerReference
+  reference: CacheHostedProducerRunReference
 ) {
   const owned = yield* encodeObservation(observation).pipe(Effect.flatMap(decodeObservation));
   const upload = yield* owned.observation.upload.pipe(
