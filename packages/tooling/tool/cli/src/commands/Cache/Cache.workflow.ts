@@ -44,12 +44,12 @@ import {
 import { CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow");
-const R2StorageHost = S.String.check(S.isPattern(/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/)).pipe(
-  $I.annoteSchema("R2StorageHost", {
-    description: "Account-specific R2 storage hostname allowed for producer uploads.",
+const R2StorageEndpoint = S.String.check(S.isPattern(/^https:\/\/[a-f0-9]{32}\.r2\.cloudflarestorage\.com\/$/)).pipe(
+  $I.annoteSchema("R2StorageEndpoint", {
+    description: "Canonical account-specific R2 storage URL allowed for producer uploads.",
   })
 );
-const isR2StorageHost = S.is(R2StorageHost);
+const isR2StorageEndpoint = S.is(R2StorageEndpoint);
 const bindingCodec = JsonStringCodec(CacheProducerBinding);
 const digest = S.decodeEffect(Sha256HexFromBytes);
 const decodeRevision = S.decodeUnknownEffect(GitObjectId);
@@ -366,24 +366,10 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
   const targetDigest = yield* hashCacheProducerUploadTarget(target);
   const keyDigest = yield* hashCacheProducerUploadKey(owned.signing);
   if (
-    url.protocol !== "http:" ||
-    url.hostname !== "127.0.0.1" ||
-    url.port !== "19427" ||
-    url.pathname !== "/" ||
-    url.search !== "" ||
-    url.hash !== "" ||
-    url.username !== "" ||
-    url.password !== "" ||
+    url.href !== "http://127.0.0.1:19427/" ||
     !S.is(Sha256Hex)(target.backend.digest) ||
     !Str.startsWith("/")(owned.adapter.value.executable) ||
-    endpoint.protocol !== "https:" ||
-    !isR2StorageHost(endpoint.hostname) ||
-    endpoint.port !== "" ||
-    endpoint.pathname !== "/" ||
-    endpoint.search !== "" ||
-    endpoint.hash !== "" ||
-    endpoint.username !== "" ||
-    endpoint.password !== "" ||
+    !isR2StorageEndpoint(endpoint.href) ||
     storage.bucket !== "beep-turbo-r2-pilot" ||
     target.namespace.teamId !== "team_beep_signed_canary_v1" ||
     target.namespace.teamId !== binding.client.namespace ||

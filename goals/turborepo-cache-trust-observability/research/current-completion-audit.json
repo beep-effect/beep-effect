@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "a837d9b38c01565703776bdf34c93b0ab4fe516bed556215ed71380b08f68fd4",
+  "specSha256": "7c8a4475cd3db0ef372870fc9bce0e3b2c574cdc40ed645c266631cbfa4cb6ec",
   "acceptance": [
     {
       "id": "AC-01",
@@ -406,6 +406,13 @@
     "path": "research/producer-integration-policy-review.json",
     "sha256": "d24e75934317b90811cd4fd6f3a115428ec79a1cdd987586efa4915f34e72cbe",
     "scope": "Introduced inline compilation/catalog fixes, canonical assertion semantics and one reviewed real-process platform judgment. Full package/final/hosted proof remains pending.",
+    "allAcceptanceUnproven": true
+  },
+  "priorSpecSha256AtFallowRepair": "a837d9b38c01565703776bdf34c93b0ab4fe516bed556215ed71380b08f68fd4",
+  "producerFallowRepairCheckpoint": {
+    "path": "research/producer-fallow-repair-checkpoint.json",
+    "sha256": "9266cb28ca37d0f3153b0fd6d978a942bf0af470f3e20e33768f1fe18b061eb0",
+    "scope": "Introduced complexity/duplication repaired;163 focused tests per runtime, source-removal integrity control, real synthetic adapter lifecycle and canonical policy/documentation checks. Complete package/final/hosted and all actual signed/deployed acceptance remain pending.",
     "allAcceptanceUnproven": true
   }
 }

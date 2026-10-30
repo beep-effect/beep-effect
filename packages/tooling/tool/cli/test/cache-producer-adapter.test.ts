@@ -1,3 +1,4 @@
+import { $RepoCliId } from "@beep/identity/packages";
 import {
   CacheCommandError,
   CacheConformanceTarget,
@@ -53,6 +54,19 @@ const Fault = LiteralKit([
   "changed-resource",
   "delayed-extra-frame",
 ]);
+const $I = $RepoCliId.create("test/cache-producer-adapter");
+const PreflightFault = LiteralKit([
+  "missing-adapter",
+  "missing-storage",
+  "changed-executable",
+  "invalid-pin",
+  "missing-git",
+  "source-visible-state",
+  "unsupported-platform",
+  "unsupported-architecture",
+]).pipe(
+  $I.annoteSchema("PreflightFault", { description: "Independent before-start refusal scenarios for the owned parent." })
+);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const json = <T extends S.Top>(schema: T) => S.encodeEffect(S.fromJsonString(schema));
 
@@ -176,6 +190,14 @@ raise SystemExit(1 if fault == "nonzero" else 0)
   return { fs, path, root, request, runtime, approval, marker, tool, backendSha256 };
 });
 
+const prepareFilesystemFault = Effect.fn("ProducerAdapterTest.prepareFilesystemFault")(function* (
+  f: Effect.Success<ReturnType<typeof fixture>>,
+  fault: typeof PreflightFault.Type
+) {
+  if (fault === "changed-executable") yield* f.fs.writeFileString(f.tool, "changed executable");
+  if (fault === "missing-git") yield* f.fs.remove(f.path.join(f.request.sourceRoot, ".git"), { recursive: true });
+});
+
 const Peer = S.Struct({ pid: S.Int, keys: S.Array(S.String), argv: S.Array(S.String) });
 const decodePeer = S.decodeEffect(S.fromJsonString(Peer));
 
@@ -256,49 +278,36 @@ describe.skipIf(process.platform !== "linux")("Linux owned adapter parent", () =
         })
       );
 
-      it.effect("refuses missing launch/storage and changed executable before starting a peer", () =>
+      it.effect.each(PreflightFault.literals)("refuses before starting a peer: %s", (fault) =>
         Effect.gen(function* () {
-          for (const fault of [
-            "missing-adapter",
-            "missing-storage",
-            "changed-executable",
-            "invalid-pin",
-            "missing-git",
-            "source-visible-state",
-            "unsupported-platform",
-            "unsupported-architecture",
-          ]) {
-            const f = yield* fixture("none");
-            const runtime = CacheProducerUploadRuntime.make({
-              ...f.runtime,
-              ...(fault === "missing-adapter" ? { adapter: O.none() } : {}),
-              target: CacheConformanceTarget.make({
-                ...f.runtime.target,
-                ...(fault === "missing-storage" ? { storage: O.none() } : {}),
-                backend: { ...f.runtime.target.backend, digest: fault === "invalid-pin" ? "invalid" : f.backendSha256 },
-              }),
-            });
-            if (fault === "changed-executable") yield* f.fs.writeFileString(f.tool, "changed executable");
-            if (fault === "missing-git")
-              yield* f.fs.remove(f.path.join(f.request.sourceRoot, ".git"), { recursive: true });
-            let callbacks = 0;
-            const result = yield* withCacheProducerAdapter(
-              fault === "source-visible-state" ? "/tmp" : f.root,
-              f.request,
-              runtime,
-              f.approval,
-              Effect.sync(() => {
-                callbacks++;
-              })
-            ).pipe(
-              Effect.provideService(HostProcessPlatform, fault === "unsupported-platform" ? "win32" : "linux"),
-              Effect.provideService(HostProcessArchitecture, fault === "unsupported-architecture" ? "arm64" : "x64"),
-              Effect.exit
-            );
-            result.pipe(Exit.isFailure, assertTrue);
-            expect(callbacks).toBe(0);
-            expect(yield* f.fs.exists(f.marker)).toBe(false);
-          }
+          const f = yield* fixture("none");
+          const runtime = CacheProducerUploadRuntime.make({
+            ...f.runtime,
+            ...(fault === "missing-adapter" ? { adapter: O.none() } : {}),
+            target: CacheConformanceTarget.make({
+              ...f.runtime.target,
+              ...(fault === "missing-storage" ? { storage: O.none() } : {}),
+              backend: { ...f.runtime.target.backend, digest: fault === "invalid-pin" ? "invalid" : f.backendSha256 },
+            }),
+          });
+          yield* prepareFilesystemFault(f, fault);
+          let callbacks = 0;
+          const result = yield* withCacheProducerAdapter(
+            fault === "source-visible-state" ? "/tmp" : f.root,
+            f.request,
+            runtime,
+            f.approval,
+            Effect.sync(() => {
+              callbacks++;
+            })
+          ).pipe(
+            Effect.provideService(HostProcessPlatform, fault === "unsupported-platform" ? "win32" : "linux"),
+            Effect.provideService(HostProcessArchitecture, fault === "unsupported-architecture" ? "arm64" : "x64"),
+            Effect.exit
+          );
+          result.pipe(Exit.isFailure, assertTrue);
+          expect(callbacks).toBe(0);
+          expect(yield* f.fs.exists(f.marker)).toBe(false);
         })
       );
     }

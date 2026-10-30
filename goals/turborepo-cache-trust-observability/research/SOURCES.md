@@ -498,3 +498,5 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
 - `owned-adapter-integration-checkpoint.json`: accepted PR #2367 main integration with the owned backend/upload path; fresh 142-test Node and Bun replays and package lint/check. Earlier checkpoints retain their original source scope; complete and protected proof remains pending.
 
 - `producer-integration-policy-review.json`: exact source repair, canonical assertion semantics, one source-reviewed real-process platform judgment, and scoped passing checks; interrupted complete proof is explicitly not acceptance.
+
+- `producer-fallow-repair-checkpoint.json`: introduced complexity/duplication attribution, canonical upload-profile and shared-reader repair, current 163-case dual-runtime replay, intended digest-removal failure with exact restoration, real synthetic controller cleanup and canonical documentation/policy checks. Complete package/final/hosted and all real trust/adoption gates remain required.

@@ -40,7 +40,10 @@ export {
   makeCacheConformanceSocketProxy,
 } from "../commands/Cache/Cache.conformance.proxy.ts";
 export { CacheConformanceProxyEvent } from "../commands/Cache/Cache.conformance.schemas.ts";
-export { inspectCacheDependencyTree } from "../commands/Cache/Cache.dependencies.ts";
+export {
+  inspectCacheDependencyTree,
+  readCacheDependencyMaterialization,
+} from "../commands/Cache/Cache.dependencies.ts";
 export {
   decodeCacheExperimentText,
   hashCacheExperimentExecutable,

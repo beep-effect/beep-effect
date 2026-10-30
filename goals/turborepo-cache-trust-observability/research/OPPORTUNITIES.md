@@ -1035,3 +1035,26 @@ codecs/guard, review each detector row, and regenerate catalogs through their
 canonical writers before a fresh publication/final proof. An initial catalog
 invocation only checked drift; the documented writer requires `--write`.
 Preserve every policy and coverage floor; no cache or runtime activation.
+
+
+### Producer Fallow preflight and documentation feedback, 2026-10-30
+
+The normal publication at `2e4f001e7f` completed the collected cheap tier with
+only Fallow audit/health red: the upload validator had cyclomatic complexity
+30, one preflight test had cognition 17, and dependency descriptor reads formed
+one introduced clone group. Nothing was pushed. The complete package attempt
+was stopped before editing and is not passing proof. Focused Fallow should run
+immediately after adding approval predicates and scenario setup, before the
+expensive inventory/full-package replay. Whole canonical URLs, one verified
+dependency reader and independently named preflight cases remove the findings
+without a threshold change. A generated valid-byte replacement property also
+fails at its intended rejection assertion when the digest guard is removed;
+exact source restoration is verified. The observer initially expected a Vitest
+message, while the canonical helper uses Node strict equality; preserve the
+actual failure and fix the observer, never count an unrelated failure.
+
+The first regenerated documentation inventory found one newly introduced
+example-import violation: `@beep/schema` was used instead of its stable
+`@beep/schema/Sha256` leaf. Compilation alone did not check that policy. Fix the
+example import and regenerate through the canonical writer; do not edit the
+generated issue away.

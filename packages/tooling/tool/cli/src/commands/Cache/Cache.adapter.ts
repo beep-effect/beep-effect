@@ -23,13 +23,8 @@ import * as Tuple from "effect/Tuple";
 import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheAdapterHostEvent, CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
-import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
-import {
-  decodeCacheExperimentText,
-  hashCacheExperimentExecutable,
-  readCacheEvidenceBytes,
-  requireCacheLinuxX64,
-} from "./Cache.evidence.ts";
+import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
+import { hashCacheExperimentExecutable, requireCacheLinuxX64 } from "./Cache.evidence.ts";
 import { makePrivateSupervisorStorage } from "./Cache.pilot.runner.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
@@ -90,10 +85,7 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
       const executable = yield* fs.realPath(launch.executable);
       if ((yield* hashCacheExperimentExecutable(executable)) !== backendSha256)
         return yield* CacheCommandError.new("Owned adapter executable differs from its independently approved pin.");
-      const dependencies = yield* readCacheEvidenceBytes(request.sourceRoot, request.pilot.dependencies).pipe(
-        Effect.flatMap(decodeCacheExperimentText),
-        Effect.flatMap(JsonStringCodec(CacheDependencyMaterialization).decode)
-      );
+      const dependencies = yield* readCacheDependencyMaterialization(request.sourceRoot, request.pilot.dependencies);
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],

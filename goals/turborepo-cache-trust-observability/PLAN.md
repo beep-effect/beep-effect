@@ -637,3 +637,17 @@ launches a real child and observes its marker and process cleanup. The current
 root policy and quick package checks pass. The interrupted complete audit is
 not a pass; fresh complete package/final/hosted proof remains required. See
 [the review](research/producer-integration-policy-review.json).
+
+
+### Producer complexity and verified-reader repair
+
+The normal pre-push gates attributed two complexity findings and one clone group
+to the producer implementation. Canonical complete-URL constraints, the shared
+dependency reader and independently named preflight cases remove them. Focused
+Fallow audit and health pass with no baseline/threshold changes. The expanded
+13-file runtime replay passes 163 tests per runtime, and the current generated
+byte-integrity property also passes separately on Node/Bun. Removing its real
+digest check fails the intended assertion, with exact restoration. The real
+Bun controller replays actual adapter success, callback failure and interruption
+cleanup. Final source-bound evidence and complete/final/hosted gates remain
+required; no goal criterion or deployed trust state is completed here.

@@ -300,6 +300,7 @@
     {"name":"CacheDependencies.inspectLink","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheDependencies.materialize","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheDependencies.physicalTree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CacheDependencies.readMaterialization","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheDependencies.toolPin","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheDependencies.toolPins","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheDependencies.verify","owner":"@beep/repo-cli","family":"tooling","conforms":true},

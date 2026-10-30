@@ -38,8 +38,7 @@ import { resolveWorktreeContext } from "../Worktree/index.ts";
 import { collectCacheCensus, collectCacheTaskSelection, joinCacheCensusPlan } from "./Cache.census.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceFaultProxy } from "./Cache.conformance.proxy.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
-import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
-import { verifyCacheDependencies } from "./Cache.dependencies.ts";
+import { readCacheDependencyMaterialization, verifyCacheDependencies } from "./Cache.dependencies.ts";
 import {
   decodeCacheExperimentText as decodeText,
   hashCacheExperimentExecutable as hashExecutable,
@@ -111,6 +110,7 @@ import {
 import { CacheQualificationService } from "./Cache.service.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
+import type { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import type { CachePilotRequest } from "./Cache.pilot.schemas.ts";
 
 const CachePilotRunType = S.toType(CachePilotRun);
@@ -392,10 +392,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       return Tuple.make(current, activationRequest);
     });
     const [current, activationRequest] = yield* resolveReviewedActivation();
-    const dependencies = yield* readCacheEvidenceBytes(root, request.dependencies).pipe(
-      Effect.flatMap(decodeText),
-      Effect.flatMap(JsonStringCodec(CacheDependencyMaterialization).decode)
-    );
+    const dependencies = yield* readCacheDependencyMaterialization(root, request.dependencies);
     yield* verifyCacheDependencies(root, dependencies);
     const dependencyNodes = yield* validatePilotClosure(current, dependencies);
     const expectedTasks = A.sort(

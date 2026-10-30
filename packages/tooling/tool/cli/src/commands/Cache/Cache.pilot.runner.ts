@@ -26,11 +26,10 @@ import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceSocketProxy } from "./Cache.conformance.proxy.ts";
 import { CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
-import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
+import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
 import {
   decodeCacheExperimentText,
   hashCacheExperimentExecutable,
-  readCacheEvidenceBytes,
   readCacheExperimentBytes,
   requireCacheLinuxX64,
   requireCacheSupervisorCapture,
@@ -197,10 +196,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
         const root = yield* fs.realPath(runnerRoot);
         const bun = yield* fs.realPath(process.execPath);
         const node = yield* fs.realPath(request.pilot.nodeExecutable);
-        const dependencies = yield* readCacheEvidenceBytes(sourceRoot, request.pilot.dependencies).pipe(
-          Effect.flatMap(decodeCacheExperimentText),
-          Effect.flatMap(JsonStringCodec(CacheDependencyMaterialization).decode)
-        );
+        const dependencies = yield* readCacheDependencyMaterialization(sourceRoot, request.pilot.dependencies);
         const git = yield* runCapturedStreams({
           command: "/usr/bin/git",
           args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],

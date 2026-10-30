@@ -153,6 +153,8 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
         `${endpoint}/other`,
         `${endpoint}/?other=1`,
         `${endpoint}/#other`,
+        `${endpoint}/?`,
+        `${endpoint}/#`,
         Str.replace("https://", "https://user:password@")(endpoint),
       ];
       const targets = yield* Effect.forEach(
@@ -166,6 +168,14 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
         { concurrency: 1 }
       );
       const candidates = A.appendAll(targets, [
+        CacheConformanceTarget.make({
+          ...runtime.target,
+          baseUrl: yield* S.decodeEffect(S.URLFromString)("http://127.0.0.1:19427/?"),
+        }),
+        CacheConformanceTarget.make({
+          ...runtime.target,
+          baseUrl: yield* S.decodeEffect(S.URLFromString)("http://127.0.0.1:19427/#"),
+        }),
         CacheConformanceTarget.make({
           ...runtime.target,
           storage: O.some({ ...storage, bucket: "unapproved-bucket" }),

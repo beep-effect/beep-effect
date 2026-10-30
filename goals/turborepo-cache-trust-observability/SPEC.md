@@ -615,3 +615,20 @@ representative windows remain required. Reverse it by stopping any future
 consumers before reverting the additive runtime/receipt path. The ordinary R2
 service and CI launcher remain on their existing route; this commit activates
 no consumer, key, grant, service, bucket or subscription.
+
+
+### Canonical upload profile and shared dependency evidence
+
+- 2026-10-30: Validate the complete canonical loopback and account-specific R2
+  URLs rather than maintaining parallel component predicates. Retain every
+  approval, capability, namespace, policy and executable-pin requirement. The
+  bounded profile also refuses empty query/fragment delimiters, which do not
+  belong in the approved endpoint identity. Counterexamples recompute matching
+  approval digests first, so approval agreement alone cannot bypass the profile.
+- Reuse one existing dependency owner's contained, digest-verified UTF-8/schema
+  reader across the pilot and both supervisors. Installed-tree verification
+  remains a separate requirement. The generated valid-byte replacement control
+  must fail if digest verification is removed, and the source restores exactly.
+- Reverse by reverting the additive extraction/profile change before enabling
+  a consumer that requires it. No running cache, credential, signing mode,
+  backend selection, paid service or proof threshold changes in this repair.
