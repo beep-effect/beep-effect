@@ -1,12 +1,12 @@
 {
   "schemaVersion": "cache-producer-execution-coverage-repair/v1",
   "authority": "Source-bound local component proof only. Canonical complete package/final and current-head hosted checks remain required; no qualification or deployment authority.",
-  "sourceParent": "84cffa097b39aade35dfad643445c56b880f2e72",
+  "sourceParent": "ac7f801a43b57d5297b465ff5cb6f202dd0734e1",
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
-    "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "db07db496221a047a59772281599c0433d621ccac1e7c2c09cc9d5835f75cd85",
+    "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "2cff3f5221d1f0f34ed3d4a3b5415794dea4a3a47d5b71943c0cad9be494b736",
     "packages/tooling/tool/cli/test/cache-workflow.test.ts": "41a02883405bf985c3a08f342eb2391a33c7b10ffc395662ff786fc58bbd1b03"
   },
   "hostedFailure": {
@@ -21,39 +21,49 @@
   },
   "repair": [
     "Select the exact schema decoder at each trusted internal supervisor caller; preserve capture, issuer and complete matrix validation.",
-    "Exercise owned upload success and graph failure through a real scoped Unix listener with deterministic native-task execution; assert one PUT and no GET, fresh dependencies and complete summary.",
+    "Exercise owned upload success and graph failure through Effect layerTest TCP transport with deterministic native-task execution; assert the fixed worker socket-path request, one PUT and no GET, fresh dependencies and complete summary. The dedicated private-socket test separately proves actual Unix transport/lifetime.",
     "Exercise approved workflow upload callback/receipt composition, changed-activation refusal, source-revision refusal and admitted local-experiment success/refusal."
   ],
   "verification": {
     "node153": {
       "exit": 0,
-      "elapsedSeconds": 31.911,
-      "finishedAt": "2026-10-30T07:18:13.274682+00:00"
+      "elapsedSeconds": 32.067,
+      "finishedAt": "2026-10-30T08:15:38.347516+00:00"
     },
     "bun153": {
       "exit": 0,
-      "elapsedSeconds": 16.955,
-      "finishedAt": "2026-10-30T07:18:30.246224+00:00"
+      "elapsedSeconds": 16.686,
+      "finishedAt": "2026-10-30T08:16:10.423590+00:00"
     },
     "quick": {
       "exit": 0,
-      "elapsedSeconds": 11.879,
-      "finishedAt": "2026-10-30T07:17:41.337071+00:00"
+      "elapsedSeconds": 11.996,
+      "finishedAt": "2026-10-30T08:16:38.380538+00:00"
     },
-    "inlinePolicy": {
+    "rootRulePolicy": {
       "exit": 0,
-      "elapsedSeconds": 0.232,
-      "finishedAt": "2026-10-30T07:17:29.440568+00:00"
+      "elapsedSeconds": 3.121,
+      "finishedAt": "2026-10-30T08:14:57.529832+00:00"
+    },
+    "effectPolicy": {
+      "exit": 0,
+      "elapsedSeconds": 38.361,
+      "finishedAt": "2026-10-30T08:17:24.694228+00:00"
     },
     "fallowAudit": {
       "exit": 0,
-      "elapsedSeconds": 8.449,
-      "finishedAt": "2026-10-30T07:18:38.712124+00:00"
+      "elapsedSeconds": 8.568,
+      "finishedAt": "2026-10-30T08:18:00.436589+00:00"
     },
     "fallowHealth": {
       "exit": 0,
-      "elapsedSeconds": 5.884,
-      "finishedAt": "2026-10-30T07:18:44.613083+00:00"
+      "elapsedSeconds": 5.894,
+      "finishedAt": "2026-10-30T08:18:16.884439+00:00"
+    },
+    "inlinePolicy": {
+      "exit": 0,
+      "elapsedSeconds": 0.235,
+      "finishedAt": "2026-10-30T08:18:58.024943+00:00"
     }
   },
   "focusedCoverage": {
@@ -114,9 +124,9 @@
     "baselineRelaxed": false
   },
   "nativeFactoryInterop": {
-    "scope": "One test-only node:http import supplies the native factory explicitly required by NodeHttpServer.make for a real Unix listener. Effect owns serving, request IO and scoped shutdown.",
-    "diagnostic": "nodeBuiltinImport disabled only on that import, with the reason adjacent. No production import or global policy change.",
-    "reversal": "Use an Effect-owned native factory when one is exposed; preserve the actual Unix lifecycle subject."
+    "status": "removed after hosted policy rejection",
+    "scope": "Use Effect NodeHttpServer.layerTest for TCP upload composition, preserving fixed worker socket-path assertion. Existing cache-private-socket.test.ts proves native Unix transport and lifecycle separately.",
+    "diagnostic": "No node:http import or diagnostic suppression; all 130 enabled installed rules remain configured as errors. No new policy exemption."
   },
   "attribution": {
     "emptyCoverageFilterWasPassingCoverage": false,
@@ -248,5 +258,131 @@
       "Match named owned-upload and failed-source cases before the existing mutation/source verdict; preserve every positive/refusal control."
     ],
     "waiversOrLoweredBaselines": false
+  },
+  "beforeHostedDirectiveRepair": {
+    "sourceParent": "84cffa097b39aade35dfad643445c56b880f2e72",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
+      "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "db07db496221a047a59772281599c0433d621ccac1e7c2c09cc9d5835f75cd85",
+      "packages/tooling/tool/cli/test/cache-workflow.test.ts": "41a02883405bf985c3a08f342eb2391a33c7b10ffc395662ff786fc58bbd1b03"
+    },
+    "verification": {
+      "node153": {
+        "exit": 0,
+        "elapsedSeconds": 31.911,
+        "finishedAt": "2026-10-30T07:18:13.274682+00:00"
+      },
+      "bun153": {
+        "exit": 0,
+        "elapsedSeconds": 16.955,
+        "finishedAt": "2026-10-30T07:18:30.246224+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 11.879,
+        "finishedAt": "2026-10-30T07:17:41.337071+00:00"
+      },
+      "inlinePolicy": {
+        "exit": 0,
+        "elapsedSeconds": 0.232,
+        "finishedAt": "2026-10-30T07:17:29.440568+00:00"
+      },
+      "fallowAudit": {
+        "exit": 0,
+        "elapsedSeconds": 8.449,
+        "finishedAt": "2026-10-30T07:18:38.712124+00:00"
+      },
+      "fallowHealth": {
+        "exit": 0,
+        "elapsedSeconds": 5.884,
+        "finishedAt": "2026-10-30T07:18:44.613083+00:00"
+      }
+    },
+    "focusedCoverage": {
+      "authority": "Current-source local focused V8 diagnostic. Canonical complete final and hosted coverage still required.",
+      "runtime": "Node V8",
+      "testCount": 153,
+      "files": {
+        "Cache.pilot.runner.ts": {
+          "sourceSha256": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
+          "current": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "unchangedFloors": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "meetsFloors": true
+        },
+        "Cache.pilot.ts": {
+          "sourceSha256": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
+          "current": {
+            "branches": 86.25,
+            "functions": 88.43,
+            "lines": 91.51,
+            "statements": 91.32
+          },
+          "unchangedFloors": {
+            "branches": 86.09,
+            "functions": 87.95,
+            "lines": 91.23,
+            "statements": 91.04
+          },
+          "meetsFloors": true
+        },
+        "Cache.workflow.ts": {
+          "sourceSha256": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
+          "current": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "unchangedFloors": {
+            "branches": 100,
+            "functions": 100,
+            "lines": 100,
+            "statements": 100
+          },
+          "meetsFloors": true
+        }
+      },
+      "emptyFilterAttemptsCountAsCoverage": false,
+      "baselineRelaxed": false
+    },
+    "nativeFactoryInterop": {
+      "scope": "One test-only node:http import supplies the native factory explicitly required by NodeHttpServer.make for a real Unix listener. Effect owns serving, request IO and scoped shutdown.",
+      "diagnostic": "nodeBuiltinImport disabled only on that import, with the reason adjacent. No production import or global policy change.",
+      "reversal": "Use an Effect-owned native factory when one is exposed; preserve the actual Unix lifecycle subject."
+    },
+    "head": "ac7f801a43b57d5297b465ff5cb6f202dd0734e1",
+    "completePackage": {
+      "exit": 0,
+      "elapsedSeconds": 1054.843,
+      "finishedAt": "2026-10-30T08:06:20.558947+00:00"
+    },
+    "normalPublication": {
+      "outcome": "success",
+      "pushed": true,
+      "elapsedMs": 628223
+    }
+  },
+  "hostedDirectiveRepair": {
+    "head": "ac7f801a43b57d5297b465ff5cb6f202dd0734e1",
+    "run": 41022184364,
+    "job": 123952286988,
+    "check": "Heavy / Lint Policy",
+    "attribution": "introduced by this component; narrow diagnostic directive forbidden by existing collector",
+    "status": "local repair verified; new committed-source complete package/final/hosted proof remains required",
+    "allReviewThreadsRead": true,
+    "reviewThreadsAtRead": 0,
+    "earlierNodeFixtureGuardAttempt": "Two targeted tests initially failed on an unavailable isTcpAddress guard. Use installed NetAddress.isInetAddress; both targeted controls and full Node/Bun suites then pass."
   }
 }

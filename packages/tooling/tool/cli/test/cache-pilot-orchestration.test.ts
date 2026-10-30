@@ -1,8 +1,4 @@
 import * as NodeBuffer from "node:buffer";
-// NodeHttpServer.make requires the native factory for this real Unix listener;
-// all serving, request IO and scoped shutdown remain owned by NodeHttpServer.
-// @effect-diagnostics-next-line nodeBuiltinImport:off
-import * as NodeHttp from "node:http";
 import * as NodeZlib from "node:zlib";
 import {
   CacheActivationPreview,
@@ -57,6 +53,7 @@ import { afterEach, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -64,12 +61,14 @@ import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
+import * as NetAddress from "effect/net/NetAddress";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -763,8 +762,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       })
     );
   const runUpload = Effect.fn("PilotOrchestrationTest.runUpload")(function* () {
-    const socket = path.join(root, "upload.sock");
-    const server = yield* NodeHttpServer.make(NodeHttp.createServer, { path: socket });
+    const serverContext = yield* Layer.build(NodeHttpServer.layerTest);
+    const server = Context.get(serverContext, HttpServer.HttpServer);
+    const address = server.address;
+    if (!NetAddress.isInetAddress(address))
+      return yield* CacheCommandError.new("Owned upload test server did not bind TCP.");
     const uploads = yield* Ref.make(A.empty<string>());
     yield* server.serve(
       Effect.gen(function* () {
@@ -781,7 +783,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     );
     const socketRoute = vi.spyOn(NodeHttpClient, "makeAgent").mockImplementation((options) => {
       expect(options?.socketPath).toBe("/cache-upload.sock");
-      return actual.makeAgent({ socketPath: socket });
+      // The composition fixture routes the fixed worker address to Effect's
+      // ephemeral TCP server. cache-private-socket.test.ts owns Unix transport.
+      return actual.makeAgent({ defaultPort: address.port });
     });
     const result = yield* runCacheSignedPilotUploadWorker(
       root,

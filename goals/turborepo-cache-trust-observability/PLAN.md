@@ -673,3 +673,13 @@ schema policy and the fixture exit rule's Fallow score. Both are repaired in
 the same component. The fresh 153-case replays pass on each runtime, with
 current quick, inline, Fallow audit/health and unchanged Node coverage floors
 passing. Normal publication and complete committed-source proof still follow.
+
+
+Hosted Lint Policy at ac7f rejected the fixture's import-scoped diagnostic
+suppression. The complete package audit had passed on that head. Remove the
+native HTTP import and suppression, use Effect's ephemeral TCP server for
+upload composition, and keep the dedicated real Unix transport test. The
+fixed socket-path assertion and successful PUT/failed-graph assertions remain.
+Re-run root tsgo-rule policy, both runtime suites, normal publication, and
+current-head package/final/hosted checks before ready; the earlier head's
+passes are historical evidence only.

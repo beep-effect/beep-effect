@@ -1069,8 +1069,8 @@ generated issue away.
   because the workspace coverage owner uses a different root. Assert the exact
   three report members before comparing counters; a green test exit alone is
   not coverage proof.
-- The real Node Unix listener requires the factory accepted by Effect's
-  NodeHttpServer. Keep the interop reason beside its single import directive.
+- The first upload fixture used a native server factory; hosted directive
+  policy subsequently rejected its scoped suppression (see the receipt below).
   ESM namespace exports cannot be redefined directly; hoisted Vitest spying
   needs its direct mocks import and the actual original implementation.
 - Formatting removes an inferred Boolean parameter annotation that the Effect
@@ -1090,3 +1090,18 @@ codec compilations and one extended fixture exit rule. Run the narrow root
 policy and changed-file Fallow controls during fixture editing, then retain
 the normal publication gate. Module-scoped codec reuse and named match cases
 fix the findings; no threshold, fixture assertion or coverage floor changes.
+
+
+### Hosted directive policy catches a fixture interop exception, 2026-10-30
+
+PR #2368 at ac7f passed the complete package audit and normal publication, but
+Heavy / Lint Policy rejected the test-only `nodeBuiltinImport:off` directive.
+The root directive collector rejects next-line exceptions even with an adjacent
+reason; quick package checks did not cover it. This was introduced by this PR.
+Use Effect's existing `NodeHttpServer.layerTest` for the upload composition
+fixture and route its agent to an ephemeral TCP port. Keep its fixed socket-path
+assertion and actual PUT/failed-graph controls. The separate private-socket test
+continues to prove native Unix transport and lifetime. Remove the import and
+directive rather than exempting another file. Replay `beep quality tsgo-rules`
+before the next normal publication; retain the failed hosted log and require
+fresh source-bound proof. No production policy or coverage floor is relaxed.

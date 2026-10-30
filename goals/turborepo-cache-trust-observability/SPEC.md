@@ -644,11 +644,11 @@ no consumer, key, grant, service, bucket or subscription.
   write-only access, complete fresh closure and failed-graph refusal. Cover the
   workflow upload composition, independent activation/source refusal and the
   admitted local route. These controlled tests grant no producer authority.
-- `NodeHttpServer.make` requires a native server factory to bind the real Unix
-  listener. Permit the one test-only `node:http` factory import with an adjacent,
-  import-scoped `nodeBuiltinImport` directive; Effect continues to own serving,
-  request IO and shutdown. Reverse this interop exception when Effect exposes a
-  native factory. No production HTTP implementation or global policy changes.
+- The upload composition fixture uses `NodeHttpServer.layerTest` and an ephemeral
+  TCP port. It asserts the worker's fixed Unix-agent request before routing the
+  test agent to that port; `cache-private-socket.test.ts` separately owns actual
+  Unix transport and scoped lifetime proof. Remove the rejected test-only native
+  HTTP import and diagnostic suppression; no policy exemption is introduced.
 - Preserve every coverage floor. The current focused Node diagnostic meets all
   three files' floors; empty initial include-filter reports count as no coverage.
   Full committed-source package/final/hosted proof, reviews and rollout gates
