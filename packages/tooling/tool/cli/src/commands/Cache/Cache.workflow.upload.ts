@@ -19,7 +19,7 @@ import {
 } from "./Cache.conformance.schemas.ts";
 import { classifyCacheConformanceBackendResult } from "./Cache.conformance.wire.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
-import { CacheHostedProducerUpload } from "./Cache.workflow.github.schemas.ts";
+import { CacheHostedProducerUpload } from "./Cache.workflow.upload.schemas.ts";
 import type { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 import type { CacheProtocolNativeSummary } from "./Cache.protocol.runner.schemas.ts";
 

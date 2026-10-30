@@ -4,6 +4,7 @@ import {
   CachePilotRequest,
   CacheProducerBinding,
   CacheProducerBundle,
+  CacheSignedPilotReceipt,
   CacheSignedPilotRequest,
   CacheToolchainSnapshot,
 } from "@beep/repo-cli/commands/Cache";
@@ -26,7 +27,7 @@ import {
   CacheRuntimeProcess as StepExec,
 } from "@beep/repo-cli/test/Cache";
 import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
-import { CacheEvidenceReference, CacheTaskContract } from "@beep/repo-configs/cache";
+import { CacheClientPin, CacheEvidenceReference, CacheTaskContract } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
@@ -37,6 +38,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -108,10 +110,15 @@ const inspectedFixture = Effect.fn("WorkflowTest.inspectedFixture")(function* ()
 
 const supervisedFixture = Effect.fn("WorkflowTest.supervisedFixture")(function* () {
   const base = yield* inspectedFixture();
-  const { root, path, fs, bundle, workflow } = base;
+  const { root, path, fs, bundle: inspectedBundle, workflow } = base;
+  const bundle = CacheProducerBundle.make({
+    ...inspectedBundle,
+    pilot: CacheSignedPilotReceipt.make({ ...inspectedBundle.pilot, sourceRevision: workflow.revision }),
+  });
   const contract = yield* S.decodeUnknownEffect(CacheTaskContract)(contractInput);
   const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
     ...bundleInput.pilot,
+    sourceRevision: workflow.revision,
     protocolClient: bundle.protocol.observation.client,
     workflowRevision: workflow.revision,
     workflowImplementation: yield* hashCacheProducerWorkflow(workflow),
@@ -158,13 +165,14 @@ const supervisedFixture = Effect.fn("WorkflowTest.supervisedFixture")(function* 
           : fs.realPath(file),
     })
   );
-  return { ...base, directory, binding, request, signed, protocol, admission, run };
+  return { ...base, bundle, directory, binding, request, signed, protocol, admission, run };
 });
 
 it.layer(
   Layer.mergeAll(
     NodeCrypto.layer,
     NodeServices.layer,
+    FetchHttpClient.layer,
     FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
     Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) }))
   ),
@@ -208,6 +216,41 @@ it.layer(
       );
       const error = yield* inspectCacheProducerWorkflow(root).pipe(Effect.flip);
       expect(error.message).toContain("Workflow revision changed during inspection");
+    })
+  );
+  it.effect("refuses an unapproved client or channel before starting either native phase", () =>
+    Effect.gen(function* () {
+      for (const field of ["channel", "client"]) {
+        const f = yield* supervisedFixture();
+        const changed =
+          field === "channel"
+            ? "canary"
+            : CacheClientPin.make({ ...f.request.pilot.client, sha256: Sha256Hex.make(Str.repeat(64)("b")) });
+        assertTrue(Reflect.set(f.request.pilot, field, changed));
+        const result = yield* f.run.pipe(Effect.result);
+        expect(f.signed).not.toHaveBeenCalled();
+        expect(f.protocol).not.toHaveBeenCalled();
+        Result.match(result, {
+          onSuccess: () => expect.fail("Workflow accepted an independently unapproved request"),
+          onFailure: (error) => expect(error.message).toContain("independently approved client or channel"),
+        });
+        vi.restoreAllMocks();
+      }
+    })
+  );
+  it.effect("snapshots the caller request before starting supervised execution", () =>
+    Effect.gen(function* () {
+      const f = yield* supervisedFixture();
+      f.signed.mockImplementation(() =>
+        Effect.sync(() => {
+          assertTrue(Reflect.set(f.request, "sourceRoot", f.path.join(f.root, "unapproved-source")));
+          return f.bundle.pilot;
+        })
+      );
+      const observed = yield* f.run;
+      expect(observed.observation).toEqual(f.bundle);
+      expect(O.getOrThrow(A.head(f.signed.mock.calls))[1].sourceRoot).toBe(f.root);
+      expect(f.request.sourceRoot).toBe(f.path.join(f.root, "unapproved-source"));
     })
   );
   it.effect("issues only the supervised bundle after all three identity checks", () =>

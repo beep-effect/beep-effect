@@ -775,3 +775,26 @@ Vitest truncates assertion strings in JSON failure messages, so the receipt
 wrapper verifies the unique test plus identifying assertion prefixes rather
 than requiring untruncated prose. Both providers now prove all four fixture
 metrics at 100%, and the proxy exceeds its existing floors.
+
+
+### Source aliases and owned upload execution
+
+A synthetic filesystem probe reproduced a confinement gap: a private file under
+source `.beep/cache/experiments` was absent at its original host path but readable
+through `/fixture/.beep/cache/experiments`. Read-only mounts are not read denial.
+Private supervisor and experiment storage now lives outside all input mounts;
+the source-visible alias is refused before writing a request. Retain original
+observations and require a fresh actual native boundary proof. Five current
+qualification records are excluded; none grants reuse and no state was changed.
+See `closed-producer-upload-checkpoint.json` for exact source bindings and limits.
+
+The implementation check caught use of removed Effect v3 `Effect.if`; the current
+Effect source and Option dispatch provide the supported equivalent. Five nested
+Redacted calls were rewritten to their pipe form. A missing test value import was
+fixed, and private storage preparation was extracted as its own resource concern
+to meet the unchanged Fallow cognitive limit. No floor or suppression was added.
+The first deliberate request-guard removal produced a null serialized Effect
+failure in Vitest JSON. Assert that no worker started before matching the typed
+result; both source-removal controls then fail with clear assertions and restore
+the original source bytes exactly. These are controlled unit counterexamples,
+not protected native producer proof.

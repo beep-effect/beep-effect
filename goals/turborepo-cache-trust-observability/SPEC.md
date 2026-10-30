@@ -484,3 +484,26 @@ The local process report does not satisfy those deployment or observation gates.
   backend results, native task/byte capture, the approved supervisor and immutable
   protected publication remain required. Reversal leaves the companion unwired
   and keeps the existing loopback observer. No live service or credential changes.
+
+
+### Closed upload execution and private scratch boundary
+
+- 2026-10-29: Bind the upload target descriptor and artifact key to independent
+  approval; snapshot the caller request and runtime, require the approved client,
+  channel and live normal-source revision/profile, and authenticate the owned
+  upload join inside the existing producer bundle. Reuse the bounded observer,
+  full native summary, complete task closure and private Unix transport. Runtime
+  descriptor agreement alone does not prove adapter process or storage-grant
+  identity; the protected entrypoint still needs that actual evidence.
+- An actual synthetic bwrap probe found that source-contained private files were
+  readable through the guest checkout alias even while their original paths were
+  absent. Move supervisor captures and pilot scratch outside every input mount,
+  into scoped mode0700 temporary directories, and remove the source experiment
+  writable bind. An explicit read-only dependency link preserves worker imports.
+  Retain the failing layout as a counterexample. Earlier confinement observations
+  do not establish the repaired native boundary. The qualification ledger has five
+  excluded entries and no qualified grants; no ledger transition is needed here.
+- Reversal keeps this source path unwired and stops any future trial consumers
+  before reverting it. Ordinary R2, the bucket, live grants and signing activation
+  are unchanged. Actual native execution, protected publication, credential
+  handoff, rotation, rollback and representative windows remain required.

@@ -201,6 +201,8 @@ export const validateCacheProducerBinding = Effect.fn("Producer.validateCachePro
 ) {
   yield* validateCacheProducerBundle(bundle, expected.protocolClient);
   const receipt = bundle.pilot;
+  if (O.isSome(expected.uploadApproval) !== O.isSome(bundle.upload))
+    return yield* CacheCommandError.new("Producer upload presence differs from its independently approved target.");
   if (
     receipt.sourceRevision !== expected.sourceRevision ||
     receipt.channel !== expected.channel ||

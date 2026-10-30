@@ -66,7 +66,8 @@ export {
   extractCacheSignedPilotLog,
   inspectCacheSignedPilotArchive,
 } from "../commands/Cache/Cache.pilot.capture.ts";
-export { runCachePilotForTesting } from "../commands/Cache/Cache.pilot.ts";
+export { runCacheProducerUploadExperiment } from "../commands/Cache/Cache.pilot.runner.ts";
+export { runCachePilotForTesting, runCacheSignedPilotUploadWorker } from "../commands/Cache/Cache.pilot.ts";
 export {
   hashCacheProducerContract,
   initializeCacheProducerIssuer,
@@ -97,17 +98,22 @@ export {
 export { verifyCacheHostedProducerUpload } from "../commands/Cache/Cache.workflow.github.ts";
 export {
   CacheProducerObservation,
+  CacheProducerUploadRuntime,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
 } from "../commands/Cache/Cache.workflow.schemas.ts";
 export {
+  assertCacheProducerUploadRuntime,
   assertCacheProducerWorkflowLocation,
   assertCacheProducerWorkflowProfile,
   collectCacheProducerWorkflowFiles,
+  hashCacheProducerUploadKey,
+  hashCacheProducerUploadTarget,
   hashCacheProducerWorkflow,
   inspectCacheProducerWorkflow,
   runCacheProducerWorkflow,
 } from "../commands/Cache/Cache.workflow.ts";
+export { CacheProducerUploadApproval } from "../commands/Cache/Cache.workflow.upload.schemas.ts";
 export { joinCacheProducerUpload } from "../commands/Cache/Cache.workflow.upload.ts";
 export * as CacheRuntimeFileGuards from "../internal/cli/FsGuards.ts";
 export * as CacheRuntimeProcess from "../internal/process/StepExec.ts";

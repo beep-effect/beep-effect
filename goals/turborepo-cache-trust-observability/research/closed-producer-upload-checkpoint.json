@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "cache-owned-upload-execution-checkpoint/v1",
+  "authority": "Source preparation and bounded local controls only. No protected publication, real R2 producer execution, deployment, or qualification is accepted.",
+  "sourceBaseRevision": "098770ea2c41e13797cbf6da04bdcc1fa8278977",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "8f8eefcba55057ce3b5d5426b0617c37a23997ccaaa0f75af7cb8626e3e2ece5",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "68bade758fe1d2b638ce8e69e43810faae1b1da656ae847815b56fa65cd4f67d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.schemas.ts": "7d6afcca4a506f9978a5f39c9cf1a47dc6b25cda715c74343175cc4afe0a5d39",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "25627eaf3996c1d4f1c76476e40169805bc644beda2270a1f2d322841065624e",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts": "68b170f6df4d657c3a6f6846439479d3e8d26ac5ed3bd4eb2daf9e98a6be067b",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "cc528fc02581ff26f27eb3fc9074f7ed3b0a7b93b700a81cc1688b5519113377",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "a15aec324c251e03ace9efb61b3569f366a94ef40e254023a8ee0f7a9049ac69",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts": "8be78307be1aa3d48ead9f1358fcffe11ba5fee1fae6dcdc99e22dcb5dd52e9c",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "94771f16534932c6a23feffbdcc51d7c62d68ec1a78212497cfc1944e4b51fda",
+    "packages/tooling/tool/cli/test/cache-producer-upload.test.ts": "157c8d709b3434e5581d7b3fb5f769c4bd7f045752b51f3e49b6aec85beab88f",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "8ebaafa87f3a9fea8e15f881713cffc734fe89dafd98cf13ce1c67396edbdfc8",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dfe5468b8307a6a0570c2cea656b025bc1f8ac3b882cce96fa793c9227330736",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "e0737dc183eae119c5e8dab35e0f88693a802754af1ec26173fe25750ff98292",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.schemas.ts": "e59833c4a6458cc48180793920c402cb819d05372261e83790aaf9c1cc3f8ea1",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "95f39794d504327a20e67818a26fdbc6b16452335b50c06b394f6fecd277518c",
+    "packages/tooling/tool/cli/test/helpers/cache-producer-upload-fixture.ts": "ee6b682cf6ee2f3c654a3f03767b65fb6d47b6d577d0cce4bec8dcea9edf2f8a"
+  },
+  "implementation": {
+    "approval": "Independently approved target descriptor and artifact-key fingerprints must appear together; runtime and request are snapshotted before asynchronous work. Client/channel and live normal-source revision/profile are checked before native phases.",
+    "worker": "Owns the upload-only native invocation and whole native summary; parent owns the bounded complete upload observer. The child receives only writer bearer and artifact key, through an explicit environment, and one private Unix socket.",
+    "publication": "Whole expected task closure and complete settled capture are joined; upload evidence is included inside the independently authenticated producer bundle. No uploaded summary/report JSON is accepted as authority.",
+    "limits": "Target descriptor identity does not attest to the actual adapter process or IAM grant. The protected entrypoint must still own or verify the pinned adapter lifecycle and runtime/grant receipt."
+  },
+  "confinementRepair": {
+    "defect": "Source-contained temporary files were hidden at original host paths but readable through the guest checkout alias. A read-only bind prevents writes but permits reads.",
+    "syntheticBwrapProbe": [
+      {
+        "case": "old-original",
+        "exit": 1,
+        "readable": false,
+        "expected": false,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      },
+      {
+        "case": "old-guest-alias",
+        "exit": 0,
+        "readable": true,
+        "expected": true,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      },
+      {
+        "case": "new-original",
+        "exit": 1,
+        "readable": false,
+        "expected": false,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      },
+      {
+        "case": "new-guest-alias",
+        "exit": 1,
+        "readable": false,
+        "expected": false,
+        "validProbeExit": true,
+        "stderrBytes": 0
+      }
+    ],
+    "probeScope": "Actual unprivileged filesystem boundary probe, synthetic files only. No real secrets or native Turbo task were used.",
+    "repair": "Fresh scoped supervisor and experiment directories under private /tmp, mode0700, outside source/worktree/Git/dependency mounts; no source experiments writable bind. Worker resolves packages through an explicit node_modules link to the approved read-only runner tree.",
+    "controls": "Controlled supervisor test rejects a source-visible storage alias before request serialization; real filesystem cleanup assertions cover the scoped directory.",
+    "qualificationImpact": {
+      "ledgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+      "entries": 5,
+      "qualifiedEntries": 0,
+      "allCurrentEntriesExcluded": true,
+      "stateChanged": false
+    },
+    "historicalEvidence": "Earlier source-contained synthetic file-confinement observations are insufficient for current acceptance. Repaired actual native confinement must be proved again. No evidence of persistent issuer material or production credential exposure was found."
+  },
+  "verification": {
+    "focusedBeforeFinalAssertionRefinement": {
+      "node": {
+        "exit": 0,
+        "tests": 94,
+        "files": 6,
+        "seconds": 13.219
+      },
+      "bun": {
+        "exit": 0,
+        "tests": 94,
+        "files": 6,
+        "seconds": 10.442
+      },
+      "scope": "Same production implementation; afterward one negative test was rewritten to assert no worker call before inspecting the typed result so deliberately removed guards produce serializable assertions."
+    },
+    "quick": {
+      "exit": 0,
+      "seconds": 13.505,
+      "scope": "Before that final test assertion refinement; current integrated replay remains required."
+    },
+    "fallow": {
+      "exit": 0,
+      "seconds": 11.258,
+      "introducedFindings": 0
+    },
+    "guardRemovalControls": {
+      "schemaVersion": "cache-owned-producer-guard-controls/v1",
+      "recordedAt": "2026-10-29T23:55:04.198413+00:00",
+      "scope": "Actual temporary removal of source guards in owned checkout; controlled unit seams, not native Turbo proof",
+      "controls": [
+        {
+          "case": "source-storage-alias",
+          "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+          "sourceSha256": "8f8eefcba55057ce3b5d5426b0617c37a23997ccaaa0f75af7cb8626e3e2ece5",
+          "mutantSha256": "30420c93b8c1eccc581fe86b60cc74f29a9fc74861c0972dfc14b52df6d582d3",
+          "test": "refuses a private storage alias inside a source mount before writing the request",
+          "exit": 1,
+          "failedTests": 1,
+          "selectedGuardTestFailed": true,
+          "reportSha256": "c9972081c0292bebe099c19f7343bae0b706dc88fe67b133c784683f8705e449",
+          "seconds": 2.994
+        },
+        {
+          "case": "client-channel-approval",
+          "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sourceSha256": "a15aec324c251e03ace9efb61b3569f366a94ef40e254023a8ee0f7a9049ac69",
+          "mutantSha256": "45d1c7ee3d17a0e98f3a636fec671a5fe473bbf5ab3325c63ea9a65c9c9a72cf",
+          "test": "refuses an unapproved client or channel before starting either native phase",
+          "exit": 1,
+          "failedTests": 1,
+          "selectedGuardTestFailed": true,
+          "reportSha256": "a3e4ef2e8cc82c49f93b93a48d4e28fa90e06fa26c73adf4d9aa66237ee83189",
+          "seconds": 3.035
+        }
+      ],
+      "allSourceBytesRestoredExactly": true
+    },
+    "remaining": [
+      "current complete package audit and Docgen",
+      "normal publication and hosted checks",
+      "consume reviewed runtime alias and socket repairs through main",
+      "current normal-source stable/canary native matrix and repaired confinement",
+      "pinned actual adapter/grant proof and protected immutable producer publication",
+      "signed trial credential handoff, rotation, rollback, and representative windows"
+    ]
+  },
+  "activePosture": {
+    "ordinaryR2": "unchanged",
+    "signedTrial": "inactive",
+    "qualificationChanges": 0,
+    "cloudChanges": 0
+  },
+  "reversal": "Keep the upload path unwired; stop trial consumers before reverting it. No production configuration or credential is changed by this source preparation."
+}

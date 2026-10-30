@@ -543,3 +543,11 @@ all four fixture metrics are 100% in V8/Istanbul, and proxy metrics exceed the
 committed floors. Two intended-failure source removals restore exactly. The
 earlier default full package replay retains its original four-file scope;
 fresh combined-source final and hosted acceptance remain required.
+
+
+### Owned upload preparation checkpoint, 2026-10-29
+
+Closed execution, paired independent approval and private storage repair are in
+`research/closed-producer-upload-checkpoint.json`. Keep all acceptance criteria
+unproven until current native, hosted/protected publication and deployed trust
+evidence pass; integrate accepted runtime and socket repairs through main first.

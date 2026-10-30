@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "bf23b5cd142b215c45147a391f4de76a3e9c05599e206ee09441a36bbdb88cfc",
+  "specSha256": "a6c8d08537ed58b9892d276b362608500ee6e41e1ba8278f985af3fa11414083",
   "acceptance": [
     {
       "id": "AC-01",
@@ -21,7 +21,8 @@
       "source": "SPEC.md:157",
       "requirement": "Reader, fork, writer, backend and storage roles satisfy the independent capability matrix; tenant escape and direct invocation negatives pass.",
       "status": "unproven",
-      "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology."
+      "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology.",
+      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
     },
     {
       "id": "AC-03",
@@ -35,14 +36,16 @@
       "source": "SPEC.md:159",
       "requirement": "Protected producer receipts and direct result classes preserve provenance/fault causes despite Turbo recomputation.",
       "status": "unproven",
-      "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient."
+      "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient.",
+      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
     },
     {
       "id": "AC-05",
       "source": "SPEC.md:160",
       "requirement": "Logs/metrics/receipts pass synthetic-secret and artifact-content safety tests with bounded labels, volume and retention.",
       "status": "unproven",
-      "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps."
+      "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps.",
+      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
     },
     {
       "id": "AC-06",
@@ -56,7 +59,8 @@
       "source": "SPEC.md:162",
       "requirement": "Relevant package/protocol checks pass; failures are attributed and no introduced regression remains.",
       "status": "unproven",
-      "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure."
+      "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure.",
+      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
     },
     {
       "id": "AC-08",
@@ -298,5 +302,6 @@
     "sha256": "7bbaf5cbadc0541e129d7982811c4c1e4ae3f0a3a06e4fedaca421d80c37307f",
     "authority": "Transport component only; no production or qualification authority.",
     "scope": "Original production and native-test bytes unchanged; new test-only in-process coverage/control file passes51 cases per provider and quick verification. Prior complete package scope retained; fresh combined-source final still required. No full-goal acceptance."
-  }
+  },
+  "ownedUploadPreparation": "Source-bound checkpoint retains the actual guest-alias counterexample; corrected native confinement and protected publication are pending. No acceptance criterion is complete."
 }

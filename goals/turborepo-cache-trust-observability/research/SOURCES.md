@@ -428,3 +428,5 @@ transport. Two source-removal controls fail their intended assertions and restor
 the exact source. The production implementation and original test stay byte
 identical to the prior full package replay; current integrated final proof
 remains required for the new test file and combined source.
+
+- `closed-producer-upload-checkpoint.json`: owned upload preparation, paired target/key approval, source/runtime snapshots, actual synthetic guest-alias counterexample and scoped private storage repair; current protected native acceptance remains pending.

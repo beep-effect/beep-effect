@@ -5,6 +5,8 @@ import {
   CacheProducerEnvelope,
 } from "@beep/repo-cli/commands/Cache";
 import {
+  CacheHostedProducerUpload,
+  CacheProducerUploadApproval,
   CacheRuntimeFileGuards,
   hashCacheProducerContract,
   initializeCacheProducerIssuer,
@@ -70,6 +72,39 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
         );
       }),
     { arbitrary: fcRuns(20) }
+  );
+
+  it.effect("authenticates owned upload bytes inside the complete producer payload", () =>
+    Effect.gen(function* () {
+      const { binding, receipt } = yield* setup();
+      const approved = CacheProducerBinding.make({
+        ...binding,
+        uploadApproval: O.some(
+          CacheProducerUploadApproval.make({
+            targetSha256: Sha256Hex.make(Str.repeat(64)("c")),
+            artifactKeySha256: Sha256Hex.make(Str.repeat(64)("e")),
+          })
+        ),
+      });
+      const issuer = yield* makeCacheProducerIssuer(approved);
+      const upload = CacheHostedProducerUpload.make({
+        taskHash: "0123456789abcdef",
+        archiveSha256: Sha256Hex.make(Str.repeat(64)("d")),
+        archiveBytes: 17,
+        status: 200,
+      });
+      const observed = CacheProducerBundle.make({ ...receipt, upload: O.some(upload) });
+      const envelope = yield* issuer.issue(observed);
+      expect(yield* issuer.verify(envelope, observed)).toEqual(observed);
+      const altered = CacheProducerBundle.make({
+        ...observed,
+        upload: O.some(CacheHostedProducerUpload.make({ ...upload, archiveBytes: 18 })),
+      });
+      assertTrue(yield* issuer.verify(envelope, altered).pipe(Effect.isFailure));
+      assertTrue(yield* issuer.issue(receipt).pipe(Effect.isFailure));
+      const historical = yield* makeCacheProducerIssuer(binding);
+      assertTrue(yield* historical.issue(observed).pipe(Effect.isFailure));
+    })
   );
 
   it.effect("validates ordinary approval against its direct configuration and toolchain pins", () =>
@@ -341,6 +376,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
     it.effect("cannot rebind an existing issuer by changing caller expectations", () =>
       Effect.gen(function* () {
         const { directory, binding, receipt, envelope } = yield* persistentSetup();
+        const encodedBinding = yield* S.encodeEffect(CacheProducerBinding)(binding);
         for (const patch of [
           { sourceRevision: Str.repeat(40)("0") },
           { workflowRevision: Str.repeat(40)("0") },
@@ -356,8 +392,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           { signedRootConfiguration: Str.repeat(64)("0") },
           { key: { ...input.key, epoch: "other" } },
           { key: { ...input.key, profile: "other" } },
+          { uploadApproval: { targetSha256: Str.repeat(64)("0"), artifactKeySha256: Str.repeat(64)("1") } },
         ]) {
-          const changed = yield* S.decodeUnknownEffect(CacheProducerBinding)({ ...binding, ...patch });
+          const changed = yield* S.decodeUnknownEffect(CacheProducerBinding)({ ...encodedBinding, ...patch });
           const result = yield* openCacheProducerIssuer(directory, changed).pipe(Effect.result);
           result.pipe(Result.isFailure, assertTrue);
           if (Result.isFailure(result)) expect(result.failure.message).toContain("different workflow");
@@ -474,9 +511,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
       Effect.gen(function* () {
         const { fs, path, directory, binding, receipt, envelope } = yield* persistentSetup();
         const verifier = yield* openCacheProducerVerifier(directory);
-        const changed = yield* S.decodeEffect(CacheProducerBinding)({
+        const changed = CacheProducerBinding.make({
           ...binding,
-          policyDigest: Str.repeat(64)("0"),
+          policyDigest: Sha256Hex.make(Str.repeat(64)("0")),
         });
         yield* fs.writeFileString(
           path.join(directory, "approval.json"),
