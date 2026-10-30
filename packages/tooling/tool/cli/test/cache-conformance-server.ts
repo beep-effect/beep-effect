@@ -1,14 +1,12 @@
 /**
  * In-test Remote Cache server and target helpers shared by the conformance tests.
  */
-import { CacheConformanceBearers, CacheConformanceTarget } from "@beep/repo-cli/commands/Cache";
-import { BunHttpServer } from "@effect/platform-bun";
+import { CacheConformanceBearers, CacheConformanceTarget, serveCacheLoopback } from "@beep/repo-cli/commands/Cache";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Headers from "effect/http/Headers";
-import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as O from "effect/Option";
@@ -169,8 +167,7 @@ export const makeConformanceServer = Effect.fn("test.makeConformanceServer")(fun
     store: yield* Ref.make(HashMap.empty<string, Stored>()),
     tags: yield* Ref.make(A.empty<string>()),
   };
-  const server = yield* BunHttpServer.make({ hostname: "127.0.0.1", port: 0 });
-  yield* server.serve(
+  const url = yield* serveCacheLoopback(
     handle(state).pipe(
       Effect.map((reply) =>
         O.match(O.fromUndefinedOr(mode.responseCacheResult), {
@@ -178,9 +175,10 @@ export const makeConformanceServer = Effect.fn("test.makeConformanceServer")(fun
           onSome: (value) => HttpServerResponse.setHeader(reply, "x-beep-cache-result", value),
         })
       )
-    )
+    ),
+    128 * 1024 * 1024
   );
-  return { url: HttpServer.formatAddress(server.address), tags: Ref.get(state.tags) };
+  return { url, tags: Ref.get(state.tags) };
 });
 
 export const targetFor = (options: {
