@@ -301,3 +301,14 @@ binds changed runner source bytes. Historical claims above keep their dates.
 
 - `external-verdict-source-review.json`: current advisory and expiring-exception source review; one whole-command keep-fresh disposition, no fresh advisory verdict or reuse grant.
 - `generator-boundary-source-review.json`: all nine configured generator write boundaries, 23 exact source bindings and explicit offline/pure decomposition leads; no execution, final exclusion or qualification.
+
+### Distinct publication identity, 2026-10-30
+
+- [Published-head checkpoint](published-head-identity-checkpoint.json) binds the
+  existing Yeet verdict/handler repair and real disposable-Git tests. The attempt
+  retains its starting head and proof facts; the append-optional publication
+  identity is emitted only for an owned successful Git push with stable head
+  from post-commit preparation through proof and publication. Failed pushes and
+  head changes produce no verified publication identity. Older records decode
+  without the new field. Local focused evidence grants no cache qualification,
+  hosted status, deployment or full-goal acceptance.

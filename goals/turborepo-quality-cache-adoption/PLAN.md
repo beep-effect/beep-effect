@@ -233,3 +233,19 @@ this grants no final exclusion or reuse. No generator was executed and no
 cache flag, qualification state or production runtime changed. See
 [the external review](research/external-verdict-source-review.json) and
 [the generator review](research/generator-boundary-source-review.json).
+
+### Publication identity repair, 2026-10-30
+
+The feature-report publication exposed an attribution gap between the initial
+attempt head and the commit created during that run. The existing verdict now
+has a separate optional publication identity. Both publication paths capture
+the prepared commit before proof and check it around the push. Real local Git
+fixtures and guard-removal controls verify successful publication, proof-time
+head drift, push-time head drift, failed pushes and plans without Git pushes.
+The prove-first route now has direct success and proof-time drift cases on the
+same fixture. Moving its capture after proof fails the new regression case in
+both runtimes; the source is restored exactly after each control. Current
+focused proof has 195 passing cases per runtime. The prior source passed
+complete package/final checks; current final/hosted acceptance and review remain
+required after this test-seam repair. This component does not qualify or activate
+any computation, cache epoch or producer profile.

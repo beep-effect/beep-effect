@@ -58,7 +58,8 @@
     "research/remaining-mutating-fixer-disposition-review.json",
     "research/remaining-persistent-service-disposition-review.json",
     "research/external-verdict-source-review.json",
-    "research/generator-boundary-source-review.json"
+    "research/generator-boundary-source-review.json",
+    "research/published-head-identity-checkpoint.json"
   ],
   "agentLaunchers": [
     {
