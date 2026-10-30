@@ -812,3 +812,13 @@ not protected native producer proof.
   a deliberate error-path fixture rather than incidental concurrent filesystem
   behavior. The full package audit and documentation pass; fresh final and
   hosted acceptance remain in progress.
+
+
+### Strict policy fields need an explicit exec lane
+
+The ordinary adapter intentionally strips policy fields from its environment.
+Reusing that entrypoint for a signed experiment would discard its strict mode,
+namespace and role. Add an opt-in pinned exec lane and inspect the actual child
+environment with inert credentials. Removing the checksum refusal or admitting
+the artifact key fails the corresponding control. These checks cover the exec
+boundary; preserve separate real-process, resource, grant and R2 proof.

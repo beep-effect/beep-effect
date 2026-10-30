@@ -437,3 +437,12 @@ identical to the prior full package replay; current integrated final proof
 remains required for the new test file and combined source.
 
 - `closed-producer-upload-checkpoint.json`: owned upload preparation, paired target/key approval, source/runtime snapshots, actual synthetic guest-alias counterexample and scoped private storage repair; current protected native acceptance remains pending.
+
+
+### Signed adapter exec controls
+
+The signed-adapter-launch checkpoint binds the explicit launcher, real child
+environment observations, default infra package audit/Docgen and two private
+source-copy controls. Its selected test executable is inert. It establishes no
+R2 capability, protected producer authority or resource/listener attestation.
+The ordinary adapter lifecycle and cache configuration remain unchanged.

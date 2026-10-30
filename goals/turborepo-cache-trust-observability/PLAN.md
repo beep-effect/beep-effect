@@ -551,3 +551,14 @@ Closed execution, paired independent approval and private storage repair are in
 `research/closed-producer-upload-checkpoint.json`. Keep all acceptance criteria
 unproven until current native, hosted/protected publication and deployed trust
 evidence pass; integrate accepted runtime and socket repairs through main first.
+
+
+### Signed adapter exec prerequisite
+
+The explicit signed launcher and its actual child-environment checks pass,
+as do the default infra package audit and Docgen. Two private source-copy
+mutants fail the intended checksum and artifact-key-isolation assertions.
+See [the checkpoint](research/signed-adapter-launch-checkpoint.json).
+The parent-owned adapter lifecycle, actual R2/protected producer execution and
+all remaining goal gates stay open. The separate producer branch still needs
+the accepted prerequisite integration from PR2367 through main.

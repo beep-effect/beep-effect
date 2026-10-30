@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "febc955266dba6fb3603b48c32ab135014437413ef4fb6029efa6eaecf20e0bb",
+  "specSha256": "640cbd9ada24cedbb67fe2c5eb8e009158a6b6f2ed6c265064d1089c6877a577",
   "acceptance": [
     {
       "id": "AC-01",
@@ -317,5 +317,11 @@
   "priorSpecSha256BeforeUploadDirectoryIntegration": {
     "ownedUpload": "a6c8d08537ed58b9892d276b362608500ee6e41e1ba8278f985af3fa11414083",
     "main": "fe2990a36afd1a640a44b1092d2c934abadfa1f2344e35d777b631a02e8f2a22"
+  },
+  "priorSpecSha256AtSignedAdapterExec": "febc955266dba6fb3603b48c32ab135014437413ef4fb6029efa6eaecf20e0bb",
+  "signedAdapterLaunchCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/signed-adapter-launch-checkpoint.json",
+    "sha256": "a9ecca51b701c49b32ed49d58bf7c71dceeb215d80b769ea4ddeb8cabb13d04a",
+    "scope": "Pinned exec-boundary component: process/lifecycle checks, default infra audit+Docgen and two private source-copy negatives. Actual owned backend, protected R2 publication, qualification and rollout remain pending."
   }
 }

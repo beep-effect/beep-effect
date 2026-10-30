@@ -519,3 +519,16 @@ The local process report does not satisfy those deployment or observation gates.
   before reverting it. Ordinary R2, the bucket, live grants and signing activation
   are unchanged. Actual native execution, protected publication, credential
   handoff, rotation, rollback and representative windows remain required.
+
+
+### Explicit signed adapter exec decision
+
+Reuse the existing adapter launcher through an explicit `serve-signed` mode.
+The ordinary installed service keeps its existing entrypoint. The new mode
+requires an independently approved binary/digest, namespace and role, and sends
+only the backend environment. The artifact signing key remains client-only.
+This decision closes the missing launch-environment prerequisite without adding
+a service or granting producer authority. The parent must still own and attest
+the real process/listener, resource envelope, approved grants and cleanup.
+Revert the additive mode to reverse it before use; no live activation accompanies
+this source change. See the source-bound launch checkpoint.

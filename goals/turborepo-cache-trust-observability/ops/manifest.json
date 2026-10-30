@@ -86,7 +86,8 @@
     "research/fs-guards-directory-coverage-checkpoint.json",
     "research/producer-capture-checkpoint.json",
     "research/private-socket-checkpoint.json",
-    "research/closed-producer-upload-checkpoint.json"
+    "research/closed-producer-upload-checkpoint.json",
+    "research/signed-adapter-launch-checkpoint.json"
   ],
   "agentLaunchers": [
     {

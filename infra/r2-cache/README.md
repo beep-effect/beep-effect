@@ -393,3 +393,24 @@ absent, different or mixed versions get an unfiltered scan. Other advisory IDs
 remain active. The source review and panic regression are retained in
 `research/adapter-dependency-review.json` under the trust packet. No shared
 repository security exceptions change.
+
+
+### Signed trial exec boundary
+
+`adapter.sh serve-signed` prepares the exec boundary for the separately qualified
+signed trial. It requires `R2_SIGNED_ADAPTER`, `R2_SIGNED_ADAPTER_SHA256`,
+`BEEP_CACHE_NAMESPACE` and `BEEP_CACHE_ACCESS_ROLE` (`reader` or `writer`), alongside
+the existing endpoint, bucket, storage credentials and loopback bearer. The owner
+selects the executable and digest from independent hardened-build approval.
+Matching a caller-supplied digest alone grants no approval or producer authority.
+
+The mode verifies the executable pin before exec and forces `signed-v1`. The
+backend receives only its approved storage/bearer environment and the three
+policy fields. It receives no artifact signing key. Ordinary `serve` and
+`start-ci` keep their existing environment and behavior.
+
+This command supplies exec only. Its parent still owns private launch storage,
+the process/listener identity, the existing resource caps and bounded cleanup.
+Real signed exchanges, immutable producer publication and rollout require their
+own current proof. Run `infra/r2-cache/check.sh` for the synthetic exec-boundary
+and existing lifecycle checks; these checks make no R2 requests.
