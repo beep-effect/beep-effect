@@ -87,6 +87,7 @@ export {
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
   openCacheProducerVerifier,
+  readCacheProducerExecutionProfile,
   revokeCacheProducerIssuer,
   validateCacheProducerApproval,
   validateCacheProducerBinding,
@@ -108,6 +109,7 @@ export {
 } from "../commands/Cache/Cache.workflow.github.schemas.ts";
 export { verifyCacheHostedProducerUpload } from "../commands/Cache/Cache.workflow.github.ts";
 export {
+  CacheProducerExecutionProfile,
   CacheProducerObservation,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
@@ -122,6 +124,7 @@ export {
   hashCacheProducerUploadTarget,
   hashCacheProducerWorkflow,
   inspectCacheProducerWorkflow,
+  loadCacheProducerExecutionRuntime,
   runCacheProducerWorkflow,
 } from "../commands/Cache/Cache.workflow.ts";
 export { CacheProducerUploadApproval } from "../commands/Cache/Cache.workflow.upload.schemas.ts";

@@ -712,22 +712,28 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   and delayed adapter-frame refusals. Guard-removal controls must fail.
 - Reverse by restoring the local queue and its bounded final-pull check; retain
   the corrected schema-encoded controls. No trust, rollout or proof gate changes.
-### Conformance fixture bind ownership (2026-10-30)
 
-The shared conformance test server reuses the existing scoped loopback server
-with its bounded `EADDRINUSE` retry, preserving the previous 128 MiB body limit.
-This fixes an inherited parallel-test bind race without adding a second retry
-implementation. Reverting the fixture call reverses the change; no runtime
-cache, credential or production policy changes are involved.
 
-### Independent upload approval refusal, 2026-10-30
 
-The owned upload rejects absent independent backend approval before quality
-admission, adapter acquisition, socket creation or worker execution. The current
-regression asserts both the error and the absence of those effects. Reordering
-admission before the approval check must fail the test. The private worker capture
-requires its issuer option explicitly: both internal callers already supply it,
-and the public experiment retains its existing optional argument and default.
-This removes an unreachable private fallback, not a safety check or coverage floor.
-The reversal path is the preceding producer-execution commit; no deployment or
-credential change accompanies this repair. Whole-goal acceptance remains unproven.
+### Closed producer command and private execution settings, 2026-10-30
+
+- Add `cache producer-run` as the operational caller of the existing owned
+  producer workflow. Its arguments select an experiment request and bounded
+  output; issuer, destination and credential selection come from supervisor
+  configuration.
+- `BEEP_CACHE_PRODUCER_STORE` selects an already provisioned owner-only store.
+  Reuse its independently approved `approval.json` and existing issuer material;
+  read the nonsecret target/executable profile from private `runtime.json` using
+  the same bounded, no-follow, single-link record reader. Opening neither
+  creates a store nor changes its approved binding.
+- Authenticate approval and the destination digest before looking up signing,
+  storage or transport capabilities. Apply the existing upload-profile checks
+  and reject any artifact-key value reused as a backend capability. Keep all
+  resolved capabilities redacted and unserialized.
+- Provide the command's actual HTTP and admission services at its command
+  boundary. Preserve existing approval-read diagnostics while sharing record IO.
+- Reversal: remove this command and its private execution profile; retain the
+  approved issuer, observations and ordinary R2 setup. No production activation
+  or protected workflow execution is implied by this source change. Explicit
+  trusted provisioning, actual runner qualification, immutable publication,
+  normal-source qualification and the complete observation windows remain gates.

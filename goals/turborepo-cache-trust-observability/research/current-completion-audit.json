@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "bd73698b8b56d96f228e110c19dd879df587861e622189ac90243621779a4515",
+  "specSha256": "0b1e7f483a8e08cf65ea768ef505dd69d2ef15b63cfa585b2e849c08205931d6",
   "acceptance": [
     {
       "id": "AC-01",
@@ -40,7 +40,9 @@
       "requirement": "Protected producer receipts and direct result classes preserve provenance/fault causes despite Turbo recomputation.",
       "status": "unproven",
       "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient.",
-      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
+      "partialEvidence": [
+        "research/closed-producer-upload-checkpoint.json"
+      ]
     },
     {
       "id": "AC-05",
@@ -433,5 +435,7 @@
   "priorSpecSha256AtAcceptedSecurityMerge": {
     "local": "0c6289dde74055a394df45acf940fbe9cea28db1d87ae01fd9ab719caf294a25",
     "accepted": "35423c3fba45ba4be7c3f22126060d94f7165c57c8358fd07fbc622d345a73e2"
-  }
+  },
+  "priorSpecSha256AtProtectedEntrypoint": "7c8a4475cd3db0ef372870fc9bce0e3b2c574cdc40ed645c266631cbfa4cb6ec",
+  "protectedProducerEntrypointCheckpoint": "research/protected-producer-entrypoint-checkpoint.json"
 }

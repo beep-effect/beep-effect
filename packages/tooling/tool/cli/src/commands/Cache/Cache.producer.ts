@@ -19,6 +19,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import * as Tuple from "effect/Tuple";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import {
   currentEffectiveUserIdOption,
@@ -34,9 +35,11 @@ import {
 } from "./Cache.producer.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import { CacheProducerExecutionProfile } from "./Cache.workflow.schemas.ts";
 
 const encodeApproval = S.encodeEffect(S.fromJsonString(CacheProducerApproval));
 const decodeApproval = S.decodeUnknownEffect(S.fromJsonString(CacheProducerApproval));
+const decodeExecutionProfile = S.decodeUnknownEffect(S.fromJsonString(CacheProducerExecutionProfile));
 const encodeContract = S.encodeEffect(S.fromJsonString(CacheTaskContract));
 const encodeBinding = S.encodeEffect(S.fromJsonString(CacheProducerBinding));
 const decodeBinding = S.decodeUnknownEffect(S.fromJsonString(CacheProducerBinding));
@@ -476,26 +479,68 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
   };
 });
 
-const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(function* (directory: string) {
+const readPrivateProducerRecord = Effect.fn("Producer.readPrivateRecord")(function* <Decoded>(
+  directory: string,
+  name: string,
+  description: string,
+  decode: (text: string) => Effect.Effect<Decoded, S.SchemaError>
+) {
   const path = yield* Path.Path;
   const uid = yield* inspectCacheProducerDirectory(directory);
-  const file = path.join(directory, "approval.json");
+  const file = path.join(directory, name);
   const limit = 16384;
-  const diagnostic = "Producer approval must be a bounded private single-link file.";
+  const diagnostic = `Producer ${description} must be a bounded private single-link file.`;
   const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
-  if (info.size === BigInt(0) || info.size > BigInt(limit))
-    return yield* CacheCommandError.new("Producer approval must be a bounded private single-link file.");
+  if (info.size === BigInt(0) || info.size > BigInt(limit)) return yield* CacheCommandError.new(diagnostic);
   const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
-  if (O.isNone(read.contents)) return yield* CacheCommandError.new("Producer approval is unavailable.");
+  if (O.isNone(read.contents)) return yield* CacheCommandError.new(`Producer ${description} is unavailable.`);
   const bytes = read.contents.value;
   const text = yield* Effect.try({
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-    catch: () => CacheCommandError.new("Producer approval must be valid UTF-8."),
+    catch: () => CacheCommandError.new(`Producer ${description} must be valid UTF-8.`),
   });
-  const approval = yield* decodeApproval(text);
+  return yield* decode(text);
+});
+
+const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(function* (directory: string) {
+  const approval = yield* readPrivateProducerRecord(directory, "approval.json", "approval", decodeApproval);
   yield* validateCacheProducerApproval(approval);
   return approval;
 }, CacheCommandError.mapError("Producer approval is unavailable or unsafe."));
+
+/**
+ * Read execution settings from an independently selected private issuer store.
+ *
+ * **Details**
+ * Opening verifies the approval against existing issuer material and revocation
+ * before returning the nonsecret runtime profile. It never provisions, replaces
+ * or rebinds an issuer. Submitted experiment requests do not select this store.
+ *
+ * **Example** (Plan a private configuration read)
+ * ```ts
+ * import { readCacheProducerExecutionProfile } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * const read = readCacheProducerExecutionProfile("/private/cache-producer")
+ * console.assert(Effect.isEffect(read))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const readCacheProducerExecutionProfile = Effect.fn("Producer.readExecutionProfile")(function* (
+  directory: string
+) {
+  const approval = yield* readIssuerApproval(directory);
+  yield* openCacheProducerIssuer(directory, approval.binding);
+  const profile = yield* readPrivateProducerRecord(
+    directory,
+    "runtime.json",
+    "execution profile",
+    decodeExecutionProfile
+  );
+  return Tuple.make(approval.binding, profile);
+}, CacheCommandError.mapError("Cannot read the independently approved producer execution profile."));
 
 /**
  * Open a verification-only capability from independently provisioned private approval.

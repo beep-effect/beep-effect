@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "cache-protected-producer-entrypoint-checkpoint/v1",
+  "authority": "Local component implementation and controls only. Dependent lane remains unpublished until the producer component is accepted on main. No hosted producer, credential grant, qualification, activation or full-goal acceptance.",
+  "sourceParent": "22b21f37d4a2d79ddfc687b4eca6867f4a0805f1",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "a975be3f21a3405c2207b75e0bf53737f0878ecab3963967e54382016916ce37",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "c99012629fc4b74934a2d6be53b58352f39fd822636a445108d387cc21c36d4c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "cc0bcac59f927a1a9c62529f02369fa2230c283a8c192e9954237732907e721d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "138942eb85b528d149cdf9240088e0bd98d8c50e854c2db1c117e54a2e9e3b14",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "dc41e415f6a4fe5e0c0833f7802c75e2b1d50c032d089484d0ac20012f16e1a2",
+    "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "fb6ed215680d5cb175b95c8fd361597d75894be8cc9e7908d3c31cf925802cbe",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "65e02977fd2f7caa574f88154928bbebfc59c7c189f315d028ab76d1d12747d5",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "485aa949ba5c99fac56968a8a98d2ca5e6b5da9981ddc7c02e363bce18034f6b"
+  },
+  "implementation": [
+    "Closed producer-run request/output CLI; private pre-provisioned store is selected by supervisor configuration.",
+    "Owner-only bounded no-follow single-link execution profile, unchanged existing approval diagnostics and revocation-before-capability lookup.",
+    "Independent destination identity before any credential provider; reject signing/backend capability aliases.",
+    "Provide required HTTP and memory services at the command boundary without widening the public dispatch context."
+  ],
+  "verification": {
+    "node95": {
+      "exit": 0,
+      "elapsedSeconds": 8.095,
+      "finishedAt": "2026-10-30T06:55:27.195887+00:00"
+    },
+    "bun95": {
+      "exit": 0,
+      "elapsedSeconds": 15.452,
+      "finishedAt": "2026-10-30T06:21:39.115066+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 12.928,
+      "finishedAt": "2026-10-30T06:57:49.785096+00:00"
+    },
+    "effectPolicy": {
+      "exit": 0,
+      "elapsedSeconds": 37.181,
+      "finishedAt": "2026-10-30T06:51:27.071901+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 11.199,
+      "finishedAt": "2026-10-30T06:34:52.851593+00:00"
+    },
+    "fallowHealth": {
+      "exit": 0,
+      "elapsedSeconds": 90.447,
+      "finishedAt": "2026-10-30T06:57:36.840607+00:00"
+    },
+    "docgen": {
+      "exit": 0,
+      "elapsedSeconds": 39.154,
+      "finishedAt": "2026-10-30T06:56:06.364592+00:00"
+    },
+    "restoredGuardNode20": {
+      "exit": 0,
+      "elapsedSeconds": 2.827,
+      "finishedAt": "2026-10-30T07:03:28.966407+00:00"
+    }
+  },
+  "artifactKeyGuardControl": {
+    "recordedAt": "2026-10-30T07:02:03.518292+00:00",
+    "nativeExit": 1,
+    "expectedSixAssertionFailures": true,
+    "sourceRestoredExactly": true,
+    "originalSourceSha256": "138942eb85b528d149cdf9240088e0bd98d8c50e854c2db1c117e54a2e9e3b14",
+    "mutation": "Remove only the artifact-key/backend-capability separation guard; leave all schema, digest, namespace, destination and launcher validation intact.",
+    "authority": "Local controlled negative test only; no real secret, runtime, issuer grant or deployment."
+  },
+  "reviewedNativeResource": "One EV010 judgment retains physical owner/mode/link/revocation semantics through the canonical typed inventory writer. The subsequent default policy check introduced zero findings.",
+  "attribution": {
+    "parallelBatchNodeTerminated": true,
+    "parallelBatchDocgenKilled": true,
+    "thoseTerminationsArePasses": false,
+    "singleSerialReplaysPassed": true,
+    "globalResourceCauseProven": false
+  },
+  "remaining": [
+    "Replay only the unpublished lane after parent acceptance, then complete default package/final/hosted checks and reviews.",
+    "Independent trusted provisioning, real protected workflow invocation, AWS user-manager and pinned-toolchain preflight, immutable actual publication.",
+    "Actual human bootstrap receipt and reference verification; signed activation remains off.",
+    "Normal-source canary diagnosis, task and feature qualification/adoption, production trust and 7/7/14-day observations, final same-PR reflection/lifecycle."
+  ],
+  "productionChanges": false
+}

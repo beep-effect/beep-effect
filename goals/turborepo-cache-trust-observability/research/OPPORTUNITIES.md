@@ -1266,3 +1266,40 @@ require a new complete final check for this source wave.
 A first coverage launch was refused by the shell's unmatched-glob rule before
 any test process started. Quoting the literal exclusion argument allowed the
 intended run; no test or coverage rule was changed.
+## Closed producer CLI and current canary evidence, 2026-10-30
+
+- Adding the operational producer caller exposed missing `HttpClient` and
+  `MemoryStats` requirements in the cache command's public Effect context.
+  Existing command-dispatch checks caught the regression. Providing the services
+  at the new command boundary restored the original context contract; do not
+  widen every caller or test to absorb the leak.
+- Sharing private record reads changed an existing approval-unavailable message.
+  The established disappearing-file control failed. Preserve the caller's record
+  description in the shared reader; keep the assertion intact.
+- A normal-source stable matrix passed, while the canonical canary invocation
+  refused with `Pilot dependency was unexpected or reused an unqualified artifact.`
+  The first bounded diagnostic confirmed that guard. Preserve the original
+  refusal while gathering actual task/cache-origin facts; a later diagnostic
+  passing its fresh executions does not retroactively explain the failure.
+- Two observational-helper defects were attributed separately: an extra closing
+  parenthesis, and an attempted summary-directory read during native dry planning.
+  Parse the helper first, observe only summary-producing executions and prevent
+  observer IO from changing a task result. These diagnostics alter an ephemeral
+  worker for observation and cannot establish qualification.
+- The canonical worktree helper defaults to `origin/main`. A dependent local
+  lane must name `--base` explicitly. The clean new lane was moved to the intended
+  parent without resetting, merging unaccepted branches or rewriting published
+  history; the empty initial branch had no unique commits.
+
+## Serial proof recovery and native resource judgment, 2026-10-30
+
+- Launching eight independent checks together produced terminated Node and
+  documentation processes and opaque Fallow child failures. No kernel or task
+  cgroup OOM evidence established one cause. A serial Fallow audit passed with
+  zero introduced findings. Serialize heavyweight replays and retain every
+  termination as failed proof rather than inferring source correctness.
+- The execution-profile suite requires actual filesystem ownership, mode, link
+  count and revocation semantics. Review the single EV010 provenance judgment
+  through the typed inventory writer, preserving existing rows; replacing the
+  physical filesystem would change the boundary tested. The default policy
+  replay must still pass after regeneration.

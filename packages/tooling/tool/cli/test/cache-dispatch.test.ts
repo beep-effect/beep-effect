@@ -40,6 +40,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -396,6 +397,39 @@ describe("cache qualification command dispatch", () => {
         expect(yield* f.run(["activation", "--request", "/outside-request.json"]).pipe(Effect.isFailure)).toBe(true);
         expect(f.calls).toEqual([]);
       })
+    );
+  });
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("requires independent producer configuration without dispatching an experiment", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        expect(
+          yield* f
+            .run(["producer-run", "--request", f.requests.baseline])
+            .pipe(
+              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+              Effect.isFailure
+            )
+        ).toBe(true);
+        expect(yield* errorText).toContain("An independently provisioned producer store is required.");
+        expect(f.calls).toEqual([]);
+      })
+    );
+    it.effect.each(["--store", "--issuer", "--target", "--signing-key"])(
+      "refuses request-side producer authority selection through %s",
+      (flag) =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          const forbidConfiguration = ConfigProvider.make(() =>
+            Effect.die("Producer configuration was read before invalid arguments were rejected.")
+          );
+          expect(
+            yield* f
+              .run(["producer-run", "--request", f.requests.baseline, flag, "/untrusted-selection"])
+              .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
+          ).toBe(true);
+          expect(f.calls).toEqual([]);
+        })
     );
   });
 });

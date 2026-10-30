@@ -10,6 +10,7 @@ import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -24,13 +25,14 @@ import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
+import { loadCacheConformanceBearers } from "./Cache.conformance.ts";
 import { decodeCacheExperimentText, readCacheEvidenceBytes, readCacheExperimentBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain } from "./Cache.fingerprint.ts";
 import { inspectCacheLinkedFile } from "./Cache.linker.ts";
 import { runCacheProducerUploadExperiment, runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import { CacheProducerBinding, CacheProducerBundle } from "./Cache.producer.schemas.ts";
-import { openCacheProducerIssuer } from "./Cache.producer.ts";
+import { openCacheProducerIssuer, readCacheProducerExecutionProfile } from "./Cache.producer.ts";
 import { CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
 import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
 import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
@@ -359,6 +361,20 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
   });
   if (O.isNone(owned.adapter) || O.isNone(target.storage))
     return yield* CacheCommandError.new("Producer upload requires approved storage and an owned adapter capability.");
+  if (
+    A.some(
+      [
+        owned.bearers.reader,
+        owned.bearers.writer,
+        owned.bearers.foreign,
+        owned.bearers.unknown,
+        owned.adapter.value.accessKey,
+        owned.adapter.value.secretKey,
+      ],
+      (capability) => Redacted.value(capability) === Redacted.value(owned.signing)
+    )
+  )
+    return yield* CacheCommandError.new("Producer artifact signing must be distinct from backend capabilities.");
   const storage = target.storage.value;
   const endpoint = storage.endpoint;
   const url = target.baseUrl;
@@ -383,6 +399,63 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
     return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
   return O.some(owned);
 });
+
+/**
+ * Load capabilities for an existing independently approved producer store.
+ *
+ * **Details**
+ * Private approval and runtime records are checked before credentials are read.
+ * The destination must match independent approval, and the resulting capability
+ * must satisfy the same target, key and adapter checks as the owned executor.
+ * This never creates an issuer or accepts configuration from an experiment.
+ *
+ * **Example** (Plan capability loading)
+ * ```ts
+ * import { loadCacheProducerExecutionRuntime } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * const load = loadCacheProducerExecutionRuntime("/private/cache-producer")
+ * console.assert(Effect.isEffect(load))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const loadCacheProducerExecutionRuntime = Effect.fn("CacheWorkflow.loadExecutionRuntime")(function* (
+  directory: string
+) {
+  const [binding, profile] = yield* readCacheProducerExecutionProfile(directory);
+  const approval = yield* binding.uploadApproval.pipe(
+    Effect.fromOption(() => CacheCommandError.new("The producer store has no independently approved upload."))
+  );
+  if ((yield* hashCacheProducerUploadTarget(profile.target)) !== approval.targetSha256)
+    return yield* CacheCommandError.new("The private producer destination differs from independent approval.");
+  const capabilities = yield* Config.all({
+    signing: Config.Redacted("TURBO_REMOTE_CACHE_SIGNATURE_KEY"),
+    accessKey: Config.Redacted("R2_ACCESS_KEY_ID"),
+    secretKey: Config.Redacted("R2_SECRET_ACCESS_KEY"),
+  }).pipe(
+    Effect.mapError(() => CacheCommandError.new("Approved producer signing and storage capabilities are required."))
+  );
+  const runtime = CacheProducerUploadRuntime.make({
+    target: profile.target,
+    bearers: yield* loadCacheConformanceBearers(profile.target),
+    signing: capabilities.signing,
+    adapter: O.some(
+      CacheProducerAdapterLaunch.make({
+        executable: profile.adapterExecutable,
+        accessKey: capabilities.accessKey,
+        secretKey: capabilities.secretKey,
+      })
+    ),
+  });
+  const owned = yield* assertCacheProducerUploadRuntime(binding, O.some(runtime)).pipe(
+    Effect.flatMap(
+      Effect.fromOption(() => CacheCommandError.new("Approved producer execution requires an upload capability."))
+    )
+  );
+  return Tuple.make(binding, owned);
+}, CacheCommandError.mapError("Cannot load independently approved producer execution capabilities."));
 
 /**
  * Execute the owned signed pilot and authenticate only its supervised observation.

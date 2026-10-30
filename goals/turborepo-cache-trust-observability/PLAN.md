@@ -715,31 +715,36 @@ controls fail the intended assertions and restore exact source. See the
 Generated inventory/catalog, complete current package/final proof and hosted
 review remain required. This component activates no cache or credential.
 
-### Owned approval refusal coverage repair
-
-`research/producer-approval-refusal-checkpoint.json` binds the current test and
-private worker contract repair to the hosted gap and its immutable coverage
-artifacts. The admission-reordering control fails once for the intended reason;
-176 cases pass per local provider with full scoped runner-file coverage. Current
-full/hosted proof and all nine whole-goal criteria remain unproven.
-
-### Dependency security compatibility checkpoint, 2026-10-31 UTC
-
-The [compatibility checkpoint](research/dependency-security-compatibility-checkpoint.json)
-records the patched dependency and vendored optimizer repair that unblocks
-producer verification. Complete local package proof, 270 Node tests and both
-coverage providers pass; independent legacy vectors preserve the old dialect.
-Both deliberate negative controls fail and restore source exactly. The old
-published head passes Security but predates this compatibility wave; fresh
-hosted proof and review remain required. No qualification or rollout is granted.
 
 
-### Second-phase security review, 2026-10-31 UTC
+### Closed producer CLI follow-through, 2026-10-30
 
-The expansion cap and pairwise-work limit cover different costs. The current
-repair skips optional deduplication above 1,000 alternatives while preserving
-all alternatives. Complete package proof and 273 tests in each runtime pass;
-the exact-boundary, no-comparison and 4,096-alternative watchdog cases pass.
-All three deliberate fault controls fail as expected and restore source exactly.
-The older complete final proof remains historical; publish and prove this new
-wave through the full current-source and hosted/review gates before acceptance.
+- The isolated follow-through lane adds `producer-run`, private execution-profile
+  loading and explicit artifact/backend capability separation. Ninety focused
+  cases across both runtimes and quick lint/check passed before the final CLI
+  refusal cases were added; replay those cases and canonical policy/catalog/
+  documentation checks before publishing.
+- The parent producer component's complete repo-cli audit and Docgen passed on
+  its recorded committed source; its full final and hosted gates retain their
+  own authority. Consume that component through accepted main before publishing
+  this dependent follow-through.
+- Actual normal-source stable execution passed the full local-loopback matrix.
+  The first canonical canary attempt refused dependency freshness; bounded
+  diagnostics remain under investigation. Preserve that refusal and require an
+  unmodified normal CLI replay after attribution. Observational worker prefixes
+  do not grant qualification.
+- The command opens pre-provisioned approval only. A protected hosted caller,
+  explicit trusted provisioning, actual AWS capability preflight, durable
+  credentials, immutable producer publication and every rollout/window obligation
+  remain unfinished. All goal acceptance criteria stay unproven.
+
+
+The isolated closed-entrypoint component now passes 95 focused tests on each
+runtime, quick package checks, scoped Docgen, Fallow audit/health and the default
+Effect test policy. Removing only the artifact/backend key-separation guard
+causes all six intended assertions to fail; exact restoration and the full
+20-case runtime suite then pass. See
+[the entrypoint checkpoint](research/protected-producer-entrypoint-checkpoint.json).
+This unpublished dependent component still needs its accepted parent, complete
+package/final/hosted proof, independent provisioning and an actual protected
+workflow. It does not complete any full-goal criterion or activate the trial.
