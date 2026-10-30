@@ -302,3 +302,16 @@ This supersedes the older eighteen-case observation with current bound output;
 the earlier report remains in Git history. There are two final feature decisions
 and 33 pending reviews. No real computation is qualified or enabled, no semantic
 input is dropped, and every full-goal acceptance remains unproven.
+
+### Asserted native selection semantics, 2026-10-30
+
+The retained [selection driver](research/native-selection-controls.py) passes
+44 cases across stable/canary and strict false/true: 88 dry/execution calls,
+with actual native summaries and output markers. Eight cases have a real
+selected execution; sixteen zero exits do not. Twenty native refusals match
+the intended task/package/path/selector error. Two driver-integrity controls
+refuse optimized Python and catch removal of the strict toggle, then restore
+the source exactly and replay every case.
+The [checkpoint](research/selection-semantics-checkpoint.json) records source,
+pins, scope and remaining real-consumer work. Feature dispositions stay at two
+final and 33 pending; no task qualification or configuration change occurs.

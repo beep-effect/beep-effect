@@ -61,7 +61,10 @@
     "research/native-future-flag-availability.json",
     "research/native-future-flag-availability.py",
     "research/published-head-identity-checkpoint.json",
-    "research/task-descriptions-feature-review.json"
+    "research/task-descriptions-feature-review.json",
+    "research/native-selection-controls.py",
+    "research/native-selection-controls.json",
+    "research/selection-semantics-checkpoint.json"
   ],
   "agentLaunchers": [
     {

@@ -29,7 +29,13 @@
       "correctnessCase": "Mutate upstream source and compare dependent and unrelated task hashes.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "dependsOn"
+      "availabilityTerm": "dependsOn",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Commandless transit dependency retained in the real-task fixture; graph-only behavior compared with strict selection false/true.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
     },
     {
       "feature": "entrypoint-selection",
@@ -56,7 +62,13 @@
       "correctnessCase": "Missing-script and strict-entrypoint fixtures must not emit successful execution evidence.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "--only"
+      "availabilityTerm": "--only",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Package-filtered missing command, explicit missing command, graph-only requests and actual selected execution records.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
     },
     {
       "feature": "affected-selection",
@@ -110,7 +122,13 @@
       "correctnessCase": "Compare positive, empty and invalid filter selection with the root graph.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "--filter"
+      "availabilityTerm": "--filter",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Positive package filter, complete negation, missing package/path, unresolved selector and malformed regex refusals.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
     },
     {
       "feature": "global-and-child-config",
@@ -965,6 +983,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Only this flag varies across the44 cases; all three observed current root flags stay fixed. Real repository adoption remains pending.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
       }
     },
     {
@@ -1020,5 +1044,12 @@
     "unknownControlsRefused": 2,
     "sentinelsExecuted": 0,
     "featuresSemanticallyQualified": 0
+  },
+  "nativeSelectionEvidence": {
+    "cases": 44,
+    "strictVariants": 2,
+    "semanticFlagsQualifiedForRepository": 0,
+    "checkpoint": "selection-semantics-checkpoint.json",
+    "clientChannels": 2
   }
 }

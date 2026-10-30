@@ -308,3 +308,17 @@ workstation's memory protection policy.
   result separately; the recovery grants no new proof or merge authority.
 - Prevention: distinguish authentication failure from an uncertain ref update,
   inspect the actual remote object/ref, and preserve forward-only updates.
+
+### Do not infer execution or dependency closure from selection switches
+
+- Work: establish the pinned task-selection contract. A first broad expectation
+  treated graph-only plans as identical across strict false/true; the native
+  assertion exposed two extra commandless entrypoints in default mode.
+  Both pins also preserve same-name dependencies under `--only`, and sixteen
+  fixture zero exits have no selected execution record.
+- Prevention: retain complete task/edge and actual execution-summary controls
+  before changing selection. Count real selected commands, and classify empty
+  or dependency-only results explicitly; do not equate zero exit with proof.
+- Local tooling: Ruff was absent from PATH; use the existing cached 0.17.2
+  binary for this driver rather than fetching another tool. Its standard UTC
+  formatting rule was applied before the final source-bound replay.

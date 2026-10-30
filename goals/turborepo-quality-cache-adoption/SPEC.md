@@ -398,3 +398,22 @@ review is `research/current-runtime-baseline-review.md`.
   with reviewed maintenance and invalidation costs. This is a final no-change
   feature decision, not a qualification exception or a deferred eligible task.
   All computation, trust, hosted status and observation requirements remain.
+
+### Native task-selection semantics, 2026-10-30
+
+- Retain a bounded native selection driver beside the existing input and
+  availability drivers. The existing entrypoint attachment owner establishes
+  source identity, not this runtime behavior; do not add another runtime owner
+  or qualification state store. Use the exact two pins, finite environments,
+  offline fixture setup, local-only execution and explicit process budgets.
+- Compare strict selection false/true without changing the three fixed flags.
+  Assert transit preservation, explicit missing tasks, graph-only requests,
+  empty selection, filter refusals and actual native execution records. A zero
+  native exit alone must never become successful selected-task evidence.
+- Treat `--only` according to the observed named-task semantics: other-name
+  prerequisites disappear, while same-name transit dependencies remain. Keep
+  real inputs and graph closure intact in any later task qualification.
+- Preserve the current production setting and all 33 unfinished feature reviews
+  until real consumers, remaining selector families and qualified changes are
+  reviewed. Reverse this evidence addition by removing its driver/report and
+  matrix links together; no production setting changes in this component.

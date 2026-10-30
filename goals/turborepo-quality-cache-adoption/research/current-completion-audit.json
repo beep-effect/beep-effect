@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "b5cc4ff0957ff16267722927f3870301597d660b177fd639a874685f3d0ac3d8",
+  "specSha256": "6dd4fa867db490b4ea34c99f1b3a69c0a765ad5006543c5c19912c31e36a87b8",
   "acceptance": [
     {
       "id": "AC-01",
@@ -271,5 +271,7 @@
   "priorSpecSha256BeforePublicationRepairHostedEscape": "d1c909a293cfdecfb08dd544dc40d6f5c0af8b50add3eea31adcbd0eb1338ad4",
   "priorSpecSha256BeforeProveFirstReview": "021bfb72be90e48429519d047dbb29be25474e13f10c54827ad3e1fc7c198d58",
   "priorSpecSha256AtTaskDescriptions": "9ee8292499806305827411bea9e4f60358810c35fa84fcd20b7e08cfd52315c0",
-  "taskDescriptionsFeatureReview": "research/task-descriptions-feature-review.json"
+  "taskDescriptionsFeatureReview": "research/task-descriptions-feature-review.json",
+  "priorSpecSha256AtSelectionSemantics": "b5cc4ff0957ff16267722927f3870301597d660b177fd639a874685f3d0ac3d8",
+  "nativeSelectionSemanticsCheckpoint": "research/selection-semantics-checkpoint.json"
 }

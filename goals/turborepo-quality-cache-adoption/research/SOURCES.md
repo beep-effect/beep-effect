@@ -371,3 +371,5 @@ or deployment authority.
   and the source is restored exactly before the final positive run. This is
   optional-feature evidence, not remote or real-computation qualification.
 - Two feature decisions are final; 33 reviews and all full-goal acceptance remain.
+
+- 2026-10-30: `selection-semantics-checkpoint.json` binds the retained native driver, 44 asserted cases/88 dry-and-execution calls, actual native summaries and two intended negative driver controls. The existing input driver covers single-package hash perturbations; the availability driver covers syntax; neither establishes this multi-workspace selection behavior. All real repository feature and task qualifications remain open.
