@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "39eb95fc1a0f5a4c06d99246fa4e304a8e59eab934ab7e26ed1ab08c845e299f",
+  "specSha256": "9ee8292499806305827411bea9e4f60358810c35fa84fcd20b7e08cfd52315c0",
   "acceptance": [
     {
       "id": "AC-01",
@@ -265,5 +265,9 @@
     "publisherJob": "c38ed02e-282f-4b24-bcf9-add48135149d",
     "publisherResult": "deliberately cancelled after more than thirteen minutes; not a local pass",
     "scope": "Use the standing hosted escape; current full proof, hosted acceptance and review remain required."
-  }
+  },
+  "priorSpecSha256AtPublishedHeadIdentity": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "publicationHeadIdentityCheckpoint": "research/published-head-identity-checkpoint.json",
+  "priorSpecSha256BeforePublicationRepairHostedEscape": "d1c909a293cfdecfb08dd544dc40d6f5c0af8b50add3eea31adcbd0eb1338ad4",
+  "priorSpecSha256BeforeProveFirstReview": "021bfb72be90e48429519d047dbb29be25474e13f10c54827ad3e1fc7c198d58"
 }

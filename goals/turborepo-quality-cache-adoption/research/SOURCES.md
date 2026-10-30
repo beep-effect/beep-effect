@@ -345,3 +345,14 @@ Eighteen synthetic executions and six real dry plans were replayed. The latter
 also ran from outside the checkout, restored each owned fixture and recovered
 each baseline hash. These remain bounded observations, without qualification
 or deployment authority.
+
+### Distinct publication identity, 2026-10-30
+
+- [Published-head checkpoint](published-head-identity-checkpoint.json) binds the
+  existing Yeet verdict/handler repair and real disposable-Git tests. The attempt
+  retains its starting head and proof facts; the append-optional publication
+  identity is emitted only for an owned successful Git push with stable head
+  from post-commit preparation through proof and publication. Failed pushes and
+  head changes produce no verified publication identity. Older records decode
+  without the new field. Local focused evidence grants no cache qualification,
+  hosted status, deployment or full-goal acceptance.

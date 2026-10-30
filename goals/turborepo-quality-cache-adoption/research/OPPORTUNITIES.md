@@ -242,3 +242,69 @@ owner fixes context refresh; do not weaken the exact-head acceptance gate.
   Ruff and packet checks; disclose unfinished broad gates in the PR.
 - Prevention: qualify reusable policy phases and keep publication admission
   separate from broad local proof; do not widen memory capacity or lower gates.
+### Preserve actual publication identity separately, 2026-10-30
+
+While publishing the feature evidence repair, Yeet pushed `1ed7bfa943` but its
+verdict retained the starting `07db932b41` head. The attempt identity is useful
+and immutable; it cannot by itself name the new commit produced in the run.
+Add an optional, independently recorded published commit identity, bound around
+the successful Git push. Refuse a head that changes during that phase, retain
+unknown identity on a failed push, and keep starting proof facts unchanged.
+
+### Attribute full-check worker termination before retry, 2026-10-30
+
+The producer component's full final check at `e9866c4c4ea7` ended with SIGTERM
+errors in two Vitest coverage workers: CLI coverage-artifact tests and cli-kit.
+Their sources match accepted main. Focused Node replays pass all 114 affected
+CLI artifact cases and all 1,396 cli-kit tests. The signal's sender and cause
+remain unproven. Preserve that failed run and permit one unchanged-head full
+retry; investigate the lifecycle before a further retry if termination recurs.
+No coverage floor, expectation, source or required status is relaxed.
+
+
+The system journal subsequently identifies the two victims: `earlyoom` sent
+SIGTERM to two Node/Vitest workers from the producer checkout at 11:14:52-53
+UTC. No later earlyoom signal appeared in the subsequent journal observation.
+The unchanged-head canonical retry then passed every final gate with no skips
+or lowered floors. Keep the original failed run and sender attribution; order
+additional heavy local checks around the active proofs instead of changing the
+workstation's memory protection policy.
+
+### Publication repair duplication gate, 2026-10-30
+
+- Doing: publish the attempt/publication identity repair through Yeet.
+- Evidence: the collected cheap-gate wave identified one introduced Fallow
+  duplication group in the two publication tails. The canonical publisher
+  stopped before pushing. The old-source whole-package audit was interrupted
+  deliberately before repair; it is not a passing proof.
+- Repair: move upstream warning and push-step selection into the existing shared
+  push phase, keeping both before/after head guards and all original behavior.
+  Replay focused tests, both guard-removal controls and the unchanged Fallow
+  gate before publishing. Preserve the original failed result.
+- Prevention: exercise the existing duplication gate during the focused edit
+  loop when consolidating a shared phase, before the broader publication wave.
+
+
+### Direct prove-first publication coverage, 2026-10-30
+
+- Doing: close review of the publication-identity repair in PR #2370.
+- Evidence: the real Git fixtures initially drove only the push-first tail,
+  leaving the standard tail's prepared-head capture unexercised directly.
+- Repair: expose the existing standard tail through the source-only test kit
+  and reuse the same disposable bare remote for its success and proof-time
+  drift cases. Moving the capture after proof fails the selected new case
+  under both Node and Bun; restore exact source bytes after each control.
+- Prevention: exercise each independently ordered publication route, even
+  when the final push guards are shared. Production phase behavior is unchanged.
+
+### Review-request Git transport recovery, 2026-10-30
+
+- Doing: push the generated review-request commit for PR #2368 after full proof.
+- Evidence: SSH refused the available public-key route. The scoped HTTPS
+  consumer authenticated, but GitHub repeatedly returned `fatal error in
+  commit_refs`. The commit object was already uploaded with the expected parent.
+- Recovery: verify that exact object and parent through GitHub, then update the
+  existing branch forward with `force=false`. Retain each failed transport
+  result separately; the recovery grants no new proof or merge authority.
+- Prevention: distinguish authentication failure from an uncertain ref update,
+  inspect the actual remote object/ref, and preserve forward-only updates.

@@ -353,3 +353,31 @@ review is `research/current-runtime-baseline-review.md`.
 - The interrupted publisher is not a passing local proof. Keep the PR in draft
   until its current content-final requirements are met; preserve all existing
   acceptance and review gates. Reversal is an ordinary repair/revert PR.
+
+### Attempt and publication identities, 2026-10-30
+
+- Preserve the attempt's starting head, resolved source and diff fingerprint.
+  Publishing staged changes may create a different commit within that attempt.
+- Add an optional published-head identity to the existing verdict. Record it
+  only around a successful owned Git push with unchanged head; an unsuccessful
+  push or head drift grants no such identity. This is transport provenance,
+  not qualification, hosted status or proof reuse authority.
+- Keep older verdicts readable when the append-optional field is absent. No
+  new proof store, scheduler or ledger is introduced.
+- Exercise the standard prove-first route against the same disposable Git
+  remote as the push-first route. A commit created during full pre-push proof
+  must refuse publication; moving the prepared-head capture after that proof
+  must make the regression test fail. This adds no production authority.
+- Reverse by removing the new writer path while retaining backward-compatible
+  decoding of already emitted records. Do not rewrite historical attempts.
+
+### Publication-repair hosted escape, 2026-10-30
+
+- The first canonical publisher stopped on an introduced duplication after
+  roughly ten minutes of local gates. Repair that duplication in the existing
+  shared phase, rerun focused checks and use the standing hosted escape to
+  open the reviewable draft under constrained local compute.
+- Preserve the failed publisher and deliberately interrupted old-source package
+  audit. Neither grants current proof. Current full package/final, hosted checks,
+  review threads and the review window remain required before completion.
+- Reverse through an ordinary repair/revert PR; keep historical attempt facts.
