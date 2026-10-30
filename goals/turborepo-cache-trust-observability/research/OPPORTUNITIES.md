@@ -811,6 +811,48 @@ actual four-file, 51-test scope before reporting a broader pass. The corrected
 Node and Bun provider runs both meet that scope.
 
 
+## Signed supervisor runtime discovery
+
+- While refreshing the real signed pilot, the unchanged supervisor exited1 at
+  toolchain discovery. A private observer retained only static error classes
+  and source locations. Its pinned Bun file was named `bun.native`, with no
+  `bun` command in the mounted search path. An actual private-network probe
+  exited 127 with the original mounts and exited 0 with exact private binary
+  aliases, reporting the expected Bun and Node versions. Keep aliases in the
+  supervisor and test their complete mount arguments; never share a host tools
+  directory or weaken the namespace. No current qualification was obtained.
+- The first added assertion used an unavailable Array helper. The installed
+  Effect declarations and canonical source expose `Array.window`; use that
+  primitive and retain the failed tests as introduced harness evidence.
+
+- The fixture's existing spy variable named `process` shadowed the runtime
+  process used by the new assertion. The compiler and runtime tests exposed it;
+  renaming the spy preserved the fixture API and restored the typed assertion.
+
+- Distinguish an added tools directory from the existing read-only system and
+  source mounts in evidence claims. Overbroad wording was corrected before the
+  first push; the superseded publication wave is not passing proof. Describe
+  additions relative to the reviewed mount baseline to prevent this ambiguity.
+
+
+### Runtime-alias regression fixture complexity
+
+Normal publication rejected the new test callback because repeated optional
+argument fallbacks increased cognitive complexity. Decode required arguments
+once through Option and reuse the resulting array; absent arguments now fail
+the fixture explicitly. Both18-test runtime suites, quick package lint/check
+and targeted Fallow audit/health pass. Retain the rejected publication and
+unchanged baselines. The earlier full package replay covers the production
+launcher and prior fixture bytes; fresh final proof must cover the new fixture.
+
+
+### Checkpoint reference refresh after fixture edits
+
+Main integration exposed an audit reference still bound to the earlier launcher
+checkpoint bytes after its fixture proof was updated. Refresh that exact report
+digest after formatting and retain both prior SPEC identities. Preserve the
+landed graph/capture evidence and the launcher evidence independently; neither
+component grants qualification or signed production authority.
 ## Deterministic contained-directory error coverage
 
 - PR #2361's current final repeat passed 8,114 tests with 5 skips but lost the

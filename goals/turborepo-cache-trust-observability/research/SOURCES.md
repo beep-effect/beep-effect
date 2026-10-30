@@ -397,6 +397,17 @@ qualification ledger remain unchanged. This grants no cache qualification or
 signed trust readiness.
 
 
+## Signed supervisor launcher repair, 2026-10-29
+
+- [Source-bound checkpoint](signed-runtime-alias-checkpoint.json): exact private
+  runtime aliases repair discovery of a pinned executable named `bun.native`.
+  The actual isolated old/fixed topology probe exited127/0 respectively and
+  the fixed form reported the expected pinned runtime versions.
+- 18 supervisor tests pass in each runtime; package lint/check and the complete
+  package audit plus Docgen pass. This is launcher proof; current native task
+  qualification and production trust remain separate unfinished gates.
+
+
 - [Deterministic contained-directory error coverage](fs-guards-directory-coverage-checkpoint.json):
   real typed filesystem cause, refusal before writing, both 34-test runtime
   suites, exact error adapter V8 hit and full package audit/documentation.

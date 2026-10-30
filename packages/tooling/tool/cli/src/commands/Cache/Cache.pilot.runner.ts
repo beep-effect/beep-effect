@@ -199,6 +199,14 @@ BunRuntime.runMain(Effect.gen(function* () {
             "/dev",
             "--tmpfs",
             "/tmp",
+            "--dir",
+            "/tools",
+            "--ro-bind",
+            bun,
+            "/tools/bun",
+            "--ro-bind",
+            node,
+            "/tools/node",
             ...A.flatMap(A.dedupe(mounts), (mount) => ["--ro-bind", mount, mount]),
             "--bind",
             directory,
@@ -216,7 +224,7 @@ BunRuntime.runMain(Effect.gen(function* () {
           ],
           cwd: root,
           extendEnv: false,
-          env: { PATH: `${path.dirname(bun)}:${path.dirname(node)}:/usr/bin`, HOME: "/tmp", CI: "1", NO_COLOR: "1" },
+          env: { PATH: "/tools:/usr/bin", HOME: "/tmp", CI: "1", NO_COLOR: "1" },
           bound,
         }).pipe(Effect.timeout(Duration.minutes(20)));
         yield* requireCacheSupervisorCapture(captured, "Signed pilot");

@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "14c3de708ce4bf86b414c8671d73e67277d4485b3e2388acd9d60ac0e0e8930b",
+  "specSha256": "46157806d440bc77d4bd2e25f506ddcc6d824cf6dcdf59a4572a7f6dc6a7d8fa",
   "acceptance": [
     {
       "id": "AC-01",
@@ -325,5 +325,24 @@
   "priorSpecSha256AtPrerequisiteIntegration": {
     "socket": "e301f02e0a11b826307c3f28e438a6eeae2ae81b1b68238fc1ef0594804d3e7b",
     "docgen": "81d96a0d4b4660ba2695602adfbe057e657f5747d11877f08aa75f20c7493121"
+  },
+  "priorSpecSha256AtRuntimeAlias": "511be224c49a558752eb531a086e571a1838bd38514359d049b59b621106fcdb",
+  "signedRuntimeAliasCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/signed-runtime-alias-checkpoint.json",
+    "sha256": "14877e0620a2f3950fc8ee3a4e80549cc28fc4ca3f40e4404c33ee8abd344b6e",
+    "scope": "Unchanged production launcher retains earlier complete package pass; current test-only fixture passes both runtimes, quick and Fallow. Fresh integrated final remains required; no qualification or activation."
+  },
+  "priorSpecSha256BeforeRuntimeAliasWording": "1cfed321351946a8a9112f1fa78ae51974039b23ebee0d5e3d123c734cf6505f",
+  "priorSpecSha256BeforeRuntimeAliasMainIntegration": {
+    "runtimeAlias": "635d08d49cc925bdcc7e2a2b40afe1ac301518dd70fa038936af75e7e9ea2960",
+    "mainProducerCapture": "51aaf9fcbc3f1c861b8f800f4597302ee7f9223c2060fa8f6d0683accab9830d"
+  },
+  "priorSpecSha256BeforeRuntimeDirectoryIntegration": {
+    "runtimeAlias": "6bc153164c8f022bf96c98db40ce9fa4313cde185c84f897bb12f8adae351426",
+    "main": "fe2990a36afd1a640a44b1092d2c934abadfa1f2344e35d777b631a02e8f2a22"
+  },
+  "priorSpecSha256AtRuntimePrerequisiteIntegration": {
+    "combinedSocketDocgen": "14c3de708ce4bf86b414c8671d73e67277d4485b3e2388acd9d60ac0e0e8930b",
+    "runtimeAlias": "6fdb54fc398691613072da4bcd681fa388f7b8408d3e14a74a7aef95732d02b2"
   }
 }

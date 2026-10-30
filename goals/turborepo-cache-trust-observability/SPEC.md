@@ -477,6 +477,19 @@ The local process report does not satisfy those deployment or observation gates.
   this change grants no cache qualification, credential access or signing.
 
 
+### Signed supervisor runtime aliases, 2026-10-29
+
+- Bind the exact selected Bun and Node files at private `/tools/bun` and
+  `/tools/node` aliases, and search only `/tools:/usr/bin` in the outer signed
+  worker. The real Bun file may be named `bun.native`; mounting that file at
+  its original path does not provide the `bun` command used by tool discovery.
+  Preserve original-path mounts, private networking, explicit clean runtime
+  configuration and independent executable content checks. Add no host tools
+  directory to the existing read-only mounts; use the fixed search path.
+- Reversal leaves signed experiments disabled and reverts this launcher fix.
+  This repair grants no producer, qualification or signed production authority.
+
+
 ### Deterministic contained-directory error control, 2026-10-29
 
 - Exercise the existing filesystem parent-creation error adapter with a scoped
