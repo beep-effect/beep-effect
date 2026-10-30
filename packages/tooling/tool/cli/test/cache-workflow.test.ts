@@ -59,7 +59,6 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
-import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -392,30 +391,11 @@ it.layer(
         ready: { ...observed, role: "writer", phase: "ready" },
         afterLoad: { ...observed, role: "writer", phase: "after-load" },
       });
-      const phases = yield* Ref.make(A.empty<string>());
       const execution = vi
         .spyOn(SignedRunner, "runCacheProducerUploadExperiment")
-        .mockReturnValue(Ref.update(phases, A.append("upload")).pipe(Effect.as(upload)));
-      const adapter = vi
-        .spyOn(Adapter, "withCacheProducerAdapter")
-        .mockImplementation(
-          <Success, Error, Requirements>(
-            _root: string,
-            _request: CacheSignedPilotRequest,
-            _runtime: CacheProducerUploadRuntime,
-            _approval: CacheProducerUploadApproval,
-            use: Effect.Effect<Success, Error, Requirements>
-          ) =>
-            use.pipe(
-              Effect.tap(() => Ref.update(phases, A.append("cleanup"))),
-              Effect.map((value) => Tuple.make(value, receipt)),
-              CacheCommandError.mapError("Controlled adapter callback failed.")
-            )
-        );
+        .mockReturnValue(Effect.succeed(Tuple.make(upload, receipt)));
       const result = yield* f.run;
-      expect(yield* Ref.get(phases)).toEqual(["upload", "cleanup"]);
       expect(execution).toHaveBeenCalledOnce();
-      expect(adapter).toHaveBeenCalledOnce();
       expect(execution.mock.calls[0]?.[4]).toEqual([f.binding.key.computation]);
       expect(execution.mock.calls[0]?.[5]).toBe(f.path.join(f.directory, "issuer.key"));
       assertSome(result.observation.upload, upload);

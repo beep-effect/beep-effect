@@ -1,4 +1,5 @@
 import {
+  CacheCommandError,
   CacheConformanceExchange,
   CacheConformanceProxyEvent,
   CacheDependencyMaterialization,
@@ -14,9 +15,13 @@ import {
   runCacheProtocolExperiment,
   runCacheSignedPilotExperiment,
 } from "@beep/repo-cli/commands/Cache";
+import * as Adapter from "@beep/repo-cli/commands/Cache/Cache.adapter";
 import * as ConformanceProxy from "@beep/repo-cli/commands/Cache/Cache.conformance.proxy";
 import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
 import {
+  CacheAdapterRuntimeObservation,
+  CacheProducerAdapterReceipt,
+  CacheProducerUploadApproval,
   CacheProducerUploadRuntime,
   CacheRuntimeAdmission,
   CacheRuntimeProcess,
@@ -30,7 +35,9 @@ import { HostProcessPlatform } from "@beep/utils";
 import { NodeCrypto, NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
@@ -43,6 +50,8 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
+import * as TestClock from "effect/testing/TestClock";
 import { bearers, secrets, targetFor } from "./cache-conformance-server.ts";
 import { makeOwnedUploadFixture } from "./helpers/cache-producer-upload-fixture.ts";
 import { executionInput } from "./helpers/cache-protocol-fixture.ts";
@@ -200,7 +209,41 @@ const ownedUploadFixture = Effect.fn("SignedRunnerTest.uploadFixture")(function*
     bearers,
     signing: Redacted.make("synthetic-owned-upload-signing"),
   });
-  const binding = CacheProducerBinding.make({ ...captured.binding, client: f.request.pilot.client });
+  const binding = CacheProducerBinding.make({
+    ...captured.binding,
+    client: f.request.pilot.client,
+    uploadApproval: O.some(CacheProducerUploadApproval.make({ targetSha256: digest, artifactKeySha256: digest })),
+  });
+  const observed = CacheAdapterRuntimeObservation.make({
+    role: "writer",
+    phase: "ready",
+    tokioNamedThreadsIncludingBlocking: 2,
+    totalThreads: 6,
+    memoryPeakBytes: S.Natural.make(1024),
+  });
+  const adapterReceipt = CacheProducerAdapterReceipt.make({
+    backendSha256: digest,
+    targetSha256: digest,
+    ready: { ...observed, role: "writer", phase: "ready" },
+    afterLoad: { ...observed, role: "writer", phase: "after-load" },
+  });
+  const adapterStarted = vi.fn();
+  const adapter = vi
+    .spyOn(Adapter, "withCacheProducerAdapter")
+    .mockImplementation(
+      <Success, Error, Requirements>(
+        _root: string,
+        _request: CacheSignedPilotRequest,
+        _runtime: CacheProducerUploadRuntime,
+        _approval: CacheProducerUploadApproval,
+        use: Effect.Effect<Success, Error, Requirements>
+      ) =>
+        Effect.sync(adapterStarted).pipe(
+          Effect.flatMap(() => use),
+          Effect.map((result) => Tuple.make(result, adapterReceipt)),
+          CacheCommandError.mapError("Controlled adapter failed.")
+        )
+    );
   const summary = CacheProtocolNativeSummary.make({ ...captured.summary, turboVersion: binding.client.version });
   const address = Redacted.make(NetAddress.unixPathAddress(f.request.pilot.executable));
   const extra = CacheConformanceProxyEvent.make({
@@ -259,7 +302,7 @@ const ownedUploadFixture = Effect.fn("SignedRunnerTest.uploadFixture")(function*
       });
     }, Effect.orDie)
   );
-  return { ...f, binding, runtime, captured, listener };
+  return { ...f, binding, runtime, captured, listener, adapter, adapterStarted, adapterReceipt };
 });
 
 it.layer(
@@ -279,7 +322,7 @@ it.layer(
   it.effect("joins the owned worker summary to the complete parent upload capture", () =>
     Effect.gen(function* () {
       const f = yield* ownedUploadFixture("none");
-      const upload = yield* runCacheProducerUploadExperiment(
+      const [upload, backend] = yield* runCacheProducerUploadExperiment(
         f.root,
         f.request,
         f.runtime,
@@ -287,6 +330,9 @@ it.layer(
         [f.binding.key.computation],
         f.issuer
       );
+      expect(backend).toEqual(f.adapterReceipt);
+      expect(f.admission).toHaveBeenCalledOnce();
+      expect(f.adapterStarted).toHaveBeenCalledOnce();
       expect(upload.archiveSha256).toBe(f.captured.archiveSha256);
       expect(upload.archiveBytes).toBe(f.captured.archiveBytes);
       expect(f.listener).toHaveBeenCalledWith(
@@ -295,6 +341,40 @@ it.layer(
       expect(f.process).toHaveBeenCalledTimes(2);
     })
   );
+  it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated upload admission clock", (it) => {
+    it.effect("does not start an owned backend while waiting for upload admission", () =>
+      Effect.gen(function* () {
+        const f = yield* ownedUploadFixture("none");
+        const queued = yield* Deferred.make<void>();
+        const admitted = yield* Deferred.make<void>();
+        f.admission.mockImplementation(
+          <Success, Error, Requirements>(
+            _request: unknown,
+            _gate: unknown,
+            use: Effect.Effect<Success, Error, Requirements>
+          ) => Deferred.succeed(queued, undefined).pipe(Effect.andThen(Deferred.await(admitted)), Effect.andThen(use))
+        );
+        const worker = yield* runCacheProducerUploadExperiment(
+          f.root,
+          f.request,
+          f.runtime,
+          f.binding,
+          [f.binding.key.computation],
+          f.issuer
+        ).pipe(Effect.forkScoped);
+        yield* Deferred.await(queued);
+        yield* TestClock.adjust("11 minutes");
+        expect(f.adapterStarted).not.toHaveBeenCalled();
+        expect(f.listener).not.toHaveBeenCalled();
+        expect(f.process).not.toHaveBeenCalled();
+        yield* Deferred.succeed(admitted, undefined);
+        const [upload] = yield* Fiber.join(worker);
+        expect(upload.archiveSha256).toBe(f.captured.archiveSha256);
+        expect(f.adapterStarted).toHaveBeenCalledOnce();
+        expect(f.admission).toHaveBeenCalledOnce();
+      })
+    );
+  });
   it.effect("refuses failed, truncated, incomplete, extra-read and changed-issuer upload executions", () =>
     Effect.gen(function* () {
       for (const fault of UploadFault.pick(["exit", "truncated", "missing-summary", "foreign-read", "issuer-change"])

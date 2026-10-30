@@ -500,3 +500,9 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
 - `producer-integration-policy-review.json`: exact source repair, canonical assertion semantics, one source-reviewed real-process platform judgment, and scoped passing checks; interrupted complete proof is explicitly not acceptance.
 
 - `producer-fallow-repair-checkpoint.json`: introduced complexity/duplication attribution, canonical upload-profile and shared-reader repair, current 163-case dual-runtime replay, intended digest-removal failure with exact restoration, real synthetic controller cleanup and canonical documentation/policy checks. Complete package/final/hosted and all real trust/adoption gates remain required.
+
+
+- [Upload lifetime review checkpoint](producer-upload-lifetime-checkpoint.json)
+  binds the current admitted lifecycle, unchanged backend caps, seventy focused
+  cases per runtime and exact-restored regression controls. The inert peer and
+  controlled admission do not prove actual R2 grants or protected publication.

@@ -23,8 +23,7 @@ import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheAdapterHostEvent, CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
 import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
-import { hashCacheExperimentExecutable, requireCacheLinuxX64 } from "./Cache.evidence.ts";
-import { makePrivateSupervisorStorage } from "./Cache.pilot.runner.ts";
+import { hashCacheExperimentExecutable, makePrivateSupervisorStorage, requireCacheLinuxX64 } from "./Cache.evidence.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import type { CacheProducerUploadRuntime } from "./Cache.workflow.schemas.ts";
@@ -46,7 +45,9 @@ const Startup = S.Struct({ adapter: S.NonEmptyString, sha256: Sha256Hex, env: S.
  * passed its post-load check and the owning host completed cleanup. Exceptions
  * and interruption terminate the scoped host, whose finalizer stops its units.
  * The canonical Bun CLI owns this helper and its admission/process services.
- * A missing systemd user manager fails explicitly.
+ * A missing systemd user manager fails explicitly. The caller admits the entire
+ * upload before acquisition; the load callback has nine minutes after readiness,
+ * leaving time for verification and cleanup inside the fixed ten-minute backend cap.
  *
  * **Example** (Reference late backend acquisition)
  * ```ts
@@ -159,7 +160,7 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
       const ready = yield* take();
       if (!CacheAdapterHostEvent.guards.ready(ready))
         return yield* CacheCommandError.new("Owned adapter host omitted readiness.");
-      const result = yield* use;
+      const result = yield* use.pipe(Effect.timeout(Duration.minutes(9)));
       yield* Stream.run(Stream.make(new TextEncoder().encode("verify\n")), handle.stdin);
       const after = yield* take();
       if (!CacheAdapterHostEvent.guards["after-load"](after))

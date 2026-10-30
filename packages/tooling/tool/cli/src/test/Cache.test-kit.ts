@@ -47,6 +47,7 @@ export {
 export {
   decodeCacheExperimentText,
   hashCacheExperimentExecutable,
+  makePrivateSupervisorStorage,
   readCacheEvidenceBytes,
   readCacheExperimentBytes,
 } from "../commands/Cache/Cache.evidence.ts";
@@ -76,10 +77,7 @@ export {
   extractCacheSignedPilotLog,
   inspectCacheSignedPilotArchive,
 } from "../commands/Cache/Cache.pilot.capture.ts";
-export {
-  makePrivateSupervisorStorage,
-  runCacheProducerUploadExperiment,
-} from "../commands/Cache/Cache.pilot.runner.ts";
+export { runCacheProducerUploadExperiment } from "../commands/Cache/Cache.pilot.runner.ts";
 export { runCachePilotForTesting, runCacheSignedPilotUploadWorker } from "../commands/Cache/Cache.pilot.ts";
 export {
   hashCacheProducerContract,

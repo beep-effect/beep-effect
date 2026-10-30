@@ -609,6 +609,17 @@ and after the callback. Missing user-manager support fails explicitly. Include
 the sanitized lifecycle and successful cleanup in the issuer-authenticated
 bundle; an upload without its approved lifecycle cannot be issued.
 
+2026-10-30: admit the entire upload before acquiring its owned backend. Reuse
+one scheduler admission around acquisition, private proxy/worker, post-load
+verification and cleanup; do not nest a second admission after backend startup.
+The callback gets nine minutes after readiness inside the existing ten-minute
+backend cap. The readiness and post-load frames each retain their twenty-second
+bounds, and the unit retains its ten-second stop bound. A longer queue consumes
+no backend lifetime. Prove this ordering with a queued eleven-minute control and
+a timed-out callback whose real inert peer is gone before return. Reverse by
+stopping future consumers before reverting the composition; never restore the
+early-acquisition path for a live consumer. No live runtime cap is increased.
+
 This is a local component and launch-contract change. Actual R2 grants, normal
 source execution, immutable protected publication, platform qualification and
 representative windows remain required. Reverse it by stopping any future

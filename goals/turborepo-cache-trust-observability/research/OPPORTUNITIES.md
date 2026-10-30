@@ -1111,3 +1111,30 @@ the next complete publication. Preserve the failed verdict; no gate is waived.
   journal records earlyoom sending SIGTERM to two Node/Vitest workers. The
   unchanged-source canonical retry passed all final gates. Sequence heavy
   checks around available memory; preserve the interrupted result separately.
+
+
+### Admit the owned upload before starting its backend, 2026-10-30
+
+- Doing: close protected-producer execution review in PR #2368.
+- Evidence: the backend's fixed 600-second unit lifetime began outside the
+  memory-gated upload admission. Queue time and a full ten-minute worker could
+  exhaust it before the parent's post-load verification. This fails closed but
+  can reject a valid run on a busy host.
+- Repair: put backend acquisition and the complete upload inside one admitted
+  scope, remove the nested worker admission and bound the callback to nine
+  minutes after readiness. The backend cap and stop bound remain unchanged.
+- Prevention: test a queue longer than the backend lifetime and actual peer
+  cleanup on callback timeout. Moving acquisition before admission and removing
+  the timeout must each fail their intended assertions, with exact restoration.
+
+
+### Isolate deterministic clocks and preserve bind-failure attribution, 2026-10-30
+
+- The two new lifecycle timing cases initially shared their parent layer's
+  TestClock. The full detector identified both ownership judgments. Each case
+  now owns a single-case `TestClock.layer()` block; all existing 554 judgments
+  remain unchanged and no policy exception was added.
+- A parallel runtime replay also exposed an inherited `EADDRINUSE` in the
+  shared direct-server fixture. Preserve that failure and the passing serial
+  Node replay. A separate main fix will reuse the existing loopback bind-event
+  and bounded retry path, then dependent lanes consume the accepted fix once.

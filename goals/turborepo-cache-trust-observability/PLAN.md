@@ -700,3 +700,17 @@ queue while retaining final-pull refusal of both batched and delayed frames.
 Current 45-case suites pass per runtime; both modules measure 100%, with two
 causal guard controls failing as intended. Fresh committed-source full package,
 full final, hosted checks and review remain required before readiness.
+
+
+### Owned upload admission and lifetime review, 2026-10-30
+
+Review of PR #2368 found the backend's fixed lifetime started before upload
+admission. The upload now owns one admitted scope around backend acquisition,
+worker/proxy execution, verification and cleanup. Its nine-minute load bound
+leaves verification/stop time under the unchanged ten-minute backend cap. The
+shared storage helper moves to the existing evidence role, avoiding a runner/
+adapter import cycle. Seventy focused cases pass per runtime; two causal
+controls fail the intended assertions and restore exact source. See the
+[source-bound checkpoint](research/producer-upload-lifetime-checkpoint.json).
+Generated inventory/catalog, complete current package/final proof and hosted
+review remain required. This component activates no cache or credential.

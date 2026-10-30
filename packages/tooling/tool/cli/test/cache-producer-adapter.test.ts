@@ -29,8 +29,10 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Cause from "effect/Cause";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -38,6 +40,7 @@ import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import { bearers, targetFor } from "./cache-conformance-server.ts";
 import { input } from "./helpers/cache-producer-bundle-fixture.ts";
 
@@ -284,6 +287,35 @@ describe.skipIf(currentHostPlatform !== "linux")("Linux owned adapter parent", (
         })
       );
 
+      it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated owned-backend deadline", (it) => {
+        it.effect("interrupts the load before the ten-minute backend cap and closes its peer", () =>
+          Effect.gen(function* () {
+            const f = yield* fixture("none");
+            const started = yield* Deferred.make<void>();
+            let interrupted = false;
+            const callback = Deferred.succeed(started, undefined).pipe(
+              Effect.andThen(Effect.never),
+              Effect.ensuring(
+                Effect.sync(() => {
+                  interrupted = true;
+                })
+              )
+            );
+            const running = yield* withCacheProducerAdapter(f.root, f.request, f.runtime, f.approval, callback).pipe(
+              Effect.exit,
+              Effect.forkScoped
+            );
+            yield* Deferred.await(started);
+            yield* TestClock.adjust("9 minutes");
+            expect(interrupted).toBe(true);
+            const result = yield* Fiber.join(running);
+            result.pipe(Exit.isFailure, assertTrue);
+            if (Exit.isFailure(result)) expect(Cause.pretty(result.cause)).toContain("Operation timed out after '9m'");
+            const peer = yield* f.fs.readFileString(f.marker).pipe(Effect.flatMap(decodePeer));
+            expect(yield* f.fs.exists(`/proc/${peer.pid}`)).toBe(false);
+          })
+        );
+      });
       it.effect.each(PreflightFault.literals)("refuses before starting a peer: %s", (fault) =>
         Effect.gen(function* () {
           const f = yield* fixture("none");

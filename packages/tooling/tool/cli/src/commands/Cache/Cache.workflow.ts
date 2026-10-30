@@ -23,7 +23,6 @@ import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schem
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
-import { withCacheProducerAdapter } from "./Cache.adapter.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { decodeCacheExperimentText, readCacheEvidenceBytes, readCacheExperimentBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain } from "./Cache.fingerprint.ts";
@@ -473,20 +472,13 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
       if (activation.source.configurationDigest !== trusted.configurationDigest)
         return yield* CacheCommandError.new("Producer task closure differs from independent configuration approval.");
       const expectedTasks = A.map(activation.source.configuration.nodes, (node) => node.id);
-      const upload = runCacheProducerUploadExperiment(
+      return yield* runCacheProducerUploadExperiment(
         root,
         ownedRequest,
         runtime,
         trusted,
         expectedTasks,
         path.join(directory, "issuer.key")
-      );
-      return yield* withCacheProducerAdapter(
-        root,
-        ownedRequest,
-        runtime,
-        O.getOrThrow(trusted.uploadApproval),
-        upload
       ).pipe(Effect.asSome);
     }),
   });

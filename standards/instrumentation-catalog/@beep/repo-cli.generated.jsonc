@@ -460,6 +460,7 @@
     {"name":"CachePilot.verifySourceWorktree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.verifySupervisedReceipt","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.verifyTools","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CachePilot.withAdmission","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheProfile.render","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheProfile.renderFromRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheProfile.verify","owner":"@beep/repo-cli","family":"tooling","conforms":true},

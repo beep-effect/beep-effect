@@ -9271,13 +9271,13 @@
       "reason": "Real scoped filesystem roots and the local HTTP fixture check bounded capture traversal, native-summary selection and output containment; native process execution fails closed (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when the protocol worker cases run over a seeded memory volume with the HTTP fixture in process."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:30:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:35:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
-      "line": 30,
-      "endLine": 30,
+      "line": 35,
+      "endLine": 35,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:3979a7ff75193389220ecf0dc6571697ec9b901ad59fdb1ea873151254956f3d",
       "class": "platform-filesystem-candidate",
