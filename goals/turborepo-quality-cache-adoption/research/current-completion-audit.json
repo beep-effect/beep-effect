@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "dde95da4ebd1978da6c29a6dc151f325287648d082dcf3fc6f7dde6abd7a5e65",
+  "specSha256": "39eb95fc1a0f5a4c06d99246fa4e304a8e59eab934ab7e26ed1ab08c845e299f",
   "acceptance": [
     {
       "id": "AC-01",
@@ -259,5 +259,11 @@
       "bindingGeneratedByDriver": true
     },
     "authority": "Fresh retained-driver observations only. No acceptance criterion or qualification transition is completed."
+  },
+  "priorSpecSha256AtConstrainedPublication": "dde95da4ebd1978da6c29a6dc151f325287648d082dcf3fc6f7dde6abd7a5e65",
+  "constrainedPublicationReplay": {
+    "publisherJob": "c38ed02e-282f-4b24-bcf9-add48135149d",
+    "publisherResult": "deliberately cancelled after more than thirteen minutes; not a local pass",
+    "scope": "Use the standing hosted escape; current full proof, hosted acceptance and review remain required."
   }
 }

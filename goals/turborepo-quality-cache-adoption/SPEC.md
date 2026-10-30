@@ -343,3 +343,13 @@ review is `research/current-runtime-baseline-review.md`.
   performance claim. Applicable features still need their complete regressions.
 - Retain the recorded observations if later semantic cases fail. Reverse the
   matrix annotation by removing its observation links; no runtime setting changes.
+
+### Constrained publication replay, 2026-10-30
+
+- Use the existing hosted escape after the generator-repair publisher spends
+  more than thirteen minutes in admission and local gates. Cancel that owned
+  publisher, retain the scoped native proofs, push the completed repair wave
+  and let current hosted checks provide the broad proof.
+- The interrupted publisher is not a passing local proof. Keep the PR in draft
+  until its current content-final requirements are met; preserve all existing
+  acceptance and review gates. Reversal is an ordinary repair/revert PR.

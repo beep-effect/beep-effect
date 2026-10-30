@@ -231,3 +231,14 @@ owner fixes context refresh; do not weaken the exact-head acceptance gate.
   unchanged. Preserve prior reports in Git history.
 - Prevention: compare the retained JSON directly with generated output before
   publication, in addition to checking each digest against retained source.
+
+### Constrained evidence-repair publication, 2026-10-30
+
+- Doing: publish the completed report-generator repair.
+- Evidence: the canonical publisher spent more than thirteen minutes in
+  admission and local gates while available memory constrained the host.
+- Action: cancel only that owned publisher after preserving its logs, then use
+  the existing hosted escape. Retain eighteen native executions, six dry plans,
+  Ruff and packet checks; disclose unfinished broad gates in the PR.
+- Prevention: qualify reusable policy phases and keep publication admission
+  separate from broad local proof; do not widen memory capacity or lower gates.
