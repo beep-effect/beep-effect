@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "46157806d440bc77d4bd2e25f506ddcc6d824cf6dcdf59a4572a7f6dc6a7d8fa",
+  "specSha256": "1efc3a9f53579caa17cabaf6cff58d0b62fd5527ed48bd0ff3a0313878100fcb",
   "acceptance": [
     {
       "id": "AC-01",
@@ -21,7 +21,8 @@
       "source": "SPEC.md:157",
       "requirement": "Reader, fork, writer, backend and storage roles satisfy the independent capability matrix; tenant escape and direct invocation negatives pass.",
       "status": "unproven",
-      "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology."
+      "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology.",
+      "partialEvidence": ["research/private-pilot-storage-checkpoint.json"]
     },
     {
       "id": "AC-03",
@@ -42,7 +43,8 @@
       "source": "SPEC.md:160",
       "requirement": "Logs/metrics/receipts pass synthetic-secret and artifact-content safety tests with bounded labels, volume and retention.",
       "status": "unproven",
-      "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps."
+      "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps.",
+      "partialEvidence": ["research/private-pilot-storage-checkpoint.json"]
     },
     {
       "id": "AC-06",
@@ -56,7 +58,8 @@
       "source": "SPEC.md:162",
       "requirement": "Relevant package/protocol checks pass; failures are attributed and no introduced regression remains.",
       "status": "unproven",
-      "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure."
+      "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure.",
+      "partialEvidence": ["research/private-pilot-storage-checkpoint.json"]
     },
     {
       "id": "AC-08",
@@ -330,7 +333,7 @@
   "signedRuntimeAliasCheckpoint": {
     "path": "goals/turborepo-cache-trust-observability/research/signed-runtime-alias-checkpoint.json",
     "sha256": "14877e0620a2f3950fc8ee3a4e80549cc28fc4ca3f40e4404c33ee8abd344b6e",
-    "scope": "Unchanged production launcher retains earlier complete package pass; current test-only fixture passes both runtimes, quick and Fallow. Fresh integrated final remains required; no qualification or activation."
+    "scope": "Historical runtime-alias source proof at its recorded bytes. Current combined source also changes private storage and needs fresh whole-package/final/hosted proof."
   },
   "priorSpecSha256BeforeRuntimeAliasWording": "1cfed321351946a8a9112f1fa78ae51974039b23ebee0d5e3d123c734cf6505f",
   "priorSpecSha256BeforeRuntimeAliasMainIntegration": {
@@ -344,5 +347,11 @@
   "priorSpecSha256AtRuntimePrerequisiteIntegration": {
     "combinedSocketDocgen": "14c3de708ce4bf86b414c8671d73e67277d4485b3e2388acd9d60ac0e0e8930b",
     "runtimeAlias": "6fdb54fc398691613072da4bcd681fa388f7b8408d3e14a74a7aef95732d02b2"
+  },
+  "priorSpecSha256BeforeCombinedStorageRepair": "46157806d440bc77d4bd2e25f506ddcc6d824cf6dcdf59a4572a7f6dc6a7d8fa",
+  "privatePilotStorageCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/private-pilot-storage-checkpoint.json",
+    "sha256": "fa8ab7336df55af33d3abd32714efa5fce65f9ecc703b931fac82af1f41b5c84",
+    "scope": "Current76-test local component checks and actual synthetic boundary/import probes; full combined and native/deployed acceptance pending."
   }
 }

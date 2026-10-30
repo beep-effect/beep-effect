@@ -865,3 +865,25 @@ component grants qualification or signed production authority.
   a deliberate error-path fixture rather than incidental concurrent filesystem
   behavior. The full package audit and documentation pass; fresh final and
   hosted acceptance remain in progress.
+
+
+### Combined prerequisite source and file-confinement repair
+
+Repeated same-owner prerequisite merges conflicted only in appended goal
+decisions, report lists and derived SPEC hashes. Preserve both sides and their
+source-bound facts, then perform the expensive integrated proof once in PR2367.
+The original branches and receipts remain recoverable until combined acceptance.
+One normal publisher waited603seconds without admission, was interrupted through
+its exact owning process, and exited130 before the prepared commit was pushed
+through the standing constrained-compute route. That old-source escape is not
+proof for the newer combined source; fresh normal and hosted acceptance remain
+required. Four exact superseded pull-request runs were cancelled and verified
+terminal, without changing runner capacity or touching unrelated runs.
+
+The private-file probe found a real alias gap: absent original host paths did
+not stop reads through the guest checkout. Move private scratch outside all
+source mounts instead of weakening the probe. The current worker imports pass
+in a real isolated bwrap/Bun process, supervisor controls cover the storage
+refusal and cleanup, and removal of that guard fails the intended control.
+These component observations do not replace a current native comparison matrix.
+See `private-pilot-storage-checkpoint.json` for source bindings and exact scope.

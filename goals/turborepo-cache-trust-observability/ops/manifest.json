@@ -90,7 +90,8 @@
     "research/docgen-launch-repair-checkpoint.json",
     "research/docgen-launch-baseline-review-2026-10-29.md",
     "research/docgen-launch-baseline-request-2026-10-29.json",
-    "research/signed-runtime-alias-checkpoint.json"
+    "research/signed-runtime-alias-checkpoint.json",
+    "research/private-pilot-storage-checkpoint.json"
   ],
   "agentLaunchers": [
     {

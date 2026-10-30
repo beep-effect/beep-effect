@@ -526,3 +526,24 @@ The local process report does not satisfy those deployment or observation gates.
   backend results, native task/byte capture, the approved supervisor and immutable
   protected publication remain required. Reversal leaves the companion unwired
   and keeps the existing loopback observer. No live service or credential changes.
+
+
+### Combined prerequisite proof and private pilot storage
+
+- 2026-10-29: Integrate the same executor's Docgen, pinned-runtime and private
+  transport prerequisites in PR2367. Preserve each original source and receipt;
+  require one fresh combined package/final/hosted/review proof rather than
+  repeatedly rebasing the same goal-document append conflicts. Original branches
+  are retained until that integration passes and merges. This grants no trust
+  readiness, task qualification or production activation.
+- A synthetic bwrap probe confirmed that source-contained private files could
+  be read through their guest alias. Move supervisor and experiment storage
+  outside every source input mount, use scoped mode0700 directories and an
+  explicit approved dependency link, and refuse source-visible storage before
+  writing the request. Preserve exact runtime aliases and private networking.
+  Actual repaired native confinement remains required; earlier original-path
+  denial alone is insufficient. The larger upload-approval prototype stays in
+  its own lane and must consume this accepted prerequisite through main.
+- Reversal retains the original branches before merge and uses a reviewed
+  revert after merge. No bucket, live service, credential, signing switch,
+  proof floor or runner-capacity setting changes in this integration.

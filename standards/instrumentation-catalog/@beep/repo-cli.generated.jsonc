@@ -375,6 +375,7 @@
     {"name":"CachePilot.inputDigest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.inspectSignedArchive","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.invoke","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CachePilot.makePrivateSupervisorStorage","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.mountDirectory","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.mountSource","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CachePilot.mountVisit","owner":"@beep/repo-cli","family":"tooling","conforms":true},

@@ -463,3 +463,5 @@ remains required for the new test file and combined source.
   one canonical Option assertion repair, six explicit resource judgments, and
   four actual scope-removal controls that fail the required cleanup assertions.
   Both current 51-test provider runs pass with unchanged coverage floors.
+
+- `private-pilot-storage-checkpoint.json`: consolidated prerequisite source, actual synthetic guest-alias counterexample, scoped private storage and dependency import checks. Fresh combined whole-package/hosted and native trust acceptance remain pending.

@@ -543,3 +543,13 @@ all four fixture metrics are 100% in V8/Istanbul, and proxy metrics exceed the
 committed floors. Two intended-failure source removals restore exactly. The
 earlier default full package replay retains its original four-file scope;
 fresh combined-source final and hosted acceptance remain required.
+
+
+### Combined prerequisite checkpoint
+
+PR2367 now integrates the retained Docgen and runtime prerequisite sources and
+the private storage repair. Original PR2361/2363 branches and proof are retained.
+`research/private-pilot-storage-checkpoint.json` binds the current76-test runtime
+checks, lint/type check, intended guard-removal failure and isolated imports.
+Complete default package, final, hosted and native/deployed acceptance are still
+required. No phase or full-goal criterion is completed by this component work.

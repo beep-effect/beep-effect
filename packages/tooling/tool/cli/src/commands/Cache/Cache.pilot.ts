@@ -492,11 +492,19 @@ const runPilot = Effect.fn("CachePilot.run")(
     const before = yield* readCacheEvidenceBytes(root, current.activation.before).pipe(Effect.flatMap(decodeText));
     const after = yield* readCacheEvidenceBytes(root, current.activation.after).pipe(Effect.flatMap(decodeText));
     const typesConfig = yield* readBytes(root, `${typesDirectory}/turbo.json`).pipe(Effect.flatMap(decodeText));
-    yield* writeContainedFileString(root, ".beep/cache/experiments/owner", "Cache-owned disposable local fixtures.\n");
-    const experiment = yield* fs.makeTempDirectoryScoped({
-      directory: path.join(root, ".beep/cache/experiments"),
-      prefix: "pilot-",
-    });
+    const experiment = yield* fs
+      .makeTempDirectoryScoped({
+        directory: "/tmp",
+        prefix: "beep-cache-pilot-",
+      })
+      .pipe(Effect.flatMap(fs.realPath));
+    yield* fs.chmod(experiment, 0o700);
+    if (
+      A.some([root, ...sourceRoots, commonGit, dependencies.directory, "/usr"], (mount) =>
+        isResolvedPathWithinRoot(path, { root: mount, candidate: experiment })
+      )
+    )
+      return yield* CacheCommandError.new("Private pilot storage must remain outside every source input mount.");
     const prepare = Effect.fn("CachePilot.prepare")(function* (
       source: string,
       label: PilotRoot["label"],
