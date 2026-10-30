@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "3ce2ae7c88aa3a8d7e11fcb2eeb652b146f256fa6a7c73aa288e91b2c6180a47",
+  "specSha256": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
   "acceptance": [
     {
       "id": "AC-01",
@@ -228,5 +228,6 @@
   "priorSpecSha256AtMutatingFixerReview": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3",
   "priorSpecSha256AtPersistentServiceReview": "02e520db66390a5cb167d4604659e8b35ac809644e36fc238533c2c1cd533ac3",
   "priorSpecSha256AtRemainingFixerReview": "f7fd00e00643a346a41e6f4b5f1fc3f4ca9cca07291859cf75936e70bf07a477",
-  "priorSpecSha256AtRemainingServiceReview": "15cee72051ba3b06cddc0ac1c39121b79072b969be51f4688e50544573a9f95c"
+  "priorSpecSha256AtRemainingServiceReview": "15cee72051ba3b06cddc0ac1c39121b79072b969be51f4688e50544573a9f95c",
+  "priorSpecSha256BeforePublicationAdmissionWording": "3ce2ae7c88aa3a8d7e11fcb2eeb652b146f256fa6a7c73aa288e91b2c6180a47"
 }

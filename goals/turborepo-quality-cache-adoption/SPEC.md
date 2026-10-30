@@ -302,3 +302,15 @@ review is `research/current-runtime-baseline-review.md`.
   has 198 reviewed fresh boundaries and 2,373 remaining disposition gaps.
   No service is launched and no script, flag or ledger changes. Reversal
   removes only these additional review/disposition records.
+
+
+### Publication memory guard and documentation consistency
+
+- 2026-10-29: Preserve the current weighted admission around cheap publication
+  gates: source and tests deliberately protect the schema-catalog scan's measured
+  memory demand. Correct the stale no-ticket claim in the Yeet skill. Attribute
+  local admission wait separately from remote-cache latency and hosted queues.
+  The existing ten-minute constrained-compute escape remains unchanged; record
+  local proof scope and require fresh hosted acceptance. Reversal changes only
+  the documentation wording; no scheduler capacity, proof floor or cache flag
+  is altered by this correction.
