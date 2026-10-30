@@ -199,3 +199,17 @@ The unchanged-head canonical retry then passed every final gate with no skips
 or lowered floors. Keep the original failed run and sender attribution; order
 additional heavy local checks around the active proofs instead of changing the
 workstation's memory protection policy.
+
+### Publication repair duplication gate, 2026-10-30
+
+- Doing: publish the attempt/publication identity repair through Yeet.
+- Evidence: the collected cheap-gate wave identified one introduced Fallow
+  duplication group in the two publication tails. The canonical publisher
+  stopped before pushing. The old-source whole-package audit was interrupted
+  deliberately before repair; it is not a passing proof.
+- Repair: move upstream warning and push-step selection into the existing shared
+  push phase, keeping both before/after head guards and all original behavior.
+  Replay focused tests, both guard-removal controls and the unchanged Fallow
+  gate before publishing. Preserve the original failed result.
+- Prevention: exercise the existing duplication gate during the focused edit
+  loop when consolidating a shared phase, before the broader publication wave.

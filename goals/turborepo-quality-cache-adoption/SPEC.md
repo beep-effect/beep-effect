@@ -327,3 +327,14 @@ review is `research/current-runtime-baseline-review.md`.
   new proof store, scheduler or ledger is introduced.
 - Reverse by removing the new writer path while retaining backward-compatible
   decoding of already emitted records. Do not rewrite historical attempts.
+
+### Publication-repair hosted escape, 2026-10-30
+
+- The first canonical publisher stopped on an introduced duplication after
+  roughly ten minutes of local gates. Repair that duplication in the existing
+  shared phase, rerun focused checks and use the standing hosted escape to
+  open the reviewable draft under constrained local compute.
+- Preserve the failed publisher and deliberately interrupted old-source package
+  audit. Neither grants current proof. Current full package/final, hosted checks,
+  review threads and the review window remain required before completion.
+- Reverse through an ordinary repair/revert PR; keep historical attempt facts.

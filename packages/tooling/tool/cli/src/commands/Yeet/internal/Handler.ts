@@ -870,9 +870,7 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
     O.some(attempt)
   );
 
-  yield* warnOnMismatchedPublishUpstream(plan.context);
-  const pushSteps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
-  yield* runPublishPushPhase(plan.context, pushSteps, recorder, extras, preparedHead);
+  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
   return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
@@ -1167,9 +1165,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
     recorder,
     "yeet clean-HEAD install preflight failed before push."
   );
-  yield* warnOnMismatchedPublishUpstream(plan.context);
-  const pushSteps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
-  yield* runPublishPushPhase(plan.context, pushSteps, recorder, extras, preparedHead);
+  yield* runPublishPushPhase(plan.context, publishSteps, recorder, extras, preparedHead);
   return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
@@ -1842,11 +1838,13 @@ const readPublishedHead = Effect.fn("Yeet.readPublishedHead")(
 
 const runPublishPushPhase = Effect.fn("Yeet.runPublishPushPhase")(function* (
   context: RepoRunContext,
-  steps: ReadonlyArray<RepoPlanStep>,
+  publishSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   extras: Ref.Ref<YeetVerdictExtras>,
   preparedHead: GitObjectId
 ) {
+  yield* warnOnMismatchedPublishUpstream(context);
+  const steps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
   const before = A.some(steps, (step) => step.id === GIT_PUSH_STEP_ID) ? O.some(preparedHead) : O.none<GitObjectId>();
   const verifyHead = O.match(before, {
     onNone: () => Effect.void,
