@@ -104,12 +104,17 @@ export {
 export { serveCachePrivateSocket } from "../commands/Cache/Cache.protocol.fixture.ts";
 export {
   CacheHostedProducerApproval,
+  CacheHostedProducerCompleteReport,
   CacheHostedProducerObservation,
   CacheHostedProducerReference,
   CacheHostedProducerReport,
   CacheHostedProducerUpload,
 } from "../commands/Cache/Cache.workflow.github.schemas.ts";
-export { verifyCacheHostedProducerUpload } from "../commands/Cache/Cache.workflow.github.ts";
+export {
+  buildCacheHostedProducerCompleteReport,
+  verifyCacheHostedProducerObservation,
+  verifyCacheHostedProducerUpload,
+} from "../commands/Cache/Cache.workflow.github.ts";
 export {
   CacheProducerExecutionProfile,
   CacheProducerObservation,

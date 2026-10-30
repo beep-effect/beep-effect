@@ -23,10 +23,12 @@ import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import {
   CacheHostedProducerApproval,
+  CacheHostedProducerCompleteReport,
   CacheHostedProducerObservation,
   CacheHostedProducerReference,
-  CacheHostedProducerReport,
+  CacheHostedProducerUpload,
 } from "./Cache.workflow.github.schemas.ts";
+import { CacheProducerObservation } from "./Cache.workflow.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github");
 const id = CacheHostedProducerReference.fields.runId;
@@ -75,7 +77,11 @@ const Artifact = S.Struct({
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const encodeApproval = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
 const decodeApproval = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerApproval));
-const decodeReport = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerReport), { onExcessProperty: "error" });
+const decodeReport = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerObservation.fields.report), {
+  onExcessProperty: "error",
+});
+const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservation));
+const decodeObservation = S.decodeUnknownEffect(S.fromJsonString(CacheProducerObservation));
 const sameBinding = S.toEquivalence(CacheProducerBinding);
 const sameRun = S.toEquivalence(Run);
 const sameArtifact = S.toEquivalence(Artifact);
@@ -200,7 +206,7 @@ const inspectHostedMetadata = Effect.fn("CacheWorkflow.inspectHostedMetadata")(f
 });
 
 const assertHostedReport = Effect.fn("CacheWorkflow.assertHostedReport")(function* (
-  report: CacheHostedProducerReport,
+  report: CacheHostedProducerObservation["report"],
   approval: CacheHostedProducerApproval,
   selected: CacheHostedProducerReference
 ) {
@@ -279,3 +285,99 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
   Effect.scoped,
   CacheCommandError.mapError("Cannot verify the independently approved GitHub producer artifact.")
 );
+
+/**
+ * Prepare the bounded report from a complete observation's own upload.
+ *
+ * **Details**
+ * The enclosing approved workflow supplies the run reference. This function
+ * derives the binding, complete canonical digest and upload from the observation;
+ * it accepts no replacement upload rows. It neither authenticates the envelope
+ * nor publishes an artifact or grants qualification.
+ *
+ * **Example** (Prepare publication for an owned observation)
+ * ```ts
+ * import {
+ *   buildCacheHostedProducerCompleteReport,
+ *   type CacheHostedProducerReference,
+ *   type CacheProducerObservation,
+ * } from "@beep/repo-cli/test/Cache"
+ *
+ * const prepare = (observation: CacheProducerObservation, run: CacheHostedProducerReference) =>
+ *   buildCacheHostedProducerCompleteReport(observation, run)
+ * ```
+ *
+ * @internal
+ * @category projections
+ * @since 0.0.0
+ */
+export const buildCacheHostedProducerCompleteReport = Effect.fn("CacheWorkflow.buildCompleteHostedReport")(function* (
+  observation: CacheProducerObservation,
+  reference: CacheHostedProducerReference
+) {
+  const owned = yield* encodeObservation(observation).pipe(Effect.flatMap(decodeObservation));
+  const upload = yield* owned.observation.upload.pipe(
+    Effect.fromOption(() => CacheCommandError.new("Complete producer publication requires its owned upload."))
+  );
+  return CacheHostedProducerCompleteReport.make({
+    binding: owned.envelope.body.binding,
+    runId: reference.runId,
+    attempt: reference.attempt,
+    observationSha256: yield* hashBytes(new TextEncoder().encode(yield* encodeObservation(owned))),
+    uploads: [upload],
+  });
+}, CacheCommandError.mapError("Cannot prepare complete producer publication."));
+
+/**
+ * Bind immutable hosted publication to the exact complete accepted observation.
+ *
+ * **Details**
+ * Reuses all authenticated metadata, workflow, archive, freshness and race
+ * checks. Legacy upload-only reports cannot satisfy this join. The independent
+ * computation binding, full canonical observation digest and exact owned upload
+ * must agree. This verifies publication only: issuer authentication, native
+ * comparisons, live source and qualification policy remain separate gates.
+ *
+ * **Example** (Inspect complete hosted publication)
+ * ```ts
+ * import {
+ *   type CacheHostedProducerApproval,
+ *   type CacheHostedProducerReference,
+ *   type CacheProducerObservation,
+ *   verifyCacheHostedProducerObservation,
+ * } from "@beep/repo-cli/test/Cache"
+ *
+ * const inspect = (
+ *   approval: CacheHostedProducerApproval,
+ *   run: CacheHostedProducerReference,
+ *   archive: Uint8Array,
+ *   observation: CacheProducerObservation,
+ * ) => verifyCacheHostedProducerObservation(approval, run, archive, observation)
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const verifyCacheHostedProducerObservation = Effect.fn("CacheWorkflow.verifyHostedObservation")(function* (
+  approval: CacheHostedProducerApproval,
+  reference: CacheHostedProducerReference,
+  archive: Uint8Array,
+  observation: CacheProducerObservation
+) {
+  const owned = yield* encodeObservation(observation).pipe(Effect.flatMap(decodeObservation));
+  const contents = yield* encodeObservation(owned);
+  const upload = yield* owned.observation.upload.pipe(
+    Effect.fromOption(() => CacheCommandError.new("Complete producer observation requires its owned upload."))
+  );
+  const hosted = yield* verifyCacheHostedProducerUpload(approval, reference, archive);
+  if (!sameBinding(owned.envelope.body.binding, hosted.report.binding))
+    return yield* CacheCommandError.new("Complete producer observation differs from independent binding.");
+  if (!S.is(CacheHostedProducerCompleteReport)(hosted.report))
+    return yield* CacheCommandError.new("Legacy upload-only publication cannot bind a complete observation.");
+  if (hosted.report.observationSha256 !== (yield* hashBytes(new TextEncoder().encode(contents))))
+    return yield* CacheCommandError.new("Hosted publication differs from the complete observation bytes.");
+  if (!S.toEquivalence(CacheHostedProducerUpload)(hosted.report.uploads[0], upload))
+    return yield* CacheCommandError.new("Hosted publication differs from the complete observation's owned upload.");
+  return hosted;
+}, CacheCommandError.mapError("Cannot join complete producer observation to immutable publication."));

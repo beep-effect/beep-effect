@@ -507,11 +507,18 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   cases per runtime and exact-restored regression controls. The inert peer and
   controlled admission do not prove actual R2 grants or protected publication.
 
-- [Owned approval refusal checkpoint](producer-approval-refusal-checkpoint.json):
-  immutable hosted gap, current exact source hashes, admission-order negative
-  control, and 176-case Node/Bun runner coverage. Local controlled evidence only.
 
-- [Dependency security compatibility checkpoint](dependency-security-compatibility-checkpoint.json):
-  patched dependency identities, independent legacy-reference provenance,
-  complete package and cross-runtime test/coverage proof, and restored negative
-  controls. This component repair grants no signed reuse or whole-goal acceptance.
+
+### Complete observation and immutable publication, 2026-10-30
+
+- [Local source-bound checkpoint](complete-observation-publication-checkpoint.json):
+  the existing hosted-report schema/verifier now supports a bounded v2 report
+  that hashes the complete canonical observation and binds its exact owned
+  upload. V1 remains upload-only; no new trust store or qualification authority.
+- Thirty-two Node tests and thirty-two Bun tests use physical local ZIPs with
+  mocked authenticated metadata. Three source-removal controls prove the full
+  digest, upload equality and private snapshot guards are causal. These are
+  component observations, not an actual protected workflow or native R2 run.
+- The existing issuer, acceptance importer and live-source policy owners remain
+  required; actual publisher/consumer wiring, renewal and production observations
+  are explicitly unfinished.

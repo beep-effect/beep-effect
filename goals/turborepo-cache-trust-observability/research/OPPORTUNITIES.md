@@ -1380,3 +1380,13 @@ negative case; do not change a threshold or add an exception. A nonquiet root
 lint also identified the old adapter fixture's process.platform warning. That
 line is inherited from the unpublished parent boundary and is already fixed
 in the owning producer PR; preserve it until the accepted-parent replay.
+
+### Wrapped export navigation, 2026-10-30
+
+- Doing: trace the hosted upload verifier before joining complete observations.
+- Evidence: `graft callers verifyCacheHostedProducerUpload --depth 2` returned
+  `no symbol`, while targeted `graft grep` located the Effect.fn-wrapped export
+  under its module node.
+- Prevention: use the exact grep result and live test barrel for wrapped exports
+  when the symbol graph cannot resolve the call edge. No graph upgrade, duplicate
+  index or alternate memory service is needed for this source inspection.

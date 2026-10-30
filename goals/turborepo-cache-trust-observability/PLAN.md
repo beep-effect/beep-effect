@@ -802,3 +802,20 @@ in the owning producer PR and will be consumed through accepted-parent replay.
 Refresh the canonical JSDoc anchor inventory after that replay, then run the
 complete combined package, final and hosted proof. This unpublished component
 is not final and grants no activation, qualification or whole-goal acceptance.
+
+### Complete-observation publication component, 2026-10-30
+
+The unpublished protected-producer continuation now prepares a versioned report
+for the complete canonical observation and exactly one owned upload. Its strict
+hosted verifier reuses the existing authenticated GitHub/ZIP boundary and checks
+the entire observation digest, independent binding and upload. Legacy upload-only
+reports remain readable but cannot satisfy the complete join. A private snapshot
+prevents caller mutation during metadata reads.
+
+All32 focused tests pass under each runtime; removing the digest, upload or
+snapshot guard makes the intended case fail, with exact source restoration.
+Quick verification, Effect Vitest (zero introduced findings) and Fallow pass.
+[The source-bound checkpoint](research/complete-observation-publication-checkpoint.json)
+retains the exact limits and remaining work. No real protected publication or
+acceptance consumer is claimed: both must use this join, retain independent MAC
+verification, and pass fresh combined-source/hosted proof after the parent lands.

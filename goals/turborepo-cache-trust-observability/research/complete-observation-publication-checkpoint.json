@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "cache-complete-observation-publication-checkpoint/v1",
+  "recordedAt": "2026-10-30T13:25:16.203354+00:00",
+  "authority": "Unpublished local component proof only; no real protected GitHub publication, issuer authentication, task qualification or production activation.",
+  "sourceParent": "3618baccb3d99c0f28aa0d936aca13f614fd780b",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts": "c144585753a31365757b833f30243b14012549a4a7dcfee958673447374625d2",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "2405a6dbc717a73ad074cffdbe57faf4e5d35600c5be1040fb90571e3efcfa45",
+    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "1a71333e49aca5b931dfde63bc5dfb942e1faf1b1cf617873ce10c9b3ca4d9b9"
+  },
+  "implementation": [
+    "Add a v2 hosted report binding the canonical schema encoding of the complete observation, including envelope and both native matrices, to exactly one owned upload.",
+    "Retain v1 upload-only decoding; the strict complete-observation verifier refuses that legacy report.",
+    "Reuse independent repository/workflow/source approval and authenticated immutable ZIP metadata; preserve all existing parser, size, freshness and race checks.",
+    "Require matching complete-observation digest, independent computation binding and exact owned upload.",
+    "Take a private decoded observation snapshot before asynchronous metadata reads. No verified boolean, new trust store or qualification transition is added."
+  ],
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 7.497,
+      "finishedAt": "2026-10-30T13:09:37.857688+00:00",
+      "tests": 32
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 2.312,
+      "finishedAt": "2026-10-30T13:18:38.031068+00:00",
+      "tests": 32
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 13.419,
+      "finishedAt": "2026-10-30T13:09:44.196136+00:00"
+    },
+    "effectVitest": {
+      "exit": 0,
+      "elapsedSeconds": 39.371,
+      "finishedAt": "2026-10-30T13:19:14.534076+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 11.158,
+      "finishedAt": "2026-10-30T13:18:47.273950+00:00"
+    }
+  },
+  "causalControls": {
+    "schemaVersion": "cache-complete-observation-controls/v1",
+    "recordedAt": "2026-10-30T13:14:03.147688+00:00",
+    "authority": "Controlled local ZIP and mocked authenticated metadata boundary only. No real GitHub producer, issuer authentication or qualification proof.",
+    "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d",
+    "rows": [
+      {
+        "control": "digest",
+        "runtime": "node",
+        "test": "rejects substituted complete matrices or envelope bytes with the same approved upload",
+        "removedGuardExit": 1,
+        "oneSelectedCaseFailed": true,
+        "logSha256": "7deffd4b696c50e2b34f831e436cb89a390ed3538fa130cb1aa1ce8c788db0fc",
+        "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d"
+      },
+      {
+        "control": "upload",
+        "runtime": "bun",
+        "test": "rejects a contradictory published upload even when its complete observation digest matches",
+        "removedGuardExit": 1,
+        "oneSelectedCaseFailed": true,
+        "logSha256": "833ef054cab2d5c675aaaeb4126c694f8bcbc070db611338bae8ef29dc7832ad",
+        "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d"
+      },
+      {
+        "control": "snapshot",
+        "runtime": "node",
+        "test": "compares a private observation snapshot despite mutation during hosted metadata reads",
+        "removedGuardExit": 1,
+        "oneSelectedCaseFailed": true,
+        "logSha256": "8b33aeae40cc6159ba3499e73a8537dfaff41f72c4f2807063bcb5b51bb9a9ee",
+        "sourceSha256": "d506cc80e4ad788773a1856f871e752612eb588ef1ce9456e2239d5baa5fdc5d"
+      }
+    ],
+    "sourceRestoredExactly": true
+  },
+  "limits": {
+    "compressedArchiveBytes": 1048576,
+    "asciiMemberBytes": 65536,
+    "memberName": "cache-producer.json",
+    "memberCount": 1,
+    "completeProfileUploadCount": 1,
+    "parserTimeoutSeconds": 10,
+    "observationHours": 24,
+    "limitsUnchanged": true
+  },
+  "remaining": [
+    "Replay unpublished producer commits onto the accepted producer-execution parent and refresh combined source/generated metadata.",
+    "Have the closed protected producer publish this report from its actual owned observation and independently configured current run reference.",
+    "Integrate the strict hosted join with the existing issuer-authenticated acceptance importer and operational rereads; preserve live source, expiry and revocation checks.",
+    "Complete fresh combined-source package/final/hosted/review acceptance; current focused tests do not prove real GitHub or native R2 execution.",
+    "Verify the actual human bootstrap, safely transport independent issuer material, execute the bounded signed trial and prove role/epoch/rollback behavior.",
+    "Retain all computation/feature adoption and actual seven/seven/fourteen-day representative observations from both full goals."
+  ],
+  "productionChanges": false,
+  "qualificationChanges": false,
+  "instrumentationCatalog": {
+    "path": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+    "sha256": "742f99e6c535f6d44cf75f15d18cb0feb3e83046befd7d29c22a2059d615630c",
+    "writer": {
+      "exit": 0,
+      "elapsedSeconds": 7.32,
+      "finishedAt": "2026-10-30T13:27:05.248421+00:00"
+    }
+  },
+  "packetChecks": {
+    "doctor": {
+      "exit": 0,
+      "elapsedSeconds": 2.073,
+      "finishedAt": "2026-10-30T13:27:02.265819+00:00"
+    },
+    "explore": {
+      "exit": 0,
+      "elapsedSeconds": 1.429,
+      "finishedAt": "2026-10-30T13:27:02.098003+00:00"
+    },
+    "reflectionArtifacts": {
+      "exit": 0,
+      "elapsedSeconds": 1.747,
+      "finishedAt": "2026-10-30T13:27:01.392867+00:00"
+    }
+  }
+}

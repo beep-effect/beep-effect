@@ -805,3 +805,21 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
 - Reverse by recombining the same validator with the optional API and restoring
   the loader caller. Keep the denial-before-lookup case and snapshot controls.
   No runtime, grant, profile or production setting changes.
+
+### Complete observation publication binding, 2026-10-30
+
+- Extend the existing bounded hosted report with a versioned complete-observation
+  digest and exactly one owned upload. Keep v1 readable as upload-only evidence;
+  it cannot satisfy the new complete-observation join. Hash the canonical schema
+  encoding of the complete observation, including its envelope and both native
+  matrices, which is the encoding consumed by the existing acceptance owner.
+- Reuse authenticated GitHub metadata, approved workflow bytes and immutable ZIP
+  verification. The strict join must also match the independent computation
+  binding and exact owned upload. Keep the one-MiB ZIP, sixty-four-KiB member,
+  ten-second inspection and twenty-four-hour lifetime unchanged.
+- This component remains observation-only. Independent issuer/MAC verification,
+  current-source admission and complete qualification policy stay mandatory.
+  The protected publisher and acceptance consumer must use this join before any
+  production qualification claim; no verified boolean or new trust store is added.
+- Reversal leaves complete-observation consumption disabled and retains the
+  legacy upload-only decoder. No endpoint, credential, signing or epoch changes.

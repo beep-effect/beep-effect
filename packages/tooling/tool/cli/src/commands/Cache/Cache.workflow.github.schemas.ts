@@ -100,6 +100,49 @@ export class CacheHostedProducerReport extends S.Opaque<CacheHostedProducerRepor
 ) {}
 
 /**
+ * Immutable publication binding for one complete owned observation and upload.
+ *
+ * **Details**
+ * The digest covers the canonical schema encoding of the complete observation,
+ * including its envelope, pilot and conformance matrices. It carries no raw
+ * observation, artifact payload or credential. Verification and qualification
+ * remain independent of shape validation.
+ *
+ * **Example** (Require complete observation identity)
+ * ```ts
+ * import { CacheHostedProducerCompleteReport } from "@beep/repo-cli/test/Cache"
+ * console.assert("observationSha256" in CacheHostedProducerCompleteReport.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheHostedProducerCompleteReport extends S.Opaque<
+  CacheHostedProducerCompleteReport,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    ...CacheHostedProducerReport.fields,
+    schemaVersion: S.tag("cache-hosted-producer-upload/v2"),
+    observationSha256: Sha256Hex,
+    uploads: S.NonEmptyArray(CacheHostedProducerUpload).check(S.isMaxLength(1)),
+  }).pipe(
+    $I.annoteSchema("CacheHostedProducerCompleteReport", {
+      description:
+        "One complete canonical observation digest and its owned upload; published shape alone grants no trust.",
+    })
+  )
+) {}
+
+const HostedReport = S.Union([CacheHostedProducerReport, CacheHostedProducerCompleteReport]).pipe(
+  S.toTaggedUnion("schemaVersion"),
+  $I.annoteSchema("HostedReport", {
+    description: "Legacy upload-only or complete-observation publication, with explicit versioned authority limits.",
+  })
+);
+
+/**
  * Verified immutable artifact observation, without qualification or reuse authority.
  *
  * **Example** (Keep the observation boundary explicit)
@@ -120,7 +163,7 @@ export class CacheHostedProducerObservation extends S.Opaque<
     reference: CacheHostedProducerReference,
     artifactSha256: Sha256Hex,
     reportSha256: Sha256Hex,
-    report: CacheHostedProducerReport,
+    report: HostedReport,
   }).pipe(
     $I.annoteSchema("CacheHostedProducerObservation", {
       description:

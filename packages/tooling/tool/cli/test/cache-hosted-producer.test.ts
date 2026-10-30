@@ -2,12 +2,23 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
 import { GitHubError } from "@beep/github/GitHubError";
 import { RepoRef } from "@beep/github/Repo";
-import { CacheCommandError, CacheProducerBinding } from "@beep/repo-cli/commands/Cache";
 import {
+  CacheCommandError,
+  CacheProducerBinding,
+  CacheProducerBody,
+  CacheProducerBundle,
+  CacheProducerEnvelope,
+  CacheProtocolExecution,
+} from "@beep/repo-cli/commands/Cache";
+import {
+  buildCacheHostedProducerCompleteReport,
   CacheHostedProducerApproval,
+  CacheHostedProducerCompleteReport,
   CacheHostedProducerReference,
   CacheHostedProducerReport,
+  CacheProducerObservation,
   CacheRuntimeProcess,
+  verifyCacheHostedProducerObservation,
   verifyCacheHostedProducerUpload,
 } from "@beep/repo-cli/test/Cache";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -21,6 +32,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -29,6 +41,8 @@ import { input } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const encodeReport = S.encodeEffect(S.fromJsonString(CacheHostedProducerReport));
+const encodeCompleteReport = S.encodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport));
+const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservation));
 const encodeUnknown = S.encodeEffect(S.fromJsonString(S.Unknown));
 const revision = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const workflow = "name: Producer\non: workflow_dispatch\n";
@@ -67,6 +81,7 @@ const zipReport = Effect.fn("HostedProducerTest.zip")(function* (
 });
 
 const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedReference = reference) {
+  const now = yield* Clock.currentTimeMillis;
   const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
     ...input.pilot,
     protocolClient: input.protocol.observation.client,
@@ -97,7 +112,19 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
   });
   const contents = yield* encodeReport(report);
   const archive = yield* zipReport(contents);
-  const now = yield* Clock.currentTimeMillis;
+  const observation = CacheProducerObservation.make({
+    observation: yield* S.decodeUnknownEffect(CacheProducerBundle)({ ...input, upload: report.uploads[0] }),
+    envelope: CacheProducerEnvelope.make({
+      body: CacheProducerBody.make({
+        issuer: binding.configurationDigest,
+        binding,
+        payloadSha256: binding.configurationDigest,
+        issuedAtMs: now,
+        expiresAtMs: now + 60_000,
+      }),
+      mac: binding.configurationDigest,
+    }),
+  });
   const repository = { id: 33, full_name: "beep-effect/beep-effect", fork: false };
   const run = {
     id: selectedReference.runId,
@@ -136,6 +163,8 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
         readonly afterRun?: unknown;
         readonly afterArtifact?: unknown;
         readonly runFailure?: GitHubError;
+        readonly observation?: CacheProducerObservation;
+        readonly onRead?: () => void;
       } = {},
       transported = archive,
       approved = approval
@@ -149,6 +178,7 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
       const client = GitHubClient.makeTest({
         requestDecoded: dual(3, <A, I>(route: string, _params: Record<string, unknown>, schema: S.Codec<A, I>) =>
           Effect.suspend(() => {
+            responses.onRead?.();
             if (route === runRoute && responses.runFailure !== undefined) return Effect.fail(responses.runFailure);
             const data = route === runRoute ? runResponse() : artifactResponse();
             expect([runRoute, artifactRoute]).toContain(route);
@@ -165,10 +195,11 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
           return Effect.succeed(responses.workflow ?? workflow);
         }),
       });
-      return verifyCacheHostedProducerUpload(approved, selectedReference, transported).pipe(
-        Effect.provideService(GitHubClient, client),
-        Effect.provideService(GitHubContent, content)
-      );
+      const verified =
+        responses.observation === undefined
+          ? verifyCacheHostedProducerUpload(approved, selectedReference, transported)
+          : verifyCacheHostedProducerObservation(approved, selectedReference, transported, responses.observation);
+      return verified.pipe(Effect.provideService(GitHubClient, client), Effect.provideService(GitHubContent, content));
     }
   );
   const repack = Effect.fn("HostedProducerTest.repack")(function* (text: string, extra = false, symlink = false) {
@@ -178,7 +209,12 @@ const fixture = Effect.fn("HostedProducerTest.fixture")(function* (selectedRefer
       metadata: { ...artifact, size_in_bytes: bytes.byteLength, digest: `sha256:${yield* hashBytes(bytes)}` },
     };
   });
-  return { approval, report, contents, archive, run, artifact, verify, repack };
+  const complete = Effect.fn("HostedProducerTest.complete")(function* () {
+    const report = yield* buildCacheHostedProducerCompleteReport(observation, selectedReference);
+    const packed = yield* repack(yield* encodeCompleteReport(report));
+    return { report, ...packed };
+  });
+  return { approval, report, observation, contents, archive, run, artifact, verify, repack, complete };
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted producer evidence", (it) => {
@@ -231,6 +267,162 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted produc
       expect(observed.authority).toBe("verified-github-artifact-observation-only");
       expect(observed.report.uploads).toEqual(f.report.uploads);
       expect(observed.reportSha256).toBe(yield* hashBytes(new TextEncoder().encode(f.contents)));
+    })
+  );
+
+  it.effect("binds complete canonical observation bytes without publishing their matrices or envelope", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const packed = yield* f.complete();
+      const observed = yield* f.verify({ artifact: packed.metadata, observation: f.observation }, packed.bytes);
+      expect(observed.report).toEqual(packed.report);
+      expect(packed.report.observationSha256).toBe(
+        yield* hashBytes(new TextEncoder().encode(yield* encodeObservation(f.observation)))
+      );
+      const contents = yield* encodeCompleteReport(packed.report);
+      expect(contents).not.toContain('"envelope"');
+      expect(contents).not.toContain('"pilot"');
+      expect(observed.authority).toBe("verified-github-artifact-observation-only");
+    })
+  );
+
+  it.effect("rejects substituted complete matrices or envelope bytes with the same approved upload", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const packed = yield* f.complete();
+      const other = yield* hashBytes(new TextEncoder().encode("controlled changed complete observation"));
+      for (const observation of [
+        CacheProducerObservation.make({
+          ...f.observation,
+          observation: CacheProducerBundle.make({
+            ...f.observation.observation,
+            protocol: CacheProtocolExecution.make({ ...f.observation.observation.protocol, bunSha256: other }),
+          }),
+        }),
+        CacheProducerObservation.make({
+          ...f.observation,
+          envelope: CacheProducerEnvelope.make({ ...f.observation.envelope, mac: other }),
+        }),
+      ]) {
+        const error = yield* f.verify({ artifact: packed.metadata, observation }, packed.bytes).pipe(Effect.flip);
+        expect(error.message).toContain("complete observation bytes");
+      }
+    })
+  );
+
+  it.effect("rejects a contradictory published upload even when its complete observation digest matches", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const original = yield* f.complete();
+      const report = CacheHostedProducerCompleteReport.make({
+        ...original.report,
+        uploads: [{ ...original.report.uploads[0], archiveBytes: original.report.uploads[0].archiveBytes + 1 }],
+      });
+      const packed = yield* f.repack(yield* encodeCompleteReport(report));
+      const error = yield* f
+        .verify({ artifact: packed.metadata, observation: f.observation }, packed.bytes)
+        .pipe(Effect.flip);
+      expect(error.message).toContain("owned upload");
+    })
+  );
+
+  it.effect("keeps legacy upload-only reports readable without accepting them as complete publication", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      expect((yield* f.verify()).report.schemaVersion).toBe("cache-hosted-producer-upload/v1");
+      const error = yield* f.verify({ observation: f.observation }).pipe(Effect.flip);
+      expect(error.message).toContain("Legacy upload-only publication");
+    })
+  );
+
+  it.effect("requires the complete observation's own upload before publication or hosted joining", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const observation = CacheProducerObservation.make({
+        ...f.observation,
+        observation: CacheProducerBundle.make({ ...f.observation.observation, upload: O.none() }),
+      });
+      const buildError = yield* buildCacheHostedProducerCompleteReport(observation, reference).pipe(Effect.flip);
+      expect(buildError.message).toContain("owned upload");
+      const joinError = yield* f.verify({ observation }).pipe(Effect.flip);
+      expect(joinError.message).toContain("owned upload");
+    })
+  );
+
+  it.effect("retains authenticated run and race refusals for complete publication", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const packed = yield* f.complete();
+      for (const change of [
+        { run: { ...f.run, event: "pull_request" } },
+        { afterRun: { ...f.run, run_attempt: f.run.run_attempt + 1 } },
+      ])
+        (yield* f
+          .verify({ ...change, artifact: packed.metadata, observation: f.observation }, packed.bytes)
+          .pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("rejects an observation from another independent computation binding", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const packed = yield* f.complete();
+      const binding = CacheProducerBinding.make({
+        ...f.approval.binding,
+        sourceRevision: yield* S.decodeEffect(CacheProducerBinding.fields.sourceRevision)(Str.repeat(40)("b")),
+      });
+      const observation = CacheProducerObservation.make({
+        ...f.observation,
+        envelope: CacheProducerEnvelope.make({
+          ...f.observation.envelope,
+          body: CacheProducerBody.make({ ...f.observation.envelope.body, binding }),
+        }),
+      });
+      const error = yield* f.verify({ artifact: packed.metadata, observation }, packed.bytes).pipe(Effect.flip);
+      expect(error.message).toContain("independent binding");
+    })
+  );
+
+  it.effect("refuses malformed complete digests, absent digests and more than one upload", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const original = yield* f.complete();
+      for (const report of [
+        { ...original.report, observationSha256: "not-a-sha256" },
+        { ...original.report, observationSha256: undefined },
+        { ...original.report, uploads: [...original.report.uploads, ...original.report.uploads] },
+      ]) {
+        const packed = yield* f.repack(yield* encodeUnknown(report));
+        (yield* f
+          .verify({ artifact: packed.metadata, observation: f.observation }, packed.bytes)
+          .pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      }
+    })
+  );
+
+  it.effect("compares a private observation snapshot despite mutation during hosted metadata reads", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const original = yield* f.complete();
+      const upload = O.getOrThrow(f.observation.observation.upload);
+      const changedBytes = upload.archiveBytes + 1;
+      const report = CacheHostedProducerCompleteReport.make({
+        ...original.report,
+        uploads: [{ ...original.report.uploads[0], archiveBytes: changedBytes }],
+      });
+      const packed = yield* f.repack(yield* encodeCompleteReport(report));
+      const error = yield* f
+        .verify(
+          {
+            artifact: packed.metadata,
+            observation: f.observation,
+            onRead: () => expect(Reflect.set(upload, "archiveBytes", changedBytes)).toBe(true),
+          },
+          packed.bytes
+        )
+        .pipe(Effect.flip);
+      expect(upload.archiveBytes).toBe(changedBytes);
+      expect(error.message).toContain("owned upload");
     })
   );
 
