@@ -309,3 +309,15 @@ binds changed runner source bytes. Historical claims above keep their dates.
   head changes produce no verified publication identity. Older records decode
   without the new field. Local focused evidence grants no cache qualification,
   hosted status, deployment or full-goal acceptance.
+
+
+### Markdown coverage isolation, 2026-10-30
+
+- [Source-bound component receipt](markdown-coverage-isolation-checkpoint.json):
+  a root run missed two default-field branches despite passing tests. Existing
+  focused and standalone tests cover them, so no parser bug is claimed.
+- Shared harness policy requires module-mocking packages to opt into isolation.
+  The registry-spy package now does so; both runtimes pass all 4,501 existing
+  cases and full parser coverage. The extra local runtime is recorded explicitly.
+- Default package verification passes; current final/hosted/review acceptance
+  and all full-goal obligations remain separately unproven.
