@@ -236,3 +236,13 @@ focused proof has 195 passing cases per runtime. The prior source passed
 complete package/final checks; current final/hosted acceptance and review remain
 required after this test-seam repair. This component does not qualify or activate
 any computation, cache epoch or producer profile.
+
+
+### Markdown coverage resource boundary, 2026-10-30
+
+The new [source-bound checkpoint](research/markdown-coverage-isolation-checkpoint.json)
+retains a root proof's missing default branches, the unchanged-source attribution,
+standalone controls, the package's explicit test-file isolation and its measured
+cost. Node and Bun each pass 4,501 existing tests with full parser coverage, and
+default package verification passes. This is a verification-reliability component;
+current final/hosted/review/merge proof and the full adoption goal remain open.
