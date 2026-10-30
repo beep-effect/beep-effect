@@ -552,3 +552,5 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
 - Both native runtimes pass 127 security/lane cases, including dispatch/main,
   read-only permission, disabled capability and retention checks. Actual protected
   execution and complete combined proof remain separate requirements.
+
+- 2026-10-30: The inspection-governance repair at `c5ae8bf81934a7d62ffce440c88b2a8a2e3e80bc` passed default `@beep/repo-cli` package verification, including audit and Docgen (exit 0; 1,085.848 seconds). Source hashes in `inspection-governance-checkpoint.json` remain exact. This is component verification, not accepted-parent, hosted or live producer proof.

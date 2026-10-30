@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-inspection-governance-checkpoint/v1",
-  "recordedAt": "2026-10-30T18:56:11.037349+00:00",
+  "recordedAt": "2026-10-30T19:22:30.248538+00:00",
   "authority": "Unpublished source/workflow policy repair and local tests; no protected workflow execution, qualification or production activation.",
   "sourceParent": "46c9202bac2dc9866fa9c64fb71c14e849d09852",
   "sourceSha256": {
@@ -42,11 +42,20 @@
       "exit": 0,
       "elapsedSeconds": 12.363,
       "finishedAt": "2026-10-30T18:54:04.777572+00:00"
+    },
+    "defaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 1085.848,
+      "finishedAt": "2026-10-30T19:18:09.552875+00:00",
+      "sourceRevision": "c5ae8bf81934a7d62ffce440c88b2a8a2e3e80bc",
+      "auditSeconds": 1046.0,
+      "docgenSeconds": 38.4,
+      "command": "bun --no-env-file run beep quality package-verify @beep/repo-cli"
     }
   },
   "testsPerRuntime": 127,
   "remaining": [
-    "Complete fresh default package and combined accepted-parent/final/hosted proof.",
+    "Complete fresh accepted-parent combined final and hosted proof; this source revision passed the default package audit and Docgen.",
     "Regenerate canonical inventories after accepted-parent replay.",
     "Execute actual protected source inspection and real producer publication before qualification.",
     "Preserve every full trust/adoption acceptance and real observation requirement."

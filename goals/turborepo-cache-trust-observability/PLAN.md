@@ -869,3 +869,13 @@ runtime; quick verification passes. See the
 [source-bound receipt](research/inspection-governance-checkpoint.json).
 Fresh default package and accepted-parent/final/hosted proof remain open; no
 inspection dispatch, credential activation or whole-goal acceptance is claimed.
+
+### Inspection governance default package result, 2026-10-30
+
+The repaired source at `c5ae8bf81934a7d62ffce440c88b2a8a2e3e80bc` passed the
+full default `@beep/repo-cli` package verification: audit 1,046.0 seconds and
+Docgen 38.4 seconds, 1,085.848 seconds total. The introduced unmapped inspection
+context failure is repaired; this source-bound result supersedes the pending
+retry statement above. Accepted-parent integration, current combined final and
+hosted proof, real protected execution and every full acceptance criterion remain
+open. No credential or production activation occurred.
