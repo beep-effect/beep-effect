@@ -914,3 +914,13 @@ The first diagnostic tried an unavailable unscoped Istanbul package and raw-map
 equality. Reuse the repo owner's `@vitest/istanbul-lib-coverage` fork and canonical
 normalizer: derived line metadata and serialized infinite columns need that
 normalization. Keep the diagnostic distinct from a new hosted proof.
+
+### Reuse the bind-safe loopback path in conformance tests, 2026-10-30
+
+- An overlapping Node/Bun replay failed with `EADDRINUSE` in the shared
+  conformance test server before its assertion. The same Node source passed
+  serially. The direct Bun server bypassed the existing scoped bind-event and
+  bounded address-in-use retry path.
+- Reuse `serveCacheLoopback`, retain the original 128 MiB body limit, and
+  qualify recovery against an actually occupied socket in both runtimes.
+  Production trust, credentials and cache activation remain unchanged.

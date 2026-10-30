@@ -444,3 +444,18 @@ review is `research/current-runtime-baseline-review.md`.
   or asserting a vulnerability outcome. Any pure parser decomposition needs
   independent qualification and cannot replace the external verdict. Reverse
   only the review projection to pending; existing safety behavior stays fresh.
+### Markdown test-resource isolation, 2026-10-30
+
+- Keep the Markdown parser unchanged and preserve the per-file 100% coverage
+  floor. A root proof reported two uncovered default-metadata branches while
+  all tests passed; existing focused and standalone full tests cover both.
+  Standalone checks do not reproduce the original measurement failure or prove
+  a particular V8 internal cause.
+- Apply the shared harness rule for module-replacing tests to this package's
+  registry spies: use an isolated module context per file during coverage too.
+  Both native profiles pass all 4,501 cases and retain full parser coverage.
+  The measured local coverage cost is about 45 extra Node seconds and 29 Bun
+  seconds; these single co-running observations are not a speedup claim.
+- Reverse the one-package override after equivalent mock isolation and reliable
+  branch evidence are shown. No runtime parser, coverage floor, required check,
+  task qualification, credential or production cache setting changes.

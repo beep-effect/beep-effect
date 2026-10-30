@@ -377,3 +377,13 @@ or deployment authority.
 - 2026-10-30: [Python workspace review](python-workspace-feature-review.json) binds the exact tracked path/script inventories, nested uv project, existing generated lint/test ownership and source hashes. Preserve absent root discovery without excluding real Python quality computations. Four retained native availability cases prove syntax only. Three feature dispositions are final; 32 and all full-goal acceptance remain open.
 
 - 2026-10-30: [External-security boundary](external-security-disposition-review.json) binds the root command/configuration, live clock-sensitive OSV selection and shared explicit proof-reuse exclusion. One final whole-task keep-fresh decision brings the total to 199, with 2372 remaining disposition gaps. This is source review, not an executed audit, a cache qualification or fresh hosted proof.
+### Markdown coverage isolation, 2026-10-30
+
+- [Source-bound component receipt](markdown-coverage-isolation-checkpoint.json):
+  a root run missed two default-field branches despite passing tests. Existing
+  focused and standalone tests cover them, so no parser bug is claimed.
+- Shared harness policy requires module-mocking packages to opt into isolation.
+  The registry-spy package now does so; both runtimes pass all 4,501 existing
+  cases and full parser coverage. The extra local runtime is recorded explicitly.
+- Default package verification passes; current final/hosted/review acceptance
+  and all full-goal obligations remain separately unproven.

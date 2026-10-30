@@ -66,7 +66,8 @@
     "research/native-selection-controls.json",
     "research/selection-semantics-checkpoint.json",
     "research/python-workspace-feature-review.json",
-    "research/external-security-disposition-review.json"
+    "research/external-security-disposition-review.json",
+    "research/markdown-coverage-isolation-checkpoint.json"
   ],
   "agentLaunchers": [
     {

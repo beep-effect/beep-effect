@@ -557,3 +557,11 @@ the fresh complete canonical final and hosted coverage gates on the new head.
 The prior complete package pass retains its original 0d source scope. A combined
 coverage diagnostic guides the repair and never replaces fresh acceptance.
 Preserve every coverage floor, uncovered-count bound and full-goal obligation.
+
+### Conformance fixture bind ownership (2026-10-30)
+
+The shared conformance test server reuses the existing scoped loopback server
+with its bounded `EADDRINUSE` retry, preserving the previous 128 MiB body limit.
+This fixes an inherited parallel-test bind race without adding a second retry
+implementation. Reverting the fixture call reverses the change; no runtime
+cache, credential or production policy changes are involved.

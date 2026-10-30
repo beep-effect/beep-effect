@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
+  "specSha256": "a5c62133cbf7d74af84c17f3596edd067efab7d340d33a6cc809ceaa467d4b98",
   "acceptance": [
     {
       "id": "AC-01",
@@ -277,5 +277,11 @@
   "priorSpecSha256AtPythonWorkspaceReview": "6dd4fa867db490b4ea34c99f1b3a69c0a765ad5006543c5c19912c31e36a87b8",
   "pythonWorkspaceFeatureReview": "research/python-workspace-feature-review.json",
   "priorSpecSha256AtExternalSecurityReview": "3801fef11d324f035903d5d217acd045f6c161bea28ab11b0027e9a80a6c3623",
-  "externalSecurityDispositionReview": "research/external-security-disposition-review.json"
+  "externalSecurityDispositionReview": "research/external-security-disposition-review.json",
+  "priorSpecSha256AtMarkdownIsolation": "c1ca04ceb9afeb4c353345ac349487ce3f03b28081a1724abe8f8eaff76903e6",
+  "markdownCoverageIsolationCheckpoint": "research/markdown-coverage-isolation-checkpoint.json",
+  "priorSpecSha256AtAcceptedConformanceMerge": {
+    "local": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
+    "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+  }
 }

@@ -340,3 +340,11 @@ executed and no security verdict or pure slice is qualified by this review.
 There are now 199 source-reviewed whole-task keep-fresh dispositions and 2372
 remaining final-disposition gaps. Three feature decisions are final and 32
 remain pending. Every full-goal acceptance criterion remains unproven.
+### Markdown coverage resource boundary, 2026-10-30
+
+The new [source-bound checkpoint](research/markdown-coverage-isolation-checkpoint.json)
+retains a root proof's missing default branches, the unchanged-source attribution,
+standalone controls, the package's explicit test-file isolation and its measured
+cost. Node and Bun each pass 4,501 existing tests with full parser coverage, and
+default package verification passes. This is a verification-reliability component;
+current final/hosted/review/merge proof and the full adoption goal remain open.
