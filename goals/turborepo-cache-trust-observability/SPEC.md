@@ -900,3 +900,20 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   different policies and absence results, with no shared behavior beyond the
   existing FileSystem primitive. Record the source judgment and leave the raw
   warning intact; add no suppression or baseline relaxation.
+
+### Private producer output creation, 2026-10-30
+
+- Create producer observation and compact publication files with the existing
+  Effect filesystem exclusive-create pattern and explicit mode0600. Generic
+  report defaults must not determine these private file permissions or replace
+  existing files, final symlinks or hardlinked peers. Use fresh caller-owned
+  output directories and paths for each run; ordinary report callers retain
+  their behavior.
+- Keep the current encoding/size checks and missing-upload preparation before
+  output writes. The two writes are sequential: a second-path refusal may leave
+  a new private observation, but the command fails and preserves any existing
+  publication. Private transport, parent-directory provisioning and immutable
+  hosted publication remain separate gates.
+- Reverse by removing the still-unpublished producer caller if these file
+  semantics cannot be supported; retain private evidence and trust boundaries.
+  No ordinary R2 service or signing activation changes with this repair.

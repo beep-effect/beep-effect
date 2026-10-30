@@ -908,3 +908,15 @@ Docgen 34.5 seconds, 1,055.828 seconds total. The source digests remain exact.
 This supersedes the pending default result above; accepted-parent combined
 final/hosted proof and actual protected publication remain open. Every full
 trust and adoption acceptance criterion remains unproven.
+
+### Private producer output repair, 2026-10-30
+
+The [file-output checkpoint](research/producer-private-output-checkpoint.json)
+records a real0644 creation failure under a child-only022 umask and an intended
+exclusivity-removal failure with exact source restoration. Producer file outputs
+now use existing Effect exclusive creation with mode0600; physical file, symlink
+and hardlink controls preserve prior data. The output pair remains sequential,
+so fresh per-run private paths are required. Final formatted-source Node/Bun replay passes96 cases per runtime and quick
+checking passes. Canonical metadata and Fallow pass with zero introduced
+findings. The new complete default package proof remains pending.
+No protected run, R2 activation, credential or qualification change occurred.

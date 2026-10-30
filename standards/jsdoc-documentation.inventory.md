@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-30T19:51:14.152Z
+Generated: 2026-10-30T21:38:38.236Z
 
 ## Scope
 
@@ -444,8 +444,8 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 2 documentation section/link violation(s)
 
 Export findings:
-- `src/commands/Cache/Cache.command.ts:306` `runCacheWarm` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:505` `buildCacheDashboard` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:313` `runCacheWarm` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:512` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:111` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:405` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1553` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)

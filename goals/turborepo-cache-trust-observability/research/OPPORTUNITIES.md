@@ -1475,3 +1475,22 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   the evidence commit. Run the canonical formatter after rewriting a receipt
   and before checking/committing it. Runtime source and the passing proof were
   unaffected; no check was bypassed.
+
+### Private output must not depend on the caller umask
+
+- Work: review the unpublished producer publication command. A controlled
+  CLI execution under a child-process umask of 022 wrote the supposedly private
+  observation as 0644; both observation-only and hosted-output cases failed
+  the physical mode assertion. No actual credential or signed trial was used.
+- Prevention: reuse the existing Effect filesystem exclusive-create pattern
+  with explicit mode0600 for producer output files. Preserve existing files,
+  symlink targets and hardlink peers; keep ordinary report callers unchanged.
+- Evidence: the focused before-fix run fails on actual mode420 versus384.
+  Positive physical file/link controls and current package proof must pass
+  before this repair is published. No live R2 configuration changed.
+
+- Canonical tool gap: Graft does not index the generic `writeEncoded` Effect
+  definition as a symbol. Use its exact source span and direct caller inventory
+  rather than repeated graph rebuilds; current package checking covers the
+  shared writer environment. The initial quick replay found only introduced
+  help-text formatting; canonical formatting repairs it without weakening gates.

@@ -174,16 +174,23 @@ const writeEncoded = Effect.fn("Cache.writeEncoded")(function* <A>(
   codec: { readonly encode: (value: A) => Effect.Effect<string, S.SchemaError> },
   output: O.Option<string>,
   print = true,
-  maxBytes: O.Option<number> = O.none()
+  maxBytes: O.Option<number> = O.none(),
+  privateOutput = false
 ) {
   const encoded = yield* codec.encode(value).pipe(CacheCommandError.mapError("Failed to encode cache report."));
   if (O.exists(maxBytes, (limit) => new TextEncoder().encode(encoded).byteLength + 1 > limit))
     return yield* CacheCommandError.new("Cache report exceeds its configured byte bound.");
   if (O.isSome(output)) {
-    yield* Effect.tryPromise({
-      try: () => Bun.write(output.value, `${encoded}\n`),
-      catch: (cause) => CacheCommandError.new(`Failed to write ${output.value}.`, cause),
-    });
+    if (privateOutput) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs
+        .writeFileString(output.value, `${encoded}\n`, { flag: "wx", mode: 0o600 })
+        .pipe(CacheCommandError.mapError(`Failed to write new private report ${output.value}.`));
+    } else
+      yield* Effect.tryPromise({
+        try: () => Bun.write(output.value, `${encoded}\n`),
+        catch: (cause) => CacheCommandError.new(`Failed to write ${output.value}.`, cause),
+      });
   }
   if (print) yield* Console.log(encoded);
 });
@@ -912,7 +919,9 @@ const cacheProducerRunCommand = Command.make(
     output: outputFlag,
     publication: Flag.Path("publication", { pathType: "file" }).pipe(
       Flag.optional,
-      Flag.withDescription("Write cache-producer.json for this workflow run and attempt, alongside private --output")
+      Flag.withDescription(
+        "Create new private cache-producer.json for this workflow run and attempt; use fresh --output"
+      )
     ),
   },
   ({ request, output, publication }) =>
@@ -963,7 +972,8 @@ const cacheProducerRunCommand = Command.make(
         JsonStringCodec(CacheProducerObservation),
         output,
         O.isNone(output),
-        O.some(8 * 1024 * 1024)
+        O.some(8 * 1024 * 1024),
+        true
       );
       if (O.isSome(hosted))
         yield* writeEncoded(
@@ -971,7 +981,8 @@ const cacheProducerRunCommand = Command.make(
           JsonStringCodec(CacheHostedProducerCompleteReport),
           O.some(hosted.value[0]),
           false,
-          O.some(64 * 1024)
+          O.some(64 * 1024),
+          true
         );
     }).pipe(renderCacheFailure)
 ).pipe(

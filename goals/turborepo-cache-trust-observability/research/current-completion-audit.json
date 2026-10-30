@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "1d8d5213a1a2b36f35154713ebb98e21752b4018be753e1224a012ffc243e466",
+  "specSha256": "1ea364b6be7c479493cdb196f41b80cd7e8bb420153b4a1fe1b028ce8d565d32",
   "acceptance": [
     {
       "id": "AC-01",
@@ -450,5 +450,7 @@
   "inspectionGovernanceCheckpoint": "research/inspection-governance-checkpoint.json",
   "priorSpecSha256AtCommandPublication": "d91a5102592e7d21c858c5907dbc55a73b92e833dd8313d9adf10b5091f43fc0",
   "producerCommandPublicationCheckpoint": "research/producer-command-publication-checkpoint.json",
-  "priorSpecSha256AtSeverityConsolidation": "8890b82dedf18902c50d4caf46cc8550bee4f13f4ecb78675ed66473cc47594c"
+  "priorSpecSha256AtSeverityConsolidation": "8890b82dedf18902c50d4caf46cc8550bee4f13f4ecb78675ed66473cc47594c",
+  "priorSpecSha256AtPrivateProducerOutput": "99964ee6e04423908f74a6c66f9b27d956b3e357b7c7afde560a22e1e0fd543b",
+  "producerPrivateOutputCheckpoint": "research/producer-private-output-checkpoint.json"
 }

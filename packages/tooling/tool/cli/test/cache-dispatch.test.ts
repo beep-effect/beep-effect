@@ -576,7 +576,7 @@ describe("cache qualification command dispatch", () => {
           .spyOn(Workflow, "loadCacheProducerExecutionRuntime")
           .mockReturnValue(Effect.succeed(Tuple.make(binding, runtime)));
         const run = vi.spyOn(Workflow, "runCacheProducerWorkflow").mockReturnValue(Effect.succeed(observation));
-        yield* f
+        const execute = f
           .run([
             "producer-run",
             "--request",
@@ -594,10 +594,12 @@ describe("cache qualification command dispatch", () => {
               })
             )
           );
+        yield* execute;
         expect(load).toHaveBeenCalledWith("/trusted/producer");
         deepStrictEqual(run.mock.calls, [[process.cwd(), selected, "/trusted/producer", binding, O.some(runtime)]]);
         const contents = yield* f.fs.readFileString(output);
         expect(yield* S.decodeEffect(S.fromJsonString(CacheProducerObservation))(contents)).toEqual(observation);
+        expect((yield* f.fs.stat(output)).mode & 0o777).toBe(0o600);
         expect(yield* f.fs.exists(publication)).toBe(publish);
         if (publish) {
           const report = yield* f.fs
@@ -610,6 +612,32 @@ describe("cache qualification command dispatch", () => {
           expect(report.observationSha256).toBe(
             yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(Str.trimEnd(contents)))
           );
+          expect((yield* f.fs.stat(publication)).mode & 0o777).toBe(0o600);
+        }
+        yield* f.fs.writeFileString(output, "preserved observation");
+        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
+        expect(yield* f.fs.readFileString(output)).toBe("preserved observation");
+        const linked = f.path.join(f.root, "preserved-linked-target.json");
+        const missing = f.path.join(f.root, "missing-linked-target.json");
+        yield* f.fs.writeFileString(linked, "preserved linked target");
+        yield* f.fs.remove(output);
+        yield* f.fs.symlink(linked, output);
+        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
+        expect(yield* f.fs.readFileString(linked)).toBe("preserved linked target");
+        yield* f.fs.remove(output);
+        yield* f.fs.symlink(missing, output);
+        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
+        expect(yield* f.fs.exists(missing)).toBe(false);
+        yield* f.fs.remove(output);
+        yield* f.fs.link(linked, output);
+        expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
+        expect(yield* f.fs.readFileString(linked)).toBe("preserved linked target");
+        yield* f.fs.remove(output);
+        if (publish) {
+          const published = yield* f.fs.readFileString(publication);
+          expect(yield* execute.pipe(Effect.isFailure)).toBe(true);
+          expect(yield* f.fs.readFileString(publication)).toBe(published);
+          expect((yield* f.fs.stat(output)).mode & 0o777).toBe(0o600);
           yield* f.fs.writeFileString(output, "preserved observation");
           yield* f.fs.writeFileString(publication, "preserved publication");
           run.mockReturnValue(
