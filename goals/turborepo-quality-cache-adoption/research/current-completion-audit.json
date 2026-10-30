@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "3801fef11d324f035903d5d217acd045f6c161bea28ab11b0027e9a80a6c3623",
+  "specSha256": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
   "acceptance": [
     {
       "id": "AC-01",
@@ -275,5 +275,7 @@
   "priorSpecSha256AtSelectionSemantics": "b5cc4ff0957ff16267722927f3870301597d660b177fd639a874685f3d0ac3d8",
   "nativeSelectionSemanticsCheckpoint": "research/selection-semantics-checkpoint.json",
   "priorSpecSha256AtPythonWorkspaceReview": "6dd4fa867db490b4ea34c99f1b3a69c0a765ad5006543c5c19912c31e36a87b8",
-  "pythonWorkspaceFeatureReview": "research/python-workspace-feature-review.json"
+  "pythonWorkspaceFeatureReview": "research/python-workspace-feature-review.json",
+  "priorSpecSha256AtExternalSecurityReview": "3801fef11d324f035903d5d217acd045f6c161bea28ab11b0027e9a80a6c3623",
+  "externalSecurityDispositionReview": "research/external-security-disposition-review.json"
 }

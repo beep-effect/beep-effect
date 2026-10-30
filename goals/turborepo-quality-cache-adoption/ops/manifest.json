@@ -65,7 +65,8 @@
     "research/native-selection-controls.py",
     "research/native-selection-controls.json",
     "research/selection-semantics-checkpoint.json",
-    "research/python-workspace-feature-review.json"
+    "research/python-workspace-feature-review.json",
+    "research/external-security-disposition-review.json"
   ],
   "agentLaunchers": [
     {
@@ -127,5 +128,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. Source review gives 198 keep-fresh whole-command dispositions: all 186 lint fixers and all 12 configured persistent services. The other 2373 computation dispositions and all qualification, adoption, observation and whole-goal acceptance remain unfinished."
+  "statusNote": "Active. Source review gives 199 keep-fresh whole-command dispositions: all186 lint fixers, all12 configured persistent services and one live external-security audit. The other2372 computation dispositions and all qualification, adoption, observation and whole-goal acceptance remain unfinished."
 }

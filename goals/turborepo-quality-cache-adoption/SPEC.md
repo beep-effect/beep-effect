@@ -433,3 +433,14 @@ review is `research/current-runtime-baseline-review.md`.
   or a changed client/discovery contract. Exact-client real uv graph and
   execution controls precede any activation. Reverse this decision by restoring
   the feature row to pending; runtime configuration is unchanged.
+
+### Existing external-security boundary review, 2026-10-30
+
+- Preserve fresh `repo-sanity:bun-audit` execution. The current command combines
+  current vulnerability information with wall-clock expiry of OSV exceptions;
+  an unchanged tree cannot prove a current verdict. Retain its existing
+  `cache: false`, empty outputs and explicit local proof-reuse exclusion.
+- Record one final whole-task keep-fresh disposition without running the audit
+  or asserting a vulnerability outcome. Any pure parser decomposition needs
+  independent qualification and cannot replace the external verdict. Reverse
+  only the review projection to pending; existing safety behavior stays fresh.

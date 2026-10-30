@@ -331,3 +331,16 @@ workstation's memory protection policy.
 - Prevention: inventory nested manifests and generated command ownership before
   declaring an ecosystem inapplicable. Preserve those quality computations in
   decomposition/qualification even when root discovery remains disabled.
+
+### Tree-exact evidence cannot refresh external security data
+
+- Work: review the existing root Bun audit boundary. The command also applies
+  wall-clock expiry to OSV ignores and package overrides, so even an unchanged
+  lockfile and config can require a different current verdict.
+- Prevention: preserve both the existing Turbo cache exclusion and local proof
+  exclusion. A future pure parsing optimization must not suppress the fresh
+  network verdict or freeze expiry policy. No audit or cache setting changed.
+
+- Report formatting friction: the generated population JSON exceeds the default
+  formatter one-MiB limit. An explicit four-MiB process bound formats the full
+  report; repository formatter settings and all correctness floors stay intact.

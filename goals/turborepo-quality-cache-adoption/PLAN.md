@@ -328,3 +328,15 @@ There are now three final no-change feature decisions and 32 pending reviews.
 Python computation decomposition and qualification remain open, with every
 full-goal acceptance still unproven. No generated script or runtime setting
 changed; final combined hosted proof remains required.
+
+### External-security whole-task review, 2026-10-30
+
+The [audit boundary review](research/external-security-disposition-review.json)
+records one existing root task as keep-fresh: current advisory information and
+expiry-sensitive OSV policy cannot reuse a tree-exact security result. Existing
+Turbo cache exclusion and local proof exclusion stay in place. No audit was
+executed and no security verdict or pure slice is qualified by this review.
+
+There are now 199 source-reviewed whole-task keep-fresh dispositions and 2372
+remaining final-disposition gaps. Three feature decisions are final and 32
+remain pending. Every full-goal acceptance criterion remains unproven.
