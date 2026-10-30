@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "cache-producer-provisioning-checkpoint/v1",
+  "authority": "Local component implementation and controls only. Unpublished dependency lane; no real material transport, protected execution, grant, publication, activation, qualification or full-goal acceptance.",
+  "sourceParent": "56d4326c921080bd201d9c5d649e5bab5e9fb2c2",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "1588f3eea7cbd1a4d355059ac3f5affbc0d536cf632e67a6ba323f4c09abbfd1",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "1b6581f6fd9091cea5fe3bb62cc9978ada655ec89de1967455cdb8e200b34f4d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "f490a6a465869a8ad38be691bd454c38a140b49691c1f6d5c984e8963e928040",
+    "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "70ef75245504a6bf56e6ecb5a71a255502049715e790d6a373b877bcf06bdfbb",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "82ce7b5b35248796932817f9c2af82cef05625ea45e781787da612c4f593c760",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "d53d2fcc414f3e243d11b971ab5a96b5fb1dc2e275385d1169e3706aacec27a0"
+  },
+  "implementation": [
+    "Reuse existing approval/profile/issuer and private-record boundaries; input material stays redacted.",
+    "Require exact binding-bound transferred material for producer-install; refuse malformed/different binding before store reservation.",
+    "Validate target, executable and live source before creation; reopen and compare installed profile and inspect source afterward.",
+    "Revoke newly reserved material on error or interruption; preserve pre-existing stores.",
+    "Keep verifier material independent and off-runner; protect every copy outside all worker mounts in the actual workflow."
+  ],
+  "verification": {
+    "node126": {
+      "exit": 0,
+      "elapsedSeconds": 8.712,
+      "finishedAt": "2026-10-30T09:54:02.514001+00:00"
+    },
+    "bun126": {
+      "exit": 0,
+      "elapsedSeconds": 6.097,
+      "finishedAt": "2026-10-30T09:54:08.626327+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 12.446,
+      "finishedAt": "2026-10-30T09:53:53.782009+00:00"
+    },
+    "effectPolicy": {
+      "exit": 0,
+      "elapsedSeconds": 38.817,
+      "finishedAt": "2026-10-30T09:54:47.459881+00:00"
+    },
+    "inlinePolicy": {
+      "exit": 0,
+      "elapsedSeconds": 0.272,
+      "finishedAt": "2026-10-30T09:54:47.748291+00:00"
+    },
+    "rootRulePolicy": {
+      "exit": 0,
+      "elapsedSeconds": 2.919,
+      "finishedAt": "2026-10-30T09:54:50.685698+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 8.898,
+      "finishedAt": "2026-10-30T09:54:59.599927+00:00"
+    },
+    "fallowHealth": {
+      "exit": 0,
+      "elapsedSeconds": 6.002,
+      "finishedAt": "2026-10-30T09:55:05.620294+00:00"
+    },
+    "scopedDocgen": {
+      "exit": 0,
+      "elapsedSeconds": 40.566,
+      "finishedAt": "2026-10-30T09:57:14.180775+00:00"
+    },
+    "generatedInventory": {
+      "exit": 0,
+      "elapsedSeconds": 270.789,
+      "finishedAt": "2026-10-30T10:02:10.546649+00:00"
+    }
+  },
+  "guardControls": {
+    "recordedAt": "2026-10-30T09:53:17.270470+00:00",
+    "authority": "Local causal guard-removal controls only; no real issuer provisioning or runtime.",
+    "rows": [
+      {
+        "guard": "target",
+        "removedGuardTestExit": 1,
+        "sourceRestoredExactly": true,
+        "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+        "testLogSha256": "148cb4618ddd04a506492cd92bed8fe16ba5e9e3d70b18699c3f7426bc3a36e6",
+        "focusedTestFailureConfirmed": true,
+        "unexpectedRuntimeLoadFailure": false
+      },
+      {
+        "guard": "interruption-revocation",
+        "removedGuardTestExit": 1,
+        "sourceRestoredExactly": true,
+        "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+        "testLogSha256": "91a67cfc8eb8fa7b85df61858b814253c6aaea88334d6139f5fe9e7196097897",
+        "focusedTestFailureConfirmed": true,
+        "unexpectedRuntimeLoadFailure": false
+      },
+      {
+        "guard": "installed-profile",
+        "removedGuardTestExit": 1,
+        "sourceRestoredExactly": true,
+        "sourceSha256": "f8ed7f54dacfceff5cb63e358c4a99ba85cc9572c3651adab994c56270c99497",
+        "testLogSha256": "549b0a0bde5da39c78c7e8ac108eec42082aa59c96ba1447251f707e36852d7d",
+        "focusedTestFailureConfirmed": true,
+        "unexpectedRuntimeLoadFailure": false
+      }
+    ],
+    "passed": true
+  },
+  "realFileComponent": "Peer store receives the exact synthetic approved material; random generation is forbidden by the fixture and a bundle issued there verifies using the original independent verifier store. This is local filesystem proof, not actual hosted producer evidence.",
+  "remaining": [
+    "Full combined source proof after accepted-parent replay.",
+    "Secure protected material transport and independently approved actual runner source/tool binding.",
+    "Actual protected producer, immutable bounded artifact publication and acceptance join.",
+    "Actual human bootstrap and seven exact suppressed reads/four reference-only files; signing remains inactive.",
+    "Current-source native qualification, all task/feature dispositions and adoption, production trust and actual 7/7/14-day windows."
+  ],
+  "runtimeChanges": false
+}

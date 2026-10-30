@@ -80,6 +80,7 @@ export {
 export { runCacheProducerUploadExperiment } from "../commands/Cache/Cache.pilot.runner.ts";
 export { runCachePilotForTesting, runCacheSignedPilotUploadWorker } from "../commands/Cache/Cache.pilot.ts";
 export {
+  assertCacheProducerPrivateLocation,
   hashCacheProducerContract,
   initializeCacheProducerIssuer,
   inspectCacheProducerDirectory,
@@ -88,6 +89,7 @@ export {
   openCacheProducerIssuer,
   openCacheProducerVerifier,
   readCacheProducerExecutionProfile,
+  readCacheProducerProvisioning,
   revokeCacheProducerIssuer,
   validateCacheProducerApproval,
   validateCacheProducerBinding,
@@ -123,6 +125,7 @@ export {
   hashCacheProducerUploadKey,
   hashCacheProducerUploadTarget,
   hashCacheProducerWorkflow,
+  initializeCacheProducerExecution,
   inspectCacheProducerWorkflow,
   loadCacheProducerExecutionRuntime,
   runCacheProducerWorkflow,

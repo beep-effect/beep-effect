@@ -771,3 +771,21 @@ external review paths and malformed/missing-input typed failures. The refreshed
 98-case Node/Bun suites, quick lint/check, Effect/inline policies, scoped Docgen
 and Fallow audit/health pass; both Fallow finding counts are zero. No threshold
 or policy exemption changes. Keep complete accepted-source proof pending.
+
+
+### Trusted execution provisioning component
+
+Prepare `producer-provision` and the material-required `producer-install` using
+the existing issuer/profile authority. Private inputs are bounded, owner-only
+and outside the supervisor source checkout. Material transfer preserves the
+independently approved issuer rather than generating a disconnected CI key.
+Source/target/executable checks precede installation; normal profile reopen,
+exact selection and source checks follow it, with revocation on error/interruption.
+
+The current 126-case Node/Bun suites, quick lint/check, root rule/inline policies
+and Fallow audit/health pass; Effect policy introduces zero findings. Three
+guard-removal controls fail as intended and restore source exactly. These are
+local component results. After accepted-parent replay, full combined package,
+final, hosted/review proof and real protected workflow/material handoff remain.
+No secret bootstrap, signing activation, qualification or observation window
+is completed by these component controls.

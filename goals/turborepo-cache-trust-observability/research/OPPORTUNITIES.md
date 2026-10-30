@@ -1326,3 +1326,19 @@ Reuse the existing FileSystem service and schema codecs; the contained local
 experiment reader intentionally has another policy. A dedicated regression and
 current 98-case suites pass on both runtimes; audit and health now report zero
 findings. No new helper module, model, policy exemption or evidence store.
+
+
+### Cross-host issuer material is a prerequisite, 2026-10-30
+
+The existing importer revalidates issuer MACs through independent private
+verification stores. A runner-generated unrelated key would therefore fail
+real cross-host acceptance despite locally valid reports. Add bounded explicit
+installation of already approved material, require it in the CI install caller,
+and prove a peer-issued bundle verifies in the original independent store.
+Keep real transport and workflow execution pending; local tests grant no trust.
+
+Quick checking also caught an introduced unit-result inference mismatch and
+formatter difference. Effect.asVoid preserves the public unit contract, and the
+canonical formatter fixes the fixture. Two new compound Option assertions were
+replaced with the existing assertSome/deepStrictEqual utilities; the full default
+Effect policy now reports zero introduced findings, without an inventory waiver.

@@ -58,6 +58,7 @@ import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
 import { CacheSignedPilotReceipt, CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import { runCachePilotExperiment } from "./Cache.pilot.ts";
+import { readCacheProducerProvisioning } from "./Cache.producer.ts";
 import { verifyCacheIdentityLintProfile, writeCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { CacheProtocolExecution, CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
 import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
@@ -85,6 +86,7 @@ import {
 import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
 import { CacheProducerObservation, CacheProducerWorkflow } from "./Cache.workflow.schemas.ts";
 import {
+  initializeCacheProducerExecution,
   inspectCacheProducerWorkflow,
   loadCacheProducerExecutionRuntime,
   runCacheProducerWorkflow,
@@ -912,7 +914,13 @@ const cacheProducerRunCommand = Command.make(
         binding,
         O.some(runtime)
       );
-      yield* writeEncoded(observation, JsonStringCodec(CacheProducerObservation), output);
+      yield* writeEncoded(
+        observation,
+        JsonStringCodec(CacheProducerObservation),
+        output,
+        O.isNone(output),
+        O.some(8 * 1024 * 1024)
+      );
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription(
@@ -920,6 +928,31 @@ const cacheProducerRunCommand = Command.make(
   ),
   Command.provide(MemoryStatsLive),
   Command.provide(FetchHttpClient.layer)
+);
+
+const provisionCacheProducer = Effect.fn("Cache.provisionProducer")(function* (requireMaterial: typeof S.Boolean.Type) {
+  const configured = yield* Config.all({
+    inputs: Config.String("BEEP_CACHE_PRODUCER_PROVISIONING"),
+    directory: Config.String("BEEP_CACHE_PRODUCER_STORE"),
+  }).pipe(
+    Effect.mapError(() =>
+      CacheCommandError.new("Independently selected provisioning inputs and producer store are required.")
+    )
+  );
+  const [approval, profile, material] = yield* readCacheProducerProvisioning(configured.inputs, process.cwd());
+  if (requireMaterial && O.isNone(material))
+    return yield* CacheCommandError.new("Producer installation requires independently transferred issuer material.");
+  yield* initializeCacheProducerExecution(process.cwd(), configured.directory, approval, profile, material);
+  yield* Console.log(
+    "Producer execution store provisioned from independent approval; runtime capabilities were not loaded."
+  );
+}, renderCacheFailure);
+
+const cacheProducerProvisionCommand = Command.make("producer-provision", {}, () => provisionCacheProducer(false)).pipe(
+  Command.withDescription("Exclusively provision a private producer store from independently selected approval files")
+);
+const cacheProducerInstallCommand = Command.make("producer-install", {}, () => provisionCacheProducer(true)).pipe(
+  Command.withDescription("Install the exact independently approved private issuer without generating a replacement")
 );
 
 const ProducerWorkflowJson = JsonStringCodec(CacheProducerWorkflow);
@@ -1165,7 +1198,7 @@ const cacheRemoteReadsCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, producer-run, producer-inspect, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
+    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, producer-run, producer-inspect, producer-provision, producer-install, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -1186,6 +1219,8 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheSignedPilotCommand,
     cacheProducerRunCommand,
     cacheProducerInspectCommand,
+    cacheProducerProvisionCommand,
+    cacheProducerInstallCommand,
     cacheAcceptCommand,
     cacheProtocolRunCommand,
     cacheProtocolReviewCommand,

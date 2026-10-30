@@ -761,3 +761,30 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   preserve external review paths and caller-owned typed failures. The bounded
   contained experiment reader retains its distinct policy. Reverse by restoring
   the prior two equivalent readers; no authority or persistence model changes.
+
+
+### Independently provisioned producer material, 2026-10-30
+
+- A protected runner must use the issuer material whose binding the independent
+  verifier already trusts. Generating an unrelated runner key cannot establish
+  cross-host provenance. Reuse the existing approval, execution profile, issuer
+  store and verification authority; do not add a PKI or parallel registry.
+- Closed supervisor configuration selects private provisioning inputs and an
+  exclusive execution store outside its source checkout. Each deployment must
+  keep every material copy outside every worker mount; the current CLI enforces
+  its supervisor-checkout boundary. The actual protected workflow remains a gate.
+- Read existing strict bounded owner-only records plus optional redacted
+  ninety-six-byte material. Check its binding suffix before reserving a store.
+  The install command requires transferred material and never silently creates
+  a replacement. Independent verifier material remains off the runner.
+- Before installation, validate approval, destination digest, executable digest
+  and live source identity. Reopen the installed private profile, compare exact
+  encoded selection and inspect source again. Revoke a newly reserved store on
+  post-reservation failure or interruption; preserve any pre-existing store.
+- Local producer output remains bounded at eight MiB. This is not the hosted
+  transport limit: the existing immutable archive and member bounds still apply.
+  Secure material transport, a real protected execution and its publication are
+  unfinished. No credential or secret value enters arguments, logs or artifacts.
+- Reversal: revoke execution stores through the existing authority, remove these
+  installation callers and private inputs, and retain verifier stores and prior
+  observations. Ordinary R2 and signed-activation state remain independently held.

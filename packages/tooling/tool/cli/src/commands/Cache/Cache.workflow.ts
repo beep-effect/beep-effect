@@ -31,12 +31,20 @@ import { collectCacheToolchain } from "./Cache.fingerprint.ts";
 import { inspectCacheLinkedFile } from "./Cache.linker.ts";
 import { runCacheProducerUploadExperiment, runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
-import { CacheProducerBinding, CacheProducerBundle } from "./Cache.producer.schemas.ts";
-import { openCacheProducerIssuer, readCacheProducerExecutionProfile } from "./Cache.producer.ts";
+import { CacheProducerApproval, CacheProducerBinding, CacheProducerBundle } from "./Cache.producer.schemas.ts";
+import {
+  assertCacheProducerPrivateLocation,
+  initializeCacheProducerIssuer,
+  openCacheProducerIssuer,
+  readCacheProducerExecutionProfile,
+  revokeCacheProducerIssuer,
+  validateCacheProducerApproval,
+} from "./Cache.producer.ts";
 import { CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
 import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
 import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
 import {
+  CacheProducerExecutionProfile,
   CacheProducerObservation,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
@@ -55,6 +63,8 @@ const bindingCodec = JsonStringCodec(CacheProducerBinding);
 const digest = S.decodeEffect(Sha256HexFromBytes);
 const decodeRevision = S.decodeUnknownEffect(GitObjectId);
 const encodeWorkflow = S.encodeEffect(S.fromJsonString(CacheProducerWorkflow));
+const approvalCodec = JsonStringCodec(CacheProducerApproval);
+const executionProfileCodec = JsonStringCodec(CacheProducerExecutionProfile);
 const pathsEquivalent = S.toEquivalence(S.Array(S.String));
 const bound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "workflow inventory exceeded bound" });
 const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args: ReadonlyArray<string>) {
@@ -277,6 +287,17 @@ export const hashCacheProducerWorkflow = Effect.fn("CacheWorkflow.hash")(functio
   return yield* digest(new TextEncoder().encode(`beep/cache-producer-workflow/v2\0${text}`));
 });
 
+const assertWorkflowIdentity = Effect.fn("CacheWorkflow.assertIdentity")(function* (
+  workflow: CacheProducerWorkflow,
+  binding: CacheProducerBinding
+) {
+  if (
+    workflow.revision !== binding.workflowRevision ||
+    (yield* hashCacheProducerWorkflow(workflow)) !== binding.workflowImplementation
+  )
+    return yield* CacheCommandError.new("Live producer workflow differs from its independently approved identity.");
+});
+
 /**
  * Hash the approved upload target without serializing any runtime credential.
  *
@@ -458,6 +479,77 @@ export const loadCacheProducerExecutionRuntime = Effect.fn("CacheWorkflow.loadEx
 }, CacheCommandError.mapError("Cannot load independently approved producer execution capabilities."));
 
 /**
+ * Exclusively provision an execution store from separately approved source and target identities.
+ *
+ * **Details**
+ * This explicit supervisor operation loads no runtime credentials and never
+ * derives approval from an experiment. It verifies the loaded checkout and
+ * frozen workflow before creating material, checks the target and executable
+ * digest, and preserves the existing exclusive issuer initializer. Failed or
+ * interrupted profile installation revokes the reserved store; no retry can
+ * overwrite it. The parent must exist and the store must be outside this checkout.
+ * Transferred private material retains the independently approved issuer across
+ * hosts; it is never rebound to the inspected workflow.
+ *
+ * **Example** (Reference trusted execution provisioning)
+ * ```ts
+ * import { initializeCacheProducerExecution, readCacheProducerProvisioning } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * const provision = Effect.gen(function* () {
+ *   const [approval, profile, material] = yield* readCacheProducerProvisioning("/private/approved-inputs", "/checkout")
+ *   yield* initializeCacheProducerExecution("/checkout", "/private/producer-store", approval, profile, material)
+ * })
+ * console.assert(Effect.isEffect(provision))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const initializeCacheProducerExecution = Effect.fn("CacheWorkflow.initializeExecution")(
+  function* (
+    root: string,
+    directory: string,
+    approval: CacheProducerApproval,
+    profile: CacheProducerExecutionProfile,
+    material: O.Option<Redacted.Redacted<Uint8Array>> = O.none()
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    yield* assertCacheProducerWorkflowLocation(root);
+    yield* assertCacheProducerPrivateLocation(root, directory);
+    const approvedText = yield* approvalCodec.encode(approval);
+    const profileText = yield* executionProfileCodec.encode(profile);
+    if (A.some([approvedText, profileText], (text) => new TextEncoder().encode(text).byteLength > 16384))
+      return yield* CacheCommandError.new("Producer provisioning records exceed their sixteen KiB private-read bound.");
+    const trusted = yield* approvalCodec.decode(approvedText);
+    const selected = yield* executionProfileCodec.decode(profileText);
+    yield* validateCacheProducerApproval(trusted);
+    const upload = yield* trusted.binding.uploadApproval.pipe(
+      Effect.fromOption(() => CacheCommandError.new("Producer provisioning requires independent upload approval."))
+    );
+    if ((yield* hashCacheProducerUploadTarget(selected.target)) !== upload.targetSha256)
+      return yield* CacheCommandError.new("Producer provisioning target differs from independent approval.");
+    if (!path.isAbsolute(selected.adapterExecutable))
+      return yield* CacheCommandError.new("Producer provisioning requires an absolute adapter executable.");
+    const executable = yield* inspectCacheLinkedFile(selected.adapterExecutable);
+    if (executable.sha256 !== selected.target.backend.digest)
+      return yield* CacheCommandError.new("Producer provisioning executable differs from its approved digest.");
+    yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
+    yield* initializeCacheProducerIssuer(directory, trusted.binding, trusted.contract, material);
+    yield* Effect.gen(function* () {
+      yield* fs.writeFileString(path.join(directory, "runtime.json"), profileText, { flag: "wx", mode: 0o600 });
+      const [, installed] = yield* readCacheProducerExecutionProfile(directory);
+      if ((yield* executionProfileCodec.encode(installed)) !== profileText)
+        return yield* CacheCommandError.new("Installed producer execution profile differs from independent selection.");
+      yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
+    }).pipe(Effect.onError(() => revokeCacheProducerIssuer(directory).pipe(Effect.orDie)));
+  },
+  Effect.asVoid,
+  CacheCommandError.mapError("Cannot exclusively provision independently approved producer execution.")
+);
+
+/**
  * Execute the owned signed pilot and authenticate only its supervised observation.
  *
  * **Details**
@@ -516,11 +608,7 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
       );
       if (sourceRevision !== trusted.sourceRevision)
         return yield* CacheCommandError.new("Live producer source differs from its independently approved revision.");
-      if (
-        workflow.revision !== trusted.workflowRevision ||
-        (yield* hashCacheProducerWorkflow(workflow)) !== trusted.workflowImplementation
-      )
-        return yield* CacheCommandError.new("Live producer workflow differs from its independently approved identity.");
+      yield* assertWorkflowIdentity(workflow, trusted);
     })
   );
   yield* verifyWorkflow;

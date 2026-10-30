@@ -104,7 +104,8 @@
     "research/producer-upload-lifetime-checkpoint.json",
     "research/producer-approval-refusal-checkpoint.json",
     "research/dependency-security-compatibility-checkpoint.json",
-    "research/protected-producer-entrypoint-checkpoint.json"
+    "research/protected-producer-entrypoint-checkpoint.json",
+    "research/producer-provisioning-checkpoint.json"
   ],
   "agentLaunchers": [
     {

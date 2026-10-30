@@ -9,16 +9,21 @@ import {
   CacheExecutablePin,
   CacheLinkedFile,
   CacheLiveIdentity,
+  CacheProducerApproval,
+  CacheProducerBinding,
   CacheQualificationService,
   CacheToolchainSnapshot,
   CacheTransitionRequest,
 } from "@beep/repo-cli/commands/Cache";
+import * as Producer from "@beep/repo-cli/commands/Cache/Cache.producer";
 import * as Profile from "@beep/repo-cli/commands/Cache/Cache.profile";
 import * as Runtime from "@beep/repo-cli/commands/Cache/Cache.runtime";
 import * as Workflow from "@beep/repo-cli/commands/Cache/Cache.workflow";
 import {
+  CacheProducerExecutionProfile,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
+  hashCacheProducerContract,
   makeCacheCommandForTesting,
 } from "@beep/repo-cli/test/Cache";
 import {
@@ -34,6 +39,7 @@ import {
   CacheQualificationStore,
   CacheReviewDecision,
   CacheTaskConfiguration,
+  CacheTaskContract,
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex } from "@beep/schema";
@@ -47,6 +53,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { afterEach, describe, expect, vi } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -55,9 +62,13 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import * as TestConsole from "effect/testing/TestConsole";
+import { targetFor } from "./cache-conformance-server.ts";
+import { contractInput, pilot, protocol } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
 const key = CacheQualificationKey.make({
@@ -140,6 +151,8 @@ const workflow = CacheProducerWorkflow.make({
   ),
 });
 const decodeWorkflow = S.decodeUnknownEffect(S.fromJsonString(CacheProducerWorkflow));
+const decodeProducerBinding = S.decodeUnknownEffect(CacheProducerBinding);
+const decodeProducerContract = S.decodeUnknownEffect(CacheTaskContract);
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
@@ -491,6 +504,101 @@ describe("cache qualification command dispatch", () => {
         expect(yield* errorText).toContain("An independently provisioned producer store is required.");
         expect(f.calls).toEqual([]);
       })
+    );
+    it.effect("requires separate trusted provisioning configuration without loading an experiment", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        expect(
+          yield* f
+            .run(["producer-provision"])
+            .pipe(
+              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+              Effect.isFailure
+            )
+        ).toBe(true);
+        expect(yield* errorText).toContain(
+          "Independently selected provisioning inputs and producer store are required."
+        );
+        expect(f.calls).toEqual([]);
+      })
+    );
+    it.effect("uses only the two closed provisioning locations and no runtime capability configuration", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const contract = yield* decodeProducerContract(contractInput);
+        const binding = yield* decodeProducerBinding({
+          ...pilot,
+          protocolClient: protocol.observation.client,
+          workflowRevision: Str.repeat(40)("a"),
+          workflowImplementation: digest,
+          policyDigest: yield* hashCacheProducerContract(contract),
+        });
+        const approval = CacheProducerApproval.make({ binding, contract });
+        const profile = CacheProducerExecutionProfile.make({
+          target: targetFor({ url: "http://127.0.0.1:19427/" }),
+          adapterExecutable: "/fixture/adapter",
+        });
+        const read = vi
+          .spyOn(Producer, "readCacheProducerProvisioning")
+          .mockReturnValue(Effect.succeed(Tuple.make(approval, profile, O.none())));
+        const initialize = vi.spyOn(Workflow, "initializeCacheProducerExecution").mockReturnValue(Effect.void);
+        yield* f.run(["producer-provision"]).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({
+              BEEP_CACHE_PRODUCER_PROVISIONING: "/trusted/inputs",
+              BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
+            })
+          )
+        );
+        expect(read).toHaveBeenCalledWith("/trusted/inputs", process.cwd());
+        deepStrictEqual(initialize.mock.calls, [[process.cwd(), "/trusted/store", approval, profile, O.none()]]);
+        expect(
+          yield* f.run(["producer-install"]).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({
+                BEEP_CACHE_PRODUCER_PROVISIONING: "/trusted/inputs",
+                BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
+              })
+            ),
+            Effect.isFailure
+          )
+        ).toBe(true);
+        expect(initialize).toHaveBeenCalledTimes(1);
+        expect(yield* errorText).toContain("requires independently transferred issuer material");
+        const material = O.some(Redacted.make(new Uint8Array(96)));
+        read.mockReturnValue(Effect.succeed(Tuple.make(approval, profile, material)));
+        yield* f.run(["producer-install"]).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({
+              BEEP_CACHE_PRODUCER_PROVISIONING: "/trusted/inputs",
+              BEEP_CACHE_PRODUCER_STORE: "/trusted/store",
+            })
+          )
+        );
+        expect(initialize).toHaveBeenLastCalledWith(process.cwd(), "/trusted/store", approval, profile, material);
+        expect(f.calls).toEqual([]);
+        expect(yield* consoleText).toContain("provisioned from independent approval");
+        expect(yield* consoleText).not.toContain("/trusted");
+      })
+    );
+    it.effect.each(["--request", "--store", "--approval", "--runtime", "--target", "--signing-key"])(
+      "refuses caller-selected provisioning authority through %s",
+      (flag) =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          const forbidConfiguration = ConfigProvider.make(() =>
+            Effect.die("Provisioning configuration read before argument refusal.")
+          );
+          expect(
+            yield* f
+              .run(["producer-provision", flag, "/untrusted-input"])
+              .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration), Effect.isFailure)
+          ).toBe(true);
+          expect(f.calls).toEqual([]);
+        })
     );
     it.effect.each(["--store", "--issuer", "--target", "--signing-key"])(
       "refuses request-side producer authority selection through %s",
