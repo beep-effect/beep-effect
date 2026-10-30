@@ -298,3 +298,14 @@ binds changed runner source bytes. Historical claims above keep their dates.
   ten additional exact Portless watcher/server commands, completing source
   classification of all twelve configured persistent executable computations.
   Their finite build counterparts retain independent qualification duties.
+
+### Distinct publication identity, 2026-10-30
+
+- [Published-head checkpoint](published-head-identity-checkpoint.json) binds the
+  existing Yeet verdict/handler repair and real disposable-Git tests. The attempt
+  retains its starting head and proof facts; the append-optional publication
+  identity is emitted only for an owned successful Git push with stable head
+  from post-commit preparation through proof and publication. Failed pushes and
+  head changes produce no verified publication identity. Older records decode
+  without the new field. Local focused evidence grants no cache qualification,
+  hosted status, deployment or full-goal acceptance.
