@@ -818,49 +818,6 @@ the original source bytes exactly. These are controlled unit counterexamples,
 not protected native producer proof.
 
 
-## Current real-pilot preparation friction
-
-- Reusing an older dependency snapshot because its lockfile and root manifest
-  matched was insufficient: the actual installed tree differed. The existing
-  guard correctly refused it; regenerate through the canonical dependency
-  materialization command and compare the complete tree identity.
-- The active verification checkout had210 additional native identity-lint inputs
-  relative to a clean source worktree, including compiled utilities and coverage
-  reports, although command and configuration matched. Use a clean registered
-  runner for like-for-like comparisons. Any later input narrowing still needs
-  semantic invalidation proof; no input was discarded here.
-- The new activation fixture reserialized JSON and changed formatting. Because
-  the selected command runs `biome check`, the proposed enabled config made the
-  check fail. An actual formatter comparison identified this introduced fixture
-  error. Preserve the original formatting, change only the cache literal and
-  refresh the exact activation reference. Failed observations remain retained;
-  the corrected proposed-launch diagnostic is running and grants no qualification.
-
-
-### Native transport proof and in-process coverage
-
-The existing native socket lifecycle passes through a Bun child during Node
-coverage, leaving the new common listener function unexecuted in Node/V8.
-Actual focused V8 evidence showed 34/35 functions and 118/129 lines. Add explicit
-constructor-double controls for modes, wrong-address refusal, bind-cause
-preservation and cleanup; keep the physical Bun lifecycle as transport proof.
-The first controls tried to spy on an immutable ESM export and used a forbidden
-native HTTP import. Use the framework's module replacement and existing Effect
-server interface instead. Missing target options and the mock's filesystem
-error channel were corrected before both runtimes passed the three controls.
-Both runtime integration runs now pass 51 tests and package lint/check passes.
-Include json-summary with LCOV to judge the statement metric explicitly;
-function/branch/line counts alone are not the full committed ratchet. Preserve
-the original failures, unchanged implementation and unchanged coverage floor.
-
-Source-removal controls reject removal of the Unix-address guard and owner-only
-socket chmod for the intended assertions; exact original bytes are restored.
-Vitest truncates assertion strings in JSON failure messages, so the receipt
-wrapper verifies the unique test plus identifying assertion prefixes rather
-than requiring untruncated prose. Both providers now prove all four fixture
-metrics at 100%, and the proxy exceeds its existing floors.
-
-
 ## Review deliberate resource lifetimes before changing a test baseline
 
 The first socket draft publication stopped on a stale generated instrumentation
@@ -1142,3 +1099,15 @@ check. It removes exactly the stale span in the producer lane and records the
 new provisioning spans in the unpublished dependent lane. Both checks report
 zero drift. Run this narrow check after changing named Effect functions before
 the next complete publication. Preserve the failed verdict; no gate is waived.
+
+## Generated anchors and duplicate research review, 2026-10-30
+
+- PR #2368 review identified a repeated preparation/transport section and an
+  outdated adapter import anchor. Removed only the later duplicate block.
+- The canonical Effect Vitest writer refreshed three import source anchors.
+  A normalized comparison confirms that every judgment, occurrence and finding
+  is unchanged; no new baseline allowance or lower threshold was introduced.
+- The earlier final-check interruption is now attributed: the workstation
+  journal records earlyoom sending SIGTERM to two Node/Vitest workers. The
+  unchanged-source canonical retry passed all final gates. Sequence heavy
+  checks around available memory; preserve the interrupted result separately.
