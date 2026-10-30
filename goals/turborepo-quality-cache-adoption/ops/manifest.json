@@ -57,7 +57,8 @@
     "research/persistent-service-disposition-review.json",
     "research/remaining-mutating-fixer-disposition-review.json",
     "research/remaining-persistent-service-disposition-review.json",
-    "research/published-head-identity-checkpoint.json"
+    "research/published-head-identity-checkpoint.json",
+    "research/markdown-coverage-isolation-checkpoint.json"
   ],
   "agentLaunchers": [
     {

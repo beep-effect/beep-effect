@@ -238,3 +238,17 @@ workstation's memory protection policy.
   result separately; the recovery grants no new proof or merge authority.
 - Prevention: distinguish authentication failure from an uncertain ref update,
   inspect the actual remote object/ref, and preserve forward-only updates.
+
+
+### Preserve module isolation around native coverage witnesses
+
+- Work: finish the occupied-port repair's full proof.
+- Evidence: all Markdown tests passed, but the root ratchet measured two uncovered
+  default-metadata branches. The existing direct test and standalone full-package
+  replays cover those branches; the original measurement is retained privately.
+- Response: follow the shared harness's existing rule for registry-mocking
+  packages and isolate each file during coverage. Both native full suites and
+  default package verification pass without lowering any floor.
+- Limit: standalone controls do not reproduce the original failure or establish
+  an exact V8 cause. Retain the extra measured coverage runtime and require fresh
+  whole-proof/hosted evidence before closure.
