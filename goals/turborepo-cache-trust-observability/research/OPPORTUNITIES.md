@@ -1467,3 +1467,11 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   source-reviewed non-defect reason is recorded and its raw warning retained.
 - Prevention: read the current upstream collection API or reuse a verified local
   idiom before applying an older-version combinator pattern.
+
+### Reformat rewritten JSON before recording passing receipts
+
+- Work: record the passing default package proof. A JSON serializer expanded
+  a command array that Biome keeps on one line; formatting-only checking held
+  the evidence commit. Run the canonical formatter after rewriting a receipt
+  and before checking/committing it. Runtime source and the passing proof were
+  unaffected; no check was bypassed.

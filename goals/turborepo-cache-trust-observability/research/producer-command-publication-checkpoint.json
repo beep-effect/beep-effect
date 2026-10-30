@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-producer-command-publication-checkpoint/v1",
-  "recordedAt": "2026-10-30T19:49:30.042536+00:00",
+  "recordedAt": "2026-10-30T20:16:56.798497+00:00",
   "authority": "Unpublished component command wiring and controlled CLI tests; no real protected execution, artifact publication, issuer grant, signing activation or task qualification.",
   "sourceParent": "f17079bcd0ed1310601294204033d35f83381eda",
   "sourceSha256": {
@@ -30,6 +30,15 @@
       "exit": 0,
       "elapsedSeconds": 12.774,
       "finishedAt": "2026-10-30T19:48:31.909364+00:00"
+    },
+    "defaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 1055.828,
+      "finishedAt": "2026-10-30T20:14:55.869623+00:00",
+      "sourceRevision": "1395a7aa8b6322d2a68b879d1ffd2aba6d13097e",
+      "auditSeconds": 1019.9,
+      "docgenSeconds": 34.5,
+      "command": "bun --no-env-file run beep quality package-verify @beep/repo-cli"
     }
   },
   "testsPerRuntime": 96,
@@ -47,7 +56,7 @@
     "limits": "Producer execution is a controlled module boundary; immutable metadata/ZIP verifier tests are real local archive operations with fixture authenticated metadata. These are not real CI or R2 execution."
   },
   "remaining": [
-    "Complete current default package proof and refresh canonical inventories.",
+    "Current source1395 passed the complete default package audit and Docgen with refreshed canonical metadata; accepted-parent combined final and hosted proof remain.",
     "Accept the parent, replay only unpublished owned commits after e6990a32b389e0a0900007ffd6bf0ada646edb58 and perform current combined final/hosted/review proof.",
     "Wire the exact protected workflow, independently provision source/runtime/issuer/publication approvals, and retain actual immutable artifact IDs from successful runs.",
     "Verify the genuinely unrun human helper only after execution, then prove bounded signed trial, independent roles, tenant/epoch isolation and rollback.",

@@ -899,3 +899,12 @@ pattern has a source-backed non-defect judgment: its SAST and JSDoc policies
 and absence results differ. Its raw warning stays visible and unsuppressed.
 Canonical anchors and the default package result will be refreshed for this
 combined source before publication.
+
+### Publication command default package result, 2026-10-30
+
+The committed implementation at `1395a7aa8b6322d2a68b879d1ffd2aba6d13097e`
+passed complete default `@beep/repo-cli` verification: audit 1,019.9 seconds,
+Docgen 34.5 seconds, 1,055.828 seconds total. The source digests remain exact.
+This supersedes the pending default result above; accepted-parent combined
+final/hosted proof and actual protected publication remain open. Every full
+trust and adoption acceptance criterion remains unproven.
