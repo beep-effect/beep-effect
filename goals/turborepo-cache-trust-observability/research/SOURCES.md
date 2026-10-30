@@ -386,6 +386,17 @@ artifact, signing activation, deployed grant or observation window changes.
   acceptance remains open.
 
 
+## Docgen launch repair, 2026-10-29
+
+`docgen-launch-repair-checkpoint.json` records the actual full before/after
+commands, the retained intermittent exit 130 attempts, interpreter observation
+and package/script checks. The baseline review names the ten blocking cached
+tasks and the one reviewed package subject; fourteen executable command-digest
+records change with those manifest bytes. Scope/profile/epoch and the
+qualification ledger remain unchanged. This grants no cache qualification or
+signed trust readiness.
+
+
 - [Deterministic contained-directory error coverage](fs-guards-directory-coverage-checkpoint.json):
   real typed filesystem cause, refusal before writing, both 34-test runtime
   suites, exact error adapter V8 hit and full package audit/documentation.

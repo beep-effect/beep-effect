@@ -86,7 +86,10 @@
     "research/fs-guards-directory-coverage-checkpoint.json",
     "research/producer-capture-checkpoint.json",
     "research/private-socket-checkpoint.json",
-    "research/private-socket-scope-review.json"
+    "research/private-socket-scope-review.json",
+    "research/docgen-launch-repair-checkpoint.json",
+    "research/docgen-launch-baseline-review-2026-10-29.md",
+    "research/docgen-launch-baseline-request-2026-10-29.json"
   ],
   "agentLaunchers": [
     {

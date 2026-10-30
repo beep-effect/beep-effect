@@ -698,6 +698,24 @@ on speculation, and do not report a whole-package pass.
   prohibited import location.
 
 
+### Docgen child interpreter compatibility
+
+- While replaying the producer-capture package audit, full Docgen twice
+  returned exit 130 at example typechecking. Direct compilation of all 3,560 generated
+  examples and both Effect process backends passed. A complete launch without
+  `bunx --bun` passed; a later default before/after pair both passed, retaining
+  the intermittent nature of the failure. The CLI script now relies on the
+  executable's Bun shebang and preserves the compiler's own Node interpreter.
+  Prevent recurrence by qualifying actual full command launches, not only the
+  generated compiler input or mocked child processes. No gate is disabled.
+
+
+### Discover scheduling commands before a status probe
+
+- A read-only `bun run beep scheduler status` probe returned
+  `Unknown subcommand "scheduler"`. No scheduler state changed. Consult the
+  root command list and the owning quality command's help before constructing
+  a status command; command discovery would have avoided this interruption.
 ### Existing native-addon runtime warnings
 
 Publication exposed two `no-global-process-runtime` warnings in the KG addon

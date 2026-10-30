@@ -460,6 +460,23 @@ The local process report does not satisfy those deployment or observation gates.
   epoch rollback and consumer requalification remain required before activation.
 
 
+### Preserve the compiler interpreter in Docgen launches
+
+- 2026-10-29: Remove only `--bun` from the repo CLI's `beep:docgen`
+  implementation script. Docgen's executable already selects Bun by its
+  shebang; forcing every child named `node` through Bun is unnecessary. Keep
+  the canonical generated task wrapper, compiler argv, examples and checks.
+- Two full default Docgen attempts in the producer lane ended with exit 130 during
+  example typechecking, while all 3,560 generated examples compiled under the
+  direct Node and Bun compilers and both Effect process backends. The complete
+  launch without the force flag passed. A fresh repair-lane before/after pair
+  also passed with both commands, so this is an intermittent compatibility
+  observation, not a proven deterministic upstream compiler defect.
+- Verification runs the real full Docgen command, the script generator and
+  package lint/check. Reversal restores the prior implementation string;
+  this change grants no cache qualification, credential access or signing.
+
+
 ### Deterministic contained-directory error control, 2026-10-29
 
 - Exercise the existing filesystem parent-creation error adapter with a scoped
