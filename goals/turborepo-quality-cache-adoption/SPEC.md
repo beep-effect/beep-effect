@@ -314,3 +314,16 @@ review is `research/current-runtime-baseline-review.md`.
   local proof scope and require fresh hosted acceptance. Reversal changes only
   the documentation wording; no scheduler capacity, proof floor or cache flag
   is altered by this correction.
+
+### Attempt and publication identities, 2026-10-30
+
+- Preserve the attempt's starting head, resolved source and diff fingerprint.
+  Publishing staged changes may create a different commit within that attempt.
+- Add an optional published-head identity to the existing verdict. Record it
+  only around a successful owned Git push with unchanged head; an unsuccessful
+  push or head drift grants no such identity. This is transport provenance,
+  not qualification, hosted status or proof reuse authority.
+- Keep older verdicts readable when the append-optional field is absent. No
+  new proof store, scheduler or ledger is introduced.
+- Reverse by removing the new writer path while retaining backward-compatible
+  decoding of already emitted records. Do not rewrite historical attempts.

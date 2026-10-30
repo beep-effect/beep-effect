@@ -170,3 +170,32 @@ from a Turbo miss or hosted runner queue; cache hit-rate cannot explain it away.
 Use the existing ten-minute constrained-compute route when its real threshold
 is reached, recording completed local checks and relying on current hosted
 proof rather than lowering test floors or forcing overlapping memory-heavy jobs.
+
+
+### Preserve actual publication identity separately, 2026-10-30
+
+While publishing the feature evidence repair, Yeet pushed `1ed7bfa943` but its
+verdict retained the starting `07db932b41` head. The attempt identity is useful
+and immutable; it cannot by itself name the new commit produced in the run.
+Add an optional, independently recorded published commit identity, bound around
+the successful Git push. Refuse a head that changes during that phase, retain
+unknown identity on a failed push, and keep starting proof facts unchanged.
+
+### Attribute full-check worker termination before retry, 2026-10-30
+
+The producer component's full final check at `e9866c4c4ea7` ended with SIGTERM
+errors in two Vitest coverage workers: CLI coverage-artifact tests and cli-kit.
+Their sources match accepted main. Focused Node replays pass all 114 affected
+CLI artifact cases and all 1,396 cli-kit tests. The signal's sender and cause
+remain unproven. Preserve that failed run and permit one unchanged-head full
+retry; investigate the lifecycle before a further retry if termination recurs.
+No coverage floor, expectation, source or required status is relaxed.
+
+
+The system journal subsequently identifies the two victims: `earlyoom` sent
+SIGTERM to two Node/Vitest workers from the producer checkout at 11:14:52-53
+UTC. No later earlyoom signal appeared in the subsequent journal observation.
+The unchanged-head canonical retry then passed every final gate with no skips
+or lowered floors. Keep the original failed run and sender attribution; order
+additional heavy local checks around the active proofs instead of changing the
+workstation's memory protection policy.

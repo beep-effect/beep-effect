@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
+import { GitObjectId } from "@beep/schema/Conformance";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -102,6 +103,7 @@ import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
   emptyTurboPlanSnapshot,
+  GIT_PUSH_STEP_ID,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
   YeetProofTier,
@@ -157,7 +159,7 @@ import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts"
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { YeetStatusReviewThread, YeetStatusSnapshot } from "./Status.ts";
-import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
+import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
 const decodeProofJobRecordLine = S.decodeUnknownOption(S.fromJsonString(ProofJobRecord));
@@ -836,6 +838,7 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
   skipCommit: boolean,
   attempt: YeetAttemptStarted
 ) {
+  const preparedHead = yield* readPublishedHead(plan.context);
   yield* runWithFullProofCoordinator(
     plan.context,
     fullSteps,
@@ -869,10 +872,7 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
 
   yield* warnOnMismatchedPublishUpstream(plan.context);
   const pushSteps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
-  const publishResults = yield* runPhase(plan.context, pushSteps, recorder);
-  if (A.some(publishResults, (result) => result.exitCode !== 0)) {
-    return yield* failWithIssueArtifacts(plan.context, pushSteps, publishResults, "yeet publish phase failed.");
-  }
+  yield* runPublishPushPhase(plan.context, pushSteps, recorder, extras, preparedHead);
   return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
@@ -1144,6 +1144,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
 > {
+  const preparedHead = yield* readPublishedHead(plan.context);
   const gateResults = yield* runWithFullProofCoordinator(
     plan.context,
     gateSteps,
@@ -1168,10 +1169,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
   );
   yield* warnOnMismatchedPublishUpstream(plan.context);
   const pushSteps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
-  const pushResults = yield* runPhase(plan.context, pushSteps, recorder);
-  if (A.some(pushResults, (result) => result.exitCode !== 0)) {
-    return yield* failWithIssueArtifacts(plan.context, pushSteps, pushResults, "yeet publish phase failed.");
-  }
+  yield* runPublishPushPhase(plan.context, pushSteps, recorder, extras, preparedHead);
   return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
@@ -1831,7 +1829,44 @@ type YeetVerdictExtras = {
   readonly baseFreshness: O.Option<YeetBaseFreshness>;
   readonly mergeReady: O.Option<YeetMergeReady>;
   readonly stash: O.Option<YeetStashState>;
+  readonly publishedHeadSha: YeetVerdict["publishedHeadSha"];
 };
+
+const readPublishedHead = Effect.fn("Yeet.readPublishedHead")(
+  flow(
+    currentCommitSha,
+    Effect.flatMap(S.decodeEffect(GitObjectId)),
+    Effect.mapError(YeetCommandError.new("Cannot read the publication commit identity."))
+  )
+);
+
+const runPublishPushPhase = Effect.fn("Yeet.runPublishPushPhase")(function* (
+  context: RepoRunContext,
+  steps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  preparedHead: GitObjectId
+) {
+  const before = A.some(steps, (step) => step.id === GIT_PUSH_STEP_ID) ? O.some(preparedHead) : O.none<GitObjectId>();
+  const verifyHead = O.match(before, {
+    onNone: () => Effect.void,
+    onSome: Effect.fn("Yeet.verifyPublishedHead")(function* (expected) {
+      if (!S.toEquivalence(GitObjectId)(yield* readPublishedHead(context), expected))
+        return yield* YeetCommandError.make({
+          message:
+            "The checkout head changed during publication; the pushed commit is unproven. Inspect the remote before retrying.",
+          command: "bun run beep yeet publish",
+          exitCode: 1,
+        });
+    }),
+  });
+  yield* verifyHead;
+  const results = yield* runPhase(context, steps, recorder);
+  if (A.some(results, (result) => result.exitCode !== 0))
+    return yield* failWithIssueArtifacts(context, steps, results, "yeet publish phase failed.");
+  yield* verifyHead;
+  yield* Ref.update(extras, (state) => ({ ...state, publishedHeadSha: before }));
+});
 
 // Only the pre-push proof runs the quality lane group that deletes this
 // artifact at group start and rewrites it on quarantine. Other full-phase
@@ -1999,6 +2034,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
       flakeQuarantine,
       head: attempt.head,
       resolvedHeadSha: attempt.resolvedHeadSha,
+      publishedHeadSha: extraState.publishedHeadSha,
       diffFingerprint: attempt.diffFingerprint,
       proofTier: attempt.proofTier,
       message,
@@ -2248,6 +2284,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
     baseFreshness: O.none(),
     mergeReady: O.none(),
     stash: O.none(),
+    publishedHeadSha: O.none(),
   });
   const terminalWritten = yield* Ref.make(false);
   yield* appendYeetAttemptJournalEvent(plan.context, attempt).pipe(Effect.uninterruptible);
