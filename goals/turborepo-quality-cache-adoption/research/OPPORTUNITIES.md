@@ -357,3 +357,16 @@ workstation's memory protection policy.
 - Limit: standalone controls do not reproduce the original failure or establish
   an exact V8 cause. Retain the extra measured coverage runtime and require fresh
   whole-proof/hosted evidence before closure.
+
+### Cross-check evidence references after extending retained drivers
+
+- Work: review the expanded native input controls. The driver/report had moved
+  to22 cases while the completion audit still named the older18-case digest.
+  A prose summary also lagged the structured feature counts.
+- Prevention: derive current references from the retained driver/report bytes
+  and count actual results. Pin the prior replay to its immutable source revision
+  instead of reusing a current path for old bytes. Keep numeric totals in
+  reviewCounts and row statuses rather than duplicating them in limits prose.
+- The superseded local proof was stopped through its exact owned launcher
+  before changing tracked files. No current full pass or cache qualification
+  is inferred from its completed gates.

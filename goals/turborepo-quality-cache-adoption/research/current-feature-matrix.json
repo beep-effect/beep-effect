@@ -1040,7 +1040,7 @@
   "limits": [
     "Documented availability is not runtime correctness proof.",
     "Research-only upstream main is not a production or canary lane.",
-    "Two current-tree feature dispositions are final (Go not applicable; task descriptions retained absent). The other 33 feature-specific reviews remain open."
+    "Feature rows carry current dispositions; reviewCounts records their totals. Native fixture evidence alone grants no real computation qualification."
   ],
   "reviewCounts": {
     "acceptedNotApplicable": 1,

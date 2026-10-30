@@ -242,11 +242,12 @@
   "retainedDriverReplays": {
     "nativeInputControls": {
       "path": "research/native-input-controls.json",
-      "driverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
-      "cases": 18,
-      "priorDriverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
-      "replayedAt": "2026-10-30T12:18:45.690570+00:00",
-      "bindingGeneratedByDriver": true
+      "driverSha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b",
+      "cases": 22,
+      "priorDriverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+      "replayedAt": "2026-10-30T19:06:18.231530+00:00",
+      "bindingGeneratedByDriver": true,
+      "sourceRevision": "91322bf96426b34daaae6d0e4c577303d1847a7a"
     },
     "actualIgnoredInput": {
       "path": "research/actual-ignored-input-observation.json",
@@ -283,5 +284,17 @@
   "priorSpecSha256AtAcceptedConformanceMerge": {
     "local": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
     "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+  },
+  "priorRetainedDriverReplayAtTaskDescriptions": {
+    "nativeInputControls": {
+      "path": "research/native-input-controls.json",
+      "driverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+      "cases": 18,
+      "priorDriverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
+      "replayedAt": "2026-10-30T12:18:45.690570+00:00",
+      "bindingGeneratedByDriver": true,
+      "sourceRevision": "6958340c791e94e88eee64d56cf2aecfbeedfa2b",
+      "pathScope": "The relative artifact path binds bytes at sourceRevision, not the current working tree."
+    }
   }
 }
