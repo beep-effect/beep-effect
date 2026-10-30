@@ -401,5 +401,11 @@
     "path": "research/owned-adapter-integration-checkpoint.json",
     "sha256": "272d12c8846f43a71d70ff93d7288c6902ae8c167e2bb35ab4b2041ccbbc0b02",
     "allAcceptanceUnproven": true
+  },
+  "producerIntegrationPolicyReview": {
+    "path": "research/producer-integration-policy-review.json",
+    "sha256": "d24e75934317b90811cd4fd6f3a115428ec79a1cdd987586efa4915f34e72cbe",
+    "scope": "Introduced inline compilation/catalog fixes, canonical assertion semantics and one reviewed real-process platform judgment. Full package/final/hosted proof remains pending.",
+    "allAcceptanceUnproven": true
   }
 }

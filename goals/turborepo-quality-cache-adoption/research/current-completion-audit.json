@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "specSha256": "5e1c44029e14f274f883e3d41dbe7007bf9606d69e6efa2d532ee0322a30aac6",
   "acceptance": [
     {
       "id": "AC-01",
@@ -229,5 +229,16 @@
   "priorSpecSha256AtPersistentServiceReview": "02e520db66390a5cb167d4604659e8b35ac809644e36fc238533c2c1cd533ac3",
   "priorSpecSha256AtRemainingFixerReview": "f7fd00e00643a346a41e6f4b5f1fc3f4ca9cca07291859cf75936e70bf07a477",
   "priorSpecSha256AtRemainingServiceReview": "15cee72051ba3b06cddc0ac1c39121b79072b969be51f4688e50544573a9f95c",
-  "priorSpecSha256BeforePublicationAdmissionWording": "3ce2ae7c88aa3a8d7e11fcb2eeb652b146f256fa6a7c73aa288e91b2c6180a47"
+  "priorSpecSha256BeforePublicationAdmissionWording": "3ce2ae7c88aa3a8d7e11fcb2eeb652b146f256fa6a7c73aa288e91b2c6180a47",
+  "priorSpecSha256AtExternalGeneratorReview": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "externalVerdictSourceReview": {
+    "path": "research/external-verdict-source-review.json",
+    "sha256": "ae85bba291a9cc1c408096051ef231b2f6e2c650850fc0b954c49190c823a7a1",
+    "scope": "One source-reviewed fresh external verdict boundary; 199 fresh boundaries and 2372 remaining final-disposition gaps. No advisory execution or qualification."
+  },
+  "generatorBoundarySourceReview": {
+    "path": "research/generator-boundary-source-review.json",
+    "sha256": "25109344bd6772a3d27ac4ab4f999de6b2a72a860041c5e647ee47a4b2cedcb1",
+    "scope": "Nine source-reviewed write/pure decomposition leads with 23 exact source bindings. No final exclusion, generator execution or reuse grant."
+  }
 }

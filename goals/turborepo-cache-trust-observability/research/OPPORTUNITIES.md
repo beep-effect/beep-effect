@@ -1021,3 +1021,17 @@ The first diagnostic tried an unavailable unscoped Istanbul package and raw-map
 equality. Reuse the repo owner's `@vitest/istanbul-lib-coverage` fork and canonical
 normalizer: derived line metadata and serialized infinite columns need that
 normalization. Keep the diagnostic distinct from a new hosted proof.
+
+
+### Integrated producer publication gate attribution, 2026-10-30
+
+The current producer's normal cheap gates found four introduced inline schema
+compilations (the approved storage-host guard and three test codecs), four new
+Effect Vitest detector rows, and a stale repo-cli instrumentation shard. The
+focused 142-test runtime replays and quick package lint/check did not cover
+these root policy gates. Both owned source proofs were stopped before repairs;
+the interrupted complete package audit is not a passing receipt. Hoist the
+codecs/guard, review each detector row, and regenerate catalogs through their
+canonical writers before a fresh publication/final proof. An initial catalog
+invocation only checked drift; the documented writer requires `--write`.
+Preserve every policy and coverage floor; no cache or runtime activation.

@@ -22,6 +22,7 @@ import { bearers, targetFor } from "./cache-conformance-server.ts";
 import { input as bundleInput } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const namespace = "team_beep_signed_canary_v1";
+const encodeTarget = S.encodeEffect(S.fromJsonString(CacheConformanceTarget));
 const fixture = Effect.fn("ProducerUploadRuntimeTest.fixture")(function* () {
   const target = CacheConformanceTarget.make({
     ...targetFor({ url: "http://127.0.0.1:19427/" }),
@@ -226,7 +227,7 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
         signing: Redacted.make("synthetic-rotated-upload-key"),
       });
       assertTrue(yield* assertCacheProducerUploadRuntime(binding, O.some(changedKey)).pipe(Effect.isFailure));
-      const descriptor = yield* S.encodeEffect(S.fromJsonString(CacheConformanceTarget))(runtime.target);
+      const descriptor = yield* encodeTarget(runtime.target);
       for (const value of [Redacted.value(runtime.signing), Redacted.value(runtime.bearers.writer)])
         expect(descriptor).not.toContain(value);
     })

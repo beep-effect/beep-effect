@@ -57,6 +57,7 @@ const hash = S.decodeEffect(Sha256HexFromBytes);
 const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMaterialization));
 const decodeReport = S.decodeUnknownEffect(CacheSignedPilotReceipt);
 const encodeReport = S.encodeEffect(S.fromJsonString(CacheSignedPilotReceipt));
+const encodePilotRun = S.encodeEffect(S.fromJsonString(CacheSignedPilotRun));
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -248,10 +249,7 @@ const ownedUploadFixture = Effect.fn("SignedRunnerTest.uploadFixture")(function*
         ...seed,
         nativeSummary: fault === "missing-summary" ? O.none() : O.some(summary),
       });
-      yield* fs.writeFileString(
-        path.join(path.dirname(worker), "report.json"),
-        yield* S.encodeEffect(S.fromJsonString(CacheSignedPilotRun))(report)
-      );
+      yield* fs.writeFileString(path.join(path.dirname(worker), "report.json"), yield* encodePilotRun(report));
       if (fault === "issuer-change") yield* fs.writeFileString(f.issuer, "changed owned issuer");
       return CacheRuntimeProcess.CapturedStreams.make({
         exitCode: fault === "exit" ? 1 : 0,

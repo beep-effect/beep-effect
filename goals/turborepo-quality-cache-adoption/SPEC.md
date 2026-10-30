@@ -299,7 +299,7 @@ review is `research/current-runtime-baseline-review.md`.
 - Bind each disposition to exact manifests, complete script maps and effective
   configuration. Finite application/dependency builds and Storybook static
   build keep their independent qualification obligations. The population now
-  has 198 reviewed fresh boundaries and 2,373 remaining disposition gaps.
+  had 198 reviewed fresh boundaries and 2,373 remaining disposition gaps at that checkpoint.
   No service is launched and no script, flag or ledger changes. Reversal
   removes only these additional review/disposition records.
 
@@ -314,3 +314,14 @@ review is `research/current-runtime-baseline-review.md`.
   local proof scope and require fresh hosted acceptance. Reversal changes only
   the documentation wording; no scheduler capacity, proof floor or cache flag
   is altered by this correction.
+
+
+### Current external verdict and generator source review
+
+Keep `repo-sanity:bun-audit` fresh at its whole-command boundary because its
+verdict depends on live advisories and clock-expiring exceptions. Its separate
+pure policy prerequisite remains eligible for independent qualification. The
+source review now gives 199 fresh boundaries and 2,372 final-disposition gaps.
+All nine generator write commands have explicit source-reviewed pure rendering
+or drift-check leads; none receives a final exclusion or reuse grant here.
+No configuration, qualification state or production consumer changes.

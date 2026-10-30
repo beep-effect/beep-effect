@@ -496,3 +496,5 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   the unperformed R2/protected/qualification/observation gates.
 
 - `owned-adapter-integration-checkpoint.json`: accepted PR #2367 main integration with the owned backend/upload path; fresh 142-test Node and Bun replays and package lint/check. Earlier checkpoints retain their original source scope; complete and protected proof remains pending.
+
+- `producer-integration-policy-review.json`: exact source repair, canonical assertion semantics, one source-reviewed real-process platform judgment, and scoped passing checks; interrupted complete proof is explicitly not acceptance.

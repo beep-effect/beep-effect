@@ -298,3 +298,6 @@ binds changed runner source bytes. Historical claims above keep their dates.
   ten additional exact Portless watcher/server commands, completing source
   classification of all twelve configured persistent executable computations.
   Their finite build counterparts retain independent qualification duties.
+
+- `external-verdict-source-review.json`: current advisory and expiring-exception source review; one whole-command keep-fresh disposition, no fresh advisory verdict or reuse grant.
+- `generator-boundary-source-review.json`: all nine configured generator write boundaries, 23 exact source bindings and explicit offline/pure decomposition leads; no execution, final exclusion or qualification.

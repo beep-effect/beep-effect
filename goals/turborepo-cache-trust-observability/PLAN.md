@@ -625,3 +625,15 @@ and its separate owned-upload/backend lifecycle. Earlier checkpoint receipts
 retain their original source scope. Fresh combined runtime and complete
 package/final/hosted proof remain required; no qualification or activation is
 claimed by resolving this merge.
+
+
+### Integrated producer policy review
+
+Normal publication found four inline schema compilation errors and one stale
+instrumentation shard. Three Boolean Exit assertions now use canonical
+helpers without inventing payload/Cause expectations. The one remaining
+platform-provenance judgment retains the real filesystem because the subject
+launches a real child and observes its marker and process cleanup. The current
+root policy and quick package checks pass. The interrupted complete audit is
+not a pass; fresh complete package/final/hosted proof remains required. See
+[the review](research/producer-integration-policy-review.json).

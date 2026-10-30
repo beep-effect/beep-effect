@@ -15,8 +15,8 @@
     "retainedQualificationRecordStates": {
       "excluded": 5
     },
-    "sourceReviewedWholeTaskFreshDispositions": 198,
-    "remainingFinalDispositionGaps": 2373
+    "sourceReviewedWholeTaskFreshDispositions": 199,
+    "remainingFinalDispositionGaps": 2372
   },
   "provenance": {
     "censusSha256": "3b7c597abae8339da6516258e94abd746251318fac8e2633b65d722cdc48fe9c",
@@ -1757,7 +1757,7 @@
     "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
     "Complete every remaining computation disposition and qualify/adopt the136 separate read-only lint counterparts.",
     "All 186 reviewed lint fixers remain fresh; complete the separate read-only lint qualifications and every other unfinished computation disposition.",
-    "All twelve configured persistent services remain fresh; their finite build counterparts and 2373 remaining computation dispositions stay unfinished."
+    "All twelve configured persistent services remain fresh; their finite build counterparts and 2372 remaining computation dispositions stay unfinished."
   ],
   "configurations": {
     "d5ba35a8c886232a7719684bd2edb0bce50b1766662181562224ff640bf90e3b": {
@@ -6885,15 +6885,26 @@
       "task": "repo-sanity:bun-audit",
       "commandDigest": "890b7cdbfaa2a80879f365cd054a8568f91ae11f1fc6b9fc34b245f14452bbd4",
       "configurationId": "c6fa36e2f69bbd46d190c250eb62c8e68833f56c6eb2d95abc8334ba6af42d01",
-      "dependencies": ["//#lint:policy-fingerprint"],
+      "dependencies": [
+        "//#lint:policy-fingerprint"
+      ],
       "observedInputCount": 9,
       "observedInputsDigest": "e95d5036ab52b438db220ea06c9c313aa8a5d9b0cf9300d520d951c3b0bb5cd4",
       "priorCommandTextUnchanged": true,
-      "priorSemanticProfileIdsForReview": ["repository-dispatch"],
+      "priorSemanticProfileIdsForReview": [
+        "repository-dispatch"
+      ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
-      "owner": "turborepo-quality-cache-adoption"
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "scope": "whole-task",
+        "reason": "external-current-advisory-and-expiring-exceptions",
+        "pureCounterpart": "//#lint:policy-fingerprint",
+        "review": "research/external-verdict-source-review.json"
+      },
+      "owner": "turborepo-quality-cache-adoption",
+      "semanticReviewRef": "research/external-verdict-source-review.json"
     },
     {
       "computation": "//#repo-sanity:changeset-graph",
@@ -63631,6 +63642,13 @@
       "sourceRevision": "1d0e90c301bce0de43b4276b8cf6b39d598fc71d",
       "reviewedComputations": 10,
       "authority": "source-review-only whole-command keep-fresh dispositions"
+    },
+    {
+      "path": "research/external-verdict-source-review.json",
+      "sha256": "ae85bba291a9cc1c408096051ef231b2f6e2c650850fc0b954c49190c823a7a1",
+      "sourceRevision": "c76902d99d77c1bb675834410f8a532cf7ed76bb",
+      "reviewedComputations": 1,
+      "authority": "source-review-only external whole-command keep-fresh disposition"
     }
   ]
 }

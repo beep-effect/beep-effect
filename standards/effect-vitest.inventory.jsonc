@@ -5937,7 +5937,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -5981,7 +5981,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -9205,13 +9205,35 @@
       "reason": "This test binds an actual Bun Unix socket, queries physical owner-only mode bits, connects through the Node Unix agent, and asserts deletion after shutdown. An in-memory filesystem cannot preserve that subject. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV010 recognizes native Unix lifecycle tests."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-producer.test.ts:21:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-producer-adapter.test.ts:24:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts",
+      "line": 24,
+      "endLine": 24,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed actual resource provenance: this Linux parent-protocol suite launches a real isolated Python pipe peer and git process; the child reads its trusted helper and writes a marker that the parent reads, and the parent verifies /proc child disappearance after scoped cleanup. MemoryFileSystem would disconnect those actual child filesystem effects and change the subject. NodeServices supplies the real filesystem, paths and process spawner; it.layer shares only platform services, while withCacheProducerAdapter owns each peer scope. The peer is inert, not a backend attestation. Owner: @beep/repo-cli. Exit: retire this exception if the suite stops testing real child filesystem/process lifetime."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-producer.test.ts:25:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-producer.test.ts",
-      "line": 21,
-      "endLine": 21,
+      "line": 25,
+      "endLine": 25,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -9249,13 +9271,13 @@
       "reason": "Real scoped filesystem roots and the local HTTP fixture check bounded capture traversal, native-summary selection and output containment; native process execution fails closed (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when the protocol worker cases run over a seeded memory volume with the HTTP fixture in process."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:19:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:30:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
-      "line": 19,
-      "endLine": 19,
+      "line": 30,
+      "endLine": 30,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:3979a7ff75193389220ecf0dc6571697ec9b901ad59fdb1ea873151254956f3d",
       "class": "platform-filesystem-candidate",
@@ -9403,13 +9425,13 @@
       "reason": "The test reads committed sources at path.join(findRepoRoot(), relative) to pin the rerun contract. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the pinned sources are passed as fixture text instead of read from the checkout."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:34:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:35:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cli-kits.test.ts",
-      "line": 34,
-      "endLine": 34,
+      "line": 35,
+      "endLine": 35,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -12065,13 +12087,13 @@
       "reason": "The owning suite is concurrent: false, each test provisions new issuers and references from its current Clock, and the 25-hour adjustment expires only the first test's acceptance; no test fiber escapes its scope (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-producer.test.ts:256:TestClock.adjust@13#1",
+      "id": "EV015:packages/tooling/tool/cli/test/cache-producer.test.ts:326:TestClock.adjust@13#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-producer.test.ts",
-      "line": 256,
-      "endLine": 256,
+      "line": 326,
+      "endLine": 326,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:ec605af0272efc75202304accd0889f006455d0f75cd279f2e19afacc4204e44",
       "class": "shared-test-clock-adjustment",

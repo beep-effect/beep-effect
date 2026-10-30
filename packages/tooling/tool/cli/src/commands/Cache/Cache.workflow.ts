@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
@@ -42,6 +43,13 @@ import {
 } from "./Cache.workflow.schemas.ts";
 import { CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
 
+const $I = $RepoCliId.create("commands/Cache/Cache.workflow");
+const R2StorageHost = S.String.check(S.isPattern(/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/)).pipe(
+  $I.annoteSchema("R2StorageHost", {
+    description: "Account-specific R2 storage hostname allowed for producer uploads.",
+  })
+);
+const isR2StorageHost = S.is(R2StorageHost);
 const bindingCodec = JsonStringCodec(CacheProducerBinding);
 const digest = S.decodeEffect(Sha256HexFromBytes);
 const decodeRevision = S.decodeUnknownEffect(GitObjectId);
@@ -369,7 +377,7 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
     !S.is(Sha256Hex)(target.backend.digest) ||
     !Str.startsWith("/")(owned.adapter.value.executable) ||
     endpoint.protocol !== "https:" ||
-    !S.is(S.String.check(S.isPattern(/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/)))(endpoint.hostname) ||
+    !isR2StorageHost(endpoint.hostname) ||
     endpoint.port !== "" ||
     endpoint.pathname !== "/" ||
     endpoint.search !== "" ||

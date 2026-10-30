@@ -217,5 +217,19 @@ classification with unchanged configuration, not runtime or adoption proof.
 more exact Portless commands: Bun watchers, Vite development, Storybook
 development and Vite preview. All twelve configured persistent executable
 computations now have source-bound keep-fresh dispositions. Finite build
-counterparts remain unfinished. The current total is 198 reviewed fresh
+counterparts remain unfinished. At that checkpoint the total was 198 reviewed fresh
 boundaries with 2,373 final-disposition gaps; no service was launched.
+
+
+### External verdict and generator boundary review
+
+The current `repo-sanity:bun-audit` command reads current vulnerability data and
+selects clock-expiring exceptions, so its whole-command verdict stays fresh.
+The source-bound review changes one population row, bringing the reviewed fresh
+boundaries to 199 with 2,372 final-disposition gaps. Its separate pure policy
+prerequisite remains unqualified. The nine configured code generators now have
+source-reviewed write behavior and explicit pure rendering/check candidates;
+this grants no final exclusion or reuse. No generator was executed and no
+cache flag, qualification state or production runtime changed. See
+[the external review](research/external-verdict-source-review.json) and
+[the generator review](research/generator-boundary-source-review.json).

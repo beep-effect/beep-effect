@@ -97,7 +97,8 @@
     "research/closed-producer-upload-checkpoint.json",
     "research/signed-adapter-launch-checkpoint.json",
     "research/owned-adapter-lifecycle-checkpoint.json",
-    "research/owned-adapter-integration-checkpoint.json"
+    "research/owned-adapter-integration-checkpoint.json",
+    "research/producer-integration-policy-review.json"
   ],
   "agentLaunchers": [
     {

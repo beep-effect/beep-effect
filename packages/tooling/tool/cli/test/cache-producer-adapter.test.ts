@@ -20,9 +20,12 @@ import { CacheClientPin, CacheEvidenceReference } from "@beep/repo-configs/cache
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -174,6 +177,7 @@ raise SystemExit(1 if fault == "nonzero" else 0)
 });
 
 const Peer = S.Struct({ pid: S.Int, keys: S.Array(S.String), argv: S.Array(S.String) });
+const decodePeer = S.decodeEffect(S.fromJsonString(Peer));
 
 describe.skipIf(process.platform !== "linux")("Linux owned adapter parent", () => {
   it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
@@ -204,7 +208,10 @@ describe.skipIf(process.platform !== "linux")("Linux owned adapter parent", () =
               })
             ).pipe(Effect.exit);
             const matches = claimed === f.backendSha256;
-            expect(Exit.isSuccess(result)).toBe(matches);
+            Bool.match(matches, {
+              onTrue: () => result.pipe(Exit.isSuccess, assertTrue),
+              onFalse: () => result.pipe(Exit.isFailure, assertTrue),
+            });
             expect(callbacks).toBe(matches ? 1 : 0);
           }),
         { arbitrary: fcRuns(20) }
@@ -225,7 +232,10 @@ describe.skipIf(process.platform !== "linux")("Linux owned adapter parent", () =
               return "owned result";
             })
           ).pipe(Effect.exit);
-          expect(Exit.isSuccess(result)).toBe(fault === "none");
+          Bool.match(fault === "none", {
+            onTrue: () => result.pipe(Exit.isSuccess, assertTrue),
+            onFalse: () => result.pipe(Exit.isFailure, assertTrue),
+          });
           expect(callbacks).toBe(
             A.contains(["early-exit", "bad-json", "oversized", "bad-ready", "wrong-role", "changed-resource"], fault)
               ? 0
@@ -237,9 +247,7 @@ describe.skipIf(process.platform !== "linux")("Linux owned adapter parent", () =
             expect(result.value[1].backendSha256).toBe(f.backendSha256);
             expect(result.value[1].cleaned).toBe(true);
           }
-          const peer = yield* f.fs
-            .readFileString(f.marker)
-            .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(Peer))));
+          const peer = yield* f.fs.readFileString(f.marker).pipe(Effect.flatMap(decodePeer));
           expect(yield* f.fs.exists(`/proc/${peer.pid}`)).toBe(false);
           expect(peer.keys).not.toContain("TURBO_REMOTE_CACHE_SIGNATURE_KEY");
           expect(peer.keys).not.toContain("BEEP_CACHE_UPLOAD_SIGNING");
@@ -287,7 +295,7 @@ describe.skipIf(process.platform !== "linux")("Linux owned adapter parent", () =
               Effect.provideService(HostProcessArchitecture, fault === "unsupported-architecture" ? "arm64" : "x64"),
               Effect.exit
             );
-            expect(Exit.isFailure(result)).toBe(true);
+            result.pipe(Exit.isFailure, assertTrue);
             expect(callbacks).toBe(0);
             expect(yield* f.fs.exists(f.marker)).toBe(false);
           }
