@@ -6885,26 +6885,22 @@
       "task": "repo-sanity:bun-audit",
       "commandDigest": "890b7cdbfaa2a80879f365cd054a8568f91ae11f1fc6b9fc34b245f14452bbd4",
       "configurationId": "c6fa36e2f69bbd46d190c250eb62c8e68833f56c6eb2d95abc8334ba6af42d01",
-      "dependencies": [
-        "//#lint:policy-fingerprint"
-      ],
+      "dependencies": ["//#lint:policy-fingerprint"],
       "observedInputCount": 9,
       "observedInputsDigest": "e95d5036ab52b438db220ea06c9c313aa8a5d9b0cf9300d520d951c3b0bb5cd4",
       "priorCommandTextUnchanged": true,
-      "priorSemanticProfileIdsForReview": [
-        "repository-dispatch"
-      ],
+      "priorSemanticProfileIdsForReview": ["repository-dispatch"],
       "retainedQualificationRecords": [],
       "currentSemanticReview": "reviewed-current-source",
       "finalDisposition": {
         "category": "keep-fresh",
         "scope": "whole-task",
-        "reason": "external-current-advisory-and-expiring-exceptions",
-        "pureCounterpart": "//#lint:policy-fingerprint",
-        "review": "research/external-verdict-source-review.json"
+        "reason": "live-external-security-and-expiring-policy",
+        "review": "research/external-security-disposition-review.json",
+        "pureCounterpart": "//#lint:policy-fingerprint"
       },
       "owner": "turborepo-quality-cache-adoption",
-      "semanticReviewRef": "research/external-verdict-source-review.json"
+      "semanticReviewRef": "research/external-security-disposition-review.json"
     },
     {
       "computation": "//#repo-sanity:changeset-graph",
@@ -63642,6 +63638,13 @@
       "sourceRevision": "1d0e90c301bce0de43b4276b8cf6b39d598fc71d",
       "reviewedComputations": 10,
       "authority": "source-review-only whole-command keep-fresh dispositions"
+    },
+    {
+      "path": "research/external-security-disposition-review.json",
+      "sha256": "30465834d715139fbecbfb3ab6dd199ce3272b7ed733324e390e1f8d32d0e1dd",
+      "sourceRevision": "3cab76e370f54d3059d6a374ff1698b5717e0524",
+      "reviewedComputations": 1,
+      "authority": "source-review-only whole-command keep-fresh disposition"
     },
     {
       "path": "research/external-verdict-source-review.json",

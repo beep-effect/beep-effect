@@ -1186,3 +1186,17 @@ the next complete publication. Preserve the failed verdict; no gate is waived.
   under both local providers. No coverage floor or safety check changed. The
   current admission-reordering control still fails exactly once after refinement,
   and source restoration is byte-exact.
+
+### 2026-10-30: preserve concurrent source reviews without double counting
+
+- The accepted feature branch and producer branch both reviewed the same
+  external-advisory computation. Preserve both reports, choose the accepted
+  security review as the current row, retain the structural fingerprint lead,
+  and count the computation once: 199 fresh dispositions, 2,372 gaps.
+- Six goal files conflicted. All 18 merge stages were preserved before changes.
+  Markdown uses Git's union merge and verifies every addition from both parents;
+  JSON uses explicit field decisions and both prior SPEC provenance records.
+- A check demanding every historical line initially rejected legitimate base
+  replacements from 198 to 199. Checking additions relative to the shared base
+  preserves all new work without restoring obsolete counters. No source work
+  was discarded and no whole-goal acceptance or runtime setting changed.

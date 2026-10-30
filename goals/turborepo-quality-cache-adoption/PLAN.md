@@ -233,6 +233,55 @@ this grants no final exclusion or reuse. No generator was executed and no
 cache flag, qualification state or production runtime changed. See
 [the external review](research/external-verdict-source-review.json) and
 [the generator review](research/generator-boundary-source-review.json).
+### Go workspace feature disposition
+
+The accepted-source census at dcca confirms zero Go files/modules/root workspace
+and zero direct Go build/module invocations across 4,544 tracked manifest
+scripts. This count includes fixtures and is not the computation census. Both
+pinned native identities were rechecked; the stable schema defaults the Go flag
+to false. The absent root setting remains unchanged.
+
+Record one accepted-not-applicable feature with an explicit reopening trigger
+in [the review](research/go-workspace-feature-review.json). The remaining 34
+feature entries and all nine complete acceptance criteria remain unfinished.
+No Cargo/Python exclusion, task qualification, cache enablement or speedup is
+implied by this source review.
+
+
+Both pinned native clients accept false and true for all 14 future flags in the
+isolated dry-run profile. Two baseline and two unknown-key controls complete
+the 60-case observation, with no sentinel command executed. The
+[native availability report](research/native-future-flag-availability.json)
+separates this parsing evidence from unresolved feature-specific semantics.
+The one Go non-applicability disposition is unchanged; the remaining 34 reviews
+are still pending. No repository task, cache setting or production flag changed.
+
+
+### Reproducible native availability review repair, 2026-10-30
+
+PR #2369 now retains the portable sixty-case driver, its exact source digest,
+the raw-report digest and the reproduction command. A fresh replay preserves
+the same native pins, fourteen flags, 58 accepted configurations and two
+unknown-key refusals. The marker never executes and owned fixtures are removed.
+This repairs evidence retention; all unfinished feature, computation,
+qualification, adoption and production-window obligations remain unchanged.
+
+
+### Revalidated older driver bindings, 2026-10-30
+
+The evidence audit also found stale driver digests on the older native input
+and real ignored-input reports. Replays from their retained files preserve all
+eighteen synthetic outcomes and both real dry-only invalidation/restore results.
+The current reports now bind the actual driver bytes. This repairs source
+provenance; current feature acceptance, computation qualification and all
+production obligations remain separately open.
+
+### Replay binding repair, 2026-10-30
+
+Both retained input drivers generate the path/digest binding in their reports.
+Fresh output reproduces eighteen synthetic executions and six real dry plans;
+tracked JSON is copied unchanged from that output. Current committed-head
+publication, final proof and hosted acceptance remain required for this repair.
 
 ### Publication identity repair, 2026-10-30
 
@@ -251,6 +300,58 @@ required after this test-seam repair. This component does not qualify or activat
 any computation, cache epoch or producer profile.
 
 
+### Task descriptions review, 2026-10-30
+
+The [final current-tree review](research/task-descriptions-feature-review.json)
+retains absent optional descriptions: the current canonical census finds none
+in 101 explicit definitions across 22 config files and 190 workspaces. Both
+pinned clients include raw `turbo.json` in task inputs while excluding this field
+from the resolved task definition. The retained native driver now asserts 22
+cases, including six add/edit/remove controls and exact restored-hash reuse.
+A no-op edit control fails its intended assertion and optimized Python is refused.
+
+This supersedes the older eighteen-case observation with current bound output;
+the earlier report remains in Git history. There are two final feature decisions
+and 33 pending reviews. No real computation is qualified or enabled, no semantic
+input is dropped, and every full-goal acceptance remains unproven.
+
+### Asserted native selection semantics, 2026-10-30
+
+The retained [selection driver](research/native-selection-controls.py) passes
+44 cases across stable/canary and strict false/true: 88 dry/execution calls,
+with actual native summaries and output markers. Eight cases have a real
+selected execution; sixteen zero exits do not. Twenty native refusals match
+the intended task/package/path/selector error. Two driver-integrity controls
+refuse optimized Python and catch removal of the strict toggle, then restore
+the source exactly and replay every case.
+The [checkpoint](research/selection-semantics-checkpoint.json) records source,
+pins, scope and remaining real-consumer work. Feature dispositions stay at two
+final and 33 pending; no task qualification or configuration change occurs.
+
+### Nested Python integration review, 2026-10-30
+
+The [source-backed review](research/python-workspace-feature-review.json)
+retains absent root uv discovery while accounting for the existing nested
+`beep-photo-face` project. Its lint/test commands already run in the Beep CLI
+package audit. No root uv workspace exists, no new graph consumer is enabled,
+and the retained four native flag cases establish syntax only.
+
+There are now three final no-change feature decisions and 32 pending reviews.
+Python computation decomposition and qualification remain open, with every
+full-goal acceptance still unproven. No generated script or runtime setting
+changed; final combined hosted proof remains required.
+
+### External-security whole-task review, 2026-10-30
+
+The [audit boundary review](research/external-security-disposition-review.json)
+records one existing root task as keep-fresh: current advisory information and
+expiry-sensitive OSV policy cannot reuse a tree-exact security result. Existing
+Turbo cache exclusion and local proof exclusion stay in place. No audit was
+executed and no security verdict or pure slice is qualified by this review.
+
+There are now 199 source-reviewed whole-task keep-fresh dispositions and 2372
+remaining final-disposition gaps. Three feature decisions are final and 32
+remain pending. Every full-goal acceptance criterion remains unproven.
 ### Markdown coverage resource boundary, 2026-10-30
 
 The new [source-bound checkpoint](research/markdown-coverage-isolation-checkpoint.json)
@@ -259,3 +360,11 @@ standalone controls, the package's explicit test-file isolation and its measured
 cost. Node and Bun each pass 4,501 existing tests with full parser coverage, and
 default package verification passes. This is a verification-reliability component;
 current final/hosted/review/merge proof and the full adoption goal remain open.
+
+### Accepted feature evidence joined to producer work
+
+`research/accepted-feature-merge-checkpoint.json` records the accepted feature
+commit, both retained source-review paths and the unique-computation counter
+check. All branch additions and prior SPEC provenance are retained; the same
+external audit remains one computation. Current combined proof and every
+qualification, rollout, observation and full-goal requirement remain unfinished.

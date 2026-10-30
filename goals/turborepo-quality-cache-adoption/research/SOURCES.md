@@ -302,6 +302,52 @@ binds changed runner source bytes. Historical claims above keep their dates.
 - `external-verdict-source-review.json`: current advisory and expiring-exception source review; one whole-command keep-fresh disposition, no fresh advisory verdict or reuse grant.
 - `generator-boundary-source-review.json`: all nine configured generator write boundaries, 23 exact source bindings and explicit offline/pure decomposition leads; no execution, final exclusion or qualification.
 
+### Retained native future-flag availability, 2026-10-30
+
+- [Native availability report](native-future-flag-availability.json) and
+  [retained driver](native-future-flag-availability.py): sixty bounded, isolated
+  dry runs using the exact installed/cached stable and canary binary digests.
+  Reproduce with `python3 goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py`.
+  Run from any directory after provisioning those pinned clients. No download,
+  credential or remote-cache access is used. The driver writes its report, raw
+  observation and bounded native logs under ignored
+  `.beep/native-future-flag-availability/`; its `driver.sha256` identifies the
+  actual executed file, and `rawObservationSha256` binds the retained raw report.
+  Both baselines and all 56 flag configurations parse; the two unknown-key
+  controls refuse, no marker command runs and owned fixture directories are
+  removed. These are configuration observations, with no feature semantic or
+  computation qualification. The earlier private-driver report remains in Git
+  history; the current report is a fresh replay from the retained driver.
+
+
+### Current retained-driver replays, 2026-10-30
+
+- [Native input observations](native-input-controls.json) were rerun from the
+  [retained driver](native-input-controls.py): all eighteen case classifications
+  agree with the earlier observation under the same Bun and native pins. The
+  report now binds the exact current driver through both its path and digest.
+- [Real ignored-input observations](actual-ignored-input-observation.json) were
+  rerun from [their retained driver](actual-ignored-input-control.py), from the
+  checkout root: `python3 goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py`.
+  Both clients include the owned ignored manifest, change the task hash, then
+  restore the exact baseline hash after cleanup. Neither executes a task or
+  accesses remote cache. The report names the observed source revision and
+  configuration bytes; earlier counts/hashes remain historical in Git.
+  These fresh replays repair driver provenance and establish no qualification,
+  production activation or representative observation window.
+
+### Replay-generated driver bindings, 2026-10-30
+
+The native input and actual ignored-input drivers now emit their own repository
+relative path and exact source digest before writing each report. The ignored
+input driver also records the observed commit, configuration digests and the
+unchanged source status around its dry-only observation. The tracked reports
+are byte-for-byte copies of generated output; no binding is added afterward.
+Eighteen synthetic executions and six real dry plans were replayed. The latter
+also ran from outside the checkout, restored each owned fixture and recovered
+each baseline hash. These remain bounded observations, without qualification
+or deployment authority.
+
 ### Distinct publication identity, 2026-10-30
 
 - [Published-head checkpoint](published-head-identity-checkpoint.json) binds the
@@ -314,6 +360,25 @@ binds changed runner source bytes. Historical claims above keep their dates.
   hosted status, deployment or full-goal acceptance.
 
 
+### Task descriptions and restored configuration inputs, 2026-10-30
+
+- [Current-tree decision](task-descriptions-feature-review.json) retains absent
+  optional description metadata. Cache's refreshed census finds zero declarations
+  in 101 explicit definitions across 22 config files and 190 workspaces.
+- The [retained driver](native-input-controls.py) emits the current 22-case
+  [native report](native-input-controls.json), including six asserted description
+  controls. Raw configuration inputs change on addition/edit; resolved task and
+  global digests remain stable. Removal restores the earlier hash and HIT.
+- A no-op edit fails the cache assertion, disabled Python assertions are refused,
+  and the source is restored exactly before the final positive run. This is
+  optional-feature evidence, not remote or real-computation qualification.
+- Two feature decisions are final; 33 reviews and all full-goal acceptance remain.
+
+- 2026-10-30: `selection-semantics-checkpoint.json` binds the retained native driver, 44 asserted cases/88 dry-and-execution calls, actual native summaries and two intended negative driver controls. The existing input driver covers single-package hash perturbations; the availability driver covers syntax; neither establishes this multi-workspace selection behavior. All real repository feature and task qualifications remain open.
+
+- 2026-10-30: [Python workspace review](python-workspace-feature-review.json) binds the exact tracked path/script inventories, nested uv project, existing generated lint/test ownership and source hashes. Preserve absent root discovery without excluding real Python quality computations. Four retained native availability cases prove syntax only. Three feature dispositions are final; 32 and all full-goal acceptance remain open.
+
+- 2026-10-30: [External-security boundary](external-security-disposition-review.json) binds the root command/configuration, live clock-sensitive OSV selection and shared explicit proof-reuse exclusion. One final whole-task keep-fresh decision brings the total to 199, with 2372 remaining disposition gaps. This is source review, not an executed audit, a cache qualification or fresh hosted proof.
 ### Markdown coverage isolation, 2026-10-30
 
 - [Source-bound component receipt](markdown-coverage-isolation-checkpoint.json):
@@ -324,3 +389,7 @@ binds changed runner source bytes. Historical claims above keep their dates.
   cases and full parser coverage. The extra local runtime is recorded explicitly.
 - Default package verification passes; current final/hosted/review acceptance
   and all full-goal obligations remain separately unproven.
+
+- [Accepted feature join](accepted-feature-merge-checkpoint.json):
+  [PR #2369](https://github.com/beep-effect/beep-effect/pull/2369), exact accepted
+  commit, preserved branch evidence and unique computation counts.
