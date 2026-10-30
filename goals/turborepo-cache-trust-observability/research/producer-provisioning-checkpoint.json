@@ -68,6 +68,11 @@
       "exit": 0,
       "elapsedSeconds": 270.789,
       "finishedAt": "2026-10-30T10:02:10.546649+00:00"
+    },
+    "instrumentationCatalog": {
+      "exit": 0,
+      "elapsedSeconds": 7.109,
+      "finishedAt": "2026-10-30T10:15:31.062044+00:00"
     }
   },
   "guardControls": {
@@ -112,5 +117,16 @@
     "Actual human bootstrap and seven exact suppressed reads/four reference-only files; signing remains inactive.",
     "Current-source native qualification, all task/feature dispositions and adoption, production trust and actual 7/7/14-day windows."
   ],
-  "runtimeChanges": false
+  "runtimeChanges": false,
+  "instrumentationCatalog": {
+    "generator": "bun run beep observability catalog --write",
+    "catalogSha256": "e39dc308a39714b91e7e8f6645ce05894187ef52e5ba281ecdfd6def8a340202",
+    "file": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+    "check": {
+      "exit": 0,
+      "elapsedSeconds": 7.109,
+      "finishedAt": "2026-10-30T10:15:31.062044+00:00"
+    },
+    "scope": "Generated span inventory only; source hashes, coverage floors and production trust state unchanged."
+  }
 }

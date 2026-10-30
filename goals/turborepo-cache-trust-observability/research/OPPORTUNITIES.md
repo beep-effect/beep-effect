@@ -1342,3 +1342,15 @@ formatter difference. Effect.asVoid preserves the public unit contract, and the
 canonical formatter fixes the fixture. Two new compound Option assertions were
 replaced with the existing assertSome/deepStrictEqual utilities; the full default
 Effect policy now reports zero introduced findings, without an inventory waiver.
+
+
+### Span changes require catalog regeneration, 2026-10-30
+
+The 938 normal publication passed all other cheap subgates but refused the
+observability catalog before push. Removing the singleton-tail helper also
+removed its named span; JSDoc inventory regeneration did not update this separate
+catalog. Use the canonical observability catalog writer and then its default
+check. It removes exactly the stale span in the producer lane and records the
+new provisioning spans in the unpublished dependent lane. Both checks report
+zero drift. Run this narrow check after changing named Effect functions before
+the next complete publication. Preserve the failed verdict; no gate is waived.
