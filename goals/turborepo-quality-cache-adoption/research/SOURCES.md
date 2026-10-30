@@ -356,3 +356,18 @@ or deployment authority.
   head changes produce no verified publication identity. Older records decode
   without the new field. Local focused evidence grants no cache qualification,
   hosted status, deployment or full-goal acceptance.
+
+
+### Task descriptions and restored configuration inputs, 2026-10-30
+
+- [Current-tree decision](task-descriptions-feature-review.json) retains absent
+  optional description metadata. Cache's refreshed census finds zero declarations
+  in 101 explicit definitions across 22 config files and 190 workspaces.
+- The [retained driver](native-input-controls.py) emits the current 22-case
+  [native report](native-input-controls.json), including six asserted description
+  controls. Raw configuration inputs change on addition/edit; resolved task and
+  global digests remain stable. Removal restores the earlier hash and HIT.
+- A no-op edit fails the cache assertion, disabled Python assertions are refused,
+  and the source is restored exactly before the final positive run. This is
+  optional-feature evidence, not remote or real-computation qualification.
+- Two feature decisions are final; 33 reviews and all full-goal acceptance remain.

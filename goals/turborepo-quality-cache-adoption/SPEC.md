@@ -381,3 +381,20 @@ review is `research/current-runtime-baseline-review.md`.
   audit. Neither grants current proof. Current full package/final, hosted checks,
   review threads and the review window remain required before completion.
 - Reverse through an ordinary repair/revert PR; keep historical attempt facts.
+
+
+### Task descriptions feature disposition, 2026-10-30
+
+- Retain the current absence of optional task descriptions. The current canonical
+  census covers 190 workspaces and 22 Turbo configuration files; none of 101
+  explicit task definitions declares this field. This feature supplies human
+  metadata, not an execution or caching benefit that warrants a second source
+  of task documentation in the current repository.
+- Both pinned native clients exclude description from resolved task definitions
+  while including raw `turbo.json` in task inputs. Assert addition/edit misses and
+  exact earlier-hash reuse after removal. Never exclude a real configuration
+  input merely to make a documentation edit hit.
+- Reopen this current-tree decision for a concrete task-inspection/UI consumer
+  with reviewed maintenance and invalidation costs. This is a final no-change
+  feature decision, not a qualification exception or a deferred eligible task.
+  All computation, trust, hosted status and observation requirements remain.

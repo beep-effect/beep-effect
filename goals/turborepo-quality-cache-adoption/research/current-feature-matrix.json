@@ -262,14 +262,19 @@
       ],
       "beepUseCase": "Make generated task intent inspectable without altering correctness.",
       "expectedBenefit": "Make generated task intent inspectable without altering correctness.",
-      "correctnessCase": "Compare schema-supported descriptions against effective task configuration.",
-      "disposition": "review existing use and qualify applicable changes",
-      "acceptanceStatus": "pending",
+      "correctnessCase": "Add/edit invalidates the implicit raw turbo.json task input on both pins; removing the field restores the exact earlier hash and HIT while definition/global digests stay unchanged.",
+      "disposition": "Retain absent optional descriptions in current Turbo config; no execution benefit or requested metadata consumer justifies adding another documentation source.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "availabilityTerm": "description",
       "runtimeObservation": {
         "report": "native-input-controls.json",
-        "scope": "Description-only changes produce MISS and a changed hash on both pins; no reuse guarantee assumed.",
-        "authority": "synthetic feature observation only; real computation qualification remains pending"
+        "scope": "Six asserted description add/edit/remove cases across both pinned clients; raw config is a task input while description is absent from resolved definition.",
+        "authority": "Synthetic native feature evidence only; no real computation qualification."
+      },
+      "finalReview": {
+        "report": "task-descriptions-feature-review.json",
+        "sourceBaseRevision": "d39e9ee2945c4d8e2dda46767f3400a49426f661",
+        "reopenWhen": "A concrete task-inspection or UI consumer needs descriptions and a reviewed source/configuration change justifies their maintenance and invalidation cost."
       }
     },
     {
@@ -1002,11 +1007,12 @@
   "limits": [
     "Documented availability is not runtime correctness proof.",
     "Research-only upstream main is not a production or canary lane.",
-    "One source-backed non-applicability decision is final for its recorded tree; the other 34 feature-specific reviews remain open."
+    "Two current-tree feature dispositions are final (Go not applicable; task descriptions retained absent). The other 33 feature-specific reviews remain open."
   ],
   "reviewCounts": {
     "acceptedNotApplicable": 1,
-    "pending": 34
+    "acceptedRetainCurrentAbsence": 1,
+    "pending": 33
   },
   "nativeAvailabilityCounts": {
     "flagCasesAccepted": 56,

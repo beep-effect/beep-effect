@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-native-feature-input-controls/v1",
-  "recordedAt": "2026-10-30T12:18:45.690570+00:00",
+  "recordedAt": "2026-10-30T19:06:18.231530+00:00",
   "authority": "synthetic-native-feature-observation-only",
   "bunVersion": "1.4.4",
   "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
@@ -23,7 +23,14 @@
       "taskHash": "7a2c798fc4595d64",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "7bc208f6be7b625e11c204e8e8dc3e43cc05dd7dfa6707adb1900d89e7044666",
+      "globalInputsSha256": "b3a937a0f52eda7d11e91fb1e871dca6dffbe3d0f48f9464711cb7e30197de99",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
@@ -33,7 +40,14 @@
       "taskHash": "7a2c798fc4595d64",
       "sameHashAsPrior": true,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "7bc208f6be7b625e11c204e8e8dc3e43cc05dd7dfa6707adb1900d89e7044666",
+      "globalInputsSha256": "b3a937a0f52eda7d11e91fb1e871dca6dffbe3d0f48f9464711cb7e30197de99",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
@@ -43,7 +57,14 @@
       "taskHash": "79b175bc1bf546fc",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "9b2b3ddf3e817a630cff955b1cef8b672e625fdd89d303018f375cf034344a73",
+      "globalInputsSha256": "b3a937a0f52eda7d11e91fb1e871dca6dffbe3d0f48f9464711cb7e30197de99",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
@@ -53,7 +74,14 @@
       "taskHash": "7dd010e6e40cedab",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "9b2b3ddf3e817a630cff955b1cef8b672e625fdd89d303018f375cf034344a73",
+      "globalInputsSha256": "f91f31511e2830dc7104aef597d0f8323d5e1ab07064ee47e79186811a38b7a4",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
@@ -63,7 +91,14 @@
       "taskHash": "7dd010e6e40cedab",
       "sameHashAsPrior": true,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "9b2b3ddf3e817a630cff955b1cef8b672e625fdd89d303018f375cf034344a73",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
@@ -73,7 +108,14 @@
       "taskHash": "1b7fbf8ac45541b3",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "74576b143a637ed21fb65de13724e224c772fed23bb95fb135dac3c9cc43265a",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
@@ -83,7 +125,14 @@
       "taskHash": "1b7fbf8ac45541b3",
       "sameHashAsPrior": true,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "74576b143a637ed21fb65de13724e224c772fed23bb95fb135dac3c9cc43265a",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
@@ -93,17 +142,65 @@
       "taskHash": "505fd9e2a5bc033f",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "5963556848a325ecb97b9f35a7746c6ade331e53b0bb0b2c7ec2004887bd4dc8",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "stable",
       "control": "description-only-change",
-      "kind": "descriptive-config-observation",
+      "kind": "asserted-invariant",
       "cacheStatus": "MISS",
       "taskHash": "d9a283eebc86e493",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "3781d40cecbb768cc1b2b1f0bc8dc2ed78de8b75b9e3cfea7586a26652c97971",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
+    },
+    {
+      "channel": "stable",
+      "control": "description-edit",
+      "kind": "asserted-invariant",
+      "cacheStatus": "MISS",
+      "taskHash": "cebfb1043b4bf776",
+      "sameHashAsPrior": false,
+      "outputMatches": true,
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "618f3d6de5e17dbc8981ffd92dd2a35260332f0dbd81554363c49ee18b7f4f76",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
+    },
+    {
+      "channel": "stable",
+      "control": "description-remove",
+      "kind": "asserted-invariant",
+      "cacheStatus": "HIT",
+      "taskHash": "505fd9e2a5bc033f",
+      "sameHashAsPrior": false,
+      "outputMatches": true,
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "5963556848a325ecb97b9f35a7746c6ade331e53b0bb0b2c7ec2004887bd4dc8",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -113,7 +210,14 @@
       "taskHash": "7a2c798fc4595d64",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "7bc208f6be7b625e11c204e8e8dc3e43cc05dd7dfa6707adb1900d89e7044666",
+      "globalInputsSha256": "b3a937a0f52eda7d11e91fb1e871dca6dffbe3d0f48f9464711cb7e30197de99",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -123,7 +227,14 @@
       "taskHash": "7a2c798fc4595d64",
       "sameHashAsPrior": true,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "7bc208f6be7b625e11c204e8e8dc3e43cc05dd7dfa6707adb1900d89e7044666",
+      "globalInputsSha256": "b3a937a0f52eda7d11e91fb1e871dca6dffbe3d0f48f9464711cb7e30197de99",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -133,7 +244,14 @@
       "taskHash": "79b175bc1bf546fc",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "9b2b3ddf3e817a630cff955b1cef8b672e625fdd89d303018f375cf034344a73",
+      "globalInputsSha256": "b3a937a0f52eda7d11e91fb1e871dca6dffbe3d0f48f9464711cb7e30197de99",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -143,7 +261,14 @@
       "taskHash": "7dd010e6e40cedab",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "9b2b3ddf3e817a630cff955b1cef8b672e625fdd89d303018f375cf034344a73",
+      "globalInputsSha256": "f91f31511e2830dc7104aef597d0f8323d5e1ab07064ee47e79186811a38b7a4",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -153,7 +278,14 @@
       "taskHash": "7dd010e6e40cedab",
       "sameHashAsPrior": true,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "9b2b3ddf3e817a630cff955b1cef8b672e625fdd89d303018f375cf034344a73",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -163,7 +295,14 @@
       "taskHash": "1b7fbf8ac45541b3",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "74576b143a637ed21fb65de13724e224c772fed23bb95fb135dac3c9cc43265a",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -173,7 +312,14 @@
       "taskHash": "1b7fbf8ac45541b3",
       "sameHashAsPrior": true,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "74576b143a637ed21fb65de13724e224c772fed23bb95fb135dac3c9cc43265a",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
@@ -183,36 +329,89 @@
       "taskHash": "505fd9e2a5bc033f",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "5963556848a325ecb97b9f35a7746c6ade331e53b0bb0b2c7ec2004887bd4dc8",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     },
     {
       "channel": "canary",
       "control": "description-only-change",
-      "kind": "descriptive-config-observation",
+      "kind": "asserted-invariant",
       "cacheStatus": "MISS",
       "taskHash": "d9a283eebc86e493",
       "sameHashAsPrior": false,
       "outputMatches": true,
-      "exit": 0
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "3781d40cecbb768cc1b2b1f0bc8dc2ed78de8b75b9e3cfea7586a26652c97971",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
+    },
+    {
+      "channel": "canary",
+      "control": "description-edit",
+      "kind": "asserted-invariant",
+      "cacheStatus": "MISS",
+      "taskHash": "cebfb1043b4bf776",
+      "sameHashAsPrior": false,
+      "outputMatches": true,
+      "exit": 0,
+      "nativeLogBytes": 544,
+      "taskInputsSha256": "618f3d6de5e17dbc8981ffd92dd2a35260332f0dbd81554363c49ee18b7f4f76",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
+    },
+    {
+      "channel": "canary",
+      "control": "description-remove",
+      "kind": "asserted-invariant",
+      "cacheStatus": "HIT",
+      "taskHash": "505fd9e2a5bc033f",
+      "sameHashAsPrior": false,
+      "outputMatches": true,
+      "exit": 0,
+      "nativeLogBytes": 557,
+      "taskInputsSha256": "5963556848a325ecb97b9f35a7746c6ade331e53b0bb0b2c7ec2004887bd4dc8",
+      "globalInputsSha256": "640d6ea0708f54a5ff2208a48b8364e691102ad3a6721935bf1ca53ecad7a6c5",
+      "resolvedTaskDefinitionSha256": "2bc6acc2eb2b353a082368283446ba8e41dae2bb7daa114d3e958d6155857ea4",
+      "taskInputsIncludeTurboConfig": true,
+      "globalInputsIncludeTurboConfig": false,
+      "descriptionInResolvedDefinition": false
     }
   ],
   "completed": true,
-  "lastControl": "canary:description-only-change",
-  "assertedInvariants": 16,
-  "descriptionObservations": 2,
-  "initialDescriptionReuseHypothesis": "Stable returned MISS; the first interrupted hypothesis run remains separately retained. Description cases record observed behavior without assuming hash reuse.",
+  "lastControl": "canary:description-remove",
+  "assertedInvariants": 22,
+  "descriptionObservations": 0,
+  "descriptionControls": 6,
+  "observedClientVersions": {
+    "stable": "2.11.10",
+    "canary": "2.11.9-canary.1"
+  },
+  "initialDescriptionReuseHypothesis": "Earlier observations returned MISS on both pins. The current controls assert description addition/edit invalidation and exact earlier-hash reuse after removal only within this synthetic globalConfiguration profile.",
   "representativeTraffic": false,
   "qualificationOrDeployment": false,
   "limits": [
     "Local Linux synthetic single-package profile only.",
-    "Each process has a thirty-second deadline and runs sequentially with strict environment and local-only cache.",
+    "Each process has a thirty-second deadline inside a ten-minute total budget and runs sequentially with strict environment and local-only cache.",
     "These controls do not establish complete semantic inputs for any real Beep computation.",
     "No production cache, key, namespace, credential or task setting changed."
   ],
-  "driverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+  "driverSha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b",
   "driver": {
     "path": "goals/turborepo-quality-cache-adoption/research/native-input-controls.py",
-    "sha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694"
+    "sha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b"
   },
   "allOwnedFixturesRemoved": true
 }

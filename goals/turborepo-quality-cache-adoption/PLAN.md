@@ -286,3 +286,19 @@ focused proof has 195 passing cases per runtime. The prior source passed
 complete package/final checks; current final/hosted acceptance and review remain
 required after this test-seam repair. This component does not qualify or activate
 any computation, cache epoch or producer profile.
+
+
+### Task descriptions review, 2026-10-30
+
+The [final current-tree review](research/task-descriptions-feature-review.json)
+retains absent optional descriptions: the current canonical census finds none
+in 101 explicit definitions across 22 config files and 190 workspaces. Both
+pinned clients include raw `turbo.json` in task inputs while excluding this field
+from the resolved task definition. The retained native driver now asserts 22
+cases, including six add/edit/remove controls and exact restored-hash reuse.
+A no-op edit control fails its intended assertion and optimized Python is refused.
+
+This supersedes the older eighteen-case observation with current bound output;
+the earlier report remains in Git history. There are two final feature decisions
+and 33 pending reviews. No real computation is qualified or enabled, no semantic
+input is dropped, and every full-goal acceptance remains unproven.

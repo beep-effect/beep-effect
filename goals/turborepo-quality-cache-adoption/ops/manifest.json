@@ -60,7 +60,8 @@
     "research/go-workspace-feature-review.json",
     "research/native-future-flag-availability.json",
     "research/native-future-flag-availability.py",
-    "research/published-head-identity-checkpoint.json"
+    "research/published-head-identity-checkpoint.json",
+    "research/task-descriptions-feature-review.json"
   ],
   "agentLaunchers": [
     {

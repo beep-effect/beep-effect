@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 if sys.flags.optimize:
@@ -48,12 +49,25 @@ clients = {
 }
 rows = []
 roots = {}
+observed_versions = {}
 current = None
+deadline = time.monotonic() + 600
 try:
     for channel, binary in clients.items():
         assert (
             hashlib.sha256(binary.read_bytes()).hexdigest() == pins[channel]["sha256"]
         ), f"{channel} native pin changed"
+        observed_versions[channel] = subprocess.check_output(
+            [str(binary), "--skip-infer", "--version"],
+            cwd=repo,
+            env={"PATH": "/usr/bin:/bin", "CI": "1", "TURBO_TELEMETRY_DISABLED": "1"},
+            timeout=5,
+            text=True,
+        ).strip()
+        assert observed_versions[channel] == pins[channel]["reportedVersion"], (
+            channel,
+            "reported native version changed",
+        )
         directory = Path(tempfile.mkdtemp(prefix=channel + "-", dir=cache))
         roots[channel] = directory
         (directory / "home").mkdir(mode=0o700)
@@ -100,6 +114,7 @@ try:
             "BENIGN": "A",
         }
         prior = None
+        hashes = {}
         controls = [
             ("cold", False, False),
             ("exact-restore", True, True),
@@ -109,7 +124,9 @@ try:
             ("global-input-change", False, False),
             ("unrelated-file-change", True, True),
             ("implementation-byte-change", False, False),
-            ("description-only-change", None, None),
+            ("description-only-change", False, False),
+            ("description-edit", False, False),
+            ("description-remove", True, False),
         ]
         for name, expected_hit, same_hash in controls:
             current = f"{channel}:{name}"
@@ -132,9 +149,17 @@ try:
                     "A synthetic nonsemantic description"
                 )
                 (directory / "turbo.json").write_text(json.dumps(config) + "\n")
+            elif name == "description-edit":
+                config["tasks"]["probe"]["description"] = "Changed explanatory task text"
+                (directory / "turbo.json").write_text(json.dumps(config) + "\n")
+            elif name == "description-remove":
+                del config["tasks"]["probe"]["description"]
+                (directory / "turbo.json").write_text(json.dumps(config) + "\n")
             (directory / "out.txt").unlink(missing_ok=True)
             before = set((directory / ".turbo/runs").glob("*.json"))
             log = base / f"{channel}-{name}.log"
+            remaining = deadline - time.monotonic()
+            assert remaining > 0, "Native input controls exceeded their ten-minute budget"
             with log.open("wb") as output:
                 result = subprocess.run(
                     [
@@ -154,7 +179,7 @@ try:
                     env=env,
                     stdout=output,
                     stderr=subprocess.STDOUT,
-                    timeout=30,
+                    timeout=min(30, remaining),
                 )
             assert result.returncode == 0, f"{current} native exit {result.returncode}"
             after = set((directory / ".turbo/runs").glob("*.json"))
@@ -174,6 +199,11 @@ try:
             assert (
                 prior is None or same_hash is None or (task_hash == prior) == same_hash
             ), (current, "hash equality", task_hash, prior)
+            if name == "description-remove":
+                assert task_hash == hashes["implementation-byte-change"], (
+                    current,
+                    "removing description did not restore the earlier configuration hash",
+                )
             expected = (directory / "input.txt").read_text() + ":" + env["SEMANTIC"]
             assert (directory / "out.txt").read_text() == expected, (
                 current,
@@ -183,16 +213,30 @@ try:
                 {
                     "channel": channel,
                     "control": name,
-                    "kind": "descriptive-config-observation"
-                    if expected_hit is None
-                    else "asserted-invariant",
+                    "kind": "asserted-invariant",
                     "cacheStatus": task["cache"]["status"],
                     "taskHash": task_hash,
                     "sameHashAsPrior": prior is not None and task_hash == prior,
                     "outputMatches": True,
                     "exit": result.returncode,
+                    "nativeLogBytes": log.stat().st_size,
+                    "taskInputsSha256": hashlib.sha256(
+                        json.dumps(task["inputs"], sort_keys=True).encode()
+                    ).hexdigest(),
+                    "globalInputsSha256": hashlib.sha256(
+                        json.dumps(summary["globalCacheInputs"], sort_keys=True).encode()
+                    ).hexdigest(),
+                    "resolvedTaskDefinitionSha256": hashlib.sha256(
+                        json.dumps(task["resolvedTaskDefinition"], sort_keys=True).encode()
+                    ).hexdigest(),
+                    "taskInputsIncludeTurboConfig": "turbo.json" in task["inputs"],
+                    "globalInputsIncludeTurboConfig": "turbo.json"
+                    in summary["globalCacheInputs"]["files"],
+                    "descriptionInResolvedDefinition": "description"
+                    in task["resolvedTaskDefinition"],
                 }
             )
+            hashes[name] = task_hash
             prior = task_hash
 finally:
     for fixture in roots.values():
@@ -211,16 +255,18 @@ finally:
             for c in clients
         },
         "results": rows,
-        "completed": len(rows) == 18,
+        "completed": len(rows) == 22,
         "lastControl": current,
-        "assertedInvariants": 16,
-        "descriptionObservations": 2,
-        "initialDescriptionReuseHypothesis": "Stable returned MISS; the first interrupted hypothesis run remains separately retained. Description cases record observed behavior without assuming hash reuse.",
+        "assertedInvariants": 22,
+        "descriptionObservations": 0,
+        "descriptionControls": 6,
+        "observedClientVersions": observed_versions,
+        "initialDescriptionReuseHypothesis": "Earlier observations returned MISS on both pins. The current controls assert description addition/edit invalidation and exact earlier-hash reuse after removal only within this synthetic globalConfiguration profile.",
         "representativeTraffic": False,
         "qualificationOrDeployment": False,
         "limits": [
             "Local Linux synthetic single-package profile only.",
-            "Each process has a thirty-second deadline and runs sequentially with strict environment and local-only cache.",
+            "Each process has a thirty-second deadline inside a ten-minute total budget and runs sequentially with strict environment and local-only cache.",
             "These controls do not establish complete semantic inputs for any real Beep computation.",
             "No production cache, key, namespace, credential or task setting changed.",
         ],
@@ -235,5 +281,5 @@ finally:
         json.dumps(report, indent=2) + "\n"
     )
 print(
-    f"{len(rows)} native stable/canary executions completed (16 invariant controls and 2 description observations); no production changes."
+    f"{len(rows)} native stable/canary invariant controls completed, including six description add/edit/remove controls; no production changes."
 )
