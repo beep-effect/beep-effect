@@ -229,5 +229,10 @@ has a separate optional publication identity. Both publication paths capture
 the prepared commit before proof and check it around the push. Real local Git
 fixtures and guard-removal controls verify successful publication, proof-time
 head drift, push-time head drift, failed pushes and plans without Git pushes.
-Complete package/final/hosted checks and review remain required. This component
-does not qualify or activate any computation, cache epoch or producer profile.
+The prove-first route now has direct success and proof-time drift cases on the
+same fixture. Moving its capture after proof fails the new regression case in
+both runtimes; the source is restored exactly after each control. Current
+focused proof has 195 passing cases per runtime. The prior source passed
+complete package/final checks; current final/hosted acceptance and review remain
+required after this test-seam repair. This component does not qualify or activate
+any computation, cache epoch or producer profile.

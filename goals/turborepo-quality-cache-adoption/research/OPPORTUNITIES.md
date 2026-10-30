@@ -213,3 +213,28 @@ workstation's memory protection policy.
   gate before publishing. Preserve the original failed result.
 - Prevention: exercise the existing duplication gate during the focused edit
   loop when consolidating a shared phase, before the broader publication wave.
+
+
+### Direct prove-first publication coverage, 2026-10-30
+
+- Doing: close review of the publication-identity repair in PR #2370.
+- Evidence: the real Git fixtures initially drove only the push-first tail,
+  leaving the standard tail's prepared-head capture unexercised directly.
+- Repair: expose the existing standard tail through the source-only test kit
+  and reuse the same disposable bare remote for its success and proof-time
+  drift cases. Moving the capture after proof fails the selected new case
+  under both Node and Bun; restore exact source bytes after each control.
+- Prevention: exercise each independently ordered publication route, even
+  when the final push guards are shared. Production phase behavior is unchanged.
+
+### Review-request Git transport recovery, 2026-10-30
+
+- Doing: push the generated review-request commit for PR #2368 after full proof.
+- Evidence: SSH refused the available public-key route. The scoped HTTPS
+  consumer authenticated, but GitHub repeatedly returned `fatal error in
+  commit_refs`. The commit object was already uploaded with the expected parent.
+- Recovery: verify that exact object and parent through GitHub, then update the
+  existing branch forward with `force=false`. Retain each failed transport
+  result separately; the recovery grants no new proof or merge authority.
+- Prevention: distinguish authentication failure from an uncertain ref update,
+  inspect the actual remote object/ref, and preserve forward-only updates.

@@ -875,6 +875,21 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
 });
 
 /**
+ * Run the prove-first publish tail with its real proof and head-drift guards.
+ *
+ * **Example** (Reference the prove-first route for a wiring test)
+ * ```ts
+ * import { runStandardPublishPhasesForTesting } from "@beep/repo-cli/test/Yeet"
+ * console.assert(typeof runStandardPublishPhasesForTesting === "function")
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const runStandardPublishPhasesForTesting = runStandardPublishPhases;
+
+/**
  * Injectable collaborators for the publish pull-request tail, so tests can
  * drive it against a fake job registry and a known pull request.
  *

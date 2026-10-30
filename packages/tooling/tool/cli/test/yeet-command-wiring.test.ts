@@ -8,6 +8,7 @@ import {
   RuntimeRootChoice,
   YeetAdmissionLease,
 } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   buildYeetRunPlanWithMode,
   defaultYeetRunOptions,
@@ -24,7 +25,9 @@ import {
   RepoRunContext,
   runPlanExecutionForTesting,
   runPushFirstPublishPhasesForTesting,
+  runStandardPublishPhasesForTesting,
   TurboPlanSnapshot,
+  YeetAttemptStarted,
   YeetEnsuredPullRequest,
   YeetRunPlanModeOptions,
 } from "@beep/repo-cli/test/Yeet";
@@ -1294,26 +1297,74 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       mutability: "readonly",
       resume: "never",
     });
+    const proofDrift = RepoPlanStep.make({
+      ...push,
+      id: "full:pre-push",
+      label: "full:pre-push",
+      phase: "full",
+      args: [
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "test: proof-time head change",
+      ],
+    });
     const execute = Effect.fn("YeetPublishedHeadTest.execute")(
-      (steps: ReadonlyArray<RepoPlanStep>, gates: ReadonlyArray<RepoPlanStep>) =>
-        runPushFirstPublishPhasesForTesting(
-          RepoRunPlan.make({ context, steps: [...gates, ...steps] }),
-          defaultYeetRunOptions({ mode: "publish", pr: false }),
-          gates,
-          steps,
-          [],
-          recorder,
-          extras,
-          false
-        ).pipe(
+      (steps: ReadonlyArray<RepoPlanStep>, gates: ReadonlyArray<RepoPlanStep>, proveFirst = false) => {
+        const plan = RepoRunPlan.make({ context, steps: [...gates, ...steps] });
+        const options = defaultYeetRunOptions({ mode: "publish", pr: false });
+        const operation =
+          proveFirst === true
+            ? runStandardPublishPhasesForTesting(
+                plan,
+                options,
+                gates,
+                steps,
+                [],
+                recorder,
+                extras,
+                false,
+                YeetAttemptStarted.make({
+                  attemptId: UUID.make("550e8400-e29b-41d4-a716-446655440000"),
+                  runId: "published-head-fixture",
+                  branch: context.branch,
+                  base: context.base,
+                  head: startingHead,
+                  mode: "publish",
+                  startedAt: "2026-10-30T00:00:00.000Z",
+                })
+              )
+            : runPushFirstPublishPhasesForTesting(plan, options, gates, steps, [], recorder, extras, false);
+        return operation.pipe(
           provideRuntimeRootForTesting(
             RuntimeRootChoice.make({ kind: "test-override", root: path.join(directory, "runtime") })
           ),
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
           TestClock.withLive
-        )
+        );
+      }
     );
-    return { committedHead, context, execute, extras, fs, path, push, readHead, remote, root, startingHead };
+    return {
+      committedHead,
+      context,
+      execute,
+      extras,
+      fs,
+      path,
+      proofDrift,
+      push,
+      readHead,
+      remote,
+      root,
+      startingHead,
+    };
   });
 
   it.effect("records the actual pushed generated commit while preserving the starting identity", () =>
@@ -1363,23 +1414,9 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
     Effect.gen(function* () {
       const current = yield* fixture();
       const gate = RepoPlanStep.make({
-        ...current.push,
+        ...current.proofDrift,
         id: "full:00-cheap-gates",
         label: "full:cheap-gates",
-        phase: "full",
-        args: [
-          "-c",
-          "user.name=fixture",
-          "-c",
-          "user.email=fixture@example.invalid",
-          "-c",
-          "commit.gpgsign=false",
-          "commit",
-          "-q",
-          "--allow-empty",
-          "-m",
-          "test: proof-time head change",
-        ],
       });
       const error = yield* current.execute([current.push], [gate]).pipe(Effect.flip);
       expect(error.message).toContain("head changed during publication");
@@ -1392,6 +1429,29 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
     Effect.gen(function* () {
       const current = yield* fixture();
       yield* current.execute([], []);
+      assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
+      expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+    })
+  );
+
+  it.effect("prove-first records the actual pushed commit while preserving the starting identity", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      yield* current.execute([current.push], [], true);
+      const remoteHead = yield* current.fs.readFileString(current.path.join(current.remote, "refs/heads/main"));
+      expect(Str.trim(remoteHead)).toBe(current.committedHead);
+      expect(current.committedHead).not.toBe(current.startingHead);
+      expect(current.context.head).toBe(current.startingHead);
+      assertSome((yield* Ref.get(current.extras)).publishedHeadSha, current.committedHead);
+    })
+  );
+
+  it.effect("prove-first refuses a proof head that changes before the push", () =>
+    Effect.gen(function* () {
+      const current = yield* fixture();
+      const error = yield* current.execute([current.push], [current.proofDrift], true).pipe(Effect.flip);
+      expect(error.message).toContain("head changed during publication");
+      expect(yield* current.readHead).not.toBe(current.committedHead);
       assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
       expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
     })

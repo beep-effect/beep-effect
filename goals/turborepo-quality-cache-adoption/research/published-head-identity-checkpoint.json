@@ -1,12 +1,12 @@
 {
   "schemaVersion": "cache-published-head-identity-checkpoint/v1",
-  "recordedAt": "2026-10-30T12:40:26.213689+00:00",
-  "authority": "Local implementation in progress; no cache qualification, deployment, producer authority or full-goal acceptance.",
+  "recordedAt": "2026-10-30T14:43:15.221154+00:00",
+  "authority": "Current focused implementation/test-seam repair only; full current final/hosted review remains required. No cache qualification, activation or full-goal acceptance.",
   "sourceParent": "dcca065b86e48c2ec1b014d998da133cc04c7e60",
   "sourceSha256": {
-    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": "cd194afab50713276572120d6cb71bf165f6f6a06b5c93fae5adf3fa3bcfae9e",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": "a2184e976c2b5ccfc76f71a5ddfc70d0f437b436cc4a9af95d62360a4558712b",
     "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts": "72c7b035eb7d0e5b74bcbf9d1f5dac3f47b72e150803a9a901a4c0c7ee5c0cac",
-    "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts": "8c5b6b62431d9dc3cb6553e270fa6ecedc35d6776be7067598535ca15c7a0cf1",
+    "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts": "28a0a8f95419ad1af783b562e75a3cbda114e11a139780bd86f463631c2a47e9",
     "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts": "7088b57f24095285c2131f62990a7d575746ec2988115604eb78cfa64a014fd4",
     "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts": "1afc35333f2ef3482898010e800b8741f359b31a7e3b01e120cfb3035baaea07",
     "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts": "a13eaca0b865f33f04e82a8289af0f8b2c70c21ee441c9bf2b79370458e755e7",
@@ -22,44 +22,27 @@
   "verification": {
     "focusedNode": {
       "exit": 0,
-      "elapsedSeconds": 28.467,
-      "finishedAt": "2026-10-30T12:33:17.517065+00:00",
-      "tests": 193,
-      "priorBeforeConsolidation": {
-        "tests": 193,
-        "exit": 0,
-        "elapsedSeconds": 26.304,
-        "finishedAt": "2026-10-30T11:57:04.885208+00:00"
-      }
+      "elapsedSeconds": 28.907,
+      "finishedAt": "2026-10-30T14:39:57.948078+00:00",
+      "tests": 195
     },
     "focusedBun": {
       "exit": 0,
-      "elapsedSeconds": 25.634,
-      "finishedAt": "2026-10-30T12:33:15.270799+00:00",
-      "tests": 193,
-      "priorBeforeConsolidation": {
-        "tests": 193,
-        "exit": 0,
-        "elapsedSeconds": 22.42,
-        "finishedAt": "2026-10-30T11:57:02.720902+00:00"
-      }
+      "elapsedSeconds": 24.737,
+      "finishedAt": "2026-10-30T14:39:54.809433+00:00",
+      "tests": 195
     },
     "quick": {
       "exit": 0,
-      "elapsedSeconds": 13.025,
-      "finishedAt": "2026-10-30T12:33:03.087091+00:00",
-      "priorBeforeConsolidation": {
-        "exit": 0,
-        "elapsedSeconds": 12.454,
-        "finishedAt": "2026-10-30T11:53:34.133702+00:00"
-      }
+      "elapsedSeconds": 12.934,
+      "finishedAt": "2026-10-30T14:39:42.543818+00:00"
     },
     "effectVitest": {
       "exit": 0,
-      "elapsedSeconds": 40.188,
-      "finishedAt": "2026-10-30T11:57:22.211526+00:00"
+      "elapsedSeconds": 40.554,
+      "finishedAt": "2026-10-30T14:40:22.935163+00:00"
     },
-    "scope": "Current focused implementation proof with unchanged test-source Effect Vitest policy. Full package/final, actual publication and hosted acceptance remain required.",
+    "scope": "Current195-case Node/Bun replay, package lint/check, Effect Vitest0 introduced/resolved, Fallow/catalog and exact-restored capture-placement controls. Alias and test changes require current canonical full final and hosted acceptance.",
     "sourceRestoredAfterControls": true,
     "priorRestoredGuardReplays": {
       "node": {
@@ -74,11 +57,14 @@
       }
     },
     "restoredGuardReplays": {
-      "scope": "Both restored guards are exercised within each current 193-case focused replay.",
-      "focusedNodeTests": 193,
-      "focusedBunTests": 193,
-      "guardCases": 2,
+      "scope": "Both publication paths execute current head-drift cases in each195-case replay. Standard capture-placement regression control fails once in each runtime and restores exact source.",
+      "focusedNodeTests": 195,
+      "focusedBunTests": 195,
       "passedBothRuntimes": true
+    },
+    "priorFocusedCountsBeforeProveFirstReview": {
+      "node": 193,
+      "bun": 193
     }
   },
   "priorFailureAttribution": [
@@ -86,13 +72,73 @@
     "Extended artifact-writer fixture exposed a pre-existing positional lane assertion; use exact lane identity while preserving its expected properties."
   ],
   "remaining": [
-    "Current full default package-verify and canonical full final check.",
-    "Reviewable draft publication through the standing constrained-compute hosted escape; no successful normal publisher receipt is claimed for this repair head.",
-    "Current hosted checks, all review threads/window and complete merge gate.",
+    "Current canonical full final check for this review repair; prior full-source proof retained separately.",
+    "Publish the complete addressed review wave, answer the finding, and satisfy current hosted/thread/window/merge gates.",
     "Both full goals retain all qualification, adoption, production and representative-window requirements."
   ],
   "productionChanges": false,
-  "guardControls": {
+  "instrumentationCatalog": {
+    "path": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+    "sha256": "1b9bc3f332363c3a98fa8f22aa04bfd337ce0e3f8302c9896e6dce3626e9dc2a",
+    "check": {
+      "exit": 0,
+      "elapsedSeconds": 8.385,
+      "finishedAt": "2026-10-30T14:39:51.149950+00:00"
+    }
+  },
+  "documentationInventory": {
+    "json": "standards/jsdoc-documentation.inventory.jsonc",
+    "jsonSha256": "c3558d56094d9fc63c324daf5b6e2c78868f3d1fd1f406a510b8109eb122ca36",
+    "markdown": "standards/jsdoc-documentation.inventory.md",
+    "markdownSha256": "07ff136db4338ca4c632b538072096af6357d0d9e3985dfb2e15257bd0d9f482",
+    "verification": {
+      "exit": 0,
+      "elapsedSeconds": 271.714,
+      "finishedAt": "2026-10-30T14:37:26.209010+00:00"
+    }
+  },
+  "priorSourceSha256BeforePhaseConsolidation": {
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": "655b4ad8458a60ec00bf54f9ffceb9840d959e4e49c116591da718613df01a14",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts": "72c7b035eb7d0e5b74bcbf9d1f5dac3f47b72e150803a9a901a4c0c7ee5c0cac",
+    "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts": "8c5b6b62431d9dc3cb6553e270fa6ecedc35d6776be7067598535ca15c7a0cf1",
+    "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts": "7088b57f24095285c2131f62990a7d575746ec2988115604eb78cfa64a014fd4",
+    "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts": "1afc35333f2ef3482898010e800b8741f359b31a7e3b01e120cfb3035baaea07",
+    "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts": "a13eaca0b865f33f04e82a8289af0f8b2c70c21ee441c9bf2b79370458e755e7",
+    "packages/tooling/tool/cli/test/proof-job.test.ts": "6a4e317870da7bb954f8e9ce4d8a3ff62b29c98c28fcf03829412838d9632b36"
+  },
+  "fallowAudit": {
+    "exit": 0,
+    "elapsedSeconds": 9.887,
+    "finishedAt": "2026-10-30T14:39:51.760025+00:00"
+  },
+  "priorFailedPublication": {
+    "sourceHead": "eb2735577a6fa9cb38cc0074118f240390537a55",
+    "job": "eeb2aa60-7463-4239-8c1d-8c070786e6fe",
+    "result": {
+      "exit": 1,
+      "elapsedSeconds": 588.571,
+      "finishedAt": "2026-10-30T12:26:39.320216+00:00"
+    },
+    "cause": "One introduced duplication group in the publication tails; repaired by moving warning and push-step selection into the existing shared phase."
+  },
+  "interruptedOldSourcePackageAudit": {
+    "result": {
+      "exit": 130,
+      "elapsedSeconds": 655.061,
+      "finishedAt": "2026-10-30T12:27:24.702576+00:00"
+    },
+    "authority": "Deliberate cancellation before repairing source. No passing audit is claimed."
+  },
+  "priorSourceSha256BeforeProveFirstReview": {
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": "cd194afab50713276572120d6cb71bf165f6f6a06b5c93fae5adf3fa3bcfae9e",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts": "72c7b035eb7d0e5b74bcbf9d1f5dac3f47b72e150803a9a901a4c0c7ee5c0cac",
+    "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts": "8c5b6b62431d9dc3cb6553e270fa6ecedc35d6776be7067598535ca15c7a0cf1",
+    "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts": "7088b57f24095285c2131f62990a7d575746ec2988115604eb78cfa64a014fd4",
+    "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts": "1afc35333f2ef3482898010e800b8741f359b31a7e3b01e120cfb3035baaea07",
+    "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts": "a13eaca0b865f33f04e82a8289af0f8b2c70c21ee441c9bf2b79370458e755e7",
+    "packages/tooling/tool/cli/test/proof-job.test.ts": "6a4e317870da7bb954f8e9ce4d8a3ff62b29c98c28fcf03829412838d9632b36"
+  },
+  "priorSharedGuardControls": {
     "recordedAt": "2026-10-30T12:30:41.715400+00:00",
     "authority": "Local synthetic Git guard-removal controls only; no real remote or production cache mutation.",
     "sourceSha256": "cd194afab50713276572120d6cb71bf165f6f6a06b5c93fae5adf3fa3bcfae9e",
@@ -116,56 +162,47 @@
     ],
     "sourceRestoredExactly": true
   },
-  "instrumentationCatalog": {
-    "path": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
-    "sha256": "1b9bc3f332363c3a98fa8f22aa04bfd337ce0e3f8302c9896e6dce3626e9dc2a",
-    "check": {
-      "exit": 0,
-      "elapsedSeconds": 7.302,
-      "finishedAt": "2026-10-30T12:31:39.320367+00:00"
-    }
+  "guardControls": {
+    "recordedAt": "2026-10-30T14:38:54.749983+00:00",
+    "authority": "Synthetic disposable local Git test only; no production mutation.",
+    "sourceSha256": "a2184e976c2b5ccfc76f71a5ddfc70d0f437b436cc4a9af95d62360a4558712b",
+    "rows": [
+      {
+        "runtime": "node",
+        "mutation": "move-standard-prepared-head-capture-after-full-proof",
+        "exit": 1,
+        "oneSelectedCaseFailed": true,
+        "logSha256": "e7e9d581a2bf682e811dab37c03b1da650abdc106074fd12d2a2581943c55190"
+      },
+      {
+        "runtime": "bun",
+        "mutation": "move-standard-prepared-head-capture-after-full-proof",
+        "exit": 1,
+        "oneSelectedCaseFailed": true,
+        "logSha256": "4e437f43762d9666112eda076e30806a864010db8ff373dad998ad84a5e23dac"
+      }
+    ],
+    "sourceRestoredExactly": true
   },
-  "documentationInventory": {
-    "json": "standards/jsdoc-documentation.inventory.jsonc",
-    "jsonSha256": "f47b4feb3d74ca1fb3653fc6129051ee821d358c2ec21badc5516c327efd23c0",
-    "markdown": "standards/jsdoc-documentation.inventory.md",
-    "markdownSha256": "27ec5f9ccc69e72a8dc422ceb214cd3b4c6384d6a06eaa38fed045812e033e8c",
-    "verification": {
-      "exit": 0,
-      "elapsedSeconds": 271.082,
-      "finishedAt": "2026-10-30T12:39:06.905524+00:00"
-    }
-  },
-  "priorSourceSha256BeforePhaseConsolidation": {
-    "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": "655b4ad8458a60ec00bf54f9ffceb9840d959e4e49c116591da718613df01a14",
-    "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts": "72c7b035eb7d0e5b74bcbf9d1f5dac3f47b72e150803a9a901a4c0c7ee5c0cac",
-    "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts": "8c5b6b62431d9dc3cb6553e270fa6ecedc35d6776be7067598535ca15c7a0cf1",
-    "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts": "7088b57f24095285c2131f62990a7d575746ec2988115604eb78cfa64a014fd4",
-    "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts": "1afc35333f2ef3482898010e800b8741f359b31a7e3b01e120cfb3035baaea07",
-    "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts": "a13eaca0b865f33f04e82a8289af0f8b2c70c21ee441c9bf2b79370458e755e7",
-    "packages/tooling/tool/cli/test/proof-job.test.ts": "6a4e317870da7bb954f8e9ce4d8a3ff62b29c98c28fcf03829412838d9632b36"
-  },
-  "fallowAudit": {
-    "exit": 0,
-    "elapsedSeconds": 8.672,
-    "finishedAt": "2026-10-30T12:34:45.089047+00:00"
-  },
-  "priorFailedPublication": {
-    "sourceHead": "eb2735577a6fa9cb38cc0074118f240390537a55",
-    "job": "eeb2aa60-7463-4239-8c1d-8c070786e6fe",
-    "result": {
-      "exit": 1,
-      "elapsedSeconds": 588.571,
-      "finishedAt": "2026-10-30T12:26:39.320216+00:00"
+  "reviewRepair": {
+    "pullRequest": 2370,
+    "finding": "Standard/prove-first publication had no direct prepared-head capture fixture.",
+    "changes": "Source-only alias plus same physical bare-remote fixture for success and proof-time drift; production phase behavior unchanged.",
+    "currentTestsPerRuntime": 195,
+    "currentNativeMutationControls": 2,
+    "priorCompleteProof": {
+      "head": "0fa95673e0b019aed1b8e3cbf1b91a726916917c",
+      "fullPackage": {
+        "exit": 0,
+        "elapsedSeconds": 1052.236,
+        "finishedAt": "2026-10-30T13:03:54.275665+00:00"
+      },
+      "fullFinal": {
+        "exit": 0,
+        "elapsedSeconds": 2205.758,
+        "finishedAt": "2026-10-30T13:49:36.634113+00:00"
+      }
     },
-    "cause": "One introduced duplication group in the publication tails; repaired by moving warning and push-step selection into the existing shared phase."
-  },
-  "interruptedOldSourcePackageAudit": {
-    "result": {
-      "exit": 130,
-      "elapsedSeconds": 655.061,
-      "finishedAt": "2026-10-30T12:27:24.702576+00:00"
-    },
-    "authority": "Deliberate cancellation before repairing source. No passing audit is claimed."
+    "scope": "Current package quick mode is justified by test-only behavior and source-only alias; fresh canonical full-final/hosted proof remains required."
   }
 }

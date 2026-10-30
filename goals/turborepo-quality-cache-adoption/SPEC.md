@@ -325,6 +325,10 @@ review is `research/current-runtime-baseline-review.md`.
   not qualification, hosted status or proof reuse authority.
 - Keep older verdicts readable when the append-optional field is absent. No
   new proof store, scheduler or ledger is introduced.
+- Exercise the standard prove-first route against the same disposable Git
+  remote as the push-first route. A commit created during full pre-push proof
+  must refuse publication; moving the prepared-head capture after that proof
+  must make the regression test fail. This adds no production authority.
 - Reverse by removing the new writer path while retaining backward-compatible
   decoding of already emitted records. Do not rewrite historical attempts.
 
