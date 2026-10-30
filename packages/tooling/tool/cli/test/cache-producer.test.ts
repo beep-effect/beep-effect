@@ -5,7 +5,9 @@ import {
   CacheProducerEnvelope,
 } from "@beep/repo-cli/commands/Cache";
 import {
+  CacheAdapterRuntimeObservation,
   CacheHostedProducerUpload,
+  CacheProducerAdapterReceipt,
   CacheProducerUploadApproval,
   CacheRuntimeFileGuards,
   hashCacheProducerContract,
@@ -93,7 +95,24 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
         archiveBytes: 17,
         status: 200,
       });
-      const observed = CacheProducerBundle.make({ ...receipt, upload: O.some(upload) });
+      const runtime = CacheAdapterRuntimeObservation.make({
+        role: "writer",
+        phase: "ready",
+        tokioNamedThreadsIncludingBlocking: 2,
+        totalThreads: 6,
+        memoryPeakBytes: 1024,
+      });
+      const adapterRuntime = CacheProducerAdapterReceipt.make({
+        backendSha256: Sha256Hex.make(Str.repeat(64)("f")),
+        targetSha256: O.getOrThrow(approved.uploadApproval).targetSha256,
+        ready: { ...runtime, role: "writer", phase: "ready" },
+        afterLoad: { ...runtime, role: "writer", phase: "after-load" },
+      });
+      const observed = CacheProducerBundle.make({
+        ...receipt,
+        upload: O.some(upload),
+        adapterRuntime: O.some(adapterRuntime),
+      });
       const envelope = yield* issuer.issue(observed);
       expect(yield* issuer.verify(envelope, observed)).toEqual(observed);
       const altered = CacheProducerBundle.make({
@@ -101,6 +120,22 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
         upload: O.some(CacheHostedProducerUpload.make({ ...upload, archiveBytes: 18 })),
       });
       assertTrue(yield* issuer.verify(envelope, altered).pipe(Effect.isFailure));
+      const missingRuntime = CacheProducerBundle.make({ ...observed, adapterRuntime: O.none() });
+      assertTrue(yield* issuer.issue(missingRuntime).pipe(Effect.isFailure));
+      const changedRuntime = CacheProducerBundle.make({
+        ...observed,
+        adapterRuntime: O.some(
+          CacheProducerAdapterReceipt.make({ ...adapterRuntime, backendSha256: Sha256Hex.make(Str.repeat(64)("0")) })
+        ),
+      });
+      assertTrue(yield* issuer.verify(envelope, changedRuntime).pipe(Effect.isFailure));
+      const foreignRuntime = CacheProducerBundle.make({
+        ...observed,
+        adapterRuntime: O.some(
+          CacheProducerAdapterReceipt.make({ ...adapterRuntime, targetSha256: Sha256Hex.make(Str.repeat(64)("0")) })
+        ),
+      });
+      assertTrue(yield* issuer.issue(foreignRuntime).pipe(Effect.isFailure));
       assertTrue(yield* issuer.issue(receipt).pipe(Effect.isFailure));
       const historical = yield* makeCacheProducerIssuer(binding);
       assertTrue(yield* historical.issue(observed).pipe(Effect.isFailure));

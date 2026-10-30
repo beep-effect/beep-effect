@@ -198,7 +198,7 @@ it.layer(
   it.effect("binds complete inspection identity and rejects a revision changed during inspection", () =>
     Effect.gen(function* () {
       const { root, git, workflow, toolchain, tools } = yield* inspectedFixture();
-      expect(workflow.inspectionTools).toHaveLength(6);
+      expect(workflow.inspectionTools).toHaveLength(7);
       expect(workflow.files).toHaveLength(1);
       tools.mockReturnValue(
         git([

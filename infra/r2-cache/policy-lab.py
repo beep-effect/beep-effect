@@ -13,6 +13,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import select
 import shutil
 import socket
 import subprocess
@@ -23,6 +24,8 @@ import time
 import uuid
 from urllib.parse import urlsplit
 from unittest import mock
+
+from policy_runtime import digest, runtime_observation, start_owned_adapter, stop_owned_adapters, user_manager_env
 
 import boto3
 from moto.server import DomainDispatcherApplication, create_backend_app
@@ -102,145 +105,12 @@ def free_port():
         return sock.getsockname()[1]
 
 
-def digest(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def user_manager_env(env):
-    runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
-    return {
-        **env,
-        "XDG_RUNTIME_DIR": runtime,
-        "DBUS_SESSION_BUS_ADDRESS": os.environ.get(
-            "DBUS_SESSION_BUS_ADDRESS", f"unix:path={runtime}/bus"
-        ),
-    }
 
 
-def stop_owned_adapters(processes, units):
-    failures = 0
-    for unit in units:
-        try:
-            stopped = subprocess.run(
-                ["systemctl", "--user", "stop", unit],
-                env=user_manager_env(os.environ),
-                capture_output=True,
-                timeout=15,
-            )
-            if stopped.returncode:
-                loaded = subprocess.check_output(
-                    ["systemctl", "--user", "show", unit, "-p", "LoadState", "--value"],
-                    env=user_manager_env(os.environ),
-                    text=True,
-                    timeout=10,
-                ).strip()
-                if loaded != "not-found":
-                    raise AssertionError("Owned adapter unit could not be stopped")
-            state = subprocess.check_output(
-                ["systemctl", "--user", "show", unit, "-p", "ActiveState", "--value"],
-                env=user_manager_env(os.environ),
-                text=True,
-                timeout=10,
-            ).strip()
-            if state not in ("inactive", "failed"):
-                raise AssertionError("Owned adapter unit remained active after cleanup")
-            subprocess.run(
-                ["systemctl", "--user", "reset-failed", unit],
-                env=user_manager_env(os.environ),
-                capture_output=True,
-                timeout=10,
-            )
-        except (AssertionError, OSError, subprocess.SubprocessError):
-            failures += 1
-    for process in processes:
-        try:
-            if process.poll() is None:
-                process.terminate()
-        except ProcessLookupError:
-            pass
-        except OSError:
-            failures += 1
-        try:
-            process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            failures += 1
-            try:
-                process.kill()
-                process.wait(timeout=5)
-            except (OSError, subprocess.SubprocessError):
-                failures += 1
-        except OSError:
-            failures += 1
-    if failures:
-        raise AssertionError(
-            f"Owned adapter cleanup failed in {failures} operation(s); every resource was attempted"
-        )
 
 
-def runtime_observation(unit, role, phase, expected_digest, expected_keys):
-    def property_value(name):
-        return subprocess.check_output(
-            ["systemctl", "--user", "show", unit, "-p", name, "--value"],
-            env=user_manager_env(os.environ),
-            text=True,
-            timeout=10,
-        ).strip()
-
-    pid = int(property_value("MainPID"))
-    cgroup = property_value("ControlGroup")
-    if (
-        pid <= 0
-        or not cgroup.startswith("/user.slice/")
-        or not cgroup.endswith("/" + unit)
-    ):
-        raise AssertionError("Runtime proof did not identify its owned adapter cgroup")
-    process_root = Path("/proc") / str(pid)
-    if digest(process_root / "exe") != expected_digest:
-        raise AssertionError("The resource unit did not execute the reviewed adapter")
-    keys = {
-        entry.split(b"=", 1)[0].decode()
-        for entry in (process_root / "environ").read_bytes().split(b"\0")
-        if entry
-    }
-    if (
-        keys != set(expected_keys)
-        or "TURBO_REMOTE_CACHE_SIGNATURE_KEY" in keys
-        or any(key.startswith("OP_") for key in keys)
-    ):
-        raise AssertionError(
-            "The backend inherited environment outside its explicit fixture allowlist"
-        )
-    group = Path("/sys/fs/cgroup") / cgroup.lstrip("/")
-    quota, period = (int(value) for value in (group / "cpu.max").read_text().split())
-    memory = int((group / "memory.max").read_text())
-    tasks = int((group / "pids.max").read_text())
-    if memory != 256 * 1024 * 1024 or quota != 2 * period or tasks != 16:
-        raise AssertionError(
-            "The actual adapter resource envelope differs from the requested caps"
-        )
-    names = [
-        (task / "comm").read_text().strip()
-        for task in (Path("/proc") / str(pid) / "task").iterdir()
-    ]
-    actix = sum("actix" in name or "arbiter" in name for name in names)
-    tokio = sum("tokio" in name for name in names)
-    if actix != 3 or not 2 <= tokio <= 8 or len(names) > 12:
-        raise AssertionError("The adapter did not preserve its fixed worker envelope")
-    return {
-        "role": role,
-        "phase": phase,
-        "actixThreadsIncludingAcceptor": actix,
-        "tokioNamedThreadsIncludingBlocking": tokio,
-        "totalThreads": len(names),
-        "memoryMaxBytes": memory,
-        "cpuQuotaMicros": quota,
-        "cpuPeriodMicros": period,
-        "tasksMax": tasks,
-        "memoryPeakBytes": int((group / "memory.peak").read_text()),
-        "reviewedExecutable": True,
-        "explicitEnvironmentOnly": True,
-        "passed": True,
-    }
 
 
 def verify_pending_unit_cleanup():
@@ -287,6 +157,99 @@ def close_owned_lab_resources(processes, units, resources):
         stop_owned_adapters(processes, units)
     finally:
         resources.close()
+
+
+def verify_runtime_identity_refusals(unit, role, sha256, keys, port, pid):
+    cases = [
+        ("wrong-listener", sha256, keys, port + 1 if port < 65535 else port - 1, pid),
+        ("changed-process", sha256, keys, port, pid + 1),
+        ("wrong-executable", "0" * 64, keys, port, pid),
+        ("unexpected-environment", sha256, keys | {"UNEXPECTED_FIXTURE_KEY"}, port, pid),
+    ]
+    rows = []
+    for case, expected_digest, expected_keys, expected_port, expected_pid in cases:
+        try:
+            runtime_observation(
+                unit, role, case, expected_digest, expected_keys, expected_port, expected_pid
+            )
+        except AssertionError:
+            rows.append({"case": case, "passed": True})
+        else:
+            raise AssertionError("Runtime observer accepted the " + case + " control")
+    return rows
+
+
+def verify_runtime_start_refusals(adapter, sha256, env, work, handle):
+    rows = []
+    for case, digest_value, changes in [
+        ("wrong-launch-pin", "0" * 64, {}),
+        ("non-loopback-launch", sha256, {"HOST": "0.0.0.0"}),
+        ("artifact-key-in-backend", sha256, {"TURBO_REMOTE_CACHE_SIGNATURE_KEY": "fixture"}),
+        ("agent-key-in-backend", sha256, {"OP_FIXTURE_KEY": "fixture"}),
+    ]:
+        processes, units = [], []
+        try:
+            try:
+                start_owned_adapter(
+                    adapter, digest_value, {**env, **changes}, work, handle, processes, units
+                )
+            except AssertionError:
+                assert not processes and not units, "Invalid launch allocated runtime handles"
+                rows.append({"case": case, "runtimeHandles": 0, "passed": True})
+            else:
+                raise AssertionError("Runtime launcher accepted the " + case + " control")
+        finally:
+            stop_owned_adapters(processes, units)
+    return rows
+
+
+def verify_owned_host_process(adapter, sha256, env, work):
+    environment = {**env, "PORT": str(free_port())}
+    before = set(work.rglob("*"))
+    host = Path(__file__).with_name("policy_runtime.py")
+    process = subprocess.Popen(
+        [sys.executable, "-I", str(host), "owned-host"],
+        cwd=work, env={"PATH": "/usr/bin"},
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+    )
+
+    def read(expected):
+        readable, _, _ = select.select([process.stdout], [], [], 15)
+        if not readable:
+            raise AssertionError("Owned host did not emit its bounded " + expected + " frame")
+        line = process.stdout.readline(4097)
+        if not line.endswith(b"\n") or len(line) > 4096:
+            raise AssertionError("Owned host emitted an invalid frame")
+        result = json.loads(line)
+        assert result["status"] == expected, "Owned host emitted an out-of-order frame"
+        return result
+
+    try:
+        payload = json.dumps({"adapter": str(adapter), "sha256": sha256, "env": environment})
+        for key in ("S3_ACCESS_KEY", "S3_SECRET_KEY", "TURBO_TOKEN"):
+            assert environment[key] not in str(process.args), "Secret entered host argv"
+        process.stdin.write((payload + "\n").encode())
+        process.stdin.flush()
+        ready = read("ready")["observation"]
+        status = request(f"http://127.0.0.1:{environment['PORT']}/v8/artifacts/" + "a" * 16)[0]
+        assert status == 401, "Owned host accepted unauthenticated artifact access"
+        process.stdin.write(b"verify\n")
+        process.stdin.flush()
+        after = read("after-load")["observation"]
+        assert ready["sameProcess"] and after["sameProcess"]
+        assert ready["ownedLoopbackListener"] and after["ownedLoopbackListener"]
+        process.stdin.write(b"stop\n")
+        process.stdin.flush()
+        read("cleaned")
+        assert process.wait(timeout=15) == 0, "Owned host did not finish successful cleanup"
+        assert set(work.rglob("*")) == before, "Owned host wrote startup material into its cwd"
+        return {"case": "owned-host-pipe-lifecycle", "startupFiles": 0, "secretInArgv": False, "passed": True}
+    finally:
+        process.stdin.close()
+        if process.poll() is None:
+            process.terminate()
+        process.wait(timeout=20)
+        process.stdout.close()
 
 
 def verify_cleanup_failure_continuation():
@@ -461,8 +424,12 @@ def run(options):
     processes = []
     units = []
     runtime_rows = []
+    runtime_controls = []
     runtime_units = {}
     runtime_keys = {}
+    runtime_environments = {}
+    runtime_pids = {}
+    runtime_ports = {}
     logs = []
     rows = []
     native_rows = []
@@ -484,13 +451,6 @@ def run(options):
         trap = "SYNTHETIC_PRIVATE_DOTENV_SENTINEL"
         (work / ".env").write_text(
             f"APPLICATION_SECRET={trap}\nRUST_LOG=trace\nS3_SERVER_SIDE_ENCRYPTION={trap}\n"
-        )
-        launch = work / "launch"
-        launch.mkdir(mode=0o700)
-        launcher = launch / "adapter.py"
-        launcher.write_text(
-            "import json, os, sys\nwith open(sys.argv[1]) as f: c = json.load(f)\nos.execve(c['adapter'], [c['adapter']], c['env'])\n",
-            encoding="utf-8",
         )
         endpoints = {}
         team = "team_beep_policy_lab_epoch_1"
@@ -518,109 +478,72 @@ def run(options):
                 "OTEL_EXPORTER_OTLP_ENDPOINT": fixture.url,
                 "RUST_LOG": "trace",
             }
-            command = [str(adapter)]
-            launch_env = env
+            endpoint = f"http://127.0.0.1:{port}"
             if options.runtime_envelope:
                 env["TOKIO_WORKER_THREADS"] = "not-a-count"
-                unit = f"beep-cache-runtime-lab-{uuid.uuid4().hex[:12]}-{role}.service"
-                # Only this fresh, owned unit may be stopped by the finalizer.
-                loaded = subprocess.check_output(
-                    [
-                        "systemctl",
-                        "--user",
-                        "show",
-                        unit,
-                        "-p",
-                        "LoadState",
-                        "--value",
-                    ],
-                    env=user_manager_env(env),
-                    text=True,
-                    timeout=10,
-                ).strip()
-                if loaded != "not-found":
-                    raise AssertionError("Runtime lab unit already exists")
-                units.append(unit)
+                if role == "writer":
+                    runtime_controls.extend(
+                        verify_runtime_start_refusals(
+                            adapter, options.adapter_sha256, env, work, handle
+                        )
+                    )
+                unit, pid, observation = start_owned_adapter(
+                    adapter, options.adapter_sha256, env, work, handle, processes, units
+                )
                 runtime_units[role] = unit
                 runtime_keys[role] = set(env)
-                configuration = launch / f"{role}.json"
-                configuration.write_text(
-                    json.dumps({"adapter": str(adapter), "env": env}),
-                    encoding="utf-8",
-                )
-                configuration.chmod(0o600)
-                # An exec boundary clears the user manager's inherited environment.
-                # Configuration contains only the lab's synthetic credentials.
-                command = [
-                    "systemd-run",
-                    "--user",
-                    "--quiet",
-                    "--wait",
-                    "--pipe",
-                    f"--unit={unit}",
-                    "--service-type=exec",
-                    f"--working-directory={work}",
-                    "--property=MemoryMax=256M",
-                    "--property=CPUQuota=200%",
-                    "--property=TasksMax=16",
-                    "--property=RuntimeMaxSec=600",
-                    "--property=TimeoutStopSec=10",
-                    sys.executable,
-                    str(launcher),
-                    str(configuration),
-                ]
-                launch_env = user_manager_env(env)
-            process = subprocess.Popen(
-                command,
-                cwd=work,
-                env=launch_env,
-                stdout=handle,
-                stderr=subprocess.STDOUT,
-            )
-            processes.append(process)
-            endpoint = f"http://127.0.0.1:{port}"
-            for _ in range(100):
-                if process.poll() is not None:
-                    handle.flush()
-                    captured = log.read_bytes()
-                    override_panic = (
-                        b"TOKIO_WORKER_THREADS" in captured
-                        and b"must be usize" in captured
-                    )
-                    failure = {
-                        "exitCode": process.returncode,
-                        "outputBytes": len(captured),
-                        "outputSha256": hashlib.sha256(captured).hexdigest(),
-                        "runtimeOverrideDiagnostic": override_panic,
-                    }
-                    Path(options.output).with_suffix(
-                        ".startup-failure.json"
-                    ).write_text(json.dumps(failure, indent=2) + "\n")
-                    if override_panic:
-                        raise AssertionError(
-                            "Ambient worker configuration overrode the runtime startup boundary"
+                runtime_environments[role] = dict(env)
+                runtime_pids[role] = pid
+                runtime_ports[role] = port
+                runtime_rows.append(observation)
+                if role == "writer":
+                    runtime_controls.extend(
+                        verify_runtime_identity_refusals(
+                            unit, role, options.adapter_sha256, set(env), port, pid
                         )
-                    raise AssertionError(
-                        "Adapter exited before readiness; startup fixture was not qualified"
                     )
-                try:
-                    if request(endpoint + "/management/health")[0] == 200:
-                        break
-                except OSError:
-                    time.sleep(0.05)
             else:
-                raise AssertionError("Adapter did not become ready")
-            endpoints[role] = endpoint
-            if options.runtime_envelope:
-                runtime_rows.append(
-                    runtime_observation(
-                        runtime_units[role],
-                        role,
-                        "ready",
-                        options.adapter_sha256,
-                        runtime_keys[role],
-                    )
+                process = subprocess.Popen(
+                    [str(adapter)],
+                    cwd=work,
+                    env=env,
+                    stdout=handle,
+                    stderr=subprocess.STDOUT,
                 )
+                processes.append(process)
+                endpoint = f"http://127.0.0.1:{port}"
+                for _ in range(100):
+                    if process.poll() is not None:
+                        handle.flush()
+                        captured = log.read_bytes()
+                        override_panic = (
+                            b"TOKIO_WORKER_THREADS" in captured
+                            and b"must be usize" in captured
+                        )
+                        failure = {
+                            "exitCode": process.returncode,
+                            "outputBytes": len(captured),
+                            "outputSha256": hashlib.sha256(captured).hexdigest(),
+                            "runtimeOverrideDiagnostic": override_panic,
+                        }
+                        Path(options.output).with_suffix(
+                            ".startup-failure.json"
+                        ).write_text(json.dumps(failure, indent=2) + "\n")
+                        if override_panic:
+                            raise AssertionError(
+                                "Ambient worker configuration overrode the runtime startup boundary"
+                            )
+                        raise AssertionError(
+                            "Adapter exited before readiness; startup fixture was not qualified"
+                        )
+                    try:
+                        if request(endpoint + "/management/health")[0] == 200:
+                            break
+                    except OSError:
+                        time.sleep(0.05)
+                else:
+                    raise AssertionError("Adapter did not become ready")
+            endpoints[role] = endpoint
 
         # Dotenv must not turn a legacy process into a signed process after
         # its strict-mode/telemetry decision. Only the refused process sees it.
@@ -1049,6 +972,11 @@ def run(options):
                         )
 
         if options.runtime_envelope:
+            runtime_controls.append(
+                verify_owned_host_process(
+                    adapter, options.adapter_sha256, runtime_environments["writer"], work
+                )
+            )
             for role, unit in runtime_units.items():
                 runtime_rows.append(
                     runtime_observation(
@@ -1057,6 +985,8 @@ def run(options):
                         "after-load",
                         options.adapter_sha256,
                         runtime_keys[role],
+                        runtime_ports[role],
+                        runtime_pids[role],
                     )
                 )
         stop_owned_adapters(processes, units)
@@ -1075,6 +1005,7 @@ def run(options):
             "startup": startup_controls,
             "native": native_rows,
             "runtime": runtime_rows,
+            "runtimeControls": runtime_controls,
             "runtimeEnvelope": options.runtime_envelope,
             "cleanupControls": cleanup_controls,
             "ownedRuntimeUnitsStopped": True,

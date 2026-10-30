@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "640cbd9ada24cedbb67fe2c5eb8e009158a6b6f2ed6c265064d1089c6877a577",
+  "specSha256": "e1b082711df70e86074ffe8e6c81e03dfe79abc6ceeae2be4d9a8a5a3bcaff0f",
   "acceptance": [
     {
       "id": "AC-01",
@@ -323,5 +323,12 @@
     "path": "goals/turborepo-cache-trust-observability/research/signed-adapter-launch-checkpoint.json",
     "sha256": "a9ecca51b701c49b32ed49d58bf7c71dceeb215d80b769ea4ddeb8cabb13d04a",
     "scope": "Pinned exec-boundary component: process/lifecycle checks, default infra audit+Docgen and two private source-copy negatives. Actual owned backend, protected R2 publication, qualification and rollout remain pending."
+  },
+  "priorSpecSha256AtOwnedAdapterLifecycle": "640cbd9ada24cedbb67fe2c5eb8e009158a6b6f2ed6c265064d1089c6877a577",
+  "ownedAdapterLifecycleCheckpoint": {
+    "path": "research/owned-adapter-lifecycle-checkpoint.json",
+    "sha256": "1b81c4e88ab83354063b9b655d634e755eea172c7265586f7a5f4ab096ae08ba",
+    "status": "local component passed; integrated/package/protected proof remains pending",
+    "allAcceptanceUnproven": true
   }
 }

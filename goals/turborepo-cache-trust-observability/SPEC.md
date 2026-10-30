@@ -532,3 +532,25 @@ a service or granting producer authority. The parent must still own and attest
 the real process/listener, resource envelope, approved grants and cleanup.
 Revert the additive mode to reverse it before use; no live activation accompanies
 this source change. See the source-bound launch checkpoint.
+
+### Owned upload backend lifecycle decision
+
+Acquire the reviewed backend only inside the late upload phase, after the full
+signed matrix, protocol experiment and independent workflow/configuration gates.
+Bind its executable digest, storage endpoint and bucket into the approved
+target. Snapshot parent-held storage capabilities separately from native client
+capabilities. Reuse the existing private supervisor storage and process runner.
+
+The shared user-unit runtime carries startup data through an anonymous pipe,
+requires the measured 256 MiB/two-CPU/sixteen-task envelope, ten-minute lifetime
+and ten-second stop bound, and checks the same executable/PID/listener before
+and after the callback. Missing user-manager support fails explicitly. Include
+the sanitized lifecycle and successful cleanup in the issuer-authenticated
+bundle; an upload without its approved lifecycle cannot be issued.
+
+This is a local component and launch-contract change. Actual R2 grants, normal
+source execution, immutable protected publication, platform qualification and
+representative windows remain required. Reverse it by stopping any future
+consumers before reverting the additive runtime/receipt path. The ordinary R2
+service and CI launcher remain on their existing route; this commit activates
+no consumer, key, grant, service, bucket or subscription.

@@ -566,6 +566,9 @@ export class CacheConformanceTarget extends S.Opaque<CacheConformanceTarget, { r
     topology: CacheConformanceTopology,
     baseUrl: S.URLFromString,
     backend: S.Struct({ id: S.NonEmptyString, release: S.NonEmptyString, digest: S.NonEmptyString }),
+    storage: S.OptionFromOptionalKey(S.Struct({ endpoint: S.URLFromString, bucket: S.NonEmptyString })).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     namespace: S.Struct({ teamId: Namespace, foreignTeamId: Namespace }),
     credentials: S.Struct({
       reader: CacheConformanceEnvName,

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { CacheClientPin } from "@beep/repo-configs/cache";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
@@ -15,11 +15,14 @@ import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { gitPathListFromNulOutput } from "../../internal/repo-run/GitExec.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
+import { withCacheProducerAdapter } from "./Cache.adapter.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { decodeCacheExperimentText, readCacheEvidenceBytes, readCacheExperimentBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain } from "./Cache.fingerprint.ts";
@@ -61,6 +64,7 @@ const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args:
 const declaredSourcePaths = [
   "packages",
   "scripts",
+  "infra/r2-cache",
   "package.json",
   "bun.lock",
   "bunfig.toml",
@@ -228,7 +232,15 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
   const files = yield* collectCacheProducerWorkflowFiles(root);
   const toolchain = yield* collectCacheToolchain(root);
   const inspectionTools = yield* Effect.forEach(
-    ["/usr/bin/git", "/usr/bin/bwrap", "/usr/bin/find", "/usr/bin/tar", "/usr/bin/sha256sum", "/usr/bin/awk"],
+    [
+      "/usr/bin/git",
+      "/usr/bin/bwrap",
+      "/usr/bin/find",
+      "/usr/bin/tar",
+      "/usr/bin/sha256sum",
+      "/usr/bin/awk",
+      "/usr/bin/python3",
+    ],
     inspectCacheLinkedFile,
     { concurrency: 2 }
   );
@@ -330,7 +342,18 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
       unknown: supplied.bearers.unknown.pipe(Redacted.value, Redacted.make),
     }),
     signing: supplied.signing.pipe(Redacted.value, Redacted.make),
+    adapter: O.map(supplied.adapter, (adapter) =>
+      CacheProducerAdapterLaunch.make({
+        executable: adapter.executable,
+        accessKey: adapter.accessKey.pipe(Redacted.value, Redacted.make),
+        secretKey: adapter.secretKey.pipe(Redacted.value, Redacted.make),
+      })
+    ),
   });
+  if (O.isNone(owned.adapter) || O.isNone(target.storage))
+    return yield* CacheCommandError.new("Producer upload requires approved storage and an owned adapter capability.");
+  const storage = target.storage.value;
+  const endpoint = storage.endpoint;
   const url = target.baseUrl;
   const targetDigest = yield* hashCacheProducerUploadTarget(target);
   const keyDigest = yield* hashCacheProducerUploadKey(owned.signing);
@@ -343,6 +366,17 @@ export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertU
     url.hash !== "" ||
     url.username !== "" ||
     url.password !== "" ||
+    !S.is(Sha256Hex)(target.backend.digest) ||
+    !Str.startsWith("/")(owned.adapter.value.executable) ||
+    endpoint.protocol !== "https:" ||
+    !S.is(S.String.check(S.isPattern(/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/)))(endpoint.hostname) ||
+    endpoint.port !== "" ||
+    endpoint.pathname !== "/" ||
+    endpoint.search !== "" ||
+    endpoint.hash !== "" ||
+    endpoint.username !== "" ||
+    endpoint.password !== "" ||
+    storage.bucket !== "beep-turbo-r2-pilot" ||
     target.namespace.teamId !== "team_beep_signed_canary_v1" ||
     target.namespace.teamId !== binding.client.namespace ||
     target.namespace.teamId === target.namespace.foreignTeamId ||
@@ -434,7 +468,7 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
       executable: ownedRequest.pilot.executable,
     })
   );
-  const upload = yield* O.match(runtime, {
+  const uploadObservation = yield* O.match(runtime, {
     onNone: () => Effect.succeedNone,
     onSome: Effect.fn("CacheWorkflow.executeOwnedUpload")(function* (runtime) {
       yield* verifyWorkflow;
@@ -445,17 +479,29 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
       if (activation.source.configurationDigest !== trusted.configurationDigest)
         return yield* CacheCommandError.new("Producer task closure differs from independent configuration approval.");
       const expectedTasks = A.map(activation.source.configuration.nodes, (node) => node.id);
-      return yield* runCacheProducerUploadExperiment(
+      const upload = runCacheProducerUploadExperiment(
         root,
         ownedRequest,
         runtime,
         trusted,
         expectedTasks,
         path.join(directory, "issuer.key")
+      );
+      return yield* withCacheProducerAdapter(
+        root,
+        ownedRequest,
+        runtime,
+        O.getOrThrow(trusted.uploadApproval),
+        upload
       ).pipe(Effect.asSome);
     }),
   });
-  const observation = CacheProducerBundle.make({ pilot, protocol, upload });
+  const observation = CacheProducerBundle.make({
+    pilot,
+    protocol,
+    upload: O.map(uploadObservation, Tuple.get(0)),
+    adapterRuntime: O.map(uploadObservation, Tuple.get(1)),
+  });
   yield* verifyWorkflow;
   return CacheProducerObservation.make({ observation, envelope: yield* issuer.issue(observation) });
 }, CacheCommandError.mapError("Cannot issue an observation from the approved producer workflow."));

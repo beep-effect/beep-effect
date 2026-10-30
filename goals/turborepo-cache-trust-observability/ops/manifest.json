@@ -87,7 +87,8 @@
     "research/producer-capture-checkpoint.json",
     "research/private-socket-checkpoint.json",
     "research/closed-producer-upload-checkpoint.json",
-    "research/signed-adapter-launch-checkpoint.json"
+    "research/signed-adapter-launch-checkpoint.json",
+    "research/owned-adapter-lifecycle-checkpoint.json"
   ],
   "agentLaunchers": [
     {
@@ -149,5 +150,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Completion resumed 2026-10-28. Retained PR1327/1389 producer and protocol mechanisms are reused under their original evidence scope; current native and deployed trust boundaries are being refreshed. All nine SPEC acceptance criteria remain unproven as a whole; no deployment, observation-window completion or production readiness is claimed."
+  "statusNote": "Active. Owned upload backend lifecycle is implemented and locally tested with fixed resources, private pipe startup and issuer-bound observations. Actual R2/protected publication, accepted-main integrated proof, platform qualification, adoption and representative windows remain pending. No signing or rollout activation."
 }

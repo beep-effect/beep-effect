@@ -6,7 +6,9 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitObjectId } from "@beep/schema/Conformance";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { CacheProducerBundle, CacheProducerEnvelope } from "./Cache.producer.schemas.ts";
 import { CacheCensusSource, CacheLinkedFile, CacheToolchainSnapshot } from "./Cache.schemas.ts";
@@ -59,7 +61,7 @@ export class CacheProducerWorkflow extends S.Opaque<CacheProducerWorkflow, { rea
     revision: GitObjectId,
     files: S.Array(CacheProducerWorkflowFile).check(S.isMinLength(1), S.isMaxLength(20000)),
     toolchain: CacheToolchainSnapshot,
-    inspectionTools: S.Array(CacheLinkedFile).check(S.isMinLength(6), S.isMaxLength(6)),
+    inspectionTools: S.Array(CacheLinkedFile).check(S.isMinLength(6), S.isMaxLength(7)),
   }).pipe(
     $I.annoteSchema("CacheProducerWorkflow", {
       description:
@@ -120,6 +122,7 @@ export class CacheProducerUploadRuntime extends S.Opaque<
     target: CacheConformanceTarget,
     bearers: CacheConformanceBearers,
     signing: S.Redacted(S.NonEmptyString),
+    adapter: S.OptionFromOptionalKey(CacheProducerAdapterLaunch).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("CacheProducerUploadRuntime", {
       description: "Unserialized parent-owned upload target, role bearers and native signing capability.",

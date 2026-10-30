@@ -377,6 +377,17 @@ the source-bound results are `research/adapter-runtime-checkpoint.json` and
 `research/adapter-runtime-lab.json` under the trust packet. The actual deployed
 credential-launcher chain still requires its own resource and grant proof.
 
+`policy_runtime.py` owns the shared user-unit startup and observation code used
+by the runtime lab. Startup configuration travels through an anonymous pipe;
+it is absent from command arguments, unit properties and environment files.
+The caller installs the exhaustive cleanup scope before launch. Readiness and
+after-load checks bind the same actual PID and executable to the adapter's
+loopback listener and measured cgroup limits. Invalid executable pins, broader
+listeners, artifact keys and agent credentials are refused before a unit is
+allocated. Negative observations cover changed PIDs, wrong listeners, wrong
+executables and unexpected environment names. This component does not activate
+the signed producer or provide R2 grant/deployment qualification.
+
 Cleanup attempts every owned unit and child before reporting an aggregate
 failure. An ExitStack closes logs, temporary data and the storage fixture even
 if stopping or another closure fails. Three failure controls cover a stop

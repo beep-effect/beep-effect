@@ -108,7 +108,20 @@ BunRuntime.runMain(Effect.gen(function* () {
 `;
 });
 
-const makePrivateSupervisorStorage = Effect.fn("CachePilot.makePrivateSupervisorStorage")(function* (
+/**
+ * Allocate scoped supervisor storage outside every task input mount.
+ *
+ * **Example** (Reference private host storage)
+ * ```ts
+ * import { makePrivateSupervisorStorage } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof makePrivateSupervisorStorage === "function")
+ * ```
+ *
+ * @internal
+ * @category resources
+ * @since 0.0.0
+ */
+export const makePrivateSupervisorStorage = Effect.fn("CachePilot.makePrivateSupervisorStorage")(function* (
   root: string,
   mounts: ReadonlyArray<string>
 ) {

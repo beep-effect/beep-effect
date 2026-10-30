@@ -22,6 +22,13 @@ export {
   previewCacheProducerImport,
   validateCacheProducerImport,
 } from "../commands/Cache/Cache.acceptance.ts";
+export {
+  CacheAdapterHostEvent,
+  CacheAdapterRuntimeObservation,
+  CacheProducerAdapterLaunch,
+  CacheProducerAdapterReceipt,
+} from "../commands/Cache/Cache.adapter.schemas.ts";
+export { withCacheProducerAdapter } from "../commands/Cache/Cache.adapter.ts";
 export { joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
 export {
   makeCacheCommandForTesting,
@@ -66,7 +73,10 @@ export {
   extractCacheSignedPilotLog,
   inspectCacheSignedPilotArchive,
 } from "../commands/Cache/Cache.pilot.capture.ts";
-export { runCacheProducerUploadExperiment } from "../commands/Cache/Cache.pilot.runner.ts";
+export {
+  makePrivateSupervisorStorage,
+  runCacheProducerUploadExperiment,
+} from "../commands/Cache/Cache.pilot.runner.ts";
 export { runCachePilotForTesting, runCacheSignedPilotUploadWorker } from "../commands/Cache/Cache.pilot.ts";
 export {
   hashCacheProducerContract,

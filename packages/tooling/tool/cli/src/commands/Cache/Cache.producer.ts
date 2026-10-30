@@ -204,6 +204,15 @@ export const validateCacheProducerBinding = Effect.fn("Producer.validateCachePro
   if (O.isSome(expected.uploadApproval) !== O.isSome(bundle.upload))
     return yield* CacheCommandError.new("Producer upload presence differs from its independently approved target.");
   if (
+    O.isSome(expected.uploadApproval) !== O.isSome(bundle.adapterRuntime) ||
+    (O.isSome(expected.uploadApproval) &&
+      O.isSome(bundle.adapterRuntime) &&
+      expected.uploadApproval.value.targetSha256 !== bundle.adapterRuntime.value.targetSha256)
+  )
+    return yield* CacheCommandError.new(
+      "Producer backend lifecycle differs from its independently approved upload target."
+    );
+  if (
     receipt.sourceRevision !== expected.sourceRevision ||
     receipt.channel !== expected.channel ||
     receipt.runtimeKeyDigest !== expected.runtimeKeyDigest ||

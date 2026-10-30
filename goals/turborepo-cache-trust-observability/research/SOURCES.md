@@ -446,3 +446,10 @@ environment observations, default infra package audit/Docgen and two private
 source-copy controls. Its selected test executable is inert. It establishes no
 R2 capability, protected producer authority or resource/listener attestation.
 The ordinary adapter lifecycle and cache configuration remain unchanged.
+
+- `owned-adapter-lifecycle-checkpoint.json`: source-bound local implementation
+  and proof for late owned-backend acquisition, approved storage identity,
+  private pipe startup, fixed real resource/lifetime observations and
+  issuer-bound cleanup. Separates 112-test Node/Bun orchestration, real
+  synthetic adapter/controller cases and three intended guard failures from
+  the unperformed R2/protected/qualification/observation gates.

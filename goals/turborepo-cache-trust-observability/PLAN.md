@@ -562,3 +562,20 @@ See [the checkpoint](research/signed-adapter-launch-checkpoint.json).
 The parent-owned adapter lifecycle, actual R2/protected producer execution and
 all remaining goal gates stay open. The separate producer branch still needs
 the accepted prerequisite integration from PR2367 through main.
+
+### Owned upload backend lifecycle component
+
+The producer now acquires the actual bounded backend only for the late upload
+phase. The approved target includes storage identity; parent capabilities are
+snapshotted; startup uses a private pipe; live executable/PID/listener and
+resource observations precede and follow the callback. Issuance requires its
+cleanup-bound lifecycle receipt. Node and Bun each pass 112 focused tests in
+seven files, including generated pin/storage cases. The real synthetic adapter
+lab retains its 33 controls plus nine runtime/host controls; the actual Bun
+controller passes success, callback-failure and interruption cleanup. Three
+removed guards fail their intended tests, with exact source restoration.
+
+See [the lifecycle checkpoint](research/owned-adapter-lifecycle-checkpoint.json).
+Complete package/final/hosted proof follows accepted prerequisite integration.
+Actual R2 grants, normal-source stable/canary execution, immutable publication,
+qualification and observation remain required. All goal acceptance is unproven.

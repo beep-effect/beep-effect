@@ -822,3 +822,36 @@ namespace and role. Add an opt-in pinned exec lane and inspect the actual child
 environment with inert credentials. Removing the checksum refusal or admitting
 the artifact key fails the corresponding control. These checks cover the exec
 boundary; preserve separate real-process, resource, grant and R2 proof.
+
+## 2026-10-29: keep runtime capabilities independent from later fixture environments
+
+The new owned-host lifecycle control initially failed with `KeyError` before
+startup because a later native fixture had rebound the loop variable holding
+the adapter environment. The adapter units and storage fixture were cleaned up.
+The driver now snapshots each role's explicit environment at launch and passes
+that snapshot to the host control. Separate capability snapshots prevent later
+client fixture construction from changing backend launch inputs. This was an
+introduced test-driver failure, not R2 grant or deployment evidence.
+
+## 2026-10-29: keep controller probes on the supported command runtime
+
+A bare-Node controller probe reached the existing admission runner and failed
+with `Bun is not defined` before adapter startup. The command tools are owned
+by the canonical Bun CLI; the controller's actual success, callback-failure and
+interruption proof uses that route. Node Vitest supplies the repository's test
+platform setup and passed the focused integration. The bare-Node invocation is
+retained as an unsupported probe, not a Node deployment or native-client pass.
+The controller documentation now states its Bun CLI owner explicitly.
+
+## 2026-10-29: distinguish empty coverage output from measured coverage
+
+The first focused coverage filter used a repository-relative path against the
+project configuration and matched no files. Its summary contained only
+`Unknown`, so it was not accepted as coverage evidence. A suffix filter matched
+exactly `Cache.adapter.ts`; the report names that file and measures 98.14%
+lines/statements, 94.44% branches and 100% functions. Always require an actual
+file row before treating a successful coverage command as proof.
+
+The schema policy scan also found two new codec-heavy tests without generated
+coverage. Both now include schema-derived pin/storage properties and the scan
+passes with no introduced advisory; no exception or floor was added.

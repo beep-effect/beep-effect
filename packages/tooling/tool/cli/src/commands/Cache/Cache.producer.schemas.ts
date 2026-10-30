@@ -17,6 +17,7 @@ import { Sha256Hex } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
 import { CacheSignedPilotReceipt } from "./Cache.pilot.signed.schemas.ts";
 import { CacheProtocolExecution } from "./Cache.protocol.runner.schemas.ts";
 import { CacheHostedProducerUpload, CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
@@ -46,6 +47,9 @@ export class CacheProducerBundle extends S.Opaque<CacheProducerBundle, { readonl
     pilot: CacheSignedPilotReceipt,
     protocol: CacheProtocolExecution,
     upload: S.OptionFromOptionalKey(CacheHostedProducerUpload).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    adapterRuntime: S.OptionFromOptionalKey(CacheProducerAdapterReceipt).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("CacheProducerBundle", {
       description: "One channel's complete native pilot and conformance observations; authentication remains separate.",
