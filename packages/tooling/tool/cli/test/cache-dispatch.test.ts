@@ -7,6 +7,7 @@ import {
   CacheCommandError,
   CacheComputationConfiguration,
   CacheExecutablePin,
+  CacheLinkedFile,
   CacheLiveIdentity,
   CacheQualificationService,
   CacheToolchainSnapshot,
@@ -14,7 +15,12 @@ import {
 } from "@beep/repo-cli/commands/Cache";
 import * as Profile from "@beep/repo-cli/commands/Cache/Cache.profile";
 import * as Runtime from "@beep/repo-cli/commands/Cache/Cache.runtime";
-import { makeCacheCommandForTesting } from "@beep/repo-cli/test/Cache";
+import * as Workflow from "@beep/repo-cli/commands/Cache/Cache.workflow";
+import {
+  CacheProducerWorkflow,
+  CacheProducerWorkflowFile,
+  makeCacheCommandForTesting,
+} from "@beep/repo-cli/test/Cache";
 import {
   CacheActivationProjection,
   CacheEvidenceReference,
@@ -31,6 +37,7 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex } from "@beep/schema";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -124,6 +131,15 @@ const encodeTransitionRequest = S.encodeEffect(S.fromJsonString(CacheTransitionR
 const encodeActivationRequest = S.encodeEffect(S.fromJsonString(CacheActivationRequest));
 const decodeIdentity = S.decodeUnknownEffect(S.fromJsonString(CacheLiveIdentity));
 const decodePreview = S.decodeUnknownEffect(S.fromJsonString(CacheActivationPreview));
+const workflow = CacheProducerWorkflow.make({
+  revision: GitObjectId.make(Str.repeat(40)("a")),
+  files: [CacheProducerWorkflowFile.make({ path: "source.ts", sha256: digest, mode: 0o644, linkTarget: O.none() })],
+  toolchain: identity.toolchain,
+  inspectionTools: A.makeBy(7, (index) =>
+    CacheLinkedFile.make({ path: `/tool-${index}`, target: `/tool-${index}`, sha256: digest })
+  ),
+});
+const decodeWorkflow = S.decodeUnknownEffect(S.fromJsonString(CacheProducerWorkflow));
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
@@ -400,6 +416,67 @@ describe("cache qualification command dispatch", () => {
     );
   });
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("preserves external review paths and typed failures when sharing review request decoding", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const external = yield* f.fs.makeTempDirectoryScoped({ prefix: "cache-review-request-" });
+        const baselinePath = f.path.join(external, "baseline.json");
+        const transitionPath = f.path.join(external, "transition.json");
+        yield* f.fs.copyFile(f.requests.baseline, baselinePath);
+        yield* f.fs.copyFile(f.requests.transition, transitionPath);
+        yield* f.run(["baseline", "--request", baselinePath]);
+        yield* f.run(["transition", "--request", transitionPath]);
+        expect(f.calls).toEqual(["baseline", "transition"]);
+        yield* f.fs.writeFileString(baselinePath, "invalid JSON");
+        expect(yield* f.run(["baseline", "--request", baselinePath]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* errorText).toContain("Cannot decode baseline review request.");
+        yield* f.fs.remove(transitionPath);
+        expect(yield* f.run(["transition", "--request", transitionPath]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* errorText).toContain("Cannot decode qualification transition request.");
+        expect(f.calls).toEqual(["baseline", "transition"]);
+      })
+    );
+    it.effect("writes producer inspection without reading credentials or changing qualification", () =>
+      Effect.gen(function* () {
+        const inspect = vi.spyOn(Workflow, "inspectCacheProducerWorkflow").mockReturnValue(Effect.succeed(workflow));
+        const f = yield* fixture();
+        const output = f.path.join(f.root, "producer-inspection.json");
+        const forbidConfiguration = ConfigProvider.make(() => Effect.die("Inspection read credential configuration."));
+        yield* f
+          .run(["producer-inspect", "--output", output])
+          .pipe(Effect.provideService(ConfigProvider.ConfigProvider, forbidConfiguration));
+        expect(inspect).toHaveBeenCalledWith(process.cwd());
+        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeWorkflow))).toEqual(workflow);
+        expect(f.calls).toEqual([]);
+        expect(yield* consoleText).not.toContain('"inspectionTools"');
+        inspect.mockReturnValue(Effect.fail(CacheCommandError.new("Source drift fixture.")));
+        expect(yield* f.run(["producer-inspect", "--output", output]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* f.fs.readFileString(output).pipe(Effect.flatMap(decodeWorkflow))).toEqual(workflow);
+      })
+    );
+    it.effect("refuses an oversized producer inspection before overwriting output", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const output = f.path.join(f.root, "bounded-inspection.json");
+        yield* f.fs.writeFileString(output, "preserved");
+        vi.spyOn(Workflow, "inspectCacheProducerWorkflow").mockReturnValue(
+          Effect.succeed(
+            CacheProducerWorkflow.make({
+              ...workflow,
+              files: [
+                CacheProducerWorkflowFile.make({
+                  ...A.getUnsafe(workflow.files, 0),
+                  path: Str.repeat(4 * 1024 * 1024)("x"),
+                }),
+              ],
+            })
+          )
+        );
+        expect(yield* f.run(["producer-inspect", "--output", output]).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* f.fs.readFileString(output)).toBe("preserved");
+        expect(yield* errorText).toContain("exceeds its configured byte bound");
+      })
+    );
     it.effect("requires independent producer configuration without dispatching an experiment", () =>
       Effect.gen(function* () {
         const f = yield* fixture();

@@ -1303,3 +1303,26 @@ intended run; no test or coverage rule was changed.
   through the typed inventory writer, preserving existing rows; replacing the
   physical filesystem would change the boundary tested. The default policy
   replay must still pass after regeneration.
+
+
+### Distinguish source observation from hosted readiness, 2026-10-30
+
+The producer command requires independently provisioned approval, while no
+secret-free hosted source inspection caller existed. Expose the existing
+inspector with bounded file-only output and an exact-main workflow. Reuse the
+current model and report instead of adding another store. Record this as source
+and tool observation only: an installed `bwrap` digest is not proof that the
+AWS user manager, namespaces or cgroup controls actually work. The inspection
+workflow remains unpublished and has not run.
+
+
+### Same-file inherited duplication needs an actual disposition, 2026-10-30
+
+Fallow's changed-file audit passed but reported an inherited-adjacent clone
+between baseline and transition review readers in Cache.command.ts. Source
+inspection confirmed duplicated file-read/decode handling. Consolidate it in
+this component, preserving external request paths and exact typed failures.
+Reuse the existing FileSystem service and schema codecs; the contained local
+experiment reader intentionally has another policy. A dedicated regression and
+current 98-case suites pass on both runtimes; audit and health now report zero
+findings. No new helper module, model, policy exemption or evidence store.

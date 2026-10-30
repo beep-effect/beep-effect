@@ -748,3 +748,26 @@ causes all six intended assertions to fail; exact restoration and the full
 This unpublished dependent component still needs its accepted parent, complete
 package/final/hosted proof, independent provisioning and an actual protected
 workflow. It does not complete any full-goal criterion or activate the trial.
+
+
+### Protected source inspection preparation, 2026-10-30
+
+The dependent lane now exposes the existing clean-source/tool inspector through
+a credential-free command and prepares its main-only AWS inspection workflow.
+The report is bounded to four MiB, avoids stdout metadata, and does not grant
+producer approval or assert resource isolation. Ninety-seven focused cases pass
+on each runtime, including absent credential reads, source failure and
+before-write size refusal. Static workflow checks pass; no hosted invocation
+has occurred. Preserve the original 95-case checkpoint as historical proof.
+Finish policy/Docgen and accepted-parent replay, then complete package/final and
+hosted gates before publishing or dispatching the inspection workflow. Trusted
+provisioning and actual authenticated producer publication remain unfinished.
+
+
+The same-file Fallow audit also exposed one inherited-adjacent clone in the
+baseline/transition review readers. Consolidate it without borrowing the local
+experiment reader's different containment policy. A regression preserves
+external review paths and malformed/missing-input typed failures. The refreshed
+98-case Node/Bun suites, quick lint/check, Effect/inline policies, scoped Docgen
+and Fallow audit/health pass; both Fallow finding counts are zero. No threshold
+or policy exemption changes. Keep complete accepted-source proof pending.

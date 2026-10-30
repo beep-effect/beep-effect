@@ -737,3 +737,27 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   or protected workflow execution is implied by this source change. Explicit
   trusted provisioning, actual runner qualification, immutable publication,
   normal-source qualification and the complete observation windows remain gates.
+
+
+### Credential-free protected source inspection, 2026-10-30
+
+- Reuse the existing producer workflow inspector through `cache producer-inspect`.
+  Require an output file, bound the encoded report including its newline to four
+  MiB, and print only a fixed status line. Inspection never opens the producer
+  store, reads credential configuration, grants approval or runs a producer.
+- Prepare a separate manual, main-only inspection workflow with exact source
+  checkout and the existing protected environment/AWS runner. Explicitly disable
+  cache and secret setup; limit runtime to ten minutes, concurrency to one group
+  and the single run/attempt artifact to one-day retention. No workflow has run.
+- Source/tool observations support independent provisioning. They do not prove
+  namespace, user-manager or cgroup readiness and cannot substitute for the
+  authenticated producer artifact. Those real host and producer gates remain.
+- Reverse by removing this inspection caller and its workflow. Preserve the
+  inspector and existing trust authorities; no runtime or cloud state changes.
+
+
+- Resolve the inherited-adjacent baseline/transition reader clone in this touched
+  command file. Share a named Effect reader and module-scoped existing codecs;
+  preserve external review paths and caller-owned typed failures. The bounded
+  contained experiment reader retains its distinct policy. Reverse by restoring
+  the prior two equivalent readers; no authority or persistence model changes.

@@ -83,8 +83,12 @@ import {
   CacheWarmReceiptJson,
 } from "./Cache.schemas.ts";
 import { CacheQualificationLive, CacheQualificationService } from "./Cache.service.ts";
-import { CacheProducerObservation } from "./Cache.workflow.schemas.ts";
-import { loadCacheProducerExecutionRuntime, runCacheProducerWorkflow } from "./Cache.workflow.ts";
+import { CacheProducerObservation, CacheProducerWorkflow } from "./Cache.workflow.schemas.ts";
+import {
+  inspectCacheProducerWorkflow,
+  loadCacheProducerExecutionRuntime,
+  runCacheProducerWorkflow,
+} from "./Cache.workflow.ts";
 import type * as Layer from "effect/Layer";
 import type { CacheConformanceBearers, CacheConformanceCorpus } from "./Cache.conformance.schemas.ts";
 
@@ -163,9 +167,12 @@ const writeEncoded = Effect.fn("Cache.writeEncoded")(function* <A>(
   value: A,
   codec: { readonly encode: (value: A) => Effect.Effect<string, S.SchemaError> },
   output: O.Option<string>,
-  print = true
+  print = true,
+  maxBytes: O.Option<number> = O.none()
 ) {
   const encoded = yield* codec.encode(value).pipe(CacheCommandError.mapError("Failed to encode cache report."));
+  if (O.exists(maxBytes, (limit) => new TextEncoder().encode(encoded).byteLength + 1 > limit))
+    return yield* CacheCommandError.new("Cache report exceeds its configured byte bound.");
   if (O.isSome(output)) {
     yield* Effect.tryPromise({
       try: () => Bun.write(output.value, `${encoded}\n`),
@@ -723,16 +730,25 @@ const cacheFingerprintCommand = Command.make(
   Command.withDescription("Observe actual configuration and native binaries for a scoped qualification candidate")
 );
 
+const BaselineReviewJson = JsonStringCodec(CacheBaselineRequest);
+const TransitionReviewJson = JsonStringCodec(CacheTransitionRequest);
+const readCacheReviewRequest = Effect.fn("Cache.readReviewRequest")(function* <A>(
+  request: string,
+  decode: (text: string) => Effect.Effect<A, S.SchemaError>,
+  failure: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.readFileString(request).pipe(Effect.flatMap(decode), CacheCommandError.mapError(failure));
+});
+
 const cacheBaselineCommand = Command.make("baseline", { request: requestFlag }, ({ request }) =>
   Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
     const cache = yield* CacheQualificationService;
-    const input = yield* fs
-      .readFileString(request)
-      .pipe(
-        Effect.flatMap(JsonStringCodec(CacheBaselineRequest).decode),
-        CacheCommandError.mapError("Cannot decode baseline review request.")
-      );
+    const input = yield* readCacheReviewRequest(
+      request,
+      BaselineReviewJson.decode,
+      "Cannot decode baseline review request."
+    );
     const record = yield* cache.baseline(process.cwd(), input);
     const list = (subjects: ReadonlyArray<string>) =>
       A.isReadonlyArrayNonEmpty(subjects) ? A.join(subjects, ", ") : "none";
@@ -747,14 +763,12 @@ const cacheBaselineCommand = Command.make("baseline", { request: requestFlag }, 
 
 const cacheTransitionCommand = Command.make("transition", { request: requestFlag }, ({ request }) =>
   Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
     const cache = yield* CacheQualificationService;
-    const input = yield* fs
-      .readFileString(request)
-      .pipe(
-        Effect.flatMap(JsonStringCodec(CacheTransitionRequest).decode),
-        CacheCommandError.mapError("Cannot decode qualification transition request.")
-      );
+    const input = yield* readCacheReviewRequest(
+      request,
+      TransitionReviewJson.decode,
+      "Cannot decode qualification transition request."
+    );
     const store = yield* cache.transition(process.cwd(), input);
     yield* Console.log(
       `Qualification revision ${store.revision}: ${input.entry.key.computation} is ${input.entry.status.state}.`
@@ -906,6 +920,20 @@ const cacheProducerRunCommand = Command.make(
   ),
   Command.provide(MemoryStatsLive),
   Command.provide(FetchHttpClient.layer)
+);
+
+const ProducerWorkflowJson = JsonStringCodec(CacheProducerWorkflow);
+const cacheProducerInspectCommand = Command.make(
+  "producer-inspect",
+  { output: Flag.Path("output", { pathType: "file" }) },
+  ({ output }) =>
+    Effect.gen(function* () {
+      const workflow = yield* inspectCacheProducerWorkflow(process.cwd());
+      yield* writeEncoded(workflow, ProducerWorkflowJson, O.some(output), false, O.some(4 * 1024 * 1024));
+      yield* Console.log("Producer source inspection written; no approval or cache activation.");
+    }).pipe(renderCacheFailure)
+).pipe(
+  Command.withDescription("Inspect clean producer sources and tools without loading credentials or approving them")
 );
 
 const cacheProtocolRunCommand = Command.make(
@@ -1137,7 +1165,7 @@ const cacheRemoteReadsCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, producer-run, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
+    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, producer-run, producer-inspect, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -1157,6 +1185,7 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cachePilotCommand,
     cacheSignedPilotCommand,
     cacheProducerRunCommand,
+    cacheProducerInspectCommand,
     cacheAcceptCommand,
     cacheProtocolRunCommand,
     cacheProtocolReviewCommand,
