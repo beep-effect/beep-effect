@@ -115,7 +115,7 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })((it) =>
             headers: { authorization: `Bearer ${secrets.reader}` },
           });
           expect(restored.status).toBe(200);
-          expect(Headers.get(restored.headers, "x-artifact-tag")).toEqual(O.some(tag));
+          assertSome(Headers.get(restored.headers, "x-artifact-tag"), tag);
           expect(new Uint8Array(yield* restored.arrayBuffer)).toEqual(bytes);
           expect(yield* upload(secrets.reader)).toBe(403);
           const finalRead = yield* client.get(endpoint, {

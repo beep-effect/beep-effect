@@ -277,6 +277,14 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
             "/dev",
             "--tmpfs",
             "/tmp",
+            "--dir",
+            "/tools",
+            "--ro-bind",
+            bun,
+            "/tools/bun",
+            "--ro-bind",
+            node,
+            "/tools/node",
             ...A.flatMap(A.dedupe(mounts), (mount) => ["--ro-bind", mount, mount]),
             ...O.match(upload, {
               onNone: A.empty<string>,
@@ -296,7 +304,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
           cwd: root,
           extendEnv: false,
           env: {
-            PATH: `${path.dirname(bun)}:${path.dirname(node)}:/usr/bin`,
+            PATH: "/tools:/usr/bin",
             HOME: "/tmp",
             CI: "1",
             NO_COLOR: "1",

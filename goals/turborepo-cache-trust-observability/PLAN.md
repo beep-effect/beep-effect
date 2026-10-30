@@ -545,6 +545,39 @@ earlier default full package replay retains its original four-file scope;
 fresh combined-source final and hosted acceptance remain required.
 
 
+### Combined prerequisite checkpoint
+
+PR2367 now integrates the retained Docgen and runtime prerequisite sources and
+the private storage repair. Original PR2361/2363 branches and proof are retained.
+`research/private-pilot-storage-checkpoint.json` binds the current 76-test runtime
+checks, lint/type check, intended guard-removal failure and isolated imports.
+Complete default package, final, hosted and native/deployed acceptance are still
+required. No phase or full-goal criterion is completed by this component work.
+
+
+### Private orchestration cleanup regression
+
+The complete combined package audit and hosted Property Laws/unit shard found
+15 introduced assertions still reading the removed source-contained experiment
+directory. The repaired tests observe actual private allocations, verify their
+permissions and location while live, then prove cleanup after success and
+faults. Both runtime integrations pass 101 tests in 7 files; removing the owning
+cleanup scope fails the intended assertion and source bytes restore exactly.
+See [the repair checkpoint](research/private-orchestration-cleanup-checkpoint.json).
+Fresh complete package, final and hosted acceptance remain required.
+
+
+### Private storage refusal coverage repair
+
+Hosted coverage identified the unexecuted containment refusal in Cache.pilot.
+The new source-visible storage fixture checks the exact pre-task refusal and
+cleanup. Both 26-test runtime suites and quick package checks pass; removing the
+production guard fails the intended case and restores exactly. The canonical
+coverage diagnostic fills the reported gap while retaining every floor. See
+[the checkpoint](research/private-storage-refusal-coverage-checkpoint.json).
+Fresh current-head full final and hosted acceptance remain required.
+
+
 ### Owned upload preparation checkpoint, 2026-10-29
 
 Closed execution, paired independent approval and private storage repair are in
@@ -579,3 +612,16 @@ See [the lifecycle checkpoint](research/owned-adapter-lifecycle-checkpoint.json)
 Complete package/final/hosted proof follows accepted prerequisite integration.
 Actual R2 grants, normal-source stable/canary execution, immutable publication,
 qualification and observation remain required. All goal acceptance is unproven.
+
+
+### Accepted prerequisite integration, 2026-10-30
+
+PR #2367 merged as `dcca065b86e48c2ec1b014d998da133cc04c7e60` after
+complete canonical final, current-head hosted checks, resolved review threads
+and the review window. Its lane is archived and retired. The producer branch
+now integrates that accepted main revision, preserving the pinned `/tools`
+launch aliases, private storage refusal, repaired orchestration cleanup tests
+and its separate owned-upload/backend lifecycle. Earlier checkpoint receipts
+retain their original source scope. Fresh combined runtime and complete
+package/final/hosted proof remain required; no qualification or activation is
+claimed by resolving this merge.
