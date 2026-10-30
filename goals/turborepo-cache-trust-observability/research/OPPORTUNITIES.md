@@ -1105,3 +1105,15 @@ continues to prove native Unix transport and lifetime. Remove the import and
 directive rather than exempting another file. Replay `beep quality tsgo-rules`
 before the next normal publication; retain the failed hosted log and require
 fresh source-bound proof. No production policy or coverage floor is relaxed.
+
+
+### Quiet lint hides a source-owned warning, 2026-10-30
+
+The successful normal publication at 001f summarized one root oxlint warning.
+A nonquiet replay attributed it to this component's adapter fixture reading
+`process.platform` at its Linux-only test gate. Reuse `currentHostPlatform`
+instead; current Node/Bun suites pass 153 cases each and complete nonquiet
+root oxlint reports zero warnings/errors. Read warning locations before calling
+a component final even when a quiet gate exits zero. Preserve the successful
+publication's attempt-start head separately from its actual pushed commit;
+a post-commit full receipt remains required.

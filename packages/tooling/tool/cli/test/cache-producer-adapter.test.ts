@@ -21,6 +21,7 @@ import { CacheClientPin, CacheEvidenceReference } from "@beep/repo-configs/cache
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
+import { currentHostPlatform } from "@beep/utils/HostProcess";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
@@ -201,7 +202,7 @@ const prepareFilesystemFault = Effect.fn("ProducerAdapterTest.prepareFilesystemF
 const Peer = S.Struct({ pid: S.Int, keys: S.Array(S.String), argv: S.Array(S.String) });
 const decodePeer = S.decodeEffect(S.fromJsonString(Peer));
 
-describe.skipIf(process.platform !== "linux")("Linux owned adapter parent", () => {
+describe.skipIf(currentHostPlatform !== "linux")("Linux owned adapter parent", () => {
   it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
     "owned adapter parent protocol",
     (it) => {

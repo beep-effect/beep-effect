@@ -683,3 +683,11 @@ fixed socket-path assertion and successful PUT/failed-graph assertions remain.
 Re-run root tsgo-rule policy, both runtime suites, normal publication, and
 current-head package/final/hosted checks before ready; the earlier head's
 passes are historical evidence only.
+
+
+The repaired upload fixture passed normal publication at 001f. A nonquiet root
+lint replay also exposed a source-owned platform read in the adapter test gate.
+The existing platform helper removes that warning; both 153-case runtime suites,
+quick lint/check and complete root oxlint pass again, with unchanged coverage
+floors. Commit this final correction before fresh normal publication and full
+source-bound package/final/hosted verification.
