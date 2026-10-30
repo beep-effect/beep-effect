@@ -316,3 +316,20 @@ binds changed runner source bytes. Historical claims above keep their dates.
   removed. These are configuration observations, with no feature semantic or
   computation qualification. The earlier private-driver report remains in Git
   history; the current report is a fresh replay from the retained driver.
+
+
+### Current retained-driver replays, 2026-10-30
+
+- [Native input observations](native-input-controls.json) were rerun from the
+  [retained driver](native-input-controls.py): all eighteen case classifications
+  agree with the earlier observation under the same Bun and native pins. The
+  report now binds the exact current driver through both its path and digest.
+- [Real ignored-input observations](actual-ignored-input-observation.json) were
+  rerun from [their retained driver](actual-ignored-input-control.py), from the
+  checkout root: `python3 goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py`.
+  Both clients include the owned ignored manifest, change the task hash, then
+  restore the exact baseline hash after cleanup. Neither executes a task or
+  accesses remote cache. The report names the observed source revision and
+  configuration bytes; earlier counts/hashes remain historical in Git.
+  These fresh replays repair driver provenance and establish no qualification,
+  production activation or representative observation window.

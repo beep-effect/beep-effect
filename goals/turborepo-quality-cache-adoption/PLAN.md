@@ -253,3 +253,13 @@ the same native pins, fourteen flags, 58 accepted configurations and two
 unknown-key refusals. The marker never executes and owned fixtures are removed.
 This repairs evidence retention; all unfinished feature, computation,
 qualification, adoption and production-window obligations remain unchanged.
+
+
+### Revalidated older driver bindings, 2026-10-30
+
+The evidence audit also found stale driver digests on the older native input
+and real ignored-input reports. Replays from their retained files preserve all
+eighteen synthetic outcomes and both real dry-only invalidation/restore results.
+The current reports now bind the actual driver bytes. This repairs source
+provenance; current feature acceptance, computation qualification and all
+production obligations remain separately open.

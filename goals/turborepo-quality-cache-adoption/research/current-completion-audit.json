@@ -238,5 +238,20 @@
     "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
     "sha256": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
     "scope": "Retained driver, fresh sixty-case replay, explicit raw-report hash and owned cleanup. Syntax only; no additional feature acceptance, task qualification or production activation."
+  },
+  "retainedDriverReplays": {
+    "nativeInputControls": {
+      "path": "research/native-input-controls.json",
+      "driverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
+      "cases": 18
+    },
+    "actualIgnoredInput": {
+      "path": "research/actual-ignored-input-observation.json",
+      "driverSha256": "098afa7cd4088e7cc68f0dd2ad08cf06698c9c5423a89ee22885d8b2e5963c82",
+      "clients": 2,
+      "taskExecution": false,
+      "remoteUse": false
+    },
+    "authority": "Fresh retained-driver observations only. No acceptance criterion or qualification transition is completed."
   }
 }

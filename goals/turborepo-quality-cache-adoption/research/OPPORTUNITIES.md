@@ -200,3 +200,22 @@ a portable driver, bind its exact bytes in the regenerated report and document
 the reproduction command in SOURCES.md. Re-run the observations from that
 retained driver; keep the previous report in Git history. This closes evidence
 reproduction, not feature semantics, task qualification or production adoption.
+
+
+### Revalidate older retained-driver bindings, 2026-10-30
+
+A source-binding audit found that the older native input and real ignored-input
+reports also named driver digests that differ from their retained files. Re-run
+those exact retained drivers and bind the new observations to their bytes before
+using either report for current feature review. Preserve the old observations in
+Git history; do not relabel an old run with the current script's hash. Both
+replays pass: eighteen synthetic runs plus both real-computation dry-only
+perturbations, with exact owned cleanup and baseline restoration.
+
+### Publication context can precede its generated commit, 2026-10-30
+
+The normal publisher pushed commit `1ed7bfa943` but its successful verdict still
+named the earlier `07db932b41` context captured before it committed the staged
+index. Retain that mismatch and refuse to call it same-head proof. An explicit
+commit before the next publication avoids this attribution defect while its
+owner fixes context refresh; do not weaken the exact-head acceptance gate.
