@@ -68,6 +68,11 @@
       "exit": 0,
       "elapsedSeconds": 5.947,
       "finishedAt": "2026-10-30T09:55:34.210320+00:00"
+    },
+    "instrumentationCatalog": {
+      "exit": 0,
+      "elapsedSeconds": 7.455,
+      "finishedAt": "2026-10-30T10:15:30.374761+00:00"
     }
   },
   "focusedCoverage": {
@@ -594,5 +599,24 @@
     },
     "fullCurrentSourcePackageFinalHosted": "pending; current tests are component proof only",
     "coverageFloorsLowered": false
+  },
+  "instrumentationCatalog": {
+    "generator": "bun run beep observability catalog --write",
+    "catalogSha256": "8846aaf12b2e1edb4ff431781dbc3b0708ab699042e46b06268f493279b9cce5",
+    "file": "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc",
+    "check": {
+      "exit": 0,
+      "elapsedSeconds": 7.455,
+      "finishedAt": "2026-10-30T10:15:30.374761+00:00"
+    },
+    "scope": "Generated span inventory only; source hashes, coverage floors and production trust state unchanged."
+  },
+  "failedNormalPublication938": {
+    "head": "938255fd04e8b768ca6be9709e9275a007d16bc6",
+    "outcome": "failure",
+    "pushed": false,
+    "onlyFailedCheapSubgate": "observability:catalog-check",
+    "reason": "Removed CacheAdapter.retainHostFrames remained in the generated catalog. Canonical regeneration removes exactly that entry.",
+    "verdictSha256": "04e6615d26fef6e87c32c97e0caee99593426ce23956e5bb77bf916530d87792"
   }
 }

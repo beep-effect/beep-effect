@@ -1130,3 +1130,15 @@ queue with the explicit upstream rechunk(1) contract and retain final-pull refus
 The corrected 45-case suites pass on both runtimes, both modules measure 100%,
 and removing either refusal guard fails its focused control. Full current-head
 package/final/hosted proof is still required; coverage floors stay unchanged.
+
+
+### Span changes require catalog regeneration, 2026-10-30
+
+The 938 normal publication passed all other cheap subgates but refused the
+observability catalog before push. Removing the singleton-tail helper also
+removed its named span; JSDoc inventory regeneration did not update this separate
+catalog. Use the canonical observability catalog writer and then its default
+check. It removes exactly the stale span in the producer lane and records the
+new provisioning spans in the unpublished dependent lane. Both checks report
+zero drift. Run this narrow check after changing named Effect functions before
+the next complete publication. Preserve the failed verdict; no gate is waived.

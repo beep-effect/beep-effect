@@ -260,7 +260,6 @@
     {"name":"Cache.writeConformanceRun","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Cache.writeEncoded","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheAdapter.decodeHostFrame","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"CacheAdapter.retainHostFrames","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheAdapter.takeHostFrame","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheAdapter.withOwnedBackend","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CacheCensus.capture","owner":"@beep/repo-cli","family":"tooling","conforms":true},
