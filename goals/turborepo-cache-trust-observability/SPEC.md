@@ -660,3 +660,16 @@ fixture verdict rule above the Fallow limit. Reuse the module-scoped JSON codec
 and match the named exit cases before the existing mutation rules. Current
 Node/Bun controls, root inline policy and both Fallow checks pass; every Node
 coverage floor is unchanged and met. The failed publication pushed nothing.
+
+
+### Singleton adapter frames and encoded provenance controls, 2026-10-30
+
+- Let the existing Effect Stream own one decoded frame per pull through
+  `rechunk(1)`. Remove the unreachable local tail queue while retaining the
+  final pull that refuses every extra frame and the owned process cleanup.
+- Build hosted forgery fixtures from the schema-encoded wire report. Runtime
+  Option objects are not wire fixtures; decoding them refused before provenance.
+  Assert the intended identity/binding/unique-upload error, plus both batched
+  and delayed adapter-frame refusals. Guard-removal controls must fail.
+- Reverse by restoring the local queue and its bounded final-pull check; retain
+  the corrected schema-encoded controls. No trust, rollout or proof gate changes.

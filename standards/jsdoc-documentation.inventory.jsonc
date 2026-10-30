@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-30T05:14:25.063Z",
+  "generatedAt": "2026-10-30T09:57:18.090Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -474312,8 +474312,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.adapter.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.ts",
-          "line": 62,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-adapter-ts-62-withcacheproduceradapter",
+          "line": 61,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-adapter-ts-61-withcacheproduceradapter",
           "currentTags": [
             "@internal",
             "@category",
@@ -477972,8 +477972,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 123,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-123-makeprivatesupervisorstorage",
+          "line": 124,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-124-makeprivatesupervisorstorage",
           "currentTags": [
             "@internal",
             "@category",
@@ -477995,8 +477995,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 363,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-363-runcachesignedpilotexperiment",
+          "line": 368,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-368-runcachesignedpilotexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -478017,8 +478017,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 394,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-394-runcacheproduceruploadexperiment",
+          "line": 400,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-400-runcacheproduceruploadexperiment",
           "currentTags": [
             "@internal",
             "@category",

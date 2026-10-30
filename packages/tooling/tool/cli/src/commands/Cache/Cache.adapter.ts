@@ -15,7 +15,6 @@ import * as Path from "effect/Path";
 import * as Pull from "effect/Pull";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Redacted from "effect/Redacted";
-import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -147,26 +146,16 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
             return yield* JsonStringCodec(CacheAdapterHostEvent).decode(line);
           })
         ),
+        Stream.rechunk(1),
         Stream.toPull
       );
-      const buffered = yield* Ref.make(A.empty<CacheAdapterHostEvent>());
-      const take = Effect.fn("CacheAdapter.takeHostFrame")(function* () {
-        const retainTail = Effect.fn("CacheAdapter.retainHostFrames")(function* ([
-          head,
-          ...tail
-        ]: A.NonEmptyReadonlyArray<CacheAdapterHostEvent>) {
-          yield* Ref.set(buffered, tail);
-          return head;
-        });
-        return yield* A.match(yield* Ref.get(buffered), {
-          onEmpty: () =>
-            pull.pipe(
-              Pull.catchDone(() => CacheCommandError.new("Owned adapter host closed before its required frame.")),
-              Effect.flatMap(retainTail)
-            ),
-          onNonEmpty: retainTail,
-        }).pipe(Effect.timeout(Duration.seconds(20)));
-      });
+      const take = Effect.fn("CacheAdapter.takeHostFrame")(() =>
+        pull.pipe(
+          Pull.catchDone(() => CacheCommandError.new("Owned adapter host closed before its required frame.")),
+          Effect.map(A.headNonEmpty),
+          Effect.timeout(Duration.seconds(20))
+        )
+      );
       const ready = yield* take();
       if (!CacheAdapterHostEvent.guards.ready(ready))
         return yield* CacheCommandError.new("Owned adapter host omitted readiness.");
@@ -182,8 +171,6 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
         (yield* handle.exitCode.pipe(Effect.timeout(Duration.seconds(20)))) !== 0
       )
         return yield* CacheCommandError.new("Owned adapter host did not finish successful cleanup.");
-      if (A.isReadonlyArrayNonEmpty(yield* Ref.get(buffered)))
-        return yield* CacheCommandError.new("Owned adapter host emitted extra frames.");
       yield* pull.pipe(
         Effect.flatMap(() => CacheCommandError.new("Owned adapter host emitted trailing frames.")),
         Pull.catchDone(() => Effect.void),

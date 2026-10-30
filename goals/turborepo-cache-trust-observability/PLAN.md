@@ -691,3 +691,12 @@ The existing platform helper removes that warning; both 153-case runtime suites,
 quick lint/check and complete root oxlint pass again, with unchanged coverage
 floors. Commit this final correction before fresh normal publication and full
 source-bound package/final/hosted verification.
+
+
+The full final at 401 passed every noncoverage lane but exposed two remaining
+new-file refusal gaps. Correct the hosted wire fixture and assert the specific
+provenance error. Use Stream.rechunk(1) instead of an unreachable local tail
+queue while retaining final-pull refusal of both batched and delayed frames.
+Current 45-case suites pass per runtime; both modules measure 100%, with two
+causal guard controls failing as intended. Fresh committed-source full package,
+full final, hosted checks and review remain required before readiness.

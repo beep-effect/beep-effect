@@ -1117,3 +1117,16 @@ root oxlint reports zero warnings/errors. Read warning locations before calling
 a component final even when a quiet gate exits zero. Preserve the successful
 publication's attempt-start head separately from its actual pushed commit;
 a post-commit full receipt remains required.
+
+
+### Exact refusal assertions expose masked coverage, 2026-10-30
+
+The full final at 401 passed every lane except coverage: one statement each in
+Cache.adapter and Cache.workflow.github remained uncovered. Generic failure
+assertions hid a hosted fixture encoding runtime Option values as unknown JSON.
+Encode the wire schema before mutation and assert the intended provenance error.
+Stream.mapEffect already emitted singleton chunks; replace the dead local tail
+queue with the explicit upstream rechunk(1) contract and retain final-pull refusal.
+The corrected 45-case suites pass on both runtimes, both modules measure 100%,
+and removing either refusal guard fails its focused control. Full current-head
+package/final/hosted proof is still required; coverage floors stay unchanged.

@@ -28,6 +28,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -182,8 +183,10 @@ emit("after-load" if fault == "bad-ready" else "ready")
 if sys.stdin.buffer.readline() != b"verify\\n": raise SystemExit(2)
 emit("cleaned" if fault == "bad-after" else "after-load")
 if sys.stdin.buffer.readline() != b"stop\\n": raise SystemExit(3)
-emit("ready" if fault == "bad-cleanup" else "cleaned")
-if fault == "extra-frame": emit("cleaned")
+if fault == "extra-frame":
+    os.write(sys.stdout.fileno(), b'{"status":"cleaned"}\\n{"status":"cleaned"}\\n')
+else:
+    emit("ready" if fault == "bad-cleanup" else "cleaned")
 if fault == "delayed-extra-frame": time.sleep(0.05); emit("cleaned")
 raise SystemExit(1 if fault == "nonzero" else 0)
 `;
@@ -259,6 +262,8 @@ describe.skipIf(currentHostPlatform !== "linux")("Linux owned adapter parent", (
             onTrue: () => result.pipe(Exit.isSuccess, assertTrue),
             onFalse: () => result.pipe(Exit.isFailure, assertTrue),
           });
+          if ((fault === "extra-frame" || fault === "delayed-extra-frame") && Exit.isFailure(result))
+            expect(Cause.pretty(result.cause)).toContain("Owned adapter host emitted trailing frames.");
           expect(callbacks).toBe(
             A.contains(["early-exit", "bad-json", "oversized", "bad-ready", "wrong-role", "changed-resource"], fault)
               ? 0

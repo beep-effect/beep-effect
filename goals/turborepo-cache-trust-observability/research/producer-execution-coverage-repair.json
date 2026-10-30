@@ -1,14 +1,17 @@
 {
   "schemaVersion": "cache-producer-execution-coverage-repair/v1",
   "authority": "Source-bound local component proof only. Canonical complete package/final and current-head hosted checks remain required; no qualification or deployment authority.",
-  "sourceParent": "001fcb5d82d415925569a75854cff6f007668181",
+  "sourceParent": "40109bfaed7470ad3e0bad18bd2073f7fde6d0c9",
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
     "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "2cff3f5221d1f0f34ed3d4a3b5415794dea4a3a47d5b71943c0cad9be494b736",
     "packages/tooling/tool/cli/test/cache-workflow.test.ts": "41a02883405bf985c3a08f342eb2391a33c7b10ffc395662ff786fc58bbd1b03",
-    "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "1c82f8e6d36feb8798c4a20c8684bda604bd0a4df79251906090d4f86d766b0b"
+    "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "fecba6292d12d2aeae7c1a71379b7f37d02affebc9b8473846fc68382c40d088",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.ts": "b1d9ddccf90878d093bae50bac3aa11a0d6a0bbeb23810a185d8a9995818f68f",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "065dbb6cbb3261fb7917241e5a0247b5f04eb7114bd33d304af5af03da207047",
+    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "ba820886907d919c40758ae217a719a0d223927cf1aa75ec2686cedfa5f51585"
   },
   "hostedFailure": {
     "head": "22b21f37d4a2d79ddfc687b4eca6867f4a0805f1",
@@ -26,25 +29,45 @@
     "Exercise approved workflow upload callback/receipt composition, changed-activation refusal, source-revision refusal and admitted local-experiment success/refusal."
   ],
   "verification": {
-    "node153": {
+    "node45": {
       "exit": 0,
-      "elapsedSeconds": 30.203,
-      "finishedAt": "2026-10-30T08:32:39.755779+00:00"
+      "elapsedSeconds": 6.166,
+      "finishedAt": "2026-10-30T09:53:16.099540+00:00"
     },
-    "bun153": {
+    "bun45": {
       "exit": 0,
-      "elapsedSeconds": 16.68,
-      "finishedAt": "2026-10-30T08:32:56.452813+00:00"
+      "elapsedSeconds": 4.235,
+      "finishedAt": "2026-10-30T09:53:20.352081+00:00"
     },
     "quick": {
       "exit": 0,
-      "elapsedSeconds": 12.575,
-      "finishedAt": "2026-10-30T08:33:09.044853+00:00"
+      "elapsedSeconds": 12.324,
+      "finishedAt": "2026-10-30T09:53:32.692340+00:00"
+    },
+    "rootRulePolicy": {
+      "exit": 0,
+      "elapsedSeconds": 3.495,
+      "finishedAt": "2026-10-30T09:53:36.210104+00:00"
     },
     "rootOxlint": {
       "exit": 0,
-      "elapsedSeconds": 5.568,
-      "finishedAt": "2026-10-30T08:33:14.632727+00:00"
+      "elapsedSeconds": 6.24,
+      "finishedAt": "2026-10-30T09:54:36.996790+00:00"
+    },
+    "effectPolicy": {
+      "exit": 0,
+      "elapsedSeconds": 40.487,
+      "finishedAt": "2026-10-30T09:55:17.498528+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 10.733,
+      "finishedAt": "2026-10-30T09:55:28.247884+00:00"
+    },
+    "fallowHealth": {
+      "exit": 0,
+      "elapsedSeconds": 5.947,
+      "finishedAt": "2026-10-30T09:55:34.210320+00:00"
     }
   },
   "focusedCoverage": {
@@ -481,5 +504,95 @@
     "change": "Use existing currentHostPlatform helper. Runtime platform injection and Linux-only fixture coverage remain unchanged.",
     "verification": "Both current 153-case runtime suites, quick lint/typecheck and complete root oxlint pass; zero root warnings/errors.",
     "remaining": "Fresh committed-source normal publication, complete package/final and hosted/review gates. No full-goal criterion is complete."
+  },
+  "priorSourceAt401": {
+    "sourceParent": "001fcb5d82d415925569a75854cff6f007668181",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "235e4ad4a65f29c6489cc7f4b04492a7856133b8b3d9f8c8998e324cfac55e5e",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
+      "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "2cff3f5221d1f0f34ed3d4a3b5415794dea4a3a47d5b71943c0cad9be494b736",
+      "packages/tooling/tool/cli/test/cache-workflow.test.ts": "41a02883405bf985c3a08f342eb2391a33c7b10ffc395662ff786fc58bbd1b03",
+      "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "1c82f8e6d36feb8798c4a20c8684bda604bd0a4df79251906090d4f86d766b0b"
+    },
+    "verification": {
+      "node153": {
+        "exit": 0,
+        "elapsedSeconds": 30.203,
+        "finishedAt": "2026-10-30T08:32:39.755779+00:00"
+      },
+      "bun153": {
+        "exit": 0,
+        "elapsedSeconds": 16.68,
+        "finishedAt": "2026-10-30T08:32:56.452813+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 12.575,
+        "finishedAt": "2026-10-30T08:33:09.044853+00:00"
+      },
+      "rootOxlint": {
+        "exit": 0,
+        "elapsedSeconds": 5.568,
+        "finishedAt": "2026-10-30T08:33:14.632727+00:00"
+      }
+    }
+  },
+  "final401": {
+    "defaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 1058.129,
+      "finishedAt": "2026-10-30T09:06:54.527741+00:00"
+    },
+    "fullFinal": {
+      "exit": 1,
+      "elapsedSeconds": 2199.743,
+      "finishedAt": "2026-10-30T09:43:34.439299+00:00"
+    },
+    "failure": "Two uncovered new-file refusal paths; all other full final lanes passed. Not a current-head pass."
+  },
+  "refusalRepair": {
+    "adapter": "Use the existing Stream.rechunk(1) boundary; one event per pull removes an unreachable local Ref/tail queue. The final pull still rejects batched or delayed extra frames and joins cleanup. Both cases assert the specific refusal.",
+    "hosted": "Mutate the encoded report rather than runtime Option-bearing values; schema-valid identity, binding and duplicate-upload cases assert the provenance refusal with no wrapped decode cause.",
+    "coverage": {
+      "runtime": "Node V8",
+      "testCount": 45,
+      "measuredLogSha256": "3bc7837fecc26af4a1e4d0adbd9d289771baa80836e8ed92b4d03522c5efe5eb",
+      "files": {
+        "Cache.adapter.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100
+        },
+        "Cache.workflow.github.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100
+        }
+      }
+    },
+    "guardControls": {
+      "recordedAt": "2026-10-30T09:52:49.901987+00:00",
+      "authority": "Local causal negative controls only; no issuer, credentials, workflow or deployment.",
+      "rows": [
+        {
+          "guard": "hosted-report",
+          "removedGuardTestExit": 1,
+          "sourceRestoredExactly": true,
+          "sourceSha256": "065dbb6cbb3261fb7917241e5a0247b5f04eb7114bd33d304af5af03da207047"
+        },
+        {
+          "guard": "adapter-trailing",
+          "removedGuardTestExit": 1,
+          "sourceRestoredExactly": true,
+          "sourceSha256": "b1d9ddccf90878d093bae50bac3aa11a0d6a0bbeb23810a185d8a9995818f68f"
+        }
+      ],
+      "passed": true
+    },
+    "fullCurrentSourcePackageFinalHosted": "pending; current tests are component proof only",
+    "coverageFloorsLowered": false
   }
 }
