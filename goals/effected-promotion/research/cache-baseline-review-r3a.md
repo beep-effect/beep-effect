@@ -45,3 +45,14 @@ already in the policy-tool closure through `@beep/repo-tsconfig`).
 
 This request re-records the baseline for the `@beep/repo-cli` and `@beep/lint-rules` subjects only. No
 qualification is granted, and no other subject changes.
+
+## Re-record after merging `origin/main` b30cd9e6dd (2026-10-31, review round 1)
+
+The review round merged `origin/main` b30cd9e6dd (R2b #2381, G4 per-task policy fingerprint seals #2390, the
+repo-cli coverage shard split #2392) into the lane. The merge took `main`'s baseline, so the R3a review above
+is applied again on top of it with the same manifests and the same reason. `bun run beep quality cache-policy`
+on the merged tree reported configuration drift on `@beep/repo-cli` only (`#check`, `#doctest`,
+`#lint:deprecated-apis`, `#test`, `#test:property`) and, once `bun run beep lint policy-fingerprint --write`
+re-sealed the root `//#lint:policy-fingerprint:*` tasks for the changed repo-cli dependency closure, source
+drift on the root `turbo.json`; the root `//` joins the subjects, and the `@beep/lint-rules` subject is kept so
+the recorded review still names both manifests the PR changes. No qualification is granted.
