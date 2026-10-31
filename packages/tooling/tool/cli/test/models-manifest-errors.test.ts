@@ -93,7 +93,7 @@ describe("routing vocabulary", () => {
       expect(S.is(RoutingRole)(role)).toBe(true);
     }
     expect(S.is(RoutingSurface)("junie-cli")).toBe(true);
-    expect(A.length(seedModelsManifest.bindings)).toBe(27);
+    expect(A.length(seedModelsManifest.bindings)).toBe(26);
     expect(A.length(seedModelsManifest.superseded)).toBe(10);
     expect(A.some(seedModelsManifest.superseded, (model) => model.id === "gpt-6-astra")).toBe(false);
   });

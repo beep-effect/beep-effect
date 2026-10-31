@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.4",
-  "epoch": "qualification-v3",
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "GPT-6.1-Sol medium independent dependency review",
-      "reason": "Reconcile six root fingerprint seal input lists after main helper extraction; retain existing cache posture with no new qualification.",
+      "reason": "Preserve main retirement and reconcile six root seal closures with current helpers; retain existing cache posture and qualification.",
       "basis": {
-        "path": "goals/codex-security-findings-2026-10-28/research/2026-10-31-cache-baseline-review.md",
-        "sha256": "01f2de19520f71e556395377828e96451648ebd0ab3f764a5c70eb41d5305c51"
+        "path": "goals/codex-security-findings-2026-10-28/research/2026-10-31-cache-baseline-main-merge-review.md",
+        "sha256": "1965fce8d84aef470a88805b8ff4e10a35f4edaa789433198ac3081ac3bce443"
       }
     },
     "@beep/acp": {
@@ -1565,8 +1565,6 @@
           "CODEX_SESSION_ID",
           "CODEX_THREAD_ID",
           "GITHUB_ACTIONS",
-          "GRAFT_CRUX_MODULE",
-          "GRAFT_EXTRACT_MODULE",
           "TURBO_CACHE",
           "TURBO_FORCE",
           "TURBO_TOKEN",
@@ -2690,7 +2688,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -5759,7 +5756,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5907,7 +5903,6 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -7027,7 +7022,6 @@
             "!.claude/worktrees/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7068,7 +7062,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7180,7 +7173,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7344,7 +7336,6 @@
             "!explorations/**",
             "!explorations/*/CAPTURE.md",
             "!goals/**",
-            "!graft/**",
             "!infra/ci-runners/sdks/**",
             "!node_modules/**",
             "!outputs/agent-reliability/**",
@@ -133858,7 +133849,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "979364fae7d4c7cf95500d7b058de37c58de36479aa3128cbce1259819858b8b"
+        "sha256": "2ebdf15eb9d7965d5318c8e078ac9069c7e827a488d740de056868072a0c29b8"
       }
     ]
   }

@@ -1,7 +1,2 @@
-# Graft's per-file cards under graft/ are a git-ignored cache; graft's own
-# .ignore re-admits them to ignore-aware tools so `graft grep` can see them.
-# Keep them out of ordinary ripgrep results (rg --no-ignore graft/ when wanted).
-graft/
-
 # Keep immutable decision rows available explicitly, outside default context.
 harness-ledger/rows/
