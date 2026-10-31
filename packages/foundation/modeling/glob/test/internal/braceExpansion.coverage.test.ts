@@ -32,7 +32,7 @@ describe("brace expansion coverage", () => {
     Effect.sync(() => {
       const adjacent = `{${Str.repeat(MAX_NESTING_DEPTH + 1)("{a,b}")},c}`;
       assert.throws(() => expand(adjacent), GuardExceeded);
-      const nested = Str.repeat(MAX_NESTING_DEPTH + 1)("{a,") + "b" + Str.repeat(MAX_NESTING_DEPTH + 1)("}");
+      const nested = `${Str.repeat(MAX_NESTING_DEPTH + 1)("{a,")}b${Str.repeat(MAX_NESTING_DEPTH + 1)("}")}`;
       assert.throws(() => expand(nested), GuardExceeded);
     })
   );
@@ -41,7 +41,7 @@ describe("brace expansion coverage", () => {
       const atLimit = Str.repeat(MAX_NESTING_DEPTH + 1)("${a}");
       assert.deepStrictEqual(expand(atLimit), [atLimit]);
       assert.throws(
-        () => expand(atLimit + "${a}"),
+        () => expand(`${atLimit}\${a}`),
         GuardExceeded,
         `NestingDepthExceeded: limit ${MAX_NESTING_DEPTH}, actual ${MAX_NESTING_DEPTH + 1}`
       );

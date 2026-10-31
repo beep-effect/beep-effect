@@ -7,9 +7,9 @@
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -127,7 +127,7 @@ class FallowEnvelopeDefect extends S.Opaque<FallowEnvelopeDefect, { readonly bra
 ) {}
 
 const decodeFallowEnvelopeJson = S.decodeUnknownEffect(S.fromJsonString(FallowEnvelope));
-const decodeFallowFixtureDocumentJsonc = decodeJsoncTextAs(FallowFixtureDocument);
+const decodeFallowFixtureDocumentJsonc = Jsonc.bind(FallowFixtureDocument).decode;
 const decodeRepoRunPlanJson = S.decodeUnknownEffect(S.fromJsonString(RepoRunPlan));
 const decodeQualityIssueIndexJson = S.decodeUnknownEffect(S.fromJsonString(QualityIssueIndex));
 const encodeQualityIssueIndexJson = S.encodeUnknownEffect(S.fromJsonString(QualityIssueIndex));

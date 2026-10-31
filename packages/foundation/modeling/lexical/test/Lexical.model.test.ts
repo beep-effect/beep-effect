@@ -26,7 +26,7 @@ import { legacyYouTubeVideoId, sanitizeUrl } from "@beep/lexical-schema/Lexical.
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { ListItemNode as RuntimeListItemNode, ListNode as RuntimeListNode } from "@lexical/list";
 import { QuoteNode as RuntimeQuoteNode } from "@lexical/rich-text";
 import * as Arbitrary from "effect/Arbitrary";
@@ -298,8 +298,18 @@ describe("Lexical.model", { concurrent: false }, () => {
       "list",
       "artifact-ref",
     ]);
-    expect(state.root.children[1]).toMatchObject({ textFormat: O.some(0), textStyle: O.some("") });
-    expect(state.root.children[3]).toMatchObject({ language: O.some("typescript"), theme: O.none() });
+    const paragraph = state.root.children[1];
+    if (paragraph?.type !== "paragraph") {
+      expect.fail("Expected decoded paragraph node");
+    }
+    assertSome(paragraph.textFormat, TextFormatMask.make(0));
+    assertSome(paragraph.textStyle, "");
+    const code = state.root.children[3];
+    if (code?.type !== "code") {
+      expect.fail("Expected decoded code node");
+    }
+    assertSome(code.language, "typescript");
+    assertNone(code.theme);
     expect(state.root.children[4]).toMatchObject({ videoID: "M7lc1UVf-VE", format: "" });
     const table = state.root.children[5];
     expect(table?.type).toBe("table");
@@ -319,10 +329,20 @@ describe("Lexical.model", { concurrent: false }, () => {
     const lexicalHeaderState: SerializedTableCellNode["headerState"] = firstHeaderCell.headerState;
     expect(lexicalHeaderState).toBe(1);
     expect(header.children[1]).toMatchObject({ headerState: 1 });
-    expect(state.root.children[6]).toMatchObject({
-      children: [{ checked: O.some(true) }, { checked: O.none() }],
-    });
-    expect(state.root.children[7]).toMatchObject({ artifactId: "artifact-123", label: O.some("Quarterly report") });
+    const list = state.root.children[6];
+    if (list?.type !== "list") {
+      expect.fail("Expected decoded list node");
+    }
+    deepStrictEqual(
+      A.map(list.children, (item) => (item.type === "listitem" ? O.some(item.checked) : O.none())),
+      [O.some(O.some(true)), O.some(O.none())]
+    );
+    const artifactRef = state.root.children[7];
+    if (artifactRef?.type !== "artifact-ref") {
+      expect.fail("Expected decoded artifact-ref node");
+    }
+    strictEqual(artifactRef.artifactId, "artifact-123");
+    assertSome(artifactRef.label, "Quarterly report");
   });
 
   it("rejects values outside nullish optional field domains", () => {
@@ -943,16 +963,18 @@ describe("Lexical.model", { concurrent: false }, () => {
         })
       )
     ).toMatchObject({ videoID: "M7lc1UVf-VE" });
-    expect(
-      decoded(
-        decodeLexicalNodeResult({
-          ...element,
-          type: "code",
-          language: "ts bad",
-          children: [],
-        })
-      )
-    ).toMatchObject({ language: O.none() });
+    const invalidLanguage = decoded(
+      decodeLexicalNodeResult({
+        ...element,
+        type: "code",
+        language: "ts bad",
+        children: [],
+      })
+    );
+    if (invalidLanguage.type !== "code") {
+      expect.fail("Expected decoded code node");
+    }
+    assertNone(invalidLanguage.language);
 
     pipe(
       decodeLexicalNodeResult({

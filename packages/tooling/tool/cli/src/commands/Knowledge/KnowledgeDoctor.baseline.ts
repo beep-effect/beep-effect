@@ -8,7 +8,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeJsoncTextAs, LiteralKit } from "@beep/schema";
+import { Jsonc } from "@beep/jsonc/Jsonc";
+import { LiteralKit } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -474,11 +475,13 @@ const decodeKnowledgeSealText = <Schema extends S.Top & { readonly DecodingServi
   repoPath: string,
   text: string
 ): Effect.Effect<Schema["Type"], KnowledgeDoctorInputError> =>
-  decodeJsoncTextAs(schema)(text).pipe(
-    Effect.mapError((error) =>
-      KnowledgeDoctorInputError.of(reason, repoPath, `${repoPath} does not decode: ${error.message}`)
-    )
-  );
+  Jsonc.bind(schema)
+    .decode(text)
+    .pipe(
+      Effect.mapError((error) =>
+        KnowledgeDoctorInputError.of(reason, repoPath, `${repoPath} does not decode: ${error.message}`)
+      )
+    );
 
 const readSealFile = <Schema extends S.Top & { readonly DecodingServices: never }>(
   tree: KnowledgeTreeOracle,

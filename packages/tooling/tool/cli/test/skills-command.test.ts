@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   decodeSkillsLockDocumentJson,
   encodeSkillsLockDocumentJson,
@@ -13,7 +14,6 @@ import {
 import { checkInstalledSkills } from "@beep/repo-cli/test/SharedInternals";
 import { computeSkillTree, installedTargetsHash } from "@beep/repo-cli/test/Skills";
 import { findRepoRoot } from "@beep/repo-utils";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -693,7 +693,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("vendored skill trees in
       const lock = yield* decodeSkillsLockDocumentJson(
         yield* fs.readFileString(path.join(repoRoot, "skills-lock.json"))
       );
-      const biome = yield* decodeJsoncTextAs(BiomeFileIncludes)(
+      const biome = yield* Jsonc.bind(BiomeFileIncludes).decode(
         yield* fs.readFileString(path.join(repoRoot, "biome.jsonc"))
       );
       const vendoredTargets = A.flatMap(R.values(lock.skills), (entry) =>
