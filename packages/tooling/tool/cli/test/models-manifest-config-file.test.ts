@@ -2,10 +2,11 @@
 // with `YamlCodec`, effected-promotion wave 3, W3-e). These cases pin the
 // adoption:
 //
-// - parity: every manifest fixture loads to the manifest the previous reader
-//   produced (`yaml` `parseDocument(...).toJS()`, then the schema decode);
-// - round trip: what the writers emit (the npm `yaml` stringifier, kept) loads
-//   back to the same manifest, for every fixture and for the seed;
+// - parity: every manifest fixture loads to the manifest an independent reader
+//   produces (`effect/encoding/Yaml` `parse`, then the schema decode; until R4
+//   the npm `yaml` `parseDocument(...).toJS()` the store used before W3-e);
+// - round trip: what the writers emit (the `@beep/yaml` stringifier since R4)
+//   loads back to the same manifest, for every fixture and for the seed;
 // - failures stay typed and keep their messages: a YAML syntax error is a
 //   parse failure, a well-formed document of the wrong shape a decode failure.
 
@@ -15,14 +16,15 @@ import {
   ModelsManifestStoreLive,
   seedModelsManifest,
 } from "@beep/repo-cli/commands/Models";
+import { Yaml } from "@beep/yaml/Yaml";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as EffectYaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { parseDocument, stringify } from "yaml";
 import { readFixtureText } from "./helpers/models-fixtures.ts";
 
 const manifestFixtures = [
@@ -36,8 +38,8 @@ const manifestFixtures = [
 const decodeManifest = S.decodeUnknownEffect(ModelsManifest);
 const encodeManifest = S.encodeUnknownEffect(ModelsManifest);
 
-// The reader the store used before the adoption.
-const legacyLoad = (text: string) => decodeManifest(parseDocument(text).toJS());
+// An independent reader: Effect's YAML parser, then the schema decode.
+const independentLoad = (text: string) => Effect.try(() => EffectYaml.parse(text)).pipe(Effect.flatMap(decodeManifest));
 
 const writeTemp = Effect.fnUntraced(function* (name: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -61,14 +63,14 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
   "models manifest store on config-file",
   (it) => {
     for (const fixture of manifestFixtures) {
-      it.effect(`loads ${fixture} to the manifest the previous reader produced`, () =>
+      it.effect(`loads ${fixture} to the manifest an independent reader produces`, () =>
         Effect.gen(function* () {
           const store = yield* ModelsManifestStore;
           const text = yield* readFixtureText(fixture);
           const file = yield* writeTemp("models.yaml", text);
           const loaded = yield* store.load(file);
-          const legacy = yield* legacyLoad(text);
-          expect(yield* encodeManifest(loaded)).toEqual(yield* encodeManifest(legacy));
+          const independent = yield* independentLoad(text);
+          expect(yield* encodeManifest(loaded)).toEqual(yield* encodeManifest(independent));
         })
       );
 
@@ -116,7 +118,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           bindings: [...seed.bindings, retiredBinding],
           targets: [...seed.targets, retiredTarget],
         };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", stringify(legacy)));
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy)));
         expect(yield* encodeManifest(loaded)).toEqual(seed);
       })
     );

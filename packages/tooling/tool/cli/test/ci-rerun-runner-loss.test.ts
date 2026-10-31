@@ -50,7 +50,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { parseDocument } from "yaml";
+import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const LOST_MESSAGE =
@@ -820,36 +820,37 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const readYaml = (relative: string) =>
-        fs.readFileString(path.join(repoRoot, relative)).pipe(
-          Effect.map((text) => {
-            const document = parseDocument(text);
-            expect(document.errors).toEqual([]);
-            return { text, value: document.toJS() };
-          })
-        );
+        fs
+          .readFileString(path.join(repoRoot, relative))
+          .pipe(Effect.map((text) => ({ text, value: parseWorkflowYaml(text) })));
       const workflow = yield* readYaml(".github/workflows/rerun-runner-loss.yml");
       const check = yield* readYaml(".github/workflows/check.yml");
       const heavyAdmit = yield* readYaml(".github/workflows/heavy-admit.yml");
-      expect(workflow.value.on).toEqual({
-        workflow_run: { workflows: [check.value.name, heavyAdmit.value.name], types: ["completed"] },
+      expect(yamlAt(workflow.value, ["on"])).toEqual({
+        workflow_run: {
+          workflows: [yamlAt(check.value, ["name"]), yamlAt(heavyAdmit.value, ["name"])],
+          types: ["completed"],
+        },
       });
-      expect(workflow.value.permissions).toEqual({});
-      expect(workflow.value.concurrency["cancel-in-progress"]).toBe(false);
-      const job = workflow.value.jobs.rerun;
-      expect(job["runs-on"]).toBe("ubuntu-24.04");
-      expect(job.if).toContain("github.event.workflow_run.conclusion == 'failure'");
-      expect(job.if).toContain("vars.BEEP_RERUN_RUNNER_LOSS != 'false'");
-      expect(job.permissions).toEqual({
+      expect(yamlAt(workflow.value, ["permissions"])).toEqual({});
+      expect(yamlAt(workflow.value, ["concurrency", "cancel-in-progress"])).toBe(false);
+      const job = (path: ReadonlyArray<string | number>) => yamlAt(workflow.value, ["jobs", "rerun", ...path]);
+      expect(job(["runs-on"])).toBe("ubuntu-24.04");
+      expect(job(["if"])).toContain("github.event.workflow_run.conclusion == 'failure'");
+      expect(job(["if"])).toContain("vars.BEEP_RERUN_RUNNER_LOSS != 'false'");
+      expect(job(["permissions"])).toEqual({
         actions: "write",
         checks: "read",
         contents: "read",
         "pull-requests": "read",
       });
-      expect(job.steps[0].with).toEqual({
+      expect(job(["steps", 0, "with"])).toEqual({
         ref: "${{ github.event.repository.default_branch }}",
         "persist-credentials": false,
       });
-      expect(job.steps[2].run).toBe('bun run beep ci rerun-runner-loss --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"');
+      expect(job(["steps", 2, "run"])).toBe(
+        'bun run beep ci rerun-runner-loss --run-id "$RUN_ID" --attempt "$RUN_ATTEMPT"'
+      );
       const code = pipe(
         Str.split(workflow.text, "\n"),
         A.filter((line) => !Str.startsWith("#")(Str.trim(line))),
