@@ -15,6 +15,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import type { VerifiedSourceText, VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor";
 
 /**
  * Web Crypto digest and secure-random services for fixture hashing.
@@ -30,7 +31,15 @@ export const TestCrypto = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.lay
  * @internal
  * @since 0.0.0
  */
-export const fixtureSource = Effect.fn("OfficeActionFixture.source")(function* (text: string) {
+export const fixtureSource = Effect.fn("OfficeActionFixture.source")(function* (text: string): Effect.fn.Return<
+  {
+    readonly source: SourceTextIdentity;
+    readonly verification: VerifySourceTextIdentityInput;
+    readonly verifiedSource: VerifiedSourceText;
+  },
+  S.SchemaError | VerifiedTextAnchorError,
+  Digest.Digest
+> {
   const hex = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
   const digest = SourceTextDigest.make(`sha256:${hex}`);
   const source = SourceTextIdentity.make({
