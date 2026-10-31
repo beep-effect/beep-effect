@@ -903,11 +903,15 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       const selected = CachePilotRequest.make({ ...request, selection: "controls" });
       const receipt = yield* run(selected);
       expect(A.every(receipt.checks, (check) => check.passed)).toBe(true);
-      expect(collect).toHaveBeenCalledWith(root, O.some(request.executable));
-      expect(Census.collectCacheTaskSelection).toHaveBeenCalledWith(
-        root,
-        ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"],
-        O.some(request.executable)
+      assertTrue(A.some(collect.mock.calls, (call) => Equal.equals(call, [root, O.some(request.executable)])));
+      assertTrue(
+        A.some(vi.mocked(Census.collectCacheTaskSelection).mock.calls, (call) =>
+          Equal.equals(call, [
+            root,
+            ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"],
+            O.some(request.executable),
+          ])
+        )
       );
       vi.spyOn(Census, "joinCacheCensusPlan").mockReturnValue(Effect.succeed(A.fromIterable(installedCensus.nodes)));
       const failure = yield* run(selected).pipe(Effect.flip);
