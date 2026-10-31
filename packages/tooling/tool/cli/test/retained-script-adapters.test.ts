@@ -33,6 +33,93 @@ const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
 }, Effect.scoped);
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
+  it.effect(
+    "settles parallel cloud downloads before cleaning up a failed Bun bootstrap",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cloud-download-failure-" });
+      const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
+      const bin = path.join(root, "bin");
+      const home = path.join(root, "home");
+      yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
+      yield* fs.makeDirectory(bin);
+      yield* fs.makeDirectory(home);
+      for (const file of ["scripts/cloud/bootstrap.sh", ".bun-version", ".nvmrc", ".bun-linux-x64.sha256"]) {
+        yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
+      }
+      // The second wait releases Node. The old early-exit path instead releases
+      // it during cleanup, making the ordering observable without a timed race.
+      const bashEnv = path.join(root, "bash-env");
+      yield* fs.writeFileString(
+        bashEnv,
+        `wait_calls=0
+wait() {
+  wait_calls=$((wait_calls + 1))
+  if [ "$wait_calls" -eq 2 ]; then : > "$BEEP_BOOTSTRAP_FIXTURE/release-node"; fi
+  builtin wait "$@"
+}
+`
+      );
+      for (const [name, source] of [
+        ["bun", '#!/bin/sh\nprintf "0.0.0\\n"\n'],
+        ["node", '#!/bin/sh\nprintf "v0.0.0\\n"\n'],
+        ["uname", '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n'],
+        [
+          "curl",
+          `#!/bin/sh
+case "$*" in
+  *index.tab*)
+    until [ -f "$BEEP_BOOTSTRAP_FIXTURE/release-node" ]; do sleep 0.01; done
+    printf 'node-finished\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
+    ;;
+esac
+exit 22
+`,
+        ],
+        [
+          "rm",
+          `#!/bin/sh
+printf 'cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
+: > "$BEEP_BOOTSTRAP_FIXTURE/release-node"
+exec /bin/rm "$@"
+`,
+        ],
+      ] as const) {
+        const target = path.join(bin, name);
+        yield* fs.writeFileString(target, source);
+        yield* fs.chmod(target, 0o755);
+      }
+      const handle = yield* ChildProcess.make("bash", [path.join(root, "scripts/cloud/bootstrap.sh")], {
+        cwd: root,
+        env: {
+          BASH_ENV: bashEnv,
+          BEEP_BOOTSTRAP_FIXTURE: root,
+          BEEP_CLOUD_SKIP_OP: "1",
+          BEEP_CLOUD_VENDOR: "fixture",
+          HOME: home,
+          NVM_DIR: path.join(home, ".nvm"),
+          PATH: `${bin}:/usr/bin:/bin`,
+          XDG_CACHE_HOME: path.join(root, "cache"),
+        },
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      // Finalizers run in reverse acquisition order: release the fixture worker
+      // before the child-process finalizer runs on an interrupted test.
+      yield* Effect.addFinalizer(() => fs.writeFileString(path.join(root, "release-node"), "").pipe(Effect.orDie));
+      const [exitCode, stderr] = yield* Effect.all(
+        [handle.exitCode, handle.stderr.pipe(Stream.decodeText, Stream.mkString), Stream.runDrain(handle.stdout)],
+        { concurrency: "unbounded" }
+      );
+      expect(exitCode).toBe(1);
+      expect(stderr).toContain("download or checksum failed");
+      expect(yield* fs.readFileString(path.join(root, "events"))).toBe("node-finished\ncleanup\n");
+      expect(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"))).toEqual([]);
+    })
+  );
+
   it.effect("keeps compiler originals and unrelated files while removing only rotations and patched leftovers", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

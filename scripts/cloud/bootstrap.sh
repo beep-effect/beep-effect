@@ -202,6 +202,7 @@ if [ "${BEEP_CLOUD_SKIP_OP:-0}" != "1" ]; then
   fetch_op & pids+=("$!:op")
 fi
 
+bun_ok=1
 op_ok=1
 node_ok=1
 for entry in "${pids[@]:-}"; do
@@ -209,12 +210,15 @@ for entry in "${pids[@]:-}"; do
   pid="${entry%%:*}"; name="${entry##*:}"
   if ! wait "${pid}"; then
     case "${name}" in
-      bun) die "bun ${BUN_VERSION} download or checksum failed." ;;
+      bun) bun_ok=0 ;;
       node) node_ok=0; warn "Node ${NODE_VERSION} provisioning failed." ;;
       op) op_ok=0; warn "1Password CLI download or signature verification failed; skipping op (op-backed secret runs unavailable)." ;;
     esac
   fi
 done
+# Every started fetch must settle before EXIT removes their shared run directory.
+# A failed Bun fetch is fatal, but must not strand the parallel Node/op workers.
+[ "${bun_ok}" = "1" ] || die "bun ${BUN_VERSION} download or checksum failed."
 
 # ---------------------------------------------------------------------------
 # 2. Place the toolchain
