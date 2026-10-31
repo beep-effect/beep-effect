@@ -14,7 +14,7 @@
       "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
       "basis": {
         "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
-        "sha256": "6ed551cefd6a778a4e657e8fdae336296129c9f2179dc21937a051175b5e64c0"
+        "sha256": "0bd833c310dd7168af0827ab097130010e11e79e7dea6d8584f37c9994fcb4d5"
       }
     },
     "@beep/acp": {
@@ -686,7 +686,7 @@
       "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
       "basis": {
         "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
-        "sha256": "6ed551cefd6a778a4e657e8fdae336296129c9f2179dc21937a051175b5e64c0"
+        "sha256": "0bd833c310dd7168af0827ab097130010e11e79e7dea6d8584f37c9994fcb4d5"
       }
     },
     "@beep/lockfiles": {
@@ -1134,7 +1134,7 @@
       "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
       "basis": {
         "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
-        "sha256": "6ed551cefd6a778a4e657e8fdae336296129c9f2179dc21937a051175b5e64c0"
+        "sha256": "0bd833c310dd7168af0827ab097130010e11e79e7dea6d8584f37c9994fcb4d5"
       }
     },
     "@beep/repo-configs": {
@@ -1565,8 +1565,6 @@
           "CODEX_SESSION_ID",
           "CODEX_THREAD_ID",
           "GITHUB_ACTIONS",
-          "GRAFT_CRUX_MODULE",
-          "GRAFT_EXTRACT_MODULE",
           "TURBO_CACHE",
           "TURBO_FORCE",
           "TURBO_TOKEN",
@@ -2690,7 +2688,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -5754,7 +5751,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5902,7 +5898,6 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -6733,6 +6728,9 @@
             "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
             "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
             "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.ts",
             "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
@@ -7020,7 +7018,6 @@
             "!.claude/worktrees/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7061,7 +7058,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7173,7 +7169,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7337,7 +7332,6 @@
             "!explorations/**",
             "!explorations/*/CAPTURE.md",
             "!goals/**",
-            "!graft/**",
             "!infra/ci-runners/sdks/**",
             "!node_modules/**",
             "!outputs/agent-reliability/**",
@@ -133868,7 +133862,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "8ef8445b67237d3b3ffe53fe5638e5760354bd810d3cc0ecdbd26890615acf1f"
+        "sha256": "2fd810906da2844838e2784a271adadf112c9a118609de31f41b691128461936"
       }
     ]
   }

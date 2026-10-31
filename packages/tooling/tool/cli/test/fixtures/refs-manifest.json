@@ -6,13 +6,11 @@
   "members": [
     {
       "name": "effect",
-      "url": "git@github.com:Effect-TS/effect.git",
-      "tier": "deep"
+      "url": "git@github.com:Effect-TS/effect.git"
     },
     {
       "name": "effect-tsgo",
-      "url": "git@github.com:Effect-TS/tsgo.git",
-      "tier": "deep"
+      "url": "git@github.com:Effect-TS/tsgo.git"
     }
   ]
 }

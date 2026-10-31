@@ -56,3 +56,12 @@ on the merged tree reported configuration drift on `@beep/repo-cli` only (`#chec
 re-sealed the root `//#lint:policy-fingerprint:*` tasks for the changed repo-cli dependency closure, source
 drift on the root `turbo.json`; the root `//` joins the subjects, and the `@beep/lint-rules` subject is kept so
 the recorded review still names both manifests the PR changes. No qualification is granted.
+
+## Re-record after merging `origin/main` e733f61bbb (2026-10-31, review round 2)
+
+The lane merged `origin/main` e733f61bbb (#2375, #2376, #2377, #2378, #2379, #2382, #2383, #2384, #2385,
+#2387, #2395, #2405). The merge took `main`'s baseline again, and `bun run beep quality cache-policy` on the
+merged tree reported the same kind of drift: configuration drift on `@beep/repo-cli` (`#doctest`,
+`#lint:deprecated-apis`, `#test`, `#test:property`) and configuration-source drift on the root `turbo.json`.
+The reason and the manifests are unchanged from the first review, so the same subjects are re-recorded on
+top of `main`'s baseline. No qualification is granted.

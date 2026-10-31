@@ -840,6 +840,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "repo-sanity:syncpack",
         "repo-sanity:sherif",
         "repo-sanity:config-typecheck",
+        "repo-sanity:goals-ops-typecheck",
         "quality:cache-policy",
         "quality:build",
         "quality:desktop-ipc",

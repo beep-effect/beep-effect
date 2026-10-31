@@ -24,7 +24,7 @@ const requiredSections = [
 
 const records = A.map(
   A.filter(Str.split(await Bun.file(inventoryPath).text(), "\n"), (line) => Str.isNonEmpty(Str.trim(line))),
-  decodeRecord
+  (line) => decodeRecord(line)
 );
 const qualified = A.filter(records, (record) => record.status !== "disqualified");
 let failures = 0;

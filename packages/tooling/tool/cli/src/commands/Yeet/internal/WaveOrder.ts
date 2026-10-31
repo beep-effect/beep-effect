@@ -241,6 +241,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     repoSanityRow("repo-sanity:syncpack", 0),
     repoSanityRow("repo-sanity:sherif", 0),
     postdatesA1Window(repoSanityRow("repo-sanity:config-typecheck", 0)),
+    postdatesA1Window(repoSanityRow("repo-sanity:goals-ops-typecheck", 0)),
     repoSanityRow("repo-sanity:bun-audit", 13 / 832, O.some(17)),
     // Joined the repo-sanity group after the A1 window (#1068); seeded under the
     // ruling 76 seeding rule so it no longer runs after every seeded lane.
@@ -453,7 +454,7 @@ const proxyRowCost = (laneId: string, sourceKey: string): GateOrderCostSource =>
  * **Details**
  *
  * One entry per seed row: 15 lanes read their own hosted A1 row
- * (`a1-lane-row`), 15 read a group aggregate or wrapper row shared with
+ * (`a1-lane-row`), 16 read a group aggregate or wrapper row shared with
  * siblings (`a1-proxy-row`), and two lanes use `external-run`: Storybook and
  * Shadcn Lint. The gate-order fixture checks that each
  * seed duration pointer resolves to the row named here.
@@ -479,6 +480,7 @@ export const DEFAULT_GATE_ORDER_COST_SOURCES: ReadonlyArray<GateOrderCostSource>
   proxyRowCost("repo-sanity:syncpack", "Repo Sanity"),
   proxyRowCost("repo-sanity:sherif", "Repo Sanity"),
   proxyRowCost("repo-sanity:config-typecheck", "Repo Sanity"),
+  proxyRowCost("repo-sanity:goals-ops-typecheck", "Repo Sanity"),
   proxyRowCost("repo-sanity:bun-audit", "Repo Sanity"),
   proxyRowCost("quality:cache-policy", "Repo Sanity"),
   proxyRowCost("quality:build", "feedback:01-build"),
