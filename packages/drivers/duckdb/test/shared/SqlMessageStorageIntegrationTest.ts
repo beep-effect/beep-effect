@@ -10,6 +10,7 @@ import * as DuckDbMessageStorage from "@beep/duckdb/DuckDbMessageStorage";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, describe, expect } from "@effect/vitest";
+// beep: Assert the held reply's successful Exit without accepting a defect reply.
 import { assertExitSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -18,6 +19,7 @@ import * as EntityAddress from "effect/cluster/EntityAddress";
 import * as EntityId from "effect/cluster/EntityId";
 import * as EntityType from "effect/cluster/EntityType";
 import * as Envelope from "effect/cluster/Envelope";
+// beep: Construct the outgoing request for the held reply's storage callback.
 import * as Message from "effect/cluster/Message";
 import * as MessageStorage from "effect/cluster/MessageStorage";
 import * as RunnerHealth from "effect/cluster/RunnerHealth";
@@ -29,9 +31,10 @@ import * as ShardingConfig from "effect/cluster/ShardingConfig";
 import * as Snowflake from "effect/cluster/Snowflake";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+// beep: Synchronize delayed layer startup and native reply completion.
 import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
@@ -91,7 +94,7 @@ const payloadIds = A.map((message: Message.Incoming<Rpc.Any>) =>
 const expectDuplicateReply = Effect.fnUntraced(function* (tag: "Chunk" | "WithExit") {
   const storage = yield* MessageStorage.MessageStorage;
   const result = yield* storage.saveRequest(yield* makeStreamRequest());
-  assert(result._tag === "Duplicate" && O.isSome(result.lastReceivedReply));
+  assert(result._tag === "Duplicate" && Option.isSome(result.lastReceivedReply));
   expect(result.lastReceivedReply.value._tag).toEqual(tag);
 });
 const expectRequestIdForKey = Effect.fnUntraced(function* (request: Message.OutgoingRequest<Rpc.Any>, id: string) {
@@ -101,7 +104,7 @@ const expectRequestIdForKey = Effect.fnUntraced(function* (request: Message.Outg
     tag: request.envelope.tag,
     id,
   });
-  expect(requestId).toEqual(O.some(request.envelope.requestId));
+  expect(requestId).toEqual(Option.some(request.envelope.requestId));
 });
 const expectDuplicateOf = Effect.fnUntraced(function* (
   request: Message.OutgoingRequest<Rpc.Any>,
@@ -173,14 +176,14 @@ describe("SqlMessageStorage", () => {
         );
         assert(duplicate._tag === "Duplicate");
         assert.strictEqual(duplicate.originalId, requestId);
-        assert.deepStrictEqual(duplicate.lastReceivedReply, O.some(reply.reply));
+        assert.deepStrictEqual(duplicate.lastReceivedReply, Option.some(reply.reply));
         assert.deepStrictEqual(
           yield* storage.requestIdForPrimaryKey({
             address: request.envelope.address,
             tag: request.envelope.tag,
             id: "123",
           }),
-          O.some(requestId)
+          Option.some(requestId)
         );
       })
     );
@@ -571,6 +574,7 @@ describe("SqlMessageStorage", () => {
       "keeps held messages readable while entity layers build",
       () =>
         Effect.gen(function* () {
+          // beep: Observe layer startup and committed replies independently of virtual time.
           const building = yield* Latch.make();
           const replied = yield* Latch.make();
           const config = ShardingConfig.layer({
@@ -579,6 +583,7 @@ describe("SqlMessageStorage", () => {
             entityMessagePollInterval: 100,
             refreshAssignmentsInterval: 0,
           });
+          // beep: Signal the layer's actual start before its ten-second virtual delay.
           const delayedEnv = TestEntityLayer.pipe(
             Layer.provide(Layer.effectDiscard(building.open.pipe(Effect.andThen(Effect.sleep(10_000))))),
             Layer.provideMerge(Sharding.layer),
@@ -615,8 +620,10 @@ describe("SqlMessageStorage", () => {
           const replies = yield* storage.repliesFor([request]);
           expect(replies).toHaveLength(1);
           const reply = A.head(replies);
-          assert(O.isSome(reply) && reply.value._tag === "WithExit");
+          // beep: A stored reply must be WithExit with a successful undefined result.
+          assert(Option.isSome(reply) && reply.value._tag === "WithExit");
           assertExitSuccess(reply.value.exit, undefined);
+          // beep: Propagate reply-reader failures instead of discarding its Exit.
           yield* Fiber.join(replyReader);
           yield* Fiber.interrupt(fiber);
         }),
