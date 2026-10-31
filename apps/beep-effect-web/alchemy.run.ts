@@ -1,5 +1,6 @@
 import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Alchemy from "alchemy";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import { apexHost, wwwHost } from "./src/PublicHosts.ts";
 
@@ -28,6 +29,13 @@ export default Alchemy.Stack(
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
+    const stack = yield* Alchemy.Stack;
+    // The Cloudflare state store has no stage lock, so every `prod` deploy runs
+    // in CI under the `alchemy-beep-effect-web-prod` concurrency group. A local
+    // `prod` plan/deploy fails here with a ConfigError on `CI`.
+    if (stack.stage === productionStage) {
+      yield* Config.Literal("true", "CI");
+    }
     const website = yield* Website;
 
     return {

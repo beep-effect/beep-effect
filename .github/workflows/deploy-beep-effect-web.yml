@@ -46,6 +46,17 @@ jobs:
           cache-turbo: "false"
           cache-write: "false"
 
+      # The reserved-slug guard test reads the committed route tree; regenerate
+      # it first and fail if the commit is stale, so the deployed routes are the
+      # tested ones.
+      - name: Check generated route tree
+        working-directory: apps/beep-effect-web
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run build
+          git diff --exit-code -- generated/
+
       - name: Test app
         working-directory: apps/beep-effect-web
         shell: bash

@@ -54,8 +54,9 @@ Higher sources outrank lower sources when they conflict.
   and mail records stay untouched.
 - The app serves no slug that the 2026-10-20 public-origin ruling reserves (`/ns`, `/taxonomy`, `/docs`, `/api`, ...).
   Its origin must equal `@beep/public-site`'s origin.
-- Deploys are serialized per stage, because the Cloudflare state store documents no lock: one local operator, and a
-  GitHub `concurrency` group `alchemy-beep-effect-web-<stage>` in CI.
+- `prod` deploys run only in CI, under the GitHub `concurrency` group `alchemy-beep-effect-web-prod`, because the
+  Cloudflare state store documents no lock. `alchemy.run.ts` refuses the `prod` stage unless `CI=true`
+  (`Config.Literal("true", "CI")`). Local runs use explicit personal stages.
 - Dev servers stay portless-wrapped (`http://beep-effect-web.beep.localhost:1355`).
 
 ## Acceptance Criteria
@@ -107,6 +108,7 @@ them and record each in the Decision Log.
 | 2026-10-28 | Registered the account workers.dev subdomain `beep-effect` | The account had none (`10007`), and Alchemy's state-store Worker is only reachable on workers.dev. No Workers existed before, so nothing else changed URL | `PUT /workers/subdomain` with another name, or manage it with `Cloudflare.Workers.Subdomain` |
 | 2026-10-31 | CI deploy: `.github/workflows/deploy-beep-effect-web.yml` runs on push to `main` (app, `public-site`, `identity`, lockfile, and the workflow itself) plus `workflow_dispatch`. It uses GitHub environment `beep-effect-web-prod` (branch policy `main` only) holding `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`, piped from 1Password and never printed. Concurrency group `alchemy-beep-effect-web-prod` with no cancel. Steps: app tests, deploy, then an apex 200 / www 301 smoke check | The state store has no lock. Branch policy keeps prod credentials off PR refs. Workspace deps export source, so no Turbo build is needed. The workflow was first staged for the operator because the repo denied agent edits under `.github/workflows` (see the next row) | Delete the workflow and the environment |
 | 2026-10-31 | Removed the `Edit(**/.github/workflows/**)` deny rule from `.claude/settings.json` (operator: "You should have autonomy"). The operator applied it with a one-off script, because `Edit(**/.claude/settings.json)` still blocks agent edits to that file | Agents author CI workflows; the settings self-edit guard stays. Hosted Heavy / Check then showed `@beep/ai-sync` hard-requires the rule (`RequiredClaudeRepoDenyPermission`). The orchestrator asked to restore it; the operator chose (2026-10-31) to drop it from that 22-rule policy domain instead | Re-add the line to `permissions.deny` and to `RequiredClaudeRepoDenyPermission` |
+| 2026-10-31 | After the first local deploy, `prod` deploys are CI-only: the stack fails with a ConfigError on `CI` for a non-CI `prod` stage | CodeRabbit (#2391): a local `prod` deploy could interleave with a CI deploy against the lock-free state store | Remove the guard in `alchemy.run.ts` |
 | 2026-10-31 | The leftover GitHub environments `Production – beep-effect-web` / `Preview – beep-effect-web` come from a Vercel project last deployed 2026-01-16 that no longer exists; there is no overlap. They are left untouched | Not created by this goal | Delete them in the repo settings |
 | 2026-10-28 | No `@cloudflare/workers-types` / `src/env.ts` binding proxy in v1 | The starter binds nothing; add both with the first binding (per the Alchemy TanStack guide) | Add when a binding lands |
 | 2026-10-28 | Hosts derive from `@beep/public-site` `PublicOrigin` in `src/PublicHosts.ts`, and the guard test reads `getRouter().routesByPath` | Origin drift is impossible by construction. The test pins the derived host and checks route first segments against `SiteRoute` | Inline literals in `alchemy.run.ts` |

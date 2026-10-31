@@ -52,8 +52,15 @@ CLOUDFLARE_ACCOUNT_ID="$(op read "op://${VAULT}/${ITEM}/CLOUD_CLOUDFLARE_ACCOUNT
 export CLOUDFLARE_ACCOUNT_ID
 
 # Tokens of this name that exist before the mint; revoked only at the end.
-previous_ids="$(cf accounts tokens list --per-page 50 | sed -n '/^[{[]/,$p' |
-  jq -r --arg name "$TOKEN_NAME" '(.[]? // .result[]?) | select(.name == $name) | .id')"
+# Walk every page: the API returns at most 50 tokens per page.
+previous_ids=""
+page=1
+while :; do
+  rows="$(cf accounts tokens list --page "$page" --per-page 50 | sed -n '/^[{[]/,$p' | jq -c '(.[]? // .result[]?)')"
+  previous_ids+="$(printf '%s\n' "$rows" | jq -r --arg name "$TOKEN_NAME" 'select(.name == $name) | .id')"$'\n'
+  [[ "$(printf '%s\n' "$rows" | grep -c .)" -lt 50 ]] && break
+  page=$((page + 1))
+done
 
 policies="$(jq -cn \
   --arg account "com.cloudflare.api.account.${CLOUDFLARE_ACCOUNT_ID}" \
