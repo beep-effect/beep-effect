@@ -61,13 +61,17 @@ import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Example");
-const Title = S.String.check(
+const Title = S.String.pipe($I.annoteSchema("Title", { description: "A non-empty title." })).check(
   S.isMinLength(1, $I.annote("TitleNotEmpty", { description: "A title must contain text." }))
-).pipe($I.annoteSchema("Title", { description: "A non-empty title." }));
+);
 
 console.log(S.is(Title)("Review identity usage")); // true
 console.log(S.is(Title)("")); // false
 ```
+
+Annotate the base schema before adding checks to preserve the check's own identity:
+applying `annoteSchema` after `.check(...)` merges into the last check's annotations
+and replaces any matching identifier or description.
 
 The [composer contract](src/Id.ts) also documents declaration-specific
 `annoteClass`, tagged-error `annoteError`, and field-path `annoteKey` helpers.
