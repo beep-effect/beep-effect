@@ -28,7 +28,6 @@ import * as Str from "effect/String";
 import { LINT_POLICY_SUBCOMMANDS } from "../cli/LintRouting.ts";
 import { commandGroupRoutes, QUALITY_TASK_NAMES } from "./Dispatch.manifest.ts";
 import { DispatchTarget } from "./Dispatch.schemas.ts";
-import type { CommandGroupRoute } from "./Dispatch.manifest.ts";
 import type { CommandGroupHelp, RuntimeService } from "./Dispatch.schemas.ts";
 
 /**
@@ -48,6 +47,8 @@ export const ROOT_COMMAND_NAME = "beep-cli";
  * @since 0.0.0
  */
 export const ROOT_COMMAND_DESCRIPTION = "CLI tool for managing beep-effect monorepo packages";
+
+type CommandGroupRoute = (typeof commandGroupRoutes)[number];
 
 const ROOT_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "--completions",

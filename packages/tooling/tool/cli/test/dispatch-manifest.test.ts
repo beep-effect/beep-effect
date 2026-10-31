@@ -1,10 +1,14 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { rootCommand } from "@beep/repo-cli/commands/Root";
 import {
+  CommandGroupHelp,
   commandGroupRoutes,
   DispatchTarget,
   dispatchRuntimeServices,
   loadDispatchTarget,
+  loadQualityTasks,
   makeRootCommand,
+  makeStubCommand,
   ROOT_COMMAND_DESCRIPTION,
   ROOT_COMMAND_NAME,
   resolveCommandTarget,
@@ -12,14 +16,39 @@ import {
 } from "@beep/repo-cli/test/Dispatch";
 import { it } from "@beep/test-runner";
 import { A, O, P } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Stdio from "effect/Stdio";
+import * as Terminal from "effect/Terminal";
 import * as TestConsole from "effect/testing/TestConsole";
+
+// Rendering help reads no file and spawns nothing, so the CLI environment is hermetic.
+const HelpRenderLayer = Layer.mergeAll(
+  MemoryFileSystem.layer,
+  Path.layer,
+  Stdio.layerTest({}),
+  Layer.succeed(
+    Terminal.Terminal,
+    Terminal.make({
+      columns: Effect.succeed(80),
+      rows: Effect.succeed(24),
+      readInput: Effect.die("Help rendering must not prompt."),
+      readLine: Effect.die("Help rendering must not prompt."),
+      display: () => Effect.void,
+    })
+  ),
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() => Effect.die("Help rendering must not spawn subprocesses."))
+  )
+);
 
 const realGroups = A.flatMap(rootCommand.subcommands, ({ commands }) => commands);
 
@@ -82,7 +111,7 @@ describe("lazy dispatch manifest", () => {
   );
 });
 
-it.layer(NodeServices.layer)((it) => {
+it.layer(HelpRenderLayer, { timeout: "30 seconds" })((it) => {
   describe("lazy dispatch help rendering", () => {
     it.effect("renders root help and every group's help identically to the eager tree", () =>
       Effect.gen(function* () {
@@ -101,6 +130,42 @@ it.layer(NodeServices.layer)((it) => {
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
+});
+
+describe("help-only stub commands", () => {
+  it("carries every optional help field a group may set", () => {
+    const stub = makeStubCommand(
+      CommandGroupHelp.make({
+        name: "example",
+        description: "Example group",
+        shortDescription: "Example",
+        alias: "ex",
+        unlisted: true,
+      })
+    );
+    expect(helpFields(stub)).toStrictEqual({
+      name: "example",
+      description: "Example group",
+      shortDescription: "Example",
+      alias: "ex",
+      unlisted: true,
+    });
+    expect(helpFields(makeStubCommand(CommandGroupHelp.make({ name: "bare" })))).toStrictEqual({
+      name: "bare",
+      description: undefined,
+      shortDescription: undefined,
+      alias: undefined,
+      unlisted: false,
+    });
+  });
+
+  it.effect("loads the quality-task parser and runner on demand", () =>
+    Effect.gen(function* () {
+      const tasks = yield* Effect.promise(loadQualityTasks);
+      expect(P.isFunction(tasks.parseQualityTaskInvocation)).toBe(true);
+      expect(P.isFunction(tasks.runQualityTask)).toBe(true);
+    })
+  );
 });
 
 describe("argv-first dispatch target", () => {
@@ -140,6 +205,7 @@ describe("argv-first dispatch target", () => {
 
   it("builds only the runtime services the dispatched group declares", () => {
     expect(HashSet.size(dispatchRuntimeServices(root))).toBe(0);
+    expect(HashSet.size(dispatchRuntimeServices(qualityTask))).toBe(0);
     expect(A.fromIterable(dispatchRuntimeServices(group("ci")))).toStrictEqual(["fs-utils"]);
     expect(HashSet.size(dispatchRuntimeServices(fullTree))).toBe(3);
   });

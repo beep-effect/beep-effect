@@ -67,19 +67,18 @@ export type RuntimeService = typeof RuntimeService.Type;
  * @category models
  * @since 0.0.0
  */
-export class CommandGroupHelp extends S.Class<CommandGroupHelp, { readonly brand: unique symbol }>(
-  $I`CommandGroupHelp`
-)(
-  {
+export class CommandGroupHelp extends S.Opaque<CommandGroupHelp, { readonly brand: unique symbol }>()(
+  S.Struct({
     name: S.NonEmptyString,
     description: S.optionalKey(S.String),
     shortDescription: S.optionalKey(S.String),
     alias: S.optionalKey(S.NonEmptyString),
     unlisted: S.optionalKey(S.Boolean),
-  },
-  $I.annote("CommandGroupHelp", {
-    description: "Static root-help fields of one top-level beep command group.",
-  })
+  }).pipe(
+    $I.annoteSchema("CommandGroupHelp", {
+      description: "Static root-help fields of one top-level beep command group.",
+    })
+  )
 ) {}
 
 /**

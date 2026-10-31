@@ -44,27 +44,16 @@ import type { RuntimeService } from "./Dispatch.schemas.ts";
  */
 export type BaseServices = BunServices | HttpClient.HttpClient | Crypto.Crypto | Scope.Scope;
 
-/**
- * The service each {@link RuntimeService} key provides.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface RuntimeServiceTypes {
+// The service each `RuntimeService` key provides; a type-level map, never a value.
+interface RuntimeServiceTypes {
   readonly "fs-utils": FsUtils;
   readonly "memory-stats": MemoryStats;
   readonly "ts-morph": TSMorphService;
 }
 
-/**
- * One manifest entry: a group's static help, its runtime services and its loader.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface CommandGroupRoute {
+// One manifest entry: the schema-modeled help and service keys, plus the facade loader. The
+// loader is behavior, so the entry is not a schema; consumers name it as `CommandGroupRoute`.
+interface CommandGroupRoute {
   readonly help: CommandGroupHelp;
   readonly load: () => Promise<Command.Command.Any>;
   readonly services: ReadonlyArray<RuntimeService>;
@@ -72,7 +61,7 @@ export interface CommandGroupRoute {
 
 const groupRoute =
   <const Services extends ReadonlyArray<RuntimeService>>(
-    help: ConstructorParameters<typeof CommandGroupHelp>[0],
+    help: Parameters<typeof CommandGroupHelp.make>[0],
     services: Services
   ) =>
   <Name extends string, Input, ContextInput, E>(
