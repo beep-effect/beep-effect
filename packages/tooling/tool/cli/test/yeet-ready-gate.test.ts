@@ -1793,7 +1793,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ready head after the Gr
 
   // These tests run serially. Each owns one fork, advances the shared TestClock,
   // and joins the fork before the next test can use that clock.
-  it.layer(TestClock.layer())("refuses a push during the budget wait without a ready mutati (own clock)", (it) => {
+  it.layer(TestClock.layer())("own TestClock", (it) => {
     it.effect("refuses a push during the budget wait without a ready mutation", () =>
       Effect.gen(function* () {
         const flip = yield* waitingFlip(true);
@@ -1821,7 +1821,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ready head after the Gr
     );
   });
 
-  it.layer(TestClock.layer())("flips a stable confirmed head once after the wait (own clock)", (it) => {
+  it.layer(TestClock.layer())("own TestClock", (it) => {
     it.effect("flips a stable confirmed head once after the wait", () =>
       Effect.gen(function* () {
         const flip = yield* waitingFlip(true);
@@ -1844,7 +1844,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ready head after the Gr
     );
   });
 
-  it.layer(TestClock.layer())("repeats the full gate and attribution confirmation after an  (own clock)", (it) => {
+  it.layer(TestClock.layer())("own TestClock", (it) => {
     it.effect("repeats the full gate and attribution confirmation after an expired wait", () =>
       Effect.gen(function* () {
         const flip = yield* waitingFlip(false);

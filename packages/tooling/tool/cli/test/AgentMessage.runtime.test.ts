@@ -425,7 +425,7 @@ const fixture = Effect.fnUntraced(function* <A, E, R>(
 it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 seconds" })(
   "Managed mailbox resilience",
   (it) => {
-    it.layer(TestClock.layer())("retries recover, claim and completion without resubmitting a (own clock)", (it) => {
+    it.layer(TestClock.layer())("own TestClock", (it) => {
       it.effect("retries recover, claim and completion without resubmitting a consumed prompt", () =>
         fixture((store) =>
           Effect.gen(function* () {
@@ -654,7 +654,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       })
     );
 
-    it.layer(TestClock.layer())("exhausted completion retries retain the claim and owned proc (own clock)", (it) => {
+    it.layer(TestClock.layer())("own TestClock", (it) => {
       it.effect("exhausted completion retries retain the claim and owned process until cancellation", () =>
         fixture((store) =>
           Effect.gen(function* () {

@@ -327,7 +327,7 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
       expect(yield* issuer.verify(fresh, receipt)).toEqual(receipt);
     })
   );
-  it.layer(TestClock.layer())("expires a correctly authenticated envelope after its lifetim (own clock)", (it) => {
+  it.layer(TestClock.layer())("own TestClock", (it) => {
     it.effect("expires a correctly authenticated envelope after its lifetime", () =>
       Effect.gen(function* () {
         const { issuer, receipt, envelope } = yield* setup();

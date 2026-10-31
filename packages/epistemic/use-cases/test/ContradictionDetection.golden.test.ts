@@ -102,7 +102,7 @@ describe("Contradiction detection golden vectors", () => {
       })
     );
     for (const [vector, index] of A.map(vectors, (vector, index) => Tuple.make(vector, index))) {
-      it.layer(TestClock.layer())("exact-negation (own clock)", (it) => {
+      it.layer(TestClock.layer())("own TestClock", (it) => {
         it.effect(
           vector.name,
           Effect.fnUntraced(function* () {

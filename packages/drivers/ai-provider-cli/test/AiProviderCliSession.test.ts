@@ -778,7 +778,7 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })("managed nativ
     );
   }
   for (const control of ["steer", "cancel", "timeout"] satisfies ReadonlyArray<string>) {
-    it.layer(TestClock.layer())("home (own clock)", (it) => {
+    it.layer(TestClock.layer())("own TestClock", (it) => {
       it.effect(
         `fences targeted Codex ${control} against stale completion`,
         Effect.fnUntraced(function* () {
@@ -894,7 +894,7 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })("managed nativ
     "session/new",
     "session/set_mode",
   ] satisfies ReadonlyArray<string>) {
-    it.layer(TestClock.layer())("home (own clock)", (it) => {
+    it.layer(TestClock.layer())("own TestClock", (it) => {
       it.effect(
         `bounds ACP enrollment ${operation} before inference`,
         Effect.fnUntraced(function* () {

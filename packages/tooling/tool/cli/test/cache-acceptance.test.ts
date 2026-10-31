@@ -480,7 +480,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
   concurrent: false,
   timeout: "30 seconds",
 })("authenticated import preview", (it) => {
-  it.layer(TestClock.layer())("accepts only a fully covered approved policy and preserves e (own clock)", (it) => {
+  it.layer(TestClock.layer())("own TestClock", (it) => {
     it.effect("accepts only a fully covered approved policy and preserves envelope expiry", () =>
       Effect.gen(function* () {
         const { fs, path, root, contract, trust, published } = yield* publishedSetup;

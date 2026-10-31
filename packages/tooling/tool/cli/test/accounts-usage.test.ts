@@ -899,7 +899,7 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
     })
   );
 
-  it.layer(TestClock.layer())("keeps the Kimi usages when the profile request fails or neve (own clock)", (it) => {
+  it.layer(TestClock.layer())("own TestClock", (it) => {
     it.effect("keeps the Kimi usages when the profile request fails or never answers", () =>
       Effect.gen(function* () {
         const hung = yield* Deferred.make<void>();
