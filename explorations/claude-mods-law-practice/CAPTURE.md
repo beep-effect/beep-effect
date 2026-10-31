@@ -18,7 +18,7 @@ Its triage brief (grounded on `main` @ `1a4aa495`, 2026-10-06) said:
 - Repo `.claude/settings.json` has an `enabledPlugins` block and one extra
   marketplace (`EveryInc/compound-engineering-plugin`); no mods config or
   directory exists — greenfield.
-- `.claude/agents/`, `.claude/skills/`, `.claude/hooks/`, `.claude/helpers/`
+- `.claude/agents/`, `.claude/skills/`, and `.claude/hooks/`
   are where law-practice content would land if repo-committed; cloud lanes
   only get repo-committed `.claude/` content.
 - `Edit(**/.claude/settings.json)` is deny-listed for agents — config changes
