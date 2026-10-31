@@ -7,8 +7,10 @@ import {
   judgeProbeRun,
   ProbeOutcome,
 } from "@beep/repo-cli/commands/Holds";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -148,4 +150,28 @@ describe("classifyProbeOutput", () => {
   it("never reads clipped output without the signature as a pass", () => {
     expect(classify({ exitCode: 0, output: "80 packages installed", truncated: true })._tag).toBe("Inconclusive");
   });
+});
+
+const encodePropositionResult = S.encodeResult(HoldProposition);
+const decodePropositionResult = S.decodeResult(HoldProposition);
+
+describe("schema-derived hold properties", () => {
+  it.prop(
+    "round trips every generated hold proposition",
+    { proposition: Arbitrary.schema(HoldProposition) },
+    ({ proposition }) => {
+      const encoded = Result.getOrThrow(encodePropositionResult(proposition));
+      expect(Result.getOrThrow(decodePropositionResult(encoded))).toEqual(proposition);
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.prop(
+    "reads a passing control as probe-broken whatever the candidate did",
+    { candidate: Arbitrary.schema(ProbeOutcome) },
+    ({ candidate }) => {
+      expect(judgeProbeRun(ProbeOutcome.cases.Passed.make({}), candidate)).toBe("probe-broken");
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });
