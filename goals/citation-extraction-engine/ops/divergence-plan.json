@@ -182,7 +182,13 @@
         "packages/law-practice/server/src/internal/Citation/CleanerTextIdentity.ts",
         "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
         "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts",
-        "packages/law-practice/server/test/CitationCleanerValues.test.ts"
+        "packages/law-practice/server/test/CitationCleanerValues.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-unicode-dictionary.md",
+        "goals/citation-extraction-engine/ops/probe-unicode-dictionary.py",
+        "goals/citation-extraction-engine/ops/verify-unicode-dictionary.py",
+        "packages/law-practice/server/test/CitationUnicodeDictionary.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
+        "packages/law-practice/server/vitest.config.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

@@ -1204,6 +1204,15 @@ global process ownership. See
   bypass stage production charges. Complete live registry/cursor replay and
   the public error translator remain open. See the cleaner value ownership evidence.
 
+- **2026-10-31 combined Unicode dictionary:** the captured classifier selects
+  internal exact-string comparison, conversion before non-exact insertion and
+  key-change restarts. Thirteen histories and forty full outcomes are retained.
+  Per-call probe guards share nested work; captured aggregate limits still apply
+  across calls. Production hashes and complete cleaner registry replay stay open.
+  The local server test runner caps fan-out at two workers and two concurrent
+  tests to reduce cold-loading contention without changing production limits.
+  Removing that package configuration override reverses the runner decision.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
@@ -1215,7 +1224,8 @@ fixture directory. The cleaner-pipeline report additionally retains complete
 source callback traces under its dedicated checker. The html-bytes report retains
 complete byte/non-text outcomes under ops/verify-html-bytes.py. The
 cleaner-identities report retains full text and object-identity observations
-under ops/verify-cleaner-identities.py. They retain upstream legal spellings, source expressions
+under ops/verify-cleaner-identities.py. The unicode-dictionary report retains
+complete transition histories under ops/verify-unicode-dictionary.py. They retain upstream legal spellings, source expressions
 or hash-bound payloads. Their separate schema/source/hash/coverage validators
 and corruption controls remain required. These exclusions do not apply to
 authored code or unrelated fixtures. Remove each exact exclusion when its

@@ -47,6 +47,11 @@ now preserve 340 text identity/subclass observations and all 45 input-kind
 controls, with no coercion and original stage production charges. Full live
 registry/cursor ownership and all 1,155 sequence cases remain open.
 
+The [combined Unicode dictionary backend](./history/evidence/2026-10-31-unicode-dictionary.md)
+now matches thirteen histories and forty outcomes, including conversion and
+equality mutation. Retained tables use per-call probe guards with captured
+aggregate accounting; production hashes and live cleaner ownership remain open.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 P0 source acquisition and public prerequisite compatibility are evidenced. The

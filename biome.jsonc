@@ -80,6 +80,7 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
       // Complete source identity relations sealed by ops/verify-cleaner-identities.py.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",

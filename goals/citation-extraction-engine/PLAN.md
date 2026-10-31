@@ -184,6 +184,11 @@ now preserve 340 text identity/subclass observations and replay all 45 input-kin
 controls with shared stage charges. Full live registry/cursor ownership, all
 1,155 sequence cases, global admission and maps/public Layer remain open.
 
+The [Unicode dictionary backend](./history/evidence/2026-10-31-unicode-dictionary.md)
+now matches thirteen source histories and forty outcomes, and retained lifetime
+work is separated from each outer call guard. Production hashes, protocol
+dispatch, live registry/cursors and complete sequence replay remain open.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

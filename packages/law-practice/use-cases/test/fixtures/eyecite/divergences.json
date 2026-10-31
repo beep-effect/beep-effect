@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "f10e5ab567ab846a0e69eaac6f52ed0d3426590bdd66f98348c7d3868d618d0e",
+  "planSha256": "ebec6fc89fac3bb6b761ccaa51819097b859bc3cd6cf0b7ec2141bebc2eac0cb",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -590,6 +590,30 @@
         {
           "path": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
           "sha256": "c8408bf7eae8f56cd0d05b9413730d6b8099d88b62e25e1f0e812dda5ee31d19"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-unicode-dictionary.md",
+          "sha256": "96dd2ac89a45c1b25799a5dd613cdd678e70cdba5c81d06f12a3dcb0d5879f1e"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-unicode-dictionary.py",
+          "sha256": "b16918181f76f7f10e9875d4cb241fb8e9223eeaa58ac11f0f70d13a48d249d6"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-unicode-dictionary.py",
+          "sha256": "e12d697098a551a423dca0cf9e719f77b502536aece5a351e98798be20abbd6a"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationUnicodeDictionary.test.ts",
+          "sha256": "89237606e24bcb436fe67fac914d999a392024bf651d3cbd83e4363f53b58c97"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
+          "sha256": "2c8625cb9c7cd72a3a3c030a8606b5d9cada4e14b45e6ffa77065a79162dc22b"
+        },
+        {
+          "path": "packages/law-practice/server/vitest.config.ts",
+          "sha256": "0427fd8a6c122ce1fba82e3a0cc676bcb3c562601422758e6e89a4c31580dd1d"
         }
       ],
       "workflowState": "audit",

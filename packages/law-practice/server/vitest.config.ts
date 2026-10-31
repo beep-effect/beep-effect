@@ -14,6 +14,9 @@ export default mergeConfig(
         },
       ],
     },
-    test: {},
+    // Real native worker tests include cold module loading. Bound the test
+    // runner fan-out so it does not consume the production deadline itself.
+    // Each native owner still enforces its configured queue/execution limits.
+    test: { maxWorkers: 2, maxConcurrency: 2 },
   })
 );

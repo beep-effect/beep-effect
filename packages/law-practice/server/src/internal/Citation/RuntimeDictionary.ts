@@ -35,7 +35,7 @@ const Hash = S.BigIntFromString.check(
 );
 /**
  * Resource-object identity and its current normalized runtime hash. Object IDs
- * are operation-local handles supplied by the captured adapter, not evidence.
+ * are owner-local handles supplied by the captured adapter, not evidence.
  * @internal
  * @category models
  * @since 0.0.0
@@ -111,6 +111,9 @@ export class CitationRuntimeDictionaryFailure extends S.TaggedError<
  * Captured source-equivalent comparison and shared work accounting. Comparison
  * may read or directly mutate the table in the same fiber. Lookup restarts
  * after key removal/replacement or table rebuild, matching the source checks.
+ * Internal probe work resets for each serialized outer call; nested mutation
+ * shares that guard. The captured step must enforce the enclosing operation
+ * budget across calls. Entry identities use a safe-integer lifetime ceiling.
  * Forked callback mutation and mutation from accounting hooks are not covered.
  * @internal
  * @category services
@@ -119,6 +122,11 @@ export class CitationRuntimeDictionaryFailure extends S.TaggedError<
 export class CitationRuntimeDictionaryComparison extends Context.Service<
   CitationRuntimeDictionaryComparison,
   {
+    /** Captured exact-string content; must not invoke hooks or mutate the table.
+     * Providing this capability starts a combined Unicode table. Subclasses
+     * return None and use ordinary reflected rich comparison through equal.
+     */
+    readonly exactUnicode?: (objectId: number) => Effect.Effect<O.Option<string>, CitationRuntimeDictionaryFailure>;
     readonly beforeSet?: (
       entries: ReadonlyArray<CitationRuntimeDictionaryEntry>,
       previous: O.Option<CitationRuntimeDictionaryEntry>,
@@ -130,7 +138,7 @@ export class CitationRuntimeDictionaryComparison extends Context.Service<
 >()($I`CitationRuntimeDictionaryComparison`) {}
 /**
  * Captured general-key dictionary operations. No callable/request fields or
- * Python runtime are used. Values are operation-owned member-list handles.
+ * Python runtime are used. Values are owner-issued handles; their payloads remain in the captured adapter.
  * @internal
  * @category services
  * @since 0.0.0
@@ -168,10 +176,12 @@ const copyEntry = (entry: CitationRuntimeDictionaryEntry) => CitationRuntimeDict
 const unsigned = (hash: bigint) => BigInt.asUintN(64, hash);
 const indexOfHash = (hash: bigint, size: number) => Number(hash & BigInt(size - 1));
 /**
- * Allocate a fresh private combined/general-key table. Source pointer identity
- * is checked before cached hash/equality; growth rebuilds with stored hashes.
- * Direct same-fiber comparison reentrancy is supported. Unicode-specialized/
- * split tables, exact hash production, forked callback mutation and final
+ * Allocate a fresh private combined table. A captured exactUnicode classifier
+ * selects source Unicode lookup and conversion; absent it, use general keys.
+ * Source pointer identity is checked before cached hash/equality; growth
+ * rebuilds with stored hashes.
+ * Direct same-fiber comparison reentrancy is supported. Split tables, exact
+ * hash production, forked callback mutation and final
  * owner/document integration remain separate obligations.
  * @internal
  * @category operations
@@ -185,6 +195,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   const maximumSteps = limits.iterations;
   const comparison = yield* CitationRuntimeDictionaryComparison;
   const mutex = yield* Semaphore.make(1);
+  let steps = 0;
   let owner = O.none<number>();
   // Direct callback recursion keeps the same owner. Other fibers still wait;
   // acquireUseRelease clears ownership on success, failure and interruption.
@@ -196,6 +207,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
           : mutex.withPermit(
               Effect.acquireUseRelease(
                 Effect.sync(() => {
+                  steps = 0;
                   owner = O.some(fiber.id);
                 }),
                 () => body,
@@ -207,6 +219,12 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
             )
       )
     );
+  let unicode = comparison.exactUnicode !== undefined;
+  const exactText = Effect.fn("Citation.runtimeDictionaryExactText")((objectId: number) =>
+    comparison.exactUnicode === undefined
+      ? Effect.succeed(O.none<string>())
+      : comparison.exactUnicode(objectId).pipe(Effect.mapError(freshFailure))
+  );
   let keysEpoch = 0;
   let capacity = 0;
   let usable = 0;
@@ -214,7 +232,6 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   let entries = HashMap.empty<number, CitationRuntimeDictionaryEntry>();
   let order = Chunk.empty<number>();
   let nextEntry = 0;
-  let steps = 0;
   const step = Effect.suspend(() => {
     if (steps >= maximumSteps) return Effect.fail(exceeded());
     steps += 1;
@@ -225,6 +242,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     return CitationRuntimeDictionaryKey.make({ objectId: decoded.objectId, hash: decoded.hash });
   });
   const lookup = Effect.fn("Citation.runtimeDictionaryLookup")(function* (key: CitationRuntimeDictionaryKey) {
+    const text = yield* exactText(key.objectId);
     // CPython's DKIX_KEY_CHANGED retries with the original caller-supplied
     // hash. Replacing only a value or deleting an unrelated key does not retry.
     while (true) {
@@ -240,7 +258,13 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
           const entry = yield* Effect.fromOption(HashMap.get(entries, cell.value.entryId), invalid);
           if (entry.objectId === key.objectId) return O.some(Hit.make({ entryId: entry.entryId, bucket: index }));
           if (entry.storedHash === key.hash) {
-            const equal = yield* comparison.equal(entry.objectId, key.objectId).pipe(Effect.mapError(freshFailure));
+            const equal = yield* unicode && O.isSome(text)
+              ? exactText(entry.objectId).pipe(
+                  Effect.flatMap((stored) =>
+                    O.isSome(stored) ? Effect.succeed(stored.value === text.value) : Effect.fail(invalid())
+                  )
+                )
+              : comparison.equal(entry.objectId, key.objectId).pipe(Effect.mapError(freshFailure));
             const current = HashMap.get(entries, entry.entryId);
             if (keysEpoch !== epoch || O.isNone(current) || current.value.objectId !== entry.objectId) break;
             if (equal) return O.some(Hit.make({ entryId: entry.entryId, bucket: index }));
@@ -266,8 +290,8 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
       index = indexOfHash(BigInt(index) * BigInt(5) + perturb + BigInt(1), size);
     }
   });
-  const prepareInsertion = Effect.fn("Citation.runtimeDictionaryPrepareInsertion")(function* () {
-    if (capacity > 0 && usable > 0) return { capacity, usable, buckets, order };
+  const prepareInsertion = Effect.fn("Citation.runtimeDictionaryPrepareInsertion")(function* (force: boolean) {
+    if (!force && capacity > 0 && usable > 0) return { capacity, usable, buckets, order };
     let size = 8;
     while (size < HashMap.size(entries) * 3) {
       yield* step;
@@ -305,6 +329,17 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   ) {
     const key = yield* keySnapshot(inputKey);
     const decodedValue = yield* S.decodeEffect(S.Natural)(value).pipe(Effect.mapError(invalid));
+    // insertdict converts before lookup even when rich comparison will hit
+    // an existing string or fail. Publish the rebuilt key table before calls.
+    if (unicode && O.isNone(yield* exactText(key.objectId))) {
+      const converted = yield* prepareInsertion(true);
+      capacity = converted.capacity;
+      usable = converted.usable;
+      buckets = converted.buckets;
+      order = converted.order;
+      unicode = false;
+      keysEpoch += 1;
+    }
     yield* step;
     const hit = yield* lookup(key);
     if (comparison.beforeSet !== undefined) {
@@ -323,8 +358,8 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
       );
       return copyEntry(yield* Effect.fromOption(HashMap.get(entries, entry.entryId), invalid));
     }
-    if (HashMap.size(entries) >= maximumEntries || nextEntry >= maximumSteps) return yield* exceeded();
-    const next = yield* prepareInsertion();
+    if (HashMap.size(entries) >= maximumEntries || nextEntry >= 9_007_199_254_740_991) return yield* exceeded();
+    const next = yield* prepareInsertion(false);
     const index = yield* emptySlot(next.buckets, next.capacity, key.hash);
     const entry = CitationRuntimeDictionaryEntry.make({
       entryId: nextEntry,
@@ -353,6 +388,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   });
   const clear = Effect.sync(() => {
     if (capacity !== 0) keysEpoch += 1;
+    unicode = comparison.exactUnicode !== undefined;
     capacity = 0;
     usable = 0;
     buckets = HashMap.empty();

@@ -288,7 +288,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 The private citation runtime table in
 `packages/law-practice/server/src/internal/Citation/RuntimeDictionary.ts`
 adapts the combined/general-key lookup, perturbation, deletion and stored-hash
-resize behavior of CPython 3.11.15 `Objects/dictobject.c`:
+resize behavior of CPython 3.11.15 `Objects/dictobject.c`, including combined
+Unicode lookup, conversion before non-exact insertion and comparison-mutation
+restart behavior:
 <https://github.com/python/cpython/blob/v3.11.15/Objects/dictobject.c>.
 Source SHA-256:
 `474b899187e73c5ec416b82e17346d2c17616b1b662e1c2fd1c7e53bb2bf19d8`.
@@ -318,7 +320,7 @@ Changes: the adaptation uses schema-owned TypeScript data, captured Effect
 comparison/work services, bounded probes and allocations, typed redacted
 failures, serialized operations and operation-local insertion identities.
 It does not embed or depend on the Python runtime. It does not claim complete
-CPython mapping compatibility, split tables or reentrant comparison mutation.
+CPython mapping compatibility, split tables or forked comparison mutation.
 Source comparisons and remaining obligations are recorded in the citation
 engine packet. The complete upstream license is reproduced below.
 
