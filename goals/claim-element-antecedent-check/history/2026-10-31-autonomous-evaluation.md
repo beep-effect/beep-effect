@@ -39,3 +39,26 @@ This high alert noise is a material limitation. Findings remain advisory review 
 All three law-practice package verifications pass for v16 (domain, use-cases, server). The four automated-adjudication boundary tests pass, covering disagreement, low confidence, ownership, invalid provenance, source evidence and prevention of human-authority promotion. The separate human import paths retain their authority guards. The same IPRally smoke remains explicitly non-US/non-gold: one claim/tree, 15,523 tokens, 78 findings, 16 coverage warnings, no undecomposed claim; no licensed source data is committed.
 
 `autonomous-review-v1/` contains byte-preserved reviewer receipts, the v16 allowed input, and reproducible derived summaries. Round-one and round-two reference reviews remain separate. `2026-10-31-v16-retention.json`, `2026-10-31-allowed-v16-coverage.json`, versioned runtime/sample freezes and evaluation outputs bind this measurement. Historical review packets and original labels/results are retained. Independent automated review satisfies the revised P2/P3 measurement procedure with explicitly unresolved outcomes; it does not repair gold or certify legal validity. Yeet publication, hosted readiness and final reflection remain separate delivery gates.
+
+## Post-main compatibility replay
+
+The delivery merge changes only the normalizer's JSDoc import within the 20 frozen runtime paths. A new v17 freeze retains v16 untouched. The fixed positive and allowed replays are semantically identical except their implementation digest; all 55 successful positive-family and 196 successful allowed-set prediction reports are byte-identical. All 287,638 source-anchor occurrences match UTF-16 source slices. The same 99 focused tests pass after synchronization. The v16 automated judgments remain attributed to v16; the post-main receipt establishes prediction/source identity rather than inventing new judgments.
+
+Reproduce in fresh output directories:
+
+```sh
+CLAIM_IMPLEMENTATION_FREEZE=goals/claim-element-antecedent-check/research/implementation-repair-v17-freeze.json \
+CLAIM_EVALUATION_OUTPUT=.beep/positive-v17-reproduction \
+  bun packages/law-practice/server/test/evaluation/positive.main.ts
+CLAIM_IMPLEMENTATION_FREEZE=goals/claim-element-antecedent-check/research/implementation-repair-v17-freeze.json \
+CLAIM_ALLOWED_OUTPUT=.beep/allowed-v17-reproduction \
+  bun packages/law-practice/server/test/evaluation/allowed.main.ts
+python goals/claim-element-antecedent-check/research/test-automated-reference.py
+python goals/claim-element-antecedent-check/research/test-automated-adjudication.py
+```
+
+Both automated summaries reproduce exactly from their committed input and reviewer receipts. Seven new boundary tests cover the two automated import paths. A separate provenance receipt verifies 120 reference-review input hashes against the recorded review commit and byte-identical public copies of prior-round receipts. The on-demand reflection passes the reflection-artifact validator; publication and hosted readiness remain active.
+
+## Delivery policy cleanup
+
+The current main policy gates required stable module-level schema expressions, `S.tag` for fixed protocol fields, explicit resource hook budgets and reviewed inventories. These fixes cover this branch's law-practice and named-fragment MCP regression tests; no new schema shape or scoring rule is introduced. After a fresh frozen-lockfile install, the full positive and allowed results are identical to the post-main replay, as are all 251 successful prediction reports. The delivery receipt pins the evaluation/scorer files. All 12 targeted server, nine use-case and 21 MCP regression tests pass; repository-wide oxlint passes. Native-source integrity and CLI evaluation entrypoints retain explicit owner/reason/removal-condition exceptions in the generated policy inventories. This does not remove or weaken tests. The current JSDoc/hosted delivery gates remain active.

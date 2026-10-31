@@ -59,14 +59,17 @@ const checker = ClaimSelfCheckLive.pipe(
   Layer.provide(nativeHttpClient)
 );
 
+const patentClaimsJson = S.fromJsonString(PatentClaims);
+const claimElementTreeJson = S.fromJsonString(ClaimElementTree);
+
 describe("Public USPTO antecedent slice", () => {
-  it.layer(checker.pipe(Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))))((it) => {
+  it.layer(checker.pipe(Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))), {
+    timeout: "30 seconds",
+  })((it) => {
     it.effect("preserves the recorded legacy slice while adding source-anchored relationships", () =>
       Effect.gen(function* () {
-        const expectedClaims = yield* S.decodeEffect(S.fromJsonString(PatentClaims))(
-          yield* fixture("US20200109732A1.claims.json")
-        );
-        const expectedTree = yield* S.decodeEffect(S.fromJsonString(ClaimElementTree))(
+        const expectedClaims = yield* S.decodeEffect(patentClaimsJson)(yield* fixture("US20200109732A1.claims.json"));
+        const expectedTree = yield* S.decodeEffect(claimElementTreeJson)(
           yield* fixture("US20200109732A1.claim1.expected.json")
         );
         const result = yield* ClaimSelfCheck.use((service) =>

@@ -136,6 +136,8 @@ describe("strict source-anchored structural measurement", () => {
 });
 
 // A positive control on the complete frozen corpus guards against an always-false scorer.
+const referenceFamiliesJson = S.fromJsonString(S.Struct({ families: S.Array(S.Struct({ familyId: S.String })) }));
+
 describe("frozen corpus scorer control", () => {
   it.layer(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))((it) => {
     it.effect("accepts every reference against itself without invoking production decomposition", () =>
@@ -145,9 +147,7 @@ describe("frozen corpus scorer control", () => {
         const freezePath = yield* path.fromFileUrl(
           new URL("../../../../goals/claim-element-antecedent-check/research/reference-freeze.json", import.meta.url)
         );
-        const freeze = yield* S.decodeEffect(
-          S.fromJsonString(S.Struct({ families: S.Array(S.Struct({ familyId: S.String })) }))
-        )(yield* fs.readFileString(freezePath));
+        const freeze = yield* S.decodeEffect(referenceFamiliesJson)(yield* fs.readFileString(freezePath));
         let passed = 0;
         for (const family of freeze.families) {
           const filename = yield* path.fromFileUrl(

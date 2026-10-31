@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const Manifest = S.Struct({
-  referenceProtocolVersion: S.Literal("semantic-reference/v2"),
+  referenceProtocolVersion: S.tag("semantic-reference/v2"),
   families: S.Array(S.Struct({ familyId: S.String })),
 });
 const Source = S.Struct({
@@ -22,13 +22,17 @@ const Source = S.Struct({
   claims: S.Array(S.Struct({ claimNumber: S.Finite, claimText: S.String })),
 });
 const Receipt = S.Struct({
-  protocolVersion: S.Literal("semantic-reference/v2"),
+  protocolVersion: S.tag("semantic-reference/v2"),
   resolvedClaimNumbers: S.Array(S.Finite),
   unresolved: S.Array(S.Struct({ claimNumber: S.Finite, reason: S.String })),
 });
 const encodeReferenceEdge = ClaimElementEdge.pipe(S.fromJsonString, S.encodeEffect);
 // Source/schema integrity only. Semantic approval and corpus completeness are separate.
 // The test never imports the decomposer, policy, or checker predictions.
+const manifestJson = S.fromJsonString(Manifest);
+const sourceJson = S.fromJsonString(Source);
+const receiptJson = S.fromJsonString(Receipt);
+
 describe("Independent semantic reference integrity", () => {
   it.layer(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))((it) => {
     it.effect("preserves selected coverage and every local/cross-claim source anchor", () =>
@@ -38,7 +42,7 @@ describe("Independent semantic reference integrity", () => {
         const manifestPath = yield* path.fromFileUrl(
           new URL("../../../../goals/claim-element-antecedent-check/research/positive-sampling.json", import.meta.url)
         );
-        const manifest = yield* S.decodeEffect(S.fromJsonString(Manifest))(yield* fs.readFileString(manifestPath));
+        const manifest = yield* S.decodeEffect(manifestJson)(yield* fs.readFileString(manifestPath));
         let referenceFamilies = 0;
         for (const { familyId } of manifest.families) {
           const directory = yield* path.fromFileUrl(
@@ -46,10 +50,10 @@ describe("Independent semantic reference integrity", () => {
           );
           const expectedPath = path.join(directory, "expected.json");
           referenceFamilies++;
-          const source = yield* S.decodeEffect(S.fromJsonString(Source))(
+          const source = yield* S.decodeEffect(sourceJson)(
             yield* fs.readFileString(path.join(directory, "claims.json"))
           );
-          const receipt = yield* S.decodeEffect(S.fromJsonString(Receipt))(
+          const receipt = yield* S.decodeEffect(receiptJson)(
             yield* fs.readFileString(path.join(directory, "extractor.json"))
           );
           const trees = yield* ClaimElementTree.pipe(

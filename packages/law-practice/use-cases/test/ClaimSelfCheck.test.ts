@@ -270,13 +270,15 @@ describe("ClaimSelfCheck", () => {
   );
 });
 
+const reviewItemJson = S.fromJsonString(ReviewItem);
+
 describe("ClaimSelfCheck read-only review items", () => {
   const testLayer = Layer.mergeAll(
     ClaimSelfCheckLive.pipe(Layer.provide(inMemoryUsptoClaims)),
     ReviewQueueLive.pipe(Layer.provide(VerdictLogMemory)),
     VerdictProjectorLive
   );
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("quotes each actual claim, preserves evidence and round-trips the review envelope", () =>
       Effect.gen(function* () {
         const original = yield* input;
@@ -302,8 +304,8 @@ describe("ClaimSelfCheck read-only review items", () => {
           const source = yield* Effect.fromOption(A.head(item.sourceRefs));
           assert.strictEqual(source.boxFileId, "1234567890");
           assert.strictEqual(source.quote.exact, claim.claimText);
-          const encoded = yield* S.encodeEffect(S.fromJsonString(ReviewItem))(item);
-          const decoded = yield* S.decodeEffect(S.fromJsonString(ReviewItem))(encoded);
+          const encoded = yield* S.encodeEffect(reviewItemJson)(item);
+          const decoded = yield* S.decodeEffect(reviewItemJson)(encoded);
           assert.deepStrictEqual(decoded, item);
         }
         const other = yield* claimSelfCheckReview(

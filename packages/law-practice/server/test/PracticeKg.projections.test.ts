@@ -869,6 +869,8 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
   return A.headNonEmpty(decoded.content).text;
 });
 
+const claimSelfCheckReviewResultJson = S.fromJsonString(ClaimSelfCheckReviewResult);
+
 describe("practice KG projections", () => {
   describe("generates schema-valid fixture source rows", () => {
     it.prop(
@@ -1195,7 +1197,7 @@ describe("practice KG projections", () => {
           const before = yield* callToolText("kg_candidate_claims", {});
           const wire = yield* S.encodeEffect(ClaimSelfCheckReviewRequest)(request);
           const result = yield* callToolText("claim_self_check", wire).pipe(
-            Effect.flatMap(S.decodeEffect(S.fromJsonString(ClaimSelfCheckReviewResult)))
+            Effect.flatMap(S.decodeEffect(claimSelfCheckReviewResultJson))
           );
           expect(result.items).toHaveLength(1);
           expect(result.candidates).toHaveLength(1);

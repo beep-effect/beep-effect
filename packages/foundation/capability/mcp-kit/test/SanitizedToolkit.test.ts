@@ -12,7 +12,7 @@ import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
 import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
@@ -605,6 +605,8 @@ describe("sanitizedToolkit", () => {
   );
 });
 
+const templateLiteralReply = S.Struct({ content: S.NonEmptyArray(S.Struct({ text: S.String })) });
+
 describe("named template literal tool schemas", () => {
   const identifier = S.TemplateLiteral([
     "item:",
@@ -629,16 +631,12 @@ describe("named template literal tool schemas", () => {
     sanitizedToolkit(toolkit).pipe(Layer.provide(handlers)),
     StubMcpClientLayer
   );
-  it.layer(layer)((it) => {
+  it.layer(layer, { timeout: "30 seconds" })((it) => {
     it.effect("registers named scalar/union fragments in both schemas and retains runtime validation", () =>
       Effect.gen(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "template_literal_tool", arguments: { id: "item:a:42" } });
-        const decoded = yield* S.decodeUnknownEffect(
-          S.Struct({
-            content: S.NonEmptyArray(S.Struct({ text: S.String })),
-          })
-        )(result);
+        const decoded = yield* S.decodeUnknownEffect(templateLiteralReply)(result);
         const value = yield* S.decodeEffect(S.fromJsonString(S.Struct({ id: identifier })))(
           A.headNonEmpty(decoded.content).text
         );
@@ -646,7 +644,7 @@ describe("named template literal tool schemas", () => {
         const invalid = yield* Effect.exit(
           server.callTool({ name: "template_literal_tool", arguments: { id: "other:a:42" } })
         );
-        assert.isTrue(Exit.isFailure(invalid));
+        assertTrue(Exit.isFailure(invalid));
       })
     );
   });

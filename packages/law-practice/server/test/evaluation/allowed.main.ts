@@ -44,6 +44,9 @@ const ImplementationFreeze = S.Struct({
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodeReport = S.encodeEffect(S.fromJsonString(PublishedClaimSelfCheckReport));
 
+const allowedSampleJson = S.fromJsonString(AllowedSample);
+const implementationFreezeJson = S.fromJsonString(ImplementationFreeze);
+
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Crypto.Crypto;
@@ -51,10 +54,8 @@ const program = Effect.gen(function* () {
   const implementationFile = yield* Config.String("CLAIM_IMPLEMENTATION_FREEZE");
   const manifestFile = "goals/claim-element-antecedent-check/research/allowed-sampling.json";
   const manifestText = yield* fs.readFileString(manifestFile);
-  const manifest = yield* S.decodeEffect(S.fromJsonString(AllowedSample))(manifestText);
-  const implementation = yield* S.decodeEffect(S.fromJsonString(ImplementationFreeze))(
-    yield* fs.readFileString(implementationFile)
-  );
+  const manifest = yield* S.decodeEffect(allowedSampleJson)(manifestText);
+  const implementation = yield* S.decodeEffect(implementationFreezeJson)(yield* fs.readFileString(implementationFile));
   const digest = (text: string) =>
     crypto.digest("SHA-256", new TextEncoder().encode(text)).pipe(Effect.map(Hex.encode));
   const verifiedText = Effect.fn("AllowedEvaluation.verifiedText")(function* (path: string, expected: string) {

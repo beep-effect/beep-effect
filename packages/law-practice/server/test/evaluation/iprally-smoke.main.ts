@@ -64,10 +64,12 @@ const SmokeResult = LiteralKit(["checked", "normalization-failed", "checking-fai
   );
 const encode = S.encodeEffect(S.fromJsonString(SmokeResult));
 
+const smokeInputJson = S.fromJsonString(SmokeInput);
+
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const filename = yield* Config.String("IPRALLY_SMOKE_INPUT");
-  const input = yield* S.decodeEffect(S.fromJsonString(SmokeInput))(yield* fs.readFileString(filename));
+  const input = yield* S.decodeEffect(smokeInputJson)(yield* fs.readFileString(filename));
   const common = {
     sourceId: input.sourceId,
     country: input.country,

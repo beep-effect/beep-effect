@@ -61,24 +61,28 @@ const Canonical = S.Struct({ claims: S.Array(S.Struct({ claimNumber: S.Int, clai
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodeReport = S.encodeEffect(S.fromJsonString(PublishedClaimSelfCheckReport));
 
+const referenceFreezeJson = S.fromJsonString(ReferenceFreeze);
+const sourceFreezeJson = S.fromJsonString(SourceFreeze);
+const implementationFreezeJson = S.fromJsonString(ImplementationFreeze);
+const claimElementTreesJson = S.fromJsonString(ClaimElementTree.pipe(S.Array));
+const canonicalJson = S.fromJsonString(Canonical);
+
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Crypto.Crypto;
   const output = yield* Config.String("CLAIM_EVALUATION_OUTPUT");
   const packet = "goals/claim-element-antecedent-check/research";
   const fixtures = "packages/law-practice/domain/test/fixtures/claim-element/positive";
-  const reference = yield* S.decodeEffect(S.fromJsonString(ReferenceFreeze))(
+  const reference = yield* S.decodeEffect(referenceFreezeJson)(
     yield* fs.readFileString(`${packet}/reference-freeze.json`)
   );
-  const sources = yield* S.decodeEffect(S.fromJsonString(SourceFreeze))(
+  const sources = yield* S.decodeEffect(sourceFreezeJson)(
     yield* fs.readFileString(`${packet}/positive-source-freeze.json`)
   );
   const implementationFile = yield* Config.String("CLAIM_IMPLEMENTATION_FREEZE").pipe(
     Config.withDefault(`${packet}/implementation-freeze.json`)
   );
-  const implementation = yield* S.decodeEffect(S.fromJsonString(ImplementationFreeze))(
-    yield* fs.readFileString(implementationFile)
-  );
+  const implementation = yield* S.decodeEffect(implementationFreezeJson)(yield* fs.readFileString(implementationFile));
   const verifiedText = Effect.fn("PositiveEvaluation.verifiedText")(function* (path: string, expected: string) {
     const text = yield* fs.readFileString(path);
     if (Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text))) !== expected)
@@ -93,10 +97,10 @@ const program = Effect.gen(function* () {
         A.findFirst(sources.selection, (row) => row.familyId === family.familyId)
       );
       const base = `${fixtures}/${family.familyId}`;
-      const gold = yield* S.decodeEffect(S.fromJsonString(ClaimElementTree.pipe(S.Array)))(
+      const gold = yield* S.decodeEffect(claimElementTreesJson)(
         yield* verifiedText(`${base}/expected.json`, family.annotationSha256)
       );
-      const canonical = yield* S.decodeEffect(S.fromJsonString(Canonical))(
+      const canonical = yield* S.decodeEffect(canonicalJson)(
         yield* verifiedText(`${base}/claims.json`, family.canonicalClaimsSha256)
       );
       yield* verifiedText(`${base}/extractor.json`, family.extractorReceiptSha256);
