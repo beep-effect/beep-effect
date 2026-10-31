@@ -93,10 +93,16 @@ cleanup_run_dir() {
   wait || true
   rm -rf -- "${run_dir}"
 }
+cancel_downloads() {
+  trap '' INT TERM HUP
+  trap - EXIT
+  cleanup_run_dir
+  exit "$1"
+}
 trap cleanup_run_dir EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
-trap 'exit 129' HUP
+trap 'cancel_downloads 130' INT
+trap 'cancel_downloads 143' TERM
+trap 'cancel_downloads 129' HUP
 
 # Symlink into /usr/local/bin when we can, so tools resolve for every shell the
 # vendor spawns (login, non-login, the agent's own exec daemon). Claude and

@@ -1,6 +1,7 @@
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -68,10 +69,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
     { signal: "", phase: "wait", worker: "op", exitCode: 1, name: "failed Bun with optional op still running" },
     { signal: "TERM", phase: "wait", worker: "node", exitCode: 143, name: "TERM interruption" },
     { signal: "TERM", phase: "register", worker: "bun", exitCode: 143, name: "TERM before PID registration" },
+    { signal: "TERM", phase: "cleanup", worker: "node", exitCode: 143, name: "repeated TERM at cleanup entry" },
+    {
+      signal: "TERM",
+      phase: "exit-cleanup",
+      worker: "node",
+      exitCode: 143,
+      name: "TERM at failed-download cleanup entry",
+    },
     { signal: "HUP", phase: "wait", worker: "node", exitCode: 129, name: "HUP interruption" },
     { signal: "HUP", phase: "register", worker: "bun", exitCode: 129, name: "HUP before PID registration" },
+    { signal: "HUP", phase: "cleanup", worker: "node", exitCode: 129, name: "repeated HUP at cleanup entry" },
     { signal: "INT", phase: "wait", worker: "node", exitCode: 130, name: "INT interruption" },
     { signal: "INT", phase: "register", worker: "bun", exitCode: 130, name: "INT before PID registration" },
+    { signal: "INT", phase: "cleanup", worker: "node", exitCode: 130, name: "repeated INT at cleanup entry" },
   ]) {
     it.effect(
       `settles parallel cloud downloads before cleanup after ${scenario.name}`,
@@ -99,6 +110,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
           const worker = yield* fs.readFileString(workerPath);
           yield* fs.writeFileString(workerPath, Str.replace("trap 'exit 143' TERM", "")(worker));
         }
+        if (scenario.phase === "cleanup" || scenario.phase === "exit-cleanup") {
+          const bootstrapPath = path.join(root, "scripts/cloud/bootstrap.sh");
+          const bootstrap = yield* fs.readFileString(bootstrapPath);
+          // Deliver the next signal at the copied function's entry, before its
+          // first mask. The marker prevents a recursive cleanup from reinjecting.
+          yield* fs.writeFileString(
+            bootstrapPath,
+            Str.replace(
+              "cleanup_run_dir() {",
+              `cleanup_run_dir() {
+  if [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/repeated-signal" ]; then
+    : > "$BEEP_BOOTSTRAP_FIXTURE/repeated-signal"
+    kill -"$BEEP_BOOTSTRAP_SIGNAL" "$BASHPID"
+  fi`
+            )(bootstrap)
+          );
+        }
         // Deliver signals only after the selected fake child is running. A DEBUG
         // hook covers the gap between launch and PID registration without sleeps.
         // Expiry cases deliver GNU timeout's ALRM event after child readiness,
@@ -119,7 +147,7 @@ wait() {
     fixture_ready "$1"
     signal_sent=1
     if [ "$BEEP_BOOTSTRAP_PHASE" = deadline ]; then kill -ALRM "$1"; fi
-    if [ "$BEEP_BOOTSTRAP_PHASE" != deadline ] && [ -n "$BEEP_BOOTSTRAP_SIGNAL" ]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi
+    if [[ "$BEEP_BOOTSTRAP_PHASE" != deadline && "$BEEP_BOOTSTRAP_PHASE" != exit-cleanup && -n "$BEEP_BOOTSTRAP_SIGNAL" ]]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi
   fi
   builtin wait "$@"
 }
@@ -310,6 +338,9 @@ exec /bin/rm "$@"
         );
         expect(exitCode).toBe(scenario.exitCode);
         expect(yield* fs.exists(path.join(root, "worker-ready")), stderr).toBe(true);
+        if (scenario.phase === "cleanup" || scenario.phase === "exit-cleanup") {
+          expect(yield* fs.exists(path.join(root, "repeated-signal"))).toBe(true);
+        }
         if (scenario.signal === "") {
           expect(stderr).toContain(
             scenario.worker === "checksum" ? "provisioning failed" : "download or checksum failed"
@@ -327,7 +358,7 @@ exec /bin/rm "$@"
               : `${scenario.worker}-finished\ncleanup\n`
           );
         }
-        expect(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"))).toEqual(
+        expect(A.sort(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap")), Str.Order)).toEqual(
           checkStaleRuns ? ["run.active", "run.legacy"] : []
         );
         expect(yield* fs.exists(path.join(home, ".bun"))).toBe(false);
