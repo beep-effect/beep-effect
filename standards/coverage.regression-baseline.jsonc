@@ -44852,18 +44852,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Jsonc.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts": {
           "lines": 97.77,
           "statements": 97.95,

@@ -85,7 +85,7 @@ manifests with 0 full-schema failures.
 | lab `xdg` `XdgConfig` | - | adopted in 3-3; promoted in 4-X | Imports `@beep/config-file` (`ConfigResolver` type); now the `@beep/xdg/XdgConfig` subpath (W4-c). |
 | lab `cli` `ConfigIssueRenderer` | - | adopted in 3-3 | Takes the structural `{ readonly issue }` and no longer imports the package (promotion map row "cli-kit -> config-file"). |
 | `Struct.deepMerge` and jsonl `internal/merge.ts` | - | excluded | Different merge semantics from config-file's `deepMerge`, which stays in the package. |
-| docgen `readTSConfig` and the `@beep/schema/Jsonc` consumers | - | excluded here; `readTSConfig` adopted in 3-A6 | `readTSConfig` moved with the `TsconfigValidator` in 3-A6 (`@beep/repo-tsconfig` section); the `@beep/schema/Jsonc` consumers belong to the jsonc adoption (Exception Ledger "Duplicate JSONC model"). |
+| docgen `readTSConfig` and the `@beep/schema/Jsonc` consumers | - | excluded here; `readTSConfig` adopted in 3-A6 | `readTSConfig` moved with the `TsconfigValidator` in 3-A6 (`@beep/repo-tsconfig` section); the `@beep/schema/Jsonc` consumers were adopted in R3a (`@beep/jsonc` section). |
 ## `@beep/github-reporting` (wave 3-1, W3-b)
 
 | Site | Map id | Status | Notes |
@@ -121,8 +121,8 @@ manifests with 0 full-schema failures.
 | repo-cli `Goals/Inventory.ts` README regexes | #287 | adopted (2d-A, D-47) | `MarkdownDocument.parseResult` with `firstSection`, `sectionByHeading` and `headingSource` (root-level H1, D-47); pin the `---json`, `<Goal Title>` and list-interrupt shifts. |
 | repo-cli DeletePackage `stripPackageFromFrontmatter` | #276 | adopted in R5a | `FrontmatterSource.split`, `YamlFormat.modifyToString(value, [name], undefined)`, `FrontmatterSource.join`; repo-cli gains the `@beep/yaml` dependency. A removal re-serializes the whole block (sibling spacing normalized, trailing blank lines dropped, a comment above the removed key lost with it); a CRLF block (by its recorded `newline`) gets its CRLFs back. 293 historical multi-package changesets prune byte-identically; an escaped key is now removed (bug fix). The substring bug was fixed independently in #2020. |
 | ReflectionArtifact and SkillFrontmatterCheck typed frontmatter | #37 | adopted in R5a | `YamlFrontmatter.decode` over the `FrontmatterSource` block, then the consumer schema (not `MarkdownFrontmatter.schema`: no mdast parse per W4-r, and the skill check needs strict parse options). Verdict parity over 312 reflections and 48 `SKILL.md` files (`research/frontmatter-adoption-parity-r5a.json`). |
-| docgen `@effect/markdown-toc` | #292 | queued: R5b | Needs a GitHub slugger and a TOC renderer; drops the npm dependency. |
-| effect-drizzle `scripts/assemble-readme.ts` | - | queued: R5b | After the TOC helper; `@beep/markdown` as a devDependency only (ecosystem polarity). |
+| docgen `@effect/markdown-toc` | #292 | adopted in R5b | `MarkdownSlug` (the `markdown-toc` 0.1.0 slug, title and anchor rule) and `MarkdownToc` (`entries`, `renderEntries`, `render`) in `@beep/markdown`; `Core.getModuleMarkdownFiles` renders through `MarkdownToc.render(moduleContent, { bullet: "-" })`. The npm package, its `markdown-toc.d.ts` shim, the repo-cli non-lockstep row and the root catalog entry are gone. Oracle: every docgen page's embedded TOC byte-identical to `markdown-toc`'s rendering (`research/markdown-toc-differential-r5b.json`); the tracked-Markdown slugger differential is classified there. |
+| effect-drizzle `scripts/assemble-readme.ts` | - | adopted in R5b | `FrontmatterSource.split(content).body` replaces the local `stripFrontmatter`; `@beep/markdown` is a devDependency only (ecosystem polarity). `bun run readme` over the regenerated docs leaves `README.md` byte-identical. |
 | docgen `fencePattern` and its consumers, EffectImports, SchemaTagIdioms | #282 | queued: R6 (or deferred per W4-q) | Needs code-node spans and an unterminated-fence diagnostic; zero JSDoc-ratchet drift. |
 | repo-cli Knowledge.refs, KnowledgeDoctor, RoadmapRefs | #232 | excluded (W4-r) | Behind a perf budget: a full parse costs about 400 times the line split. Prefilter fence-bearing files and re-benchmark. |
 | repo-cli KnowledgeDoctor `beep-historical` frontmatter | - | adopted in R5a | `FrontmatterSource.split`, yaml blocks only; the key line keeps its document line number. The corpus surface is vacuous (0 of 8,674 tracked Markdown files carry a document marker); parity rests on the 13 probes in `ops/frontmatter-adoption-parity.ts` and the `knowledge-doctor` test. An unclosed block no longer counts (D-47 grammar). |
@@ -200,6 +200,33 @@ pick what the kit picks.
 | repo-cli VersionSync `RootCatalog` bun.lock versions | #269 | 3-A1 | The lockfile half rides the lockfiles adoption; its Docker semver half is #43 above. |
 | repo-utils `schemas/PackageJson.ts` version fields | #243 | adopted in 3-A3 | `version` is the kit `SemVer.FromString` and `packageManager` the kit `PackageManagerRange`; no tracked manifest changes verdict. |
 | repo-cli `EffectResolver` `VERSION_SPECIFIER_PATTERN`, `TurboResolver` `STABLE_VERSION_PATTERN` | - | excluded | Shape checks on a specifier or schema URL; neither parses nor orders versions. |
+
+## `@beep/jsonc` (roadmap R3a, SPEC W4-o)
+
+R3a is the owner switch: every `@beep/schema/Jsonc` importer decodes through `Jsonc.bind(schema).decode`,
+the facade is deleted and `@beep/schema` drops `jsonc-parser`. Parity is recorded in
+`research/jsonc-owner-switch-differential-r3a-before.json` (the pre-switch code) and
+`research/jsonc-owner-switch-differential-r3a.json` (`--compare`, `ops/jsonc-owner-switch-differential.ts`):
+1,438 tracked JSONC and facade-consumed JSON documents decode equal under both parsers with 0 unclassified
+differences and 1,438 kit encode round trips, and twelve generator check or dry runs against one fixed input
+tree are byte-identical before and after. A fixed 42-case negative and edge corpus classifies every case
+(`equal`, `both-reject`, `legacy-reject-kit-accept`, `legacy-accept-kit-reject`, `value-differs`) and
+allowlists exactly three intended divergences by case id: BOM tolerance (the kit scanner treats U+FEFF as
+whitespace), the 256-deep nesting cap (`NestingDepthExceeded` from `internal/limits.ts`) and JSON.parse
+`__proto__` semantics (an own data property instead of a prototype assignment that dropped the key; no
+adopted site merges a decoded object through `Object.assign`). The rejection message text changes from
+`Invalid JSONC input (...)` to `JSONC parse failed with N error(s): ...`. The `jsonc-parser` editing facade
+and its users leave in R3b.
+
+| Site | Map id | Status | Notes |
+| --- | --- | --- | --- |
+| `@beep/schema/Jsonc` (`JsoncTextToUnknown`, `decodeJsoncTextAs`, `JsoncParseDiagnostic`) | #1 | retired (R3a) | Deleted with its test, both export entries, the root barrel line, the generated aliases and the catalog, inventory and span rows. `decodeJsoncTextAs(X)` is `Jsonc.bind(X).decode`; `JsoncTextToUnknown` is `Jsonc.JsoncFromString`; `JsoncParseDiagnostic` is `JsoncParseErrorDetail` (neither had an importer outside the facade). |
+| repo-cli `@beep/schema/Jsonc` importers (20 source files, 3 tests) and the root-barrel import in `KnowledgeDoctor.baseline.ts` | #255 | adopted (R3a) | `Jsonc.bind(schema).decode` at every site; `readArtifact`, `TsconfigSync.plan` `parseJsonc` and `readSealFile` keep their schema-generic signatures. `jsonc-parser` stays for the editing facade until R3b. |
+| repo-cli `internal/cli/Jsonc.ts` `decodeJsoncTextAs` re-export (`ConfigUpdater`, `CreatePackage.command`, `TsconfigSync.plan`, `Quality/Tasks`) | #2 (decode half) | re-export removed (R3a) | The four callers import `@beep/jsonc` directly; the editing facade (`JsoncModification`, `applyJsoncModification`, `jsonText`) is R3b's. |
+| `@beep/lint-rules` `test/registry.test.ts` Biome plugin config decode | - | adopted (R3a) | `Jsonc.bind(BiomePluginConfig).decode`; `@beep/jsonc` is a devDependency. |
+| packet ops scripts `tsconfig-sync-parity.ts`, `lockfiles-adoption-parity.ts`, `package-json-readers-parity.ts` | - | adopted (R3a) | Same owner switch; their recorded reports are unchanged. |
+| `@beep/utils/Schema` `TextDecodeTo` and `Jsonc.bind` `Codec`-view generics | - | kit extended (R3a) | Both are generic over the target schema (`Target extends S.Top`), so an `S.Opaque` class keeps its branded type; pinned in `jsonc/test/Jsonc.test.ts`. |
+| `@beep/repo-configs` `AllowlistJsoncTextToUnknown` | #10 | queued: R3b | A copy of the facade's decode with its own error prefix; goes with the repo-configs `jsonc-parser` drop. |
 
 ## `@beep/commands` drivers (roadmap R9, SPEC W4-l)
 
@@ -355,9 +382,9 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli internal/GlobPattern.ts, internal/quality/TestTypecheckCoverage.ts | #263 | partial | adopted in R2b | `internal/GlobPattern.ts` is deleted (see #57). TestTypecheckCoverage's tsc matcher stays: it mirrors tsgo's `include` semantics (a bare directory is a recursive subtree), which no glob dialect expresses. |
 | repo-cli internal/GlobPattern.ts | #305 | partial | adopted in R2b | `internal/GlobPattern.ts` is deleted (see #57). |
 | repo-cli Knowledge/KnowledgeDoctor.leases.ts, Skills/Skills.patches.ts CODEOWNERS compilers | (none) | partial | excluded (R2b) | Not a map site; found by the R2b `git grep '[^/]*'` owner census. `globTokens`/`globSource`/`codeownersPattern` implement the gitignore/CODEOWNERS dialect: a slash anywhere anchors the pattern to the root, a trailing slash matches only below a directory, and a matched directory owns everything under it. `@beep/glob` has no spelling for directory ownership or slash-anchoring, the same reason #263 keeps the tsc `include` matcher. The two copies are identical; their deduplication into one repo-cli internal module is a defect outside R2b's files (KnowledgeDoctor is R5a's). |
-| schema Jsonc.ts | #1 | confirmed | queued: R3a | Importers re-point to `@beep/jsonc`; `schema/src/Jsonc.ts` is deleted (W4-o). |
-| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | queued: R3a; R3b | Owner switch in R3a, `jsonc-parser` drop in R3b. |
-| repo-cli internal/cli/Jsonc.ts | #2 | partial | queued: R3b | `internal/cli/Jsonc.ts` stays a sync facade without the `decodeJsoncTextAs` re-export (W4-o). |
+| schema Jsonc.ts | #1 | confirmed | migrated (R3a, W4-o) | `@beep/schema/Jsonc` deleted; every importer decodes through `Jsonc.bind`. See the `@beep/jsonc` section above. |
+| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | owner switch migrated (R3a, W4-o); `jsonc-parser` drop queued: R3b | The decode owner is `@beep/jsonc` (see the section above); the editing facade's `jsonc-parser` leaves in R3b. |
+| repo-cli internal/cli/Jsonc.ts | #2 | partial | re-export removed (R3a); editing facade queued: R3b | R3a removed the `decodeJsoncTextAs` re-export (W4-o); the sync editing facade moves onto `JsoncModifier`/`JsoncFormatter` in R3b. |
 | repo-cli internal/cli/Json.ts | #3 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
 | repo-cli Skills/Skills.render.ts | #4 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
 | repo-cli Models | #5 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
@@ -386,7 +413,7 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli Quality/FallowQuality.command.ts, Models and other yaml sites | #256 | partial | queued: R4 | `yaml` out of repo-cli (Runners onto `effect/encoding/Yaml`; Models.locator kept with a reason if the kit lacks a visitor). |
 | repo-cli | #285 | partial | queued: R4 | `yaml` out of repo-cli (Runners onto `effect/encoding/Yaml`; Models.locator kept with a reason if the kit lacks a visitor). |
 | ai-metrics | #304 | partial | queued: R4; follow-up goal (W4-l) | The yaml half is R4's (#32); the git half goes with the gh/git follow-up goal. |
-| effect-drizzle scripts/assemble-readme.ts | #92 | confirmed | queued: R5b | effect-drizzle README script after the TOC helper, `@beep/markdown` as a devDependency only. |
+| effect-drizzle scripts/assemble-readme.ts | #92 | confirmed | migrated (R5b, W4-h) | `FrontmatterSource.split` replaces the local frontmatter stripper; `@beep/markdown` as a devDependency only. Migrated in R5b; see the `@beep/markdown` section above. |
 | repo-cli Explore/Atlas.ts | #89 | partial | migrated (R8, W4-h) | Explore Atlas onto `@beep/managed-section` with byte-identical round trips. Migrated in R8; see the `@beep/managed-section` section above. |
 | repo-cli Observability/Observability.render.ts | #90 | partial | migrated (R8, W4-h) | Observability render onto `@beep/managed-section`. Migrated in R8; see the `@beep/managed-section` section above. |
 | repo-cli Models/Models.render.ts, Observability/Observability.render.ts | #260 | partial | migrated (R8, W4-h) | Models.render and Observability splice sites. Migrated in R8; see the `@beep/managed-section` section above. |

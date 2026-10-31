@@ -88,9 +88,9 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | 3-A9 (merged, #2190) | `ScopedPackageName` in observability `Catalog.names.ts` | 3-4 (merged) |
 | 4-CI (merged, #2179) | one CI rule through `@beep/runtime-env` (W4-e) | main |
 | R1 (merged, #2195) | delete `@beep/schema/Semver`; BunResolver and DockerResolver onto `@beep/semver`; `Cache.policy.ts:245` pin | main |
-| R2a (in review, this PR) | `vitest.setup.ts`: `toml` shim out, `GlobShim` matcher on `@beep/glob`; `toml`, `picomatch`, `@types/picomatch` out of the root | main |
+| R2a (merged, #2401) | `vitest.setup.ts`: `toml` shim out, `GlobShim` matcher on `@beep/glob`; `toml`, `picomatch`, `@types/picomatch` out of the root | main |
 | R2b (merged, #2381) | repo-cli `internal/GlobPattern.ts` onto `@beep/glob`; `tinyglobby` out of `EffectImports.ts`; closes "Duplicate glob matching" | main (after 4-CI on `Tasks.ts`) |
-| R5b | slugger/TOC in `@beep/markdown`; `@effect/markdown-toc` out of docgen, repo-cli and root; effect-drizzle README script | main |
+| R5b (in review, this PR) | slugger/TOC in `@beep/markdown`; `@effect/markdown-toc` out of docgen, repo-cli and root; effect-drizzle README script | main |
 | R9 (merged, #2289) | exiftool, pdf-tools, obs, tailscale onto `@beep/commands` `Run.collect`; retire the D-03 "Driver-local output folds" row | main (after #2145 if it is close to merging) |
 | R10 (merged, #2274) | `@beep/git` for `Skills/internal/MergeBase.ts`, `repo-run/GitWorktree.ts`, `Yeet/internal/ProvenanceFooter.ts`, dead `GitExec.ts` collectors | main |
 | 4-S (merged, #2183) | `@beep/sbom` (W4-b); lab signer, github-actions, PROMOTED maps | main |
@@ -113,7 +113,7 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | R4 | `yaml` out of repo-cli and ai-metrics runtime deps (Runners to `effect/encoding/Yaml`; Models.locator kept with a reason if the kit lacks a visitor) | 3-3, 3-A4, 4-A2 |
 | R6 | one fence extractor (docgen `Core.ts`, `EffectImports.ts`, `TypeScriptFences.ts`, `Doctest.ts`) or deferred per W4-q | R2b, R5b, #2144 |
 | W5 (merged, #2245) | `@beep/github-actions` (drivers); runner-file adopters (`CiOperational`, `Ci.command`, `CiAdmission`, `CiRerunRunnerLoss`, github-commands #87); `@azure/storage-blob` exact pin; `ActionCache.resolvePaths` split first | 4-S, 3-A8, W4-j resolved |
-| R3a | `@beep/schema/Jsonc` owner switch and deletion | 3-A6, R5a |
+| R3a (in review, this PR) | `@beep/schema/Jsonc` owner switch and deletion | 3-A6, R5a |
 | R3b | `jsonc-parser` out of repo-cli, repo-configs, root; Skills formatter collapse | R3a, R4, R5a |
 | C | close (Closeout definition of done) | every row above |
 

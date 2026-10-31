@@ -277,7 +277,7 @@ describe("SectionDocument.parseResult", () => {
 describe("SectionDocument review regressions", () => {
   it("reads a first-line BEGIN after the BOM and preserves its bytes on reconciliation", () => {
     for (const eol of Eol.literals) {
-      const text = "\uFEFF" + A.join([begin("tool"), "old", end("tool"), "footer", ""], eol);
+      const text = `\uFEFF${A.join([begin("tool"), "old", end("tool"), "footer", ""], eol)}`;
       const doc = parse(text);
       assert.strictEqual(doc.text, text);
       assert.strictEqual(doc.eol, eol);
@@ -292,21 +292,21 @@ describe("SectionDocument review regressions", () => {
       if (!Result.isSuccess(updated)) assert.fail("BOM document must update");
       assert.strictEqual(
         updated.success.text,
-        "\uFEFF" + A.join([begin("tool"), "new", end("tool"), "footer", ""], eol)
+        `\uFEFF${A.join([begin("tool"), "new", end("tool"), "footer", ""], eol)}`
       );
     }
   });
 
   it.effect("parses a BOM-prefixed section through the Effect primitive", () =>
     Effect.gen(function* () {
-      const doc = yield* SectionDocument.parse("\uFEFF" + block("tool", "body"));
+      const doc = yield* SectionDocument.parse(`\uFEFF${block("tool", "body")}`);
       assert.strictEqual(O.getOrThrow(doc.read(id("tool"))).content, "body");
       assert.strictEqual(doc.check(section("tool", "body"))._tag, "UpToDate");
     })
   );
 
   it("does not treat an interior BOM as a first-line BOM", () => {
-    const error = parseFailure("header\n\uFEFF" + block("tool", "body"));
+    const error = parseFailure(`header\n\uFEFF${block("tool", "body")}`);
     assert.strictEqual(error.reason, "orphanedEnd");
   });
 
@@ -444,7 +444,7 @@ describe("SectionDocument review regressions", () => {
 describe("SectionDocument round-2 regressions", () => {
   it("creates and reconciles sections containing BOM-prefixed marker-shaped content", () => {
     for (const marker of [begin("tool"), end("tool")]) {
-      const expected = section("tool", "\uFEFF" + marker);
+      const expected = section("tool", `\uFEFF${marker}`);
       const first = Result.getOrThrow(parse("header\n").reconcile([expected]));
       const doc = parse(first.text);
       assert.strictEqual(O.getOrThrow(doc.read(expected.id)).content, expected.content);
@@ -477,9 +477,9 @@ describe("SectionDocument round-2 regressions", () => {
   it("preserves a leading BOM without introducing a gap when the first section is removed", () => {
     for (const eol of Eol.literals) {
       for (const footer of ["", `footer${eol}`]) {
-        const original = "\uFEFF" + A.join([begin("tool"), "body", end("tool"), "", footer], eol);
+        const original = `\uFEFF${A.join([begin("tool"), "body", end("tool"), "", footer], eol)}`;
         const remainder = O.getOrThrow(parse(original).remove(id("tool")));
-        assert.strictEqual(remainder, "\uFEFF" + footer);
+        assert.strictEqual(remainder, `\uFEFF${footer}`);
         assertNone(parse(remainder).remove(id("tool")));
         let text = remainder;
         for (let count = 0; count < 3; count += 1) {
@@ -491,13 +491,13 @@ describe("SectionDocument round-2 regressions", () => {
           assert.strictEqual(text, remainder);
         }
       }
-      const middle = "\uFEFF" + A.join(["header", "", begin("tool"), "body", end("tool"), "", "footer", ""], eol);
+      const middle = `\uFEFF${A.join(["header", "", begin("tool"), "body", end("tool"), "", "footer", ""], eol)}`;
       assert.strictEqual(
         O.getOrThrow(parse(middle).remove(id("tool"))),
-        "\uFEFF" + A.join(["header", "", "footer", ""], eol)
+        `\uFEFF${A.join(["header", "", "footer", ""], eol)}`
       );
-      const last = "\uFEFF" + A.join(["header", "", begin("tool"), "body", end("tool"), ""], eol);
-      assert.strictEqual(O.getOrThrow(parse(last).remove(id("tool"))), "\uFEFFheader" + eol);
+      const last = `\uFEFF${A.join(["header", "", begin("tool"), "body", end("tool"), ""], eol)}`;
+      assert.strictEqual(O.getOrThrow(parse(last).remove(id("tool"))), `\uFEFFheader${eol}`);
     }
   });
 });

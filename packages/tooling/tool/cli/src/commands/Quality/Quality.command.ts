@@ -59,6 +59,7 @@ import {
 } from "../../internal/repo-run/index.ts";
 import { runCachePolicyAudit } from "../Cache/Cache.command.ts";
 import { CacheQualificationLive } from "../Cache/Cache.service.ts";
+import { CacheHostedProducerVerifierLive } from "../Cache/Cache.workflow.github.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts";
@@ -1331,6 +1332,10 @@ const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(funct
   ]);
 });
 
+// Paired `ruleid:`/`ok:` cases for every rule in .semgrep/first-party.yml.
+const firstPartySemgrepFixturePath =
+  "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts";
+
 const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
   repoRoot: string
 ): Effect.fn.Return<
@@ -1340,6 +1345,29 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // Rule tests run on every invocation, before the changed-file filter: they
+  // prove the first-party rules still match their `ruleid:` cases and skip
+  // their `ok:` cases under the current (unpinned) Semgrep image. Explicit
+  // targets bypass .semgrepignore, which keeps the fixture out of the scan.
+  yield* Console.log("[github-checks] sast: semgrep rule tests");
+  yield* runFixedStep(repoRoot, "sast:semgrep-rule-tests", "docker", [
+    "run",
+    "--rm",
+    "-e",
+    "SEMGREP_SEND_METRICS=off",
+    "-v",
+    `${repoRoot}:/src`,
+    "-w",
+    "/src",
+    "semgrep/semgrep",
+    "semgrep",
+    "--test",
+    "--disable-version-check",
+    "--config",
+    "/src/.semgrep/first-party.yml",
+    `/src/${firstPartySemgrepFixturePath}`,
+  ]);
+
   const trackedFilesOutput = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "sast:changed-files",
@@ -3699,7 +3727,7 @@ const cachePolicyCommand = Command.make("cache-policy", {}, () =>
   findRepoRoot().pipe(Effect.flatMap((root) => runCachePolicyAudit(root, false)))
 ).pipe(
   Command.withDescription("Enforce Cache's reviewed qualification policy without writing qualification state"),
-  Command.provide(CacheQualificationLive)
+  Command.provide(CacheQualificationLive.pipe(Layer.provideMerge(CacheHostedProducerVerifierLive)))
 );
 
 const turboConfigProofCommand = Command.make(
