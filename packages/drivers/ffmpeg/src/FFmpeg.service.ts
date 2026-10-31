@@ -841,10 +841,8 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
     yield* preflightWritable(fs, frame.targetPath, context.request.overwrite, "frame output");
   }
 
+  // A failed replacement must leave the previous destination intact.
   for (const frame of planned) {
-    if (context.request.overwrite) {
-      yield* fs.remove(frame.targetPath, { force: true }).pipe(Effect.ignore);
-    }
     yield* fs
       .rename(frame.sourcePath, frame.targetPath)
       .pipe(
@@ -874,9 +872,6 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
       )
     );
   // fallow-ignore-next-line code-duplication -- intra-file twin: extractFrames and extractFramesAt commit the temporary manifest the same way; each operation keeps its own FFmpegError operation tag and message. Owner: @beep/ffmpeg. Exit: extract one helper parameterized by operation name and message when another frame or clip operation is added.
-  if (context.request.overwrite) {
-    yield* fs.remove(context.manifestPath, { force: true }).pipe(Effect.ignore);
-  }
   yield* fs
     .rename(tempManifestPath, context.manifestPath)
     .pipe(
@@ -1064,9 +1059,6 @@ const commitTimestampedFrames = Effect.fn("FFmpeg.commitTimestampedFrames")(func
   let committed = A.empty<TimestampedFrame>();
   for (const frame of staged) {
     const targetPath = path.join(context.outDir, frame.fileName);
-    if (context.overwrite) {
-      yield* fs.remove(targetPath, { force: true }).pipe(Effect.ignore);
-    }
     yield* fs
       .rename(frame.tempPath, targetPath)
       .pipe(
@@ -1096,9 +1088,6 @@ const commitTimestampedFrames = Effect.fn("FFmpeg.commitTimestampedFrames")(func
       })
     )
   );
-  if (context.overwrite) {
-    yield* fs.remove(context.manifestPath, { force: true }).pipe(Effect.ignore);
-  }
   yield* fs
     .rename(tempManifestPath, context.manifestPath)
     .pipe(
@@ -1351,19 +1340,11 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
           );
         const fileSizeBytes = FileSizeBytes.make(Number(stat.size));
 
-        yield* Effect.uninterruptible(
-          Effect.gen(function* () {
-            if (options.overwrite) {
-              yield* fs.remove(options.outPath, { force: true }).pipe(Effect.ignore);
-            }
-            yield* fs
-              .rename(tempTarget, options.outPath)
-              .pipe(
-                Effect.mapError((cause) =>
-                  FFmpegError.fromUnknown(options.operation, `Failed to commit output: "${options.outPath}"`, { cause })
-                )
-              );
-          })
+        yield* fs.rename(tempTarget, options.outPath).pipe(
+          Effect.mapError((cause) =>
+            FFmpegError.fromUnknown(options.operation, `Failed to commit output: "${options.outPath}"`, { cause })
+          ),
+          Effect.uninterruptible
         );
 
         return fileSizeBytes;

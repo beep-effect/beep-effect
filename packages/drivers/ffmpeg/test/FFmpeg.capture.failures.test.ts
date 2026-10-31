@@ -1,11 +1,13 @@
 import {
   ExtractClipRequest,
+  ExtractFramesAtRequest,
   ExtractFramesRequest,
   FFmpeg,
   FFmpegError,
   ProbeRegionLuminanceRequest,
   ProbeVideoRequest,
   RenderContactSheetRequest,
+  RenderGifRequest,
 } from "@beep/ffmpeg";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
@@ -174,17 +176,42 @@ const makeScriptedSpawnerLayer = (
   );
 };
 
-const makeLayer = (commands: Array<ChildProcess.StandardCommand>, overrides: Partial<SpawnScript> = {}) =>
+const makeLayer = (
+  commands: Array<ChildProcess.StandardCommand>,
+  overrides: Partial<SpawnScript> = {},
+  renameFailureTarget: O.Option<string> = O.none()
+) =>
   FFmpeg.makeLayer().pipe(
     Layer.provide(makeScriptedSpawnerLayer(commands, overrides)),
+    Layer.provide(
+      Layer.effect(
+        FileSystem.FileSystem,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          return FileSystem.FileSystem.of({
+            ...fs,
+            // Produce a native error before the destination changes; all other
+            // filesystem operations retain their real behavior.
+            rename: Effect.fn("FileSystem.FileSystem.rename")((source: string, destination: string) =>
+              O.exists(renameFailureTarget, (target) => path.basename(destination) === target)
+                ? fs.rename(`${source}.missing`, destination)
+                : fs.rename(source, destination)
+            ),
+          });
+        })
+      )
+    ),
     Layer.provide(NodeServices.layer)
   );
 class Commands extends Context.Service<Commands, Array<ChildProcess.StandardCommand>>()(
   "@beep/ffmpeg/test/FFmpeg.capture.failures.test/Commands"
 ) {}
-const makeTestLayer = (overrides: Partial<SpawnScript> = {}) =>
+const makeTestLayer = (overrides: Partial<SpawnScript> = {}, renameFailureTarget: O.Option<string> = O.none()) =>
   Layer.unwrap(
-    Effect.map(Commands, (commands) => Layer.mergeAll(NodeServices.layer, makeLayer(commands, overrides)))
+    Effect.map(Commands, (commands) =>
+      Layer.mergeAll(NodeServices.layer, makeLayer(commands, overrides, renameFailureTarget))
+    )
   ).pipe(Layer.provideMerge(Layer.sync(Commands, () => [])));
 
 const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>
@@ -211,6 +238,140 @@ const exitCodeOf = (error: FFmpegError): number =>
   );
 
 describe("@beep/ffmpeg capture failures", () => {
+  for (const target of ["sample_frame_00000.png", "extract-frames-manifest.json"]) {
+    it.layer(makeTestLayer({}, O.some(target)))(`preserves existing ${target} on failed frame commit`, (it) => {
+      it.effect(`preserves existing ${target} on failed frame commit`, () =>
+        withTempDirectory((directory) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const ffmpeg = yield* FFmpeg;
+            const videoPath = path.join(directory, "sample.mp4");
+            const outDir = path.join(directory, "frames");
+            const existingPath = path.join(outDir, target);
+            yield* fs.writeFileString(videoPath, "video");
+            yield* fs.makeDirectory(outDir);
+            yield* fs.writeFileString(existingPath, "original artifact");
+            const error = yield* Effect.flip(
+              ffmpeg.extractFrames(
+                ExtractFramesRequest.make({
+                  fps: 1,
+                  manifestPath: O.none(),
+                  outDir,
+                  overwrite: true,
+                  prefix: O.none(),
+                  videoPath,
+                })
+              )
+            );
+            expect(error.operation).toBe("extractFrames");
+            expect(error.message).toContain("Failed to commit");
+            expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+            expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+          })
+        )
+      );
+    });
+  }
+
+  for (const target of ["sample_at_00000.png", "extract-frames-at-manifest.json"]) {
+    it.layer(makeTestLayer({}, O.some(target)))(`preserves existing ${target} on failed timestamped commit`, (it) => {
+      it.effect(`preserves existing ${target} on failed timestamped commit`, () =>
+        withTempDirectory((directory) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const ffmpeg = yield* FFmpeg;
+            const videoPath = path.join(directory, "sample.mp4");
+            const outDir = path.join(directory, "frames");
+            const existingPath = path.join(outDir, target);
+            yield* fs.writeFileString(videoPath, "video");
+            yield* fs.makeDirectory(outDir);
+            yield* fs.writeFileString(existingPath, "original artifact");
+            const error = yield* Effect.flip(
+              ffmpeg.extractFramesAt(
+                ExtractFramesAtRequest.make({
+                  manifestPath: O.none(),
+                  outDir,
+                  overwrite: true,
+                  prefix: O.none(),
+                  timestampsSeconds: [0.25],
+                  videoPath,
+                })
+              )
+            );
+            expect(error.operation).toBe("extractFramesAt");
+            expect(error.message).toContain("Failed to commit");
+            expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+            expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+          })
+        )
+      );
+    });
+  }
+
+  it.layer(makeTestLayer())("replaces an existing output after successful encoding", (it) => {
+    it.effect("replaces an existing output after successful encoding", () =>
+      withTempDirectory((directory) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const ffmpeg = yield* FFmpeg;
+          const videoPath = path.join(directory, "input.mp4");
+          const outPath = path.join(directory, "existing.gif");
+          yield* fs.writeFileString(videoPath, "video");
+          yield* fs.writeFileString(outPath, "original output");
+          yield* ffmpeg.renderGif(
+            RenderGifRequest.make({
+              dither: "bayer",
+              durationSeconds: 1,
+              fps: 1,
+              outPath,
+              overwrite: true,
+              startSeconds: 0,
+              videoPath,
+            })
+          );
+          expect(yield* fs.readFileString(outPath)).toBe("fake output");
+          expect(A.some(yield* fs.readDirectory(directory), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+        })
+      )
+    );
+  });
+
+  it.layer(makeTestLayer({}, O.some("existing.gif")))("preserves an output when replacement rename fails", (it) => {
+    it.effect("preserves an output when replacement rename fails", () =>
+      withTempDirectory((directory) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const ffmpeg = yield* FFmpeg;
+          const videoPath = path.join(directory, "input.mp4");
+          const outPath = path.join(directory, "existing.gif");
+          yield* fs.writeFileString(videoPath, "video");
+          yield* fs.writeFileString(outPath, "original output");
+          const error = yield* Effect.flip(
+            ffmpeg.renderGif(
+              RenderGifRequest.make({
+                dither: "bayer",
+                durationSeconds: 1,
+                fps: 1,
+                outPath,
+                overwrite: true,
+                startSeconds: 0,
+                videoPath,
+              })
+            )
+          );
+          expect(error.operation).toBe("renderGif");
+          expect(error.message).toContain("Failed to commit output");
+          expect(yield* fs.readFileString(outPath)).toBe("original output");
+          expect(A.some(yield* fs.readDirectory(directory), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+        })
+      )
+    );
+  });
+
   it.layer(makeTestLayer())("normalizes a missing video input into a typed driver failure", (it) => {
     it.effect(
       "normalizes a missing video input into a typed driver failure",
