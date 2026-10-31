@@ -265,11 +265,11 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "bun-uds-" });
       const socket = `${directory}/server.sock`;
-      const client = yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket }));
-      const get = HttpClient.get("http://localhost/").pipe(
-        Effect.flatMap((response) => response.text),
-        Effect.provide(client)
+      const client = Context.get(
+        yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket })),
+        HttpClient.HttpClient
       );
+      const get = client.get("http://localhost/").pipe(Effect.flatMap((response) => response.text));
       const serve = Effect.fnUntraced(function* (text: string) {
         const context = yield* Layer.build(BunHttpServer.layer({ unix: socket }));
         const server = Context.get(context, HttpServer.HttpServer);
@@ -295,9 +295,8 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
         assert.strictEqual(yield* get, `${text}-reloaded`);
         const posted = yield* HttpClientRequest.post("http://localhost/").pipe(
           HttpClientRequest.bodyText("synthetic-post"),
-          HttpClient.execute,
-          Effect.flatMap((response) => response.text),
-          Effect.provide(client)
+          client.execute,
+          Effect.flatMap((response) => response.text)
         );
         assert.strictEqual(posted, "synthetic-post");
       }, Effect.scoped);
@@ -323,11 +322,11 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
       }).pipe(Effect.scoped, Effect.exit);
       assert.strictEqual(duplicate._tag, "Failure");
       assert.deepStrictEqual((yield* fs.stat(socket)).ino, original.ino);
-      const client = yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket }));
-      const response = yield* HttpClient.get("http://localhost/").pipe(
-        Effect.flatMap((response) => response.text),
-        Effect.provide(client)
+      const client = Context.get(
+        yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket })),
+        HttpClient.HttpClient
       );
+      const response = yield* client.get("http://localhost/").pipe(Effect.flatMap((response) => response.text));
       assert.strictEqual(response, "owner");
     })
   );

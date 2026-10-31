@@ -292,3 +292,20 @@ bytes. The [comment-only source binding](../ops/history/doc-path-source-binding-
 records both hashes without rewriting execution receipts or claiming a new run.
 No executable source, annotation, location, tag or example presence changes;
 the canonical generated outputs do not serialize that example text.
+
+## Effect-test policy repair — October 31
+
+Hosted policy found seven PR-owned candidates, with zero missing/stale schema
+records. The marker wait now schedules barrier polling without retrying the
+crash operation or post-barrier assertions. The liveness assertion remains in
+each unsuccessful poll. Three client Context provisions become direct calls
+on the same acquired HttpClient. All focused Node/Bun shim and crash tests pass.
+
+The canonical writer removes the old polling candidate and introduces exactly
+three reviewed shim dispositions: two intentionally shorter cleanup scopes and
+the actual native Unix-socket/filesystem/HTTP boundary. Independent Astra accepts
+these exact semantic exceptions with owners and exit/re-review conditions. All
+prior finding statuses/reasons remain unchanged; other changes are location
+metadata. A later standalone check declined on resource headroom, so fresh
+hosted policy remains mandatory. See the
+[repair receipt](../ops/history/effect-vitest-repair-20261031.json).

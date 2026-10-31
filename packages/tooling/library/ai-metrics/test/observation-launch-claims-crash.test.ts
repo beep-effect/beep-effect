@@ -7,6 +7,7 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { claimFixture, claimSubmission } from "./fixtures/observation-claims.ts";
 
@@ -53,10 +54,12 @@ for (const mode of ["before-write", "after-sync", "after-operation", "after-obse
             }
           );
         const child = yield* run(mode);
-        while (!(yield* f.fs.exists(marker))) {
-          expect(yield* child.isRunning).toBe(true);
-          yield* Effect.sleep("10 millis");
-        }
+        // Poll only the producer barrier; the crash operation and post-barrier assertions run once.
+        yield* Effect.gen(function* () {
+          const ready = yield* f.fs.exists(marker);
+          if (!ready) expect(yield* child.isRunning).toBe(true);
+          return ready;
+        }).pipe(Effect.repeat({ while: (ready) => !ready, schedule: Schedule.spaced("10 millis") }));
         expect(yield* f.fs.readFileString(marker)).toBe(mode);
         expect(yield* f.fs.exists(output)).toBe(false);
         yield* child.kill({ killSignal: "SIGKILL" });
