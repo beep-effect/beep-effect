@@ -1,5 +1,5 @@
 import { MemoryFileSystem } from "@beep/memfs";
-import { manifestPatternsOf, pnpmPatternsOf, readPatterns, stringsOf } from "@beep/repo-workspaces/internal/patterns";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { assert, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -9,10 +9,11 @@ import * as PlatformError from "effect/PlatformError";
 
 it.effect("extracts only string patterns from both manifest shapes and rejects malformed shapes", () =>
   Effect.sync(() => {
-    assertSome(stringsOf(["packages/*", 1, null]), ["packages/*"]);
-    assertNone(stringsOf({}));
-    for (const value of [null, 1, {}, { packages: null }]) assert.deepStrictEqual(pnpmPatternsOf(value), []);
-    assert.deepStrictEqual(pnpmPatternsOf({ packages: ["apps/*", false] }), ["apps/*"]);
+    assertSome(WorkspacePatterns.stringsOf(["packages/*", 1, null]), ["packages/*"]);
+    assertNone(WorkspacePatterns.stringsOf({}));
+    for (const value of [null, 1, {}, { packages: null }])
+      assert.deepStrictEqual(WorkspacePatterns.fromPnpmWorkspace(value), []);
+    assert.deepStrictEqual(WorkspacePatterns.fromPnpmWorkspace({ packages: ["apps/*", false] }), ["apps/*"]);
     for (const value of [
       null,
       1,
@@ -22,10 +23,10 @@ it.effect("extracts only string patterns from both manifest shapes and rejects m
       { workspaces: { packages: 1 } },
       { workspaces: () => [] },
     ]) {
-      assert.deepStrictEqual(manifestPatternsOf(value), []);
+      assert.deepStrictEqual(WorkspacePatterns.fromManifest(value), []);
     }
-    assert.deepStrictEqual(manifestPatternsOf({ workspaces: ["apps/*", 1] }), ["apps/*"]);
-    assert.deepStrictEqual(manifestPatternsOf({ workspaces: { packages: ["apps/*", 1] } }), ["apps/*"]);
+    assert.deepStrictEqual(WorkspacePatterns.fromManifest({ workspaces: ["apps/*", 1] }), ["apps/*"]);
+    assert.deepStrictEqual(WorkspacePatterns.fromManifest({ workspaces: { packages: ["apps/*", 1] } }), ["apps/*"]);
   })
 );
 
@@ -49,8 +50,10 @@ for (const file of ["pnpm-workspace.yaml", "package.json"]) {
   it.layer(base, { timeout: "30 seconds" })(`${file} read fault`, (it) => {
     it.effect("keeps the failing path, failure kind and original cause", () =>
       Effect.gen(function* () {
-        const failure = yield* Effect.flip(readPatterns("/repo"));
-        assert.deepStrictEqual(failure, { path: location, kind: "read", cause });
+        const failure = yield* Effect.flip(WorkspacePatterns.read("/repo"));
+        assert.strictEqual(failure.path, location);
+        assert.strictEqual(failure.kind, "read");
+        assert.strictEqual(failure.cause, cause);
       })
     );
   });
@@ -68,7 +71,7 @@ it.layer(
 )("existence faults", (it) => {
   it.effect("treats failed existence probes as absent configuration", () =>
     Effect.gen(function* () {
-      assert.deepStrictEqual(yield* readPatterns("/repo"), []);
+      assert.deepStrictEqual(yield* WorkspacePatterns.read("/repo"), []);
     })
   );
 });
@@ -82,7 +85,7 @@ for (const [file, content, kind] of [
   })(`${file} parse fault`, (it) => {
     it.effect("reports invalid syntax with its configuration path", () =>
       Effect.gen(function* () {
-        const failure = yield* Effect.flip(readPatterns("/repo"));
+        const failure = yield* Effect.flip(WorkspacePatterns.read("/repo"));
         assert.strictEqual(failure.path, `/repo/${file}`);
         assert.strictEqual(failure.kind, kind);
         assert.isDefined(failure.cause);

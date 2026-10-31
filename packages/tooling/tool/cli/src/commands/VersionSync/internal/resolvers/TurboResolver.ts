@@ -13,8 +13,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { resolveWorkspaceDirs } from "@beep/repo-utils";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -186,9 +186,9 @@ const readTurboConfigFile = Effect.fn("readTurboConfigFile")(function* (
     .readFileString(filePath)
     .pipe(VersionSyncError.mapError(`Failed to read ${relativePath}`, relativePath));
 
-  const document = yield* decodeJsoncTextAs(TurboJsonDocument)(content).pipe(
-    VersionSyncError.mapError(`Failed to parse ${relativePath}`, relativePath)
-  );
+  const document = yield* Jsonc.bind(TurboJsonDocument)
+    .decode(content)
+    .pipe(VersionSyncError.mapError(`Failed to parse ${relativePath}`, relativePath));
 
   return O.map(O.fromUndefinedOr(document.$schema), (schemaUrl) =>
     TurboConfigFile.make({

@@ -762,31 +762,30 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
     );
   return yield* Effect.acquireUseRelease(
     fs.makeDirectory(directory, { mode: 0o700 }),
-    () =>
-      Effect.gen(function* () {
-        yield* inspectCacheProducerDirectory(directory);
-        yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
-          flag: "wx",
-          mode: 0o600,
-        });
-        const material = yield* supplied.pipe(
-          O.map(Effect.succeed),
-          O.getOrElse(
-            Effect.fnUntraced(function* () {
-              const approved = yield* decodeBindingBytes(approvedHex);
-              const bytes = new Uint8Array(persistedMaterialBytes);
-              bytes.set(yield* crypto.randomBytes(64));
-              bytes.set(approved, 64);
-              return Redacted.make(bytes);
-            })
-          )
-        );
-        yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), {
-          flag: "wx",
-          mode: 0o600,
-        });
-        return yield* openCacheProducerIssuer(directory, trusted);
-      }),
+    Effect.fnUntraced(function* () {
+      yield* inspectCacheProducerDirectory(directory);
+      yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
+        flag: "wx",
+        mode: 0o600,
+      });
+      const material = yield* supplied.pipe(
+        O.map(Effect.succeed),
+        O.getOrElse(
+          Effect.fnUntraced(function* () {
+            const approved = yield* decodeBindingBytes(approvedHex);
+            const bytes = new Uint8Array(persistedMaterialBytes);
+            bytes.set(yield* crypto.randomBytes(64));
+            bytes.set(approved, 64);
+            return Redacted.make(bytes);
+          })
+        )
+      );
+      yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), {
+        flag: "wx",
+        mode: 0o600,
+      });
+      return yield* openCacheProducerIssuer(directory, trusted);
+    }),
     (_, exit) => (Exit.isFailure(exit) ? revokeCacheProducerIssuer(directory).pipe(Effect.orDie) : Effect.void)
   );
 }, CacheCommandError.mapError("Cannot exclusively provision producer store."));

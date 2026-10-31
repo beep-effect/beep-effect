@@ -7,10 +7,10 @@
 
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheClientPin, CacheQualificationKey, CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HostProcessArchitecture, HostProcessPlatform, O } from "@beep/utils";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as A from "effect/Array";
@@ -117,6 +117,7 @@ const CachePilotRunType = S.toType(CachePilotRun);
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot");
 const decodeSignedPilotRun = S.decodeUnknownEffect(S.toType(CacheSignedPilotRun));
+const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;
 const PilotMode = LiteralKit(["local", "signed"]);
 const PilotCapability = S.Redacted(S.NonEmptyString);
 class PilotTransport extends S.Opaque<PilotTransport, { readonly brand: unique symbol }>()(
@@ -1249,7 +1250,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
         else {
           const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
-            const config = yield* decodeJsoncTextAs(S.JsonObject)(text);
+            const config = yield* decodeJsonObjectText(text);
             const tasks = yield* decodeJsonObject(config.tasks);
             const lint = yield* decodeJsonObject(tasks.lint);
             const declared = yield* decodeArrayString(lint.env);
@@ -1286,7 +1287,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "dependency-source": () => "tsconfig.json",
         })(id);
         original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
-        const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+        const config = yield* decodeJsonObjectText(original);
         if (id === "root-lint-config") {
           const files = yield* decodeJsonObject(config.files);
           const includes = yield* decodeArrayString(files.includes);
@@ -1324,7 +1325,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       });
       const applyMutation = Effect.fn("CachePilot.applyMutation")(function* () {
         if (id === "root-task-config") {
-          const config = yield* decodeJsoncTextAs(S.JsonObject)(original);
+          const config = yield* decodeJsonObjectText(original);
           const global = yield* decodeJsonObject(config.global);
           const declared = yield* decodeArrayString(global.env);
           changedText = yield* JsonStringCodec(S.JsonObject).encode(
@@ -1373,7 +1374,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       else {
         const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
           Effect.flatMap(decodeText),
-          Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
+          Effect.flatMap(decodeJsonObjectText)
         );
         const scripts = yield* decodeJsonObject(manifest.scripts);
         yield* writeContainedFileString(
@@ -1575,7 +1576,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             );
             const manifest = yield* readBytes(root.identity, "package.json").pipe(
               Effect.flatMap(decodeText),
-              Effect.flatMap(decodeJsoncTextAs(S.JsonObject))
+              Effect.flatMap(decodeJsonObjectText)
             );
             const scripts = yield* decodeJsonObject(manifest.scripts);
             yield* writeContainedFileString(root.identity, "capture-probe.ts", probe);

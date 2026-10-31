@@ -91,6 +91,10 @@
       "purpose": "R2b parity: the pre-R2b repo-cli glob compiler frozen and compared with @beep/glob GlobPattern over every live caller pattern and candidate, plus fingerprints of the three EffectImports discovery sets before and after the @beep/walker switch."
     },
     {
+      "path": "ops/jsonc-owner-switch-differential.ts",
+      "purpose": "R3a parity (W4-o): every tracked *.jsonc and facade-consumed JSON document decoded by the frozen @beep/schema/Jsonc facade and by @beep/jsonc with 0 unclassified differences, plus byte parity of every JSONC-reading repo-cli generator's check or dry mode against one fixed input tree before and after the owner switch."
+    },
+    {
       "path": "ops/lockfiles-adoption-parity.ts",
       "purpose": "3-A1 parity: frozen copies of the legacy repo-cli bun.lock readers compared with the adopted @beep/lockfiles Lockfile.parse expression over the live lockfile."
     },
@@ -153,6 +157,10 @@
     {
       "path": "ops/tsconfig-validator-parity.ts",
       "purpose": "3-A6 parity: records the strict tsconfig verdict over every tracked tsconfig*.json and docgen's resolved compiler options for every docgen.json, and compares a before/after pair against the intended TsconfigValidator verdict shifts."
+    },
+    {
+      "path": "ops/workspace-patterns-adoption-parity.ts",
+      "purpose": "4-A2 parity: the five repo-cli pattern readers before and after the move onto @beep/repo-workspaces WorkspacePatterns (pattern lists, derived pathspecs, matched directories, syncpack sources, CreatePackage coverage) plus byte-identical tsconfig-sync --check, changeset-graph and create-package dry-run outputs."
     },
     {
       "path": "ops/xdg-systemd-differential.ts",
