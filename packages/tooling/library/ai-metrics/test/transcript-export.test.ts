@@ -410,16 +410,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const f = yield* fixture();
       const frame = f.frames[0];
       if (frame === undefined || O.isNone(frame.metadata.usage)) return yield* Effect.die("Missing synthetic usage");
-      for (const usage of [
-        O.none(),
-        O.some({
-          ...frame.metadata.usage.value,
-          input: O.some(0),
-          output: O.none(),
-          cacheRead: O.none(),
-          cacheWrite: O.none(),
-        }),
-      ]) {
+      const exportSpan = Effect.fnUntraced(function* (usage: (typeof TranscriptMetadata.Type)["usage"]) {
         const metadata = TranscriptMetadata.make({ ...frame.metadata, usage, workingDirectoryHash: O.some(id("f")) });
         const encoded: NativeEncodedBatch = yield* encodeTranscriptTraceBatch(
           TranscriptExportInput.make({
@@ -430,6 +421,19 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         const span: typeof Span.Type | undefined = (yield* decode(encoded.body)).resourceSpans[0].scopeSpans[0]
           .spans[0];
         if (span === undefined) return yield* Effect.die("Missing synthetic output");
+        return span;
+      });
+      for (const usage of [
+        O.none(),
+        O.some({
+          ...frame.metadata.usage.value,
+          input: O.some(0),
+          output: O.none(),
+          cacheRead: O.none(),
+          cacheWrite: O.none(),
+        }),
+      ]) {
+        const span = yield* exportSpan(usage);
         if (O.isSome(usage)) {
           assertSome(attr(span, "ai_metrics.usage.input"), { intValue: "0" });
           assertSome(attr(span, "ai_metrics.usage.basis"), { stringValue: usage.value.basis });

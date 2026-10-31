@@ -86,43 +86,56 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
     HttpServer.HttpServer
   );
   yield* fs.chmod(`${directory}/worker.sock`, 0o600);
+  const receiptRow = Effect.gen(function* () {
+    const row = (yield* facts.read(id("1"), 0))[0];
+    if (row === undefined) return yield* Effect.die("Missing synthetic receipt");
+    return row;
+  });
+  const fixedResponse = (scenario: string, result: HttpServerResponse.HttpServerResponse) => {
+    if (scenario === "conflict") return O.some(HttpServerResponse.empty({ status: 409 }));
+    if (scenario === "invalid-utf8") return O.some(HttpServerResponse.uint8Array(new Uint8Array([0xff])));
+    if (scenario === "wrong-header")
+      return O.some(HttpServerResponse.setHeader(result, "x-observation-receipt", id("f")));
+    if (scenario === "oversize") return O.some(HttpServerResponse.text(Str.repeat(17000)("X")));
+    return O.none();
+  };
+  const postResponse = Effect.fnUntraced(function* (scenario: string, result: HttpServerResponse.HttpServerResponse) {
+    // Keep the acknowledgment past the client deadline, but let server cleanup finish.
+    if (scenario === "lost") return yield* Effect.as(Effect.sleep("1 second"), result);
+    if (scenario === "forged") {
+      const row = yield* receiptRow;
+      return HttpServerResponse.text(
+        yield* encodeObservationLaunchReceiptJson(ObservationLaunchReceipt.make({ ...row, receiptId: id("f") })),
+        {
+          contentType: "application/json",
+          headers: { "x-observation-receipt": id("f") },
+        }
+      );
+    }
+    if (scenario === "extra-field") {
+      const row = yield* receiptRow;
+      const json = yield* encodeObservationLaunchReceiptJson(row);
+      return HttpServerResponse.text(`${Str.slice(0, -1)(json)},"private-extra":true}`, {
+        contentType: "application/json",
+        headers: { "x-observation-receipt": row.receiptId },
+      });
+    }
+    return result;
+  });
   yield* server.serve(
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
-      if (request.method === "POST") yield* Ref.update(posts, (n) => n + 1);
+      const isPost = request.method === "POST";
+      if (isPost) yield* Ref.update(posts, (n) => n + 1);
       const result = yield* intake.handler;
       const scenario = yield* Ref.get(mode);
       if (scenario === "blocked") {
         yield* Deferred.succeed(reached, undefined);
         yield* Deferred.await(release);
       }
-      if (scenario === "conflict") return HttpServerResponse.empty({ status: 409 });
-      if (scenario === "invalid-utf8") return HttpServerResponse.uint8Array(new Uint8Array([0xff]));
-      if (scenario === "wrong-header") return HttpServerResponse.setHeader(result, "x-observation-receipt", id("f"));
-      // Keep the acknowledgment past the client deadline, but let server cleanup finish.
-      if (scenario === "lost" && request.method === "POST") yield* Effect.sleep("1 second");
-      if (scenario === "oversize") return HttpServerResponse.text(Str.repeat(17000)("X"));
-      if (scenario === "forged" && request.method === "POST") {
-        const row = (yield* facts.read(id("1"), 0))[0];
-        if (row === undefined) return yield* Effect.die("Missing synthetic receipt");
-        return HttpServerResponse.text(
-          yield* encodeObservationLaunchReceiptJson(ObservationLaunchReceipt.make({ ...row, receiptId: id("f") })),
-          {
-            contentType: "application/json",
-            headers: { "x-observation-receipt": id("f") },
-          }
-        );
-      }
-      if (scenario === "extra-field" && request.method === "POST") {
-        const row = (yield* facts.read(id("1"), 0))[0];
-        if (row === undefined) return yield* Effect.die("Missing synthetic receipt");
-        const json = yield* encodeObservationLaunchReceiptJson(row);
-        return HttpServerResponse.text(`${Str.slice(0, -1)(json)},"private-extra":true}`, {
-          contentType: "application/json",
-          headers: { "x-observation-receipt": row.receiptId },
-        });
-      }
-      return result;
+      const fixed = fixedResponse(scenario, result);
+      if (O.isSome(fixed)) return fixed.value;
+      return isPost ? yield* postResponse(scenario, result) : result;
     })
   );
   const policy = ObservationLaunchClientPolicy.make({
