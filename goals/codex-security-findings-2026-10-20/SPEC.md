@@ -282,3 +282,10 @@ Preserve #1930's verified historical receipt and bind prospective completion to
 seven-finding remediation, reflection, and hosted proof; Cloud closure remains
 an independently verified post-merge requirement. Reverse through this
 manifest/documentation diff; do not alter historical verdict bytes.
+
+Decision — 2026-10-31: supersede the prior final-PR reference with #2389 for
+final reconciliation and the 20 supplemental dependency alerts in the October 28
+packet. PRs #1930 and #2333 remain supporting merged remediation. All fifteen
+Cloud identities are verified Fixed. Preserve historical verdicts; obtain a
+genuine final-head readiness verdict and merge-time completion receipt for
+#2389 before deriving `completed-retained` for either packet.

@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 
+import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
@@ -69,12 +70,6 @@ const modules: ReadonlyArray<ModuleEntry> = [
   { doc: "core/literals.ts.md", importPath: "@beep/effect-drizzle", label: "Core: literal collection" },
 ];
 
-const stripFrontmatter = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
-  if (!A.isReadonlyArrayNonEmpty(lines) || A.headNonEmpty(lines) !== "---") return lines;
-  const closing = A.findFirstIndex(A.drop(lines, 1), (line) => line === "---");
-  return closing._tag === "Some" ? A.drop(lines, closing.value + 2) : lines;
-};
-
 const stripNavigation = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
   const start = A.findFirstIndex(lines, (line) => line === "## Exports Grouped by Category");
   if (start._tag === "None") return lines;
@@ -100,7 +95,7 @@ const demote = (entry: ModuleEntry) => (line: string) => {
 type RenderState = { readonly inCode: boolean; readonly out: ReadonlyArray<string> };
 
 const renderModule = (entry: ModuleEntry, content: string): string => {
-  const lines = stripNavigation(stripFrontmatter(Str.split(content, "\n")));
+  const lines = stripNavigation(Str.split(FrontmatterSource.split(content).body, "\n"));
   const rendered = A.reduce(lines, { inCode: false, out: A.empty<string>() } as RenderState, (state, line) => {
     if (Str.startsWith("```")(line)) return { inCode: !state.inCode, out: A.append(state.out, line) };
     if (state.inCode) return { inCode: state.inCode, out: A.append(state.out, line) };

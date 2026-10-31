@@ -166,8 +166,6 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect Ca
           const independent = {
             "@effect/tsgo": "^0.5.0",
             "@effect/tsgo-linux-x64": "^0.5.0",
-            "@effect/markdown-toc": "^0.1.0",
-            "@effect/markdown-toc-cli": "^0.1.0",
             typescript: "^5.9.0",
           };
           const packageJsonPath = path.join(tmpDir, "package.json");

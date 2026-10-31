@@ -434,3 +434,30 @@ The current graph capture has an eight-MiB stdout cap; the synthetic controls us
 one MiB. Both cap stderr at one MiB. Their default raw outputs stay under the
 ignored `.beep/cargo-feature-review/` directory. They use finite credential-free
 child environments and require active Python assertions.
+
+### Quiet-log hash option, fresh canary snapshot (2026-10-31)
+
+- The [turbo registry tags](https://registry.npmjs.org/-/package/turbo/dist-tags)
+  and [native package tags](https://registry.npmjs.org/-/package/@turbo%2flinux-64/dist-tags)
+  returned stable 2.11.10 andcanary 2.11.11-canary.1 at the retained observation.
+  These are time-bound tag observations, not a future latest-version promise.
+- The exact [native package metadata](https://registry.npmjs.org/@turbo%2flinux-64/2.11.11-canary.1)
+  supplied the verified archive integrity; the extracted executable digest and
+  reported version are retained in [feature-local pins](errors-only-client-pins.json).
+- The exact [Turbo package metadata](https://registry.npmjs.org/turbo/2.11.11-canary.1)
+  supplied the independently integrity-verified schema archive. The named field,
+  schema digest and availability are retained in [the schema observation](errors-only-schema-observation.json).
+- Current repository consumers and source hashes are listed in
+  [the applicability review](errors-only-feature-review.json). Both retained
+  drivers reuse the existing bounded selection-control invocation function;
+  reports bind its exact source digest. Synthetic execution and refusals grant
+  no actual computation qualification or production performance claim.
+
+## Quiet-log current-driver replay, 2026-10-31
+
+- [Fresh controls](native-log-controls.json): real replay of current corrected
+  drivers at `ec979dd5db`, with the same frozen feature-local native clients,
+  24 cases, six refusals and fresh private-report hashes.
+- [Prior controls](native-log-controls-before-pin-default-fix.json): byte-identical
+  retained execution with the original driver bindings; matching driver source
+  content is available at `70145eb55b`. This is historical, not current replay.

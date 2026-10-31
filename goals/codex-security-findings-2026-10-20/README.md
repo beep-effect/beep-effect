@@ -6,6 +6,13 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Current closeout evidence
+
+All eight original Cloud IDs remain Fixed. The 123 captured Dependabot IDs
+are resolved: 121 Fixed, two withdrawn. The seven October 28 Cloud IDs are
+also Fixed. Twenty newer dependency alerts are being remediated in the
+October 28 packet. See [current revalidation](research/2026-10-31-revalidation.md).
+
 ## Mission
 
 Capture, validate, remediate, and close every open Codex Cloud security finding
@@ -30,7 +37,7 @@ leave no packet-applicable finding open.
 5. [`ops/triage.json`](./ops/triage.json)
 6. [`findings/INDEX.md`](./findings/INDEX.md)
 
-## Latest verified state — 2026-10-28
+## Historical verified state — 2026-10-28
 
 PR #1930 is merged, all eight original Cloud IDs are Fixed, and captured
 Dependabot alerts are closed (122 fixed, one withdrawn). The retained readiness
@@ -83,7 +90,7 @@ post-merge and exact-ID bound. See the lane reports for runtime and scanner limi
 The same-PR reflection is retained at
 `history/reflections/2026-10-21-codex.md` as an interim `todo-codify` record.
 It does not declare completion. The manifest carries prospective closeout for
-PR #1930 while operative lifecycle remains active. After actual merge,
+PR #2389 while operative lifecycle remains active. After actual merge,
 merged-revision proof and exact-ID closure, retain the final addendum and genuine
 head-bound Yeet readiness verdict, then run:
 
@@ -101,3 +108,18 @@ tracked in the [linked supplemental packet](../codex-security-findings-2026-10-2
 See [the reconciliation receipt](research/2026-10-28-cloud-refresh.md) for the
 exact-ID mapping and the already merged #1930 state. Completion of this resumed
 goal requires both historical closeout verification and supplemental remediation.
+
+## Final acceptance — October 31
+
+PR [#2389](https://github.com/beep-effect/beep-effect/pull/2389) contains the
+final dependency remediation and packet reconciliation. Historical source fixes
+remain in merged PRs #1930 and #2333. The
+[closeout reflection](history/reflections/2026-10-31-codex.md) records the current
+qualification and tooling lessons.
+
+The manifest deliberately retains active declared status with prospective
+`completed-retained` closeout. After the final PR merges, exact external alert
+closure and head-bound readiness are verified before `goals completion refresh`
+records the clone-scoped acceptance receipt and derives the retained lifecycle.
+An implementation snapshot showing open dependency alerts is not a closure
+claim; the post-merge receipt is the final evidence.
