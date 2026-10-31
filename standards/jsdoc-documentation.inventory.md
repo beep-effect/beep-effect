@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T21:42:14.388Z
+Generated: 2026-10-31T22:36:32.500Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 165 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3580 |
-| publicExports | 25363 |
+| publicModules | 3585 |
+| publicExports | 25378 |
 | openModules | 166 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -202,7 +202,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 144 | `@beep/xstate` | `packages/drivers/xstate` | clean | 6 | 26 | 0 | 0 |
 | 145 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
 | 146 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
-| 147 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 30 | 108 | 2 | 0 |
+| 147 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
 | 148 | `@beep/openclaw` | `packages/drivers/openclaw` | clean | 9 | 130 | 0 | 0 |
 | 149 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 150 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |

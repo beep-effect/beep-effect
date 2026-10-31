@@ -10,7 +10,7 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6.1-Sol independent identity_fix_review; re-applied by Claude Opus 5.5 on main 441c6d94de (Codex takeover)",
+      "reviewer": "GPT-6.1-Sol independent identity_fix_review; re-applied by Claude Opus 5.5 on main 850a5bb47b (Codex takeover)",
       "reason": "Retain accepted main reviews and acknowledge only the reviewed schemaStatics shared seal input; no qualification granted.",
       "basis": {
         "path": "docs/reports/identity-statics-cache-review-2026-10-31.md",
