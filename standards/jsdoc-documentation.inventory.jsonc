@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T14:09:05.749Z",
+  "generatedAt": "2026-10-31T15:21:24.796Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
     "publicModules": 3575,
-    "publicExports": 25325,
+    "publicExports": 25329,
     "openModules": 166,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -366994,8 +366994,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 428,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-428-validaterepoconfig",
+          "line": 427,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-427-validaterepoconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -367017,8 +367017,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 471,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-471-validatereposafetypolicy",
+          "line": 470,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-470-validatereposafetypolicy",
           "currentTags": [
             "@effects",
             "@category",
@@ -367040,8 +367040,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 512,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-512-validatedogfoodconfig",
+          "line": 511,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-511-validatedogfoodconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -367063,8 +367063,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 540,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-540-validatedogfoodconfigs",
+          "line": 539,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-539-validatedogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
@@ -367086,8 +367086,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 566,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-566-defaultreporoot",
+          "line": 565,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-565-defaultreporoot",
           "currentTags": [
             "@effects",
             "@category",
@@ -367109,8 +367109,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 594,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-594-validatecurrentcheckoutdogfood",
+          "line": 593,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-593-validatecurrentcheckoutdogfood",
           "currentTags": [
             "@effects",
             "@category",
@@ -367132,8 +367132,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 623,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-623-validatecurrentcheckoutdogfoodconfigs",
+          "line": 622,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-622-validatecurrentcheckoutdogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
@@ -385454,8 +385454,8 @@
           "exportKind": "namespace",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 486,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-486-workspacediscoveryoptions",
+          "line": 508,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-508-workspacediscoveryoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -385476,8 +385476,8 @@
           "exportKind": "interface",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 503,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-503-workspacediscoveryshape",
+          "line": 525,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-525-workspacediscoveryshape",
           "currentTags": [
             "@public",
             "@category",
@@ -385499,8 +385499,8 @@
           "exportKind": "class",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 619,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-619-workspacediscovery",
+          "line": 641,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-641-workspacediscovery",
           "currentTags": [
             "@public",
             "@category",
@@ -457142,7 +457142,7 @@
         "srcDir": "src",
         "sourceFileCount": 485,
         "publicModuleCount": 483,
-        "publicExportCount": 4461
+        "publicExportCount": 4465
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -463489,7 +463489,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -527057,12 +527057,100 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "PolicyWorkspace",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-199-policyworkspace",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyCliLayout",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 232,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-232-policyclilayout",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyCommandNode",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-266-policycommandnode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyClosure",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-294-policyclosure",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "computePolicyFingerprint",
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 355,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-355-computepolicyfingerprint",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-327-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -527083,8 +527171,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 813,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-813-policytoolsfingerprintpolicy",
+          "line": 763,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-763-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -527105,8 +527193,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 891,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-891-lintpolicyfingerprintcommand",
+          "line": 838,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-838-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"
