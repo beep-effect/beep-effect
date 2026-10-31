@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T07:31:18.882Z",
+  "generatedAt": "2026-10-31T09:30:13.587Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
     "publicModules": 3568,
-    "publicExports": 25360,
+    "publicExports": 25363,
     "openModules": 166,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -210595,8 +210595,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 118,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-118-generateretentionreport",
+          "line": 138,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-138-generateretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210617,8 +210617,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 229,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-229-encoderetentionreport",
+          "line": 249,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-249-encoderetentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210639,8 +210639,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 244,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-244-renderretentionreport",
+          "line": 264,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-264-renderretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210661,8 +210661,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 291,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-291-evaluateretentioncandidate",
+          "line": 311,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-311-evaluateretentioncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -457098,7 +457098,7 @@
         "srcDir": "src",
         "sourceFileCount": 481,
         "publicModuleCount": 479,
-        "publicExportCount": 4501
+        "publicExportCount": 4504
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -458108,7 +458108,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 6,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -462751,7 +462751,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -474335,8 +474335,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-90-resolvecacheturbobinary",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-91-resolvecacheturbobinary",
           "currentTags": [
             "@category",
             "@since"
@@ -474357,8 +474357,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 163,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-163-joincachecensusplan",
+          "line": 164,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-164-joincachecensusplan",
           "currentTags": [
             "@category",
             "@since"
@@ -474379,8 +474379,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 236,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-236-iscachetaskinspectionarg",
+          "line": 237,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-237-iscachetaskinspectionarg",
           "currentTags": [
             "@param",
             "@returns",
@@ -474403,9 +474403,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 262,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-262-cachetaskselectionargs",
+          "line": 263,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-263-cachetaskselectionargs",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "forwardsBiomeConfigPath",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.census.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+          "line": 362,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-362-forwardsbiomeconfigpath",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -474425,8 +474449,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-391-collectcachetaskselection",
+          "line": 443,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-443-collectcachetaskselection",
           "currentTags": [
             "@category",
             "@since"
@@ -474447,8 +474471,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 470,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-470-collectcachecensus",
+          "line": 522,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-522-collectcachecensus",
           "currentTags": [
             "@category",
             "@since"
@@ -521781,8 +521805,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 62,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-62-effectimportcorpusmode",
+          "line": 63,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-63-effectimportcorpusmode",
           "currentTags": [
             "@category",
             "@since"
@@ -521803,8 +521827,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 74,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-74-effectimportcorpusmode",
+          "line": 75,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-75-effectimportcorpusmode",
           "currentTags": [
             "@category",
             "@since"
@@ -521825,8 +521849,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-90-effectimportmanualreviewkind",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-91-effectimportmanualreviewkind",
           "currentTags": [
             "@category",
             "@since"
@@ -521847,8 +521871,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 112,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-112-effectimportmanualreviewkind",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-113-effectimportmanualreviewkind",
           "currentTags": [
             "@category",
             "@since"
@@ -521869,8 +521893,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 138,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-138-effectimportrulesoptions",
+          "line": 139,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-139-effectimportrulesoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -521891,8 +521915,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 185,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-185-effectimportmanualreview",
+          "line": 186,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-186-effectimportmanualreview",
           "currentTags": [
             "@category",
             "@since"
@@ -521913,9 +521937,57 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 229,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-229-effectimportrulessummary",
+          "line": 230,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-230-effectimportrulessummary",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "discoverEffectImportSourceFiles",
+          "exportKind": "const",
+          "filePath": "src/commands/Laws/EffectImports.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+          "line": 1720,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1720-discovereffectimportsourcefiles",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "discoverEffectImportMarkdownFiles",
+          "exportKind": "const",
+          "filePath": "src/commands/Laws/EffectImports.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
+          "line": 1761,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1761-discovereffectimportmarkdownfiles",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -521935,8 +522007,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1651,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1651-runeffectimportrules",
+          "line": 1801,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1801-runeffectimportrules",
           "currentTags": [
             "@category",
             "@since"
