@@ -10,7 +10,7 @@ import * as Str from "effect/String";
 /**
  * Whether an introduction adds exactly one modifier to a referring head.
  *
- * @example
+ * **Example** (Match One Added Modifier)
  * ```ts
  * import { isSingleModifiedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
  * console.log(isSingleModifiedHead("sensor")("optical sensor")) // true
@@ -26,7 +26,7 @@ export const isSingleModifiedHead =
 
 /**
  * Match only an abbreviation explicitly written in an introduction's parentheses.
- * @example
+ * **Example** (Match an Explicit Abbreviation)
  * ```ts
  * import { isExplicitAbbreviatedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
  * console.log(isExplicitAbbreviatedHead("ir sensor")("infrared (ir) sensor")) // true
@@ -48,7 +48,7 @@ export const isExplicitAbbreviatedHead =
 
 /**
  * Match a name whose source supplies a trailing letter-number designator.
- * @example
+ * **Example** (Match a Letter Number Designator)
  * ```ts
  * import { isDesignatedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
  * console.log(isDesignatedHead("relaxation time")("relaxation time t2")) // true

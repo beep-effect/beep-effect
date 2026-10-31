@@ -36,7 +36,7 @@ This high alert noise is a material limitation. Findings remain advisory review 
 
 ## Verification and preserved evidence
 
-All three law-practice package verifications pass for v16 (domain, use-cases, server). The four automated-adjudication boundary tests pass, covering disagreement, low confidence, ownership, invalid provenance, source evidence and prevention of human-authority promotion. The separate human import paths retain their authority guards. The same IPRally smoke remains explicitly non-US/non-gold: one claim/tree, 15,523 tokens, 78 findings, 16 coverage warnings, no undecomposed claim; no licensed source data is committed.
+All three law-practice package verifications pass for v16 (domain, use-cases, server). The four automated-adjudication boundary tests pass, covering disagreement, low confidence, ownership, invalid provenance, source evidence and prevention of human-authority promotion. The separate human import paths retain their authority guards. The same IPRally smoke remains explicitly non-US/non-gold: one claim/tree, 523 tokens, 78 findings, 16 coverage warnings, no undecomposed claim; no licensed source data is committed.
 
 `autonomous-review-v1/` contains byte-preserved reviewer receipts, the v16 allowed input, and reproducible derived summaries. Round-one and round-two reference reviews remain separate. `2026-10-31-v16-retention.json`, `2026-10-31-allowed-v16-coverage.json`, versioned runtime/sample freezes and evaluation outputs bind this measurement. Historical review packets and original labels/results are retained. Independent automated review satisfies the revised P2/P3 measurement procedure with explicitly unresolved outcomes; it does not repair gold or certify legal validity. Yeet publication, hosted readiness and final reflection remain separate delivery gates.
 
@@ -62,3 +62,5 @@ Both automated summaries reproduce exactly from their committed input and review
 ## Delivery policy cleanup
 
 The current main policy gates required stable module-level schema expressions, `S.tag` for fixed protocol fields, explicit resource hook budgets and reviewed inventories. These fixes cover this branch's law-practice and named-fragment MCP regression tests; no new schema shape or scoring rule is introduced. After a fresh frozen-lockfile install, the full positive and allowed results are identical to the post-main replay, as are all 251 successful prediction reports. The delivery receipt pins the evaluation/scorer files. All 12 targeted server, nine use-case and 21 MCP regression tests pass; repository-wide oxlint passes. Native-source integrity and CLI evaluation entrypoints retain explicit owner/reason/removal-condition exceptions in the generated policy inventories. This does not remove or weaken tests. The current JSDoc/hosted delivery gates remain active.
+
+Smoke narrative correction: the raw smoke receipt records 523 tokens; F15 is the IPC section. Its original result bytes are unchanged.
