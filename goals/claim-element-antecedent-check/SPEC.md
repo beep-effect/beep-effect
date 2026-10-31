@@ -198,11 +198,11 @@ Higher sources outrank lower sources when they conflict.
       on allowed claims with an explicitly conditional interval/envelope, after an
       independently reviewed sample; and an IPRally training-sample smoke-test result
       labelled non-US and non-gold.
-- [ ] No finding blocks a draft or a pipeline; nothing wires the checker into a
+- [x] No finding blocks a draft or a pipeline; nothing wires the checker into a
       gate.
-- [ ] No NC-licensed data file is in the diff; only derived metrics and source
+- [x] No NC-licensed data file is in the diff; only derived metrics and source
       IDs.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 - [ ] A closeout reflection exists under `history/reflections/`.
 
 ## Verification Matrix
