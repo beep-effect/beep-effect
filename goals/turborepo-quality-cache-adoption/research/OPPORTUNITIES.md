@@ -393,3 +393,10 @@ workstation's memory protection policy.
   boundary control needs no policy exception or lowered threshold. Current
   Fallow audit and health checks pass; retain the interrupted package attempt
   as unproven and complete the normal proof and hosted review before closure.
+
+- Additional source review found fixture setup could overwrite another job's
+  reservation. Publish complete marker files with an exclusive hard link;
+  atomically retire only markers still owned by this live test process. Keep
+  a direct occupied-marker refusal control and wrap fixture offsets within
+  the allocator range. This repairs the test setup without weakening the
+  server-identity assertions.
