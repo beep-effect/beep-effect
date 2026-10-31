@@ -120,6 +120,15 @@ notices, output limits and failure recovery have focused proof. The owned
 worker, complete IPC accounting, shared deadline and engine translation remain
 open. See history/evidence/2026-10-31-html-kernel.md. No completion row advances.
 
+Latest worker evidence (2026-10-31): private process ownership now covers bounded
+schema frames, captured Clock timers, queue/active limits, forced stop,
+acknowledged cleanup and quarantine without permit reuse. Real-process tests
+include native busy work, cancellation, queue/total expiry, late acknowledgement,
+owner-Scope shutdown, failed spawn and malformed transport. Local counters and
+timers still need complete engine composition across cleaner stages. See
+history/evidence/2026-10-31-owned-html-worker.md. Source maps, Layer and exhaustive
+engine parity remain open; no canonical completion row advances.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

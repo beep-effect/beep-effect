@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "477b45c2edd7f2cd6c28ec14b5298f367496610ec4f363c042fed0827a78f82b",
+  "planSha256": "11d64d7e8e2723862788cd389bf33c506f4e9eea8ece3e5dd3fbe08d70a9989e",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -410,6 +410,34 @@
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/html-kernel-cases.json",
           "sha256": "34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProtocol.ts",
+          "sha256": "cc4192cc73dece3d891c1b044a2640d17dc130b9421a28cd81582beb5b03cdbe"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts",
+          "sha256": "aa0c193c1af1ba337aa707910209e509df9a5978b448de4e3d4374fcf81c54aa"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.entry.ts",
+          "sha256": "ef14b61ffb2a0553d88424c758d158f577d336e8de1f13d9d97f6ac9751ae77a"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
+          "sha256": "bcad678c6b97e9f4980eb23962d92f89fc48d87629506345abc529acb9b8c722"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
+          "sha256": "4ed807f7182c239622ccce7c6faa42cf555b7fc634fe51a37c3a9dde2421b528"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
+          "sha256": "faa9b52bfec54b830f563d103a62dee6b4b37072cd2e6ed7e8cdb1cde15a237e"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md",
+          "sha256": "05e5d44a5d8076e0407448c040030ff60568b1aa41b83f6c17003d22f8643e49"
         }
       ],
       "workflowState": "audit",

@@ -9,13 +9,16 @@ returns CitationSafetyLimitExceeded without a partial value. The
 [recorded human authorization](./ops/html-safety-exception.json) clears the
 [previous hold](./history/evidence/2026-10-29-html-safety-hold.md). Other HTML
 behavior retains its parity obligations. The completion guard is implemented;
-the native parser backend and its full qualification remain open.
+full engine qualification remains open.
 Bounded [Unicode input preparation](./history/evidence/2026-10-31-html-input-preparation.md)
 now matches 1,075 source decisions, including exact buffer bytes and declaration
 rejection, with captured limits, Clock and cooperative interruption.
 The [private native core](./history/evidence/2026-10-31-html-kernel.md) now matches
 1,097 complete source outcomes under the approved safety exception. Two clean
-builds are identical; the owned worker, shared deadlines and Layer remain open.
+builds are identical. The [owned worker](./history/evidence/2026-10-31-owned-html-worker.md)
+now bounds complete transport frames, queueing and execution, confirms child
+retirement and quarantines unacknowledged cleanup. Global engine admission,
+composed stage budgets, source maps and the live Layer remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

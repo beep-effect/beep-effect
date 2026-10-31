@@ -137,7 +137,14 @@
         "packages/law-practice/server/assets/citation-html/notices.json",
         "packages/law-practice/server/src/internal/Citation/HtmlKernel.ts",
         "packages/law-practice/server/test/CitationHtmlKernel.test.ts",
-        "packages/law-practice/use-cases/test/fixtures/eyecite/html-kernel-cases.json"
+        "packages/law-practice/use-cases/test/fixtures/eyecite/html-kernel-cases.json",
+        "packages/law-practice/server/src/internal/Citation/HtmlWorkerProtocol.ts",
+        "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts",
+        "packages/law-practice/server/src/internal/Citation/HtmlWorker.entry.ts",
+        "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
+        "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
+        "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

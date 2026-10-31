@@ -1131,6 +1131,16 @@ instead of silently splitting delivery or weakening scope.
   deadlines, full engine translation, maps and Layer qualification remain open.
   No canonical completion or normalization law follows.
 
+- **2026-10-31 owned HTML worker:** the private Bun entrypoint and supervisor
+  provide bounded schema messages, captured Clock timers, bounded admission,
+  forced retirement and acknowledgement before permit reuse. Thirteen focused
+  tests cover real kernel values, busy native work, cancellation, queue/total
+  expiry, quarantine and late acknowledgement, owner-Scope shutdown, failed
+  launch, environment isolation and malformed traffic. Full JSON envelopes and
+  newlines count toward message ceilings before encoding/buffer growth. Global
+  engine admission, composed stage budgets, source maps, Layer wiring and
+  exhaustive engine qualification remain open. No canonical row advances.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
