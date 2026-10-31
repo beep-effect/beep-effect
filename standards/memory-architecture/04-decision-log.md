@@ -537,8 +537,7 @@ about three hours of Opus 5.5 per night for that result.
 
 **Decision (operator, 2026-10-28):** Retire graft completely. This supersedes
 the 2026-09-08 and 2026-09-09 entries, which stay as history. Removed: the
-`beep graft` command and its deep refresh unit, the patch kit under
-`scripts/graft/`, the Claude hooks, status line, helpers and permission
+graft CLI command and its deep refresh unit, the graft patch kit, the Claude hooks, status line, helpers and permission
 grants, the `graft` skill (Claude, Codex, Grok), the `AGENTS.md` section, the
 `graft.deep` model-routing role, the graft context in schema-inventory lane
 prompts, and every ignore, lint, Turbo, and IDE entry for the `graft/` cache.
