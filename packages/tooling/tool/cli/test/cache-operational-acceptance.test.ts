@@ -14,12 +14,10 @@ import {
 import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import {
+  CacheHostedProducerVerifier,
   CacheProducerAcceptanceReference,
-  CacheProducerImportRequest,
-  CacheProducerObservation,
   CacheProducerTrustLocations,
   hashCacheProducerContract,
-  initializeCacheProducerIssuer,
   persistCacheProducerAcceptance,
   revokeCacheProducerIssuer,
 } from "@beep/repo-cli/test/Cache";
@@ -53,6 +51,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makePublishedAcceptanceFixture, PublishedContentClient } from "./helpers/cache-hosted-publication-fixture.ts";
 import { canaryInput, contractInput, input } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const ActivationPreviewJson = S.fromJsonString(CacheActivationPreview);
@@ -61,6 +60,7 @@ const PolicyBaselineJson = S.fromJsonString(CachePolicyBaseline);
 const QualificationStoreJson = S.fromJsonString(CacheQualificationStore);
 
 const platform = Layer.mergeAll(
+  PublishedContentClient,
   NodeCrypto.layer,
   NodeServices.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
@@ -233,163 +233,173 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
           stable: path.join(root, "stable"),
           canary: path.join(root, "canary"),
         });
-        const stableIssuer = yield* initializeCacheProducerIssuer(trust.stable, binding, contract);
-        const canaryIssuer = yield* initializeCacheProducerIssuer(trust.canary, canaryBinding, contract);
-        const request = CacheProducerImportRequest.make({
-          observations: {
-            stable: CacheProducerObservation.make({ observation: bundle, envelope: yield* stableIssuer.issue(bundle) }),
-            canary: CacheProducerObservation.make({ observation: canary, envelope: yield* canaryIssuer.issue(canary) }),
-          },
-        });
-        const directory = path.join(root, "accepted");
-        yield* fs.makeDirectory(directory, { mode: 0o700 });
-        const accepted = yield* persistCacheProducerAcceptance(directory, request, trust);
-        const marker = yield* S.encodeEffect(AcceptanceReferenceJson)(accepted);
-        yield* fs.writeFileString(path.join(root, "accepted.json"), marker);
-        const reference = CacheEvidenceReference.make({
-          path: "accepted.json",
-          sha256: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(marker)),
-        });
-        vi.stubEnv("BEEP_CACHE_ACCEPTANCE_STORE", directory);
-        vi.stubEnv("BEEP_CACHE_STABLE_ISSUER_STORE", trust.stable);
-        vi.stubEnv("BEEP_CACHE_CANARY_ISSUER_STORE", trust.canary);
-        const review = CacheReviewDecision.make({
-          reviewer: "fixture",
-          reason: "synthetic complete acceptance",
-          basis: CacheEvidenceReference.make({ path: "review.md", sha256: worksheetDigest }),
-        });
-        vi.spyOn(Census, "collectCacheCensus").mockReturnValue(Effect.succeed(census));
-        const observedToolchain = vi
-          .spyOn(Fingerprint, "collectCacheToolchain")
-          .mockReturnValue(Effect.succeed(toolchain));
-        const baseline = CachePolicyBaseline.make({
-          reviews: { "//": review, [cacheBaselineSubject(contract.key.computation)]: review },
-          scope: [contract.key.computation],
-          profile: contract.key.profile,
-          epoch: contract.key.epoch,
-          projection: CachePolicyProjection.make({
-            globalConfiguration: census.globalConfiguration,
-            sources: census.sources,
-            nodes: [
-              CachePolicyNode.make({
-                computation: contract.key.computation,
-                command: "bun run beep:lint",
-                commandDigest: contract.commandDigest,
-                dependencies: contract.dependencies,
-                configuration: node.configuration,
-              }),
-            ],
-          }),
-        });
-        yield* fs.makeDirectory(path.join(root, "standards"));
-        yield* fs.writeFileString(
-          path.join(root, "standards/cache-qualification-baseline.json"),
-          yield* S.encodeEffect(PolicyBaselineJson)(baseline)
+        const published = yield* makePublishedAcceptanceFixture(
+          trust,
+          contract,
+          bundle,
+          binding,
+          canary,
+          canaryBinding
         );
-        const candidate = CacheQualificationEntry.make({
-          key: contract.key,
-          status: { state: "candidate", contract, review },
-        });
-        const shadow = CacheQualificationEntry.make({
-          key: contract.key,
-          status: { state: "shadow", contract, review, receipts: [] },
-        });
-        const qualified = CacheQualificationEntry.make({
-          key: contract.key,
-          status: { state: "qualified", contract, review, receipts: [reference] },
-        });
-        const prior = yield* S.encodeEffect(QualificationStoreJson)(
-          CacheQualificationStore.make({
-            revision: 2,
-            entries: [shadow],
-            history: [
-              CacheQualificationEvent.make({ revision: S.Int.make(1), entry: candidate }),
-              CacheQualificationEvent.make({ revision: S.Int.make(2), entry: shadow }),
-            ],
-          })
-        );
-        const ledger = path.join(root, "standards/cache-qualification.json");
-        yield* fs.writeFileString(ledger, prior);
-        const cache = yield* CacheQualificationService;
-        const transition = CacheTransitionRequest.make({ expectedRevision: S.Natural.make(2), entry: qualified });
-
-        for (const patch of [{ signedExecution: O.none() }, { activation: O.none() }]) {
-          const incompleteContract = CacheTaskContract.make({ ...contract, ...patch });
-          const incompleteEntry = CacheQualificationEntry.make({
-            key: contract.key,
-            status: { state: "qualified", contract: incompleteContract, review, receipts: [reference] },
+        const { request } = published;
+        yield* Effect.gen(function* () {
+          const directory = path.join(root, "accepted");
+          yield* fs.makeDirectory(directory, { mode: 0o700 });
+          const accepted = yield* persistCacheProducerAcceptance(directory, request, trust);
+          const marker = yield* S.encodeEffect(AcceptanceReferenceJson)(accepted);
+          yield* fs.writeFileString(path.join(root, "accepted.json"), marker);
+          const reference = CacheEvidenceReference.make({
+            path: "accepted.json",
+            sha256: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(marker)),
           });
-          const failure = yield* cache
-            .transition(root, CacheTransitionRequest.make({ ...transition, entry: incompleteEntry }))
-            .pipe(Effect.flip);
-          expect(failure.message).toBe("Signed qualification requires a reviewed execution profile and activation.");
-          expect(yield* fs.readFileString(ledger)).toBe(prior);
-          const priorStore = yield* S.decodeEffect(QualificationStoreJson)(prior);
+          vi.stubEnv("BEEP_CACHE_ACCEPTANCE_STORE", directory);
+          vi.stubEnv("BEEP_CACHE_STABLE_ISSUER_STORE", trust.stable);
+          vi.stubEnv("BEEP_CACHE_CANARY_ISSUER_STORE", trust.canary);
+          const review = CacheReviewDecision.make({
+            reviewer: "fixture",
+            reason: "synthetic complete acceptance",
+            basis: CacheEvidenceReference.make({ path: "review.md", sha256: worksheetDigest }),
+          });
+          vi.spyOn(Census, "collectCacheCensus").mockReturnValue(Effect.succeed(census));
+          const observedToolchain = vi
+            .spyOn(Fingerprint, "collectCacheToolchain")
+            .mockReturnValue(Effect.succeed(toolchain));
+          const baseline = CachePolicyBaseline.make({
+            reviews: { "//": review, [cacheBaselineSubject(contract.key.computation)]: review },
+            scope: [contract.key.computation],
+            profile: contract.key.profile,
+            epoch: contract.key.epoch,
+            projection: CachePolicyProjection.make({
+              globalConfiguration: census.globalConfiguration,
+              sources: census.sources,
+              nodes: [
+                CachePolicyNode.make({
+                  computation: contract.key.computation,
+                  command: "bun run beep:lint",
+                  commandDigest: contract.commandDigest,
+                  dependencies: contract.dependencies,
+                  configuration: node.configuration,
+                }),
+              ],
+            }),
+          });
+          yield* fs.makeDirectory(path.join(root, "standards"));
           yield* fs.writeFileString(
-            ledger,
-            yield* S.encodeEffect(QualificationStoreJson)(
-              CacheQualificationStore.make({
-                ...priorStore,
-                revision: 3,
-                entries: [incompleteEntry],
-                history: [
-                  ...priorStore.history,
-                  CacheQualificationEvent.make({ revision: S.Int.make(3), entry: incompleteEntry }),
-                ],
-              })
-            )
+            path.join(root, "standards/cache-qualification-baseline.json"),
+            yield* S.encodeEffect(PolicyBaselineJson)(baseline)
           );
-          expect((yield* cache.audit(root).pipe(Effect.flip)).message).toBe(
-            "Signed qualification requires a reviewed execution profile and activation."
+          const candidate = CacheQualificationEntry.make({
+            key: contract.key,
+            status: { state: "candidate", contract, review },
+          });
+          const shadow = CacheQualificationEntry.make({
+            key: contract.key,
+            status: { state: "shadow", contract, review, receipts: [] },
+          });
+          const qualified = CacheQualificationEntry.make({
+            key: contract.key,
+            status: { state: "qualified", contract, review, receipts: [reference] },
+          });
+          const prior = yield* S.encodeEffect(QualificationStoreJson)(
+            CacheQualificationStore.make({
+              revision: 2,
+              entries: [shadow],
+              history: [
+                CacheQualificationEvent.make({ revision: S.Int.make(1), entry: candidate }),
+                CacheQualificationEvent.make({ revision: S.Int.make(2), entry: shadow }),
+              ],
+            })
           );
+          const ledger = path.join(root, "standards/cache-qualification.json");
           yield* fs.writeFileString(ledger, prior);
-        }
-        const result = yield* cache.transition(root, transition);
-        expect(result.revision).toBe(3);
-        expect(
-          (yield* Fingerprint.fingerprintCacheComputation(contract.key, census, toolchain).pipe(Effect.flip)).message
-        ).toBe("Computation and observed toolchain use different profiles.");
-        expect(result.entries[0]?.status.state).toBe("qualified");
-        expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
-        const promoted = yield* fs.readFileString(ledger);
-        expect(yield* fs.readFileString(path.join(root, child.path))).toBe(beforeText);
-        expect(node.configuration.cache).toBe(false);
-        for (const reference of [rootReference, child, before, after, activationRequest, signedRoot]) {
-          const file = path.join(root, reference.path);
-          const original = yield* fs.readFileString(file);
-          yield* fs.writeFileString(file, `${original} `);
+          const cache = yield* CacheQualificationService;
+          const transition = CacheTransitionRequest.make({ expectedRevision: S.Natural.make(2), entry: qualified });
+
+          for (const patch of [{ signedExecution: O.none() }, { activation: O.none() }]) {
+            const incompleteContract = CacheTaskContract.make({ ...contract, ...patch });
+            const incompleteEntry = CacheQualificationEntry.make({
+              key: contract.key,
+              status: { state: "qualified", contract: incompleteContract, review, receipts: [reference] },
+            });
+            const failure = yield* cache
+              .transition(root, CacheTransitionRequest.make({ ...transition, entry: incompleteEntry }))
+              .pipe(Effect.flip);
+            expect(failure.message).toBe("Signed qualification requires a reviewed execution profile and activation.");
+            expect(yield* fs.readFileString(ledger)).toBe(prior);
+            const priorStore = yield* S.decodeEffect(QualificationStoreJson)(prior);
+            yield* fs.writeFileString(
+              ledger,
+              yield* S.encodeEffect(QualificationStoreJson)(
+                CacheQualificationStore.make({
+                  ...priorStore,
+                  revision: 3,
+                  entries: [incompleteEntry],
+                  history: [
+                    ...priorStore.history,
+                    CacheQualificationEvent.make({ revision: S.Int.make(3), entry: incompleteEntry }),
+                  ],
+                })
+              )
+            );
+            expect((yield* cache.audit(root).pipe(Effect.flip)).message).toBe(
+              "Signed qualification requires a reviewed execution profile and activation."
+            );
+            yield* fs.writeFileString(ledger, prior);
+          }
+          const result = yield* cache.transition(root, transition);
+          expect(result.revision).toBe(3);
+          expect(
+            (yield* Fingerprint.fingerprintCacheComputation(contract.key, census, toolchain).pipe(Effect.flip)).message
+          ).toBe("Computation and observed toolchain use different profiles.");
+          expect(result.entries[0]?.status.state).toBe("qualified");
+          expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
+          const priorAttempt = published.channels.stable.run.run_attempt;
+          published.channels.stable.run.run_attempt = priorAttempt + 1;
+          expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(true);
+          published.channels.stable.run.run_attempt = priorAttempt;
+          expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
+          const promoted = yield* fs.readFileString(ledger);
+          expect(yield* fs.readFileString(path.join(root, child.path))).toBe(beforeText);
+          expect(node.configuration.cache).toBe(false);
+          for (const reference of [rootReference, child, before, after, activationRequest, signedRoot]) {
+            const file = path.join(root, reference.path);
+            const original = yield* fs.readFileString(file);
+            yield* fs.writeFileString(file, `${original} `);
+            expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(true);
+            yield* fs.writeFileString(ledger, prior);
+            expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(true);
+            expect(yield* fs.readFileString(ledger)).toBe(prior);
+            yield* fs.writeFileString(file, original);
+            yield* fs.writeFileString(ledger, promoted);
+          }
+          expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
+          const runtimeDrift = yield* Arbitrary.checkEffect(
+            Arbitrary.schema(Sha256Hex),
+            (kernel) =>
+              Effect.gen(function* () {
+                observedToolchain.mockReturnValue(
+                  Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel }))
+                );
+                yield* fs.writeFileString(ledger, promoted);
+                expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(kernel !== toolchain.kernel);
+                yield* fs.writeFileString(ledger, prior);
+                expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(
+                  kernel !== toolchain.kernel
+                );
+                if (kernel !== toolchain.kernel) expect(yield* fs.readFileString(ledger)).toBe(prior);
+                return true;
+              }),
+            fcRuns(10)
+          );
+          expect(runtimeDrift._tag).toBe("Passed");
+          observedToolchain.mockReturnValue(Effect.succeed(toolchain));
+          yield* revokeCacheProducerIssuer(trust.canary);
+          yield* fs.writeFileString(ledger, promoted);
           expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(true);
           yield* fs.writeFileString(ledger, prior);
           expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(true);
           expect(yield* fs.readFileString(ledger)).toBe(prior);
-          yield* fs.writeFileString(file, original);
-          yield* fs.writeFileString(ledger, promoted);
-        }
-        expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
-        const runtimeDrift = yield* Arbitrary.checkEffect(
-          Arbitrary.schema(Sha256Hex),
-          (kernel) =>
-            Effect.gen(function* () {
-              observedToolchain.mockReturnValue(Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel })));
-              yield* fs.writeFileString(ledger, promoted);
-              expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(kernel !== toolchain.kernel);
-              yield* fs.writeFileString(ledger, prior);
-              expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(
-                kernel !== toolchain.kernel
-              );
-              if (kernel !== toolchain.kernel) expect(yield* fs.readFileString(ledger)).toBe(prior);
-              return true;
-            }),
-          fcRuns(10)
-        );
-        expect(runtimeDrift._tag).toBe("Passed");
-        observedToolchain.mockReturnValue(Effect.succeed(toolchain));
-        yield* revokeCacheProducerIssuer(trust.canary);
-        yield* fs.writeFileString(ledger, promoted);
-        expect(yield* cache.audit(root).pipe(Effect.isFailure)).toBe(true);
-        yield* fs.writeFileString(ledger, prior);
-        expect(yield* cache.transition(root, transition).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* fs.readFileString(ledger)).toBe(prior);
+        }).pipe(Effect.provideService(CacheHostedProducerVerifier, published.verifier));
       })
     );
   }

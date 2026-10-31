@@ -11,6 +11,7 @@ import * as Clock from "effect/Clock";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -19,6 +20,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import * as Tuple from "effect/Tuple";
 import { readContainedFileBytesNoFollow } from "../../internal/cli/FsGuards.ts";
 import {
   currentEffectiveUserIdOption,
@@ -34,12 +36,17 @@ import {
 } from "./Cache.producer.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import { CacheHostedProducerApproval } from "./Cache.workflow.github.schemas.ts";
+import { CacheProducerExecutionProfile } from "./Cache.workflow.schemas.ts";
 
 const encodeApproval = S.encodeEffect(S.fromJsonString(CacheProducerApproval));
 const decodeApproval = S.decodeUnknownEffect(S.fromJsonString(CacheProducerApproval));
+const decodeHostedApproval = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerApproval));
+const decodeExecutionProfile = S.decodeUnknownEffect(S.fromJsonString(CacheProducerExecutionProfile));
 const encodeContract = S.encodeEffect(S.fromJsonString(CacheTaskContract));
 const encodeBinding = S.encodeEffect(S.fromJsonString(CacheProducerBinding));
 const decodeBinding = S.decodeUnknownEffect(S.fromJsonString(CacheProducerBinding));
+const decodeBindingBytes = S.decodeEffect(S.Uint8ArrayFromHex);
 const encodeBody = S.encodeEffect(S.fromJsonString(CacheProducerBody));
 const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheProducerBundle));
 const digest = S.decodeEffect(Sha256HexFromBytes);
@@ -372,6 +379,37 @@ export const inspectCacheProducerDirectory = Effect.fn("Producer.inspectIssuerDi
 });
 
 /**
+ * Require private producer inputs and stores outside the loaded checkout.
+ *
+ * **Details**
+ * Callers also keep every private material copy outside all worker mounts.
+ * The protected caller supplies the checkout; experiment requests do not select it.
+ *
+ * **Example** (Plan an outside-checkout location check)
+ * ```ts
+ * import { assertCacheProducerPrivateLocation } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * const check = assertCacheProducerPrivateLocation("/checkout", "/private/producer-inputs")
+ * console.assert(Effect.isEffect(check))
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const assertCacheProducerPrivateLocation = Effect.fn("Producer.privateLocation")(function* (
+  root: string,
+  directory: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const source = yield* fs.realPath(root);
+  const destination = path.resolve(directory);
+  if (!path.isAbsolute(directory) || destination === source || Str.startsWith(`${source}${path.sep}`)(destination))
+    return yield* CacheCommandError.new("Producer private location must be absolute and outside its checkout.");
+}, CacheCommandError.mapError("Cannot approve the private producer location."));
+
+/**
  * Inspect the common ownership and single-link boundary of a private producer file.
  *
  * **Details**
@@ -404,14 +442,13 @@ export const inspectCacheProducerFile = Effect.fn("Producer.inspectPrivateFile")
   return info;
 });
 
-const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (directory: string) {
-  const fs = yield* FileSystem.FileSystem;
+const readPrivateProducerMaterial = Effect.fn("Producer.readPrivateMaterial")(function* (
+  directory: string,
+  name: string,
+  uid: number
+) {
   const path = yield* Path.Path;
-  const uid = yield* inspectCacheProducerDirectory(directory);
-  // readDirectory detects even a dangling revocation marker; errors fail closed.
-  const entries = yield* fs.readDirectory(directory);
-  if (A.contains(entries, "revoked")) return yield* CacheCommandError.new("Producer issuer is revoked.");
-  const file = path.join(directory, "issuer.key");
+  const file = path.join(directory, name);
   const diagnostic = "Producer material must be a private single-link approval-bound file.";
   const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
   if (info.size !== BigInt(persistedMaterialBytes))
@@ -420,6 +457,15 @@ const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (d
   if (O.isNone(read.contents) || read.contents.value.length !== persistedMaterialBytes)
     return yield* CacheCommandError.new("Producer material is unavailable.");
   return Redacted.make(read.contents.value);
+});
+
+const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const uid = yield* inspectCacheProducerDirectory(directory);
+  // readDirectory detects even a dangling revocation marker; errors fail closed.
+  const entries = yield* fs.readDirectory(directory);
+  if (A.contains(entries, "revoked")) return yield* CacheCommandError.new("Producer issuer is revoked.");
+  return yield* readPrivateProducerMaterial(directory, "issuer.key", uid);
 }, CacheCommandError.mapError("Producer store is unavailable, unsafe or revoked."));
 
 /**
@@ -476,26 +522,148 @@ export const openCacheProducerIssuer = Effect.fn("Producer.openCacheProducerIssu
   };
 });
 
-const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(function* (directory: string) {
+const readPrivateProducerRecord = Effect.fn("Producer.readPrivateRecord")(function* <Decoded>(
+  directory: string,
+  name: string,
+  description: string,
+  decode: (text: string) => Effect.Effect<Decoded, S.SchemaError>
+) {
   const path = yield* Path.Path;
   const uid = yield* inspectCacheProducerDirectory(directory);
-  const file = path.join(directory, "approval.json");
+  const file = path.join(directory, name);
   const limit = 16384;
-  const diagnostic = "Producer approval must be a bounded private single-link file.";
+  const diagnostic = `Producer ${description} must be a bounded private single-link file.`;
   const info = yield* inspectCacheProducerFile(file, uid, diagnostic);
-  if (info.size === BigInt(0) || info.size > BigInt(limit))
-    return yield* CacheCommandError.new("Producer approval must be a bounded private single-link file.");
+  if (info.size === BigInt(0) || info.size > BigInt(limit)) return yield* CacheCommandError.new(diagnostic);
   const read = yield* readContainedFileBytesNoFollow(directory, file, S.Natural.make(limit));
-  if (O.isNone(read.contents)) return yield* CacheCommandError.new("Producer approval is unavailable.");
+  if (O.isNone(read.contents)) return yield* CacheCommandError.new(`Producer ${description} is unavailable.`);
   const bytes = read.contents.value;
   const text = yield* Effect.try({
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
-    catch: () => CacheCommandError.new("Producer approval must be valid UTF-8."),
+    catch: () => CacheCommandError.new(`Producer ${description} must be valid UTF-8.`),
   });
-  const approval = yield* decodeApproval(text);
+  return yield* decode(text);
+});
+
+/**
+ * Read independently provisioned hosted-publication approval from the issuer store.
+ *
+ * **Details**
+ * Reuses the owner-only directory, bounded single-link/no-follow record reader.
+ * Submitted observations cannot select the filename or supply its contents.
+ * Callers compare the binding to the current issuer approval and re-read after
+ * hosted verification to refuse concurrent replacement or revocation.
+ *
+ * **Example** (Read the independently approved workflow)
+ * ```ts
+ * import { readCacheProducerHostedApproval } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * const approvedWorkflow = readCacheProducerHostedApproval("/private/cache/stable").pipe(
+ *   Effect.map((approval) => approval.workflowPath)
+ * )
+ * // Effect<string, CacheCommandError, FileSystem | Path>; no read until execution.
+ * console.assert(Effect.isEffect(approvedWorkflow))
+ * ```
+ *
+ * @param directory - Independently selected owner-only issuer directory.
+ * @returns The bounded decoded approval, or a typed failure for missing or unsafe storage.
+ * @internal
+ * @category queries
+ * @since 0.0.0
+ */
+export const readCacheProducerHostedApproval = Effect.fn("Producer.readHostedApproval")((directory: string) =>
+  readPrivateProducerRecord(directory, "publication.json", "hosted publication approval", decodeHostedApproval).pipe(
+    CacheCommandError.mapError("Hosted producer approval is unavailable or unsafe.")
+  )
+);
+
+const readIssuerApproval = Effect.fn("Producer.readIssuerApproval")(function* (directory: string) {
+  const approval = yield* readPrivateProducerRecord(directory, "approval.json", "approval", decodeApproval);
   yield* validateCacheProducerApproval(approval);
   return approval;
 }, CacheCommandError.mapError("Producer approval is unavailable or unsafe."));
+
+/**
+ * Read private approval and optional transferred material outside an execution store.
+ *
+ * **Details**
+ * Only the supervisor selects this directory. Both fixed records use the existing
+ * owner-only, single-link, no-follow and sixteen-KiB boundaries. An issuer key or
+ * revocation marker refuses the input directory; provisioning does not select
+ * approval from an existing execution store or submitted experiment.
+ * Optional `issuer.material` uses the same fixed-length private byte reader as
+ * execution keys. It stays redacted and must match the approved binding before
+ * installation; it is never an observation or public artifact field.
+ *
+ * **Example** (Read separately prepared approval)
+ * ```ts
+ * import { readCacheProducerProvisioning } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * const read = readCacheProducerProvisioning("/private/approved-producer-inputs", "/checkout")
+ * console.assert(Effect.isEffect(read))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const readCacheProducerProvisioning = Effect.fn("Producer.readProvisioning")(function* (
+  directory: string,
+  root: string
+) {
+  yield* assertCacheProducerPrivateLocation(root, directory);
+  const uid = yield* inspectCacheProducerDirectory(directory);
+  const fs = yield* FileSystem.FileSystem;
+  const entries = yield* fs.readDirectory(directory);
+  if (A.some(["issuer.key", "revoked"], (name) => A.contains(entries, name)))
+    return yield* CacheCommandError.new("Provisioning inputs must be separate from an issuer store.");
+  const approval = yield* readIssuerApproval(directory);
+  const profile = yield* readPrivateProducerRecord(
+    directory,
+    "runtime.json",
+    "execution profile",
+    decodeExecutionProfile
+  );
+  const material = A.contains(entries, "issuer.material")
+    ? O.some(yield* readPrivateProducerMaterial(directory, "issuer.material", uid))
+    : O.none();
+  return Tuple.make(approval, profile, material);
+}, CacheCommandError.mapError("Cannot read independently selected producer provisioning inputs."));
+
+/**
+ * Read execution settings from an independently selected private issuer store.
+ *
+ * **Details**
+ * Opening verifies the approval against existing issuer material and revocation
+ * before returning the nonsecret runtime profile. It never provisions, replaces
+ * or rebinds an issuer. Submitted experiment requests do not select this store.
+ *
+ * **Example** (Plan a private configuration read)
+ * ```ts
+ * import { readCacheProducerExecutionProfile } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * const read = readCacheProducerExecutionProfile("/private/cache-producer")
+ * console.assert(Effect.isEffect(read))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const readCacheProducerExecutionProfile = Effect.fn("Producer.readExecutionProfile")(function* (
+  directory: string
+) {
+  const approval = yield* readIssuerApproval(directory);
+  yield* openCacheProducerIssuer(directory, approval.binding);
+  const profile = yield* readPrivateProducerRecord(
+    directory,
+    "runtime.json",
+    "execution profile",
+    decodeExecutionProfile
+  );
+  return Tuple.make(approval.binding, profile);
+}, CacheCommandError.mapError("Cannot read the independently approved producer execution profile."));
 
 /**
  * Open a verification-only capability from independently provisioned private approval.
@@ -542,12 +710,15 @@ export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVe
  *
  * **Details**
  * The parent must already exist. Failed initialization leaves the reserved
- * directory for operator inspection and never silently recreates a lost key.
+ * directory revoked for operator inspection and never silently recreates a lost key.
  * Provisioning fixes the approved workflow/computation binding in the private
  * material and writes the complete reviewed contract to its private approval
  * record. It is an explicit trusted-supervisor action, never an observation
  * import or a receipt-selected key lookup. A new binding requires a new issuer.
  * Callers must keep this location outside every reader mount.
+ * An explicitly supplied private material value is installed only for the exact
+ * binding encoded in its existing suffix. Installation never generates a new key
+ * or silently rebinds transferred material. Omission retains fresh local generation.
  *
  * **Example** (Reference explicit provisioning)
  * ```ts
@@ -562,8 +733,14 @@ export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVe
 export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCacheProducerIssuer")(function* (
   directory: string,
   expected: CacheProducerBinding,
-  contract: CacheTaskContract
+  contract: CacheTaskContract,
+  transferred: O.Option<Redacted.Redacted<Uint8Array>> = O.none()
 ) {
+  if (O.exists(transferred, (value) => Redacted.value(value).length !== persistedMaterialBytes))
+    return yield* CacheCommandError.new(
+      "Transferred producer material differs from its independently approved binding."
+    );
+  const supplied = O.map(transferred, (value) => Redacted.make(new Uint8Array(Redacted.value(value))));
   const approval = yield* encodeApproval(CacheProducerApproval.make({ binding: expected, contract })).pipe(
     Effect.flatMap(decodeApproval)
   );
@@ -572,20 +749,46 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
   const path = yield* Path.Path;
   const crypto = yield* SecureRandom.SecureRandom;
   if (!path.isAbsolute(directory)) return yield* CacheCommandError.new("Producer store path must be absolute.");
-  yield* fs.makeDirectory(directory, { mode: 0o700 });
-  yield* inspectCacheProducerDirectory(directory);
   const trusted = approval.binding;
-  yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
-    flag: "wx",
-    mode: 0o600,
-  });
-  const approved = yield* bindingDigest(trusted).pipe(Effect.flatMap(S.decodeEffect(S.Uint8ArrayFromHex)));
-  const bytes = new Uint8Array(persistedMaterialBytes);
-  bytes.set(yield* crypto.randomBytes(64));
-  bytes.set(approved, 64);
-  const material = Redacted.make(bytes);
-  yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), { flag: "wx", mode: 0o600 });
-  return yield* openCacheProducerIssuer(directory, trusted);
+  const approvedHex = yield* bindingDigest(trusted);
+  if (
+    O.exists(supplied, (value) => {
+      const bytes = Redacted.value(value);
+      return Hex.encode(bytes.slice(64)) !== approvedHex;
+    })
+  )
+    return yield* CacheCommandError.new(
+      "Transferred producer material differs from its independently approved binding."
+    );
+  return yield* Effect.acquireUseRelease(
+    fs.makeDirectory(directory, { mode: 0o700 }),
+    () =>
+      Effect.gen(function* () {
+        yield* inspectCacheProducerDirectory(directory);
+        yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
+          flag: "wx",
+          mode: 0o600,
+        });
+        const material = yield* supplied.pipe(
+          O.map(Effect.succeed),
+          O.getOrElse(
+            Effect.fnUntraced(function* () {
+              const approved = yield* decodeBindingBytes(approvedHex);
+              const bytes = new Uint8Array(persistedMaterialBytes);
+              bytes.set(yield* crypto.randomBytes(64));
+              bytes.set(approved, 64);
+              return Redacted.make(bytes);
+            })
+          )
+        );
+        yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), {
+          flag: "wx",
+          mode: 0o600,
+        });
+        return yield* openCacheProducerIssuer(directory, trusted);
+      }),
+    (_, exit) => (Exit.isFailure(exit) ? revokeCacheProducerIssuer(directory).pipe(Effect.orDie) : Effect.void)
+  );
 }, CacheCommandError.mapError("Cannot exclusively provision producer store."));
 
 /**

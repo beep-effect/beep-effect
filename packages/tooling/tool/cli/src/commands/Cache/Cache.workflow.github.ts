@@ -12,23 +12,162 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { GithubClientRequest, layerGithubClientFor, selectGithubIdentity } from "../../internal/github/index.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import {
   CacheHostedProducerApproval,
+  CacheHostedProducerCompleteReport,
   CacheHostedProducerObservation,
   CacheHostedProducerReference,
-  CacheHostedProducerReport,
+  CacheHostedProducerUpload,
 } from "./Cache.workflow.github.schemas.ts";
+import { CacheProducerObservation } from "./Cache.workflow.schemas.ts";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { CacheHostedProducerRunReference } from "./Cache.workflow.github.schemas.ts";
+
+/**
+ * Build the existing authenticated GitHub services only for hosted verification.
+ *
+ * **Details**
+ * Identity selection uses the repo CLI's approved reference/App/gh route.
+ * The supplied working directory is independently configured issuer storage;
+ * reports choose neither credentials nor the GitHub endpoint. Unpublished
+ * previews and unqualified policy audits never construct this layer.
+ *
+ * **Example** (Prepare an authenticated workflow-content read)
+ * ```ts
+ * import { GitHubContent } from "@beep/github/GitHubContent"
+ * import { layerCacheHostedProducerMetadata } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * const workflow = GitHubContent.use((content) =>
+ *   content.getFile(".github/workflows/cache-producer.yml", {
+ *     ref: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+ *   })
+ * ).pipe(Effect.provide(layerCacheHostedProducerMetadata("/private/cache/stable")))
+ * // The caller still supplies the repository and platform services at execution.
+ * console.assert(Effect.isEffect(workflow))
+ * ```
+ *
+ * @param directory - Independently selected private issuer directory used for identity routing.
+ * @returns Lazy GitHub client/content services whose credentials resolve only when built.
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerCacheHostedProducerMetadata = (directory: string) =>
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const identity = yield* selectGithubIdentity(O.none());
+      return GitHubContent.layer.pipe(
+        Layer.provideMerge(layerGithubClientFor(GithubClientRequest.make({ identity, cwd: directory })))
+      );
+    }).pipe(Effect.withSpan("CacheWorkflow.hostedMetadataLayer"))
+  );
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github");
+
+/**
+ * Application-owned authenticated metadata capability for acceptance verification.
+ *
+ * **Details**
+ * This service owns lazy credential and HTTP resource composition. Submitted
+ * requests cannot configure it. An absent capability fails acceptance closed;
+ * unpublished previews need no credential or network lookup.
+ *
+ * **Example** (Deny published imports in a restricted application)
+ * ```ts
+ * import { CacheCommandError } from "@beep/repo-cli/commands/Cache"
+ * import { CacheHostedProducerVerifier } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ *
+ * const denyPublishedImports = Layer.succeed(CacheHostedProducerVerifier, {
+ *   verify: () => Effect.fail(CacheCommandError.new("Published imports are disabled."))
+ * })
+ * console.assert(Layer.isLayer(denyPublishedImports))
+ * ```
+ *
+ * @internal
+ * @category services
+ * @since 0.0.0
+ */
+export class CacheHostedProducerVerifier extends Context.Service<
+  CacheHostedProducerVerifier,
+  {
+    readonly verify: (
+      directory: string,
+      approval: CacheHostedProducerApproval,
+      reference: CacheHostedProducerReference,
+      archive: Uint8Array,
+      observation: CacheProducerObservation
+    ) => Effect.Effect<CacheHostedProducerObservation, CacheCommandError>;
+  }
+>()($I`CacheHostedProducerVerifier`) {}
+
+/**
+ * Provide lazy authenticated GitHub verification with one owned scope per call.
+ *
+ * **Details**
+ * Captures platform services while composing the application layer. Credentials
+ * are resolved only when a published request is checked; the metadata context
+ * is built inside the verification scope and released before returning.
+ *
+ * **Example** (Compose qualification with lazy hosted verification)
+ * ```ts
+ * import { CacheQualificationLive } from "@beep/repo-cli/commands/Cache"
+ * import { CacheHostedProducerVerifierLive } from "@beep/repo-cli/test/Cache"
+ * import * as Layer from "effect/Layer"
+ *
+ * const qualification = CacheQualificationLive.pipe(
+ *   Layer.provideMerge(CacheHostedProducerVerifierLive)
+ * )
+ * console.assert(Layer.isLayer(qualification))
+ * ```
+ *
+ * @internal
+ * @category layers
+ * @since 0.0.0
+ */
+export const CacheHostedProducerVerifierLive = Layer.effect(
+  CacheHostedProducerVerifier,
+  Effect.gen(function* () {
+    const platform = yield* Effect.context<
+      | FileSystem.FileSystem
+      | Path.Path
+      | Digest.Digest
+      | SecureRandom.SecureRandom
+      | ChildProcessSpawner.ChildProcessSpawner
+    >();
+    return CacheHostedProducerVerifier.of({
+      verify: Effect.fn("CacheWorkflow.verifyPublishedAcceptance")(
+        function* (directory, approval, reference, archive, observation) {
+          const metadata = yield* Layer.build(layerCacheHostedProducerMetadata(directory));
+          return yield* verifyCacheHostedProducerObservation(approval, reference, archive, observation).pipe(
+            Effect.provide(metadata)
+          );
+        },
+        Effect.scoped,
+        CacheCommandError.mapError("Cannot verify independently published acceptance metadata."),
+        Effect.provide(platform)
+      ),
+    });
+  })
+);
+
 const id = CacheHostedProducerReference.fields.runId;
 const repository = S.Struct({ id, full_name: S.NonEmptyString, fork: S.Boolean }).pipe(
   $I.annoteSchema("Repository", { description: "GitHub repository database identity and fork status." })
@@ -75,7 +214,11 @@ const Artifact = S.Struct({
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const encodeApproval = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
 const decodeApproval = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerApproval));
-const decodeReport = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerReport), { onExcessProperty: "error" });
+const decodeReport = S.decodeUnknownEffect(S.fromJsonString(CacheHostedProducerObservation.fields.report), {
+  onExcessProperty: "error",
+});
+const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservation));
+const decodeObservation = S.decodeUnknownEffect(S.fromJsonString(CacheProducerObservation));
 const sameBinding = S.toEquivalence(CacheProducerBinding);
 const sameRun = S.toEquivalence(Run);
 const sameArtifact = S.toEquivalence(Artifact);
@@ -200,7 +343,7 @@ const inspectHostedMetadata = Effect.fn("CacheWorkflow.inspectHostedMetadata")(f
 });
 
 const assertHostedReport = Effect.fn("CacheWorkflow.assertHostedReport")(function* (
-  report: CacheHostedProducerReport,
+  report: CacheHostedProducerObservation["report"],
   approval: CacheHostedProducerApproval,
   selected: CacheHostedProducerReference
 ) {
@@ -279,3 +422,99 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
   Effect.scoped,
   CacheCommandError.mapError("Cannot verify the independently approved GitHub producer artifact.")
 );
+
+/**
+ * Prepare the bounded report from a complete observation's own upload.
+ *
+ * **Details**
+ * The enclosing approved workflow supplies the run identity before upload. This function
+ * derives the binding, complete canonical digest and upload from the observation;
+ * it accepts no replacement upload rows. It neither authenticates the envelope
+ * nor publishes an artifact or grants qualification.
+ *
+ * **Example** (Prepare publication for an owned observation)
+ * ```ts
+ * import {
+ *   buildCacheHostedProducerCompleteReport,
+ *   type CacheHostedProducerRunReference,
+ *   type CacheProducerObservation,
+ * } from "@beep/repo-cli/test/Cache"
+ *
+ * const prepare = (observation: CacheProducerObservation, run: CacheHostedProducerRunReference) =>
+ *   buildCacheHostedProducerCompleteReport(observation, run)
+ * ```
+ *
+ * @internal
+ * @category projections
+ * @since 0.0.0
+ */
+export const buildCacheHostedProducerCompleteReport = Effect.fn("CacheWorkflow.buildCompleteHostedReport")(function* (
+  observation: CacheProducerObservation,
+  reference: CacheHostedProducerRunReference
+) {
+  const owned = yield* encodeObservation(observation).pipe(Effect.flatMap(decodeObservation));
+  const upload = yield* owned.observation.upload.pipe(
+    Effect.fromOption(() => CacheCommandError.new("Complete producer publication requires its owned upload."))
+  );
+  return CacheHostedProducerCompleteReport.make({
+    binding: owned.envelope.body.binding,
+    runId: reference.runId,
+    attempt: reference.attempt,
+    observationSha256: yield* hashBytes(new TextEncoder().encode(yield* encodeObservation(owned))),
+    uploads: [upload],
+  });
+}, CacheCommandError.mapError("Cannot prepare complete producer publication."));
+
+/**
+ * Bind immutable hosted publication to the exact complete accepted observation.
+ *
+ * **Details**
+ * Reuses all authenticated metadata, workflow, archive, freshness and race
+ * checks. Legacy upload-only reports cannot satisfy this join. The independent
+ * computation binding, full canonical observation digest and exact owned upload
+ * must agree. This verifies publication only: issuer authentication, native
+ * comparisons, live source and qualification policy remain separate gates.
+ *
+ * **Example** (Inspect complete hosted publication)
+ * ```ts
+ * import {
+ *   type CacheHostedProducerApproval,
+ *   type CacheHostedProducerReference,
+ *   type CacheProducerObservation,
+ *   verifyCacheHostedProducerObservation,
+ * } from "@beep/repo-cli/test/Cache"
+ *
+ * const inspect = (
+ *   approval: CacheHostedProducerApproval,
+ *   run: CacheHostedProducerReference,
+ *   archive: Uint8Array,
+ *   observation: CacheProducerObservation,
+ * ) => verifyCacheHostedProducerObservation(approval, run, archive, observation)
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const verifyCacheHostedProducerObservation = Effect.fn("CacheWorkflow.verifyHostedObservation")(function* (
+  approval: CacheHostedProducerApproval,
+  reference: CacheHostedProducerReference,
+  archive: Uint8Array,
+  observation: CacheProducerObservation
+) {
+  const owned = yield* encodeObservation(observation).pipe(Effect.flatMap(decodeObservation));
+  const contents = yield* encodeObservation(owned);
+  const upload = yield* owned.observation.upload.pipe(
+    Effect.fromOption(() => CacheCommandError.new("Complete producer observation requires its owned upload."))
+  );
+  const hosted = yield* verifyCacheHostedProducerUpload(approval, reference, archive);
+  if (!sameBinding(owned.envelope.body.binding, hosted.report.binding))
+    return yield* CacheCommandError.new("Complete producer observation differs from independent binding.");
+  if (!S.is(CacheHostedProducerCompleteReport)(hosted.report))
+    return yield* CacheCommandError.new("Legacy upload-only publication cannot bind a complete observation.");
+  if (hosted.report.observationSha256 !== (yield* hashBytes(new TextEncoder().encode(contents))))
+    return yield* CacheCommandError.new("Hosted publication differs from the complete observation bytes.");
+  if (!S.toEquivalence(CacheHostedProducerUpload)(hosted.report.uploads[0], upload))
+    return yield* CacheCommandError.new("Hosted publication differs from the complete observation's owned upload.");
+  return hosted;
+}, CacheCommandError.mapError("Cannot join complete producer observation to immutable publication."));
