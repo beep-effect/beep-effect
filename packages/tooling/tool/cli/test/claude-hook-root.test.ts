@@ -26,10 +26,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook launch project con
       const commands = A.flatMap(R.values(settings.hooks), (groups) =>
         A.flatMap(groups, (group) => A.map(group.hooks, (hook) => hook.command))
       );
-      const guarded = A.filter(
-        commands,
-        (command) => Str.includes(".claude/hooks/")(command) || Str.includes("graft-hooks.cjs")(command)
-      );
+      const guarded = A.filter(commands, (command) => Str.includes(".claude/hooks/")(command));
       expect(guarded.length).toBeGreaterThan(0);
       for (const command of guarded) {
         expect(command).toContain('d="${CLAUDE_PROJECT_DIR:-}"; [ -n "$d" ] && [ -d "$d/.claude/hooks" ] || exit 0;');
@@ -41,7 +38,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook launch project con
       const attacker = path.join(root, "attacker");
       for (const dir of [trusted, attacker]) {
         yield* fs.makeDirectory(path.join(dir, ".claude", "hooks"), { recursive: true });
-        yield* fs.makeDirectory(path.join(dir, ".claude", "helpers"), { recursive: true });
       }
       const fixtureDirs: ReadonlyArray<readonly [string, string]> = [
         [trusted, "trusted"],
@@ -51,35 +47,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook launch project con
         const shell = path.join(dir, ".claude", "hooks", "hook-pulse.sh");
         yield* fs.writeFileString(shell, `#!/bin/sh\necho ${label}-shell\n`);
         yield* fs.chmod(shell, 0o755);
-        yield* fs.writeFileString(
-          path.join(dir, ".claude", "helpers", "graft-hooks.cjs"),
-          `console.log("${label}-node");\n`
-        );
       }
       const shellCommand = A.findFirst(guarded, (command) => Str.includes("hook-pulse.sh")(command)).pipe(
         O.getOrElse(() => "")
       );
-      const nodeCommand = A.findFirst(guarded, (command) => Str.includes("graft-hooks.cjs")(command)).pipe(
-        O.getOrElse(() => "")
-      );
       expect(shellCommand).not.toBe("");
-      expect(nodeCommand).not.toBe("");
-      const commandCases: ReadonlyArray<readonly [string, string]> = [
-        [shellCommand, "trusted-shell\n"],
-        [nodeCommand, "trusted-node\n"],
-      ];
-      for (const [command, expected] of commandCases) {
-        const result = Bun.spawnSync(["sh", "-c", command], {
-          cwd: attacker,
-          env: { ...process.env, CLAUDE_PROJECT_DIR: trusted },
-          stdin: "ignore",
-          stdout: "pipe",
-          stderr: "pipe",
-        });
-        expect(result.exitCode).toBe(0);
-        expect(result.stdout.toString()).toBe(expected);
-        expect(result.stderr.toString()).toBe("");
-      }
+      const result = Bun.spawnSync(["sh", "-c", shellCommand], {
+        cwd: attacker,
+        env: { ...process.env, CLAUDE_PROJECT_DIR: trusted },
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout.toString()).toBe("trusted-shell\n");
+      expect(result.stderr.toString()).toBe("");
     })
   );
 });

@@ -998,10 +998,10 @@ to the historical twenty-minute failure.
 
 The complete package attempt finished with 8,298 passing tests, one unchanged
 model-command case timing out at thirty seconds, and three skips; Docgen passed
-in53.8 seconds. The exact isolated case passed in16.763 seconds. The full audit
+in 53.8 seconds. The exact isolated case passed in 16.763 seconds. The full audit
 remains failed and its local timeout attribution is recorded; no Models change
 was made. The final metadata guard now rejects wrong stable-version/channel
 requests before querying a native client. Current combined focused replay
-passes104 cases on Node and104 on Bun, and package quick checking passes.
+passes 104 cases on Node and 104 on Bun, and package quick checking passes.
 Accepted-main integration, current combined hosted proof and full supervised
 stable/current-canary receipts remain required.

@@ -1,27 +1,22 @@
-# systemd user timers: research, graft, and references
+# systemd user timers: research and references
 
-Three repo CLI commands render systemd **user** units into
+Two repo CLI commands render systemd **user** units into
 `$HOME/.config/systemd/user/` on a workstation and enable their timers:
 
 | Command | Units | Schedule |
 | --- | --- | --- |
 | `bun run beep research install-timers` | `beep-research-daily.{service,timer}`, `beep-research-repo-card.{service,timer}` | daily 21:00, Sunday 20:30 |
-| `bun run beep graft deep install-timer --owner <clone>` | `beep-graft-deep-refresh.{service,timer}` | nightly 02:30 |
 | `bun run beep refs install-timer --owner <clone>` | `beep-refs-refresh.{service,timer}` | nightly 03:30 |
 
-The refs timer refreshes every manifest member under
+The refs timer fast-forwards every manifest member under
 `$HOME/YeeBois/references/effect`, provisioned from `scripts/references.json` by
 `bun run beep refs provision` (`BEEP_REFERENCES_ROOT` overrides the root).
-Its deep tier uses `claude-opus-5` through CLIProxyAPI and reuses
-`$HOME/.config/beep-graft/env`; see [graft recovery](graft-local-recovery.md)
-for the shared provider environment.
+It needs no model provider or secrets.
 
 ## Add a reference repository
 
-The manifest is the membership authority. Add a unique `name`, upstream `url`,
-and `tier` to `scripts/references.json`. `deep` joins the existing nightly
-summary/concept pass; `structural` only builds the tree-sitter graph.
-The optional `branch` defaults to `main`. Setup clones that branch; refresh
+The manifest is the membership authority. Add a unique `name` and upstream
+`url` to `scripts/references.json`. The optional `branch` defaults to `main`. Setup clones that branch; refresh
 requires a clean checkout on that branch and pulls `origin <branch>` with
 `--ff-only`, independently of the checkout's configured tracking branch.
 Existing checkouts on another branch are preserved and reported as
@@ -48,60 +43,20 @@ bun run beep refs plan
 ```
 
 Setup preserves existing clones and creates `.repos/<member>` links plus
-`.repos/effect-workspace`. When moving an existing clone, add `graft/`,
-`.graft/`, and `.ignore` to its `.git/info/exclude`; do not edit upstream's
-tracked ignore files. Build each added member from inside its directory,
-then the parent workspace, with `GRAFT_NO_GITIGNORE=1 graft build`. Verify with
-`graft check` and a source query against each member. No dependency install or
-initialization of the upstream repositories' reference submodules is needed.
-
-```sh
-graft ask "How are YAML codecs implemented?" .repos/effected --source
-graft ask "How are plugins discovered?" .repos/effect-workspace --source
-graft ask "How are Effect services composed?" .repos/t3code --source
-graft ask "How are Effect layers assembled?" .repos/opencode --source
-graft ask "How are resources managed with Effect?" .repos/alchemy --source
-```
+`.repos/effect-workspace`. No dependency install or initialization of the
+upstream repositories' reference submodules is needed.
 
 Merge the manifest change and ensure the installed timer's durable owner has
 that commit. Other checkouts receive individual member links when setup runs;
-their existing workspace link already resolves to the shared parent. Structural
-queries work immediately. Deep summaries are separate evidence: verify them
-in the next nightly refresh receipt before claiming the meaning tier is complete.
-Do not start the operator-only deep refresh from an agent merely to add a member.
-When the operator explicitly requests immediate deep ingestion, run the
-authorized deep workflow and retain each source HEAD, branch, exit status,
-coverage, failed-file count, and query evidence. A structural build or a zero
-exit from `--allow-partial` does not prove complete deep coverage.
+their existing workspace link already resolves to the shared parent.
 
 ## Refresh behavior
 
-Each refs run first checks the Graft dist patches with
-`<owner>/scripts/graft/apply-dist-patches.sh --check`, as the graft deep refresh
-does. If the check does not pass, every deep member gets a structural build only
-and reports `skipped-preflight`, and the run sends a critical notification.
-
-The rendered `beep-refs-refresh.service` carries
-`After=beep-graft-deep-refresh.service` in `[Unit]`. It is ordering only, with no
-`Wants=` or `Requires=`, so refs still runs when the graft unit is not installed.
-Both services are `Type=oneshot`, and a oneshot start job stays installed until
-its `ExecStart` exits. systemd enforces `After=` against any installed job, not
-only against jobs from the same transaction. When the 02:30 graft deep pass is
-still running at 03:30, the refs start job therefore waits for it instead of
-sharing the model proxy with a second deep build. No `flock` or `ExecStartPre`
-wait is needed. `OnCalendar` stays at 03:30.
-
-This was checked on this workstation's systemd 262 with two transient units:
-
-```bash
-systemd-run --user --unit=B --property=Type=oneshot sleep 25
-# about 3 s later:
-systemd-run --user --unit=A --property=Type=oneshot --property=After=B.service true
-systemctl --user list-jobs   # A: start waiting, B: start running
-```
-
-B started at 04:30:04 and exited at 04:30:29. A started at 04:30:29, the second
-B exited.
+Each refs run inspects every member: a missing checkout reports `pull-failed`,
+a dirty or off-branch checkout is skipped and left untouched, and a clean
+checkout on its branch is fast-forwarded with `git pull --ff-only`. The run
+writes its receipt to `$HOME/.local/state/beep/refs/last-refresh.json` and
+sends a critical desktop notification only when a member failed.
 
 All installers share one module, `packages/tooling/tool/cli/src/internal/systemd/`:
 the Bun the unit runs is the mise shim (`$HOME/.local/share/mise/shims/bun`)
@@ -129,17 +84,15 @@ Three things rot it:
 
 `--refresh` is the answer to the third: it re-renders the installed units from
 what they recorded — `WorkingDirectory` (repo root / owner), the `--page` in
-`ExecStart` (research), `EnvironmentFile` (graft), the `--root` in `ExecStart`
-(refs), and the timer's `OnCalendar` (graft and refs) — with a fresh Bun
-resolution. For research and graft a flag given alongside `--refresh` still
-wins over the recorded value. For refs only `--bun-path` may accompany
+`ExecStart` (research), the `--root` in `ExecStart` (refs), and the timer's
+`OnCalendar` (refs) — with a fresh Bun resolution. For research a flag given
+alongside `--refresh` still wins over the recorded value. For refs only `--bun-path` may accompany
 `--refresh`; `--owner` and `--on-calendar` are rejected because the installed
 unit is the truth for them, and a new owner or calendar needs a fresh
 `install-timer` (operator only):
 
 ```bash
 bun run beep research install-timers --refresh
-bun run beep graft deep install-timer --refresh
 bun run beep refs install-timer --refresh
 ```
 
@@ -153,13 +106,11 @@ installed.
 
 The agent that shipped the change, as part of post-merge closeout, per
 `AGENTS.md`. The permissions are granted to agents on purpose:
-`Bash(bun run beep research install-timers:*)`,
-`Bash(bun run beep graft deep install-timer --refresh:*)`, and
-`Bash(bun run beep refs install-timer --refresh:*)`. For graft and refs,
-`--refresh` is the only agent-allowed installer form because a first install
-schedules a nightly model-spending job. `beep refs plan` is read-only and
-agent-permitted; agents never run `beep refs refresh`, a fresh
-`beep refs install-timer`, `graft init`, or `graft build --deep`. Agents may
+`Bash(bun run beep research install-timers:*)` and
+`Bash(bun run beep refs install-timer --refresh:*)`. For refs, `--refresh` is
+the only agent-allowed installer form because a first install schedules a new
+nightly job. `beep refs plan` is read-only and agent-permitted; agents never
+run `beep refs refresh` or a fresh `beep refs install-timer`. Agents may
 also use the read-only
 `systemctl --user list-timers`, `systemctl --user status beep-…`, and
 `journalctl --user -u beep-…` queries used to verify. The status and journal
@@ -217,7 +168,7 @@ reason. `--branch` is refused alongside
 ## Verify
 
 ```bash
-systemctl --user list-timers --no-pager | grep -E "beep-research|beep-graft|beep-refs"
+systemctl --user list-timers --no-pager | grep -E "beep-research|beep-refs"
 grep -E "^(ExecStart|WorkingDirectory)=" $HOME/.config/systemd/user/beep-research-daily.service
 journalctl --user -u beep-research-daily.service -n 20 --no-pager
 ```
@@ -241,5 +192,4 @@ a renderer change with `bun run beep research install-timers --repo-root <clone>
 
 ## Related
 
-- `docs/runbooks/graft-local-recovery.md` — what the graft refresh unit does each night.
 - `standards/git-worktrees.md` — lane retirement, including `yeet sweep --retire`.

@@ -2165,13 +2165,13 @@
       "reason": "Prepends a bin directory of ssh and rsync shims to PATH for one `mirror sync` call. The real ChildProcessSpawner resolves those executables through the inherited process PATH, and it.layer would leak the PATH change across the block. Owner: @beep/repo-cli. Exit: the mirror sync resolves ssh and rsync through Config or an injected executable path, so the test provides the shim paths instead. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:1830:withEnvVarEffect@6#1",
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:1836:withEnvVarEffect@6#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 1830,
-      "endLine": 1839,
+      "line": 1836,
+      "endLine": 1845,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:22ab9b8e9a72bdaabc0a13aa41228277902d21a8b3e1eda9a9d6f689b5e23f2c",
       "class": "resource-wrapper",
@@ -5773,6 +5773,48 @@
       "reason": "The failure-variant assertion is followed by typed driver, phase and cause assertions; the complete Cause of a native provision failure is deliberately unspecified, and assertExitFailure would need a fabricated or self-extracted Cause. Owner: @beep/test-utils. Exit: retire when the harness exposes its exact failure Cause, or EV006 accepts an Exit predicate followed by typed failure assertions (#1855 wave 8 register)."
     },
     {
+      "id": "EV006:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:905:expect@6#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "line": 905,
+      "endLine": 905,
+      "symbol": "expect",
+      "occurrence": "v2:bbcd9d33b7b04b0b37df622d936c1ddda06576e790dcee7ed0b8e77814536d3e",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(collect).toHaveBeenCalledWith(root, O.some(request.executable))",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:906:expect@6#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "line": 906,
+      "endLine": 910,
+      "symbol": "expect",
+      "occurrence": "v2:b4d7d80295d1800db297f350a91ae2986cfc9bbfaf62cf5e994cd27419ca8987",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(Census.collectCacheTaskSelection).toHaveBeenCalledWith( root, [\"run\", \"lint\", \"--filter=@beep/identity\", \"--env-mode=strict\"], O.some(request.executable) )",
+      "replacement": {
+        "primitive": "utils.deepStrictEqual",
+        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV006:packages/workspace/use-cases/test/ThreadTimeline.test.ts:86:expect@6#1",
       "lens": "resource",
       "ruleId": "EV006",
@@ -7245,6 +7287,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native filesystem behavior is the subject: materialized bytes, symlink and root-boundary protection, procfs fallback and atomic updates in the vault sync engine. Owner: @beep/documents-server. Exit: retire when MemoryFileSystem models symlinks and procfs and the engine cases move to it."
+    },
+    {
+      "id": "EV010:packages/documents/server/test/VaultSyncFileStoreFailures.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/VaultSyncFileStoreFailures.test.ts",
+      "line": 7,
+      "endLine": 7,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native filesystem identity, path containment, descriptor failures and real file preservation are the tested contract. Tests use it.layer with explicit acquisition budgets. Owner: @beep/documents-server. Exit: retire when an in-memory filesystem faithfully models inode/device identity and descriptor-to-path races."
     },
     {
       "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:22:@effect/platform-bun/BunFileSystem@0#1",
@@ -8985,13 +9049,13 @@
       "reason": "Child processes run the real Node and Bun binaries against the root compatibility shim; memory cannot represent OS child environments or executable identity (research/spawn-env-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the spawn environment parity check moves out of the unit suite."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-acceptance.test.ts:44:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-acceptance.test.ts:45:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-acceptance.test.ts",
-      "line": 44,
-      "endLine": 44,
+      "line": 45,
+      "endLine": 45,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -9799,28 +9863,6 @@
       "reason": "The command reads a temporary exploration manifest and goal packets, the same boundary the snapshot reader crosses in production. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js:5:node:fs@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js",
-      "line": 5,
-      "endLine": 5,
-      "symbol": "node:fs",
-      "occurrence": "v2:6b7cf8f9617e80e9006de4a200f56c479525ec92fe10fbf507d65367a3673ea8",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFS from \"node:fs\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "A node:test fixture that runs the installed graft binary through node:child_process execFileSync. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the fixture stops resolving graft from PATH."
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/gate-order-handoff.test.ts:32:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -9951,28 +9993,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "withTempWorkingDirectory from support/CommandTest.ts chdirs into each temp project. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals set-risk-tier resolves its root from an injected path."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/graft-deep-refresh.test.ts:28:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/graft-deep-refresh.test.ts",
-      "line": 28,
-      "endLine": 28,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The refresh captures real subprocess output and probes process liveness through runCommand. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the refresh runner takes a scripted spawner for every case."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/identity-registration-removal.test.ts:14:@effect/platform-node@0#1",
@@ -10349,13 +10369,13 @@
       "reason": "The prefix check reads the real checkout at findRepoRoot() through FsUtilsLive. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the check runs over a seeded workspace volume."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:12:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:11:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 11,
+      "endLine": 11,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -11955,13 +11975,13 @@
       "reason": "The forced command-encoder failure is the codec-boundary regression: it proves the exact user-facing failure and zero messages, and a service Layer.mock cannot reach this module codec arm. Owner: @beep/ontology-client. Exit: retire when the session command encoder is injected as a service the test can replace (#1855 wave 8 register)."
     },
     {
-      "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:31:vi.mock@0#1",
+      "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:33:vi.mock@0#1",
       "lens": "resource",
       "ruleId": "EV012",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
-      "line": 31,
-      "endLine": 36,
+      "line": 33,
+      "endLine": 38,
       "symbol": "vi.mock",
       "occurrence": "v2:ce22c322e48af625c0bf281f8a089ed69e050aebfb58f6ea3910e876339a04f1",
       "class": "unproven-module-mock-review",
@@ -12109,13 +12129,13 @@
       "reason": "The owning `live account poller` block runs its tests serially on the shared test clock; the test forks the one poll it owns with forkChild, advances the clock only after the hung /me request has signalled through a Deferred that it is in flight, and joins the fiber before the test ends, so no other test sees the adjustment. Owner: @beep/repo-cli. Exit: retire when the Kimi profile timeout test owns its TestClock in a single-case it.layer(TestClock.layer()) block."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:594:TestClock.adjust@15#1",
+      "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:597:TestClock.adjust@15#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-acceptance.test.ts",
-      "line": 594,
-      "endLine": 594,
+      "line": 597,
+      "endLine": 597,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:b86a81525dfecb6357a38a3267a034f6cff03c0669a43f9568812d1eceb0084d",
       "class": "shared-test-clock-adjustment",
@@ -12151,6 +12171,48 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The closed-issuer suite is concurrent: false, every test creates a new issuer and envelope from its current Clock, and the expiry test advances 25 hours to reject its own envelope; no issuer or fiber survives into another test (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:378:TestClock.adjust@15#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
+      "line": 378,
+      "endLine": 378,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:8c466609ec41a7b93b3087a832dbde960a96b7b20f87c452e1c762ba1b4ea7b3",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"21 minutes\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:411:TestClock.adjust@15#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
+      "line": 411,
+      "endLine": 411,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:fe51633fb21e85f8d4605b786fc8ac3bd3bf84a587f81225a667558f3610b144",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"11 minutes\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1808:TestClock.adjust@13#1",

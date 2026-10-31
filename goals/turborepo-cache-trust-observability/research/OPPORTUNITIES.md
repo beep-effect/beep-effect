@@ -1621,7 +1621,7 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   error. Preserve numeric execution bounds and return a dedicated safe timeout
   message; verify the scoped worker directory is removed with a virtual clock.
   Historical unknown causes remain unknown until independently established.
-- A broad package audit completed with8,298 passes and one unchanged Models
+- A broad package audit completed with 8,298 passes and one unchanged Models
   check-only case exceeding its thirty-second test limit. Its exact isolated
   replay passed in16.763 seconds. Preserve both scopes and the failed full audit;
   use fresh combined hosted validation instead of inferring a complete pass.

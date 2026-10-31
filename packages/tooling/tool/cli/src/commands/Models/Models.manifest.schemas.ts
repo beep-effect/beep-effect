@@ -22,12 +22,14 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { SectionKey } from "@beep/managed-section/Section";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import { EffortLevel, ModelId } from "./Models.catalog.schemas.ts";
 import { ModelsLegacyPublication, ModelsPublication, ModelsTrackedPublication } from "./Models.exchange.schemas.ts";
 import type { EffortLevel as EffortLevelValue } from "./Models.catalog.schemas.ts";
@@ -50,7 +52,6 @@ const RoutingRoleKit = LiteralKit([
   "fallback.cursor",
   "fallback.grok",
   "qa.judge",
-  "graft.deep",
   "research.routine",
   "jsdoc.migrate-titles",
   "deprecated.routable",
@@ -1011,6 +1012,44 @@ export class SupersededModel extends S.Opaque<SupersededModel, { readonly brand:
   )
 ) {}
 
+// ── Retired roles ───────────────────────────────────────────────────────────
+
+// Roles removed from the vocabulary. A manifest written before a retirement
+// still names them, so its bindings and targets for them decode and are
+// dropped instead of failing the whole manifest (graft.deep: graft retired
+// 2026-10-28).
+const RetiredRoutingRole = LiteralKit(["graft.deep"]);
+const RetiredBindingRef = S.Struct({ role: RetiredRoutingRole });
+const RetiredBinding = S.Struct({ role: RetiredRoutingRole, surface: S.String, modelId: S.String });
+const RetiredLocator = S.Union([
+  S.Struct({ binding: RetiredBindingRef }),
+  S.Struct({ filter: S.Struct({ roles: S.NonEmptyArray(RetiredRoutingRole) }) }),
+]);
+const RetiredTarget = S.Struct({ id: S.String, locators: S.NonEmptyArray(RetiredLocator) });
+
+const ActiveBindings = S.Array(S.Union([ModelBinding, RetiredBinding])).pipe(
+  S.decodeTo(
+    ModelBinding.pipe(S.toType, S.Array),
+    SchemaTransformation.transform({
+      decode: (entries: ReadonlyArray<ModelBinding | typeof RetiredBinding.Type>): ReadonlyArray<ModelBinding> =>
+        A.filter(entries, S.is(ModelBinding)),
+      encode: (bindings: ReadonlyArray<ModelBinding>): ReadonlyArray<ModelBinding | typeof RetiredBinding.Type> =>
+        bindings,
+    })
+  )
+);
+const ActiveTargets = S.Array(S.Union([ModelSyncTarget, RetiredTarget])).pipe(
+  S.decodeTo(
+    ModelSyncTarget.pipe(S.toType, S.Array),
+    SchemaTransformation.transform({
+      decode: (entries: ReadonlyArray<ModelSyncTarget | typeof RetiredTarget.Type>): ReadonlyArray<ModelSyncTarget> =>
+        A.filter(entries, S.is(ModelSyncTarget)),
+      encode: (targets: ReadonlyArray<ModelSyncTarget>): ReadonlyArray<ModelSyncTarget | typeof RetiredTarget.Type> =>
+        targets,
+    })
+  )
+);
+
 /**
  * The operator's whole routing manifest.
  *
@@ -1041,8 +1080,8 @@ export class SupersededModel extends S.Opaque<SupersededModel, { readonly brand:
 export class ModelsManifest extends S.Opaque<ModelsManifest, { readonly brand: unique symbol }>()(
   S.Struct({
     version: S.tag("beep-models/v1"),
-    bindings: S.Array(ModelBinding),
-    targets: S.Array(ModelSyncTarget),
+    bindings: ActiveBindings,
+    targets: ActiveTargets,
     superseded: S.Array(SupersededModel).pipe(S.withDecodingDefaultKey(Effect.succeed([]))),
   }).pipe(
     $I.annoteSchema("ModelsManifest", {
