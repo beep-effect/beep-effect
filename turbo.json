@@ -3635,6 +3635,7 @@
         "packages/foundation/modeling/identity/src/Vocab.ts",
         "packages/foundation/modeling/identity/src/index.ts",
         "packages/foundation/modeling/identity/src/internal/generated/SparTerms.ts",
+        "packages/foundation/modeling/identity/src/internal/schemaStatics.ts",
         "packages/foundation/modeling/identity/src/packages.ts",
         "packages/foundation/modeling/jsonc/package.json",
         "packages/foundation/modeling/jsonc/src/Jsonc.ts",
