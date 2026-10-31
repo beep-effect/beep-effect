@@ -14,6 +14,7 @@
 import { ConfigFile } from "@beep/config-file/ConfigFile";
 import { YamlCodec } from "@beep/config-file/YamlCodec";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Yaml, YamlStringifyOptions } from "@beep/yaml/Yaml";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -25,7 +26,6 @@ import * as Path from "effect/Path";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { stringify as stringifyYaml } from "yaml";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { ModelsManifestError } from "./Models.errors.ts";
 import { ModelsManifest } from "./Models.manifest.schemas.ts";
@@ -33,6 +33,11 @@ import { ModelsManifest } from "./Models.manifest.schemas.ts";
 const $I = $RepoCliId.create("commands/Models/Models.manifest.service");
 
 const encodeManifest = S.encodeUnknownEffect(ModelsManifest);
+
+// The `yaml` npm writer's layout (sequences indented under their key, double
+// quotes when quoting is needed, no folding), so an adopted manifest keeps the
+// shape the operator already has on disk.
+const manifestYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "double" });
 
 // ── Manifest store ──────────────────────────────────────────────────────────
 
@@ -116,8 +121,8 @@ const makeManifestStore = Effect.fnUntraced(function* () {
   const path = yield* Path.Path;
 
   // The manifest is read through `ConfigFile.read` and `YamlCodec` (wave 3,
-  // W3-e); the writers below keep the npm `yaml` stringifier and the atomic
-  // rename. The three failure messages are the ones the store always raised.
+  // W3-e) and written through the `@beep/yaml` stringifier with the atomic
+  // rename (R4). The three failure messages are the ones the store always raised.
   const load: ModelsManifestStoreShape["load"] = (file: string) =>
     ConfigFile.read(file, { schema: ModelsManifest, codec: YamlCodec }).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
@@ -209,8 +214,11 @@ const makeManifestStore = Effect.fnUntraced(function* () {
     yield* fs
       .makeDirectory(directory, { recursive: true })
       .pipe(ModelsManifestError.mapError(`Failed to create ${directory}`, directory));
+    const text = yield* Yaml.stringify(encoded, manifestYamlOptions).pipe(
+      ModelsManifestError.mapError("Failed to render the seed models manifest as YAML", file)
+    );
     const temporary = `${file}.tmp-${yield* uniqueSuffix()}`;
-    yield* fs.writeFileString(temporary, stringifyYaml(encoded, { lineWidth: 0 }), { flag: "wx" }).pipe(
+    yield* fs.writeFileString(temporary, text, { flag: "wx" }).pipe(
       Effect.flatMap(() => fs.rename(temporary, file)),
       Effect.onError(() => Effect.ignore(fs.remove(temporary))),
       ModelsManifestError.mapError(`Failed to write ${file}`, file)

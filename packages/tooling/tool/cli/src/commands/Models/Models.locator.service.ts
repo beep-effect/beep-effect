@@ -14,6 +14,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, P, pipe, R, Str } from "@beep/utils";
+import { YamlDocument } from "@beep/yaml/YamlDocument";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -24,7 +25,6 @@ import * as Tuple from "effect/Tuple";
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
 import { getNodeValue } from "jsonc-parser";
-import { isMap, isScalar as isYamlScalar, parseDocument, visit } from "yaml";
 import { ModelsLocatorError } from "./Models.errors.ts";
 import { extractGeneratedBlock } from "./Models.render.ts";
 import {
@@ -34,6 +34,8 @@ import {
   modelsShellScope,
   modelsShellWords,
 } from "./Models.spans.ts";
+import type { YamlPath } from "@beep/yaml/YamlEdit";
+import type { YamlNode } from "@beep/yaml/YamlNode";
 import type { Locator } from "./Models.manifest.schemas.ts";
 import type { ModelsTargetFile } from "./Models.paths.ts";
 
@@ -247,35 +249,91 @@ const unsupportedOccurrence = (
   );
 };
 
-const readYamlPath = (content: string, path: ReadonlyArray<string | number>): O.Option<string> => {
-  const names = A.map(path, (segment) => `${segment}`);
-  const doc = parseDocument(content);
-  // Only simple block mappings are modeled. No aliases, anchors, tags,
-  // flow collections, complex keys, multiline scalars or multiple documents.
-  let supported = A.isReadonlyArrayEmpty(doc.errors) && A.isReadonlyArrayEmpty(doc.warnings);
-  visit(doc, {
-    Node: (_, node) => {
-      const simple = isMap(node)
-        ? node.flow !== true && A.every(node.items, (pair) => isYamlScalar(pair.key) && pair.key.type === "PLAIN")
-        : isYamlScalar(node) && node.type !== "BLOCK_LITERAL" && node.type !== "BLOCK_FOLDED";
-      supported = supported && node.anchor === undefined && node.tag === undefined && simple;
-    },
+// Every node of a YAML subtree, mapping keys included (the nodes a document
+// visitor reaches).
+const yamlNodesOf = (node: YamlNode): ReadonlyArray<YamlNode> =>
+  Match.valueTags(node, {
+    YamlMap: (map) =>
+      A.prepend(
+        A.flatMap(map.items, (pair) =>
+          A.appendAll(yamlNodesOf(pair.key), P.isNull(pair.value) ? A.empty<YamlNode>() : yamlNodesOf(pair.value))
+        ),
+        map
+      ),
+    YamlSeq: (seq) => A.prepend(A.flatMap(seq.items, yamlNodesOf), seq),
+    YamlScalar: A.of<YamlNode>,
+    YamlAlias: A.of<YamlNode>,
   });
-  const ranges = A.getSomes(
-    A.map(A.entries(path), ([depth, segment]) => {
-      const parent = doc.getIn(A.take(path, depth), true);
-      if (!isMap(parent)) return O.none<readonly [number, number]>();
-      const pair = A.findFirst(parent.items, (pair) => isYamlScalar(pair.key) && pair.key.value === segment);
-      return O.flatMap(pair, ({ key }) =>
-        isYamlScalar(key) && key.range != null ? O.some(Tuple.make(key.range[0], key.range[1])) : O.none()
+
+// Only simple block mappings are modeled: block maps with plain scalar keys
+// and non-block scalars, with no anchor or tag. Sequences and aliases are not.
+const isSimpleYamlNode = (node: YamlNode): boolean =>
+  Match.valueTags(node, {
+    YamlMap: (map) =>
+      map.style === "block" &&
+      P.isUndefined(map.anchor) &&
+      P.isUndefined(map.tag) &&
+      A.every(map.items, (pair) => pair.key._tag === "YamlScalar" && pair.key.style === "plain"),
+    YamlScalar: (scalar) =>
+      scalar.style !== "block-literal" &&
+      scalar.style !== "block-folded" &&
+      P.isUndefined(scalar.anchor) &&
+      P.isUndefined(scalar.tag),
+    YamlSeq: () => false,
+    YamlAlias: () => false,
+  });
+
+const yamlNodeAt = (document: YamlDocument, path: YamlPath): O.Option<YamlNode> =>
+  pipe(
+    O.fromNullishOr(document.contents),
+    O.flatMap((root) => root.find(path))
+  );
+
+const yamlKeyRange = (
+  document: YamlDocument,
+  path: YamlPath,
+  depth: number,
+  segment: string | number
+): O.Option<readonly [number, number]> =>
+  pipe(
+    yamlNodeAt(document, A.take(path, depth)),
+    O.flatMap((parent) => (parent._tag === "YamlMap" ? O.some(parent.items) : O.none())),
+    O.flatMap(A.findFirst(({ key }) => key._tag === "YamlScalar" && key.value === segment)),
+    O.map(({ key }) => Tuple.make(key.offset, key.offset + key.length))
+  );
+
+const readYamlPath = (content: string, path: YamlPath): Effect.Effect<O.Option<string>> =>
+  YamlDocument.parseAll(content).pipe(
+    Effect.option,
+    Effect.map((documents) => {
+      const names = A.map(path, (segment) => `${segment}`);
+      // No aliases, anchors, tags, flow collections, complex keys, block
+      // scalars or multiple documents; every reported diagnostic fails closed.
+      const document = O.flatMap(documents, (parsed) => (A.length(parsed) === 1 ? A.head(parsed) : O.none()));
+      const supported = O.filter(
+        document,
+        (parsed) =>
+          A.isReadonlyArrayEmpty(parsed.errors) &&
+          A.isReadonlyArrayEmpty(parsed.warnings) &&
+          A.every(
+            O.match(O.fromNullishOr(parsed.contents), { onNone: A.empty<YamlNode>, onSome: yamlNodesOf }),
+            isSimpleYamlNode
+          )
+      );
+      const ranges = O.match(supported, {
+        onNone: A.empty<readonly [number, number]>,
+        onSome: (parsed) =>
+          A.getSomes(A.map(A.entries(path), ([depth, segment]) => yamlKeyRange(parsed, path, depth, segment))),
+      });
+      const unsupported = unsupportedOccurrence(content, names, ranges, "YAML");
+      if (O.isSome(unsupported)) return unsupported;
+      return pipe(
+        document,
+        O.flatMap((parsed) => yamlNodeAt(parsed, path)),
+        O.flatMap((node) => (node._tag === "YamlScalar" ? scalarText(node.value) : O.none<string>()))
       );
     })
   );
-  const unsupported = unsupportedOccurrence(content, names, supported ? ranges : [], "YAML");
-  if (O.isSome(unsupported)) return unsupported;
-  const value = doc.getIn([...path]);
-  return scalarText(value);
-};
 
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
@@ -488,7 +546,7 @@ export const modelsReadLocator = Effect.fn("Models.readLocator")(function* (file
     Match.tag("md-generated-block", ({ blockId }) => Effect.succeed(extractGeneratedBlock(file.content, blockId))),
     Match.tag("toml-top-level-key", ({ key }) => readTomlPath(file.content, [key])),
     Match.tag("toml-table-key", ({ table, key }) => readTomlPath(file.content, [...Str.split(table, "."), key])),
-    Match.tag("yaml-path", ({ path: yamlPath }) => Effect.succeed(readYamlPath(file.content, yamlPath))),
+    Match.tag("yaml-path", ({ path: yamlPath }) => readYamlPath(file.content, yamlPath)),
     Match.tag("json-key", ({ pointer, fallbacks }) => readJsonPointer(file.content, pointer, fallbacks)),
     Match.tag("env-key", ({ key }) => modelsReadShellAssign(file.content, key, O.none())),
     Match.tag("shell-assign", ({ variable, within }) => modelsReadShellAssign(file.content, variable, within)),

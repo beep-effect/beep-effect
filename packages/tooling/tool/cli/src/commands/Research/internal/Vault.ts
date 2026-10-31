@@ -8,6 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Yaml, YamlStringifyOptions } from "@beep/yaml/Yaml";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Crypto from "effect/Crypto";
@@ -20,7 +21,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import * as Yaml from "yaml";
 import { ResearchCommandError } from "../Research.errors.ts";
 import type { KnowledgeCardFrontmatter } from "../Research.schemas.ts";
 
@@ -174,6 +174,10 @@ export const slugFor = Effect.fn("ResearchVault.slugFor")(function* (
   return Str.isEmpty(base) ? suffix : `${base}--${suffix}`;
 });
 
+// The `yaml` npm writer's layout the vault cards were written in: sequences
+// indented under their key, double quotes when quoting is needed, no folding.
+const cardYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "double" });
+
 /**
  * Render a knowledge card as YAML frontmatter followed by a markdown body.
  *
@@ -184,16 +188,21 @@ export const slugFor = Effect.fn("ResearchVault.slugFor")(function* (
  * @category utilities
  */
 export const renderCard: {
-  (body: string): (frontmatter: KnowledgeCardFrontmatter) => string;
-  (frontmatter: KnowledgeCardFrontmatter, body: string): string;
-} = dual(2, (frontmatter: KnowledgeCardFrontmatter, body: string): string => {
-  const yamlSource: Array<readonly [string, unknown]> = A.flatMap(FRONTMATTER_KEYS, ([prop, key]) => {
-    const value = frontmatter[prop];
-    return P.isUndefined(value) ? [] : [[key, value] as const];
-  });
-  const rendered = Yaml.stringify(R.fromEntries(yamlSource), { lineWidth: 0 });
-  return `---\n${rendered}---\n\n${Str.trimEnd(body)}\n`;
-});
+  (body: string): (frontmatter: KnowledgeCardFrontmatter) => Effect.Effect<string, ResearchCommandError>;
+  (frontmatter: KnowledgeCardFrontmatter, body: string): Effect.Effect<string, ResearchCommandError>;
+} = dual(
+  2,
+  Effect.fn("ResearchVault.renderCard")(function* (frontmatter: KnowledgeCardFrontmatter, body: string) {
+    const yamlSource: Array<readonly [string, unknown]> = A.flatMap(FRONTMATTER_KEYS, ([prop, key]) => {
+      const value = frontmatter[prop];
+      return P.isUndefined(value) ? [] : [[key, value] as const];
+    });
+    const rendered = yield* Yaml.stringify(R.fromEntries(yamlSource), cardYamlOptions).pipe(
+      ResearchCommandError.mapError("Failed rendering card frontmatter as YAML.")
+    );
+    return `---\n${rendered}---\n\n${Str.trimEnd(body)}\n`;
+  })
+);
 
 /**
  * Write a knowledge card beneath the vault root, creating parent directories.

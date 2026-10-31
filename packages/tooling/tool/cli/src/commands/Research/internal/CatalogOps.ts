@@ -121,7 +121,7 @@ export const persistCards = Effect.fn("Research.persistCards")(function* (
   }
   const now = DateTime.formatIso(yield* DateTime.now);
   for (const card of cards) {
-    yield* writeCard(vaultRoot, card.relativePath, renderCard(card.frontmatter, card.body));
+    yield* writeCard(vaultRoot, card.relativePath, yield* renderCard(card.frontmatter, card.body));
   }
   const hashedCards = yield* Effect.forEach(cards, (card) =>
     Effect.map(sha256HexOf(card.body), (contentHash) => ({ card, contentHash }))
