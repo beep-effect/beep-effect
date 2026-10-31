@@ -192,6 +192,19 @@ describe("hostility: optimizer expansion", () => {
       "ExpansionBudgetExceeded"
     );
   });
+
+  it("deduplicates alternatives at the 1,000-pattern ceiling", () => {
+    const matcher = new Minimatch("literal");
+    assert.deepStrictEqual(matcher.secondPhasePreProcess(A.makeBy(1000, () => ["literal"])), [["literal"]]);
+  });
+
+  it("skips every pairwise comparison above the 1,000-pattern ceiling", () => {
+    const matcher = new Minimatch("literal");
+    matcher.partsMatch = () => assert.fail("large sets must not enter pairwise deduplication");
+    const parts = A.makeBy(1001, () => ["literal"]);
+    assert.strictEqual(matcher.secondPhasePreProcess(parts), parts);
+    assert.strictEqual(parts.length, 1001);
+  });
 });
 
 describe("hostility: internal cap wiring", () => {
@@ -224,6 +237,16 @@ const underWatchdog = Effect.fnUntraced(
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provide([FileSystem.layerNoop({}), Path.layer]));
 
 it.layer(SpawnerLayer, { timeout: "2 seconds" })((it) => {
+  it.effect("preserves 4,096 level-two alternatives under a subprocess watchdog", () =>
+    underWatchdog(`
+      import { Minimatch } from "@beep/glob/internal/minimatch";
+      const matcher = new Minimatch("{a,b}".repeat(12), { optimizationLevel: 2 });
+      if (matcher.globParts.length !== 4096) throw new Error("alternatives were lost");
+      if (!matcher.match("a".repeat(12)) || !matcher.match("b".repeat(12))) throw new Error("missing match");
+      if (matcher.match("x".repeat(12))) throw new Error("unexpected match");
+    `)
+  );
+
   it.effect("rejects a long ambiguous repetition without exponential backtracking under a subprocess watchdog", () =>
     underWatchdog(`
 			import { Minimatch } from "@beep/glob/internal/minimatch";

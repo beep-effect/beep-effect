@@ -184,7 +184,6 @@ export const legacyFragment: {
  * import { legacySamples } from "./legacyOracle.ts";
  * import * as Arbitrary from "effect/Arbitrary";
  * import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
  *
  * const examples = Arbitrary.sampleEffect(legacySamples("compliance-default"), { count: 1, seed: 0 });
  * Effect.runPromise(examples).then((rows) => console.log(rows.length)); // 1

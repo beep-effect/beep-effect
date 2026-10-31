@@ -1288,7 +1288,9 @@ export class Minimatch {
    *
    * **Details**
    *
-   * The input alternatives are edited before the retained alternatives are returned.
+   * Up to 1,000 input alternatives are edited before the retained alternatives
+   * are returned. Larger sets skip pairwise deduplication and retain every
+   * alternative, preserving the same matching language.
    *
    * **Example** (Deduplicate pattern alternatives)
    *
@@ -1304,6 +1306,8 @@ export class Minimatch {
    * @since 0.0.0
    */
   secondPhasePreProcess(globParts: Array<Array<string>>): Array<Array<string>> {
+    // Pairwise deduplication is optional; keep large sets without quadratic work.
+    if (globParts.length > 1000) return globParts;
     for (let i = 0; i < globParts.length - 1; i++) this.#mergeFirstMatch(globParts, i);
     // A.filter visits sparse holes that native filter skipped; a hole stays dropped
     return A.filter(globParts, (gs: Array<string> | undefined) => gs !== undefined && gs.length > 0);

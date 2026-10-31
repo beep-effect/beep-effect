@@ -974,3 +974,20 @@ quiet output, and refresh the full package and both runtime coverage proofs.
 Those checks and the repeated negative controls pass; the initial refusal
 remains retained. No gate or diagnostic was disabled. Prevent recurrence by
 checking existing source-import conventions before applying compiler hints.
+
+
+### 2026-10-31: expansion budgets do not bound optional pairwise work
+
+PR2373 review found that 4,096 alternatives remain below the existing expansion
+budget but still entered quadratic second-phase processing. Mirror the patched
+upstream 1,000-alternative deduplication ceiling and retain all larger sets.
+The exact-boundary and zero-comparison tests plus a subprocess watchdog pass.
+Removing only the new guard fails the fast 1,001-alternative assertion; source
+restores exactly. Full package and both runtime coverage suites pass 273 tests.
+The same review found a stray import inside JSDoc; remove that text while keeping
+the actual filesystem import. Preserve the earlier proof as historical and
+require a new complete final check for this source wave.
+
+A first coverage launch was refused by the shell's unmatched-glob rule before
+any test process started. Quoting the literal exclusion argument allowed the
+intended run; no test or coverage rule was changed.

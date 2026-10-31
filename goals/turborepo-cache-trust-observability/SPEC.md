@@ -210,6 +210,20 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Bound optional second-phase optimizer work, 2026-10-31 UTC
+
+- The expansion budget alone still permits quadratic pairwise processing below
+  its cap. Follow the patched upstream limit: skip optional deduplication above
+  1,000 alternatives while retaining every alternative and matching behavior.
+  Test the exact boundary, zero comparisons above it, and 4,096 alternatives
+  through the existing scoped subprocess watchdog. Removing the guard must
+  fail the bounded 1,001-alternative control, then restore source exactly.
+- Remove the stray import text from the legacy helper's JSDoc; keep its real
+  filesystem import. Re-prove this source wave rather than treating the older
+  complete proof as current. Reversal is a reviewed Git revert of this wave;
+  protected consumers remain held until a secure compatible repair is accepted.
+  No cache deployment, credential, scanner exception or proof floor changes.
+
 ### Dependency security compatibility, 2026-10-31 UTC
 
 - Resolve the inherited glob/minimatch advisories with patched dependencies and

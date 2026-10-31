@@ -1,7 +1,7 @@
 {
   "schemaVersion": "dependency-security-compatibility-checkpoint/v1",
   "authority": "Component compatibility and local source proof only; no qualification or deployment authority.",
-  "recordedAt": "2026-10-31T02:20:01.027531+00:00",
+  "recordedAt": "2026-10-31T04:13:11.847337+00:00",
   "baseRevision": "0e601a3d55f88d875ca49d47931e216a5a328aa2",
   "initialPublishedRepairHead": "3b482fbe6a4d2de26833c4dd15c1826e08338a8c",
   "pullRequest": 2373,
@@ -13,9 +13,9 @@
     "minimatch": "11.0.3",
     "bun": "1.4.4"
   },
-  "guardSourceSha256": "78b87e6831c10d382ad13c17b47d3120a9e8279edaa258a27e2d0ddc3a1f2bc5",
+  "guardSourceSha256": "fcce6e00d72f6c64cbf3e63a9aa1dd2edbdc6883846b8920ad6235d7030a05c6",
   "sourceSha256": {
-    "packages/foundation/modeling/glob/README.md": "a0cbd81c9692a3e13934c0fa4fb81bb5e922c9bc410061f28a568c548baf00bd",
+    "packages/foundation/modeling/glob/README.md": "db90c63079f083154a71ee3e15281ebe3001ae52eeb729f8d82a1feef0cd9613",
     "packages/foundation/modeling/glob/package.json": "5fb6e89dee7d251d8c859befe4cb6a67ae9b3653121670279ed9492434db01f2",
     "packages/foundation/modeling/glob/src/GlobPattern.ts": "15aa31baaadf70a5422e4be7d56b8d7990adc1878621f4d666c8643da768f1c8",
     "packages/foundation/modeling/glob/src/GlobSet.ts": "669d7151090225648241c37fe5a01af539bccc109068bb04594c288bb246a94c",
@@ -28,7 +28,7 @@
     "packages/foundation/modeling/glob/src/internal/braceExpressions.ts": "62e301233bc60b2ab3bb8b69c7366b18dd61691153b601ecf23dcab3df85bd3d",
     "packages/foundation/modeling/glob/src/internal/escape.ts": "c99ac0e1a7911d31273b5ef0f1b283a2038fc47515d729c8132993d2d39614fe",
     "packages/foundation/modeling/glob/src/internal/limits.ts": "fa87e702168d813f2cb49e47bba1efa871aa2fa6a7e8faf57042788433c82bd8",
-    "packages/foundation/modeling/glob/src/internal/minimatch.ts": "78b87e6831c10d382ad13c17b47d3120a9e8279edaa258a27e2d0ddc3a1f2bc5",
+    "packages/foundation/modeling/glob/src/internal/minimatch.ts": "fcce6e00d72f6c64cbf3e63a9aa1dd2edbdc6883846b8920ad6235d7030a05c6",
     "packages/foundation/modeling/glob/src/internal/types.ts": "3768fdd1633e596d5fa1952944129e6dacbcacbb0bd1340f3a2a175e8a62344c",
     "packages/foundation/modeling/glob/src/internal/unescape.ts": "6fe511911e4aecc278f3de912ee4266c0afbdf59ebac5f311804ab65ac45a2b9",
     "packages/foundation/modeling/glob/test/GlobPattern.coverage.test.ts": "e2ad70285525213cc91a7e19e159802b693a2de0dc8d0e2338f2e4b1d792b39d",
@@ -55,7 +55,7 @@
     "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-provenance.json": "5982ccca5d25d8d6e58ef197f9e1e8d1c385ab4f1c83899a2172a4da10b449ad",
     "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-public-facade.json": "59ae571f06a567c09daca3a74eefbbbd320f905220a36d5a3f0013c06ae93bc5",
     "packages/foundation/modeling/glob/test/fixtures/minimatch-v10-regexp.json": "185483553962a63837634ad97ed4c50e0c42696d1f06191e0669e10a82c426fc",
-    "packages/foundation/modeling/glob/test/hostility.test.ts": "bccf6172881485a7b17ee24a14ce6b95e9738ca549b0b9fdd5ab0da5afbb7164",
+    "packages/foundation/modeling/glob/test/hostility.test.ts": "8d851e0e1c0ecdcffd214876a63fb1d09f187ec8e7cbc341c19c2b361183e401",
     "packages/foundation/modeling/glob/test/internal/assertValidPattern.property.test.ts": "6d9ebc33803ec7d6f79f234e4b185316a0db4c751e437ffe9d3cd317f5448a68",
     "packages/foundation/modeling/glob/test/internal/ast.coverage.test.ts": "9ced0596ea1062a156c92552c261d62907c6f9047b73521e24af5fff9a31e720",
     "packages/foundation/modeling/glob/test/internal/ast.property.test.ts": "bb46f2b7378cc9b3b5c637d3cb6cf7f5fde351e664b0be9451cde55610455026",
@@ -74,11 +74,11 @@
     "packages/foundation/modeling/glob/test/internal/unescape.coverage.test.ts": "a804f6e12121d5df4f33d3b6c04c8bc0577691b7b157775354202362b445ece5",
     "packages/foundation/modeling/glob/test/internal/unescape.property.test.ts": "72e4ce013053ba9e9ba701ae4df8e8e2831a81e8a130eaad0da19ee904aa711a",
     "packages/foundation/modeling/glob/test/legacyOracle.test.ts": "1c1f83086c712ec5ec9ad27ed66c1c791f37cbe310a15aa671f1f900f6960664",
-    "packages/foundation/modeling/glob/test/legacyOracle.ts": "dc753c0cbe34874f7496e72fcd0fac91c066d336be3941c669ffa0eb90a5ed8b"
+    "packages/foundation/modeling/glob/test/legacyOracle.ts": "1807e127a3d4b497cf4534f93b5e6bd7d53c0907ece2e42a6586624d39dd922e"
   },
   "specBinding": {
-    "prior": "4abd0d6fc7c4e0401893ee5cc581053bf33db9d07fd4be48804a922dc873c21e",
-    "current": "98f7ff8cee753d056cd178f5e90d5bd0534fc3444836bc62998a4da7bc7d77e6",
+    "prior": "98f7ff8cee753d056cd178f5e90d5bd0534fc3444836bc62998a4da7bc7d77e6",
+    "current": "35423c3fba45ba4be7c3f22126060d94f7165c57c8358fd07fbc622d345a73e2",
     "acceptanceAndContractUnchanged": true
   },
   "oracle": {
@@ -139,28 +139,28 @@
   "verification": {
     "completePackage": {
       "exit": 0,
-      "elapsedSeconds": 15.993,
-      "finishedAt": "2026-10-31T02:16:03.389629+00:00"
+      "elapsedSeconds": 18.414,
+      "finishedAt": "2026-10-31T04:06:40.955225+00:00"
     },
     "nodeCoverage": {
       "exit": 0,
-      "elapsedSeconds": 8.386,
-      "finishedAt": "2026-10-31T02:16:11.797386+00:00"
+      "elapsedSeconds": 8.311,
+      "finishedAt": "2026-10-31T04:11:58.124798+00:00"
     },
     "bunCoverage": {
       "exit": 0,
-      "elapsedSeconds": 4.864,
-      "finishedAt": "2026-10-31T02:16:16.677433+00:00"
+      "elapsedSeconds": 4.858,
+      "finishedAt": "2026-10-31T04:12:22.562450+00:00"
     }
   },
   "testScope": {
     "node": {
       "files": 29,
-      "tests": 270
+      "tests": 273
     },
     "bunCoverage": {
       "files": 29,
-      "tests": 270
+      "tests": 273
     },
     "allOriginalDirectedMatchingCasesRetained": 2043,
     "allReferenceSamplesExecuted": 8000,
@@ -197,27 +197,34 @@
   "causalControls": {
     "schemaVersion": 1,
     "source": "packages/foundation/modeling/glob/src/internal/minimatch.ts",
-    "restoredSha256": "78b87e6831c10d382ad13c17b47d3120a9e8279edaa258a27e2d0ddc3a1f2bc5",
+    "restoredSha256": "fcce6e00d72f6c64cbf3e63a9aa1dd2edbdc6883846b8920ad6235d7030a05c6",
     "controls": [
       {
         "name": "first-excess-budget",
         "exit": 1,
         "oneIntendedFailure": true,
-        "seconds": 0.543
+        "seconds": 0.688
+      },
+      {
+        "name": "second-phase-pairwise-bound",
+        "exit": 1,
+        "oneIntendedFailure": true,
+        "seconds": 0.589
       },
       {
         "name": "independent-reference",
         "exit": 1,
         "oneIntendedFailure": true,
-        "seconds": 0.65
+        "seconds": 0.668
       }
     ],
     "restoredExactly": true
   },
   "hostedSnapshot": {
-    "head": "3b482fbe6a4d2de26833c4dd15c1826e08338a8c",
+    "head": "ac3833ec76e2a53718c4d30579cec089ae967f53",
     "security": "success",
-    "checkAndUnitFailures": "Pre-migration removed oracle APIs and changed matching semantics; current local wave repairs them. Aggregates failed after the unit shard. Fresh hosted checks required after publication."
+    "propertyLaws": "Inherited unchanged DuckDB held-message readiness race; focused repair PR2374 is separately published. Fresh checks required for this security wave.",
+    "currentWave": "Unpublished; no current hosted or full-final acceptance yet."
   },
   "preserved": {
     "scannerExceptionsChanged": false,
@@ -251,5 +258,52 @@
     "warnings": 0,
     "diagnosticSuppressionsAdded": false,
     "fix": "Explicit .ts helper imports, NodeURL alias and a hoisted JSON reference codec."
+  },
+  "priorPublishedSourceProof": {
+    "sourceHead": "4bff49f293bb048fae3e471d8a59fc6dcb5c1080",
+    "verification": {
+      "completePackage": {
+        "exit": 0,
+        "elapsedSeconds": 15.993,
+        "finishedAt": "2026-10-31T02:16:03.389629+00:00"
+      },
+      "nodeCoverage": {
+        "exit": 0,
+        "elapsedSeconds": 8.386,
+        "finishedAt": "2026-10-31T02:16:11.797386+00:00"
+      },
+      "bunCoverage": {
+        "exit": 0,
+        "elapsedSeconds": 4.864,
+        "finishedAt": "2026-10-31T02:16:16.677433+00:00"
+      }
+    },
+    "testsPerRuntime": 270,
+    "fullFinal": {
+      "exit": 0,
+      "elapsedSeconds": 2878.108,
+      "complete": true,
+      "skips": 0
+    },
+    "hosted": {
+      "requiredGreen": 15,
+      "optionalGreen": 21,
+      "head": "4bff49f293bb048fae3e471d8a59fc6dcb5c1080"
+    },
+    "authority": "Historical proof only; does not prove the current review wave.",
+    "checkpointSha256": "586dcb2a17db329fcf0cacb15edc815472e77055dfd64d1a8c4c68891b9aae87"
+  },
+  "secondPhaseGuard": {
+    "upstreamAdvisory": "https://github.com/advisories/GHSA-g3hv-75wg-m249",
+    "upstreamInspectedVersion": "11.0.3",
+    "pairwiseAlternativeCeiling": 1000,
+    "aboveCeiling": "Return every input alternative unchanged without pairwise deduplication.",
+    "controls": {
+      "atCeilingDeduplicates": 1000,
+      "aboveCeilingNoPairwiseCalls": 1001,
+      "watchdogPreservesAlternatives": 4096
+    },
+    "currentPublicationAndFullFinal": "Pending; prior complete proof remains historical.",
+    "reviewThreads": ["PRRT_kwDOPbO_N86yNUv8", "PRRT_kwDOPbO_N86yNUv-"]
   }
 }

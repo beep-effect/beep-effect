@@ -8,7 +8,7 @@ Glob matching is compilation: a pattern string becomes a predicate over candidat
 
 This package puts the failure where it belongs. `GlobPattern.compile` returns `Effect<GlobPattern, GlobPatternError>`, and the error carries the `reason`, the `limit` and the `actual` value rather than a message you have to parse. Once a `GlobPattern` exists, `matches` is total: pure, synchronous, no error channel, and no hostile pattern can make it overflow, allocate unboundedly or hang, because every guard fired before the instance was constructed.
 
-The dialect is not a subset. The engine in `src/internal/` is a vendored port of minimatch with attribution, property-tested against the real minimatch as an oracle, with every upstream DoS guard preserved and new depth guards added on the recursion surfaces upstream left open. The minimatch oracle is a devDependency confined to the test suite.
+The dialect is not a subset. The engine in `src/internal/` is a vendored port of minimatch with attribution. Independent recorded results from the verified minimatch 10 implementation preserve its matching dialect, while bounded fresh candidates and hostile-input tests exercise the port. The patched minimatch development dependency supplies the unchanged escape primitives; the older implementation is not an executable dependency. Expansion, pairwise-work and recursion guards bound the compilation paths.
 
 One deliberate deviation from upstream: no ambient environment detection. `platform` is an explicit option defaulting to `"posix"`, and `process.platform` is never read, so a pattern behaves identically on every machine. All win32 path handling stays behind the option.
 
@@ -222,5 +222,7 @@ Current upstream still checks unchanged escape and expansion primitives.
 
 The vendored optimizer applies `braceExpandMax` to generated globstar-parent
 alternatives as well as brace expansion. It rejects the first excess member
-with the existing typed `ExpansionBudgetExceeded` signal before the pairwise
-optimization phase.
+with the existing typed `ExpansionBudgetExceeded` signal. Pairwise deduplication
+is skipped for more than 1,000 alternatives, matching upstream's second-phase
+ceiling. All alternatives remain available for matching; this optimization does
+not truncate the pattern language.
