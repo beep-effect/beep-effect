@@ -193,7 +193,6 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
   "Bash(git checkout -- .)",
   "Bash(gh pr merge --admin:*)",
   "Bash(gh repo delete:*)",
-  "Edit(**/.github/workflows/**)",
   "Edit(**/docs/_internal/**)",
   "Edit(**/.claude/settings.json)",
   "Bash(bun run beep refs refresh:*)",
@@ -201,7 +200,7 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
     description:
-      "Exact 20-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, protected-file edits, and the operator-only reference refresh and timer installation commands.",
+      "Exact 19-value Claude deny domain required to block history rewrites, forced worktree removal, working-tree destruction, direct stash deletion and popping, admin merges, repository deletion, protected-file edits, and the operator-only reference refresh and timer installation commands.",
   })
 );
 

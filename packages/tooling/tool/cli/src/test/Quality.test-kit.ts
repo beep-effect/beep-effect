@@ -96,7 +96,6 @@ export {
   listSourceFiles,
   readWorkspacePackageText,
   tagsFromComment,
-  workspacePatternsFrom,
 } from "../commands/Quality/internal/QualityArtifactSupport.ts";
 export * from "../commands/Quality/internal/ResidueTerminalLaneLive.ts";
 export { testTsgoPrograms } from "../commands/Quality/internal/TestTsgoPrograms.ts";
