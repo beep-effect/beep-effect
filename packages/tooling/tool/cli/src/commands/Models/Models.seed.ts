@@ -229,7 +229,6 @@ const seedBindings: ReadonlyArray<ModelBinding> = [
   binding("cursor.review", "cursor-seat", "claude-opus-5-5-high", O.none(), ["claude-opus-5-thinking-high"]),
   binding("cursor.mechanical", "cursor-seat", "composer-2.5", O.none()),
   binding("qa.judge", "claude-code", "claude-opus-5-5", O.none(), [], opusChildren),
-  binding("graft.deep", "proxy-workflow", "claude-opus-5-5", O.none(), ["claude-opus-5"]),
   binding("jsdoc.migrate-titles", "grok-cli", "grok-4.7", O.none(), ["grok-4.6", "grok-4.5"]),
   binding("deprecated.routable", "proxy-workflow", "gpt-daybreak-blue-latest", O.none()),
 ];
@@ -308,9 +307,6 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
   target("repo.agents-md", "repo", "AGENTS.md", false, [block("volume-pools", allBindings, true), doctrineEffort]),
   target("repo.docs.agent-pools", "repo", "docs/runbooks/agent-pools.md", false, [
     block("cursor-seats", cursorSeats, true),
-  ]),
-  target("repo.docs.graft-local-recovery", "repo", "docs/runbooks/graft-local-recovery.md", false, [
-    block("graft-deep", onlyRoles(["graft.deep"]), false),
   ]),
   target("repo.skills.browser-qa-loop", "repo", ".claude/skills/browser-qa-loop/SKILL.md", false, [
     block("qa-judge", onlyRoles(["qa.judge"]), false),
@@ -393,14 +389,6 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
       // `effortLevel`; the check reads the same effective value.
       pointer: ["modelSettings", BOUND_MODEL_SEGMENT, "effortLevel"],
       fallbacks: [["effortLevel"]],
-    },
-  ]),
-  target("home.beep-graft.env", "home", "$HOME/.config/beep-graft/env", true, [
-    {
-      _tag: "env-key",
-      binding: at("graft.deep", "proxy-workflow", "model"),
-      render: verbatim,
-      key: "GRAFT_MODEL",
     },
   ]),
   target("home.junie.settings", "home", "$HOME/.junie/settings.json", true, [

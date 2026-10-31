@@ -279,20 +279,11 @@ proven shapes, and wave 0 generalizes them.
 
 ### 3.1 Upstream
 
-- Checkout: `~/YeeBois/references/effect/effected` (registered as `effected`,
-  tier deep, in `scripts/references.json`). Record its commit once in the
+- Checkout: `~/YeeBois/references/effect/effected` (registered as `effected`
+  in `scripts/references.json`). Record its commit once in the
   ledger header: `git -C ~/YeeBois/references/effect/effected rev-parse HEAD`.
 - Effect is 4.0.1 on both sides (`node_modules/effect/package.json` here,
   `pnpm-workspace.yaml` catalog there). Never introduce v3 APIs.
-- Graft is indexed upstream. **Run it from inside that checkout**, otherwise
-  it resolves the beep graph and reports no definitions:
-
-  ```bash
-  cd ~/YeeBois/references/effect/effected && graft skeleton packages/semver/src/SemVer.ts
-  cd ~/YeeBois/references/effect/effected && graft ask "how does YamlLint autofix apply edits" --source
-  cd ~/YeeBois/references/effect/effected && graft callers Journal --depth 2
-  ```
-
 - Upstream conventions you must read once: `CLAUDE.md`,
   `okf/conventions/testing-standards.md`, `okf/conventions/format-package-convention.md`,
   `okf/project.md` (tiers table). Per module: `packages/<m>/CLAUDE.md`,
@@ -300,7 +291,7 @@ proven shapes, and wave 0 generalizes them.
 
 ### 3.2 Effect references
 
-- Effect API truth: `graft ask "<q>" .repos/effect` from the beep root
+- Effect API truth: the `.repos/effect` checkout from the beep root
   (`~/YeeBois/references/effect/effect` is the same checkout).
 - Schema best practices: `~/YeeBois/references/effect/effect/packages/effect/SCHEMA.md`.
 - `@effect/tsgo` diagnostics: `~/YeeBois/references/effect/effect-tsgo`
@@ -323,7 +314,7 @@ D6 no flakyTest), `packages/tooling/library/repo-utils/src/schemas/JSDocCategori
 
 Skills to load at the named stage: `schema-first-development`,
 `effect-first-development`, `jsdoc-annotation-specialist`, `crispen`,
-`quality-review-fix-loop`, `graft`, `closeout`.
+`quality-review-fix-loop`, `closeout`.
 
 Beep helpers the ports use: `@beep/identity/packages` (`$ScratchpadId`),
 `@beep/schema` (`LiteralKit`, kits), `@beep/utils` (`@beep/utils/Option`),
@@ -813,7 +804,7 @@ commit SHA against:
 - `.patterns/error-handling.md`, `.patterns/module-organization.md`
 - bugs, type safety (D15), performance (D11 evidence rule)
 - schema best practices (`SCHEMA.md` in the Effect reference)
-- idiomatic Effect module usage (verified with graft against `.repos/effect`)
+- idiomatic Effect module usage (verified against `.repos/effect`)
 - `@effect/tsgo` diagnostics (reference checkout `effect-tsgo`)
 
 ### 12.2 Seats and exact commands
