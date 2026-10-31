@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T17:41:49.719979+00:00",
   "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-ledger-launch-7bl332k4",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-ledger-launch-7bl332k4",
   "artifacts": [
     {
       "file": "audit.repair-v12.combined.txt",

@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T18:57:48.732272+00:00",
   "head": "98c762efbff9abfda6cee6383ced7a07ea50a514",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-preflight-repair-mzkh40yc",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-preflight-repair-mzkh40yc",
   "artifacts": [
     {
       "file": "foundation-preflight-repair-v1.log",

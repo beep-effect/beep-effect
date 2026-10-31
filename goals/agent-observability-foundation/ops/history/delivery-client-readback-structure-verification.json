@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T19:17:34.678879+00:00",
   "head": "48f87682ccfb6037fe870baa747123c0789c5077",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-client-readback-structure-e3uh_lwe",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-client-readback-structure-e3uh_lwe",
   "artifacts": [
     {
       "file": "foundation-structure-focused-v1.log",

@@ -6,9 +6,9 @@
       "launch": {
         "unit": "foundation-panel-claude-20261028.service",
         "argv": [
-          "/home/elpresidank/.local/bin/claude",
+          "~/.local/bin/claude",
           "-p",
-          "Independent review.panel seat required by AGENTS.md. Read-only review of the active agent-observability-foundation implementation in this workspace and /home/elpresidank/YeeBois/projects/dankserver-worktrees/agent-observability-foundation. Read AGENTS.md and goals/agent-observability-foundation/SPEC.md, GOAL.md, PLAN.md, research/LIVE-CANARY.md. Review current dirty code/config/tests and receipt evidence against all 13 acceptance criteria. Identify actionable correctness/privacy/recovery defects and acceptance gaps with exact file and line references. Do not trust evidence summaries alone. No edits, deployments, commands that mutate state, provider launches, external communications, or delegations. Return the review in your final output; parent saves it. Do not expand this foundation to universal real-harness coverage: SPEC allows unknown populations and asks for CLI/desktop-marked fixtures plus bounded live route. Parent is repairing missing event-lag/independent health signals; broad CLI quality and repository delivery are still open. Focus deeply on receipt/replay, source privacy, queue/retention/backup, operational rollback, and honest metrics. Follow graft discovery when available; if denied record limitation and inspect with read/search tools. Give verdict, prioritized findings with evidence, and explicit unverified areas.",
+          "Independent review.panel seat required by AGENTS.md. Read-only review of the active agent-observability-foundation implementation in this workspace and ~/YeeBois/projects/dankserver-worktrees/agent-observability-foundation. Read AGENTS.md and goals/agent-observability-foundation/SPEC.md, GOAL.md, PLAN.md, research/LIVE-CANARY.md. Review current dirty code/config/tests and receipt evidence against all 13 acceptance criteria. Identify actionable correctness/privacy/recovery defects and acceptance gaps with exact file and line references. Do not trust evidence summaries alone. No edits, deployments, commands that mutate state, provider launches, external communications, or delegations. Return the review in your final output; parent saves it. Do not expand this foundation to universal real-harness coverage: SPEC allows unknown populations and asks for CLI/desktop-marked fixtures plus bounded live route. Parent is repairing missing event-lag/independent health signals; broad CLI quality and repository delivery are still open. Focus deeply on receipt/replay, source privacy, queue/retention/backup, operational rollback, and honest metrics. Follow graft discovery when available; if denied record limitation and inspect with read/search tools. Give verdict, prioritized findings with evidence, and explicit unverified areas.",
           "--model",
           "claude-fable-5-1",
           "--effort",
@@ -27,9 +27,9 @@
           "Bash(git diff *)",
           "Bash(git status *)",
           "--add-dir",
-          "/home/elpresidank/YeeBois/projects/dankserver-worktrees/agent-observability-foundation"
+          "~/YeeBois/projects/dankserver-worktrees/agent-observability-foundation"
         ],
-        "cwd": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
+        "cwd": "~/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
       }
     },
     {
@@ -37,7 +37,7 @@
       "launch": {
         "unit": "foundation-panel-claude-finalize.service",
         "argv": [
-          "/home/elpresidank/.local/bin/claude",
+          "~/.local/bin/claude",
           "-p",
           "Finish the independent review now using the evidence already inspected. Return the full prioritized review in your final response immediately. Do not call tools, inspect more files, acknowledge inbox rows, run checks, or mutate anything. State limitations and the source revision/dirty snapshot you inspected. Parent is fixing the multi-event order issue and health gaps; do not assume those newer changes passed final verification. Preserve findings rather than waiting for a perfect tree.",
           "--model",
@@ -51,11 +51,11 @@
           "--tools",
           "",
           "--add-dir",
-          "/home/elpresidank/YeeBois/projects/dankserver-worktrees/agent-observability-foundation",
+          "~/YeeBois/projects/dankserver-worktrees/agent-observability-foundation",
           "--resume",
-          "9fb92782-841f-4a66-9188-fed08abae22d"
+          "[redacted-review-session-2]"
         ],
-        "cwd": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
+        "cwd": "~/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
       }
     },
     {
@@ -63,7 +63,7 @@
       "launch": {
         "unit": "foundation-panel-claude-report.service",
         "argv": [
-          "/home/elpresidank/.local/bin/claude",
+          "~/.local/bin/claude",
           "-p",
           "Return your independent review now as a final written report. This is an explicit response request. Use only evidence already inspected in this session. List prioritized defects and acceptance gaps with file references, and state unverified boundaries. No tool calls or further work. The parent is fixing issues separately; preserve your findings.",
           "--model",
@@ -77,15 +77,15 @@
           "--tools",
           "",
           "--add-dir",
-          "/home/elpresidank/YeeBois/projects/dankserver-worktrees/agent-observability-foundation",
+          "~/YeeBois/projects/dankserver-worktrees/agent-observability-foundation",
           "--resume",
-          "9fb92782-841f-4a66-9188-fed08abae22d",
+          "[redacted-review-session-2]",
           "--max-turns",
           "1",
           "--settings",
           "{\"disableAllHooks\":true}"
         ],
-        "cwd": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
+        "cwd": "~/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
       }
     },
     {
@@ -93,7 +93,7 @@
       "launch": {
         "unit": "foundation-panel-grok-finalize.service",
         "argv": [
-          "/home/elpresidank/.local/bin/grok",
+          "~/.local/bin/grok",
           "-m",
           "grok-4.7",
           "--effort",
@@ -117,11 +117,11 @@
           "--allow",
           "Bash(git diff *)",
           "--resume",
-          "01a18602-2f06-7541-a45c-8d4b31850102",
+          "[redacted-review-session-1]",
           "--disallowed-tools",
           "run_terminal_command,read_file,search_replace,list_dir,grep,kill_command_or_subagent,todo_write,get_command_or_subagent_output,scheduler_create,scheduler_delete,scheduler_list,monitor,search_tool,use_tool,workflow,enter_plan_mode,exit_plan_mode,ask_user_question,send_feedback,image_gen,image_edit,image_to_video,reference_to_video,write"
         ],
-        "cwd": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
+        "cwd": "~/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation"
       }
     }
   ]

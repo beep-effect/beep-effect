@@ -1,0 +1,13 @@
+{
+  "kind": "independent-public-receipt-review",
+  "reviewer": "Named GPT-6-Astra foundation panel",
+  "reviewedManifestSha256": "d1a9fa9116db7d1fd0dbc5487eccefaec09ae2a3f03f0d5cae617b63594ada72",
+  "originalPublicPairsVerified": 49,
+  "privateRelocationOriginalsVerified": 90,
+  "credentialOrPromptContentFinding": false,
+  "publicIdentityMinimizationAccepted": true,
+  "oomFactsAndUnknownIntentPreserved": true,
+  "recommendation": "Hold owner may treat this specific publication objection as resolved at reviewed bytes.",
+  "holdReleased": false,
+  "historyBoundary": "Earlier published history persists; no history rewrite authorized or performed."
+}

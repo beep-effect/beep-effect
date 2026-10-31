@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T17:52:53.154721+00:00",
   "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-http-intake-pu2d88gb",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-http-intake-pu2d88gb",
   "artifacts": [
     {
       "file": "audit.repair-v13.combined.txt",

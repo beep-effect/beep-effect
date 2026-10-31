@@ -26,7 +26,7 @@
     "rebasedForwarderSha256": "d94884986a42cef0d3f0b11f75bf61886a3114aeb99418826f8642c60ad0e806",
     "onlySourceTransformation": "relative module imports resolved to current dependency files; file-local rollback proof, not a whole historical binary rollback"
   },
-  "artifactRoot": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation/.cache/forwarder-compatibility-vq8fqt6f",
+  "artifactRoot": "~/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation/.cache/forwarder-compatibility-vq8fqt6f",
   "fixtureSha256": "c730c96951a3a1ebd08b3841f10f78995a4f36b67fa6463f7282487d7f656607",
   "currentForwarderSha256": "bc13b6228007debbb1420aede54abea9da28f6f6131a5e8427d5d400fec72adf",
   "currentDependencySourceReceipt": "ops/retirement-package-verification.json",

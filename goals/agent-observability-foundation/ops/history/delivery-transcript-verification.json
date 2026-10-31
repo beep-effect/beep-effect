@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T15:41:30.474976+00:00",
   "scope": "Current AI-metrics audit/docgen and regenerated documentation ratchet pass; full goal remains open.",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-transcript-fjqg41t7",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-transcript-fjqg41t7",
   "sourceManifestSha256": "accc6183fa1736ce38494f5eef8de840001d1736b94891d1633a7fd0ff605834",
   "sourceFileCount": 169,
   "artifacts": [

@@ -58,6 +58,12 @@ curated sanitized examples remains the approved collection policy. Source merge,
 fixtures and synthetic canaries do not enroll real harnesses, establish exhaustive
 coverage, reingest historical archives or release the recovery hold.
 
+Historical execution originals remain privately retained. Selected public receipts
+are now explicitly sanitized derivatives, with separate original/public hashes in
+the [publication manifest](./ops/history/public-receipt-sanitization-20261031.json).
+The original relocation index describes its historical operation; it does not claim
+that later public derivatives retain the original bytes.
+
 ## Current verification
 
 - [October 31 PR repair](./research/PR2364-REPAIR.md): current-main integration,

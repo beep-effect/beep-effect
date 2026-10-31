@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T13:46:45.124160-05:00",
   "head": "98c762efbff9abfda6cee6383ced7a07ea50a514",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-preflight-pxghfzcv",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-preflight-pxghfzcv",
   "artifacts": [
     {
       "file": "foundation-delivery-cheap-v2.log",
@@ -209,9 +209,9 @@
   },
   "guard": {
     "ownedScopes": {
-      "agent-run-894d1358-f96d-447a-84d3-224f004e7064.scope": {
-        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-894d1358-f96d-447a-84d3-224f004e7064.scope",
-        "invocationId": "30a8a83bc60641439ca57573abd22f8b",
+      "[redacted-agent-session-4]": {
+        "group": "[redacted-user-cgroup]/agent-runs/[redacted-agent-session-4]",
+        "invocationId": "[redacted-invocation-for-redacted-agent-session-4]",
         "preGuardPeakBytes": 19062784,
         "ownership": "live descendant of proof service MainPID"
       }

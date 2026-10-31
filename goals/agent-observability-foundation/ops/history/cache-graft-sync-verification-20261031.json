@@ -1,0 +1,104 @@
+{
+  "kind": "reviewed-graft-main-cache-sync",
+  "incomingMain": "3fbb6e614b",
+  "reviewedSubjects": ["//", "@beep/repo-ai-metrics"],
+  "metadataPreservedFromIncomingMain": {
+    "scope": [
+      "@beep/identity#lint",
+      "@beep/types#lint",
+      "@beep/fc-runs#lint",
+      "@beep/test-runner#lint"
+    ],
+    "profile": "local-linux-x64-bun1.4.2",
+    "epoch": "qualification-v2"
+  },
+  "qualificationBoundary": "Preserves incoming historical Bun1.4.2/v2 baseline metadata, not a qualification of the current runtime.",
+  "unaffectedReviewsUnchanged": true,
+  "priorReviewsCarried": 187,
+  "reviewsDropped": 0,
+  "globalConfigurationUnchanged": true,
+  "nodeSetUnchanged": true,
+  "projectionChanges": [
+    {
+      "computation": "//#lint:policy-fingerprint:goals-doctor",
+      "fields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:goals-index",
+      "fields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:knowledge",
+      "fields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:lint-deprecated-apis",
+      "fields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:lint-roadmap-refs",
+      "fields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:quality",
+      "fields": ["configuration"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#audit",
+      "fields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#build",
+      "fields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#check",
+      "fields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#coverage",
+      "fields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#lint:deprecated-apis",
+      "fields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#package-test-typecheck",
+      "fields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#test",
+      "fields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#test:property",
+      "fields": ["dependencies"]
+    }
+  ],
+  "cacheAudit": "0 blocking findings;1655 unassessed computations",
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-cache-sync2-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 42807087104,
+    "peakObservedBytes": 2468438016,
+    "minimumAvailableBytes": 22936297472,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 68,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "docgen",
+        "observedAtEpochSeconds": 1793452877.3085685
+      }
+    ],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "qualificationLedgerUnchanged": "standards/cache-qualification.json",
+  "independentReview": "Named Astra accepted exact2subject request; post-writer projection verified by owner."
+}

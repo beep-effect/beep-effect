@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T18:04:24.499886+00:00",
   "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-intake-boundaries-rs_lurab",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-intake-boundaries-rs_lurab",
   "artifacts": [
     {
       "file": "audit.repair-v14.combined.txt",

@@ -22,11 +22,11 @@
   "firstDriverContinuation": "Stopped by owner after completed834+5 scopes, because ambient VitePlus wrapper bootstrapped Bun under each synthetic HOME. Its wrapper exit0 is not a complete script pass. Provider rerun used direct pinned executable first in private PATH. No assertions/timeouts were weakened.",
   "logs": [
     {
-      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup/foundation-pr2364-current-full-tests-20261031.log",
+      "path": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup/foundation-pr2364-current-full-tests-20261031.log",
       "sha256": "0df3178745a4e51d5f7cbcf06cb3535d75ce9c7fc7621d9501c931636ca0c404"
     },
     {
-      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup/foundation-pr2364-current-provider-pinned-20261031.log",
+      "path": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup/foundation-pr2364-current-provider-pinned-20261031.log",
       "sha256": "80bb61e867866cfdeeddb1d3b79608dfc28009189a12c3ac19e865acc7cd8f23"
     }
   ],

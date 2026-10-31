@@ -1,6 +1,6 @@
 {
   "result": "passed",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/obs-deploy-tyfel5ys",
+  "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-tyfel5ys",
   "sameHostOnly": true,
   "doNotRunRetainedBundles": true,
   "files": [

@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T16:30:06.420733+00:00",
   "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-payload-runtime-0a5ec20p",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-payload-runtime-0a5ec20p",
   "artifacts": [
     {
       "file": "foundation-bounded-job.py",

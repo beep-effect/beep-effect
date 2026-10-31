@@ -467,7 +467,7 @@ or desktop notification was changed.
 
 ## Delivery guard correction — 2026-10-29
 
-The collected Yeet cheap-gate run moved its admitted descendants into `agent-run-ea3f73ec-b7b9-430f-aed0-24b25a642629.scope`, a sibling of the outer proof service. The old outer-service monitor therefore did not measure aggregate proof memory. The admitted scope retained a peak of 15,691,333,632 bytes (about 14.6 GiB), with no own memory/swap limits; its observed current use was 4,510,527,488 bytes when this was discovered. The outer service reported only 605,114,368 bytes peak. Earlier outer-service Yeet peaks cannot establish aggregate bounds. This observation does not establish a new kernel OOM event.
+The collected Yeet cheap-gate run moved its admitted descendants into `[redacted-agent-session-8]`, a sibling of the outer proof service. The old outer-service monitor therefore did not measure aggregate proof memory. The admitted scope retained a peak of 15,691,333,632 bytes (about 14.6 GiB), with no own memory/swap limits; its observed current use was 4,510,527,488 bytes when this was discovered. The outer service reported only 605,114,368 bytes peak. Earlier outer-service Yeet peaks cannot establish aggregate bounds. This observation does not establish a new kernel OOM event.
 
 The exact owned scope was verified through live process ancestry, given runtime limits, and deliberately stopped together with the outer job after the collected checks had exposed repairable failures. The revised guard follows live descendants into admitted scopes, sums nonoverlapping owned cgroup usage, applies limits only to ancestry-proven owned scopes, and stops those scopes before the outer service on threshold breach. The supported `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1` setting now serializes the next collected run. No other agent's service or user application was stopped. The guard revision and before/after evidence are retained by `ops/history/delivery-guard-correction.json`; aggregate qualification remains pending its next admitted run.
 
@@ -483,7 +483,7 @@ Its kernel record says `CONSTRAINT_MEMCG`, memory usage and limit both
 the same event are not counted as separate OOM decisions.
 
 Read-only source inspection found the matching unit prefix and exact 768 MiB
-limit in `/home/elpresidank/ai/lib/review/restricted_runtime_aggregate.py`.
+limit in `~/ai/lib/review/restricted_runtime_aggregate.py`.
 That implementation has an explicit `memory-pressure` stress case whose intended
 result is a bounded group OOM kill. A receipt tying this exact unit to that case
 was not recovered, so deliberate stress is a plausible source attribution, not

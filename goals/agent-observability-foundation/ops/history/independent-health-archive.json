@@ -1,6 +1,6 @@
 {
   "source": "/tmp/obs-deploy-5kf8m3um",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/obs-deploy-5kf8m3um",
+  "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-5kf8m3um",
   "bytes": 53484755,
   "sameHostOnly": true,
   "notOffDeviceBackup": true,

@@ -10,7 +10,7 @@
   "recoveryHoldReleased": false,
   "stages": {
     "current-disposable": {
-      "retainedEvidence": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/current-disposable/evidence.json",
+      "retainedEvidence": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/current-disposable/evidence.json",
       "sha256": "0e8d9975ef4ab51ea7131d0ad9b56531a019a1a958a1e112230b6e9b8ff52559",
       "sourceCount": 88,
       "sourceSha256": {
@@ -166,7 +166,7 @@
       }
     },
     "current-live": {
-      "retainedEvidence": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/current-live/evidence.json",
+      "retainedEvidence": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/current-live/evidence.json",
       "sha256": "beee4aafebaaf28392b5aeb6d326238e4b59b1ffd456489f3a7e4d5e7f1e73b9",
       "sourceCount": 87,
       "sourceSha256": {
@@ -322,7 +322,7 @@
     }
   },
   "interruptedAttempt": {
-    "evidence": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/interrupted-live/interrupted-cleanup.json",
+    "evidence": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/interrupted-live/interrupted-cleanup.json",
     "result": "incomplete-host-pressure",
     "noPreSendPlanWritten": true,
     "ownedCleanupVerified": true,

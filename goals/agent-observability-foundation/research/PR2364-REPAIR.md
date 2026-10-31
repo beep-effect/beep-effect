@@ -128,8 +128,10 @@ membership uses `MutableHashSet` with unchanged check/add ordering.
 
 The reference gate identified 90 immutable execution receipts stored in the live
 `ops` surface. They moved to `ops/history` byte-for-byte; the relocation index
-records original paths and SHA-256 values. Historical internal source locations
-retain their original meaning. Navigation links point to retained locations.
+records original paths and SHA-256 values for that relocation operation. The later
+public sanitization described below supersedes the representation of selected
+public copies; exact originals retain their meaning in the private proof archive.
+Navigation links point to the public representations.
 The captured operator request is likewise retained verbatim in the exploration's
 research directory. The reference classifier and its zero-debt gate are unchanged.
 
@@ -200,3 +202,26 @@ and a head-bound Yeet verdict reference. After merge, canonical completion
 refresh must verify accepted-head readiness and the full merge-time required
 check inventory. A proposal, stale verdict, structural mergeability or local
 receipt alone cannot establish achievement. The recovery hold remains intact.
+
+## Publication correction and hosted HTTP test repair
+
+The 117 held operator-home references contained no credentials, customer content
+or prompt/transcript text, but the public friction-receipt policy still required
+a correction. All 90 relocation originals were preserved privately and their
+original hashes verified. Forty-eight receipt/research files now normalize home
+paths. Three memory follow-up receipts replace raw kernel/journal lines and
+unrelated workload locations with structured failure/resource facts; measurements,
+time, source digests and unknown intent remain explicit.
+
+[The sanitization manifest](../ops/history/public-receipt-sanitization-20261031.json)
+separates original and public hashes. Relocation `byteIdentical` claims describe
+the original operation, not later sanitized copies. These are public derivatives,
+not new execution proof, and this correction does not erase published Git history.
+The reviewer hold awaits its holder's disposition; recovery services remain held.
+
+Five equivalent HTTP test-layer expressions now use the required pipeable form.
+All four affected package typechecks pass, and the focused 23 HTTP/worker tests
+pass separately under Node 22 and Bun 1.4.4. See the
+[scoped repair receipt](../ops/history/http-layer-repair-proof-20261031.json).
+The inherited Fallow graph/writer complexity belongs to consolidated main repair
+PR2399; this delivery consumes accepted main rather than creating a second repair.

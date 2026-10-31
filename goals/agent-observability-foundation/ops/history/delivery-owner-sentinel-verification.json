@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T13:23:03.223308-05:00",
   "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-owner-sentinel-9p14hnqi",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-owner-sentinel-9p14hnqi",
   "artifacts": [
     {
       "file": "foundation-launch-owner-reproduction.log",

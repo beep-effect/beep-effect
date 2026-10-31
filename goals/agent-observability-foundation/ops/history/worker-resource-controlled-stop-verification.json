@@ -139,7 +139,7 @@
                         "handler": "reverse_proxy",
                         "upstreams": [
                           {
-                            "dial": "unix//home/elpresidank/.cache/claude-tmp/foundation-worker-resources-oj5jm9ec/journal.sqlite.sock"
+                            "dial": "unix/~/.cache/claude-tmp/foundation-worker-resources-oj5jm9ec/journal.sqlite.sock"
                           }
                         ],
                         "transport": {
@@ -222,7 +222,7 @@
                         "handler": "reverse_proxy",
                         "upstreams": [
                           {
-                            "dial": "unix//home/elpresidank/.cache/claude-tmp/foundation-worker-resources-oj5jm9ec/journal.sqlite.sock"
+                            "dial": "unix/~/.cache/claude-tmp/foundation-worker-resources-oj5jm9ec/journal.sqlite.sock"
                           }
                         ],
                         "transport": {

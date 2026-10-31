@@ -2,7 +2,7 @@
   "observedAt": "2026-10-31T07:37:44.129043+00:00",
   "baseIntegrationCommit": "fcb2c70946",
   "scannerMerge": "4a71782090acac558412687d387de7996aec4073",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o",
+  "archive": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o",
   "checks": {
     "schemaInventoryRefresh": "passed",
     "jsdocLint": "passed-zero-warnings",
@@ -117,7 +117,7 @@
       "exitCode": 0,
       "orphanCleanup": []
     },
-    "scriptArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/pr2364-schema-shard.ts",
+    "scriptArchive": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/pr2364-schema-shard.ts",
     "scriptSha256": "88764460d2892fabd1b8774ca5db87f7d4138da0f8a73ae7d2c5982bde5c8c1c",
     "fullCheck": "Requires current-head hosted verification",
     "repeatabilityCheck": "Passed: 250 input files, changed false, exit zero, no protective stop"

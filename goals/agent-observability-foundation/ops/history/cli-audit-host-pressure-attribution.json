@@ -1,7 +1,7 @@
 {
   "recordedAt": "2026-10-29T22:45:00.820998+00:00",
   "result": "incomplete-controlled-host-pressure-stop",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/cli-audit-host-pressure-3_ph8rm8",
+  "archive": "~/.local/state/beep/observation-proof-archive/cli-audit-host-pressure-3_ph8rm8",
   "sourceFilesChecked": 1421,
   "sourceChangesDuringRun": [],
   "durableSteps": [

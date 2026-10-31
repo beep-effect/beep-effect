@@ -2,10 +2,10 @@
   "observedAt": "2026-10-29T19:38:55.708596+00:00",
   "purpose": "Separate repair for false cheap-gate failure attribution discovered during foundation verification",
   "pullRequest": "https://github.com/beep-effect/beep-effect/pull/2362",
-  "worktree": "/home/elpresidank/YeeBois/projects/beep-effect-worktrees/yeet-cheap-gate-attribution",
+  "worktree": "~/YeeBois/projects/beep-effect-worktrees/yeet-cheap-gate-attribution",
   "branch": "fix/yeet-cheap-gate-attribution",
   "head": "04b53e034eae00853daf80db24227d2293fac7c6",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/yeet-cheap-gate-attribution-52g_5q7e",
+  "archive": "~/.local/state/beep/observation-proof-archive/yeet-cheap-gate-attribution-52g_5q7e",
   "review": "Independent Astra accepted five exact source/test hashes archived in receipt.json",
   "verification": "271 focused tests plus CLI quick lint/check passed; full local publication safely stopped on host pressure",
   "publication": "Standing constrained-compute route after local-capacity hold exceeded ten minutes; draft with ready-for-heavy label",
@@ -38,8 +38,8 @@
   "verifiedSourceHead": "e84ba8519163a13ea68beddeab5f3237f9214ad7",
   "reviewWindow": "At least 20 minutes after ready/last push; not merge-ready yet",
   "monitor": {
-    "jobId": "24507487-b499-4be3-8be6-df5ea7278601",
-    "unit": "beep-proof-24507487-b499-4be3-8be6-df5ea7278601.service",
+    "jobId": "[redacted-historical-monitor-job]",
+    "unit": "[redacted-historical-monitor-unit]",
     "state": "submitted"
   }
 }

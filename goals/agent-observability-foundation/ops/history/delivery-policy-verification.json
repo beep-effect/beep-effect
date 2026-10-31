@@ -264,7 +264,7 @@
       },
       "logPath": "/tmp/foundation-final-policy-verification-v1.log",
       "logSha256": "ad7e5f871c2b65d6837088e4b72a3024d60f26996baa0dd732fad0703d2ce878",
-      "archivedLogPath": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-final-policy-verification-v1.log"
+      "archivedLogPath": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-final-policy-verification-v1.log"
     },
     "foundation-remaining-checks-v1": {
       "guard": {
@@ -279,7 +279,7 @@
       },
       "logPath": "/tmp/foundation-remaining-checks-v1.log",
       "logSha256": "f4cb50da31ea2c1e633294a18912a2a303023eca9bf7ed65061037ee6feb75fd",
-      "archivedLogPath": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-remaining-checks-v1.log"
+      "archivedLogPath": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-remaining-checks-v1.log"
     },
     "foundation-runtime-clock-v3": {
       "guard": {
@@ -294,7 +294,7 @@
       },
       "logPath": "/tmp/foundation-runtime-clock-v3.log",
       "logSha256": "88a4923fb42fd52c1618f2b17254d7e55920ef197877c121db0c090b2621bc1d",
-      "archivedLogPath": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-runtime-clock-v3.log"
+      "archivedLogPath": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-runtime-clock-v3.log"
     },
     "foundation-cli-quality-v2": {
       "guard": {
@@ -309,7 +309,7 @@
       },
       "logPath": "/tmp/foundation-cli-quality-v2.log",
       "logSha256": "fd845968e5cda8736d7a6804222e4c12c32e8f2fe1526abc6a74326ff66c3145",
-      "archivedLogPath": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-cli-quality-v2.log"
+      "archivedLogPath": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-cli-quality-v2.log"
     }
   },
   "limitations": [
@@ -320,67 +320,67 @@
   ],
   "archive": [
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-final-policy-verification-v1.log",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-final-policy-verification-v1.log",
       "sha256": "ad7e5f871c2b65d6837088e4b72a3024d60f26996baa0dd732fad0703d2ce878",
       "bytes": 1043
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-final-policy-verification-v1-guard.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-final-policy-verification-v1-guard.json",
       "sha256": "79616bbc4cf93bdcb672e63fdfbceaceb5de2605c53d2344e6df49782f1b8b1e",
       "bytes": 292
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-remaining-checks-v1.log",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-remaining-checks-v1.log",
       "sha256": "f4cb50da31ea2c1e633294a18912a2a303023eca9bf7ed65061037ee6feb75fd",
       "bytes": 994
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-remaining-checks-v1-guard.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-remaining-checks-v1-guard.json",
       "sha256": "a05891cf798e7eb0178eda55d379f5e98093fb08d9f9f03c36f279fa18ba94da",
       "bytes": 283
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-runtime-clock-v3.log",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-runtime-clock-v3.log",
       "sha256": "88a4923fb42fd52c1618f2b17254d7e55920ef197877c121db0c090b2621bc1d",
       "bytes": 894
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-runtime-clock-v3-guard.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-runtime-clock-v3-guard.json",
       "sha256": "93c5a3a67c31f84753b84c5aa9e6c024083087c0b33c48b37ace47107705e225",
       "bytes": 279
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-cli-quality-v2.log",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-cli-quality-v2.log",
       "sha256": "fd845968e5cda8736d7a6804222e4c12c32e8f2fe1526abc6a74326ff66c3145",
       "bytes": 2008
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-cli-quality-v2-guard.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-cli-quality-v2-guard.json",
       "sha256": "2bcbdd370db89669d5642d2b95e3570a4a2aa16d0c3fde9d829df587240e1fc7",
       "bytes": 278
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-hoist-codecs.cjs",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-hoist-codecs.cjs",
       "sha256": "6924ca92f63c809f9895618bbdbd62e54a34a3281d4dc3f66515ad73633b8449",
       "bytes": 5005
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-hoist-codecs-report.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-hoist-codecs-report.json",
       "sha256": "2da6ca98b55fa9363b345bb73c1107655e3fc11f2a07598d65b4f1140ac5673d",
       "bytes": 11943
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-fixture-codecs-report.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-fixture-codecs-report.json",
       "sha256": "0aeeccaea3b5408b1934775eea58d1ab35139c904c1ac6ac10b5ddbe9dcb0def",
       "bytes": 157
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-test-policy-fixes.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-test-policy-fixes.json",
       "sha256": "5b72006e4f2dd7c9109ec13e3e5812d7f80655b7bc8431df2a6bd177d2f96eba",
       "bytes": 2765
     },
     {
-      "file": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-test-lifetimes.json",
+      "file": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-test-lifetimes.json",
       "sha256": "cdd39fa5ccef3987e1c266a64b9ba9f59cdcad1cc5eb9295bf580c55b72805d0",
       "bytes": 3194
     }

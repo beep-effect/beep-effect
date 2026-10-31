@@ -1294,10 +1294,10 @@ predates this adjustment.
   the parent. Repository rule: `AGENTS.md:53-59`. The launch metadata is owned by
   the parent/native collaboration record; this document does not invent a CLI argv.
 - Beep worktree:
-  `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation`,
+  `~/YeeBois/projects/beep-effect-worktrees/agent-observability-foundation`,
   HEAD `bea57177a342284007f242a65a126c029791aea8`, with substantial owned dirty work.
 - Dankserver worktree:
-  `/home/elpresidank/YeeBois/projects/dankserver-worktrees/agent-observability-foundation`,
+  `~/YeeBois/projects/dankserver-worktrees/agent-observability-foundation`,
   HEAD `33d932c7abfc132b0ced363f77cb1a0fe43da493`, also dirty.
 - Read both AGENTS files, SPEC, GOAL and PLAN. Followed targeted live-source
   discovery. Inspected source, tests, verifier scripts and selected receipts;

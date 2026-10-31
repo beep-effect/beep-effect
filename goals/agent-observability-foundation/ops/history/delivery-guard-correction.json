@@ -1,7 +1,7 @@
 {
   "recordedAt": "2026-10-29T12:56:53.783196+00:00",
   "outerUnit": "foundation-cheap-gates-v2.service",
-  "ownedAdmissionScope": "agent-run-ea3f73ec-b7b9-430f-aed0-24b25a642629.scope",
+  "ownedAdmissionScope": "[redacted-agent-session-8]",
   "observedScopePeakBytes": 15691333632,
   "observedScopeCurrentBytesBeforeContainment": 4510527488,
   "originalScopeMemoryMax": "max",
@@ -19,12 +19,12 @@
     "JSDoc regenerated ratchet was interrupted, not passing"
   ],
   "correctedGuardArchive": {
-    "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job.py",
+    "path": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job.py",
     "sha256": "f4196e1558712d63daa6a5d24b3d7bb992e26bac9792259c6dbd98f549af9023"
   },
   "serializedCheapGates": "BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1, supported by Quality/internal/GithubChecks.ts",
   "correctedGuardArchiveV2": {
-    "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job-v2.py",
+    "path": "~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job-v2.py",
     "sha256": "ea52e029a1ac722694c3060b454e8f481cf733a888b2784d432a14c4362ca83c"
   }
 }

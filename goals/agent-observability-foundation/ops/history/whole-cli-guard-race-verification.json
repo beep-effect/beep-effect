@@ -1,20 +1,20 @@
 {
   "result": "not-passing-guard-race",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/whole-cli-guard-race-dt1ax7bn",
+  "archive": "~/.local/state/beep/observation-proof-archive/whole-cli-guard-race-dt1ax7bn",
   "sourceHead": "95711cb9df8f850c67aa16967567e5c7535e2801",
   "sourceFilesChecked": 1421,
   "sourceChangesDuringRun": [],
   "guard": {
     "ownedScopes": {
-      "agent-run-d0b4b0f0-7c23-4ed2-9452-facebc6ea71b.scope": {
-        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-d0b4b0f0-7c23-4ed2-9452-facebc6ea71b.scope",
-        "invocationId": "2e8e5411608a413bb1cb8e46d45487a1",
+      "[redacted-agent-session-6]": {
+        "group": "[redacted-user-cgroup]/agent-runs/[redacted-agent-session-6]",
+        "invocationId": "[redacted-invocation-for-redacted-agent-session-6]",
         "preGuardPeakBytes": 57040896,
         "ownership": "live descendant of proof service MainPID"
       },
-      "agent-run-d5b03f46-4eb3-492a-97d0-d9f38d373997.scope": {
-        "group": "/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/agent-run-d5b03f46-4eb3-492a-97d0-d9f38d373997.scope",
-        "invocationId": "43c68a54ff2f43318451e04e357e8692",
+      "[redacted-agent-session-7]": {
+        "group": "[redacted-user-cgroup]/agent-runs/[redacted-agent-session-7]",
+        "invocationId": "[redacted-invocation-for-redacted-agent-session-7]",
         "preGuardPeakBytes": 3690496,
         "ownership": "live descendant of proof service MainPID"
       }

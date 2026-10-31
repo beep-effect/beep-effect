@@ -2,7 +2,7 @@
   "observedAt": "2026-10-29T13:30:39.804591-05:00",
   "foundationParent": "4c93cd6d6df4acd59cb01c6fc8539d64fdd732f4",
   "upstreamParent": "524a5fad6fd422919f00d388ecea17ae4d3e501d",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-cache-base-sync-1ycuz9ue",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-cache-base-sync-1ycuz9ue",
   "artifacts": [
     {
       "file": "foundation-upstream-cache-baseline.json",

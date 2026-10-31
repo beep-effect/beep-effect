@@ -8,53 +8,98 @@
   },
   "pressure": "some avg10=0.36 avg60=0.60 avg300=0.39 total=660561563\nfull avg10=0.30 avg60=0.49 avg300=0.33 total=590807114\n",
   "distinctOomDecisions": 9,
-  "lastKernelDecision": "2026-10-29T10:56:06-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task=python3,pid=2787027,uid=1000",
+  "lastKernelDecision": {
+    "timestamp": "2026-10-29T10:56:06-05:00",
+    "constraint": "CONSTRAINT_MEMCG",
+    "scope": "cgroup",
+    "task": "python3"
+  },
   "largeProcesses": [
     {
-      "pid": 537468,
-      "comm": "python",
+      "processCategory": "python workload",
       "rssBytes": 37329911808,
-      "swapBytes": 15152095232,
-      "cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-ghostty-surface-transient-6759.scope"
+      "swapBytes": 15152095232
     },
     {
-      "pid": 927184,
-      "comm": "ChatGPT",
+      "processCategory": "desktop assistant",
       "rssBytes": 1555447808,
-      "swapBytes": 293666816,
-      "cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-chatgpt@62224b1536a94ca08de2364af5fdbe5b.service"
+      "swapBytes": 293666816
     },
     {
-      "pid": 2037705,
-      "comm": "llama-server",
+      "processCategory": "local model server",
       "rssBytes": 1274306560,
-      "swapBytes": 380276736,
-      "cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/qwen-chat.service"
+      "swapBytes": 380276736
     },
     {
-      "pid": 3900458,
-      "comm": "chrome",
+      "processCategory": "browser",
       "rssBytes": 1192837120,
-      "swapBytes": 534122496,
-      "cgroup": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-google\\x2dchrome@bd07759e926042d2a2d4d049a7acd99d.service"
+      "swapBytes": 534122496
     }
   ],
   "mutations": "Read-only host inspection; no unrelated apps or swap settings changed",
   "kernelDecisions": [
-    "2026-10-27T07:16:09-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=/,mems_allowed=0,global_oom,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/app-comfyui\\x2drdna4@4dfd146fea434a4896d0d9bc1189700d.service,task=python,pid=3841020,uid=1000",
-    "2026-10-28T05:57:47-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-f73fd58c50b7.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-f73fd58c50b7.service,task=bun.native,pid=1726603,uid=1000",
-    "2026-10-28T05:59:29-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-43e8e622bca9.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-43e8e622bca9.service,task=bun.native,pid=1880114,uid=1000",
-    "2026-10-28T06:04:08-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-c2d016cab73a.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-c2d016cab73a.service,task=bun.native,pid=2100022,uid=1000",
-    "2026-10-28T06:06:47-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-8698e49ccdfa.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-8698e49ccdfa.service,task=bun.native,pid=2199743,uid=1000",
-    "2026-10-28T14:26:17-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-db4bf07912b3.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-db4bf07912b3.service,task=bun.native,pid=719818,uid=1000",
-    "2026-10-28T21:13:20-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/foundation-managed-enrollment-types.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/foundation-managed-enrollment-types.service,task=tsc,pid=2096272,uid=1000",
-    "2026-10-29T07:54:53-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-35bd64e246d2427c9ccfdf60344ace7c.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-35bd64e246d2427c9ccfdf60344ace7c.service,task=python3,pid=3993553,uid=1000",
-    "2026-10-29T10:56:06-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task=python3,pid=2787027,uid=1000"
+    {
+      "timestamp": "2026-10-27T07:16:09-05:00",
+      "constraint": "CONSTRAINT_NONE",
+      "scope": "global",
+      "task": "python"
+    },
+    {
+      "timestamp": "2026-10-28T05:57:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T05:59:29-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:04:08-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:06:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T14:26:17-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T21:13:20-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "tsc"
+    },
+    {
+      "timestamp": "2026-10-29T07:54:53-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    },
+    {
+      "timestamp": "2026-10-29T10:56:06-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    }
   ],
   "largestProcessAttribution": {
-    "pid": 537468,
-    "cwd": "/home/elpresidank/ai/ComfyUI",
-    "executable": "/home/elpresidank/.local/share/mise/installs/python/3.13.14/bin/python3.13",
-    "interpretation": "ComfyUI working directory; no full command arguments read"
+    "processCategory": "python media workflow",
+    "interpretation": "Working-directory attribution was inspected privately; full command arguments were not read."
+  },
+  "publicRepresentation": {
+    "kind": "sanitized-derivative",
+    "originalSha256": "8790defb1ae921628f1d1b1a63bc657002d8b59af2a78cb3363d2d5e8e890557",
+    "policy": "Home paths normalized; machine/session/process identities and unrelated workload locations omitted. Measurements, timestamps, source hashes and uncertainty retained. Exact original is retained privately; see public-receipt-sanitization-20261031.json."
   }
 }

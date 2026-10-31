@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T19:50:25.392469+00:00",
   "baseHead": "22af3ecdca9a3da0abf2f44bfc6660e92e235230",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-boundary-structure-c4jtwkoz",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-boundary-structure-c4jtwkoz",
   "sourceSha256": {
     "packages/tooling/library/ai-metrics/src/native-export.ts": "184563134614b3b451cff4c43f9e9ff072f82fc12b02e931088c5e592a0c40ec",
     "packages/tooling/library/ai-metrics/src/git-root-evidence.ts": "93bb52bb2108d1ac5b953856f8b5b98ed09c5176c90dd44e577046161f1e4cfb",

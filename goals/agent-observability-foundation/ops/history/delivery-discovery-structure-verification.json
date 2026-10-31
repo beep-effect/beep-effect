@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T19:42:33.583164+00:00",
   "headBeforeCommit": "829da07ec55f8957336a15b65e67c9c86471c617",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-discovery-structure-ylunim1x",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-discovery-structure-ylunim1x",
   "sourceSha256": {
     "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "60f2cbc1b43099cb40f602fe91023ebab5be91eea1a55f4eff06df07d2938c5d"
   },

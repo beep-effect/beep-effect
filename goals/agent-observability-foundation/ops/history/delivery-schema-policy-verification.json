@@ -16,11 +16,11 @@
   },
   "artifacts": [
     {
-      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-policy-final-v1.log",
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-policy-final-v1.log",
       "sha256": "db9e6a2462477e7c28bccc70438975bbce52674a0b1b57852b0827e5d8b781f6"
     },
     {
-      "path": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-policy-final-v1-guard.json",
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-policy-final-v1-guard.json",
       "sha256": "6c89f9f9fc202700884040708d0808f7f43121dce00cc0f1d28a0a22adf1639a"
     }
   ],

@@ -542,5 +542,10 @@
       "byteIdentical": true
     }
   ],
-  "historicalInternalPaths": "Receipt payloads remain byte-identical; internal source paths retain their original observation meaning. Live document links point to the retained location."
+  "historicalInternalPaths": "Receipt payloads remain byte-identical; internal source paths retain their original observation meaning. Live document links point to the retained location.",
+  "representationNotice": {
+    "relocationClaimsApplyTo": "Original bytes at the time of the recorded relocation operation. Exact originals remain privately retained and verified against all90 recorded hashes.",
+    "currentPublicCopies": "Some destinations are now explicitly sanitized derivatives. Consult public-receipt-sanitization-20261031.json for separate original/public hashes. byteIdentical describes the original relocation, not a claim about these later public representations.",
+    "historyBoundary": "This correction does not erase previously published Git history."
+  }
 }

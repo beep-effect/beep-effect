@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T17:18:16.553962+00:00",
   "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-recovery-scheduler-lpeiklu_",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-recovery-scheduler-lpeiklu_",
   "artifacts": [
     {
       "file": "audit.repair-v10.combined.txt",

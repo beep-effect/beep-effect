@@ -4,12 +4,12 @@
   "scope": "AC12 declared synthetic host/repository and CLI/desktop fixture routes; no real harness enrollment",
   "sourceHead": "fc6451b88670141a186e6a79d3ef2a5b009e8bcc",
   "sourceDirtyProofFiles": true,
-  "finalArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f",
-  "initialRunsArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-stage-initial-3ahnp2v7",
-  "priorV2RefusalChecksArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-plan-refusal-r3wfvkdc",
+  "finalArchive": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f",
+  "initialRunsArchive": "~/.local/state/beep/observation-proof-archive/declared-stage-initial-3ahnp2v7",
+  "priorV2RefusalChecksArchive": "~/.local/state/beep/observation-proof-archive/declared-plan-refusal-r3wfvkdc",
   "stages": {
     "disposable": {
-      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/disposable/evidence.json",
+      "evidencePath": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/disposable/evidence.json",
       "evidenceSha256": "40917598aa61f3f6a570a9c114b6db1b5c9b1b82d267eb5d40b324e41507b290",
       "sourceFiles": 87,
       "project": "foundation-canary-4e3311cb9304",
@@ -65,7 +65,7 @@
       "backendReadbackAfterRouteRollback": true
     },
     "live": {
-      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/live/evidence.json",
+      "evidencePath": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/live/evidence.json",
       "evidenceSha256": "9e3b5e3e5369c8e8c4516a2c095a8ed80336951e7b1a1eed3fd44c92bc51da93",
       "sourceFiles": 86,
       "project": "foundation-canary-1879ab28ba1c",

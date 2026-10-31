@@ -1,7 +1,7 @@
 {
   "observedAt": "2026-10-29T17:02:51.084930+00:00",
   "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/delivery-native-projection-ovv12wv3",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-native-projection-ovv12wv3",
   "artifacts": [
     {
       "file": "audit.repair-v8.combined.txt",

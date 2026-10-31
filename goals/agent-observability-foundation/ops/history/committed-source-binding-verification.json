@@ -8,13 +8,13 @@
   },
   "stages": {
     "disposable": {
-      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/disposable/evidence.json",
+      "evidencePath": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/disposable/evidence.json",
       "evidenceSha256": "40917598aa61f3f6a570a9c114b6db1b5c9b1b82d267eb5d40b324e41507b290",
       "sourceFiles": 87,
       "mismatches": []
     },
     "live": {
-      "evidencePath": "/home/elpresidank/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/live/evidence.json",
+      "evidencePath": "~/.local/state/beep/observation-proof-archive/hosted-repair-final-ee2fty2f/live/evidence.json",
       "evidenceSha256": "9e3b5e3e5369c8e8c4516a2c095a8ed80336951e7b1a1eed3fd44c92bc51da93",
       "sourceFiles": 86,
       "mismatches": []

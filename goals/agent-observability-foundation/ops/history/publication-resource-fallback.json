@@ -19,7 +19,7 @@
     "exitCode": 130,
     "orphanCleanup": []
   },
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/foundation-publication-guard-fab0_1py",
+  "archive": "~/.local/state/beep/observation-proof-archive/foundation-publication-guard-fab0_1py",
   "hostedFallback": "AGENTS.md Quality Operator constrained-compute route. Earlier collected gate exceeded 15-minute local deadline; repeated bounded local runs and current admission pressure prevent whole local proof. Keep passing package/targeted evidence and explicitly disclose local gaps in draft PR. Hosted checks remain required.",
   "latestAttemptRanNoChecks": true,
   "noKernelOomDuringAttempt": true,

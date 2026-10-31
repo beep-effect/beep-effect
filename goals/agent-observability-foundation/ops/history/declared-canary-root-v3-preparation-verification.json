@@ -1,7 +1,7 @@
 {
   "recordedAt": "2026-10-29T22:24:31.672372+00:00",
   "qualificationRecordedAt": "2026-10-29T21:55:18.378104+00:00",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/declared-canary-root-20261029-v3",
+  "archive": "~/.local/state/beep/observation-proof-archive/declared-canary-root-20261029-v3",
   "qualificationSha256": "3391a1b8b9fd3cf4470faba9556d48fd8b204269bed900e4fc2be98f90fd496b",
   "probeSha256": "641bf34a3635c2cce0b856d449321e05ee90d018edfc002706e2ce25ef0bdb93",
   "sourceFilesVerified": 82,

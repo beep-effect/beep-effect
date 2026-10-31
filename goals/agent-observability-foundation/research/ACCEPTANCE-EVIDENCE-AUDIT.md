@@ -149,3 +149,13 @@ Git blobs at `95711cb9df8f850c67aa16967567e5c7535e2801`, with no mismatches.
 This closes source/evidence review while preserving historical execution receipts.
 Current-head repository gates, hosted delivery, merge and terminal lifecycle remain
 open. The closeout reflection is prepared and explicitly reports that pending state.
+
+## Public evidence representation — October 31
+
+The [publication manifest](../ops/history/public-receipt-sanitization-20261031.json)
+records a later sanitization of selected public receipts and research references.
+Exact execution originals remain privately retained; all 90 relocation-original
+hashes were verified. Public derivative hashes are distinct from original hashes.
+The correction changes no runtime source, measurements, event identities, source
+bindings, uncertainty, recovery service state or execution result. It does not
+qualify previously unknown populations or erase earlier published Git history.

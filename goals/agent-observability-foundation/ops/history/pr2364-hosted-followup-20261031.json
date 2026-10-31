@@ -2,7 +2,7 @@
   "observedAt": "2026-10-31T10:49:22.538321+00:00",
   "startingHead": "1d19d4c51896e4545311659414f7c7aa0ee0620e",
   "mergedBase": "2bcf7ae23c",
-  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/followup-1042",
+  "archive": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/followup-1042",
   "sourceHashes": {
     "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts": "30f8c94cf61b5414b6253fc2ea1a34478c5ae29c5272910caea7a2aa47823764",
     "packages/drivers/phoenix/src/Phoenix.span-readback.ts": "cf08bcb4f68d00ac64bd3a7ba8e6d1d6cdf46251c700eed666b6387d7de8991a",
