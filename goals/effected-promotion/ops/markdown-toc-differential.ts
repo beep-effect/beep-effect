@@ -45,6 +45,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type * as PlatformError from "effect/PlatformError";
 
 const TOOL = "goals/effected-promotion/ops/markdown-toc-differential.ts";
 const repoRoot = NodeURL.fileURLToPath(new URL("../../..", import.meta.url));
@@ -144,7 +145,9 @@ const parseArgs = (argv: ReadonlyArray<string>) => {
 const TOC_BLOCK = /\n---\n## Exports Grouped by Category\n([\s\S]*?)\n---(?:\n|$)/;
 const FRONTMATTER = /^---\n[\s\S]*?\n---\n/;
 // A page without the block (the `index.md` module index) is not TOC output and is skipped.
-const docgenInput = (page: string): O.Option<{ readonly input: string; readonly embedded: string }> => {
+type PageInput = { readonly input: string; readonly embedded: string | null };
+
+const docgenInput = (page: string): O.Option<PageInput> => {
   const body = Str.replace(FRONTMATTER, "")(page);
   return O.map(O.fromUndefinedOr(TOC_BLOCK.exec(body)?.[1]), (embedded) => ({
     input: Str.replace(TOC_BLOCK, "\n<!-- toc -->\n")(body),
@@ -162,7 +165,9 @@ const docgenPages = Effect.fnUntraced(function* () {
     path.dirname(path.join(repoRoot, file))
   );
   const pages: Array<string> = [];
-  const walk = Effect.fnUntraced(function* (current: string) {
+  const walk: (current: string) => Effect.Effect<void, PlatformError.PlatformError> = Effect.fnUntraced(function* (
+    current: string
+  ) {
     for (const entry of yield* fs.readDirectory(current)) {
       const full = path.join(current, entry);
       const info = yield* fs.stat(full);
@@ -300,7 +305,7 @@ const program = Effect.gen(function* () {
     };
     for (const file of files) {
       const raw = yield* fs.readFileString(file);
-      const page = corpus === "docgen" ? docgenInput(raw) : O.some({ input: raw, embedded: null });
+      const page: O.Option<PageInput> = corpus === "docgen" ? docgenInput(raw) : O.some({ input: raw, embedded: null });
       if (O.isNone(page)) continue;
       const outcome = compareFile(corpus, relative(file), page.value.input, page.value.embedded, oracle.toc);
       const kitError = outcome.difference?.kitError !== null && outcome.difference !== undefined ? 1 : 0;
