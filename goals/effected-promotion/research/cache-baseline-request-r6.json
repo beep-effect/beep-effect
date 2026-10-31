@@ -1,11 +1,11 @@
 {
-  "previous": "fc1afbb089bec054bc84f88cd61a5559e36f14c040817590944f97e0d3b47365",
+  "previous": "7d081d691b23f8fc110f459403bfcee960ee0d08c63bc4847b1e092dd5b12e3d",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R6, lane effected-r6)",
     "reason": "Record the root subject drift from the generated policy-fingerprint task inputs: all seven gain the @beep/markdown MarkdownFence module, and the five that reached docgen only through repo-cli JSDocSections drop the docgen closure now that the fence extractors read @beep/markdown directly; no manifest changes; the turbo coupling is measured in the review; no qualification is granted.",
     "basis": {
       "path": "goals/effected-promotion/research/cache-baseline-review-r6.md",
-      "sha256": "768c579ad761773b576cb8fdcfef3762d29d0754eddcc0913388a9fe01c044e7"
+      "sha256": "b2c62fb69dd4e82bf4b5f7756b0bbd59878a1d8f9b909070bff2d5aaa4f2718c"
     }
   },
   "scope": [

@@ -447,7 +447,7 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const file = path.join(root, "config.toml");
       const backups = path.join(root, "backups");
       for (const key of ["sandbox_mode", '"sandbox_mode"', "'sandbox_mode'"]) {
-        const before = `${key} = "danger-full-access" # legacy\r\n` + native;
+        const before = `${key} = "danger-full-access" # legacy\r\n${native}`;
         yield* fs.writeFileString(file, before);
         const request = ModelsLocatorWrite.make({
           locator: {

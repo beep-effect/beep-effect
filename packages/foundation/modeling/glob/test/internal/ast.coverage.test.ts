@@ -183,7 +183,7 @@ describe("AST coverage", () => {
           assert.strictEqual(matches(actual, candidate), matches(expected, candidate));
       }
       assert.throws(() =>
-        AST.fromGlob(Str.repeat(MAX_NESTING_DEPTH + 1)("@(") + "a" + Str.repeat(MAX_NESTING_DEPTH + 1)(")"))
+        AST.fromGlob(`${Str.repeat(MAX_NESTING_DEPTH + 1)("@(")}a${Str.repeat(MAX_NESTING_DEPTH + 1)(")")}`)
       );
       const root = new AST(null);
       let parent = root;
