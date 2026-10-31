@@ -16,7 +16,7 @@ bindings:
   - role: cursor.volume
     surface: cursor-seat
     modelId: composer-2.5
-  - role: graft.deep
+  - role: child.heavy
     surface: proxy-workflow
     modelId: claude-opus-5
 targets:
@@ -68,7 +68,7 @@ targets:
     optional: false
     locators:
       - _tag: env-key
-        binding: { role: graft.deep, surface: proxy-workflow, field: model }
+        binding: { role: child.heavy, surface: proxy-workflow, field: model }
         render: { _tag: verbatim }
         key: NO_SUCH_KEY
   - id: unknown.model
