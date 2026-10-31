@@ -298,16 +298,12 @@ describe("Lexical.model", { concurrent: false }, () => {
       "list",
       "artifact-ref",
     ]);
-    const paragraph = state.root.children[1];
-    if (paragraph?.type !== "paragraph") {
-      expect.fail("Expected decoded paragraph node");
-    }
+    const paragraph = A.getUnsafe(state.root.children, 1);
+    assertTrue(paragraph.type === "paragraph", "Expected decoded paragraph node");
     assertSome(paragraph.textFormat, TextFormatMask.make(0));
     assertSome(paragraph.textStyle, "");
-    const code = state.root.children[3];
-    if (code?.type !== "code") {
-      expect.fail("Expected decoded code node");
-    }
+    const code = A.getUnsafe(state.root.children, 3);
+    assertTrue(code.type === "code", "Expected decoded code node");
     assertSome(code.language, "typescript");
     assertNone(code.theme);
     expect(state.root.children[4]).toMatchObject({ videoID: "M7lc1UVf-VE", format: "" });
@@ -329,18 +325,14 @@ describe("Lexical.model", { concurrent: false }, () => {
     const lexicalHeaderState: SerializedTableCellNode["headerState"] = firstHeaderCell.headerState;
     expect(lexicalHeaderState).toBe(1);
     expect(header.children[1]).toMatchObject({ headerState: 1 });
-    const list = state.root.children[6];
-    if (list?.type !== "list") {
-      expect.fail("Expected decoded list node");
-    }
+    const list = A.getUnsafe(state.root.children, 6);
+    assertTrue(list.type === "list", "Expected decoded list node");
     deepStrictEqual(
       A.map(list.children, (item) => (item.type === "listitem" ? O.some(item.checked) : O.none())),
       [O.some(O.some(true)), O.some(O.none())]
     );
-    const artifactRef = state.root.children[7];
-    if (artifactRef?.type !== "artifact-ref") {
-      expect.fail("Expected decoded artifact-ref node");
-    }
+    const artifactRef = A.getUnsafe(state.root.children, 7);
+    assertTrue(artifactRef.type === "artifact-ref", "Expected decoded artifact-ref node");
     strictEqual(artifactRef.artifactId, "artifact-123");
     assertSome(artifactRef.label, "Quarterly report");
   });
@@ -971,9 +963,7 @@ describe("Lexical.model", { concurrent: false }, () => {
         children: [],
       })
     );
-    if (invalidLanguage.type !== "code") {
-      expect.fail("Expected decoded code node");
-    }
+    assertTrue(invalidLanguage.type === "code", "Expected decoded code node");
     assertNone(invalidLanguage.language);
 
     pipe(
