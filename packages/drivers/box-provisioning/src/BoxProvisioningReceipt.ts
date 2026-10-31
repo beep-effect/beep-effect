@@ -19,7 +19,6 @@ import { BoxProviderId } from "./BoxProvisioningObserved.ts";
 import { BoxProvisioningPlan, BoxResourceKind } from "./BoxProvisioningPlan.ts";
 import { digestText } from "./internal/canonical.ts";
 import type * as Digest from "effect/crypto/Digest";
-import type * as PlatformError from "effect/PlatformError";
 import type { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningReceipt");
@@ -256,17 +255,17 @@ export type BoxApplyJournalEntry = typeof BoxApplyJournalEntry.Type;
 export const recoverBoxAdoptions: {
   (
     journalEntries: ReadonlyArray<BoxApplyJournalEntry>
-  ): (desired: BoxDesiredState) => Effect.Effect<BoxAdoptions, PlatformError.PlatformError, Digest.Digest>;
+  ): (desired: BoxDesiredState) => Effect.Effect<BoxAdoptions, never, Digest.Digest>;
   (
     desired: BoxDesiredState,
     journalEntries: ReadonlyArray<BoxApplyJournalEntry>
-  ): Effect.Effect<BoxAdoptions, PlatformError.PlatformError, Digest.Digest>;
+  ): Effect.Effect<BoxAdoptions, never, Digest.Digest>;
 } = dual(
   2,
   Effect.fnUntraced(function* (
     desired: BoxDesiredState,
     journalEntries: ReadonlyArray<BoxApplyJournalEntry>
-  ): Effect.fn.Return<BoxAdoptions, PlatformError.PlatformError, Digest.Digest> {
+  ): Effect.fn.Return<BoxAdoptions, never, Digest.Digest> {
     const latestAttemptByPlan = A.reduce(
       journalEntries,
       HashMap.empty<Sha256Hex, BoxApplyAttemptId>(),

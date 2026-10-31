@@ -61,7 +61,6 @@ import {
   sealBoxProvisioningPlan,
 } from "./internal/canonical.ts";
 import { assertExpectedBoxIdentity } from "./internal/live.ts";
-import type * as PlatformError from "effect/PlatformError";
 import type * as S from "effect/Schema";
 import type {
   BoxProvisioningSubjectMismatchError,
@@ -146,13 +145,11 @@ const rootFolder = Effect.fnUntraced(function* (rootFolderId: BoxProviderId) {
 type PlanDigestError =
   | BoxProvisioningTenantMismatchError
   | BoxProvisioningSubjectMismatchError
-  | BoxProvisioningSchemaError
-  | PlatformError.PlatformError;
+  | BoxProvisioningSchemaError;
 
 const mapPlanFailure = (error: PlanDigestError | BoxCanonicalDigestError): PlanDigestError =>
   P.isTagged("BoxProvisioningTenantMismatchError")(error) ||
   P.isTagged("BoxProvisioningSubjectMismatchError")(error) ||
-  P.isTagged("PlatformError")(error) ||
   P.isTagged("BoxProvisioningSchemaError")(error)
     ? error
     : BoxProvisioningSchemaError.make({ stage: "plan" });

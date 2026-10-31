@@ -237,7 +237,6 @@ export class ToolNameNormalizationError extends S.TaggedError<
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  * import * as S from "effect/Schema"
  * import {
@@ -250,7 +249,7 @@ export class ToolNameNormalizationError extends S.TaggedError<
  *   buildToolNameCollisionReport([
  *     ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
  *     ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" })
- *   ]).pipe(Effect.flip, Effect.provide(NodeCrypto.layer))
+ *   ]).pipe(Effect.flip, Effect.provide(NodeCrypto.layerDigest))
  * )
  * console.log(S.is(ToolNameCollisionError)(result))
  * // true

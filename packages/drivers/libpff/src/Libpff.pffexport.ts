@@ -561,7 +561,7 @@ const claimReleaseFailedWarning =
  * construction and probes `pffexport -V` once to populate
  * `descriptor.version`; a failed probe leaves the version unset rather than
  * failing construction. The returned engine's `exportArchive` method still
- * requires `effect/Crypto` so child artifact ids can be derived through the
+ * requires the `effect/crypto/Digest` service so child artifact ids can be derived through the
  * shared SHA-backed artifact id schema. File-backed source artifacts are
  * passed to `pffexport` by path; in-memory artifacts use a private temporary
  * snapshot. Exported file and directory names escape backslashes to `%5C`
@@ -583,7 +583,7 @@ const claimReleaseFailedWarning =
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @effects Requires {@link FileSystem.FileSystem}, {@link Path.Path}, and {@link ChildProcessSpawner.ChildProcessSpawner}; returned archive export effects additionally require `effect/Crypto` for child artifact id derivation.
+ * @effects Requires {@link FileSystem.FileSystem}, {@link Path.Path}, and {@link ChildProcessSpawner.ChildProcessSpawner}; returned archive export effects additionally require the `effect/crypto/Digest` service for child artifact id derivation.
  * @category constructors
  * @since 0.0.0
  */

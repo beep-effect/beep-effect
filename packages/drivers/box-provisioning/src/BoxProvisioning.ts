@@ -12,9 +12,7 @@ import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -34,8 +32,6 @@ import { BoxProvisioningPlanner } from "./BoxProvisioningPlanner.ts";
 import { BoxActionApplied, BoxReviewedApplyResult } from "./BoxProvisioningReceipt.ts";
 import { digestText, hasValidBoxProvisioningPlanDigest } from "./internal/canonical.ts";
 import type * as B from "@beep/box";
-import type * as PlatformError from "effect/PlatformError";
-import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxProvisioningApplyJournal } from "./BoxProvisioningApplier.ts";
 import type {
   BoxProvisioningApplyJournalError,
@@ -53,8 +49,7 @@ type ReadError =
   | BoxProvisioningInvariantError
   | BoxProvisioningSchemaError
   | BoxProvisioningSubjectMismatchError
-  | BoxProvisioningTenantMismatchError
-  | PlatformError.PlatformError;
+  | BoxProvisioningTenantMismatchError;
 
 type ApplyError =
   | ReadError
@@ -64,11 +59,8 @@ type ApplyError =
 
 const isAppliedOutcome = S.is(BoxActionApplied);
 
-/** Keeps platform digest failures intact and reports every schema issue as a plan-stage failure. */
-const toPlanStageFailure = Match.type<PlatformError.PlatformError | SchemaIssue.Issue>().pipe(
-  Match.tag("PlatformError", identity<PlatformError.PlatformError>),
-  Match.orElse(() => BoxProvisioningSchemaError.make({ stage: "plan" }))
-);
+/** Reports every schema issue raised while digesting a plan as a plan-stage failure. */
+const toPlanStageFailure = (): BoxProvisioningSchemaError => BoxProvisioningSchemaError.make({ stage: "plan" });
 
 const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(function* (
   desired: BoxDesiredState,

@@ -81,7 +81,6 @@ import {
   toObservedFolderFromFull,
   toObservedWebhook,
 } from "./internal/live.ts";
-import type * as PlatformError from "effect/PlatformError";
 import type { BoxProvisioningApplyJournalError } from "./BoxProvisioningErrors.ts";
 import type { BoxDesiredState, BoxLogicalKey } from "./BoxProvisioningIntent.ts";
 import type {
@@ -112,10 +111,9 @@ type DesiredResource =
 
 const invariant = (code: BoxProvisioningInvariantError["code"]) => BoxProvisioningInvariantError.make({ code });
 
-type ApplyDigestError = PlatformError.PlatformError | BoxProvisioningSchemaError;
+type ApplyDigestError = BoxProvisioningSchemaError;
 
-const digestFailure = (error: BoxCanonicalDigestError): ApplyDigestError =>
-  P.isTagged("PlatformError")(error) ? error : BoxProvisioningSchemaError.make({ stage: "plan" });
+const digestFailure = (): ApplyDigestError => BoxProvisioningSchemaError.make({ stage: "plan" });
 
 const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError, Digest.Digest>) =>
   effect.pipe(Effect.mapError(digestFailure));

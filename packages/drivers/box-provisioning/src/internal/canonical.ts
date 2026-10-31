@@ -14,7 +14,6 @@ import { BoxContentMigrationPlan } from "../BoxContentMigrationPlan.ts";
 import { BoxAdoptions, BoxDesiredState, BoxWebhookIntent } from "../BoxProvisioningIntent.ts";
 import { BoxObservedState, BoxObservedWebhook } from "../BoxProvisioningObserved.ts";
 import { BoxProvisioningPlan } from "../BoxProvisioningPlan.ts";
-import type * as PlatformError from "effect/PlatformError";
 import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxLogicalKey } from "../BoxProvisioningIntent.ts";
 
@@ -45,12 +44,12 @@ const canonicalJson = (value: unknown): string => {
 };
 
 /**
- * Crypto and schema failures raised while hashing canonical Box payloads.
+ * Schema failures raised while hashing canonical Box payloads; the digest itself cannot fail.
  *
  * @category models
  * @since 0.0.0
  */
-export type BoxCanonicalDigestError = PlatformError.PlatformError | SchemaIssue.Issue;
+export type BoxCanonicalDigestError = SchemaIssue.Issue;
 
 /**
  * SHA-256 hex digest of a UTF-8 string.
