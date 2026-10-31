@@ -293,7 +293,8 @@ seven-finding remediation, reflection, and hosted proof; Cloud closure remains
 an independently verified post-merge requirement. Reverse through this
 manifest/documentation diff; do not alter historical verdict bytes.
 
-Decision — 2026-10-31: supersede the prior final-PR reference with #2389 for
+Historical decision — 2026-10-31 (superseded by the #2416 reconciliation below):
+supersede the prior final-PR reference with #2389 for
 final reconciliation and the 20 supplemental dependency alerts in the October 28
 packet. PRs #1930 and #2333 remain supporting merged remediation. All fifteen
 Cloud identities are verified Fixed. Preserve historical verdicts; obtain a

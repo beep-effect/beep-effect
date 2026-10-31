@@ -64,7 +64,8 @@ Code and secret scanning show zero open alerts. Read the linked
 
 #2389 merged before this lane captured positive canonical readiness; later
 green checks cannot replace it. Hold #2416 until its genuine final-head
-`merge-ready: yes` is recorded while open. Preserve the verdict before merge.
+`merge-ready: yes` is recorded while open. Preserve the verdict, then obtain the
+owning security session’s explicit merge release to the designated coordinator.
 After #2416 merges and exact dependency closure is verified, run
 `bun run beep goals completion refresh --slug codex-security-findings-2026-10-20`.
 Refresh the linked packet too. Keep declared lifecycle active and prospective
