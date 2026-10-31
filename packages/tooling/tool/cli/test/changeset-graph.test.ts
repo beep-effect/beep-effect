@@ -3,6 +3,7 @@ import {
   ChangesetGraphPackageReference,
   changesetPackageReferencesFromText,
   changesetsParseClosingFenceLine,
+  collectWorkspacePackageJsonFiles,
   findMissingChangesetPackageReferences,
   makeChangesetGraphSummary,
   runChangesetGraphCheck,
@@ -359,6 +360,21 @@ Record a null bump.
   });
 
   it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })((it) => {
+    // 4-A2: the root patterns come from `@beep/repo-workspaces` `WorkspacePatterns.read`;
+    // its typed read failure maps onto ChangesetGraphError with the failing file.
+    it.effect("reports an unreadable root manifest as a ChangesetGraphError naming the file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeRepoFile(tmpDir, "package.json", "{");
+        const error = yield* collectWorkspacePackageJsonFiles(tmpDir).pipe(Effect.flip);
+        expect(error._tag).toBe("ChangesetGraphError");
+        expect(error.file).toBe(path.join(tmpDir, "package.json"));
+        expect(error.message).toContain("invalidJson");
+      })
+    );
+
     it.effect("accepts tracked workspace changesets through the release-path check", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

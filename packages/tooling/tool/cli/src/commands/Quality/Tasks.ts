@@ -7,8 +7,8 @@
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
-import { StringListField, WorkspacesField } from "@beep/package-json/ManifestFields";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -372,60 +372,17 @@ const parseRootAuditSelection = (args: ReadonlyArray<string>): RootAuditSelectio
     },
   });
 
-const parsePackageJson = manifestParser(["name", "scripts", "workspaces"]);
-const decodeWorkspaces = S.decodeUnknownEffect(WorkspacesField);
-const isWorkspacePatternList = S.is(StringListField);
+const parsePackageJson = manifestParser(["name", "scripts"]);
 
 /**
- * Read the workspace glob patterns a quality-task root manifest declares.
+ * Read a quality-task `package.json` text: its `name` and `scripts`, each of
+ * which must keep its JSON shape when present.
  *
  * **Details**
  *
- * A string array is the pattern list. The object form's `packages` is optional:
- * Bun accepts a `workspaces` object that carries only `catalog`/`catalogs`, and
- * such a root declares no workspace packages, so it reads as an empty list
- * rather than failing. A present `workspaces` of any other shape fails.
- *
- * **Example** (Read a catalog-only object form as no workspaces)
- *
- * ```ts
- * import { readQualityTaskManifest, workspacePatternsFromPackageJson } from "@beep/repo-cli/test/Quality"
- * import * as Effect from "effect/Effect"
- *
- * const patterns = Effect.runSync(
- *   Effect.flatMap(readQualityTaskManifest('{"workspaces":{"catalog":{}}}', "package.json"), (manifest) =>
- *     workspacePatternsFromPackageJson(manifest, "package.json")
- *   )
- * )
- * console.log(patterns) // []
- * ```
- *
- * @param packageJson - Root manifest read by {@link readQualityTaskManifest}.
- * @param filePath - Path named in a failure.
- * @returns The declared workspace patterns.
- * @category parsing
- * @since 0.0.0
- */
-export const workspacePatternsFromPackageJson = Effect.fn("QualityTasks.workspacePatternsFromPackageJson")(function* (
-  packageJson: LenientManifest,
-  filePath: string
-): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError> {
-  if (packageJson.workspaces === undefined) {
-    return A.empty<string>();
-  }
-  const workspaces = yield* decodeWorkspaces(packageJson.workspaces).pipe(
-    QualityTaskConfigurationError.mapError(`Failed to parse ${filePath}`)
-  );
-  return isWorkspacePatternList(workspaces) ? workspaces : (workspaces.packages ?? A.empty());
-});
-
-/**
- * Read a quality-task `package.json` text: its `name`, `scripts` and
- * `workspaces`, each of which must keep its JSON shape when present.
- *
- * **Details**
- *
- * Strict JSON only: JSONC text fails.
+ * Strict JSON only: JSONC text fails. The root's workspace patterns are not
+ * read here: `workspaceTaskOwners` takes them from `@beep/repo-workspaces`
+ * `WorkspacePatterns` (4-A2).
  *
  * **Example** (Read a package's scripts)
  *
@@ -534,10 +491,11 @@ const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(functi
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const rootPackageJsonPath = path.join(repoRoot, "package.json");
-  const rootPackageJson = yield* readPackageJsonFile(rootPackageJsonPath);
+  const patterns = yield* WorkspacePatterns.read(repoRoot).pipe(
+    QualityTaskConfigurationError.mapError(`Failed to read workspace patterns under ${repoRoot}`)
+  );
   const candidateDirs = yield* Effect.forEach(
-    yield* workspacePatternsFromPackageJson(rootPackageJson, rootPackageJsonPath),
+    patterns,
     (pattern) => workspaceCandidateDirsForPattern(repoRoot, pattern),
     { concurrency: 4 }
   );

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T09:30:13.587Z
+Generated: 2026-10-31T12:05:39.427Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 164 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3568 |
-| publicExports | 25363 |
+| publicModules | 3580 |
+| publicExports | 25389 |
 | openModules | 166 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -153,7 +153,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 95 | `@beep/exiftool` | `packages/drivers/exiftool` | clean | 5 | 55 | 0 | 0 |
 | 96 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
 | 97 | `@beep/pdf-tools` | `packages/drivers/pdf-tools` | clean | 4 | 38 | 0 | 0 |
-| 98 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 244 | 0 | 0 |
+| 98 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 27 | 246 | 0 | 0 |
 | 99 | `@beep/runpod` | `packages/drivers/runpod` | clean | 7 | 204 | 0 | 0 |
 | 100 | `@beep/tesseract` | `packages/drivers/tesseract` | clean | 3 | 15 | 0 | 0 |
 | 101 | `@beep/obs` | `packages/drivers/obs` | clean | 6 | 73 | 0 | 0 |
@@ -190,7 +190,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 132 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 133 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
 | 134 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
-| 135 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 479 | 4504 | 47 | 35 |
+| 135 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 489 | 4524 | 47 | 35 |
 | 136 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 137 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 138 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
@@ -201,7 +201,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 143 | `@beep/xstate` | `packages/drivers/xstate` | clean | 6 | 26 | 0 | 0 |
 | 144 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
 | 145 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
-| 146 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 104 | 2 | 0 |
+| 146 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 30 | 108 | 2 | 0 |
 | 147 | `@beep/openclaw` | `packages/drivers/openclaw` | clean | 9 | 130 | 0 | 0 |
 | 148 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 149 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
@@ -450,7 +450,7 @@ Export findings:
 - `src/commands/Ci/CiLane.ts:405` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1553` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
-- `src/commands/CreatePackage/CreatePackage.command.ts:122` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
+- `src/commands/CreatePackage/CreatePackage.command.ts:118` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:354` `IntakeRecord` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:405` `IntakeResult` (class) - 1 example import violation(s)
@@ -463,7 +463,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1052` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1053` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)

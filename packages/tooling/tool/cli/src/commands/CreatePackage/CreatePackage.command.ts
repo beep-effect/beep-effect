@@ -17,8 +17,8 @@ import {
   encodePackageJsonCanonicalPrettyEffect,
   findRepoRoot,
   readPackageJsonFile,
-  workspaceGlobsFrom,
 } from "@beep/repo-utils";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { today } from "@beep/schema/LocalDate";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
@@ -38,11 +38,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
-import {
-  applyJsoncModification as applySharedJsoncModification,
-  decodeJsoncTextAs,
-  JsoncModification,
-} from "../../internal/cli/Jsonc.ts";
+import { applyJsoncModification, decodeJsoncTextAs, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import {
   encodeLabManifestJson,
   isLabsWorkspacePath,
@@ -866,34 +862,23 @@ const matchesWorkspacePattern: {
   );
 });
 
-// fallow-ignore-next-line code-duplication -- config-updater helper twin of the CreatePackage/TsconfigSync copy, converged after the tstyche removal and the JSDoc grammar migration. Owner: @beep/repo-cli. Exit: consolidate both onto `@beep/repo-utils` (workspaceGlobsFrom/readPackageJsonFile) and delete the twins.
 const isPathCoveredByWorkspacePatterns = (patterns: ReadonlyArray<string>, targetPath: string): boolean =>
   A.some(patterns, matchesWorkspacePattern(targetPath));
 
-const applyJsoncModification = (
-  content: string,
-  path: ReadonlyArray<string | number>,
-  value: unknown,
-  options?: { readonly isArrayInsertion?: boolean }
-): string =>
-  applySharedJsoncModification(
-    JsoncModification.make({
-      content,
-      path,
-      value,
-      ...(options?.isArrayInsertion === true ? { isArrayInsertion: true } : {}),
-    })
-  );
-
 const appendWorkspaceEntry = (content: string, currentWorkspaces: unknown, packagePath: string): string => {
   if (P.isUndefined(currentWorkspaces)) {
-    return applyJsoncModification(content, ["workspaces"], [packagePath]);
+    return applyJsoncModification(JsoncModification.make({ content, path: ["workspaces"], value: [packagePath] }));
   }
 
   if (A.isArray(currentWorkspaces) && A.every(currentWorkspaces, P.isString)) {
-    return applyJsoncModification(content, ["workspaces", A.length(currentWorkspaces)], packagePath, {
-      isArrayInsertion: true,
-    });
+    return applyJsoncModification(
+      JsoncModification.make({
+        content,
+        path: ["workspaces", A.length(currentWorkspaces)],
+        value: packagePath,
+        isArrayInsertion: true,
+      })
+    );
   }
 
   if (
@@ -903,24 +888,26 @@ const appendWorkspaceEntry = (content: string, currentWorkspaces: unknown, packa
     A.every(currentWorkspaces.packages, P.isString)
   ) {
     return applyJsoncModification(
-      content,
-      ["workspaces", "packages", A.length(currentWorkspaces.packages)],
-      packagePath,
-      {
+      JsoncModification.make({
+        content,
+        path: ["workspaces", "packages", A.length(currentWorkspaces.packages)],
+        value: packagePath,
         isArrayInsertion: true,
-      }
+      })
     );
   }
 
   return P.isObject(currentWorkspaces)
-    ? applyJsoncModification(content, ["workspaces", "packages"], [packagePath])
-    : applyJsoncModification(content, ["workspaces"], [packagePath]);
+    ? applyJsoncModification(
+        JsoncModification.make({ content, path: ["workspaces", "packages"], value: [packagePath] })
+      )
+    : applyJsoncModification(JsoncModification.make({ content, path: ["workspaces"], value: [packagePath] }));
 };
 
 const ensureRootWorkspaceEntry = Effect.fn(function* (repoRoot: string, packagePath: string) {
   const fs = yield* FileSystem.FileSystem;
   const { content, filePath, packageJson } = yield* readRootPackageJsonDocument(repoRoot);
-  const workspacePatterns = workspaceGlobsFrom(packageJson.workspaces);
+  const workspacePatterns = WorkspacePatterns.fromManifest(packageJson);
 
   if (isPathCoveredByWorkspacePatterns(workspacePatterns, packagePath)) {
     return false;
@@ -942,7 +929,7 @@ const ensureRootWorkspaceEntry = Effect.fn(function* (repoRoot: string, packageP
 
 const rootWorkspaceEntryNeeded = Effect.fn(function* (repoRoot: string, packagePath: string) {
   const { packageJson } = yield* readRootPackageJsonDocument(repoRoot);
-  return !isPathCoveredByWorkspacePatterns(workspaceGlobsFrom(packageJson.workspaces), packagePath);
+  return !isPathCoveredByWorkspacePatterns(WorkspacePatterns.fromManifest(packageJson), packagePath);
 });
 
 /**
