@@ -1,10 +1,10 @@
 import * as NodeURL from "node:url";
 import { resolvePathWithinCanonicalRoot, resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { WorkspaceDiscovery } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import { WorkspaceRoot } from "@beep/repo-workspaces/WorkspaceRoot";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -144,7 +144,7 @@ const MANIFEST_FIELDS: ReadonlyArray<ManifestField> = [
 ];
 const parsePackageJson = manifestParser(MANIFEST_FIELDS);
 const decodePackageJson = manifestDecoder(MANIFEST_FIELDS);
-const decodeJsoncRecord = decodeJsoncTextAs(JsonRecord);
+const decodeJsoncRecord = Jsonc.bind(JsonRecord).decode;
 
 /**
  * Repository root resolved relative to the Quality command internals.
