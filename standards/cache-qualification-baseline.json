@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the root subject after a main merge added one generated input to the //#lint:policy-fingerprint:knowledge seal; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy)",
+      "reason": "Re-record the policy-fingerprint seal inputs after merging main (#2390 seals, #2381 GlobPattern removal) and the new app manifest, plus @beep/beep-effect-web lint tasks picking up the seal inputs. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review-2.md",
-        "sha256": "e2df2b079fa631d5eb0e43850e5802ff5ea5dda3b1f5301b3dfce3db6ba0809b"
+        "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-2.md",
+        "sha256": "a67d12edae46d3640be2812297d146807fdf3d90b040c498573f02e961f027f9"
       }
     },
     "@beep/acp": {
@@ -171,10 +171,10 @@
     },
     "@beep/beep-effect-web": {
       "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy)",
-      "reason": "Record the seven scaffold-generated tasks of the new app @beep/beep-effect-web (create-package --app-kind vite) as first entries with their standard commands, outputs, env and cache flags (goals/beep-effect-web-alchemy). No other subject drifted; no qualification is granted.",
+      "reason": "Re-record the policy-fingerprint seal inputs after merging main (#2390 seals, #2381 GlobPattern removal) and the new app manifest, plus @beep/beep-effect-web lint tasks picking up the seal inputs. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31.md",
-        "sha256": "65d075cd54c19482232c99a8c865254bb964ba31f3f51a7e9f50bc2d729585cc"
+        "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-2.md",
+        "sha256": "a67d12edae46d3640be2812297d146807fdf3d90b040c498573f02e961f027f9"
       }
     },
     "@beep/box": {
@@ -2948,6 +2948,7 @@
             ".oxlintrc.json",
             "_typos.toml",
             "apps/architecture-lab-proof/package.json",
+            "apps/beep-effect-web/package.json",
             "apps/docket-intake/package.json",
             "apps/labs/api-docs/package.json",
             "apps/labs/ciops/package.json",
@@ -3510,7 +3511,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -3833,7 +3833,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -4283,7 +4282,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
             "packages/tooling/tool/cli/src/internal/Codeowners.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -4707,7 +4705,6 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -5480,7 +5477,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -5914,6 +5910,7 @@
             "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Aggregate.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts",
+            "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
@@ -6000,7 +5997,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/PathContainment.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
@@ -20970,7 +20966,7 @@
         "command": "beep-cli lint deprecated-apis --package .",
         "commandDigest": "2a116c0c9147ea9d56993cfdb1707ecca36354662080158c672c0016c76071bb",
         "dependencies": [
-          "//#lint:policy-fingerprint",
+          "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/public-site#transit"
         ],
         "configuration": {
@@ -21020,7 +21016,7 @@
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
-            "//#lint:policy-fingerprint",
+            "//#lint:policy-fingerprint:lint-deprecated-apis",
             "^transit"
           ],
           "persistent": false,
@@ -21063,7 +21059,7 @@
         "command": "beep-cli lint jsdoc --package .",
         "commandDigest": "2a116c0c9147ea9d56993cfdb1707ecca36354662080158c672c0016c76071bb",
         "dependencies": [
-          "//#lint:policy-fingerprint"
+          "//#lint:policy-fingerprint:lint-jsdoc"
         ],
         "configuration": {
           "cache": true,
@@ -21105,7 +21101,7 @@
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
-            "//#lint:policy-fingerprint"
+            "//#lint:policy-fingerprint:lint-jsdoc"
           ],
           "persistent": false,
           "interactive": false,
@@ -21118,7 +21114,7 @@
         "command": "beep-cli lint laws --package .",
         "commandDigest": "2a116c0c9147ea9d56993cfdb1707ecca36354662080158c672c0016c76071bb",
         "dependencies": [
-          "//#lint:policy-fingerprint"
+          "//#lint:policy-fingerprint:lint-laws"
         ],
         "configuration": {
           "cache": true,
@@ -21159,7 +21155,7 @@
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
-            "//#lint:policy-fingerprint"
+            "//#lint:policy-fingerprint:lint-laws"
           ],
           "persistent": false,
           "interactive": false,
@@ -134424,7 +134420,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "c9ea6cdde0ba65a1d58dbc21c8f3323e47669114948cf24715a87ae8fab8aed1"
+        "sha256": "3457ddd0be1178907be577ed20f4b10f06b5e414e740bf3bf8c2d58a286bc648"
       }
     ]
   }
