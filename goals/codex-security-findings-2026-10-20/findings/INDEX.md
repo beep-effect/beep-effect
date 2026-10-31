@@ -34,7 +34,7 @@ auth values, email addresses, and raw local paths.
 - Record missing detail evidence explicitly and hold unsupported verdicts; the CSV contains Summary only.
 - Accepted risk / `Won't fix` does not satisfy this packet's completion gate.
 
-## Current execution state
+## Historical execution state
 
 Full Validation, Evidence and Attack-path detail enrichment is complete for all
 eight records. The remediation is published in PR #1930; scoped proof receipts
@@ -47,3 +47,10 @@ local remediation, and does not change the captured Cloud status `New`.
 All eight exact identities currently show Fixed. PR #1930 is merged; see
 [the live reconciliation](../research/2026-10-28-cloud-refresh.md). Earlier
 execution notes retain their historical state.
+
+## Current revalidation — 2026-10-31
+
+All eight complete Codex identities were independently rechecked Fixed.
+PR #1930 remains merged; see [current exact-ID evidence](../research/2026-10-31-revalidation.md).
+The supplemental dependency reconciliation is tracked in PR #2389 and the
+October 28 packet; it does not reopen these historical Cloud findings.

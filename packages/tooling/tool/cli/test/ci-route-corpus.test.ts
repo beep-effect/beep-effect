@@ -261,11 +261,86 @@ it.effect.prop(
 );
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture and load", (it) => {
+  it.effect("keeps today and future days open and collects runs created later today", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const runner = yield* fixtureRunner(calls);
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-29T12:00:00Z").pipe(DateTime.toEpochMillis));
+      const options = captureOptions(root, { since: "2026-10-29", until: O.some("2026-10-30") });
+      const empty = yield* (yield* makeRouteCorpus(runner)).capture(options);
+      expect([empty.until, empty.runs]).toEqual(["2026-10-28", 0]);
+
+      const corpus = yield* makeRouteCorpus(extendedRunner(calls, runner, false, "2026-10-29T14:00:00Z"));
+      const later = yield* corpus.capture(captureOptions(root, { since: "2026-10-29", until: O.none() }));
+      expect([later.until, later.runs]).toEqual(["2026-10-28", 1]);
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-30T00:00:00Z").pipe(DateTime.toEpochMillis));
+      const finished = yield* corpus.capture(options);
+      expect([finished.until, finished.runs]).toEqual(["2026-10-29", 2]);
+    })
+  );
+
+  it.effect("refuses missing or changed pinned evidence before resuming or writing a receipt", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const corpus = yield* makeRouteCorpus(yield* fixtureRunner(calls));
+      yield* corpus.capture(captureOptions(root));
+      const receiptPath = path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE);
+      const corpusPath = path.join(root, "corpus", ROUTE_CORPUS_FILE);
+      const receipt = yield* fs.readFileString(receiptPath);
+      const bytes = yield* fs.readFile(corpusPath);
+      const text = gunzip(bytes);
+      yield* fs.writeFile(corpusPath, NodeZlib.gzipSync(new TextEncoder().encode(`${text}${text}`)));
+      yield* Ref.set(calls, []);
+      const changed = yield* Effect.flip(corpus.capture(captureOptions(root)));
+      assertInclude(changed.message, "but its receipt pins");
+      expect(changed.reason).toBe("corpus-pin");
+      expect(yield* fs.readFileString(receiptPath)).toBe(receipt);
+      expect(yield* Ref.get(calls)).toEqual([]);
+
+      yield* fs.remove(corpusPath);
+      const missing = yield* Effect.flip(corpus.capture(captureOptions(root)));
+      expect(missing.reason).toBe("corpus-pin");
+      assertInclude(missing.message, "Failed to read the corpus");
+      expect(yield* fs.readFileString(receiptPath)).toBe(receipt);
+      expect(yield* Ref.get(calls)).toEqual([]);
+    })
+  );
+
+  it.effect("removes previously captured runs excluded by a new workflow selection", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
+      const corpus = yield* makeRouteCorpus(
+        yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
+      );
+      yield* corpus.capture(captureOptions(root));
+      const filtered = yield* corpus.capture(
+        RouteCorpusCaptureOptions.make({
+          ...captureOptions(root),
+          workflows: ["Check"],
+        })
+      );
+      const loaded = yield* corpus.load(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE));
+      expect(filtered.runs).toBe(3);
+      expect(A.map(loaded.runs, (run) => run.runId)).toEqual([PR_RUN, MAIN_RUN, RERUN]);
+      assertTrue(A.every(loaded.runs, (run) => run.workflow === "Check"));
+    })
+  );
+
   it.effect("captures the selected runs into a pinned gzip and receipt", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const corpus = yield* makeRouteCorpus(yield* fixtureRunner(calls));
 
@@ -275,7 +350,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       expect(receipt).toEqual(
         RouteCorpusReceipt.make({
           schemaVersion: "route-corpus/v1",
-          capturedAt: "1970-01-01T00:00:00.000Z",
+          capturedAt: "2026-10-31T00:00:00.000Z",
           since: "2026-10-27",
           // 2026-10-27 still has an unfinished run, so no day is fully captured yet.
           until: "2026-10-26",
@@ -368,6 +443,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const runGh = yield* fixtureRunner(calls);
       const corpus = yield* makeRouteCorpus(runGh);
@@ -399,6 +475,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const runGh = yield* fixtureRunner(calls);
       const fullPage = `[${A.join(
@@ -429,6 +506,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const corpus = yield* makeRouteCorpus(
         yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
       );
@@ -456,6 +534,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const corpus = yield* makeRouteCorpus(
         yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
       );
@@ -490,13 +569,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const corpus = yield* makeRouteCorpus(yield* fixtureRunner(calls));
       yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-29T12:00:00Z").pipe(DateTime.toEpochMillis));
 
       // No runs on 2026-10-29: the corpus is empty but still pinned and loadable.
       const today = yield* corpus.capture(captureOptions(root, { since: "2026-10-29", until: O.none() }));
-      expect([today.since, today.until, today.runs, today.heads]).toEqual(["2026-10-29", "2026-10-29", 0, 0]);
+      expect([today.since, today.until, today.runs, today.heads]).toEqual(["2026-10-29", "2026-10-28", 0, 0]);
       expect((yield* corpus.load(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE))).runs).toEqual([]);
 
       // An earlier since starts the window again at that day.
@@ -508,20 +588,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       // The same since continues from the day after the receipt's until.
       yield* Ref.set(calls, []);
       const continued = yield* corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.none() }));
-      expect([continued.since, continued.until, continued.runs]).toEqual(["2026-10-28", "2026-10-29", 1]);
+      expect([continued.since, continued.until, continued.runs]).toEqual(["2026-10-28", "2026-10-28", 1]);
       expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-29"]);
 
-      // Nothing left to list: the receipt keeps its window.
+      // The still-open current day is listed again without refetching pinned runs.
       yield* Ref.set(calls, []);
       const unchanged = yield* corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.none() }));
       expect([unchanged.until, unchanged.sha256]).toEqual([continued.until, continued.sha256]);
-      expect(yield* Ref.get(calls)).toEqual([]);
+      expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-29"]);
 
       const gap = yield* Effect.flip(
         corpus.capture(captureOptions(root, { since: "2026-10-31", until: O.some("2026-11-01") }))
       );
       expect(gap.reason).toBe("corpus-fetch");
-      assertInclude(gap.message, "since 2026-10-31 leaves a gap after the captured 2026-10-28..2026-10-29");
+      assertInclude(gap.message, "since 2026-10-31 leaves a gap after the captured 2026-10-28..2026-10-28");
 
       // Another set of workflows starts the window again.
       const checkOnly = yield* corpus.capture(
@@ -533,7 +613,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
           outDir: "corpus",
         })
       );
-      expect([checkOnly.since, checkOnly.until, checkOnly.workflows]).toEqual(["2026-10-28", "2026-10-29", ["Check"]]);
+      expect([checkOnly.since, checkOnly.until, checkOnly.workflows]).toEqual(["2026-10-28", "2026-10-28", ["Check"]]);
 
       const backwards = yield* Effect.flip(
         corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-27") }))
@@ -552,6 +632,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const runGh = yield* fixtureRunner(calls);
       const options = captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-30") });
@@ -575,7 +656,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
 
       yield* Ref.set(calls, []);
       const resumed = yield* corpus.capture(options);
-      expect([resumed.until, resumed.runs]).toEqual(["2026-10-30", 3]);
+      expect([resumed.until, resumed.runs]).toEqual(["2026-10-29", 3]);
       expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-30"]);
       expect(listCalls(yield* Ref.get(calls))).toBe(2);
       expect(A.map((yield* corpus.load(receiptPath)).runs, (run) => run.runId)).toEqual([RERUN, DAY2_RUN, DAY3_RUN]);
@@ -587,6 +668,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const runGh = yield* fixtureRunner(calls);
       const options = captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-28") });
@@ -624,6 +706,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const runGh = yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]));
       const crossed: RouteGhRunner = (args, cwd) =>
         args[2] === `${PR_RUN}` ? runGh(["run", "view", `${MAIN_RUN}`], cwd) : runGh(args, cwd);
@@ -639,6 +722,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const spawns = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const list = yield* fixtureText("list.Check.2026-10-28.json");
       const view = yield* fixtureText(`view.${RERUN}.json`);
@@ -680,6 +764,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const spawns = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const views = yield* Ref.make(0);
       const list = yield* fixtureText("list.Check.2026-10-28.json");
@@ -710,7 +795,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
         )
       );
 
-      expect([receipt.until, receipt.runs]).toEqual(["2026-10-28", 1]);
+      expect([receipt.until, receipt.runs]).toEqual(["2026-10-27", 1]);
       // The refused view is not retried by the runner; the corpus waits, then retries it once.
       expect(A.map(yield* Ref.get(spawns), (spawn) => A.join(A.take(A.drop(spawn, 1), 3), " "))).toEqual([
         "gh run list",
@@ -725,6 +810,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
       const options = RouteCorpusCaptureOptions.make({
         repoRoot: root,
         since: "2026-10-28",

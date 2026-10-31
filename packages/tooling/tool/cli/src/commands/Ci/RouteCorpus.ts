@@ -14,8 +14,11 @@
  * Capture works one UTC day at a time, oldest first, and pins the corpus
  * after every day, so a failure keeps every finished day. The receipt's
  * `until` is the last fully captured day: every eligible run of that day and
- * the days before it was finished and fetched. A rerun with the same `since`
- * continues from the day after `until`. A run is fetched again only when it
+ * the days before it was finished and fetched, and the UTC day has elapsed.
+ * Today and future days remain open even when no unfinished runs are listed.
+ * A rerun with the same `since`
+ * verifies the pinned corpus before continuing from the day after `until`.
+ * Changing workflows filters saved runs to that selection. A run is fetched again only when it
  * is new or its attempt moved past the captured one, so a pinned run is never
  * re-fetched. Every `gh` call goes through an injected {@link RouteGhRunner},
  * which lets tests supply recorded payloads and never spawn `gh`.
@@ -654,11 +657,26 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         `since ${options.since} is after until ${DateTime.formatIsoDateUtc(until)}.`
       );
     }
-    const previous = (yield* exists(receiptPath)) ? O.some(yield* readReceipt(receiptPath)) : O.none();
+    const loaded = (yield* exists(receiptPath)) ? O.some(yield* load(receiptPath)) : O.none();
+    const previous = O.map(loaded, (value) => value.receipt);
     const plan = yield* capturePlan(previous, options.since, since, options.workflows);
-    const existing: CaptureState = (yield* exists(corpusPath))
-      ? yield* readExisting(corpusPath)
-      : { runs: HashMap.empty(), pinned: O.none(), covered: "", open: true };
+    const existing: CaptureState = O.isSome(loaded)
+      ? {
+          runs: HashMap.fromIterable(
+            A.map(
+              A.filter(loaded.value.runs, (run) => A.contains(options.workflows, run.workflow)),
+              (run): readonly [number, HostedRun] => [run.runId, run]
+            )
+          ),
+          pinned: A.every(loaded.value.runs, (run) => A.contains(options.workflows, run.workflow))
+            ? O.some(loaded.value.receipt.sha256)
+            : O.none(),
+          covered: "",
+          open: true,
+        }
+      : (yield* exists(corpusPath))
+        ? yield* readExisting(corpusPath)
+        : { runs: HashMap.empty(), pinned: O.none(), covered: "", open: true };
     yield* fs
       .makeDirectory(outDir, { recursive: true })
       .pipe(Effect.mapError(RouteError.mapError("corpus-pin", `Failed to create ${outDir}.`)));
@@ -716,7 +734,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       const fetched = yield* Effect.forEach(pending, (runId) => fetchRun(options.repoRoot, runId), {
         concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
       });
-      const open = state.open && A.every(eligible, isFinishedRun);
+      const open = state.open && isLaterDay(DateTime.formatIsoDateUtc(now), day) && A.every(eligible, isFinishedRun);
       yield* Effect.logDebug("route corpus day captured").pipe(
         Effect.annotateLogs({ day, listed: A.length(listed), fetched: A.length(fetched), complete: open })
       );
