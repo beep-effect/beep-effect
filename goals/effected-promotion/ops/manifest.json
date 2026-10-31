@@ -75,12 +75,16 @@
       "purpose": "4-A4 differential: runEcosystemPolarityCheck over the live repo and a synthetic ecosystem of import forms, recorded before the SourceBoundary.scan switch and compared at the head with every difference classified into an intended shift class."
     },
     {
+      "path": "ops/git-adoption-differential.ts",
+      "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+    },
+    {
       "path": "ops/github-reporting-gfm-differential.ts",
       "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
     },
     {
-      "path": "ops/git-adoption-differential.ts",
-      "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+      "path": "ops/glob-shim-census.ts",
+      "purpose": "R2a parity: recomputes the Bun.Glob shim matcher census (every `new Bun.Glob` pattern, the vitest include globs and semantics probes over the tracked-path universe) with `@beep/glob` GlobPattern (dot: true) and compares it with the recorded `research/glob-shim-census-r2a.json`."
     },
     {
       "path": "ops/glob-adoption-parity.ts",
@@ -119,6 +123,10 @@
       "purpose": "Wave 3-A4 parity: every retired repo-cli and docgen package.json reader, as an oracle, against its @beep/package-json replacement over every tracked manifest."
     },
     {
+      "path": "ops/qas-discovery-adoption-parity.ts",
+      "purpose": "4-A1 parity: the QualityArtifactSupport discovery, CoverageScope and CoverageRegression surfaces before and after the move onto WorkspaceDiscovery, plus classified fixture probes."
+    },
+    {
       "path": "ops/repo-tsconfig-differential.ts",
       "purpose": "Wave 3-2 differential: TsconfigLoader.resolve against tsc --showConfig, optionally three-way with get-tsconfig."
     },
@@ -149,6 +157,10 @@
     {
       "path": "ops/xdg-systemd-differential.ts",
       "purpose": "Wave 4-X differential: @beep/xdg base and search directories against systemd-path over an environment matrix."
+    },
+    {
+      "path": "ops/markdown-toc-differential.ts",
+      "purpose": "Roadmap R5b differential: @beep/markdown MarkdownToc against a disposable @effect/markdown-toc 0.1.0 install over every tracked Markdown file and every generated docgen page, with the page's embedded TOC compared to the oracle."
     }
   ],
   "provides": [],

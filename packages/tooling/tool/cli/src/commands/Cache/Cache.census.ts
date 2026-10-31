@@ -75,7 +75,11 @@ const TurboRuntimePlan = S.Struct({
 const decodeTurboRuntimePlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboRuntimePlan));
 
 /**
- * Resolve an already-installed native Turbo binary without launcher overrides or installation fallback.
+ * Resolve a caller-selected or already-installed native Turbo binary without launcher inference.
+ *
+ * **Details**
+ * A selected executable must already be verified by the caller. Resolution only
+ * canonicalizes its path; it neither grants trust nor installs a client.
  *
  * **Example** (Plan native client resolution)
  *
@@ -85,11 +89,18 @@ const decodeTurboRuntimePlanJson = S.decodeUnknownEffect(S.fromJsonString(TurboR
  * console.assert(Effect.isEffect(resolveCacheTurboBinary("/repo")))
  * ```
  *
+ * @param root - Workspace root used for installed client discovery.
+ * @param executable - An optional caller-verified native executable.
+ * @returns The canonical native executable path.
  * @category queries
  * @since 0.0.0
  */
-export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(function* (root: string) {
+export const resolveCacheTurboBinary = Effect.fn("Cache.resolveTurboBinary")(function* (
+  root: string,
+  executable: O.Option<string> = O.none()
+) {
   const fs = yield* FileSystem.FileSystem;
+  if (O.isSome(executable)) return yield* fs.realPath(executable.value);
   const path = yield* Path.Path;
   const platform = yield* Match.value(yield* HostProcessPlatform).pipe(
     Match.when("linux", () => Effect.succeed("linux")),
@@ -416,7 +427,7 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
 });
 
 /**
- * Select tasks through the installed native client and verify their manifest commands.
+ * Select tasks through the exact native client and verify their manifest commands.
  *
  * **Details**
  * No tasks execute and no toolchain profile is required. Transit nodes retain
@@ -426,7 +437,8 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
  * with caching disabled, and rejects global or cross-task profile forwarding.
  * Positive matching declarations are rejected conservatively even if a later
  * negative pattern would exclude the profile. This neither calculates an
- * identity nor grants reuse.
+ * identity nor grants reuse. A caller-selected executable must already be verified;
+ * native launcher inference is disabled so it cannot delegate to an installed client.
  *
  * **Example** (Select a package and its task dependencies)
  *
@@ -437,18 +449,23 @@ const validateIdentityProfileScope = Effect.fn("Cache.validateIdentityProfileSco
  * console.assert(Effect.isEffect(collectCacheTaskSelection(".", ["run", "lint", "--filter=@beep/identity"])))
  * ```
  *
+ * @param repoRoot - Workspace root whose scripts and native task inputs are inspected.
+ * @param args - Execution arguments to convert to a read-only native plan.
+ * @param executable - An optional caller-verified client whose input semantics must be retained.
+ * @returns The selected nodes with exact native inputs and resolved task configuration.
  * @category queries
  * @since 0.0.0
  */
 export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")(function* (
   repoRoot: string,
-  args: ReadonlyArray<string>
+  args: ReadonlyArray<string>,
+  executable: O.Option<string> = O.none()
 ) {
   const selectedArgs = yield* cacheTaskSelectionArgs(args);
   const paths = yield* Path.Path;
   const root = paths.resolve(repoRoot);
-  const turbo = yield* resolveCacheTurboBinary(root);
-  const dry = yield* capture(root, turbo, selectedArgs).pipe(
+  const turbo = yield* resolveCacheTurboBinary(root, executable);
+  const dry = yield* capture(root, turbo, A.prepend(selectedArgs, "--skip-infer")).pipe(
     Effect.flatMap(decodeTurboRuntimePlanJson),
     CacheCommandError.mapError("Native task selection did not produce a valid dry plan.")
   );
@@ -505,7 +522,9 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
  * Cache reads and writes are disabled. Graph-only nodes carry no command.
  * Entrypoint source files are fingerprinted for subsequent semantic review;
  * the unresolved list prevents that source inventory from being mistaken for
- * a fully reviewed computation contract.
+ * a fully reviewed computation contract. A caller-selected executable must
+ * already be verified. All native inspections disable launcher inference,
+ * retaining that client's own input hashing semantics.
  *
  * **Example** (Plan an executable census)
  *
@@ -516,19 +535,25 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
  * console.assert(Effect.isEffect(computation))
  * ```
  *
+ * @param repoRoot - Workspace root whose declared quality computations are inspected.
+ * @param executable - An optional caller-verified client whose input semantics must be retained.
+ * @returns The exact-client workspace, task, input and configuration census.
  * @category queries
  * @since 0.0.0
  */
-export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function* (repoRoot: string) {
+export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function* (
+  repoRoot: string,
+  executable: O.Option<string> = O.none()
+) {
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* Path.Path;
   const fsUtils = yield* FsUtils;
   const root = paths.resolve(repoRoot);
-  const turbo = yield* resolveCacheTurboBinary(root);
+  const turbo = yield* resolveCacheTurboBinary(root, executable);
   const workspaces = yield* resolveWorkspacePackages(root).pipe(
     CacheCommandError.mapError("Cannot discover workspace manifests.")
   );
-  const query = yield* capture(root, turbo, ["query", "ls", "--output", "json"]).pipe(
+  const query = yield* capture(root, turbo, ["--skip-infer", "query", "ls", "--output", "json"]).pipe(
     Effect.flatMap(decodeTurboWorkspaceListJson),
     CacheCommandError.mapError("Turbo workspace query did not match the census wire contract.")
   );
@@ -601,6 +626,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   }
   const selectedTasks = pipe(tasks, A.dedupe, A.sort(Order.String));
   const dry = yield* capture(root, turbo, [
+    "--skip-infer",
     "run",
     ...selectedTasks,
     "--dry=json",
@@ -634,7 +660,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   );
   return CacheCensusReport.make({
     revision: Str.trim(yield* capture(root, "git", ["rev-parse", "HEAD"])),
-    turboVersion: Str.trim(yield* capture(root, turbo, ["--version"])),
+    turboVersion: Str.trim(yield* capture(root, turbo, ["--skip-infer", "--version"])),
     rootScripts: toSortedRecord(rootManifest.scripts),
     globalConfiguration: R.filter(rootJson, (_, key) => key !== "tasks" && key !== "$schema"),
     workspaces: workspaceRows,

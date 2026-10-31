@@ -712,22 +712,215 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   and delayed adapter-frame refusals. Guard-removal controls must fail.
 - Reverse by restoring the local queue and its bounded final-pull check; retain
   the corrected schema-encoded controls. No trust, rollout or proof gate changes.
-### Conformance fixture bind ownership (2026-10-30)
 
-The shared conformance test server reuses the existing scoped loopback server
-with its bounded `EADDRINUSE` retry, preserving the previous 128 MiB body limit.
-This fixes an inherited parallel-test bind race without adding a second retry
-implementation. Reverting the fixture call reverses the change; no runtime
-cache, credential or production policy changes are involved.
 
-### Independent upload approval refusal, 2026-10-30
 
-The owned upload rejects absent independent backend approval before quality
-admission, adapter acquisition, socket creation or worker execution. The current
-regression asserts both the error and the absence of those effects. Reordering
-admission before the approval check must fail the test. The private worker capture
-requires its issuer option explicitly: both internal callers already supply it,
-and the public experiment retains its existing optional argument and default.
-This removes an unreachable private fallback, not a safety check or coverage floor.
-The reversal path is the preceding producer-execution commit; no deployment or
-credential change accompanies this repair. Whole-goal acceptance remains unproven.
+### Closed producer command and private execution settings, 2026-10-30
+
+- Add `cache producer-run` as the operational caller of the existing owned
+  producer workflow. Its arguments select an experiment request and bounded
+  output; issuer, destination and credential selection come from supervisor
+  configuration.
+- `BEEP_CACHE_PRODUCER_STORE` selects an already provisioned owner-only store.
+  Reuse its independently approved `approval.json` and existing issuer material;
+  read the nonsecret target/executable profile from private `runtime.json` using
+  the same bounded, no-follow, single-link record reader. Opening neither
+  creates a store nor changes its approved binding.
+- Authenticate approval and the destination digest before looking up signing,
+  storage or transport capabilities. Apply the existing upload-profile checks
+  and reject any artifact-key value reused as a backend capability. Keep all
+  resolved capabilities redacted and unserialized.
+- Provide the command's actual HTTP and admission services at its command
+  boundary. Preserve existing approval-read diagnostics while sharing record IO.
+- Reversal: remove this command and its private execution profile; retain the
+  approved issuer, observations and ordinary R2 setup. No production activation
+  or protected workflow execution is implied by this source change. Explicit
+  trusted provisioning, actual runner qualification, immutable publication,
+  normal-source qualification and the complete observation windows remain gates.
+
+
+### Credential-free protected source inspection, 2026-10-30
+
+- Reuse the existing producer workflow inspector through `cache producer-inspect`.
+  Require an output file, bound the encoded report including its newline to four
+  MiB, and print only a fixed status line. Inspection never opens the producer
+  store, reads credential configuration, grants approval or runs a producer.
+- Prepare a separate manual, main-only inspection workflow with exact source
+  checkout and the existing protected environment/AWS runner. Explicitly disable
+  cache and secret setup; limit runtime to ten minutes, concurrency to one group
+  and the single run/attempt artifact to one-day retention. No workflow has run.
+- Source/tool observations support independent provisioning. They do not prove
+  namespace, user-manager or cgroup readiness and cannot substitute for the
+  authenticated producer artifact. Those real host and producer gates remain.
+- Reverse by removing this inspection caller and its workflow. Preserve the
+  inspector and existing trust authorities; no runtime or cloud state changes.
+
+
+- Resolve the inherited-adjacent baseline/transition reader clone in this touched
+  command file. Share a named Effect reader and module-scoped existing codecs;
+  preserve external review paths and caller-owned typed failures. The bounded
+  contained experiment reader retains its distinct policy. Reverse by restoring
+  the prior two equivalent readers; no authority or persistence model changes.
+
+
+### Independently provisioned producer material, 2026-10-30
+
+- A protected runner must use the issuer material whose binding the independent
+  verifier already trusts. Generating an unrelated runner key cannot establish
+  cross-host provenance. Reuse the existing approval, execution profile, issuer
+  store and verification authority; do not add a PKI or parallel registry.
+- Closed supervisor configuration selects private provisioning inputs and an
+  exclusive execution store outside its source checkout. Each deployment must
+  keep every material copy outside every worker mount; the current CLI enforces
+  its supervisor-checkout boundary. The actual protected workflow remains a gate.
+- Read existing strict bounded owner-only records plus optional redacted
+  ninety-six-byte material. Check its binding suffix before reserving a store.
+  The install command requires transferred material and never silently creates
+  a replacement. Independent verifier material remains off the runner.
+- Before installation, validate approval, destination digest, executable digest
+  and live source identity. Reopen the installed private profile, compare exact
+  encoded selection and inspect source again. Revoke a newly reserved store on
+  post-reservation failure or interruption; preserve any pre-existing store.
+- Local producer output remains bounded at eight MiB. This is not the hosted
+  transport limit: the existing immutable archive and member bounds still apply.
+  Secure material transport, a real protected execution and its publication are
+  unfinished. No credential or secret value enters arguments, logs or artifacts.
+- Reversal: revoke execution stores through the existing authority, remove these
+  installation callers and private inputs, and retain verifier stores and prior
+  observations. Ordinary R2 and signed-activation state remain independently held.
+
+
+### Concrete private runtime validation, 2026-10-30
+
+- Keep one implementation of upload target, key separation, adapter policy and
+  owned capability snapshots. The optional experiment API retains paired
+  approval/runtime absence; the private loader calls the concrete validator
+  after requiring upload approval and checking its target before credentials.
+- Do not unwrap a redundant optional result in the private loader. Its
+  independently approved store and locally constructed capability are concrete.
+  The same validator still returns the owned snapshot on both paths.
+- Prove a store without upload approval fails before any credential provider
+  is consulted; moving lookup earlier must trip the denying provider control.
+  Existing optional no-upload experiments retain their behavior.
+- Reverse by recombining the same validator with the optional API and restoring
+  the loader caller. Keep the denial-before-lookup case and snapshot controls.
+  No runtime, grant, profile or production setting changes.
+
+### Complete observation publication binding, 2026-10-30
+
+- Extend the existing bounded hosted report with a versioned complete-observation
+  digest and exactly one owned upload. Keep v1 readable as upload-only evidence;
+  it cannot satisfy the new complete-observation join. Hash the canonical schema
+  encoding of the complete observation, including its envelope and both native
+  matrices, which is the encoding consumed by the existing acceptance owner.
+- Reuse authenticated GitHub metadata, approved workflow bytes and immutable ZIP
+  verification. The strict join must also match the independent computation
+  binding and exact owned upload. Keep the one-MiB ZIP, sixty-four-KiB member,
+  ten-second inspection and twenty-four-hour lifetime unchanged.
+- This component remains observation-only. Independent issuer/MAC verification,
+  current-source admission and complete qualification policy stay mandatory.
+  The protected publisher and acceptance consumer must use this join before any
+  production qualification claim; no verified boolean or new trust store is added.
+- Reversal leaves complete-observation consumption disabled and retains the
+  legacy upload-only decoder. No endpoint, credential, signing or epoch changes.
+
+- Publication preparation takes only an independently configured run/attempt,
+  which exists before upload. Reuse that schema inside the later artifact
+  reference, whose real artifact ID remains mandatory during verification.
+  No placeholder identity is introduced and the report wire format is unchanged.
+
+
+### Strict publication at acceptance and operational reads, 2026-10-30
+
+- Require both channel publications in the existing authenticated import owner.
+  Legacy requests remain decodable for preview, with explicit missing-publication
+  failures; they cannot persist acceptance or authorize an operational transition.
+  The fixed private issuer store supplies `publication.json`; submitted requests
+  select neither workflow approval, credentials nor an alternate trust directory.
+- Reuse the existing protected GitHub metadata and bounded immutable ZIP verifier.
+  Bind the entire canonical observation and its exact owned upload, retain both
+  issuer/MAC checks, and re-read both private publication approvals after both
+  channel checks. Refuse a stable approval replaced during canary verification.
+- Compose one lazy metadata capability into the existing cache and quality
+  commands. Resolve credentials only for a supplied publication, scope each
+  metadata client to one verification, and release it before returning on success
+  or failure. Existing expiry, revocation, live-source and policy checks remain.
+- Controlled physical ZIP, private-file and CLI tests cover acceptance, persistence
+  and operational rereads; source-removal tests cover the strict join, final
+  publication approval reads and final issuer checks. These tests use fixture
+  metadata and do not prove a real protected publication or signed R2 execution.
+- Continue locally from the committed producer lifecycle repair while its PR is
+  open; keep this dependent branch unpublished. Retain a recovery ref and exact
+  seven-commit patch, then replay only this branch's commits after its exact parent
+  onto accepted main before publication. Never rebase the published parent PR.
+- Reverse by disabling acceptance-driven qualification and reverting this consumer
+  wiring while retaining prior private records and observations. Do not restore
+  unsigned remote fallback or loosen the independent source and issuer policies.
+  Ordinary R2 and inactive signed-trial state are unchanged.
+
+
+### Manual inspection governance, 2026-10-30
+
+- Classify the new manual source-inspection context through the existing explicit
+  orchestration inventory. It emits operational source evidence, not a required
+  quality verdict or a new CLI lane; do not expand required-status authority.
+- Keep the workflow policy checker active. Pin dispatch-only execution, protected
+  main, contents-read permission, the existing environment, ten-minute deadline,
+  all five disabled setup capabilities, disabled inherited host cache and one-day
+  artifact retention in the security suite.
+- The first default package proof found the missing mapping (introduced). The
+  repaired security/lane suite passes 127 cases on each runtime, with quick
+  verification passing. Fresh default and combined final/hosted proof remain
+  required; this does not prove actual protected inspection or signed execution.
+- Reverse by removing the still-unused inspection workflow and its exact mapping
+  and policy case together. No credential, permission, status or runtime change.
+
+### Owned command publication output, 2026-10-30
+
+- Extend the closed producer command with optional publication output rather than
+  adding another runner or editable report authority. Derive the existing v2
+  report from the exact observation returned by the owned execution.
+- Read run/attempt from workflow configuration using the existing positive-safe
+  identifier schemas before capabilities load. Require a separate private full
+  observation file and the fixed `cache-producer.json` upload member. Never accept
+  replacement uploads, issuer authority or artifact identity as command arguments.
+- Preserve observation-only callers without GitHub configuration. Prepare the
+  owned publication before either file is changed and keep report/observation
+  bounds at 64 KiB/8 MiB including newline. Immutable publication, independent
+  approval and authenticated acceptance remain later gates; local files alone
+  confer no producer or qualification authority.
+- Reverse by removing the optional publication flag and associated output wiring;
+  retain existing observations and strict acceptance requirements. No credential,
+  protected workflow, cache configuration or production change occurs here.
+
+- Adjacent quality audit: consolidate the duplicated expected/actual diagnostic
+  severity calculation into the existing one-pass Array idiom; preserve every
+  diagnostic and refusal. Retain the separately reported filesystem-presence
+  idiom: SAST canonical-path/security selection and JSDoc text diagnostics have
+  different policies and absence results, with no shared behavior beyond the
+  existing FileSystem primitive. Record the source judgment and leave the raw
+  warning intact; add no suppression or baseline relaxation.
+
+### Private producer output creation, 2026-10-30
+
+- Create producer observation and compact publication files with the existing
+  Effect filesystem exclusive-create pattern and explicit mode 0600. Generic
+  report defaults must not determine these private file permissions or replace
+  existing files, final symlinks or hardlinked peers. Use fresh caller-owned
+  output directories and paths for each run; ordinary report callers retain
+  their behavior.
+- Keep the current encoding/size checks and missing-upload preparation before
+  output writes. The two writes are sequential: a second-path refusal may leave
+  a new private observation, but the command fails and preserves any existing
+  publication. Private transport, parent-directory provisioning and immutable
+  hosted publication remain separate gates.
+- Reverse by removing the still-unpublished producer caller if these file
+  semantics cannot be supported; retain private evidence and trust boundaries.
+  No ordinary R2 service or signing activation changes with this repair.
+
+- Keep the generic writer and public warming service requirements unchanged.
+  Read the filesystem at the producer command boundary and pass its optional
+  concrete capability to the shared writer. Typed public/testing warming
+  examples enforce their existing service-free Effect contract. The initial
+  boolean branch widened that contract; an intended compile failure demonstrates
+  why the dependency must stay at the producer boundary.
