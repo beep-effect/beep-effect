@@ -510,3 +510,8 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
 - [Owned approval refusal checkpoint](producer-approval-refusal-checkpoint.json):
   immutable hosted gap, current exact source hashes, admission-order negative
   control, and 176-case Node/Bun runner coverage. Local controlled evidence only.
+
+- [Dependency security compatibility checkpoint](dependency-security-compatibility-checkpoint.json):
+  patched dependency identities, independent legacy-reference provenance,
+  complete package and cross-runtime test/coverage proof, and restored negative
+  controls. This component repair grants no signed reuse or whole-goal acceptance.

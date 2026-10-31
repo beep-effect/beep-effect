@@ -722,3 +722,24 @@ private worker contract repair to the hosted gap and its immutable coverage
 artifacts. The admission-reordering control fails once for the intended reason;
 176 cases pass per local provider with full scoped runner-file coverage. Current
 full/hosted proof and all nine whole-goal criteria remain unproven.
+
+### Dependency security compatibility checkpoint, 2026-10-31 UTC
+
+The [compatibility checkpoint](research/dependency-security-compatibility-checkpoint.json)
+records the patched dependency and vendored optimizer repair that unblocks
+producer verification. Complete local package proof, 270 Node tests and both
+coverage providers pass; independent legacy vectors preserve the old dialect.
+Both deliberate negative controls fail and restore source exactly. The old
+published head passes Security but predates this compatibility wave; fresh
+hosted proof and review remain required. No qualification or rollout is granted.
+
+
+### Second-phase security review, 2026-10-31 UTC
+
+The expansion cap and pairwise-work limit cover different costs. The current
+repair skips optional deduplication above 1,000 alternatives while preserving
+all alternatives. Complete package proof and 273 tests in each runtime pass;
+the exact-boundary, no-comparison and 4,096-alternative watchdog cases pass.
+All three deliberate fault controls fail as expected and restore source exactly.
+The older complete final proof remains historical; publish and prove this new
+wave through the full current-source and hosted/review gates before acceptance.

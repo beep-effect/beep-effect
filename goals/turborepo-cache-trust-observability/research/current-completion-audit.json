@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "0c6289dde74055a394df45acf940fbe9cea28db1d87ae01fd9ab719caf294a25",
+  "specSha256": "bd73698b8b56d96f228e110c19dd879df587861e622189ac90243621779a4515",
   "acceptance": [
     {
       "id": "AC-01",
@@ -426,5 +426,12 @@
   "priorSpecSha256AtAcceptedConformanceMerge": {
     "local": "e8f5fb1ba06b92ab6a9dcd291b3ae8f97291cce4e2569e92669ccec93357cf04",
     "accepted": "4abd0d6fc7c4e0401893ee5cc581053bf33db9d07fd4be48804a922dc873c21e"
+  },
+  "priorSpecSha256AtDependencySecurityRepair": "4abd0d6fc7c4e0401893ee5cc581053bf33db9d07fd4be48804a922dc873c21e",
+  "dependencySecurityCompatibilityCheckpoint": "research/dependency-security-compatibility-checkpoint.json",
+  "priorSpecSha256AtSecondPhaseSecurityReview": "98f7ff8cee753d056cd178f5e90d5bd0534fc3444836bc62998a4da7bc7d77e6",
+  "priorSpecSha256AtAcceptedSecurityMerge": {
+    "local": "0c6289dde74055a394df45acf940fbe9cea28db1d87ae01fd9ab719caf294a25",
+    "accepted": "35423c3fba45ba4be7c3f22126060d94f7165c57c8358fd07fbc622d345a73e2"
   }
 }
