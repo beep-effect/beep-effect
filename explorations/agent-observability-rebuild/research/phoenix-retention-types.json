@@ -1,0 +1,82 @@
+{
+  "data": {
+    "rule": {
+      "possibleTypes": [
+        {
+          "name": "TraceRetentionRuleMaxDays",
+          "fields": [
+            {
+              "name": "maxDays"
+            }
+          ]
+        },
+        {
+          "name": "TraceRetentionRuleMaxCount",
+          "fields": [
+            {
+              "name": "maxCount"
+            }
+          ]
+        },
+        {
+          "name": "TraceRetentionRuleMaxDaysOrCount",
+          "fields": [
+            {
+              "name": "maxDays"
+            },
+            {
+              "name": "maxCount"
+            }
+          ]
+        }
+      ]
+    },
+    "cost": {
+      "fields": [
+        {
+          "name": "tokens"
+        },
+        {
+          "name": "cost"
+        }
+      ]
+    },
+    "col": {
+      "enumValues": [
+        {
+          "name": "startTime"
+        },
+        {
+          "name": "endTime"
+        },
+        {
+          "name": "latencyMs"
+        },
+        {
+          "name": "tokenCountTotal"
+        },
+        {
+          "name": "tokenCountPrompt"
+        },
+        {
+          "name": "tokenCountCompletion"
+        },
+        {
+          "name": "cumulativeTokenCountTotal"
+        },
+        {
+          "name": "cumulativeTokenCountPrompt"
+        },
+        {
+          "name": "cumulativeTokenCountCompletion"
+        },
+        {
+          "name": "cumulativeTokenCostTotal"
+        },
+        {
+          "name": "tokenCostTotal"
+        }
+      ]
+    }
+  }
+}

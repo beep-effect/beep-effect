@@ -68,6 +68,22 @@ export * from "./config-snapshot.ts";
  */
 export * from "./data-root.ts";
 /**
+ * Durable delivery facts and exclusive local event states.
+ * **Example** Examples live in `./delivery-ledger.ts`.
+ * **Details** Transport acknowledgment and positive backend visibility remain separate facts.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./delivery-ledger.ts";
+/**
+ * Strict bounded OTLP trace response interpretation.
+ * **Example** Examples live in `./delivery-response.ts`.
+ * **Details** HTTP 200 with a positive rejected count is partial evidence.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./delivery-response.ts";
+/**
  * DuckDB derived-store schema, transcript row projection, and Parquet export.
  * Examples live on the owning declarations in `./derived-storage.ts`.
  *
@@ -83,6 +99,20 @@ export * from "./derived-storage.ts";
  * @since 0.0.0
  */
 export * from "./duckdb.ts";
+/**
+ * Atomic retirement of drained evidence epochs with retained uncertainty totals.
+ * **Example** (Retention policy) Examples live in `./evidence-retention.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./evidence-retention.ts";
+/**
+ * Bounded evidence windows and explicit retired-history accounting.
+ * **Example** (Evidence scope) Examples live in `./evidence-window.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./evidence-window.ts";
 /**
  * Recursive file inventory traversal shared by AI metrics storage workflows.
  * Examples live on the owning declarations in `./file-inventory.ts`.
@@ -109,6 +139,14 @@ export * from "./flight-record.ts";
  * @since 0.0.0
  */
 export * from "./forwarder.ts";
+/**
+ * Versioned, bounded Git root observations alongside compatible legacy IDs.
+ * Examples live on the declarations in `./git-root-evidence.ts`.
+ *
+ * @category observability
+ * @since 0.0.0
+ */
+export * from "./git-root-evidence.ts";
 /**
  * Harness evidence ledger: context surface ids, harness fingerprints, ledger
  * rows, and the derived harness-edit, budget, staleness, and warm-restart
@@ -183,6 +221,163 @@ export * from "./mirror.ts";
  */
 export * from "./models.ts";
 /**
+ * Single-attempt native sender with durable delivery evidence.
+ * **Example** Examples live in `./native-delivery.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./native-delivery.ts";
+/**
+ * Canonical native metadata projection and cache-aware OTLP encoding.
+ * **Example** Examples live in `./native-export.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./native-export.ts";
+/**
+ * Bounded native trace HTTP admission into the local metadata journal.
+ *
+ * **Example** Examples live in `./native-http.ts`.
+ * **Details** Responses describe local durable admission, never backend visibility.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./native-http.ts";
+/**
+ * Atomic native metadata admission sharing the bounded local intake journal.
+ *
+ * **Example** Examples live in `./native-intake.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./native-intake.ts";
+/**
+ * Verified native backend observations linked to original send attempts.
+ * **Example** Examples live in `./native-readback.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./native-readback.ts";
+/**
+ * Bounded restartable native delivery scheduling over durable receipts.
+ * **Example** Examples live in `./native-schedule.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./native-schedule.ts";
+/**
+ * Positive bounded native OTLP metadata projection before durable intake.
+ *
+ * **Example** Examples live in `./native-trace.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./native-trace.ts";
+/**
+ * Bounded independent physical snapshots and fresh-destination restoration.
+ * **Example** Examples live in `./observation-backup.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-backup.ts";
+export {
+  ObservationClaimPopulationError,
+  ObservationClaimPopulationEvidence,
+  ObservationClaimPopulationReport,
+  ObservationClaimPopulationRequest,
+  readObservationClaimPopulation,
+} from "./observation-claim-population.ts";
+/**
+ * Shared bounded worker admission, drain and maintenance coordination.
+ * **Example** Examples live in `./observation-control.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-control.ts";
+/**
+ * Evidence-bound coverage reconciliation. Examples live on the owning declarations.
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./observation-coverage.ts";
+/**
+ * Declared route inventory, independent population denominators, and route health.
+ * Examples live in `./observation-inventory.ts`.
+ *
+ * @category observability
+ * @since 0.0.0
+ */
+export * from "./observation-inventory.ts";
+/**
+ * Explicit private launch configuration and secret namespace binding.
+ * **Example** Examples live in `./observation-launch.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-launch.ts";
+/**
+ * Independent durable one-attempt launch claims.
+ * @since 0.0.0
+ */
+export * from "./observation-launch-claims.ts";
+/**
+ * Owner-only client for exact managed-launch submissions.
+ * **Example** Examples live in `./observation-launch-client.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-launch-client.ts";
+/**
+ * Durable managed-launch observations. Examples live on the owning declarations.
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./observation-launch-facts.ts";
+/**
+ * Private bounded managed-launch fact transport.
+ * **Example** Examples live in `./observation-launch-http.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-launch-http.ts";
+/**
+ * Private bounded maintenance for a paused worker.
+ * **Example** Examples live in `./observation-maintenance-http.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-maintenance-http.ts";
+/**
+ * Bounded declared-root inventory producer and retained observation evidence.
+ *
+ * **Example** Examples live in `./observation-root-probe.ts`.
+ * **Details** Root probes do not qualify harness coverage.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-root-probe.ts";
+/**
+ * Scoped native scheduling cadence and explicit runtime freshness.
+ * **Example** Examples live in `./observation-runtime.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-runtime.ts";
+/**
+ * Source traversal/read health with explicit partial, failed and unknown observations.
+ * **Example** Examples live in `./observation-source-health.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-source-health.ts";
+/**
+ * Paused-by-default composition of the owned observation components.
+ * **Example** Examples live in `./observation-worker.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./observation-worker.ts";
+/**
  * OTLP span projection and export: the allowlisted attribute surface and the
  * exporter that ships it. Examples live on the owning declarations in
  * `./otlp.ts`.
@@ -191,6 +386,14 @@ export * from "./models.ts";
  * @since 0.0.0
  */
 export * from "./otlp.ts";
+/**
+ * Verified payload reclamation with durable original receipts and replay identity.
+ * **Example** (Reclamation policy) Examples live in `./payload-reclamation.ts`.
+ * **Details** Uncertain delivery and compact evidence expiration remain separate policies.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./payload-reclamation.ts";
 /**
  * Salted hashing, salt provenance, and the privacy proof that no raw identifier
  * reaches a derived payload. Examples live on the owning declarations in
@@ -270,3 +473,43 @@ export * from "./telemetry-v2.ts";
  * @since 0.0.0
  */
 export * from "./telemetry-v2-store.ts";
+/**
+ * Streaming discovery over declared private roots and bounded intake composition.
+ * **Example** Examples live in `./transcript-discovery.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./transcript-discovery.ts";
+/**
+ * Metadata-only reconstructed observations with explicit non-additive usage.
+ * **Example** Examples live in `./transcript-export.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./transcript-export.ts";
+/**
+ * Atomic local acceptance for metadata transcript pages and their source cursors.
+ *
+ * **Example** Examples live in `./transcript-intake.ts`.
+ * **Details** Local acceptance remains separate from export and backend evidence.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./transcript-intake.ts";
+/**
+ * Incremental metadata-only transcript pages and proposed source cursors.
+ *
+ * **Example** Examples live in `./transcript-page.ts`.
+ * **Details** Source progress must be committed with durable intake, independently of export acknowledgment.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./transcript-page.ts";
+/**
+ * Fair bounded processing of declared transcript candidates into local intake.
+ *
+ * **Example** Examples live in `./transcript-sweep.ts`.
+ * @category exports
+ * @since 0.0.0
+ */
+export * from "./transcript-sweep.ts";

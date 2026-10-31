@@ -1,0 +1,125 @@
+{
+  "observedAt": "2026-10-29T17:02:51.084930+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-native-projection-ovv12wv3",
+  "artifacts": [
+    {
+      "file": "audit.repair-v8.combined.txt",
+      "bytes": 112540,
+      "sha256": "d9212bf07f2125038c27607777ae31dbe0fe4b97e513323c17e0eb97240943e0"
+    },
+    {
+      "file": "audit.repair-v8.json",
+      "bytes": 12961,
+      "sha256": "acc3f49d2594a97785a69617b7e140d07381de06e263449864e0956233a5670d"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 14565,
+      "sha256": "dd121d570e845a3e97062c1dca67136d75cea0b69a14dbc30ff9dc07f7a68415"
+    },
+    {
+      "file": "NATIVE-PROJECTION-REVIEW.md",
+      "bytes": 2149,
+      "sha256": "9576f0cfd5bb01167b72411c5219de97d73c1f912172d2ededb821b2998e9c01"
+    },
+    {
+      "file": "foundation-native-trace-before.ts",
+      "bytes": 19442,
+      "sha256": "be5e6d0cc330caa8f4e3974b05247f0d44e117fe977f600d1ddc1a061c6df0c8"
+    },
+    {
+      "file": "foundation-native-trace-test-before.ts",
+      "bytes": 13630,
+      "sha256": "da1237982186afbc045ca9c41e630ada5ff1be0cb7b81ce2be970abc4d1b0d85"
+    },
+    {
+      "file": "foundation-native-trace-health-v1.json",
+      "bytes": 5926,
+      "sha256": "1868722f38761995accb86e34256b57410138b90b596769de66c4ad2bef82e66"
+    },
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "foundation-native-projection-v1.log",
+      "bytes": 1594,
+      "sha256": "f867fdd3363ebbdfb432aa71d2fd5f8ac08937c042334e1ce176c0e80917b3f1"
+    },
+    {
+      "file": "foundation-native-projection-v1-guard.json",
+      "bytes": 352,
+      "sha256": "1d9e2eea13d1732d8dd766617f5ee8502aaaa189b8e26fb867d3e46492b4334f"
+    },
+    {
+      "file": "foundation-native-projection-v2.log",
+      "bytes": 14777,
+      "sha256": "124d89b19bc3e41b9b01be9b82feac17147f9d87d61c477bcf7e89a9542cf8f4"
+    },
+    {
+      "file": "foundation-native-projection-v2-guard.json",
+      "bytes": 352,
+      "sha256": "a8bd2063ab6225aead2be34c0e41275a2c95339c724a002291e7a07d21114caf"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/native-trace.ts": "3bb99f2b073d986b087cd57a0d0bce58f2317ee49456e0f5c3b4e71181a40a99",
+    "packages/tooling/library/ai-metrics/test/native-trace.test.ts": "bbfc2bf9ec562b2c04ba5d8671c2a20942a6859e44618c08b59757565cf0e9b1"
+  },
+  "verification": {
+    "focusedTests": 31,
+    "aiMetricsQuick": "lint and check passed",
+    "nativeProjectionComplexityFindings": 0,
+    "independentReview": "accepted exact source hash; test added subsequently does not change reviewed source",
+    "fallowAttribution": {
+      "gate": "new-only",
+      "dead_code_introduced": 0,
+      "dead_code_inherited": 0,
+      "complexity_introduced": 47,
+      "complexity_inherited": 0,
+      "duplication_introduced": 3,
+      "duplication_inherited": 4,
+      "styling_introduced": 0,
+      "styling_inherited": 0,
+      "duplication_demoted": 0,
+      "diff_risk_introduced": 0
+    },
+    "maximumRemainingCyclomatic": 28
+  },
+  "guards": {
+    "foundation-native-projection-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-native-projection-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 44076564480,
+      "peakObservedBytes": 5720535040,
+      "minimumAvailableBytes": 35543236608,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-native-projection-v2": {
+      "ownedScopes": {},
+      "unit": "foundation-native-projection-v2.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 45575356416,
+      "peakObservedBytes": 5434613760,
+      "minimumAvailableBytes": 36873474048,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    }
+  },
+  "limitations": [
+    "Combined v2 command exits 1 on remaining repository Fallow findings after successful tests/lint/typecheck. No gates weakened.",
+    "Earlier full AI-metrics audit and entrypoint proof precede this native projection refactor. Focused native projection/intake/export/readback and package lint/types are current; installed/canary source proof still needs refresh.",
+    "Whole CLI runtime-abort, remaining quality/catalog checks, publication and hosted review/merge remain pending.",
+    "No raw collection, production enrollment, historical removal or recovery hold release."
+  ]
+}

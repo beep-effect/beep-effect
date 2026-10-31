@@ -1,0 +1,132 @@
+{
+  "result": "passed",
+  "syntheticOnly": true,
+  "productionDeployment": false,
+  "lifecycleAgesUseFixedClock": true,
+  "images": {
+    "phoenix": "arizephoenix/phoenix@sha256:c542e7de1dc1fdd0f938de337d44ebefa7266e91391eed6e7978523d7f6e1f2f",
+    "collector": "otel/opentelemetry-collector-contrib@sha256:1175b03003053962012f5a231f5567f66a3e8fdb960c7835c0e48f7aa1555806"
+  },
+  "sourceSha256": {
+    "fixture": "48c0143518b10e050455236a912182b673b3947a8750cfd070764de3d09e6265",
+    "template": "20bce80b8a5dd72030facdb46e60822720fd1bff57f94c1bb38bbff708658526",
+    "verifier": "ac7ce79e407b25a5b0c8c4a6dda5f68d8528aa69964e7a1d6f47f996620fa07e"
+  },
+  "lifecycle": {
+    "stableEventId": "b85e3c7213c857682ee74611340f44d663bd3c398ea327e7a3e26f240c08c137",
+    "traceId": "77777777777777777777777777777777",
+    "spanId": "7777777777777777",
+    "epoch": 1,
+    "priorWindow": {
+      "epoch": 0,
+      "openedAt": 1793274800579,
+      "closedAt": 1793274861986,
+      "totals": {
+        "pages": 1,
+        "payloadBytes": 935,
+        "nativeAcceptedOccurrences": 1,
+        "nativeRejectedOccurrences": 0,
+        "transcriptFrameOccurrences": 0,
+        "eventObservations": 1,
+        "attempts": 1,
+        "pending": 0,
+        "acceptedUnverified": 0,
+        "visible": 1,
+        "rejected": 0,
+        "unresolved": 0,
+        "verifiedPages": 1,
+        "expiredPages": 0,
+        "unenrolledReferences": 0,
+        "unenrolledNativeEvents": 0,
+        "launchPreparations": 0,
+        "launchStarts": 0,
+        "launchSessionBindings": 0,
+        "launchFinishes": 0,
+        "launchPayloadBytes": 0
+      },
+      "previousDigest": {
+        "_id": "Option",
+        "_tag": "None"
+      }
+    },
+    "encodedBytesChanged": true,
+    "readback": {
+      "_tag": "Mismatch",
+      "eventId": "b85e3c7213c857682ee74611340f44d663bd3c398ea327e7a3e26f240c08c137"
+    },
+    "state": {
+      "eventId": "b85e3c7213c857682ee74611340f44d663bd3c398ea327e7a3e26f240c08c137",
+      "targetId": "c2e6e9e8075b5a754be95cd9d0f76898681835ae9b385cfa913adfac3a4a1002",
+      "state": "accepted-unverified",
+      "attempts": 1,
+      "acknowledgedAttempts": 1,
+      "ambiguousAttempts": 0
+    },
+    "afterTick": {
+      "eventId": "b85e3c7213c857682ee74611340f44d663bd3c398ea327e7a3e26f240c08c137",
+      "targetId": "c2e6e9e8075b5a754be95cd9d0f76898681835ae9b385cfa913adfac3a4a1002",
+      "state": "accepted-unverified",
+      "attempts": 1,
+      "acknowledgedAttempts": 1,
+      "ambiguousAttempts": 0
+    },
+    "expired": {
+      "_id": "Option",
+      "_tag": "Some",
+      "value": {
+        "version": "expired-page-disposition/v1",
+        "reason": "retention-expired",
+        "page": {
+          "receiptId": "6fe5b2956acfc3d984b7995fa5a88ab166492421b010d959d0b58089f0c530c1",
+          "sequence": 2,
+          "acceptedAt": 1793274861986,
+          "payloadBytes": 935,
+          "frames": 1,
+          "evidenceEpoch": 1
+        },
+        "disposedAt": 1793361262986,
+        "enrolledOwnership": {
+          "count": 1,
+          "digest": "b5a6e140dec74751cf8773230fdf71078d22ed870021c592be8ea36ef957e4de"
+        },
+        "eventCount": 1,
+        "states": {
+          "pending": 0,
+          "acceptedUnverified": 1,
+          "visible": 0,
+          "rejected": 0,
+          "unresolved": 0
+        }
+      }
+    },
+    "lifecycleClock": "explicit fixed wall clock; network and deadlines use real timers"
+  },
+  "storedSyntheticAttributes": {
+    "llm.token_count.total": 15,
+    "llm.token_count.prompt": 10,
+    "llm.token_count.prompt_details.cache_read": 0,
+    "llm.token_count.prompt_details.cache_write": 0,
+    "llm.token_count.completion": 5,
+    "ai_metrics.event_id": "b85e3c7213c857682ee74611340f44d663bd3c398ea327e7a3e26f240c08c137",
+    "ai_metrics.stream": "native",
+    "ai_metrics.usage.cache_read": 0,
+    "ai_metrics.usage.convention": "claude-code",
+    "ai_metrics.usage.normalized": true,
+    "ai_metrics.usage.input": 10,
+    "ai_metrics.usage.cache_write": 0,
+    "ai_metrics.usage.complete": true,
+    "ai_metrics.usage.output": 5,
+    "ai_metrics.time_basis": "source_event",
+    "ai_metrics.route_id": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "ai_metrics.source_start_time_unix_nano": "1793000000000000000",
+    "ai_metrics.source_end_time_unix_nano": "1793000000100000000",
+    "ai_metrics.source_name_hash": "ee6465ee2faaa9f396f7d67052c69a6f8603a67c24ed3a07ee7f4542eb3e2d9f",
+    "ai_metrics.duration_known": true
+  },
+  "storedRows": 1,
+  "storedTokenTotal": 15,
+  "storedEpoch": null,
+  "backendResponseSha256": "83ab73c6900b88c4de5af7b25ad1fd6b6f2ec5923c47f9b04d8cb727b9fe5f15",
+  "ownedResourcesRemoved": true,
+  "logSha256": "00ce2628221a28d3dfcb0f3083cc94098ee0f37938e529f5d4e6603723cbc897"
+}

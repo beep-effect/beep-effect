@@ -1,0 +1,26 @@
+[
+  {
+    "repository": "Arize-ai/phoenix",
+    "ref": "main",
+    "license": "Elastic-2.0",
+    "url": "https://raw.githubusercontent.com/Arize-ai/phoenix/main/LICENSE"
+  },
+  {
+    "repository": "openai/codex",
+    "ref": "rust-v0.165.0",
+    "license": "Apache-2.0",
+    "url": "https://raw.githubusercontent.com/openai/codex/rust-v0.165.0/LICENSE"
+  },
+  {
+    "repository": "open-telemetry/opentelemetry-collector",
+    "ref": "main",
+    "license": "Apache-2.0",
+    "url": "https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector/main/LICENSE"
+  },
+  {
+    "repository": "open-telemetry/opentelemetry-collector-contrib",
+    "ref": "main",
+    "license": "Apache-2.0",
+    "url": "https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector-contrib/main/LICENSE"
+  }
+]

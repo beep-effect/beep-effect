@@ -1,0 +1,143 @@
+{
+  "recordedAt": "2026-10-29T00:40:33.528402+00:00",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "deliberateMemoryExhaustion": false,
+  "goalComplete": false,
+  "runs": [
+    {
+      "unit": "beep-observation-entry-proof-86f23950c144.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-887783d48966.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-1e0869476dc6.service",
+      "refused": "ownership",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 38
+    },
+    {
+      "unit": "beep-observation-entry-proof-dee80197b169.service",
+      "refused": "resources",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 38
+    },
+    {
+      "unit": "beep-observation-entry-proof-e05091ac08ae.service",
+      "refused": "ownership",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 38
+    },
+    {
+      "unit": "beep-observation-entry-proof-ba4d1753f8b0.service",
+      "refused": "socket",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 35
+    }
+  ],
+  "result": "passed",
+  "launchFacts": {
+    "cliMarkedFixtures": 1,
+    "desktopMarkedFixtures": 1,
+    "actualHarnessLaunches": 0,
+    "committedFacts": 8,
+    "exactReplayAfterRestart": true,
+    "privateFieldRefused": true,
+    "startsPaused": true
+  },
+  "sourceStartsPaused": true,
+  "sourceAutonomousRead": true,
+  "sourcePartialTailPersists": true,
+  "sourceCursorSurvivesRestart": true,
+  "sourceCoverageRemainsUnknown": true,
+  "startsPaused": true,
+  "autonomousSend": true,
+  "acceptedMissingReadbackDegraded": true,
+  "exactReceiptReplayAfterRestart": true,
+  "noBlindResend": true,
+  "privateCanaryAbsent": true,
+  "scopedSocketCleanup": true,
+  "noFixtureRoutes": true,
+  "databaseIntegrity": true,
+  "backendPostCount": 2,
+  "nativeBackendPostCount": 1,
+  "reconstructedBackendPostCount": 1,
+  "unsafeCreationModeRefused": true,
+  "symlinkFixture": "/tmp/obs-link-6xt_8tqk",
+  "socketFixture": "/tmp/obs-socket-otwkibmn",
+  "missingLockRefused": true,
+  "symlinkDatabasePreserved": true,
+  "activeSocketPreserved": true,
+  "cleanup": [
+    {
+      "unit": "beep-observation-entry-proof-86f23950c144.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-887783d48966.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-1e0869476dc6.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-dee80197b169.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-e05091ac08ae.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-ba4d1753f8b0.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "c91549ab1020bea7eab50f2751a9470bef43b43a32bd4b205fbfbd8b2263ee5e",
+    "packages/tooling/library/ai-metrics/test/fixtures/write-observation-launch.ts": "f0f951c0e8f5c1814f6f31b6eb1b5660d1481b2ce70844baf5bb1f72ee6f8cf9",
+    "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": "df8dfcf0dfd040532c1ac77717438968952b6c4e72332905d50a109d44672fc1",
+    "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": "b32ff47d7190ff0738ebd820ad262e7a6390a2ed2c68585eb1b08413ffcc6f2f",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "2d94a9b01e7f6655b41bce8b9002ce1929308b0eb38271e7a497cff37a3bc8de",
+    "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts": "ab77912fe98eacf0a7a992d9e2044f0a2a7f352cbc23530b3beef4a4999ae4c4",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "64cf9ede956e6fb72037928291bbfd1096ef6a57fdba8d2626e02e08979324f7",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "0ee97d21e201eed5b19a99f8c61a3d89063a5d1988bbcbfbde7a8f30dd1d59b6",
+    "packages/tooling/library/ai-metrics/src/observation-runtime.ts": "1a7803b08aa18acfb88b103787ca664dd0d74eabef19cd56056b7bd1095dc199",
+    "packages/tooling/library/ai-metrics/src/observation-source-health.ts": "9bb5e28dcdf25d6abe2bebefbd18edbadbe3226a87f44b2b2b9eb50d31f73db5",
+    "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "e30501db65e67cc8fe4fb64454425a0f67dd3e8ec6ef2803858b6476f66c8a30",
+    "packages/tooling/library/ai-metrics/src/transcript-sweep.ts": "8fe5fb339a37ebe5bbc68bc1decc3f8e75366efb4c2d91bc1c84fe5413470056",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "483d0dea575a6a6f4927c9915a72345b8443c74faacae2882047f37978566640"
+  }
+}

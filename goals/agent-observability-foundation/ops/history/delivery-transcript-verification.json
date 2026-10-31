@@ -1,0 +1,133 @@
+{
+  "observedAt": "2026-10-29T15:41:30.474976+00:00",
+  "scope": "Current AI-metrics audit/docgen and regenerated documentation ratchet pass; full goal remains open.",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-transcript-fjqg41t7",
+  "sourceManifestSha256": "accc6183fa1736ce38494f5eef8de840001d1736b94891d1633a7fd0ff605834",
+  "sourceFileCount": 169,
+  "artifacts": [
+    {
+      "file": "foundation-bounded-job.py",
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee",
+      "bytes": 7421
+    },
+    {
+      "file": "foundation-cache-audit-repaired.json",
+      "sha256": "1f23c19460b6f5007772c0aa984b85c4868ee5a55d72339f13492962327d612b",
+      "bytes": 46798
+    },
+    {
+      "file": "foundation-schema-catalog-v1.log",
+      "sha256": "201ef41f5d1240704cc38e1392175ac9b7a7c1b4b8cf2ea04196e7897abbd901",
+      "bytes": 640
+    },
+    {
+      "file": "foundation-schema-catalog-v1-guard.json",
+      "sha256": "51ebbf1bb470324810c6ffb79db2ce8e188d2bc3859b63186a46a3e34461c29c",
+      "bytes": 352
+    },
+    {
+      "file": "foundation-schema-catalog-sync-v1.log",
+      "sha256": "24f6bef32e12bd5ffa940fc4298d2e10d97ac21d78917a006eb08bafc2eae30e",
+      "bytes": 866
+    },
+    {
+      "file": "foundation-schema-catalog-sync-v1-guard.json",
+      "sha256": "7a94d1aadb85d977f10449078bc64b785fb4d0f6dece8675b6de5f857abaada5",
+      "bytes": 357
+    },
+    {
+      "file": "foundation-transcript-refactor-v1.log",
+      "sha256": "716f70f30881bb3b9805c3a079eb7eadd514631015ca2c559efb9f0011b55299",
+      "bytes": 5761
+    },
+    {
+      "file": "foundation-transcript-refactor-v1-guard.json",
+      "sha256": "0e7e9224abfdae7748afe15fc38308e6ddd42f0408c4710395f74b103e77dae0",
+      "bytes": 354
+    },
+    {
+      "file": "foundation-transcript-refactor-v2.log",
+      "sha256": "342be17dafff7e0c469c39515179e2ca9052b09b745a9f08f00d37358a3c496e",
+      "bytes": 598
+    },
+    {
+      "file": "foundation-transcript-refactor-v2-guard.json",
+      "sha256": "58f5e7a9a9a9814401f000d7b455a5d087363b7b8194478af7c20d9b807c9135",
+      "bytes": 354
+    },
+    {
+      "file": "foundation-fixture-dependency-repair-v1.log",
+      "sha256": "2a586bdeae1eebbd3fe046bc8a06120e32202f05d58b4fc4435ed89ff4346a31",
+      "bytes": 2098
+    },
+    {
+      "file": "foundation-fixture-dependency-repair-v1-guard.json",
+      "sha256": "ed1c57b68e9bc85bccf120d99527d2d2f013647a9b13c07e7a7ce6466896bfc3",
+      "bytes": 360
+    },
+    {
+      "file": "foundation-source-quality-v3.log",
+      "sha256": "91bfecdd7bfa7cff8e18f41cf4885467ba0215e21faeb016e9bbb2efe91d6470",
+      "bytes": 1419
+    },
+    {
+      "file": "foundation-source-quality-v3-guard.json",
+      "sha256": "ff69118e1d5f7dbe62d680cb3750d292be954fa575777d2baae318c753c65858",
+      "bytes": 349
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v3.log",
+      "sha256": "4670e9eba0371415980aef3a9c601ce69f86b03237e537d72d370b73715bc768",
+      "bytes": 18024
+    },
+    {
+      "file": "foundation-fallow-repair-audit-v3-guard.json",
+      "sha256": "278700a5178a22f788ab0abae663db85572547ce98113db817413783f22107e3",
+      "bytes": 354
+    },
+    {
+      "file": "audit.repair-v3.json",
+      "sha256": "393f1d5506a6cf9c2b4639a353c983970377e29cb0ca4c733a02d5e65ef5a22c",
+      "bytes": 17509
+    },
+    {
+      "file": "audit.repair-v3.combined.txt",
+      "sha256": "eaed683aa8f6115b478e4899749b4612e5c617207b4f76311e603177d7552520",
+      "bytes": 151480
+    },
+    {
+      "file": "dead-code.fixture-repair.json",
+      "sha256": "4a593492c2a1776be4a520798b2d0758fb43f43069807a49b37bb47fb0612424",
+      "bytes": 654
+    },
+    {
+      "file": "jsdoc-documentation.inventory.jsonc",
+      "sha256": "adfe2d1b7920d4680a2b44644d02d5b636153db7aafeac7b746d8ac8c091aee2",
+      "bytes": 25345759
+    }
+  ],
+  "passing": [
+    "foundation-transcript-refactor-v2",
+    "foundation-fixture-dependency-repair-v1",
+    "foundation-source-quality-v3"
+  ],
+  "failed": {
+    "foundation-schema-catalog-v1": "stale catalog shards",
+    "foundation-schema-catalog-sync-v1": "catalog regenerated; following cache audit rejected missing fixture dependency",
+    "foundation-transcript-refactor-v1": "19 focused tests passed; lint formatting/import ordering failed and was repaired",
+    "foundation-fallow-repair-audit-v3": "60 introduced complexity findings, 10 introduced duplicate groups and 4 inherited adjacent duplicate groups"
+  },
+  "qualificationLimits": [
+    "Earlier v1/v2 receipts describe the historical source at those runs, not every current file.",
+    "Final source manifest binds source-quality-v3 and fallow-repair-audit-v3 only.",
+    "Catalog write completed; a later catalog check is still required.",
+    "Current-source installed proof, whole CLI audit, hosted checks, Beep publication and final goal acceptance remain open."
+  ],
+  "dankserver": {
+    "head": "470ddf6594762203e4181c06eb621d62cdaa2ed4",
+    "pullRequest": "https://github.com/kriegcloud/dankserver/pull/3",
+    "status": "draft",
+    "deployed": false,
+    "validation": "Four current observation-health tests including fourteen Prometheus cases and staged secret scan passed."
+  }
+}

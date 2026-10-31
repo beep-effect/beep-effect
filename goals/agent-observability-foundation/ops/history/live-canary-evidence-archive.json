@@ -1,0 +1,189 @@
+{
+  "version": "canary-evidence-archive/v1",
+  "sameHostCopyOnly": true,
+  "offDeviceBackup": false,
+  "runs": [
+    {
+      "source": "/tmp/obs-deploy-avzi8ho2",
+      "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-avzi8ho2",
+      "files": [
+        {
+          "path": "evidence.json",
+          "bytes": 2390,
+          "sha256": "e36cd6695a60f9ceeeea80de031f84f6ac94cf657280783c3789146514a00223"
+        },
+        {
+          "path": "synthetic-input.json",
+          "bytes": 1000,
+          "sha256": "ea01a540ed324f5d54da850d92ae151fc5aec2e587c00b58b8cbda906721831e"
+        },
+        {
+          "path": "deployment-request.json",
+          "bytes": 425,
+          "sha256": "fec352e973176678978be66827b56a709190f9dd95b111c4359faf00cbc91a5d"
+        },
+        {
+          "path": "synthetic env",
+          "bytes": 155,
+          "sha256": "30b1c8f85ff13a44d469cc5e1d5611938cf14511794361c7663dddd5894d6456"
+        },
+        {
+          "path": "bundle-build.log",
+          "bytes": 68,
+          "sha256": "e6a73c89972c23237a59f83dc0fc5bdaf2c14364dbb0f278f79befbd59e41bdd"
+        },
+        {
+          "path": "collector.yaml",
+          "bytes": 3190,
+          "sha256": "51725a02638f7667f4032f893648c7a6a50b41401ed33a1106181ea1c4f8c6ea"
+        },
+        {
+          "path": "queue/exporter_otlphttp_phoenix_traces",
+          "bytes": 32768,
+          "sha256": "463cd8c99de619b6c08fd87574b38c25968d5a4cd018364f2c5c6f94198f4849"
+        },
+        {
+          "path": "state/journal.sqlite",
+          "bytes": 159744,
+          "sha256": "4413543b2d1395a98808fc7cac2a5f32fb53dc6267f191299a0718250879c12d"
+        },
+        {
+          "path": "state/worker.lock",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "state/worker.json",
+          "bytes": 1424,
+          "sha256": "6c537be8eb0d145e33d842c60faa9428c2a6bc59bb083569f439a4581e431c26"
+        },
+        {
+          "path": "artifacts space/intake.sha256",
+          "bytes": 232,
+          "sha256": "c2e023e1bcc663a125f689c4eaa26eca1115bd6cee429dedde704ee3b4a6a6cb"
+        },
+        {
+          "path": "artifacts space/worker.sha256",
+          "bytes": 379,
+          "sha256": "4df7a68f14a560c7ccdd6933515d054f958cfc9ddb742b13df62f746ef2bbdd0"
+        },
+        {
+          "path": "artifacts space/intake.json",
+          "bytes": 1068,
+          "sha256": "4b4fc093a6c0094f91fad0d5bb8643b1d78edf90d2dd633831afbaaa5f1b6223"
+        },
+        {
+          "path": "artifacts space/caddy",
+          "bytes": 51953826,
+          "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9"
+        },
+        {
+          "path": "artifacts space/worker.mjs",
+          "bytes": 1298207,
+          "sha256": "d80c878eee0486e6f7c27ca816bd7d7417d68432d975cf445274b8b3c6f996c3"
+        },
+        {
+          "path": "state/frontend-data/caddy/last_clean.json",
+          "bytes": 112,
+          "sha256": "8c20e07e07e3026269b13e49c5581f199a1e5e40909061e963d199891fe027c7"
+        },
+        {
+          "path": "state/frontend-data/caddy/instance.uuid",
+          "bytes": 36,
+          "sha256": "2f27ab09ccad02bd244ebe2fb7e14432672a9fbc8c6cce14421dacf942e6469b"
+        }
+      ]
+    },
+    {
+      "source": "/tmp/obs-deploy-kgrini2y",
+      "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-kgrini2y",
+      "files": [
+        {
+          "path": "evidence.json",
+          "bytes": 7117,
+          "sha256": "6201729dc4a116a62368ac06e506a20c43669c395335d9ce1b871a3310eb2bae"
+        },
+        {
+          "path": "synthetic-input.json",
+          "bytes": 1000,
+          "sha256": "b254551db93fca634e156b0865de8ec8e80a1a6e141b0f36acc562588d11038d"
+        },
+        {
+          "path": "deployment-request.json",
+          "bytes": 425,
+          "sha256": "9dcd4862357de746a2795df14d1bd23015e3acac2f0e51f8adfdd5a2ff3959b6"
+        },
+        {
+          "path": "synthetic env",
+          "bytes": 155,
+          "sha256": "30b1c8f85ff13a44d469cc5e1d5611938cf14511794361c7663dddd5894d6456"
+        },
+        {
+          "path": "bundle-build.log",
+          "bytes": 68,
+          "sha256": "2fe142f09218f888f966a276ebcb279493437fef41320e006c954532216407ae"
+        },
+        {
+          "path": "collector.yaml",
+          "bytes": 3190,
+          "sha256": "963f597d2a8e3e07abe18d0b9bfa7456b74b68d14fad47bd0bebede83563106c"
+        },
+        {
+          "path": "queue/exporter_otlphttp_phoenix_traces",
+          "bytes": 32768,
+          "sha256": "e5750bc6a3dd279a35797d26b1d69f6a2a954662ff50ded8dcbff83a3fa0f3da"
+        },
+        {
+          "path": "state/journal.sqlite",
+          "bytes": 159744,
+          "sha256": "699bde099827f4d8af5be9ee38523d7ed1e293855f0b9ce7ba373a605378c239"
+        },
+        {
+          "path": "state/worker.lock",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "state/worker.json",
+          "bytes": 1424,
+          "sha256": "2f7cb1c82ac2381fcd02febf5448a806b3cabf44cd2741ef647a04888781ecfd"
+        },
+        {
+          "path": "artifacts space/intake.sha256",
+          "bytes": 232,
+          "sha256": "05789a8e545560edb84dc17938d67649dd389004aecd458b3a403dd74cf58587"
+        },
+        {
+          "path": "artifacts space/worker.sha256",
+          "bytes": 379,
+          "sha256": "19e4a62ac3de8fc2cefa7b3773fdf7ce0e134f0274acc0ad77c1f17c57afff9f"
+        },
+        {
+          "path": "artifacts space/intake.json",
+          "bytes": 1068,
+          "sha256": "514451ec0df564b17123442bf1af91d7f97165a6e1fc0c4d597a9c70ce258fa8"
+        },
+        {
+          "path": "artifacts space/caddy",
+          "bytes": 51953826,
+          "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9"
+        },
+        {
+          "path": "artifacts space/worker.mjs",
+          "bytes": 1298240,
+          "sha256": "8475c0cb25455dbcc59fc25c6827c5be310cf03df5b0ad6f3ceffbc7ca4f14f6"
+        },
+        {
+          "path": "state/frontend-data/caddy/last_clean.json",
+          "bytes": 112,
+          "sha256": "d280f4b7ee4afe5ab0960abee0674f11f89b55f31a532581f3db9695bb5808e7"
+        },
+        {
+          "path": "state/frontend-data/caddy/instance.uuid",
+          "bytes": 36,
+          "sha256": "06d217cc24f5d8c2b28fe36780f174854ab2e079fe4ee15d98084d3f97232cc8"
+        }
+      ]
+    }
+  ]
+}

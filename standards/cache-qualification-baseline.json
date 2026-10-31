@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (graft retirement, chore/retire-graft)",
-      "reason": "Record the root turbo.json drift after the retired graft env names and graft/ input exclusions are removed; no qualification is granted.",
+      "reviewer": "GPT-6-Astra independent foundation panel",
+      "reason": "Carry reviewed foundation closure/dependency deltas onto accepted Graft-retirement main baseline; exactly11configuration drifts across2subjects, no qualification or exception growth.",
       "basis": {
-        "path": "docs/reports/graft-retirement/cache-baseline-review.md",
-        "sha256": "047f9af01941510edd3b182ceae76cd75a5355453b23343b06d384d8542e2087"
+        "path": "goals/agent-observability-foundation/research/CACHE-GRAFT-SYNC-20261031.md",
+        "sha256": "e0f087b467a96dfeab475310d3ae0068b3857e6e4f191d74ac65db6dab20125f"
       }
     },
     "@beep/acp": {
@@ -1122,11 +1122,11 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "GPT-6-Astra independent foundation panel",
+      "reason": "Carry reviewed foundation closure/dependency deltas onto accepted Graft-retirement main baseline; exactly11configuration drifts across2subjects, no qualification or exception growth.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/agent-observability-foundation/research/CACHE-GRAFT-SYNC-20261031.md",
+        "sha256": "e0f087b467a96dfeab475310d3ae0068b3857e6e4f191d74ac65db6dab20125f"
       }
     },
     "@beep/repo-cli": {
@@ -3499,7 +3499,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -3822,7 +3821,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -4272,7 +4270,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
             "packages/tooling/tool/cli/src/internal/Codeowners.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -4696,7 +4693,6 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -5469,7 +5465,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -5903,6 +5898,7 @@
             "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Aggregate.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts",
+            "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
@@ -5989,7 +5985,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/PathContainment.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
@@ -101030,11 +101025,13 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#audit",
           "@beep/cli-kit#audit",
           "@beep/duckdb#audit",
           "@beep/fc-runs#audit",
           "@beep/file-processing#audit",
           "@beep/identity#audit",
+          "@beep/jsonl#audit",
           "@beep/memfs#audit",
           "@beep/observability#audit",
           "@beep/phoenix#audit",
@@ -101104,11 +101101,13 @@
         "command": "bun run beep:build",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -101167,11 +101166,13 @@
         "command": "bun run beep:check",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -101217,11 +101218,13 @@
         "command": "bunx vitest run --coverage",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -101352,11 +101355,13 @@
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -101565,11 +101570,13 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -101618,11 +101625,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -101677,11 +101686,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -133856,7 +133867,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "28bc7d83ec1ffa4b7401fd63364c8be877581535c0fa2487ecf68b630038d1dc"
+        "sha256": "038dbf3d92fdfe34f0263bbb8183ed4ebfe2085f49d8269b55cbbd95808a0b36"
       }
     ]
   }

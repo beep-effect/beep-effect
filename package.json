@@ -253,7 +253,8 @@
     "are-docs-informative": "0.1.1",
     "@microsoft/tsdoc": "0.17.1",
     "@microsoft/tsdoc-config": "0.18.3",
-    "oxlint-tsgolint": "7.0.2005"
+    "oxlint-tsgolint": "7.0.2005",
+    "protobufjs": "^7.6.6"
   },
   "devDependencies": {
     "@babel/cli": "catalog:",
@@ -313,7 +314,7 @@
     "katex": "^0.18.2",
     "next": "catalog:",
     "postcss-selector-parser": "^7.1.6",
-    "protobufjs": "^7.6.6",
+    "protobufjs": "catalog:",
     "sharp": "catalog:",
     "@modelcontextprotocol/client": "2.3.1",
     "@modelcontextprotocol/server": "2.3.1",

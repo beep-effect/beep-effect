@@ -1,0 +1,30 @@
+{
+  "verifiedAtUtc": "2026-10-28T02:47:15.742603+00:00",
+  "sourceRevision": "bea57177a342284007f242a65a126c029791aea8",
+  "sourceBranch": "@slop/10-27-26",
+  "packetJsonFilesParsed": 76,
+  "relativeMarkdownLinks": "passed",
+  "launcherLengths": {
+    "agent-observability-foundation": 1949,
+    "harness-telemetry-enrollment": 1989,
+    "agent-outcome-experiments": 2051
+  },
+  "exploreAtlasWrite": "passed",
+  "exploreAtlasCheck": "passed",
+  "reflectionArtifacts": {
+    "blocking": 0,
+    "advisory": 0
+  },
+  "gitDiffCheck": "passed",
+  "newPacketTrailingWhitespace": "none",
+  "existingSyntheticTests": {
+    "passed": 4,
+    "skipped": 81,
+    "seconds": 3.52,
+    "details": "research/REVIEW.md"
+  },
+  "productionMutations": false,
+  "implementationStarted": false,
+  "committedOrPushed": false,
+  "scope": "Audit, adopted exploration, three paused implementation packets."
+}
