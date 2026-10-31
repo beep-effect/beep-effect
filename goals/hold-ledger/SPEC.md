@@ -121,8 +121,8 @@ Higher sources outrank lower sources when they conflict.
 | Manifest JSON | `jq . goals/hold-ledger/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/hold-ledger` | Passes |
 | Package handoff | `bun run beep quality package-verify @beep/repo-cli` | Passes |
-| Holds lint | `bun run beep holds lint` | Passes on the PR head |
-| jsdom probe receipt | `bun run beep holds probe jsdom-vitest-eventtarget` output, attached in `history/` | Control reproduces the signature |
+| Holds lint | `bun run beep holds lint # this goal creates the command` | Passes on the PR head |
+| jsdom probe receipt | `bun run beep holds probe jsdom-vitest-eventtarget # this goal creates the command` output, attached in `history/` | Control reproduces the signature |
 
 ## Stop Conditions
 
