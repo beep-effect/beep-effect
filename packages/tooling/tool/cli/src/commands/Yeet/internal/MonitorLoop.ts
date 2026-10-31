@@ -1951,7 +1951,7 @@ const closeoutMonitorHead = Effect.fn("YeetMonitorLoop.closeoutHead")(function* 
   yield* Console.log(
     `[yeet] closeout: ${closedOut.success.report.issueCount} issue(s) for head ${Str.slice(0, 7)(current.timeline.headSha)}`
   );
-  const reread = yield* collectMonitorStatus(context, options.collectStatus ?? collectYeetStatus).pipe(Effect.result);
+  const reread = yield* collectMonitorStatus(context, options.collectStatus).pipe(Effect.result);
   if (Result.isFailure(reread)) {
     return Result.fail(MonitorPoll.make({ ...nextPoll, failure: O.some(reread.failure) }));
   }
@@ -2344,9 +2344,7 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   firstCycle: boolean,
   scope: MonitorLoopScope
 ) {
-  const collected = yield* collectMonitorStatus(context, options.collectStatus ?? collectYeetStatus).pipe(
-    Effect.result
-  );
+  const collected = yield* collectMonitorStatus(context, options.collectStatus).pipe(Effect.result);
   if (Result.isFailure(collected)) {
     return MonitorPoll.make({ budget, head: previous, failure: O.some(collected.failure) });
   }
@@ -2531,7 +2529,7 @@ export const runYeetMonitorUntilMerged: {
 
 const collectMonitorStatus = Effect.fn("YeetMonitorLoop.collectStatus")(function* (
   context: RepoRunContext,
-  collectStatus: typeof collectYeetStatus
+  collectStatus: typeof collectYeetStatus = collectYeetStatus
 ) {
   const snapshot = yield* collectStatus(context, true);
   if (O.isSome(snapshot.remote.readFailure)) return yield* snapshot.remote.readFailure.value;

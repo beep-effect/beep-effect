@@ -1640,3 +1640,8 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   returned. Attach cleanup to successful exclusive directory acquisition and mask
   the handoff to profile rollback; interruption after writing the key and failed
   reopening must revoke the new store while a refused existing store stays intact.
+
+- Shared GitHub quota exhaustion exposed a monitor boundary gap: status returns
+  an unknown snapshot with typed `remote.readFailure`, while the loop counted
+  failed effects only. Promote that existing error at both monitor reads; keep
+  confirmed absence distinct, preserve recovery, and bound repeated API failures.
