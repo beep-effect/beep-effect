@@ -22,11 +22,17 @@ import { repoRunOutputBound, runCaptured } from "../../internal/process/StepExec
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
 import { HoldsError, holdsPlatformError } from "./Holds.errors.ts";
-import { HoldClaimVersion, HoldProposition, ProbeOutcome, ProbeRun, ProbeRunId } from "./Holds.schemas.ts";
+import {
+  HoldClaimVersion,
+  HoldProposition,
+  HoldVersionId,
+  ProbeOutcome,
+  ProbeRun,
+  ProbeRunId,
+} from "./Holds.schemas.ts";
 import { judgeProbeRun } from "./Holds.verdict.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { HoldId } from "./Holds.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.service");
 
@@ -69,8 +75,8 @@ export interface HoldLedgerShape {
   readonly appendRun: (run: ProbeRun) => Effect.Effect<void, HoldsError>;
   /** Current hold versions: the rows whose knowledge interval is still open. */
   readonly currentVersions: Effect.Effect<ReadonlyArray<HoldClaimVersion>, HoldsError>;
-  /** Probe runs recorded for one hold, newest first. */
-  readonly runsFor: (holdId: HoldId) => Effect.Effect<ReadonlyArray<ProbeRun>, HoldsError>;
+  /** Probe runs recorded against one claim version, newest first; a changed probe starts with no evidence. */
+  readonly runsFor: (version: HoldClaimVersion) => Effect.Effect<ReadonlyArray<ProbeRun>, HoldsError>;
 }
 
 /**
@@ -120,18 +126,30 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
       : "";
   });
 
-  const currentVersions = readLines(claimsFile).pipe(
-    Effect.map((content) =>
-      A.filter(partitionJsonLines(HoldClaimVersionJson.decodeOption)(content).rows, (version) =>
-        O.isNone(version.knowledge.expiredAt)
-      )
-    )
+  // A line that does not decode could be newer evidence, so a damaged ledger fails instead of reading short.
+  const strictRows = <Row>(file: string, decodeOption: (line: string) => O.Option<Row>) =>
+    readLines(file).pipe(
+      Effect.flatMap((content) => {
+        const { rows, corruptLineCount } = partitionJsonLines(decodeOption)(content);
+        return corruptLineCount > 0
+          ? Effect.fail(
+              HoldsError.make({
+                reason: "decode",
+                message: `${file} has ${corruptLineCount} line(s) that do not decode; repair the ledger before reading verdicts.`,
+              })
+            )
+          : Effect.succeed(rows);
+      })
+    );
+
+  const currentVersions = strictRows(claimsFile, HoldClaimVersionJson.decodeOption).pipe(
+    Effect.map(A.filter((version: HoldClaimVersion) => O.isNone(version.knowledge.expiredAt)))
   );
 
-  const runsFor = Effect.fn("HoldLedger.runsFor")(function* (holdId: HoldId) {
-    const { rows } = partitionJsonLines(ProbeRunJson.decodeOption)(yield* readLines(runsFile));
+  const runsFor = Effect.fn("HoldLedger.runsFor")(function* (version: HoldClaimVersion) {
+    const rows = yield* strictRows(runsFile, ProbeRunJson.decodeOption);
     return pipe(
-      A.filter(rows, (run) => run.holdId === holdId),
+      A.filter(rows, (run) => run.holdVersionId === version.id),
       A.reverse
     );
   });
@@ -168,6 +186,7 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
 export class HoldProbeRequest extends S.Opaque<HoldProbeRequest, { readonly brand: unique symbol }>()(
   S.Struct({
     commitSha: S.String.check(S.isPattern(/^[0-9a-f]{40}$/)),
+    holdVersionId: HoldVersionId,
     proposition: HoldProposition,
   }).pipe(
     $I.annoteSchema("HoldProbeRequest", {
@@ -217,30 +236,27 @@ export interface HoldProbeShape {
  */
 export class HoldProbe extends Context.Service<HoldProbe, HoldProbeShape>()($I`HoldProbe`) {}
 
-const lastLine = (text: string): string =>
-  pipe(
-    Str.split(text, "\n"),
-    A.map(Str.trim),
-    A.filter(Str.isNonEmpty),
-    A.last,
-    O.getOrElse(() => "no output")
-  );
-
 /**
  * Classify one probe command run from its exit code and combined output.
  *
  * **Details**
  *
  * The failure signature wins over the exit code, so a command that prints the
- * signature but exits 0 still counts as `Reproduced`. A non-zero exit without
- * the signature is `Inconclusive`, never `Passed`.
+ * signature but exits 0 still counts as `Reproduced`. Clipped output without the
+ * signature, or a non-zero exit, is `Inconclusive`, never `Passed`. The detail
+ * names only the category and exit code: raw output can carry paths or
+ * credentials and the ledger is public.
  *
  * **Example** (A 404 reproduces the hold)
  *
  * ```ts
  * import { classifyProbeOutput } from "@beep/repo-cli/commands/Holds"
  *
- * const outcome = classifyProbeOutput("model-testing")({ exitCode: 1, output: "error: @statelyai/model-testing@0.2.0 failed to resolve" })
+ * const outcome = classifyProbeOutput("model-testing")({
+ *   exitCode: 1,
+ *   output: "error: @statelyai/model-testing@0.2.0 failed to resolve",
+ *   truncated: false,
+ * })
  * console.log(outcome._tag) // "Reproduced"
  * ```
  *
@@ -249,12 +265,14 @@ const lastLine = (text: string): string =>
  */
 export const classifyProbeOutput =
   (failureSignature: string) =>
-  (result: { readonly exitCode: number; readonly output: string }): ProbeOutcome =>
+  (result: { readonly exitCode: number; readonly output: string; readonly truncated: boolean }): ProbeOutcome =>
     Str.includes(failureSignature)(result.output)
       ? ProbeOutcome.cases.Reproduced.make({})
-      : result.exitCode === 0
-        ? ProbeOutcome.cases.Passed.make({})
-        : ProbeOutcome.cases.Inconclusive.make({ detail: `exit ${result.exitCode}: ${lastLine(result.output)}` });
+      : result.truncated
+        ? ProbeOutcome.cases.Inconclusive.make({ detail: "output clipped before the signature could be ruled out" })
+        : result.exitCode === 0
+          ? ProbeOutcome.cases.Passed.make({})
+          : ProbeOutcome.cases.Inconclusive.make({ detail: `exit ${result.exitCode} without the failure signature` });
 
 /**
  * Build the scratch-install probe. Each side runs in its own directory under
@@ -279,14 +297,14 @@ export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot:
   const context = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto>();
 
   const runSide = Effect.fn("HoldProbe.runSide")(function* (
+    runDirectory: string,
     proposition: HoldProposition,
     command: A.NonEmptyReadonlyArray<string>,
     failureSignature: string,
     side: "control" | "candidate",
     version: string
   ) {
-    const directory = path.join(scratchRoot, proposition.holdId, side);
-    yield* fs.remove(directory, { recursive: true, force: true }).pipe(Effect.ignore);
+    const directory = path.join(runDirectory, side);
     yield* fs
       .makeDirectory(directory, { recursive: true })
       .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
@@ -315,9 +333,7 @@ export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot:
     }).pipe(
       Effect.provide(context),
       Effect.map(classifyProbeOutput(failureSignature)),
-      Effect.catch((cause) =>
-        Effect.succeed(ProbeOutcome.cases.Inconclusive.make({ detail: `could not run the probe: ${String(cause)}` }))
-      )
+      Effect.orElseSucceed(() => ProbeOutcome.cases.Inconclusive.make({ detail: "the probe command could not run" }))
     );
     const installedVersion = yield* fs
       .readFileString(
@@ -340,25 +356,41 @@ export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot:
       });
     }
     const falsifier = proposition.falsifier;
-    const control = yield* runSide(
-      proposition,
-      falsifier.command,
-      falsifier.failureSignature,
-      "control",
-      falsifier.controlVersion
-    );
-    const candidate = yield* runSide(
-      proposition,
-      falsifier.command,
-      falsifier.failureSignature,
-      "candidate",
-      falsifier.candidate
+    const holdDirectory = path.join(scratchRoot, proposition.holdId);
+    yield* fs
+      .makeDirectory(holdDirectory, { recursive: true })
+      .pipe(Effect.mapError(holdsPlatformError(`Could not create ${holdDirectory}`)));
+    // Each invocation gets its own directory, removed when the run ends, so concurrent probes never share files.
+    const { control, candidate } = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const runDirectory = yield* fs
+          .makeTempDirectoryScoped({ directory: holdDirectory, prefix: "run-" })
+          .pipe(Effect.mapError(holdsPlatformError(`Could not create a run directory under ${holdDirectory}`)));
+        const control = yield* runSide(
+          runDirectory,
+          proposition,
+          falsifier.command,
+          falsifier.failureSignature,
+          "control",
+          falsifier.controlVersion
+        );
+        const candidate = yield* runSide(
+          runDirectory,
+          proposition,
+          falsifier.command,
+          falsifier.failureSignature,
+          "candidate",
+          falsifier.candidate
+        );
+        return { control, candidate } as const;
+      })
     );
     const ranAt = yield* DateTime.now;
     return ProbeRun.make({
       schemaVersion: "hold-probe-run/v1",
       id: ProbeRunId.make(`${proposition.holdId}@${DateTime.toEpochMillis(ranAt)}`),
       holdId: proposition.holdId,
+      holdVersionId: request.holdVersionId,
       ranAt,
       commitSha: request.commitSha,
       runtime: falsifier.runtime,

@@ -83,7 +83,7 @@ export const holdsListCommand = Command.make(
       }
       yield* Effect.forEach(versions, (version) =>
         ledger
-          .runsFor(version.proposition.holdId)
+          .runsFor(version)
           .pipe(
             Effect.flatMap((runs) =>
               Console.log(
@@ -141,7 +141,9 @@ export const holdsProbeCommand = Command.make(
           onSome: Effect.succeed,
         })
       );
-      const run = yield* probe.probe(HoldProbeRequest.make({ proposition: version.proposition, commitSha }));
+      const run = yield* probe.probe(
+        HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha })
+      );
       yield* Console.log(
         A.join(
           [
@@ -157,7 +159,7 @@ export const holdsProbeCommand = Command.make(
         return yield* Console.log("[holds] dry run: nothing recorded.");
       }
       yield* ledger.appendRun(run);
-      const confirmed = confirmHoldRuns(yield* ledger.runsFor(id));
+      const confirmed = confirmHoldRuns(yield* ledger.runsFor(version));
       yield* Console.log(`[holds] recorded ${run.id}; confirmed verdict: ${confirmed}`);
     }
   })

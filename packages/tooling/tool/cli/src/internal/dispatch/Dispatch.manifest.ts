@@ -152,6 +152,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/HarnessLedger/index.ts").then((module) => module.harnessLedgerCommand)),
   groupRoute(
+    { name: "holds", description: "Temporary repo decisions as probe-backed holds" },
+    []
+  )(() => import("../../commands/Holds/index.ts").then((module) => module.holdsCommand)),
+  groupRoute(
     { name: "refs", description: "Manage the manifest-defined reference workspace" },
     []
   )(() => import("../../commands/Refs/index.ts").then((module) => module.refsCommand)),

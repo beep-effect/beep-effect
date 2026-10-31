@@ -500,6 +500,7 @@ export class ProbeRun extends S.Opaque<ProbeRun, { readonly brand: unique symbol
     schemaVersion: S.tag("hold-probe-run/v1"),
     id: ProbeRunId,
     holdId: HoldId,
+    holdVersionId: HoldVersionId,
     ranAt: S.DateTimeUtcFromMillis,
     commitSha: S.String.check(S.isPattern(/^[0-9a-f]{40}$/)),
     runtime: ProbeRuntime,
