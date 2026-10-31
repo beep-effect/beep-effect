@@ -28,7 +28,7 @@ and rewrites JSDoc example imports in the same change.
 | Step | Content | Starts after |
 | --- | --- | --- |
 | G1 | Parallel vitest projects for repo-cli; the suites that need isolation (cwd changes, module mocks, global stubs) stay in a serial project. | now |
-| G2 | Shard the repo-cli coverage run (blob reports, merged lcov) or give it more workers. | now |
+| G2 | Done: four repo-cli coverage shards; merged map equals the unsharded run (`research/g2-coverage-shards.md`). | now |
 | G3 | Argv-first lazy dispatch with a static help manifest in `bin-main.ts` and `commands/Root.ts`, written so it moves to the composition app unchanged. | now |
 | G4 | Per-task policy fingerprint from each command's import graph instead of the repo-cli package closure. | now |
 | W0 | Retirements after zero-consumer checks: the D11 instruments plus the candidates the map found (`yeet pre-push-hook`, `plan-contract-check`, `fallow-fixture-check`, `goals migrate-conventions`, `goals repair-fork`, `lint goal-packets`, `docs aggregate`). Cache tier B was held for `goals/turborepo-cache-conformance`; recheck it now that that goal has closed. | now |
