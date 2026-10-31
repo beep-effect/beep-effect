@@ -94,10 +94,15 @@ const flagValue = (flag: string): O.Option<string> =>
 
 // --- frozen retired readers ------------------------------------------------------
 
-// Frozen copies of repo-utils `Workspaces.ts` `workspaceGlobsFrom` and `resolveWorkspaceDirs`,
+// Simplified stand-ins for repo-utils `Workspaces.ts` `workspaceGlobsFrom` and `resolveWorkspaceDirs`,
 // `Dependencies.ts` `extractWorkspaceDependencies` and `sortWorkspacePackages`, and `DependencyIndex.ts`
-// `buildRepoDependencyIndex` as they stood when this 3-A3 record was made. 4-A3 retired them when every
-// caller moved onto `@beep/repo-workspaces`; the parity record keeps the readers it measured.
+// `buildRepoDependencyIndex`, written when 4-A3 retired those modules (every caller moved onto
+// `@beep/repo-workspaces`). They are NOT the readers the 3-A3 record measured: `workspaceGlobsFrom` reads the
+// field as `unknown` instead of the strict `WorkspacesField`, and `resolveWorkspaceDirs` omits the retired
+// `isSafeWorkspacePattern` refusal (empty, absolute and `..` globs), the canonical-root containment check on each
+// member's real path and the tolerance of a manifest that vanished mid-scan. None of those checks fires on the
+// live repository (no unsafe glob, no escaping member), so a re-run reproduces the record; the faithful frozen
+// copy is `ops/repo-workspaces-adoption-parity.ts`.
 const ROOT_KEY = "@beep/root";
 const IGNORED_DIRS = ["**/node_modules/**", "**/dist/**", "**/build/**", "**/coverage/**", "**/.turbo/**"];
 const workspaceGlobsFrom = (workspaces: unknown): ReadonlyArray<string> => {

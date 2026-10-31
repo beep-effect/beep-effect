@@ -984,10 +984,10 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
  * **Example** (Plan tsconfig synchronization)
  *
  * ```ts
- * import { planPackageReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import * as Effect from "effect/Effect";
  * import * as HashMap from "effect/HashMap";
- * const program = planPackageReferenceSync("/repo", [], HashMap.empty(), undefined, false)
+ * const program = TsconfigSyncPlan.planPackageReferenceSync("/repo", [], HashMap.empty(), undefined, false)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *

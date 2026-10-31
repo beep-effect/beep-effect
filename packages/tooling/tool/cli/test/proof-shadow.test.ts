@@ -1062,7 +1062,7 @@ it.layer(NodeServices.layer)("proof shadow changed packages", (it) => {
     )
   );
 
-  // Review round 1, CodeRabbit Major: `resolveWorkspaceDirs` canonicalises every
+  // Review round 1, CodeRabbit Major: `workspaceDirectories` canonicalises every
   // directory it returns, so a checkout reached through a symlink used to compare
   // symlinked paths against canonical workspace directories and map nothing —
   // `known []`, a silent fail-open for every lane.

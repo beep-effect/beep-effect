@@ -1,4 +1,5 @@
 import { computeTransitiveClosure, decodePackageJsonEffect, toSortedRecord } from "@beep/repo-utils";
+import { ALL_DEPENDENCY_FIELDS } from "@beep/repo-workspaces/internal/dependencyFields";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -433,8 +434,6 @@ const authoredKindFor = (file: string): DependentHitKind =>
 
 type WorkspaceEdge = { readonly owner: string; readonly bucket: string; readonly dependency: string };
 
-const DEPENDENCY_BUCKETS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"] as const;
-
 // Every manifest edge onto a workspace member, root manifest included: one row per bucket and dependency.
 const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEdges")(function* (
   repoRoot: string,
@@ -450,7 +449,7 @@ const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEd
     )
   );
   return A.flatMap(packages, (pkg) =>
-    A.flatMap(DEPENDENCY_BUCKETS, (bucket) =>
+    A.flatMap(ALL_DEPENDENCY_FIELDS, (bucket) =>
       pipe(
         R.keys(pkg[bucket]),
         A.filter((dependency) => HashSet.has(memberNames, dependency)),
