@@ -23,7 +23,7 @@ import { VerifySkillArtifactInput } from "@beep/skill-contract/SkillProjection";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -171,7 +171,7 @@ describe("@beep/skill-contract SkillProjection", () => {
         })
       ).toEqual(["rerender-mismatch", "frontmatter-missing"]);
       pipe(unterminated, Result.isFailure, assertTrue);
-      expect(Result.isFailure(unterminated) ? unterminated.failure.reasons : []).toEqual(["frontmatter-missing"]);
+      deepStrictEqual(Result.isFailure(unterminated) ? unterminated.failure.reasons : [], ["frontmatter-missing"]);
     })
   );
 

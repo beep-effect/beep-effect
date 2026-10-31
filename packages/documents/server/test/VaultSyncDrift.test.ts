@@ -19,7 +19,7 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -291,7 +291,7 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
         expect(counts.ensureFolder).toBe(1);
         expect(counts.uploadFile).toBe(1);
         expect(counts.uploadFileVersion).toBe(0);
-        expect(positions).toEqual([O.none(), O.some(storedCursor.streamPosition)]);
+        deepStrictEqual(positions, [O.none(), O.some(storedCursor.streamPosition)]);
       })
     );
   });

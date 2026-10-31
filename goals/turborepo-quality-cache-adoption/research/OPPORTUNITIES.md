@@ -509,3 +509,8 @@ defect. Publish/prove the new source and answer the review before acceptance.
   install completed, an explicit scan of the committed change found no secrets,
   and commit-message validation passed. Install before committing a new lane.
   The source-only follow-up uses the installed normal hooks.
+
+- A base-ref fixture initially assumed an invalid explicit `TURBO_SCM_BASE`
+  behaved like missing implicit GitHub inference. Stable returned an SCM-query
+  refusal instead. Preserve this stronger boundary, retain the failed attempt,
+  and re-execute the corrected source rather than relabeling the old run.
