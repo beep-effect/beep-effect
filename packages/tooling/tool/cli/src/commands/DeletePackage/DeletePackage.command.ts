@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource, FrontmatterSourceBlock, FrontmatterSourceSplit } from "@beep/markdown/FrontmatterSource";
-import { DomainError, decodePackageJsonEffect, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { DomainError, decodePackageJsonEffect, findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -44,6 +44,7 @@ import {
   surfacesForTarget,
 } from "../../internal/cli/RegistrationGeometry/index.ts";
 import { runToExit } from "../../internal/process/index.ts";
+import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
 import { ChangesetGraphError, changesetPackageReferencesFromText } from "../Quality/ChangesetGraph.ts";
@@ -179,7 +180,7 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
   const path = yield* Path.Path;
   const normalizedInput = normalizePath(input);
   const requestedName = packageNameForInput(input);
-  const workspaces = A.fromIterable(yield* resolveWorkspaceDirs(repoRoot));
+  const workspaces = A.fromIterable(yield* workspaceDirectories(repoRoot));
   const workspacePaths = A.map(workspaces, ([, dir]) => normalizePath(path.relative(repoRoot, dir)));
   const match = A.findFirst(
     workspaces,
@@ -230,7 +231,7 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
 
 const workspacePathsAtRoot = Effect.fn("DeletePackage.workspacePathsAtRoot")(function* (repoRoot: string) {
   const path = yield* Path.Path;
-  const workspaces = A.fromIterable(yield* resolveWorkspaceDirs(repoRoot));
+  const workspaces = A.fromIterable(yield* workspaceDirectories(repoRoot));
   return A.map(workspaces, ([, directory]) => normalizePath(path.relative(repoRoot, directory)));
 });
 

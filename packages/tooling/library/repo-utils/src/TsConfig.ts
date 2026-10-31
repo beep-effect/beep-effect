@@ -8,10 +8,10 @@
  * @since 0.0.0
  */
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import { FsUtils, GlobOptions } from "./FsUtils.ts";
-import { resolveWorkspaceDirs } from "./Workspaces.ts";
-import type { DomainError, NoSuchFileError } from "./errors/index.ts";
+import type { DomainError } from "./errors/index.ts";
 
 /**
  * The root package identifier used in the returned HashMap.
@@ -28,9 +28,11 @@ const IGNORED_TSCONFIG_DIRS = ["**/ci-runners/sdks/**"];
  *
  * **Details**
  *
- * For every workspace package (plus the monorepo root), this function
- * globs for files matching `tsconfig*.json` and returns a HashMap
- * mapping each package name to its array of tsconfig paths.
+ * For every workspace package named in `workspaceDirs` (plus the monorepo
+ * root), this function globs for files matching `tsconfig*.json` and returns
+ * a HashMap mapping each package name to its array of tsconfig paths. The
+ * caller supplies the workspace directories (repo-cli reads them from
+ * `@beep/repo-workspaces` `WorkspaceDiscovery`).
  *
  * The root directory is indexed under `"@beep/root"`.
  *
@@ -38,23 +40,32 @@ const IGNORED_TSCONFIG_DIRS = ["**/ci-runners/sdks/**"];
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+ * import * as HashMap from "effect/HashMap";
  * import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig"
  *
- * const program = collectTsConfigPaths(".")
- * console.log(program)
+ * const program = collectTsConfigPaths("/repo", HashMap.make(["@beep/utils", "/repo/packages/utils"]))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param rootDir - Absolute path to the monorepo root directory.
+ * @param workspaceDirs - Each workspace package's absolute directory, keyed by package name.
  * @returns A HashMap mapping package names to arrays of tsconfig file paths.
  * @category utilities
  * @since 0.0.0
  */
-export const collectTsConfigPaths: (
-  rootDir: string
-) => Effect.Effect<HashMap.HashMap<string, ReadonlyArray<string>>, NoSuchFileError | DomainError, FsUtils> = Effect.fn(
-  function* (rootDir) {
+export const collectTsConfigPaths: {
+  (
+    rootDir: string,
+    workspaceDirs: HashMap.HashMap<string, string>
+  ): Effect.Effect<HashMap.HashMap<string, ReadonlyArray<string>>, DomainError, FsUtils>;
+  (
+    workspaceDirs: HashMap.HashMap<string, string>
+  ): (rootDir: string) => Effect.Effect<HashMap.HashMap<string, ReadonlyArray<string>>, DomainError, FsUtils>;
+} = dual(
+  2,
+  Effect.fn(function* (rootDir: string, workspaceDirs: HashMap.HashMap<string, string>) {
     const fsUtils = yield* FsUtils;
-    const workspaces = yield* resolveWorkspaceDirs(rootDir);
 
     let result = HashMap.empty<string, ReadonlyArray<string>>();
 
@@ -72,7 +83,7 @@ export const collectTsConfigPaths: (
     }
 
     // Collect tsconfig files for each workspace
-    for (const [name, dir] of workspaces) {
+    for (const [name, dir] of workspaceDirs) {
       const configs = yield* fsUtils.globFiles(
         "tsconfig*.json",
         GlobOptions.make({
@@ -87,5 +98,5 @@ export const collectTsConfigPaths: (
     }
 
     return result;
-  }
+  })
 );

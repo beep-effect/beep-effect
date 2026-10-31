@@ -6,14 +6,7 @@
  */
 
 import { Jsonc } from "@beep/jsonc/Jsonc";
-import {
-  collectTsConfigPaths,
-  DomainError,
-  decodePackageJsonEffect,
-  resolveWorkspaceDirs,
-  topologicalSort,
-  workspaceDependencyNames,
-} from "@beep/repo-utils";
+import { collectTsConfigPaths, DomainError, decodePackageJsonEffect, topologicalSort } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import {
   CanonicalDocgenConfigInput,
@@ -45,6 +38,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
+import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { FALLOW_BOUNDARY_CONFIG_PATH, renderFallowBoundaryConfig } from "../Fallow/Fallow.command.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {
@@ -55,7 +49,6 @@ import {
   DOCGEN_CONFIG_FILENAME,
   isBeepScopedPackageName,
   isCanonicalAliasKey,
-  isRootDepIndexKey,
   JsonObject,
   PlannedFileChange,
   stringArrayEquivalence,
@@ -63,7 +56,6 @@ import {
   TsconfigSyncSchemaInternals,
   WorkspaceDescriptor,
 } from "./TsconfigSync.schemas.ts";
-import type { WorkspaceDeps } from "@beep/repo-utils";
 
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
@@ -242,8 +234,8 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  const workspaceDirs = yield* resolveWorkspaceDirs(rootDir);
-  const tsconfigPathsByPackage = yield* collectTsConfigPaths(rootDir);
+  const workspaceDirs = yield* workspaceDirectories(rootDir);
+  const tsconfigPathsByPackage = yield* collectTsConfigPaths(rootDir, workspaceDirs);
 
   const descriptors = A.empty<WorkspaceDescriptor>();
 
@@ -322,44 +314,6 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
 
   return A.sort(descriptors, byWorkspaceRelativeDirAscending);
 });
-
-/**
- * Build the workspace dependency adjacency map.
- *
- * **Example** (Plan tsconfig synchronization)
- *
- * ```ts
- * import { buildAdjacency } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
- * import * as HashMap from "effect/HashMap";
- * // An empty dependency index yields an empty adjacency map.
- * console.log(HashMap.size(buildAdjacency(HashMap.empty()))) // 0
- * ```
- *
- * @param depIndex - Dependency index mapping each package to its workspace dependencies.
- * @returns An adjacency map from each package name to the set of packages it depends on.
- * @category utilities
- * @since 0.0.0
- */
-const buildAdjacency = (
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>
-): HashMap.HashMap<string, HashSet.HashSet<string>> => {
-  let adjacency = HashMap.empty<string, HashSet.HashSet<string>>();
-
-  for (const [packageName, deps] of depIndex) {
-    if (isRootDepIndexKey(packageName)) {
-      continue;
-    }
-
-    let depSet = HashSet.empty<string>();
-    for (const depName of workspaceDependencyNames(deps)) {
-      depSet = HashSet.add(depSet, depName);
-    }
-
-    adjacency = HashMap.set(adjacency, packageName, depSet);
-  }
-
-  return adjacency;
-};
 
 const summaryCounts = (
   currentItems: ReadonlyArray<string>,
@@ -893,15 +847,14 @@ const canonicalizeExistingRefTarget = Effect.fn(function* (
 const computedPackageReferenceTargets = Effect.fnUntraced(function* (
   workspace: WorkspaceDescriptor,
   workspaceByName: HashMap.HashMap<string, WorkspaceDescriptor>,
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
   adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>
 ) {
-  const workspaceDeps = HashMap.get(depIndex, workspace.packageName);
+  const workspaceDeps = HashMap.get(adjacency, workspace.packageName);
   if (O.isNone(workspaceDeps)) {
     return O.none<ReadonlyArray<string>>();
   }
 
-  const directDeps = A.filter(workspaceDependencyNames(workspaceDeps.value), (depName) => {
+  const directDeps = A.filter(A.sort(A.fromIterable(workspaceDeps.value), byStringAscending), (depName) => {
     const descriptor = HashMap.get(workspaceByName, depName);
     return O.isSome(descriptor) && descriptor.value.ownerTsconfigPath !== undefined;
   });
@@ -968,7 +921,6 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
   workspace: WorkspaceDescriptor,
   workspaces: ReadonlyArray<WorkspaceDescriptor>,
   workspaceByName: HashMap.HashMap<string, WorkspaceDescriptor>,
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
   adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
   verbose: boolean
 ) {
@@ -978,7 +930,7 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
 
   const path = yield* Path.Path;
   const sourceOwnerTsconfigPath = workspace.ownerTsconfigPath;
-  const computedTargets = yield* computedPackageReferenceTargets(workspace, workspaceByName, depIndex, adjacency);
+  const computedTargets = yield* computedPackageReferenceTargets(workspace, workspaceByName, adjacency);
   if (O.isNone(computedTargets)) {
     return O.none<PlannedFileChange>();
   }
@@ -1035,7 +987,7 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
  * import { planPackageReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  * import * as Effect from "effect/Effect";
  * import * as HashMap from "effect/HashMap";
- * const program = planPackageReferenceSync("/repo", [], HashMap.empty(), HashMap.empty())
+ * const program = planPackageReferenceSync("/repo", [], HashMap.empty(), undefined, false)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -1045,7 +997,6 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
 const planPackageReferenceSync = Effect.fn(function* (
   rootDir: string,
   workspaces: ReadonlyArray<WorkspaceDescriptor>,
-  depIndex: HashMap.HashMap<string, WorkspaceDeps>,
   adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
   filter: string | undefined,
   verbose: boolean
@@ -1063,7 +1014,6 @@ const planPackageReferenceSync = Effect.fn(function* (
       workspace,
       workspaces,
       workspaceByName,
-      depIndex,
       adjacency,
       verbose
     );
@@ -1302,7 +1252,6 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
  * @since 0.0.0
  */
 export const TsconfigSyncPlan = {
-  buildAdjacency,
   buildWorkspaceDescriptors,
   planPackageCheckReferenceSync,
   planPackageDocgenSync,

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { FsUtils, findRepoRoot, GlobOptions, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as Command from "effect/cli/Command";
@@ -17,6 +17,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
+import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { lintPackageFlag, resolveLintPackage } from "./internal/LintPackage.ts";
 
 // Root-only targets are every non-workspace source file; `.oxlintrc.docs.json`
@@ -75,7 +76,7 @@ export const lintJsdocCommand = Command.make(
     }
     const fsUtils = yield* FsUtils;
     const path = yield* Path.Path;
-    const workspaces = yield* resolveWorkspaceDirs(root);
+    const workspaces = yield* workspaceDirectories(root);
     const files = yield* fsUtils.globFiles(
       ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
       GlobOptions.make({

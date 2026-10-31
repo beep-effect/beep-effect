@@ -1,14 +1,8 @@
 import * as NodeURL from "node:url";
 import { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-cli/test/Docgen";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
-import {
-  FsUtils,
-  FsUtilsLive,
-  findRepoRoot,
-  readPackageJsonFile,
-  resolveWorkspacePackages,
-  toSortedRecord,
-} from "@beep/repo-utils";
+import { workspaceManifests } from "@beep/repo-cli/test/SharedInternals";
+import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -157,7 +151,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("doctest l
       const fs = yield* FileSystem.FileSystem;
       const fsUtils = yield* FsUtils;
       const path = yield* Path.Path;
-      const workspaces = yield* resolveWorkspacePackages(root);
+      const workspaces = yield* workspaceManifests(root);
       let owners = 0;
       for (const [name, workspace] of workspaces) {
         const dir = workspace.dir;
