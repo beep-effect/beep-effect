@@ -49,6 +49,35 @@ export class CacheHostedProducerApproval extends S.Opaque<
 ) {}
 
 /**
+ * Unverified run identity available before its artifact is uploaded.
+ *
+ * **Details**
+ * A producer can publish its run and attempt without inventing a future artifact
+ * identifier. These numbers grant no workflow or publication authority.
+ *
+ * **Example** (Prepare a run identity before upload)
+ * ```ts
+ * import { CacheHostedProducerRunReference } from "@beep/repo-cli/test/Cache"
+ * const run = CacheHostedProducerRunReference.make({ runId: 1, attempt: 2 })
+ * console.assert(run.attempt === 2)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheHostedProducerRunReference extends S.Opaque<
+  CacheHostedProducerRunReference,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ runId: Identifier, attempt: Identifier }).pipe(
+    $I.annoteSchema("CacheHostedProducerRunReference", {
+      description: "Run and attempt carried before upload; authenticated artifact selection remains a later boundary.",
+    })
+  )
+) {}
+
+/**
  * Exact immutable Actions artifact and attempt to inspect.
  *
  * **Example** (Select an artifact without a report-supplied URL)
@@ -65,7 +94,7 @@ export class CacheHostedProducerReference extends S.Opaque<
   CacheHostedProducerReference,
   { readonly brand: unique symbol }
 >()(
-  S.Struct({ runId: Identifier, attempt: Identifier, artifactId: Identifier }).pipe(
+  S.Struct({ ...CacheHostedProducerRunReference.fields, artifactId: Identifier }).pipe(
     $I.annoteSchema("CacheHostedProducerReference", {
       description: "Database identifiers only; no caller-selected endpoint, workflow approval or archive member.",
     })
@@ -100,6 +129,49 @@ export class CacheHostedProducerReport extends S.Opaque<CacheHostedProducerRepor
 ) {}
 
 /**
+ * Immutable publication binding for one complete owned observation and upload.
+ *
+ * **Details**
+ * The digest covers the canonical schema encoding of the complete observation,
+ * including its envelope, pilot and conformance matrices. It carries no raw
+ * observation, artifact payload or credential. Verification and qualification
+ * remain independent of shape validation.
+ *
+ * **Example** (Require complete observation identity)
+ * ```ts
+ * import { CacheHostedProducerCompleteReport } from "@beep/repo-cli/test/Cache"
+ * console.assert("observationSha256" in CacheHostedProducerCompleteReport.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheHostedProducerCompleteReport extends S.Opaque<
+  CacheHostedProducerCompleteReport,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    ...CacheHostedProducerReport.fields,
+    schemaVersion: S.tag("cache-hosted-producer-upload/v2"),
+    observationSha256: Sha256Hex,
+    uploads: S.NonEmptyArray(CacheHostedProducerUpload).check(S.isMaxLength(1)),
+  }).pipe(
+    $I.annoteSchema("CacheHostedProducerCompleteReport", {
+      description:
+        "One complete canonical observation digest and its owned upload; published shape alone grants no trust.",
+    })
+  )
+) {}
+
+const HostedReport = S.Union([CacheHostedProducerReport, CacheHostedProducerCompleteReport]).pipe(
+  S.toTaggedUnion("schemaVersion"),
+  $I.annoteSchema("HostedReport", {
+    description: "Legacy upload-only or complete-observation publication, with explicit versioned authority limits.",
+  })
+);
+
+/**
  * Verified immutable artifact observation, without qualification or reuse authority.
  *
  * **Example** (Keep the observation boundary explicit)
@@ -120,7 +192,7 @@ export class CacheHostedProducerObservation extends S.Opaque<
     reference: CacheHostedProducerReference,
     artifactSha256: Sha256Hex,
     reportSha256: Sha256Hex,
-    report: CacheHostedProducerReport,
+    report: HostedReport,
   }).pipe(
     $I.annoteSchema("CacheHostedProducerObservation", {
       description:

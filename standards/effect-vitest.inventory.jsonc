@@ -5795,17 +5795,17 @@
       "reason": "Strict equality checks the whole encoded append-input object (content, parentTurnId, role, threadId) as the wire-shape oracle; a single Option assertion would weaken it. Owner: @beep/workspace-use-cases. Exit: retire when EV006 recognises whole-record oracles that only nest Option fields (#1855 wave 8 register)."
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:106:checkEffect@39#1",
+      "id": "EV007:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:156:checkEffect@43#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-accept-cli.test.ts",
-      "line": 106,
-      "endLine": 118,
+      "line": 156,
+      "endLine": 168,
       "symbol": "checkEffect",
-      "occurrence": "v2:abed51e0cb40ad59eac6f1a67b3500e558c0d26b1a7fdb089f26cbb73dbefa9c",
+      "occurrence": "v2:a91cfd7ad5266ee6e807421f1b41f07dc35395288f549bd19c1b18bd93d2c50b",
       "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.schema(Sha256Hex), (sha256) => Effect.gen(function* () { const altered = CacheProducerAcceptanceReference.make({ ...reference, sha256 }); expect(yield* readCacheProduc",
+      "evidence": "Arbitrary.checkEffect( Arbitrary.schema(Sha256Hex), (sha256) => Effect.gen(function* () { const altered = CacheProducerAcceptanceReference.make({ ...reference, sha256 }); expect( yield* readCacheProdu",
       "replacement": {
         "primitive": "it.effect.prop",
         "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
@@ -5817,17 +5817,17 @@
       "reason": "This native CLI integration runs one provision/import/revoke transaction, and the inner generated loop mutates only the acceptance reference while asserting the persisted marker is unchanged before revocation; per-case transactions would drop that shared-marker invariant and multiply subprocess work (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when EV007 recognises an Arbitrary.checkEffect property nested inside one shared transaction, or the property moves to it.effect.prop with the transaction in its layer (#1855 wave 8 register)."
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:369:checkEffect@36#1",
+      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:376:checkEffect@38#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts",
-      "line": 369,
-      "endLine": 384,
+      "line": 376,
+      "endLine": 393,
       "symbol": "checkEffect",
       "occurrence": "v2:ad6b69003cf2934fbcada88907461f762e95046ef2b8d09dd43f723902ca2c85",
       "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.schema(Sha256Hex), (kernel) => Effect.gen(function* () { observedToolchain.mockReturnValue(Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel }))); yiel",
+      "evidence": "Arbitrary.checkEffect( Arbitrary.schema(Sha256Hex), (kernel) => Effect.gen(function* () { observedToolchain.mockReturnValue( Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel })) ); yi",
       "replacement": {
         "primitive": "it.effect.prop",
         "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
@@ -8985,13 +8985,13 @@
       "reason": "Child processes run the real Node and Bun binaries against the root compatibility shim; memory cannot represent OS child environments or executable identity (research/spawn-env-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the spawn environment parity check moves out of the unit suite."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:15:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-acceptance.test.ts:44:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-accept-cli.test.ts",
-      "line": 15,
-      "endLine": 15,
+      "file": "packages/tooling/tool/cli/test/cache-acceptance.test.ts",
+      "line": 44,
+      "endLine": 44,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -9004,7 +9004,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Real private issuer files and cryptographic authentication are shared with a spawned CLI, so permissions, durable bytes and subprocess visibility are the subjects (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when the accept command is exercised in process over a memory volume that models file modes."
+      "reason": "Physical owner-only issuer and publication files, unsafe permissions, replacement, links, persistence and revocation are the subject; real ZIPs also cross the verifier process boundary. Controlled metadata does not replace those filesystem semantics. The 222-case combined suite passes under Node and Bun, including final approval and issuer source-removal controls (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when native provenance is understood by the detector or an equally strict memory volume proves these native boundaries."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-baseline-merge.test.ts:18:@effect/platform-node@0#1",
@@ -9139,6 +9139,28 @@
       "reason": "The physical scope, symlink, no-follow, digest, UTF-8 and original-bytes safety cases need the native filesystem; only the JSON preservation law uses a memory provider. Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models symlinks and no-follow opens and the safety cases move to it."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-hosted-producer.test.ts:27:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts",
+      "line": 27,
+      "endLine": 27,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The strict hosted verifier consumes real ZIP files through a bounded native parser, including malformed members, symlinks, size and deadline controls. Metadata is controlled; filesystem/parser behavior remains real. All 32 hosted cases pass under Node and Bun in the 222-case combined suite (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when platform provenance is understood by the detector or these native parser subjects move to another retained test."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:49:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -9227,13 +9249,35 @@
       "reason": "Reviewed actual resource provenance: this Linux parent-protocol suite launches a real isolated Python pipe peer and git process; the child reads its trusted helper and writes a marker that the parent reads, and the parent verifies /proc child disappearance after scoped cleanup. MemoryFileSystem would disconnect those actual child filesystem effects and change the subject. NodeServices supplies the real filesystem, paths and process spawner; it.layer shares only platform services, while withCacheProducerAdapter owns each peer scope. The peer is inert, not a backend attestation. Owner: @beep/repo-cli. Exit: retire this exception if the suite stops testing real child filesystem/process lifetime."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-producer.test.ts:25:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts:20:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+      "line": 20,
+      "endLine": 20,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The private capability loader reads actual owner-only issuer/profile files and revocation markers before a denying credential provider; changed-destination and absent-approval controls must remain physical filesystem observations. All 21 cases pass under Node and Bun in the 222-case combined suite (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when the detector resolves platform provenance or equivalent native private-file proof remains elsewhere."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-producer.test.ts:28:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-producer.test.ts",
-      "line": 25,
-      "endLine": 25,
+      "line": 28,
+      "endLine": 28,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -12065,13 +12109,13 @@
       "reason": "The owning `live account poller` block runs its tests serially on the shared test clock; the test forks the one poll it owns with forkChild, advances the clock only after the hung /me request has signalled through a Deferred that it is in flight, and joins the fiber before the test ends, so no other test sees the adjustment. Owner: @beep/repo-cli. Exit: retire when the Kimi profile timeout test owns its TestClock in a single-case it.layer(TestClock.layer()) block."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:532:TestClock.adjust@15#1",
+      "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:594:TestClock.adjust@15#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-acceptance.test.ts",
-      "line": 532,
-      "endLine": 532,
+      "line": 594,
+      "endLine": 594,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:b86a81525dfecb6357a38a3267a034f6cff03c0669a43f9568812d1eceb0084d",
       "class": "shared-test-clock-adjustment",
@@ -12087,13 +12131,13 @@
       "reason": "The owning suite is concurrent: false, each test provisions new issuers and references from its current Clock, and the 25-hour adjustment expires only the first test's acceptance; no test fiber escapes its scope (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-producer.test.ts:326:TestClock.adjust@13#1",
+      "id": "EV015:packages/tooling/tool/cli/test/cache-producer.test.ts:333:TestClock.adjust@13#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-producer.test.ts",
-      "line": 326,
-      "endLine": 326,
+      "line": 333,
+      "endLine": 333,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:ec605af0272efc75202304accd0889f006455d0f75cd279f2e19afacc4204e44",
       "class": "shared-test-clock-adjustment",

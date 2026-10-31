@@ -7,6 +7,7 @@ import {
   CacheLinkedFile,
   CacheLiveIdentity,
   CachePilotRequest,
+  CacheProducerApproval,
   CacheProducerBinding,
   CacheProducerBundle,
   CacheSignedPilotReceipt,
@@ -25,6 +26,7 @@ import {
   CacheHostedProducerUpload,
   CacheProducerAdapterLaunch,
   CacheProducerAdapterReceipt,
+  CacheProducerExecutionProfile,
   CacheProducerUploadApproval,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
@@ -34,9 +36,11 @@ import {
   hashCacheProducerUploadKey,
   hashCacheProducerUploadTarget,
   hashCacheProducerWorkflow,
+  initializeCacheProducerExecution,
   initializeCacheProducerIssuer,
   inspectCacheProducerWorkflow,
   openCacheProducerVerifier,
+  readCacheProducerExecutionProfile,
   runCacheProducerWorkflow,
   CacheRuntimeProcess as StepExec,
 } from "@beep/repo-cli/test/Cache";
@@ -45,12 +49,15 @@ import { JsonStringCodec } from "@beep/repo-cli/test/SharedInternals";
 import { CacheClientPin, CacheEvidenceReference, CacheTaskContract } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
@@ -105,6 +112,7 @@ const fixture = Effect.fn("WorkflowTest.fixture")(function* () {
   ]);
   return { root, fs, path, source, git };
 });
+const encodeExecutionProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
 const inspectedFixture = Effect.fn("WorkflowTest.inspectedFixture")(function* () {
   const base = yield* fixture();
   const bundle = yield* S.decodeUnknownEffect(CacheProducerBundle)(bundleInput);
@@ -251,18 +259,67 @@ const supervisedFixture = Effect.fn("WorkflowTest.supervisedFixture")(function* 
   const protocol = vi
     .spyOn(ProtocolRunner, "runCacheProtocolExperiment")
     .mockReturnValue(Effect.succeed(bundle.protocol));
+  const observedFs: FileSystem.FileSystem = {
+    ...fs,
+    // The real loaded-location rejection is covered separately; this scoped
+    // mapping lets a temporary Git fixture exercise the complete issuer flow.
+    realPath: (file) =>
+      Str.endsWith("/Cache.workflow.ts")(file)
+        ? Effect.succeed(path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts"))
+        : fs.realPath(file),
+  };
   const run = runCacheProducerWorkflow(root, request, directory, binding, runtime).pipe(
-    Effect.provideService(FileSystem.FileSystem, {
-      ...fs,
-      // The real loaded-location rejection is covered separately; this scoped
-      // mapping lets a temporary Git fixture exercise the complete issuer flow.
-      realPath: (file) =>
-        Str.endsWith("/Cache.workflow.ts")(file)
-          ? Effect.succeed(path.join(root, "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts"))
-          : fs.realPath(file),
-    })
+    Effect.provideService(FileSystem.FileSystem, observedFs)
   );
-  return { ...base, bundle, directory, binding, request, signed, protocol, admission, runtime, run };
+  return {
+    ...base,
+    bundle,
+    directory,
+    binding,
+    contract,
+    request,
+    signed,
+    protocol,
+    admission,
+    runtime,
+    run,
+    observedFs,
+  };
+});
+
+const provisioningFixture = Effect.fn("WorkflowTest.provisioningFixture")(function* () {
+  const state = yield* supervisedFixture();
+  const baseTarget = targetFor({ url: "http://127.0.0.1:19427/" });
+  const target = CacheConformanceTarget.make({
+    ...baseTarget,
+    backend: { ...baseTarget.backend, digest: state.bundle.pilot.configurationDigest },
+  });
+  const profile = CacheProducerExecutionProfile.make({ target, adapterExecutable: "/fixture/owned-adapter" });
+  const binding = CacheProducerBinding.make({
+    ...state.binding,
+    uploadApproval: O.some(
+      CacheProducerUploadApproval.make({
+        targetSha256: yield* hashCacheProducerUploadTarget(target),
+        artifactKeySha256: Sha256Hex.make(Str.repeat(64)("c")),
+      })
+    ),
+  });
+  const approval = CacheProducerApproval.make({ binding, contract: state.contract });
+  vi.spyOn(Linker, "inspectCacheLinkedFile").mockImplementation((file) =>
+    Effect.succeed(
+      CacheLinkedFile.make({
+        path: file,
+        target: file,
+        sha256: state.bundle.pilot.configurationDigest,
+      })
+    )
+  );
+  const destination = state.path.join(state.path.dirname(state.directory), "execution-store");
+  const provision = (approved = approval, selected = profile, directory = destination) =>
+    initializeCacheProducerExecution(state.root, directory, approved, selected).pipe(
+      Effect.provideService(FileSystem.FileSystem, state.observedFs)
+    );
+  return { ...state, approval, profile, destination, provision };
 });
 
 it.layer(
@@ -275,6 +332,215 @@ it.layer(
   ),
   { timeout: "30 seconds" }
 )("producer workflow source identity", (it) => {
+  it.effect("provisions private execution once and preserves existing material on a second attempt", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      yield* f.provision();
+      const [binding, profile] = yield* readCacheProducerExecutionProfile(f.destination);
+      expect(binding).toEqual(f.approval.binding);
+      expect(profile).toEqual(f.profile);
+      for (const name of ["approval.json", "issuer.key", "runtime.json"])
+        expect((yield* f.fs.stat(f.path.join(f.destination, name))).mode & 0o777).toBe(0o600);
+      const key = f.path.join(f.destination, "issuer.key");
+      const material = yield* f.fs.readFile(key);
+      expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.readFile(key)).toEqual(material);
+    })
+  );
+  it.effect("installs the separately approved issuer into execution without replacing its material", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const approvedStore = f.path.join(f.path.dirname(f.directory), "approved-issuer");
+      yield* initializeCacheProducerIssuer(approvedStore, f.approval.binding, f.contract);
+      const original = yield* f.fs.readFile(f.path.join(approvedStore, "issuer.key"));
+      yield* initializeCacheProducerExecution(
+        f.root,
+        f.destination,
+        f.approval,
+        f.profile,
+        O.some(Redacted.make(original))
+      ).pipe(Effect.provideService(FileSystem.FileSystem, f.observedFs));
+      expect(yield* f.fs.readFile(f.path.join(f.destination, "issuer.key"))).toEqual(original);
+      const [binding, profile] = yield* readCacheProducerExecutionProfile(f.destination);
+      expect(binding).toEqual(f.approval.binding);
+      expect(profile).toEqual(f.profile);
+    })
+  );
+  it.effect("refuses a different loaded checkout before reserving an execution store", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      expect(
+        yield* initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(Effect.isFailure)
+      ).toBe(true);
+      expect(yield* f.fs.exists(f.destination)).toBe(false);
+    })
+  );
+  it.effect("refuses relative and source-visible execution stores before creating material", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      for (const directory of ["relative-store", f.root, f.path.join(f.root, "private-store")])
+        expect(yield* f.provision(f.approval, f.profile, directory).pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.root, "private-store"))).toBe(false);
+    })
+  );
+  it.effect("refuses oversized approval and runtime records before reserving a store", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const contract = CacheTaskContract.make({ ...f.contract, negativeCases: [Str.repeat(16385)("x")] });
+      const oversizedApproval = CacheProducerApproval.make({ ...f.approval, contract });
+      const oversizedProfile = CacheProducerExecutionProfile.make({
+        ...f.profile,
+        adapterExecutable: `/${Str.repeat(16385)("x")}`,
+      });
+      expect(yield* f.provision(oversizedApproval).pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.provision(f.approval, oversizedProfile).pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.exists(f.destination)).toBe(false);
+    })
+  );
+  it.effect("refuses absent upload approval, target drift and relative or changed executable selection", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const absent = CacheProducerApproval.make({
+        ...f.approval,
+        binding: CacheProducerBinding.make({ ...f.approval.binding, uploadApproval: O.none() }),
+      });
+      expect(yield* f.provision(absent).pipe(Effect.isFailure)).toBe(true);
+      const changed = CacheProducerExecutionProfile.make({
+        ...f.profile,
+        target: CacheConformanceTarget.make({
+          ...targetFor({ url: "http://127.0.0.1:19428/" }),
+          backend: f.profile.target.backend,
+        }),
+      });
+      expect(yield* f.provision(f.approval, changed).pipe(Effect.isFailure)).toBe(true);
+      const linker = vi.spyOn(Linker, "inspectCacheLinkedFile");
+      linker.mockClear();
+      expect(
+        yield* f
+          .provision(f.approval, CacheProducerExecutionProfile.make({ ...f.profile, adapterExecutable: "relative" }))
+          .pipe(Effect.isFailure)
+      ).toBe(true);
+      expect(linker).not.toHaveBeenCalled();
+      linker.mockImplementation((file) =>
+        Effect.succeed(
+          CacheLinkedFile.make({
+            path: file,
+            target: file,
+            sha256:
+              file === f.profile.adapterExecutable
+                ? Sha256Hex.make(Str.repeat(64)("e"))
+                : f.bundle.pilot.configurationDigest,
+          })
+        )
+      );
+      expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.exists(f.destination)).toBe(false);
+    })
+  );
+  it.effect("refuses stale workflow revision and source identity before reserving a store", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      for (const binding of [
+        CacheProducerBinding.make({ ...f.approval.binding, workflowRevision: GitObjectId.make(Str.repeat(40)("e")) }),
+        CacheProducerBinding.make({
+          ...f.approval.binding,
+          workflowImplementation: Sha256Hex.make(Str.repeat(64)("e")),
+        }),
+      ])
+        expect(yield* f.provision(CacheProducerApproval.make({ ...f.approval, binding })).pipe(Effect.isFailure)).toBe(
+          true
+        );
+      expect(yield* f.fs.exists(f.destination)).toBe(false);
+    })
+  );
+  it.effect("revokes the reserved execution store when source drifts after private installation", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      f.tools
+        .mockReturnValueOnce(Effect.succeed(f.toolchain))
+        .mockReturnValueOnce(
+          f.fs
+            .writeFileString(f.source, "export const changed = true;\n")
+            .pipe(CacheCommandError.mapError("Cannot mutate workflow fixture."), Effect.as(f.toolchain))
+        );
+      expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      expect(yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure)).toBe(true);
+    })
+  );
+  it.effect("revokes an interrupted private profile installation", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const exit = yield* initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...f.observedFs,
+          writeFileString: (file, body, options) =>
+            file === f.path.join(f.destination, "runtime.json")
+              ? Effect.interrupt
+              : f.fs.writeFileString(file, body, options),
+        }),
+        Effect.exit
+      );
+      if (Exit.isFailure(exit)) expect(Cause.hasInterrupts(exit.cause)).toBe(true);
+      else expect.unreachable("Interrupted installation completed successfully.");
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+    })
+  );
+  it.effect("preserves a competing runtime record and revokes the reserved store", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const runtimeFile = f.path.join(f.destination, "runtime.json");
+      const installation = initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...f.observedFs,
+          writeFileString: (file, body, options) =>
+            file === runtimeFile
+              ? f.fs
+                  .writeFileString(runtimeFile, "reserved", { flag: "wx", mode: 0o600 })
+                  .pipe(Effect.andThen(f.fs.writeFileString(file, body, options)))
+              : f.fs.writeFileString(file, body, options),
+        })
+      );
+      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.readFileString(runtimeFile)).toBe("reserved");
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+    })
+  );
+  it.effect("revokes a profile whose installed permissions fail the normal reopen boundary", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const runtimeFile = f.path.join(f.destination, "runtime.json");
+      const installation = initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...f.observedFs,
+          writeFileString: (file, body, options) =>
+            f.fs
+              .writeFileString(file, body, options)
+              .pipe(Effect.andThen(file === runtimeFile ? f.fs.chmod(file, 0o644) : Effect.void)),
+        })
+      );
+      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+    })
+  );
+  it.effect("revokes a valid private record changed during installation", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const runtimeFile = f.path.join(f.destination, "runtime.json");
+      const changed = yield* encodeExecutionProfile(
+        CacheProducerExecutionProfile.make({ ...f.profile, adapterExecutable: "/fixture/changed-adapter" })
+      );
+      const installation = initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...f.observedFs,
+          writeFileString: (file, body, options) =>
+            f.fs.writeFileString(file, file === runtimeFile ? changed : body, options),
+        })
+      );
+      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+    })
+  );
   it.effect.prop(
     "binds every schema-generated source digest into the workflow identity",
     { sha256: Sha256Hex },

@@ -57,7 +57,7 @@ import {
   setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
-import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
+import { CacheHostedProducerVerifierLive, CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts";
@@ -2270,19 +2270,16 @@ const collectEffectDrizzleSeverityDiffDiagnostics = (
   );
   const mismatched = pipe(
     baseRuleNames,
-    A.filter((ruleName) => {
+    A.flatMap((ruleName) => {
       const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
         ? "off"
         : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
       const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
-      return actualSeverity !== undefined && actualSeverity !== expectedSeverity;
-    }),
-    A.map((ruleName) => {
-      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
-        ? "off"
-        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
-      const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
-      return `${file}: Effect Drizzle diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
+      return actualSeverity !== undefined && actualSeverity !== expectedSeverity
+        ? A.of(
+            `${file}: Effect Drizzle diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`
+          )
+        : A.empty<string>();
     })
   );
   return A.appendAll(A.appendAll(missing, unexpected), mismatched);
@@ -3716,7 +3713,7 @@ const cachePolicyCommand = Command.make("cache-policy", {}, () =>
   findRepoRoot().pipe(Effect.flatMap((root) => runCachePolicyAudit(root, false)))
 ).pipe(
   Command.withDescription("Enforce Cache's reviewed qualification policy without writing qualification state"),
-  Command.provide(CacheQualificationLive)
+  Command.provide(CacheQualificationLive.pipe(Layer.provideMerge(CacheHostedProducerVerifierLive)))
 );
 
 const turboConfigProofCommand = Command.make(
