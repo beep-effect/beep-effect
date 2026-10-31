@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T14:52:05.565Z",
+  "generatedAt": "2026-10-31T18:03:23.832Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 164,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
-    "publicModules": 3576,
-    "publicExports": 25334,
+    "publicModules": 3577,
+    "publicExports": 25341,
     "openModules": 166,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -57618,9 +57618,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 18,
-        "publicModuleCount": 18,
-        "publicExportCount": 101
+        "sourceFileCount": 19,
+        "publicModuleCount": 19,
+        "publicExportCount": 104
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -57833,6 +57833,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/MarkdownFence.ts",
+          "repoPath": "packages/foundation/modeling/markdown/src/MarkdownFence.ts",
+          "line": 1,
+          "anchor": "packages-foundation-modeling-markdown-src-markdownfence-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -58052,7 +58074,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 14,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         }
       ],
@@ -59233,8 +59255,8 @@
           "exportKind": "class",
           "filePath": "src/MarkdownDocument.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownDocument.ts",
-          "line": 549,
-          "anchor": "packages-foundation-modeling-markdown-src-markdowndocument-ts-549-markdowndocument",
+          "line": 571,
+          "anchor": "packages-foundation-modeling-markdown-src-markdowndocument-ts-571-markdowndocument",
           "currentTags": [
             "@public",
             "@category",
@@ -59373,6 +59395,51 @@
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownEdit.ts",
           "line": 186,
           "anchor": "packages-foundation-modeling-markdown-src-markdownedit-ts-186-markdownedit",
+          "currentTags": [
+            "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CodeFence",
+          "exportKind": "class",
+          "filePath": "src/MarkdownFence.ts",
+          "repoPath": "packages/foundation/modeling/markdown/src/MarkdownFence.ts",
+          "line": 62,
+          "anchor": "packages-foundation-modeling-markdown-src-markdownfence-ts-62-codefence",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MarkdownFence",
+          "exportKind": "class",
+          "filePath": "src/MarkdownFence.ts",
+          "repoPath": "packages/foundation/modeling/markdown/src/MarkdownFence.ts",
+          "line": 152,
+          "anchor": "packages-foundation-modeling-markdown-src-markdownfence-ts-152-markdownfence",
           "currentTags": [
             "@public",
             "@category",
@@ -59713,8 +59780,8 @@
           "exportKind": "type",
           "filePath": "src/MarkdownSlug.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownSlug.ts",
-          "line": 72,
-          "anchor": "packages-foundation-modeling-markdown-src-markdownslug-ts-72-headingslug",
+          "line": 73,
+          "anchor": "packages-foundation-modeling-markdown-src-markdownslug-ts-73-headingslug",
           "currentTags": [
             "@public",
             "@category",
@@ -59736,8 +59803,8 @@
           "exportKind": "class",
           "filePath": "src/MarkdownSlug.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownSlug.ts",
-          "line": 138,
-          "anchor": "packages-foundation-modeling-markdown-src-markdownslug-ts-138-markdownslug",
+          "line": 141,
+          "anchor": "packages-foundation-modeling-markdown-src-markdownslug-ts-141-markdownslug",
           "currentTags": [
             "@public",
             "@category",
@@ -59782,8 +59849,8 @@
           "exportKind": "class",
           "filePath": "src/MarkdownToc.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownToc.ts",
-          "line": 120,
-          "anchor": "packages-foundation-modeling-markdown-src-markdowntoc-ts-120-tocoptions",
+          "line": 123,
+          "anchor": "packages-foundation-modeling-markdown-src-markdowntoc-ts-123-tocoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -59805,8 +59872,8 @@
           "exportKind": "namespace",
           "filePath": "src/MarkdownToc.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownToc.ts",
-          "line": 153,
-          "anchor": "packages-foundation-modeling-markdown-src-markdowntoc-ts-153-tocoptions",
+          "line": 156,
+          "anchor": "packages-foundation-modeling-markdown-src-markdowntoc-ts-156-tocoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -59827,8 +59894,8 @@
           "exportKind": "class",
           "filePath": "src/MarkdownToc.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownToc.ts",
-          "line": 217,
-          "anchor": "packages-foundation-modeling-markdown-src-markdowntoc-ts-217-markdowntoc",
+          "line": 220,
+          "anchor": "packages-foundation-modeling-markdown-src-markdowntoc-ts-220-markdowntoc",
           "currentTags": [
             "@public",
             "@category",
@@ -60057,8 +60124,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 33,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-33-export-frontmatternewline-frontmattersource-frontmattersourceblock-frontmattersourcesplit-from-frontmattersource-ts",
+          "line": 34,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-34-export-frontmatternewline-frontmattersource-frontmattersourceblock-frontmattersourcesplit-from-frontmattersource-ts",
           "currentTags": [
             "@packageDocumentation",
             "@since"
@@ -60079,8 +60146,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 39,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-39-export-markdown-markdowndialect-markdownparseerror-markdownparseoptions-markdownstringifyerror-from-markdown-ts",
+          "line": 40,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-40-export-markdown-markdowndialect-markdownparseerror-markdownparseoptions-markdownstringifyerror-from-markdown-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60098,8 +60165,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 46,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-46-export-markdowndiagnostic-markdownparseerrorcode-from-markdowndiagnostic-ts",
+          "line": 47,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-47-export-markdowndiagnostic-markdownparseerrorcode-from-markdowndiagnostic-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60117,8 +60184,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 47,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-47-export-documentheading-documentlink-documentsection-markdowndocument-sectionqueryoptions-from-markdowndocument-ts",
+          "line": 48,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-48-export-documentheading-documentlink-documentsection-markdowndocument-sectionqueryoptions-from-markdowndocument-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60136,8 +60203,27 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 54,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-54-export-markdownedit-markdownpath-markdownrange-markdownsegment-from-markdownedit-ts",
+          "line": 55,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-55-export-markdownedit-markdownpath-markdownrange-markdownsegment-from-markdownedit-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { CodeFence, MarkdownFence } from \"./MarkdownFence.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
+          "line": 56,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-56-export-codefence-markdownfence-from-markdownfence-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60155,8 +60241,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 55,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-55-export-codeblockstyle-markdownformat-markdownformattingoptions-markdownmodificationerror-markdownmodificationerrorcode-from-markdownformat-ts",
+          "line": 57,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-57-export-codeblockstyle-markdownformat-markdownformattingoptions-markdownmodificationerror-markdownmodificationerrorcode-from-markdownformat-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60174,8 +60260,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 62,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-62-export-blockquote-break-breakstyle-bulletchar-code-definition-delete-emphasis-emphasischar-fencechar-flowcontent-footnotedefinition-footnotereference-frontmatter-frontmattercontent-frontmatterformat-heading-headingdepth-headingstyle-html-image-imagereference-inlinecode-link-linkreference-list-listcontent-listdelimiter-listitem-markdownnode-markdownnodekind-paragraph-phrasingcontent-point-position-referencetype-root-rowcontent-strong-table-tablealign-tablecell-tablecontent-tablerow-text-thematicbreak-thematicbreakchar-from-markdownnode-ts",
+          "line": 64,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-64-export-blockquote-break-breakstyle-bulletchar-code-definition-delete-emphasis-emphasischar-fencechar-flowcontent-footnotedefinition-footnotereference-frontmatter-frontmattercontent-frontmatterformat-heading-headingdepth-headingstyle-html-image-imagereference-inlinecode-link-linkreference-list-listcontent-listdelimiter-listitem-markdownnode-markdownnodekind-paragraph-phrasingcontent-point-position-referencetype-root-rowcontent-strong-table-tablealign-tablecell-tablecontent-tablerow-text-thematicbreak-thematicbreakchar-from-markdownnode-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60193,8 +60279,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 111,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-111-export-headingslug-markdownslug-from-markdownslug-ts",
+          "line": 113,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-113-export-headingslug-markdownslug-from-markdownslug-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60212,8 +60298,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 112,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-112-export-markdowntoc-tocentry-tocoptions-from-markdowntoc-ts",
+          "line": 114,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-114-export-markdowntoc-tocentry-tocoptions-from-markdowntoc-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60231,8 +60317,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 113,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-113-export-markdownvisitor-markdownvisitorevent-from-markdownvisitor-ts",
+          "line": 115,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-115-export-markdownvisitor-markdownvisitorevent-from-markdownvisitor-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60250,8 +60336,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 114,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-114-export-mdast-mdastdecodeerror-mdastnode-from-mdast-ts",
+          "line": 116,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-116-export-mdast-mdastdecodeerror-mdastnode-from-mdast-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60269,8 +60355,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 115,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-115-export-type-linkbearingnode-sectionheadingmatch-from-markdowndocument-ts",
+          "line": 117,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-117-export-type-linkbearingnode-sectionheadingmatch-from-markdowndocument-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60288,8 +60374,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 116,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-116-export-type-markdownrangelike-from-markdownformat-ts",
+          "line": 118,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-118-export-type-markdownrangelike-from-markdownformat-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60307,8 +60393,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/index.ts",
-          "line": 117,
-          "anchor": "packages-foundation-modeling-markdown-src-index-ts-117-export-type-flowcontentencoded-frontmattercontentencoded-listcontentencoded-markdownnodeencoded-markdownnodeoftype-markdownnodetype-phrasingcontentencoded-rowcontentencoded-tablecontentencoded-from-markdownnode-ts",
+          "line": 119,
+          "anchor": "packages-foundation-modeling-markdown-src-index-ts-119-export-type-flowcontentencoded-frontmattercontentencoded-listcontentencoded-markdownnodeencoded-markdownnodeoftype-markdownnodetype-phrasingcontentencoded-rowcontentencoded-tablecontentencoded-from-markdownnode-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -368229,8 +368315,8 @@
           "exportKind": "class",
           "filePath": "src/Core.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Core.ts",
-          "line": 73,
-          "anchor": "packages-tooling-tool-docgen-src-core-ts-73-fencedcodeblockdetail",
+          "line": 77,
+          "anchor": "packages-tooling-tool-docgen-src-core-ts-77-fencedcodeblockdetail",
           "currentTags": [
             "@category",
             "@since"
@@ -368251,8 +368337,8 @@
           "exportKind": "const",
           "filePath": "src/Core.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Core.ts",
-          "line": 264,
-          "anchor": "packages-tooling-tool-docgen-src-core-ts-264-skip-type-checking-fence-metadata",
+          "line": 268,
+          "anchor": "packages-tooling-tool-docgen-src-core-ts-268-skip-type-checking-fence-metadata",
           "currentTags": [
             "@see",
             "@category",
@@ -368274,8 +368360,8 @@
           "exportKind": "const",
           "filePath": "src/Core.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Core.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-docgen-src-core-ts-294-extractfencedcode",
+          "line": 300,
+          "anchor": "packages-tooling-tool-docgen-src-core-ts-300-extractfencedcode",
           "currentTags": [
             "@internal",
             "@param",
@@ -368300,8 +368386,8 @@
           "exportKind": "const",
           "filePath": "src/Core.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Core.ts",
-          "line": 363,
-          "anchor": "packages-tooling-tool-docgen-src-core-ts-363-extractfencedcodeblocks",
+          "line": 374,
+          "anchor": "packages-tooling-tool-docgen-src-core-ts-374-extractfencedcodeblocks",
           "currentTags": [
             "@internal",
             "@param",
@@ -368326,8 +368412,8 @@
           "exportKind": "const",
           "filePath": "src/Core.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Core.ts",
-          "line": 413,
-          "anchor": "packages-tooling-tool-docgen-src-core-ts-413-extractfencedcodeblockdetails",
+          "line": 420,
+          "anchor": "packages-tooling-tool-docgen-src-core-ts-420-extractfencedcodeblockdetails",
           "currentTags": [
             "@param",
             "@returns",
@@ -368351,8 +368437,8 @@
           "exportKind": "const",
           "filePath": "src/Core.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Core.ts",
-          "line": 778,
-          "anchor": "packages-tooling-tool-docgen-src-core-ts-778-rendermoduletoc",
+          "line": 771,
+          "anchor": "packages-tooling-tool-docgen-src-core-ts-771-rendermoduletoc",
           "currentTags": [
             "@category",
             "@since"
@@ -368373,8 +368459,8 @@
           "exportKind": "const",
           "filePath": "src/Core.ts",
           "repoPath": "packages/tooling/tool/docgen/src/Core.ts",
-          "line": 883,
-          "anchor": "packages-tooling-tool-docgen-src-core-ts-883-program",
+          "line": 876,
+          "anchor": "packages-tooling-tool-docgen-src-core-ts-876-program",
           "currentTags": [
             "@internal",
             "@effects",
@@ -457362,7 +457448,7 @@
         "srcDir": "src",
         "sourceFileCount": 485,
         "publicModuleCount": 483,
-        "publicExportCount": 4461
+        "publicExportCount": 4465
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -463709,7 +463795,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -520957,8 +521043,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 63,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-63-effectimportcorpusmode",
+          "line": 66,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-66-effectimportcorpusmode",
           "currentTags": [
             "@category",
             "@since"
@@ -520979,8 +521065,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 75,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-75-effectimportcorpusmode",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-78-effectimportcorpusmode",
           "currentTags": [
             "@category",
             "@since"
@@ -521001,8 +521087,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 91,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-91-effectimportmanualreviewkind",
+          "line": 94,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-94-effectimportmanualreviewkind",
           "currentTags": [
             "@category",
             "@since"
@@ -521023,8 +521109,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 113,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-113-effectimportmanualreviewkind",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-116-effectimportmanualreviewkind",
           "currentTags": [
             "@category",
             "@since"
@@ -521045,8 +521131,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-139-effectimportrulesoptions",
+          "line": 142,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-142-effectimportrulesoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -521067,8 +521153,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-186-effectimportmanualreview",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-189-effectimportmanualreview",
           "currentTags": [
             "@category",
             "@since"
@@ -521089,8 +521175,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 230,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-230-effectimportrulessummary",
+          "line": 233,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-233-effectimportrulessummary",
           "currentTags": [
             "@category",
             "@since"
@@ -521111,8 +521197,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1720,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1720-discovereffectimportsourcefiles",
+          "line": 1701,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1701-discovereffectimportsourcefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -521135,8 +521221,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1761,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1761-discovereffectimportmarkdownfiles",
+          "line": 1742,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1742-discovereffectimportmarkdownfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -521159,8 +521245,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1801,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1801-runeffectimportrules",
+          "line": 1782,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1782-runeffectimportrules",
           "currentTags": [
             "@category",
             "@since"
@@ -527277,12 +527363,100 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "PolicyWorkspace",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-199-policyworkspace",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyCliLayout",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 232,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-232-policyclilayout",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyCommandNode",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-266-policycommandnode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyClosure",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-294-policyclosure",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "computePolicyFingerprint",
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 355,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-355-computepolicyfingerprint",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-327-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -527303,8 +527477,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 813,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-813-policytoolsfingerprintpolicy",
+          "line": 763,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-763-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -527325,8 +527499,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 891,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-891-lintpolicyfingerprintcommand",
+          "line": 838,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-838-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"

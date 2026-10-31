@@ -132,10 +132,24 @@ const toFence = (source: string, node: Code): CodeFence => {
 /**
  * The fenced-code queries over a parsed {@link MarkdownDocument}.
  *
+ * **Example** (Slice a fence's body out of the source)
+ *
+ * ```ts
+ * import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+ * import { MarkdownFence } from "@beep/markdown/MarkdownFence";
+ * import * as Effect from "effect/Effect";
+ *
+ * const fence = "~".repeat(3);
+ * const doc = Effect.runSync(MarkdownDocument.parse(`Intro\n\n${fence}ts\nconst a = 1\n${fence}\n`));
+ * const [first] = MarkdownFence.fences(doc);
+ * console.log(first === undefined ? "" : doc.source.slice(first.bodyStart, first.bodyEnd)) // const a = 1
+ * ```
+ *
+ * @public
  * @category utilities
  * @since 0.0.0
  */
-export class MarkdownFence {
+export abstract class MarkdownFence {
   /**
    * Every fenced code block of a document with its spans, in document order.
    *

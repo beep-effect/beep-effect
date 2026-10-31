@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T14:52:05.565Z
+Generated: 2026-10-31T18:03:23.832Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 164 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3576 |
-| publicExports | 25334 |
+| publicModules | 3577 |
+| publicExports | 25341 |
 | openModules | 166 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
 | 17 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
 | 18 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
-| 19 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 18 | 101 | 0 | 0 |
+| 19 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 19 | 104 | 0 | 0 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 10 | 0 | 0 |
 | 21 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 64 | 628 | 16 | 0 |
 | 22 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
@@ -190,7 +190,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 132 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 133 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
 | 134 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
-| 135 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 483 | 4461 | 47 | 35 |
+| 135 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 483 | 4465 | 47 | 35 |
 | 136 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 137 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 138 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |
