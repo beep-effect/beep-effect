@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { PackageManifest } from "@beep/package-json/PackageManifest";
 import {
   applyPackageJsonPatchEffect,
@@ -6,10 +7,13 @@ import {
   diffPackageJsonEffect,
   encodePackageJsonCanonicalPrettyEffect,
   encodePackageJsonEffect,
+  encodePackageJsonPrettyEffect,
   getPackageJsonSchemaIssues,
+  NoSuchFileError,
   normalizePackageJsonEffect,
   PackageJson,
   packageJsonJsonSchema,
+  readPackageJsonFile,
 } from "@beep/repo-utils";
 import { PublishConfig } from "@beep/repo-utils/schemas/PackageJson";
 import { it } from "@beep/test-runner";
@@ -20,6 +24,7 @@ import { assertSome, assertTrue, assertUndefined } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Order from "effect/Order";
@@ -36,6 +41,8 @@ const decodeUnknownPackageJson = S.decodeUnknownEffect(PackageJson);
 const encodePackageJsonFieldsDependencies = S.encodeEffect(DependenciesHolder);
 const encodePackageJsonFieldsPublishConfig = S.encodeEffect(PublishConfig);
 const isPackageJson = S.is(PackageJson);
+const isNoSuchFileError = S.is(NoSuchFileError);
+const decodeUnknownJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 const decodeJsonPointerSegment = (segment: string): string =>
@@ -1067,6 +1074,48 @@ describe("PackageJson schema", () => {
             ])
           );
         }
+      })
+    );
+  });
+
+  it.layer(MemoryFileSystem.layer, { timeout: "10 seconds" })("readPackageJsonFile", (it) => {
+    it.effect(
+      "reads a manifest file and decodes it strictly",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const dir = yield* fs.makeTempDirectoryScoped();
+        yield* fs.writeFileString(
+          `${dir}/package.json`,
+          '{ "name": "@mock/pkg-a", "dependencies": { "@mock/pkg-b": "workspace:*", "effect": "^3.0.0" } }'
+        );
+        const manifest = yield* readPackageJsonFile(`${dir}/package.json`);
+        expect(manifest.name).toBe("@mock/pkg-a");
+        // The dependency maps decode to HashMaps.
+        const dependencies = manifest.dependencies ?? HashMap.empty<string, string>();
+        assertSome(HashMap.get(dependencies, "@mock/pkg-b"), "workspace:*");
+        assertSome(HashMap.get(dependencies, "effect"), "^3.0.0");
+        expect(HashMap.size(dependencies)).toBe(2);
+      })
+    );
+
+    it.effect(
+      "reports a missing manifest as NoSuchFileError",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const dir = yield* fs.makeTempDirectoryScoped();
+        const error = yield* readPackageJsonFile(`${dir}/package.json`).pipe(Effect.flip);
+        error.pipe(isNoSuchFileError, assertTrue);
+      })
+    );
+  });
+
+  describe("pretty encoding", () => {
+    it.effect(
+      "validates, encodes and pretty-prints a manifest",
+      Effect.fn(function* () {
+        const pretty = yield* encodePackageJsonPrettyEffect({ name: "@beep/example", private: true });
+        expect(pretty).toContain("\n");
+        expect(yield* decodeUnknownJsonString(pretty)).toEqual({ name: "@beep/example", private: true });
       })
     );
   });

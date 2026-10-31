@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T21:15:31.966Z",
+  "generatedAt": "2026-10-31T19:59:29.205Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -306653,8 +306653,8 @@
           "exportKind": "const",
           "filePath": "src/TsConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/TsConfig.ts",
-          "line": 57,
-          "anchor": "packages-tooling-library-repo-utils-src-tsconfig-ts-57-collecttsconfigpaths",
+          "line": 56,
+          "anchor": "packages-tooling-library-repo-utils-src-tsconfig-ts-56-collecttsconfigpaths",
           "currentTags": [
             "@param",
             "@returns",

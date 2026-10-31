@@ -90,5 +90,25 @@ it.layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
         expect(HashMap.size(configs)).toBe(4);
       })
     );
+
+    it.effect(
+      "should omit a root or workspace directory that has no tsconfig",
+      Effect.fn(function* () {
+        // Neither `packages/` nor `pkg-a/src` holds a top-level tsconfig*.json.
+        const configs = yield* collectTsConfigPaths(
+          `${MOCK_ROOT}/packages`,
+          HashMap.make(["@mock/pkg-a-src", `${MOCK_ROOT}/packages/pkg-a/src`])
+        );
+        expect(HashMap.size(configs)).toBe(0);
+      })
+    );
+
+    it.effect(
+      "should accept the workspace directories first (data-last)",
+      Effect.fn(function* () {
+        const configs = yield* collectTsConfigPaths(MOCK_WORKSPACE_DIRS)(MOCK_ROOT);
+        expect(HashMap.size(configs)).toBe(4);
+      })
+    );
   });
 });

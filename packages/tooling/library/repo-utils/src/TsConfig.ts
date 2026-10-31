@@ -40,7 +40,6 @@ const IGNORED_TSCONFIG_DIRS = ["**/ci-runners/sdks/**"];
  *
  * ```typescript
  * import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
  * import * as HashMap from "effect/HashMap";
  * import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig"
  *
