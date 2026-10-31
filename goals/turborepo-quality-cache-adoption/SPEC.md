@@ -315,7 +315,7 @@ review is `research/current-runtime-baseline-review.md`.
 - Bind each disposition to exact manifests, complete script maps and effective
   configuration. Finite application/dependency builds and Storybook static
   build keep their independent qualification obligations. The population now
-  has 198 reviewed fresh boundaries and 2,373 remaining disposition gaps.
+  had 198 reviewed fresh boundaries and 2,373 remaining disposition gaps at that checkpoint.
   No service is launched and no script, flag or ledger changes. Reversal
   removes only these additional review/disposition records.
 
@@ -332,6 +332,15 @@ review is `research/current-runtime-baseline-review.md`.
   is altered by this correction.
 
 
+### Current external verdict and generator source review
+
+Keep `repo-sanity:bun-audit` fresh at its whole-command boundary because its
+verdict depends on live advisories and clock-expiring exceptions. Its separate
+pure policy prerequisite remains eligible for independent qualification. The
+source review now gives 199 fresh boundaries and 2,372 final-disposition gaps.
+All nine generator write commands have explicit source-reviewed pure rendering
+or drift-check leads; none receives a final exclusion or reuse grant here.
+No configuration, qualification state or production consumer changes.
 ### Go workspace discovery applicability, 2026-10-30
 
 - Retain the disabled Go workspace flag. The accepted tree has no root go.work,
@@ -475,6 +484,18 @@ review is `research/current-runtime-baseline-review.md`.
 - Reverse the one-package override after equivalent mock isolation and reliable
   branch evidence are shown. No runtime parser, coverage floor, required check,
   task qualification, credential or production cache setting changes.
+
+### Accepted feature review join, 2026-10-30
+
+The accepted feature-review commit `0e601a3d55` is consumed before the next
+producer publication. Both external-advisory source reviews remain evidence for
+the same single computation. Its current disposition uses the accepted security
+review; the existing structural fingerprint counterpart remains a decomposition
+lead, without qualification or reuse authority. The population stays at 199
+whole-command fresh dispositions and 2,372 final-disposition gaps. Branch-local
+SPEC digests remain preserved as historical provenance, while the current audit
+binds this merged SPEC. The preceding producer commit is the reversal point;
+this documentation join deploys nothing and satisfies no whole-goal criterion.
 
 
 ### Standalone Cargo workspace feature decision, 2026-10-31

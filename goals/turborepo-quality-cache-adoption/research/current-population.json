@@ -1757,7 +1757,7 @@
     "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
     "Complete every remaining computation disposition and qualify/adopt the136 separate read-only lint counterparts.",
     "All 186 reviewed lint fixers remain fresh; complete the separate read-only lint qualifications and every other unfinished computation disposition.",
-    "All twelve configured persistent services remain fresh; their finite build counterparts and 2373 remaining computation dispositions stay unfinished."
+    "All twelve configured persistent services remain fresh; their finite build counterparts and 2372 remaining computation dispositions stay unfinished."
   ],
   "configurations": {
     "d5ba35a8c886232a7719684bd2edb0bce50b1766662181562224ff640bf90e3b": {
@@ -6896,7 +6896,8 @@
         "category": "keep-fresh",
         "scope": "whole-task",
         "reason": "live-external-security-and-expiring-policy",
-        "review": "research/external-security-disposition-review.json"
+        "review": "research/external-security-disposition-review.json",
+        "pureCounterpart": "//#lint:policy-fingerprint"
       },
       "owner": "turborepo-quality-cache-adoption",
       "semanticReviewRef": "research/external-security-disposition-review.json"
@@ -63644,6 +63645,13 @@
       "sourceRevision": "3cab76e370f54d3059d6a374ff1698b5717e0524",
       "reviewedComputations": 1,
       "authority": "source-review-only whole-command keep-fresh disposition"
+    },
+    {
+      "path": "research/external-verdict-source-review.json",
+      "sha256": "ae85bba291a9cc1c408096051ef231b2f6e2c650850fc0b954c49190c823a7a1",
+      "sourceRevision": "c76902d99d77c1bb675834410f8a532cf7ed76bb",
+      "reviewedComputations": 1,
+      "authority": "source-review-only external whole-command keep-fresh disposition"
     }
   ]
 }

@@ -353,23 +353,31 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("immutable hosted produc
   it.effect("rejects a forged computation or epoch binding and duplicate upload identities", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
+      const encodedReport = yield* S.encodeEffect(CacheHostedProducerReport)(f.report);
       yield* Effect.forEach(
         [
-          { ...f.report, runId: 12 },
-          { ...f.report, attempt: 1 },
-          { ...f.report, binding: { ...f.report.binding, sourceRevision: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" } },
-          { ...f.report, binding: { ...f.report.binding, key: { ...f.report.binding.key, epoch: "forged" } } },
-          { ...f.report, uploads: [...f.report.uploads, ...f.report.uploads] },
-          { ...f.report, uploads: [] },
-          { ...f.report, unsafe: "synthetic bearer and artifact content must be refused" },
-          { ...f.report, uploads: [{ ...f.report.uploads[0], backendResult: "ambiguous-write" }] },
+          { ...encodedReport, runId: 12 },
+          { ...encodedReport, attempt: 1 },
+          {
+            ...encodedReport,
+            binding: { ...encodedReport.binding, sourceRevision: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+          },
+          {
+            ...encodedReport,
+            binding: { ...encodedReport.binding, key: { ...encodedReport.binding.key, epoch: "forged" } },
+          },
+          { ...encodedReport, uploads: [...encodedReport.uploads, ...encodedReport.uploads] },
+          { ...encodedReport, uploads: [] },
+          { ...encodedReport, unsafe: "synthetic bearer and artifact content must be refused" },
+          { ...encodedReport, uploads: [{ ...encodedReport.uploads[0], backendResult: "ambiguous-write" }] },
         ],
         Effect.fn("HostedProducerTest.rejectForgery")(function* (report) {
           const packed = yield* f.repack(yield* encodeUnknown(report));
-          (yield* f.verify({ artifact: packed.metadata }, packed.bytes).pipe(Effect.result)).pipe(
-            Result.isFailure,
-            assertTrue
-          );
+          const error = yield* f.verify({ artifact: packed.metadata }, packed.bytes).pipe(Effect.flip);
+          if (report.uploads.length > 0 && !("unsafe" in report) && report.uploads[0]?.backendResult === "allowed") {
+            expect(error.cause).toBeUndefined();
+            expect(error.message).toBe("Producer report identity, binding or unique upload set is invalid.");
+          }
         }),
         { concurrency: 1, discard: true }
       );

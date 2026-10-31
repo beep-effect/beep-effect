@@ -586,6 +586,132 @@ The prior complete package pass retains its original 0d source scope. A combined
 coverage diagnostic guides the repair and never replaces fresh acceptance.
 Preserve every coverage floor, uncovered-count bound and full-goal obligation.
 
+
+### Closed upload execution and private scratch boundary
+
+- 2026-10-29: Bind the upload target descriptor and artifact key to independent
+  approval; snapshot the caller request and runtime, require the approved client,
+  channel and live normal-source revision/profile, and authenticate the owned
+  upload join inside the existing producer bundle. Reuse the bounded observer,
+  full native summary, complete task closure and private Unix transport. Runtime
+  descriptor agreement alone does not prove adapter process or storage-grant
+  identity; the protected entrypoint still needs that actual evidence.
+- An actual synthetic bwrap probe found that source-contained private files were
+  readable through the guest checkout alias even while their original paths were
+  absent. Move supervisor captures and pilot scratch outside every input mount,
+  into scoped mode0700 temporary directories, and remove the source experiment
+  writable bind. An explicit read-only dependency link preserves worker imports.
+  Retain the failing layout as a counterexample. Earlier confinement observations
+  do not establish the repaired native boundary. The qualification ledger has five
+  excluded entries and no qualified grants; no ledger transition is needed here.
+- Reversal keeps this source path unwired and stops any future trial consumers
+  before reverting it. Ordinary R2, the bucket, live grants and signing activation
+  are unchanged. Actual native execution, protected publication, credential
+  handoff, rotation, rollback and representative windows remain required.
+
+
+### Explicit signed adapter exec decision
+
+Reuse the existing adapter launcher through an explicit `serve-signed` mode.
+The ordinary installed service keeps its existing entrypoint. The new mode
+requires an independently approved binary/digest, namespace and role, and sends
+only the backend environment. The artifact signing key remains client-only.
+This decision closes the missing launch-environment prerequisite without adding
+a service or granting producer authority. The parent must still own and attest
+the real process/listener, resource envelope, approved grants and cleanup.
+Revert the additive mode to reverse it before use; no live activation accompanies
+this source change. See the source-bound launch checkpoint.
+
+### Owned upload backend lifecycle decision
+
+Acquire the reviewed backend only inside the late upload phase, after the full
+signed matrix, protocol experiment and independent workflow/configuration gates.
+Bind its executable digest, storage endpoint and bucket into the approved
+target. Snapshot parent-held storage capabilities separately from native client
+capabilities. Reuse the existing private supervisor storage and process runner.
+
+The shared user-unit runtime carries startup data through an anonymous pipe,
+requires the measured 256 MiB/two-CPU/sixteen-task envelope, ten-minute lifetime
+and ten-second stop bound, and checks the same executable/PID/listener before
+and after the callback. Missing user-manager support fails explicitly. Include
+the sanitized lifecycle and successful cleanup in the issuer-authenticated
+bundle; an upload without its approved lifecycle cannot be issued.
+
+2026-10-30: admit the entire upload before acquiring its owned backend. Reuse
+one scheduler admission around acquisition, private proxy/worker, post-load
+verification and cleanup; do not nest a second admission after backend startup.
+The callback gets nine minutes after readiness inside the existing ten-minute
+backend cap. The readiness and post-load frames each retain their twenty-second
+bounds, and the unit retains its ten-second stop bound. A longer queue consumes
+no backend lifetime. Prove this ordering with a queued eleven-minute control and
+a timed-out callback whose real inert peer is gone before return. Reverse by
+stopping future consumers before reverting the composition; never restore the
+early-acquisition path for a live consumer. No live runtime cap is increased.
+
+This is a local component and launch-contract change. Actual R2 grants, normal
+source execution, immutable protected publication, platform qualification and
+representative windows remain required. Reverse it by stopping any future
+consumers before reverting the additive runtime/receipt path. The ordinary R2
+service and CI launcher remain on their existing route; this commit activates
+no consumer, key, grant, service, bucket or subscription.
+
+
+### Canonical upload profile and shared dependency evidence
+
+- 2026-10-30: Validate the complete canonical loopback and account-specific R2
+  URLs rather than maintaining parallel component predicates. Retain every
+  approval, capability, namespace, policy and executable-pin requirement. The
+  bounded profile also refuses empty query/fragment delimiters, which do not
+  belong in the approved endpoint identity. Counterexamples recompute matching
+  approval digests first, so approval agreement alone cannot bypass the profile.
+- Reuse one existing dependency owner's contained, digest-verified UTF-8/schema
+  reader across the pilot and both supervisors. Installed-tree verification
+  remains a separate requirement. The generated valid-byte replacement control
+  must fail if digest verification is removed, and the source restores exactly.
+- Reverse by reverting the additive extraction/profile change before enabling
+  a consumer that requires it. No running cache, credential, signing mode,
+  backend selection, paid service or proof threshold changes in this repair.
+
+
+### Producer execution coverage and exact report decoding, 2026-10-30
+
+- Current-head CI on the integrated producer exposed missing execution coverage
+  in three files. Each trusted internal supervisor caller now supplies its exact
+  schema decoder; remove redundant union guards after decoding while preserving
+  capture, issuer-material and complete matrix verification.
+- Test the actual scoped Unix transport with deterministic native-task execution,
+  write-only access, complete fresh closure and failed-graph refusal. Cover the
+  workflow upload composition, independent activation/source refusal and the
+  admitted local route. These controlled tests grant no producer authority.
+- The upload composition fixture uses `NodeHttpServer.layerTest` and an ephemeral
+  TCP port. It asserts the worker's fixed Unix-agent request before routing the
+  test agent to that port; `cache-private-socket.test.ts` separately owns actual
+  Unix transport and scoped lifetime proof. Remove the rejected test-only native
+  HTTP import and diagnostic suppression; no policy exemption is introduced.
+- Preserve every coverage floor. The current focused Node diagnostic meets all
+  three files' floors; empty initial include-filter reports count as no coverage.
+  Full committed-source package/final/hosted proof, reviews and rollout gates
+  remain required. See the source-bound coverage repair checkpoint.
+
+
+The pre-push policy replay found three inline schema compilations and one
+fixture verdict rule above the Fallow limit. Reuse the module-scoped JSON codec
+and match the named exit cases before the existing mutation rules. Current
+Node/Bun controls, root inline policy and both Fallow checks pass; every Node
+coverage floor is unchanged and met. The failed publication pushed nothing.
+
+
+### Singleton adapter frames and encoded provenance controls, 2026-10-30
+
+- Let the existing Effect Stream own one decoded frame per pull through
+  `rechunk(1)`. Remove the unreachable local tail queue while retaining the
+  final pull that refuses every extra frame and the owned process cleanup.
+- Build hosted forgery fixtures from the schema-encoded wire report. Runtime
+  Option objects are not wire fixtures; decoding them refused before provenance.
+  Assert the intended identity/binding/unique-upload error, plus both batched
+  and delayed adapter-frame refusals. Guard-removal controls must fail.
+- Reverse by restoring the local queue and its bounded final-pull check; retain
+  the corrected schema-encoded controls. No trust, rollout or proof gate changes.
 ### Conformance fixture bind ownership (2026-10-30)
 
 The shared conformance test server reuses the existing scoped loopback server
@@ -593,3 +719,15 @@ with its bounded `EADDRINUSE` retry, preserving the previous 128 MiB body limit.
 This fixes an inherited parallel-test bind race without adding a second retry
 implementation. Reverting the fixture call reverses the change; no runtime
 cache, credential or production policy changes are involved.
+
+### Independent upload approval refusal, 2026-10-30
+
+The owned upload rejects absent independent backend approval before quality
+admission, adapter acquisition, socket creation or worker execution. The current
+regression asserts both the error and the absence of those effects. Reordering
+admission before the approval check must fail the test. The private worker capture
+requires its issuer option explicitly: both internal callers already supply it,
+and the public experiment retains its existing optional argument and default.
+This removes an unreachable private fallback, not a safety check or coverage floor.
+The reversal path is the preceding producer-execution commit; no deployment or
+credential change accompanies this repair. Whole-goal acceptance remains unproven.

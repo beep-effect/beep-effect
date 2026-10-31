@@ -8,9 +8,10 @@ import { RepoRef } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CacheConformanceBackendResult } from "./Cache.conformance.schemas.ts";
-import { CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
+import { CacheHostedProducerUpload } from "./Cache.workflow.upload.schemas.ts";
+
+export { CacheHostedProducerUpload } from "./Cache.workflow.upload.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow.github.schemas");
 const Identifier = S.Int.check(S.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER })).pipe(
@@ -67,38 +68,6 @@ export class CacheHostedProducerReference extends S.Opaque<
   S.Struct({ runId: Identifier, attempt: Identifier, artifactId: Identifier }).pipe(
     $I.annoteSchema("CacheHostedProducerReference", {
       description: "Database identifiers only; no caller-selected endpoint, workflow approval or archive member.",
-    })
-  )
-) {}
-
-/**
- * One upload observed by the approved producer after its owned task completed.
- *
- * **Details**
- * A successful transport result does not prove native signature validity,
- * complete semantic inputs, or qualification. Payloads, tags and credentials
- * are deliberately absent.
- *
- * **Example** (Inspect safe upload identities)
- * ```ts
- * import { CacheHostedProducerUpload } from "@beep/repo-cli/test/Cache"
- * console.assert("archiveSha256" in CacheHostedProducerUpload.fields)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export class CacheHostedProducerUpload extends S.Opaque<CacheHostedProducerUpload, { readonly brand: unique symbol }>()(
-  S.Struct({
-    taskHash: CacheSyntheticRun.fields.taskHash,
-    archiveSha256: Sha256Hex,
-    archiveBytes: S.Int.check(S.isBetween({ minimum: 1, maximum: 50 * 1024 * 1024 })),
-    status: S.Int.check(S.isBetween({ minimum: 200, maximum: 299 })),
-    backendResult: S.tag(CacheConformanceBackendResult.Enum.allowed),
-  }).pipe(
-    $I.annoteSchema("CacheHostedProducerUpload", {
-      description:
-        "Finite successful-upload projection with canonical task/content identities and no raw request material.",
     })
   )
 ) {}

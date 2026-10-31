@@ -377,6 +377,17 @@ the source-bound results are `research/adapter-runtime-checkpoint.json` and
 `research/adapter-runtime-lab.json` under the trust packet. The actual deployed
 credential-launcher chain still requires its own resource and grant proof.
 
+`policy_runtime.py` owns the shared user-unit startup and observation code used
+by the runtime lab. Startup configuration travels through an anonymous pipe;
+it is absent from command arguments, unit properties and environment files.
+The caller installs the exhaustive cleanup scope before launch. Readiness and
+after-load checks bind the same actual PID and executable to the adapter's
+loopback listener and measured cgroup limits. Invalid executable pins, broader
+listeners, artifact keys and agent credentials are refused before a unit is
+allocated. Negative observations cover changed PIDs, wrong listeners, wrong
+executables and unexpected environment names. This component does not activate
+the signed producer or provide R2 grant/deployment qualification.
+
 Cleanup attempts every owned unit and child before reporting an aggregate
 failure. An ExitStack closes logs, temporary data and the storage fixture even
 if stopping or another closure fails. Three failure controls cover a stop
@@ -393,3 +404,24 @@ absent, different or mixed versions get an unfiltered scan. Other advisory IDs
 remain active. The source review and panic regression are retained in
 `research/adapter-dependency-review.json` under the trust packet. No shared
 repository security exceptions change.
+
+
+### Signed trial exec boundary
+
+`adapter.sh serve-signed` prepares the exec boundary for the separately qualified
+signed trial. It requires `R2_SIGNED_ADAPTER`, `R2_SIGNED_ADAPTER_SHA256`,
+`BEEP_CACHE_NAMESPACE` and `BEEP_CACHE_ACCESS_ROLE` (`reader` or `writer`), alongside
+the existing endpoint, bucket, storage credentials and loopback bearer. The owner
+selects the executable and digest from independent hardened-build approval.
+Matching a caller-supplied digest alone grants no approval or producer authority.
+
+The mode verifies the executable pin before exec and forces `signed-v1`. The
+backend receives only its approved storage/bearer environment and the three
+policy fields. It receives no artifact signing key. Ordinary `serve` and
+`start-ci` keep their existing environment and behavior.
+
+This command supplies exec only. Its parent still owns private launch storage,
+the process/listener identity, the existing resource caps and bounded cleanup.
+Real signed exchanges, immutable producer publication and rollout require their
+own current proof. Run `infra/r2-cache/check.sh` for the synthetic exec-boundary
+and existing lifecycle checks; these checks make no R2 requests.
