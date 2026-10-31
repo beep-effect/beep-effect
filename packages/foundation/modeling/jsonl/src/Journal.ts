@@ -496,18 +496,6 @@ const decodeSettings = S.decodeEffect(JournalSettings);
 const MAX_IMMEDIATE_REARMS = 8;
 
 /**
- * Scheduler turns yielded to a freshly-forked watch consumer before the
- * catch-up read runs.
- *
- * **Details**
- *
- * See the arming comment in `supervise`: this orders arming ahead of catch-up
- * by scheduling rather than by synchronisation, because `fs.watch` offers no
- * registration signal.
- */
-const ARM_YIELDS = 3;
-
-/**
  * Index of the last path separator, on either convention.
  *
  * **Details**
@@ -1393,25 +1381,28 @@ const makeEngine: {
     const basename = basenameOf(config.path);
     const directory = config.directory ?? parentOf(config.path);
 
-    const watchJournal = fs.watch(config.path).pipe(
-      // The event is a poke, never a source of paths. Re-stat and ingest.
-      Stream.runForEach(() => ingest),
-      Effect.ignore
-    );
-
-    const watchForCreation = fs.watch(directory).pipe(
-      Stream.filter((event) => basenameOf(event.path) === basename),
-      // END once the journal exists. A directory watch reports creation, not a
-      // child's later content appends, so staying on it after activation
-      // leaves the journal silently blind to external growth. Ending here is
-      // what returns control to the supervisor loop, which then arms the FILE
-      // watch. `takeUntilEffect` runs before the ingest below, and the element
-      // that satisfies it is still emitted, so the creation event that ends
-      // this watch is also the one that catches the journal up.
-      Stream.takeUntilEffect(() => exists),
-      Stream.runForEach(() => ingest),
-      Effect.ignore
-    );
+    const watchForCreation = Effect.gen(function* () {
+      const ready = yield* Deferred.make<void>();
+      const armed = yield* Effect.forkChild(
+        fs.watch(directory, { onReady: () => Deferred.doneUnsafe(ready, Effect.void) }).pipe(
+          Stream.filter((event) => basenameOf(event.path) === basename),
+          // End on activation so the supervisor can follow the file itself.
+          Stream.takeUntilEffect(() => exists),
+          Stream.runForEach(() => ingest),
+          Effect.ignore,
+          Effect.ensuring(Deferred.succeed(ready, undefined))
+        )
+      );
+      yield* Deferred.await(ready);
+      // Creation may finish before the directory watch installs, leaving no
+      // event to activate us. Re-stat only after it can buffer later events.
+      if (yield* exists) {
+        yield* ingest;
+        yield* Fiber.interrupt(armed);
+      } else {
+        yield* Fiber.join(armed);
+      }
+    });
 
     // The journal exists: arm its watch, catch up, and follow it until the
     // watch ends.
@@ -1424,31 +1415,19 @@ const makeEngine: {
       // and a silently idle subscription. Real consumer-visible staleness,
       // not a test artifact.
       //
-      // `fs.watch` exposes no "registered" signal — `Stream.onStart` fires
-      // before acquisition and `Stream.toQueue` does not register eagerly
-      // (both measured) — so establishment is ordered by forking the
-      // consumer and yielding to it before the catch-up runs. Registration
-      // happens on the consumer's first pull, which the yield guarantees
-      // has been scheduled.
-      const armed = yield* Effect.forkChild(watchJournal);
-      // Yield to the forked consumer so it reaches its first pull, which is
-      // when registration happens.
-      //
-      // HONEST LIMITATION, do not read this as a guarantee: `fs.watch`
-      // exposes no "registered" signal, so this ORDERS by scheduling
-      // rather than by synchronisation. Measured: `Stream.toQueue` does not
-      // register eagerly, and `Stream.onStart` fires BEFORE acquisition —
-      // neither is a hook. One yield was not enough and the arming-window
-      // test caught it; this many is empirically sufficient here, which
-      // makes it a heuristic, not a proof.
-      //
-      // The one primitive that would make this airtight is
-      // `FileSystem.WatchBackend.register(path, stat)`, which registers
-      // synchronously and returns the stream — at the cost of putting
-      // `WatchBackend` in this layer's `R`.
-      for (let turn = 0; turn < ARM_YIELDS; turn++) {
-        yield* Effect.yieldNow;
-      }
+      // onReady runs after installation, when the backend can buffer events.
+      // Completion also releases this wait so failed/ending watches still
+      // reach the bounded re-arm loop instead of hanging before readiness.
+      const ready = yield* Deferred.make<void>();
+      const armed = yield* Effect.forkChild(
+        fs.watch(config.path, { onReady: () => Deferred.doneUnsafe(ready, Effect.void) }).pipe(
+          // The event is a poke, never a source of paths. Re-stat and ingest.
+          Stream.runForEach(() => ingest),
+          Effect.ignore,
+          Effect.ensuring(Deferred.succeed(ready, undefined))
+        )
+      );
+      yield* Deferred.await(ready);
       // Reconcile after arming to include any growth during registration.
       // A stable file contributes no envelopes to the publication batch.
       yield* ingest;
