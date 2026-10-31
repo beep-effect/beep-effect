@@ -450,7 +450,7 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  * import * as O from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const input = AiMetricsForwarderInput.make({
- *   dataRoot: O.some("/home/dev/.local/state/beep/ai-metrics"),
+ *   dataRoot: O.some("/var/lib/beep/ai-metrics"),
  *   hashSalt: O.some("salt"),
  *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),

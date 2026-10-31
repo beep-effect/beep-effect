@@ -283,3 +283,12 @@ is added here. Today's operator instructions require immediate coherent push,
 hosted verification and coordinator-owned merging; no new local final-check gate
 is introduced. Required green checks, actual accepted merge and canonical goal
 completion remain mandatory. The recovery hold stays intact.
+
+A subsequent public-path correction replaces one illustrative JSDoc dataRoot
+with a neutral `/var/lib/beep/ai-metrics` example. Exactly one full-file source
+hash therefore differs from the archived 88/87 canary maps. All other sources
+remain byte-identical, and Bun 1.4.4 transpiles the before/after source to identical
+bytes. The [comment-only source binding](../ops/history/doc-path-source-binding-20261031.json)
+records both hashes without rewriting execution receipts or claiming a new run.
+No executable source, annotation, location, tag or example presence changes;
+the canonical generated outputs do not serialize that example text.
