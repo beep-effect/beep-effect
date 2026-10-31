@@ -6,8 +6,11 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as UrlParams from "effect/http/UrlParams";
+import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -102,5 +105,134 @@ it.effect("times out unavailable transport and refuses concurrent waiting work",
     expect(yield* reader.lookup(lookup).pipe(Effect.flip)).toMatchObject({ reason: "busy" });
     yield* TestClock.adjust("6 seconds");
     expect(yield* Fiber.join(sending)).toMatchObject({ reason: "timed-out" });
+  })
+);
+
+it.effect("refuses unsafe origins before sending credentials", () =>
+  Effect.gen(function* () {
+    let requests = 0;
+    const client = HttpClient.make(() =>
+      Effect.sync(() => {
+        requests += 1;
+      }).pipe(Effect.andThen(Effect.never))
+    );
+    for (const baseUrl of [
+      "http://phoenix.example",
+      "https://user:secret@phoenix.example",
+      "https://phoenix.example/path",
+      "https://phoenix.example?token=private",
+      "https://phoenix.example#private",
+    ]) {
+      const result = yield* makePhoenixSpanReader(PhoenixConfigInput.make({ baseUrl })).pipe(
+        Effect.provideService(HttpClient.HttpClient, client),
+        Effect.flip
+      );
+      expect(result).toMatchObject({ reason: "configuration" });
+    }
+    expect(requests).toBe(0);
+  })
+);
+
+it.effect("uses explicit credentials and fixed response encoding while projecting only allowed metadata", () =>
+  Effect.gen(function* () {
+    const json = yield* encodeJsonValue({ data: [row], next_cursor: null });
+    const client = HttpClient.make((request) =>
+      Effect.sync(() => {
+        expect(request.headers.authorization).toBe("Bearer synthetic-test-key");
+        expect(request.headers["x-synthetic"]).toBe("configured");
+        expect(request.headers.accept).toBe("application/json");
+        expect(request.headers["accept-encoding"]).toBe("identity");
+        return HttpClientResponse.fromWeb(
+          request,
+          new Response(json, { headers: { "content-type": "Application/JSON; charset=utf-8" } })
+        );
+      })
+    );
+    const reader = yield* makePhoenixSpanReader(
+      PhoenixConfigInput.make({
+        baseUrl: "https://phoenix.example",
+        apiKey: O.some(Redacted.make("synthetic-test-key")),
+        headers: {
+          "x-synthetic": "configured",
+          authorization: "overridden",
+          accept: "text/plain",
+          "accept-encoding": "gzip",
+        },
+      })
+    ).pipe(Effect.provideService(HttpClient.HttpClient, client));
+    expect(yield* reader.lookup(lookup)).toMatchObject({
+      value: { attributes: { "ai_metrics.event_id": "synthetic-id" } },
+    });
+  })
+);
+
+it.effect("keeps transport, malformed bytes and unexpected encodings content-free", () =>
+  Effect.gen(function* () {
+    const broken = HttpClient.make((request) =>
+      Effect.fail(
+        new HttpClientError.HttpClientError({
+          reason: new HttpClientError.TransportError({ request, cause: "private-transport-detail" }),
+        })
+      )
+    );
+    const reader = yield* makePhoenixSpanReader(PhoenixConfigInput.make({ baseUrl: "http://localhost:6006" })).pipe(
+      Effect.provideService(HttpClient.HttpClient, broken)
+    );
+    expect(yield* reader.lookup(lookup).pipe(Effect.flip)).toMatchObject({ reason: "transport" });
+    for (const response of [
+      new Response("private-not-json", { headers: { "content-type": "text/plain" } }),
+      new Response("private-not-json", { headers: { "content-type": "application/json", "content-encoding": "gzip" } }),
+      new Response(new Uint8Array([0xff]), { headers: { "content-type": "application/json" } }),
+      new Response("private-not-json", { headers: { "content-type": "application/json" } }),
+    ]) {
+      const client = HttpClient.make((request) => Effect.succeed(HttpClientResponse.fromWeb(request, response)));
+      const querying = yield* makePhoenixSpanReader(PhoenixConfigInput.make({ baseUrl: "http://localhost:6006" })).pipe(
+        Effect.provideService(HttpClient.HttpClient, client)
+      );
+      const error = yield* querying.lookup(lookup).pipe(Effect.flip);
+      expect(error).toMatchObject({ reason: "invalid-response" });
+      expect(String(error)).not.toContain("private-");
+    }
+  })
+);
+
+it.effect("releases admission after a response stream fails without exposing its cause", () =>
+  Effect.gen(function* () {
+    const json = yield* encodeJsonValue({ data: [row], next_cursor: null });
+    let requests = 0;
+    const client = HttpClient.make((request) =>
+      Effect.sync(() => {
+        const body =
+          requests++ === 0
+            ? new ReadableStream<Uint8Array>({
+                start(controller) {
+                  controller.error(new Error("private-stream-detail"));
+                },
+              })
+            : json;
+        return HttpClientResponse.fromWeb(
+          request,
+          new Response(body, { headers: { "content-type": "application/json" } })
+        );
+      })
+    );
+    const reader = yield* makePhoenixSpanReader(PhoenixConfigInput.make({ baseUrl: "http://localhost:6006" })).pipe(
+      Effect.provideService(HttpClient.HttpClient, client)
+    );
+    const error = yield* reader.lookup(lookup).pipe(Effect.flip);
+    expect(error).toMatchObject({ reason: "transport" });
+    expect(String(error)).not.toContain("private-stream-detail");
+    expect(yield* reader.lookup(lookup)).toMatchObject({ value: { traceId, spanId } });
+    expect(requests).toBe(2);
+  })
+);
+
+it.effect("refuses a structurally valid page whose timestamp exceeds the stored metadata bound", () =>
+  Effect.gen(function* () {
+    const error = yield* run({ data: [{ ...row, start_time: Str.repeat(65)("x") }], next_cursor: null }).pipe(
+      Effect.flip
+    );
+    expect(error).toMatchObject({ reason: "invalid-response" });
+    expect(String(error)).not.toContain(Str.repeat(65)("x"));
   })
 );

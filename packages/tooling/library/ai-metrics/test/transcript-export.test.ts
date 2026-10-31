@@ -403,3 +403,47 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
     })
   )
 );
+
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("preserves unknown token fields separately from an explicit zero observation", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const frame = f.frames[0];
+      if (frame === undefined || O.isNone(frame.metadata.usage)) return yield* Effect.die("Missing synthetic usage");
+      for (const usage of [
+        O.none(),
+        O.some({
+          ...frame.metadata.usage.value,
+          input: O.some(0),
+          output: O.none(),
+          cacheRead: O.none(),
+          cacheWrite: O.none(),
+        }),
+      ]) {
+        const metadata = TranscriptMetadata.make({ ...frame.metadata, usage, workingDirectoryHash: O.some(id("f")) });
+        const encoded: NativeEncodedBatch = yield* encodeTranscriptTraceBatch(
+          TranscriptExportInput.make({
+            ...f.input,
+            frames: [TranscriptFrame.cases.Accepted.make({ ...frame, metadata })],
+          })
+        );
+        const span: typeof Span.Type | undefined = (yield* decode(encoded.body)).resourceSpans[0].scopeSpans[0]
+          .spans[0];
+        if (span === undefined) return yield* Effect.die("Missing synthetic output");
+        if (O.isSome(usage)) {
+          assertSome(attr(span, "ai_metrics.usage.input"), { intValue: "0" });
+          assertSome(attr(span, "ai_metrics.usage.basis"), { stringValue: usage.value.basis });
+        } else {
+          assertNone(attr(span, "ai_metrics.usage.input"));
+          assertNone(attr(span, "ai_metrics.usage.basis"));
+        }
+        for (const key of ["output", "cache_read", "cache_write"]) assertNone(attr(span, `ai_metrics.usage.${key}`));
+        assertSome(attr(span, "ai_metrics.usage.normalized"), { boolValue: false });
+        assertSome(attr(span, "ai_metrics.usage.additive"), { boolValue: false });
+        assertSome(attr(span, "ai_metrics.source_working_directory_hash"), { stringValue: id("f") });
+        assertNone(attr(span, "llm.token_count.prompt"));
+        assertNone(attr(span, "llm.token_count.total"));
+      }
+    })
+  )
+);

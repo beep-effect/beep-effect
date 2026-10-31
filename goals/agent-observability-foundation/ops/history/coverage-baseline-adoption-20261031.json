@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "scope": "Reviewed initial file coverage identities and focused behavior tests; no readiness or completion claim",
+  "hostedMeasurement": {
+    "runId": "41219050445",
+    "executionSha": "7c91e8390fbc79af8ee47dc1922bc3be211db95e",
+    "sourceHead": "11da49d99a77befddded395b3afd8441df7eacae",
+    "runtime": "Node 22.23.4",
+    "reportSha256": {
+      "phoenix": "9bc5656a3d9cea95392bc923af9a65479ef4024fc0e16dbb239dfb558f8bf0f8",
+      "aiMetrics": "f79931bcd80a74ed3b52d7c06298e6d2da6ea91201d5588fae8849b5f39c755e"
+    },
+    "rawCountersAndAllSourceHashesVerified": true,
+    "notRelabeledAsCurrentHeadMeasurement": true
+  },
+  "currentSourceBridge": {
+    "publishedHead": "012625f4596a8d24ed310688ff62bdfe71425445",
+    "receipt": "goals/agent-observability-foundation/ops/history/jsdoc-source-binding-20261031.json",
+    "kind": "Reviewed documentation-only source changes with byte-equivalent transpilation; accepted main 8afbd does not change these source files"
+  },
+  "adoption": {
+    "newFileRows": 35,
+    "phoenixFileRowsBefore": 4,
+    "phoenixFileRowsAfter": 5,
+    "aiMetricsFileRowsBefore": 31,
+    "aiMetricsFileRowsAfter": 65,
+    "beforeSha256": "ba03595a5c6033acbc09cca484a39848513d21ab441b15a7b10e87ec6225b332",
+    "afterSha256": "dcc952a6d510a361da66286df5fd7423a0f625bf7b8e6c7cbd7293835a71f064",
+    "mappingSha256": "be9674fb985e63989e78154f94dc1e1969e860094fe697afd1ca262e09aa42f7",
+    "allExistingPackageAndFileRowsPreserved": true,
+    "globalMetadataMinimumsEpsilonExemptionsAndFollowupsPreserved": true,
+    "method": "Canonical Istanbul summaries, coveragePackageBaselineFromSummaryForTesting, baseline schema decode/encode and artifact formatter; additions-only hosted row insertion supported by canonical measured-row renderer",
+    "independentNamedFoundationReview": "Accepted exact candidate and all 35 raw measured rows after focused behavior gap repair"
+  },
+  "focusedProof": {
+    "baseHead": "012625f4596a8d24ed310688ff62bdfe71425445",
+    "testSha256": {
+      "packages/tooling/library/ai-metrics/test/observation-launch-client.test.ts": "8bf38ee8b1f3b5e065fa376db38847123617af5dc996ae85882a7d1e3ee8644a",
+      "packages/tooling/library/ai-metrics/test/transcript-export.test.ts": "d8768187115e3c68f75654b9bbc6c7043b275b4d3d1c48d1665a14dc576770ef",
+      "packages/tooling/library/ai-metrics/test/observation-source-health.test.ts": "6db6c8a46644ec8a1bf709550d2f9b8f64b7e7e96ad842be97e54e738dc37f5b",
+      "packages/drivers/phoenix/test/Phoenix.span-readback.test.ts": "ec950ed9e329d8577c4b8ec0e0fed363a1939a3f046a99a6a53533e30144f3e4"
+    },
+    "aiMetrics": {
+      "typesExitCode": 0,
+      "nodeTests": 16,
+      "bunTests": 16,
+      "allExitCodesZero": true,
+      "overlayRestored": true
+    },
+    "phoenix": {
+      "nodePackageTests": 40,
+      "bunReadbackTests": 10,
+      "coverageExitCode": 0,
+      "bunExitCode": 0,
+      "overlayRestored": true,
+      "readerCoverage": {
+        "lines": 100,
+        "statements": 98.36,
+        "branches": 95.12,
+        "functions": 94.44
+      }
+    }
+  },
+  "negativeEvidence": {
+    "firstCoverageAttempt": "Failed before tests: private bunx launcher absent; corrected privately without changing runtime version",
+    "broaderWorkerMeasurement": "Stopped after notification tests failed because worker lacks GNU awk; not passing coverage evidence, not adopted",
+    "firstAiTestTypeCheck": "Failed on native Array.map policy and two inference annotations; corrected and types plus both runtime suites rerun successfully",
+    "candidateConstruction": "Initial private diagnostic attempts failed; successful candidate used canonical package resolution, schema roundtrip passed, no repository artifact was changed until reviewed candidate acceptance"
+  },
+  "holds": {
+    "recoveryServiceAndTimer": "masked and inactive",
+    "realHarnessPopulations": "Unknown",
+    "realEnrollment": false,
+    "productionDeployment": false,
+    "existingFloorsLowered": false,
+    "requiredNext": "Regenerate metadata after accepted-main integration, publish coherent repair, obtain exact-head hosted green and canonical readiness, coordinator-owned merge, canonical completion"
+  }
+}

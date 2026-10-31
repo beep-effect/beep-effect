@@ -342,3 +342,14 @@ The new 11da coverage comparison is a separate actionable report, not a canceled
 unit shard: the unit result succeeded. Its new-file/baseline-identity findings
 are being attributed under the established initial-baseline policy. No existing
 floor is lowered, and no final readiness or goal-completion claim is made.
+
+
+## Reviewed coverage identities and behavior gaps — October 31
+
+The completed hosted 11da comparison measured 35 new files lacking baseline identities. The underlying sealed Istanbul reports bind merge execution 7c91e839 to exact 11da source hashes. These historical counts are connected to the current runtime by reviewed comment-only equivalence; they are not relabeled as a new hosted measurement. Independent review accepted exactly 35 new file rows, with every prior file/package floor, global setting and metadata field preserved. The canonical measured-row renderer explicitly supports schema-encoded hosted row insertion.
+
+Focused tests now exercise unsafe Phoenix origins, explicit credentials, malformed responses, stream failure and permit reuse; mixed source outcome counts and unknown omissions; launch receipt/conflict/cancellation behavior; and unknown-versus-zero token projection. Corrected AI tests pass their package type check and 16 tests on each Node and Bun runtime. Phoenix passes 40 Node package tests with coverage and 10 Bun readback tests. Worker GNU-awk prerequisite failures, a controlled stop, initial type failures and candidate diagnostic failures remain recorded as unsuccessful attempts. See `ops/history/coverage-baseline-adoption-20261031.json`.
+
+Accepted main 8afbd51a6c is being integrated to clear subsequent generated-inventory conflicts. Current-head hosted checks, canonical readiness, coordinator-owned merge and canonical completion remain required. The recovery hold and unknown real-harness populations remain unchanged.
+
+The accepted-main 8af combined-source regeneration has now completed: Fallow, JSDoc inventory and cache audit all exited zero with no guard stop. JSDoc reports zero root-policy openings; cache audit reports zero findings and retains 1,655 unassessed tasks as unqualified. All 189 incoming cache review keys survive, with all reviews other than this lane's AI-metrics review unchanged. All 40 documented current source hashes were rechecked. The immutable pre-generation index tree and actual output hashes are recorded in `ops/history/accepted-main-8af-metadata-20261031.json`; this adds no fresh canary or hosted-readiness claim. Phoenix package test types also pass for the exact updated test file.

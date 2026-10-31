@@ -22,7 +22,9 @@ import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
 import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
@@ -77,6 +79,8 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
   const facts = yield* makeObservationLaunchFacts(config);
   const mode = yield* Ref.make("normal");
   const posts = yield* Ref.make(0);
+  const reached = yield* Deferred.make<void>();
+  const release = yield* Deferred.make<void>();
   const server = Context.get(
     yield* Layer.build(BunHttpServer.layer({ unix: `${directory}/worker.sock` })),
     HttpServer.HttpServer
@@ -88,6 +92,13 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
       if (request.method === "POST") yield* Ref.update(posts, (n) => n + 1);
       const result = yield* intake.handler;
       const scenario = yield* Ref.get(mode);
+      if (scenario === "blocked") {
+        yield* Deferred.succeed(reached, undefined);
+        yield* Deferred.await(release);
+      }
+      if (scenario === "conflict") return HttpServerResponse.empty({ status: 409 });
+      if (scenario === "invalid-utf8") return HttpServerResponse.uint8Array(new Uint8Array([0xff]));
+      if (scenario === "wrong-header") return HttpServerResponse.setHeader(result, "x-observation-receipt", id("f"));
       // Keep the acknowledgment past the client deadline, but let server cleanup finish.
       if (scenario === "lost" && request.method === "POST") yield* Effect.sleep("1 second");
       if (scenario === "oversize") return HttpServerResponse.text(Str.repeat(17000)("X"));
@@ -101,6 +112,15 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
             headers: { "x-observation-receipt": id("f") },
           }
         );
+      }
+      if (scenario === "extra-field" && request.method === "POST") {
+        const row = (yield* facts.read(id("1"), 0))[0];
+        if (row === undefined) return yield* Effect.die("Missing synthetic receipt");
+        const json = yield* encodeObservationLaunchReceiptJson(row);
+        return HttpServerResponse.text(`${Str.slice(0, -1)(json)},"private-extra":true}`, {
+          contentType: "application/json",
+          headers: { "x-observation-receipt": row.receiptId },
+        });
       }
       return result;
     })
@@ -119,7 +139,7 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
     evidenceEpoch: 0,
     fact: prepare,
   });
-  return { fs, directory, policy, uid, client, control, facts, mode, posts, submission };
+  return { fs, directory, policy, uid, client, control, facts, mode, posts, submission, reached, release };
 });
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
@@ -145,6 +165,42 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       ).toBe("retired");
       expect((yield* f.client.context).evidenceEpoch).toBe(0);
     })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("refuses malformed acknowledgments and conflicts without losing committed facts", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.control.resume;
+      for (const scenario of ["invalid-utf8", "extra-field", "wrong-header", "conflict"]) {
+        yield* Ref.set(f.mode, scenario);
+        const error = yield* f.client.submit(f.submission).pipe(Effect.flip);
+        expect(error.reason).toBe(scenario === "conflict" ? "conflict" : "invalid-response");
+        expect(String(error)).not.toContain("private-extra");
+        expect((yield* f.facts.read(id("1"), 0)).length).toBe(1);
+      }
+      yield* Ref.set(f.mode, "normal");
+      expect((yield* f.client.submit(f.submission)).fact).toEqual(prepare);
+      expect(yield* Ref.get(f.posts)).toBe(5);
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("rejects overlapping work and recovers admission after cancellation", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* Ref.set(f.mode, "blocked");
+      const pending = yield* f.client.context.pipe(Effect.forkChild);
+      yield* Deferred.await(f.reached);
+      expect((yield* f.client.context.pipe(Effect.flip)).reason).toBe("busy");
+      yield* Fiber.interrupt(pending);
+      yield* Ref.set(f.mode, "normal");
+      yield* Deferred.succeed(f.release, undefined);
+      expect((yield* f.client.context).accepting).toBe(false);
+      expect(yield* Ref.get(f.posts)).toBe(0);
+    }).pipe(Effect.timeout("3 seconds"))
   )
 );
 

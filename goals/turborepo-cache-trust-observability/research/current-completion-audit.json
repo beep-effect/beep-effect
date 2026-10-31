@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "bd73698b8b56d96f228e110c19dd879df587861e622189ac90243621779a4515",
+  "specSha256": "93f42ec17cb921f1665c1a18b1453fc0303a1251dade8289e83315728447c824",
   "acceptance": [
     {
       "id": "AC-01",
@@ -217,7 +217,15 @@
     "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json",
     "proxyRequestCompletionComponent": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
     "proxyNodeRuntimeComponent": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json",
-    "hostedProducerVerifierComponent": "goals/turborepo-cache-trust-observability/research/hosted-producer-verifier-checkpoint.json"
+    "hostedProducerVerifierComponent": "goals/turborepo-cache-trust-observability/research/hosted-producer-verifier-checkpoint.json",
+    "credentialBootstrap": {
+      "path": "goals/turborepo-cache-trust-observability/research/normal-source-worker-observation.json",
+      "scope": "Seven exact suppressed reads and four reference-file wrappers verified. Bootstrap complete; no further human credential step at this checkpoint. Runtime signing and CI secret activation remain separate."
+    },
+    "signedWorkerObservation": {
+      "path": "goals/turborepo-cache-trust-observability/research/normal-source-worker-observation.json",
+      "scope": "Complete stable worker and actual-CLI matrices under completion observers. No worker/native launch changes. Earlier uninstrumented failures retained; fresh uninstrumented stable/current-canary proof remains open."
+    }
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -433,5 +441,29 @@
   "priorSpecSha256AtAcceptedSecurityMerge": {
     "local": "0c6289dde74055a394df45acf940fbe9cea28db1d87ae01fd9ab719caf294a25",
     "accepted": "35423c3fba45ba4be7c3f22126060d94f7165c57c8358fd07fbc622d345a73e2"
-  }
+  },
+  "priorSpecSha256AtProtectedEntrypoint": "7c8a4475cd3db0ef372870fc9bce0e3b2c574cdc40ed645c266631cbfa4cb6ec",
+  "protectedProducerEntrypointCheckpoint": "research/protected-producer-entrypoint-checkpoint.json",
+  "priorSpecSha256AtTrustedProvisioning": "57f808bb9d3ca99f2b24fc1eaf08ebe738ac791f339bb4113e373b6a36ea1563",
+  "producerProvisioningCheckpoint": "research/producer-provisioning-checkpoint.json",
+  "priorSpecSha256AtConcreteRuntimeValidation": "db88ddfcd71e68e408bcf3ceefa95cf33bd61220c25e582444b7341b61bd559b",
+  "priorSpecSha256BeforeCompleteObservationPublication": "f10615779ac03eac7123e77d99cd6d4224dc22f4f314831e75c4c064935d6f64",
+  "completeObservationPublicationCheckpoint": "research/complete-observation-publication-checkpoint.json",
+  "priorSpecSha256BeforeRunIdentity": "c47e11e00721109ff6804966b117f5e76cf75753106a179904b21b77e961de67",
+  "priorSpecSha256AtAcceptancePublicationJoin": "e4e2b345e9f21ae33140bb4059192290e0b52e4c32652d2ebfb84ba0e941c129",
+  "acceptancePublicationJoinCheckpoint": "research/acceptance-publication-join-checkpoint.json",
+  "priorSpecSha256AtInspectionGovernance": "3ff431d1f8a0a951b5832cd8a13a4a021be66613f07d27eb2b5f36bad7917f79",
+  "inspectionGovernanceCheckpoint": "research/inspection-governance-checkpoint.json",
+  "priorSpecSha256AtCommandPublication": "d91a5102592e7d21c858c5907dbc55a73b92e833dd8313d9adf10b5091f43fc0",
+  "producerCommandPublicationCheckpoint": "research/producer-command-publication-checkpoint.json",
+  "priorSpecSha256AtSeverityConsolidation": "8890b82dedf18902c50d4caf46cc8550bee4f13f4ecb78675ed66473cc47594c",
+  "priorSpecSha256AtPrivateProducerOutput": "99964ee6e04423908f74a6c66f9b27d956b3e357b7c7afde560a22e1e0fd543b",
+  "producerPrivateOutputCheckpoint": "research/producer-private-output-checkpoint.json",
+  "priorSpecSha256AtProducerWriterServiceBoundary": "9de60aafceafea92b1c4bf888c4e04637fca78b82e0a640e7eb9ced8b8d2e1d5",
+  "normalSourceWorkerObservation": {
+    "checkpoint": "research/normal-source-worker-observation.json",
+    "scope": "Stable worker and actual-CLI observer witnesses only; uninstrumented/current-canary and protected acceptance remain open."
+  },
+  "specNormalizationReview": "Source digest refreshed for the current producer SPEC. All nine acceptance obligations remain unproven; this is not an evidence promotion.",
+  "priorSpecSha256BeforeWorkerObservation": "3de5e43c85fefd0d79c15cd23ceae94119ff4460d59536c8903c4c839f99c253"
 }
