@@ -85,7 +85,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
       return original;
     },
   });
-  const backend = Context.get(yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest)), HttpServer.HttpServer);
+  const backend = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
   // The factory-free test layer binds an ephemeral wildcard address; clients dial loopback.
   const origin = pipe(
     HttpServer.formatAddress(backend.address),
@@ -151,7 +151,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
     Effect.provideService(HttpClient.HttpClient, client),
     Effect.provideService(SqlClient.SqlClient, proxy)
   );
-  const intake = Context.get(yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest)), HttpServer.HttpServer);
+  const intake = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
   yield* intake.serve(worker.handler);
   const post = Effect.fn("ObservationWorkerTest.post")(function* (digit = "1", protobuf = false) {
     const body = yield* encodeJsonValue({
@@ -489,7 +489,7 @@ const maintenanceFixture = Effect.fn("ObservationWorkerTest.maintenanceFixture")
   const root = yield* fs.makeTempDirectoryScoped();
   yield* fs.chmod(root, 0o700);
   const maintenance = yield* makeObservationMaintenanceHttp(f.worker, f.config, root);
-  const server = Context.get(yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest)), HttpServer.HttpServer);
+  const server = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
   yield* server.serve(
     future === true
       ? maintenance.handler.pipe(Effect.provideService(Clock.Clock, yield* futureClock))

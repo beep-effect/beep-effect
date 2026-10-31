@@ -63,7 +63,7 @@ const fixture = Effect.fn("LaunchHttpTest.fixture")(function* (enabled = true) {
   });
   const intake = yield* makeObservationLaunchHttp(config, policy, control);
   const facts = yield* makeObservationLaunchFacts(config);
-  const server = Context.get(yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest)), HttpServer.HttpServer);
+  const server = Context.get(yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh)), HttpServer.HttpServer);
   const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
   yield* server.serve(intake.handler);
   const url = `${HttpServer.formatAddress(server.address)}/v1/launch-facts`;

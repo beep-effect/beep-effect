@@ -49,7 +49,7 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
       bodyTimeoutMillis,
     })
   );
-  const context = yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest));
+  const context = yield* Layer.build(NodeHttpServer.layerTest.pipe(Layer.fresh));
   const server = Context.get(context, HttpServer.HttpServer);
   const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
   yield* server.serve(intake.handler);
