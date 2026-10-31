@@ -1418,11 +1418,11 @@
       }
     },
     "@beep/uspto": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "Codex claim-element-antecedent-check owner (self-review)",
+      "reason": "Record only the USPTO manifest input drift caused by two canonical generated doctest scripts. Existing task scripts and qualification scope/profile/epoch are unchanged; the new doctest remains unassessed. No cache qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/claim-element-antecedent-check/research/cache-baseline-review-v23.md",
+        "sha256": "d75bad6f997274d19e3a2350cdf59ad9cab769412fe963ab4c4b7bc8e4523a23"
       }
     },
     "@beep/uspto-mcp": {
@@ -125634,7 +125634,7 @@
       {
         "computation": "@beep/uspto#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#audit",
           "@beep/schema#audit",
@@ -125700,7 +125700,7 @@
       {
         "computation": "@beep/uspto#build",
         "command": "bun run beep:build",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -125755,7 +125755,7 @@
       {
         "computation": "@beep/uspto#check",
         "command": "bun run beep:check",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -125797,7 +125797,7 @@
       {
         "computation": "@beep/uspto#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -125849,7 +125849,7 @@
       {
         "computation": "@beep/uspto#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/uspto#transit"
@@ -125886,9 +125886,60 @@
         }
       },
       {
+        "computation": "@beep/uspto#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
+        "dependencies": [
+          "@beep/identity#transit",
+          "@beep/schema#transit",
+          "@beep/test-runner#transit",
+          "@beep/test-utils#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vite.shared.ts",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/uspto#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -125923,7 +125974,7 @@
       {
         "computation": "@beep/uspto#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/identity#transit",
@@ -125991,7 +126042,7 @@
       {
         "computation": "@beep/uspto#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -126020,7 +126071,7 @@
       {
         "computation": "@beep/uspto#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -126075,7 +126126,7 @@
       {
         "computation": "@beep/uspto#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-laws"
         ],
@@ -126129,7 +126180,7 @@
       {
         "computation": "@beep/uspto#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -126174,7 +126225,7 @@
       {
         "computation": "@beep/uspto#test",
         "command": "bun run beep:test",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -126225,7 +126276,7 @@
       {
         "computation": "@beep/uspto#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126268,7 +126319,7 @@
       {
         "computation": "@beep/uspto#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",

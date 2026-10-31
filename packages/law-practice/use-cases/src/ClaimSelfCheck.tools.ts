@@ -183,8 +183,9 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
   // into an arbitrarily amplified response before the limit is applied.
   let responseBytes = textEncoder.encode(yield* encodeUnchecked(checked.undecomposed)).byteLength + 64;
   if (responseBytes > maxReviewResponseBytes) return yield* oversized();
-  const items = yield* Effect.forEach(checked.candidates, (mapped) =>
-    Effect.gen(function* () {
+  const items = yield* Effect.forEach(
+    checked.candidates,
+    Effect.fnUntraced(function* (mapped: ClaimFindingCandidate) {
       const { candidate, finding } = mapped;
       const number = claimNumberOfPath(finding.referring.path);
       const claim = yield* Effect.fromOption(

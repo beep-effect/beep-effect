@@ -63,6 +63,8 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [Current v23 delivery compatibility](history/2026-10-31-v23-delivery-compatibility.json): consumes accepted main through #2423, retains byte-identical v22 dependency replay and all 251 prediction reports, and preserves 37/538 with all 34 protected/all 37 previous matches. An equivalent untraced callback and canonical doctest/catalog repairs address the owned hosted lint failures. Six integrated-base package audit/docgen proofs pass; the callback then passes scoped laws, lint/check and 10 tests. The reviewed USPTO-only cache baseline changes no qualification. Hosted readiness and final closeout remain pending.
+
 - [Review repairs and retained evaluation](history/2026-10-31-review-repair-evaluation.md): rejects and preserves the 35/538 attempt; the refined v22 scores 37/538 with all 34 protected and all 37 prior passes. It corrects component defining-clause boundaries, binds review identities, bounds tool responses and uses canonical documentation categories. The original 30-claim automated judgments carry forward only because their exact prediction reports and evidence remain unchanged; no fresh or attorney review is claimed.
 
 - [App integration repair and full package proofs](history/2026-10-31-delivery-integration-repair.json): preserves every assertion and extends the all-tools telemetry canary to the new tool. MCP and app audit/docgen pass; generated identity profile freshness and cache audit pass.
