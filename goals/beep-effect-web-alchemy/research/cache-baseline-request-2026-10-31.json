@@ -1,0 +1,20 @@
+{
+  "previous": "d9376177110c2e43f810b16b9658cb546b0205fb2677bd58dc2bf5d425506e9e",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy)",
+    "reason": "Record the seven scaffold-generated tasks of the new app @beep/beep-effect-web (create-package --app-kind vite) as first entries with their standard commands, outputs, env and cache flags (goals/beep-effect-web-alchemy). No other subject drifted; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31.md",
+      "sha256": "65d075cd54c19482232c99a8c865254bb964ba31f3f51a7e9f50bc2d729585cc"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["@beep/beep-effect-web"]
+}

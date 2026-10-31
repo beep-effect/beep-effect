@@ -1,6 +1,6 @@
 # Git cache review after protected producer main sync
 
-PR #2413's merge of accepted main `900023804b` takes main's canonical cache
+PR #2413's merge of accepted main `441c6d94de` takes main's canonical cache
 baseline as its regeneration base. That preserves the approved protected producer
 posture. This review reapplies only the two previously reviewed Git changes:
 

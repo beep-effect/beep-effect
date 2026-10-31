@@ -1,0 +1,51 @@
+{
+  "exportedAt": "2026-10-28",
+  "zone": "beep-effect.com",
+  "records": [
+    {
+      "id": "a8f9b6cb9c860b2321df7df034afd079",
+      "type": "A",
+      "name": "beep-effect.com",
+      "content": "15.197.148.33",
+      "proxied": true,
+      "ttl": 1,
+      "comment": null
+    },
+    {
+      "id": "1b68dbcf27c3e057d97856b6b5d237f0",
+      "type": "A",
+      "name": "beep-effect.com",
+      "content": "3.33.130.190",
+      "proxied": true,
+      "ttl": 1,
+      "comment": null
+    },
+    {
+      "id": "fe8d39e439b536c563a05f67fa104098",
+      "type": "CNAME",
+      "name": "_domainconnect.beep-effect.com",
+      "content": "_domainconnect.gd.domaincontrol.com",
+      "proxied": true,
+      "ttl": 1,
+      "comment": null
+    },
+    {
+      "id": "bc54dbb2fe2afc93e519b7e8e7449fbd",
+      "type": "CNAME",
+      "name": "www.beep-effect.com",
+      "content": "beep-effect.com",
+      "proxied": true,
+      "ttl": 1,
+      "comment": null
+    },
+    {
+      "id": "7ed8209b0a3b08102b3f719b2e0cb2c9",
+      "type": "TXT",
+      "name": "_dmarc.beep-effect.com",
+      "content": "\"v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:dmarc_rua@onsecureserver.net;\"",
+      "proxied": false,
+      "ttl": 1,
+      "comment": null
+    }
+  ]
+}
