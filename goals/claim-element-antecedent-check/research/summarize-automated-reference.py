@@ -54,6 +54,9 @@ def validate(review, main):
         raise ValueError('Missing/duplicate/out-of-sample reference verdicts.')
     checks = 0
     for row in rows:
+        if (type(row.get('claimNumber')) is not int or
+                row['id'] != f"{row.get('familyId')}:{row.get('claimNumber')}"):
+            raise ValueError('Reference verdict identity does not match its source claim.')
         if row['outcome'] not in ['agree','revise','uncertain'] or type(row.get('confidence')) not in [int,float] or not 0<=row['confidence']<=1:
             raise ValueError('Invalid source-review judgment.')
         texts={c['claimNumber']:c['claimText'] for c in json.loads((BASE/row['familyId']/'claims.json').read_text())['claims']}

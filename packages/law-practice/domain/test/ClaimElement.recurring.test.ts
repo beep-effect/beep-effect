@@ -44,6 +44,10 @@ describe("next recurring source-structure gaps", () => {
       const capsule = "A capsule having a rim, said capsule being characterized by the fact that a seal is fixed.";
       const method =
         "A method, wherein a detector is running, said method is characterized by the steps of: creating a record.";
+      const implicitSubject =
+        "An end cap for use with a blade, said end cap having a lid, characterized in that a lip is fixed.";
+      const bareSubject =
+        "Capsule designed to hold a substance, the capsule having a rim; the said capsule being characterized by a seal.";
       for (const text of [capsule, method]) {
         const claims = yield* normalizePatentClaims([["1", text]]);
         const claim = O.getOrThrow(A.head(claims));
@@ -52,11 +56,28 @@ describe("next recurring source-structure gaps", () => {
         const tree = yield* decomposeClaim(claim, claims);
         assert.strictEqual(O.getOrThrow(A.head(tree.elements)).anchor.quote, claim.preamble);
       }
+      const subjectCases: ReadonlyArray<readonly [string, string]> = [
+        [implicitSubject, "a lip is fixed."],
+        [bareSubject, "a seal."],
+      ];
+      for (const [text, body] of subjectCases) {
+        const claim = O.getOrThrow(A.head(yield* normalizePatentClaims([["1", text]])));
+        assert.strictEqual(claim.claimText, text);
+        assert.strictEqual(claim.transition, "wherein");
+        assert.strictEqual(claim.body, body);
+      }
       const plain = yield* normalizePatentClaims([
         ["1", "A device comprising a surface that is characterized by the fact that a seal is fixed."],
       ]);
       assert.strictEqual(O.getOrThrow(A.head(plain)).preamble, "A device");
       assert.strictEqual(O.getOrThrow(A.head(plain)).transition, "comprising");
+      for (const transition of ["having", "including"]) {
+        const text = `A device ${transition} a housing, the housing being characterized by a smooth surface.`;
+        const component = O.getOrThrow(A.head(yield* normalizePatentClaims([["1", text]])));
+        assert.strictEqual(component.preamble, "A device");
+        assert.strictEqual(component.transition, transition);
+        assert.strictEqual(component.body, "a housing, the housing being characterized by a smooth surface.");
+      }
     })
   );
 

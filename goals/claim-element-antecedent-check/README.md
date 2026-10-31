@@ -63,6 +63,8 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [Review repairs and retained evaluation](history/2026-10-31-review-repair-evaluation.md): rejects and preserves the 35/538 attempt; the refined v22 scores 37/538 with all 34 protected and all 37 prior passes. It corrects component defining-clause boundaries, binds review identities, bounds tool responses and uses canonical documentation categories. The original 30-claim automated judgments carry forward only because their exact prediction reports and evidence remain unchanged; no fresh or attorney review is claimed.
+
 - [App integration repair and full package proofs](history/2026-10-31-delivery-integration-repair.json): preserves every assertion and extends the all-tools telemetry canary to the new tool. MCP and app audit/docgen pass; generated identity profile freshness and cache audit pass.
 
 - **Primary delivery PR:** [#2411](https://github.com/beep-effect/beep-effect/pull/2411) is published as a draft. Its first hosted checks exposed missing app tool metadata and telemetry registration, a pipe-style diagnostic in an MCP regression test, and a stale generated identity lint profile. The current delivery wave repairs those integration gaps while retaining the fixed 37/538 measurement and every protected pass. Hosted readiness and closeout remain pending; earlier unpublished checkpoints below are historical.

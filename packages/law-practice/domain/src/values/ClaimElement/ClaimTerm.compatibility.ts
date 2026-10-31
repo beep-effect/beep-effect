@@ -15,7 +15,7 @@ import * as Str from "effect/String";
  * import { isSingleModifiedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
  * console.log(isSingleModifiedHead("sensor")("optical sensor")) // true
  * ```
- * @category domain-logic
+ * @category predicates
  * @since 0.0.0
  */
 export const isSingleModifiedHead =
@@ -31,7 +31,7 @@ export const isSingleModifiedHead =
  * import { isExplicitAbbreviatedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
  * console.log(isExplicitAbbreviatedHead("ir sensor")("infrared (ir) sensor")) // true
  * ```
- * @category domain-logic
+ * @category predicates
  * @since 0.0.0
  */
 export const isExplicitAbbreviatedHead =
@@ -60,7 +60,7 @@ const matchesCapturedHead =
  * console.log(isDesignatedHead("relaxation time")("relaxation time t2")) // true
  * console.log(isDesignatedHead("sensor")("sensor 12")) // false
  * ```
- * @category domain-logic
+ * @category predicates
  * @since 0.0.0
  */
 export const isDesignatedHead = matchesCapturedHead(/^(.+)\s+[a-z]{1,4}\d+[a-z0-9]*$/u);
@@ -76,7 +76,7 @@ export const isDesignatedHead = matchesCapturedHead(/^(.+)\s+[a-z]{1,4}\d+[a-z0-
  * console.log(isCountedHead("sensor")("number of sensors")) // false
  * ```
  *
- * @category domain-logic
+ * @category predicates
  * @since 0.0.0
  */
 export const isCountedHead = matchesCapturedHead(/^(?:(?:specified|predetermined|selected|fixed)\s+)?number of (.+)$/u);

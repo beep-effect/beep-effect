@@ -17,6 +17,7 @@ import { annotateFourHints, FourHintAnnotations } from "@beep/mcp-kit";
 import * as A from "effect/Array";
 import * as Tool from "effect/ai/Tool";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -27,6 +28,19 @@ import {
 } from "./ClaimSelfCheck/index.ts";
 
 const $I = $LawPracticeUseCasesId.create("ClaimSelfCheck.tools");
+const maxReviewResponseBytes = 1024 * 1024;
+const textEncoder = new TextEncoder();
+const reviewEncodingError = () =>
+  ClaimSelfCheckError.make({ reason: "candidate-mapping-failed", message: "The review result could not be encoded." });
+const encodeCandidate = flow(
+  S.encodeEffect(S.fromJsonString(ClaimFindingCandidate)),
+  Effect.mapError(reviewEncodingError)
+);
+const encodeReviewItem = flow(S.encodeEffect(S.fromJsonString(ReviewItem)), Effect.mapError(reviewEncodingError));
+const encodeUnchecked = flow(
+  S.encodeEffect(S.fromJsonString(S.Array(ClaimDecompositionError))),
+  Effect.mapError(reviewEncodingError)
+);
 
 /**
  * Normalized document and optional genuine Box source for a local self-check.
@@ -111,7 +125,7 @@ export class ClaimSelfCheckReviewResult extends S.Opaque<
 export const ClaimSelfCheckTool = annotateFourHints(
   Tool.make("claim_self_check", {
     description:
-      "Check the supplied normalized patent claims for possible antecedent and dependency issues. Returns advisory, candidate-unreviewed claim-finding review items with the complete claim quoted, candidate evidence and unchecked claims. It fetches and stores nothing. Always report unchecked claims and patterns needing manual review; no findings alone does not mean every claim was checked.",
+      "Check the supplied normalized patent claims for possible antecedent and dependency issues. Returns advisory, candidate-unreviewed claim-finding review items with the complete claim quoted, candidate evidence and unchecked claims. Responses are limited to 1 MiB; an oversized result is an explicit failure requiring a smaller claim set with dependency context, never a clean result. It fetches and stores nothing. Always report unchecked claims and patterns needing manual review; no findings alone does not mean every claim was checked.",
     parameters: ClaimSelfCheckReviewRequest,
     success: ClaimSelfCheckReviewResult,
     failure: ClaimSelfCheckError,
@@ -159,8 +173,19 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
   request: ClaimSelfCheckReviewRequest
 ): Effect.fn.Return<ClaimSelfCheckReviewResult, ClaimSelfCheckError, ClaimSelfCheck> {
   const checked = yield* (yield* ClaimSelfCheck).candidates(ClaimSelfCheckInput.make(request.input));
-  const items = yield* Effect.forEach(checked.candidates, ({ candidate, finding }) =>
+  const oversized = () =>
+    ClaimSelfCheckError.make({
+      reason: "review-response-too-large",
+      message: `No review result was delivered because it exceeds 1 MiB. All supplied claims still require review; ${A.length(checked.undecomposed)} could not be checked. Retry with a smaller claim set and its dependency context.`,
+    });
+  // Count the encoded wire representation, including UTF-8 and JSON escaping.
+  // Fail during projection so repeated full-claim quotations cannot accumulate
+  // into an arbitrarily amplified response before the limit is applied.
+  let responseBytes = textEncoder.encode(yield* encodeUnchecked(checked.undecomposed)).byteLength + 64;
+  if (responseBytes > maxReviewResponseBytes) return yield* oversized();
+  const items = yield* Effect.forEach(checked.candidates, (mapped) =>
     Effect.gen(function* () {
+      const { candidate, finding } = mapped;
       const number = claimNumberOfPath(finding.referring.path);
       const claim = yield* Effect.fromOption(
         A.findFirst(request.input.document.claims, (value) => value.claimNumber === number),
@@ -176,13 +201,19 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
           SourceRef.make({ boxFileId, quote: TextQuote.make({ exact: claim.claimText }) })
         )
       );
-      return ReviewItem.cases["claim-finding"].make({
+      const item = ReviewItem.cases["claim-finding"].make({
         itemId: ReviewItemId.make(`claim-finding:${candidate.publicId}`),
         claimId: candidate.id,
         label: O.some("Antecedent check — candidate, unreviewed"),
         text: `Claim ${number}: “${claim.claimText}”\nPhrase: “${finding.referring.anchor.quote}”. ${explanation(finding)}${dependencyContext(finding)}`,
         sourceRefs,
       });
+      responseBytes +=
+        textEncoder.encode(yield* encodeReviewItem(item)).byteLength +
+        textEncoder.encode(yield* encodeCandidate(mapped)).byteLength +
+        2;
+      if (responseBytes > maxReviewResponseBytes) return yield* oversized();
+      return item;
     })
   );
   return ClaimSelfCheckReviewResult.make({ items, candidates: checked.candidates, undecomposed: checked.undecomposed });

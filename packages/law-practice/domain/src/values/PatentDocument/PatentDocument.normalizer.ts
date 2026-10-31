@@ -364,9 +364,22 @@ const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> 
       );
     });
   const first = A.head(matches).pipe(O.orElse(implicit));
-  const defining = A.findFirst(matches, (match) =>
-    O.isSome(Str.match(/^(?:(?:is|being)\s+)?characteri[sz]ed\b/iu)(match[0]))
+  const subject = first.pipe(
+    O.map((match) => Str.slice(0, match.index)(claimText)),
+    O.flatMap(
+      Str.match(/^(?:(?:an?|the)\s+)?(.+?)(?=\s+(?:for|of|with|according|as|to|designed|intended)\b|\s*\(\d|[,;:]|$)/iu)
+    ),
+    O.flatMap(A.get(1)),
+    O.map(flow(Str.trim, Str.toLowerCase))
   );
+  const defining = A.findFirst(matches, (match) => {
+    const prefix = pipe(Str.slice(0, match.index)(claimText), Str.trim, Str.toLowerCase);
+    return (
+      O.isSome(Str.match(/^(?:(?:is|being)\s+)?characteri[sz]ed\b/iu)(match[0])) &&
+      (O.isSome(Str.match(/[,;]$/u)(prefix)) ||
+        O.exists(subject, (value) => Str.endsWith(` said ${value}`)(prefix) || Str.endsWith(` the ${value}`)(prefix)))
+    );
+  });
   return O.exists(first, (match) => O.isSome(Str.match(/^(?:wherein|having|including)$/iu)(match[0]))) &&
     O.isSome(defining)
     ? defining

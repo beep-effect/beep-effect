@@ -51,5 +51,32 @@ class AutomatedReferenceBoundary(unittest.TestCase):
                 review.summarize(bad, self.b)
 
 
+class ReferenceOwnership(unittest.TestCase):
+    def setUp(self):
+        self.main = review.load_main()
+        self.review = json.loads((review.ROOT / 'history/autonomous-review-v1/reference-A-round2.json').read_text())
+
+    def test_original_receipt_still_covers_all_fifty_claims(self):
+        rows, _, _ = review.validate(self.review, self.main)
+        self.assertEqual(len(rows), 50)
+
+    def test_copied_claim_cannot_keep_another_claims_id(self):
+        rows = review.decisions(self.review)
+        first_id = rows[0]['id']
+        rows[0] = copy.deepcopy(rows[-1])
+        rows[0]['id'] = first_id
+        with self.assertRaisesRegex(ValueError, 'identity does not match'):
+            review.validate(self.review, self.main)
+
+    def test_wrong_family_and_noninteger_claim_number_are_rejected(self):
+        for field, value in [('familyId', 'other-family'), ('claimNumber', True), ('claimNumber', '5')]:
+            with self.subTest(field=field, value=value):
+                bad = copy.deepcopy(self.review)
+                review.decisions(bad)[0][field] = value
+                with self.assertRaisesRegex(ValueError, 'identity does not match'):
+                    review.validate(bad, self.main)
+
+
+
 if __name__ == '__main__':
     unittest.main()

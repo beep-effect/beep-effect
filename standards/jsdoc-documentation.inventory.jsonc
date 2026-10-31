@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T15:21:48.308Z",
+  "generatedAt": "2026-10-31T16:57:48.237Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -196969,8 +196969,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 517,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-517-normalizepatentclaims",
+          "line": 530,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-530-normalizepatentclaims",
           "currentTags": [
             "@category",
             "@since"
@@ -196991,8 +196991,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 582,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-582-normalizepatentapplicationdocument",
+          "line": 595,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-595-normalizepatentapplicationdocument",
           "currentTags": [
             "@effects",
             "@category",
@@ -293431,8 +293431,8 @@
           "exportKind": "class",
           "filePath": "src/ClaimSelfCheck.tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
-          "line": 44,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-44-claimselfcheckreviewrequest",
+          "line": 58,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-58-claimselfcheckreviewrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -293453,8 +293453,8 @@
           "exportKind": "class",
           "filePath": "src/ClaimSelfCheck.tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
-          "line": 77,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-77-claimselfcheckreviewresult",
+          "line": 91,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-91-claimselfcheckreviewresult",
           "currentTags": [
             "@category",
             "@since"
@@ -293475,8 +293475,8 @@
           "exportKind": "const",
           "filePath": "src/ClaimSelfCheck.tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
-          "line": 111,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-111-claimselfchecktool",
+          "line": 125,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-125-claimselfchecktool",
           "currentTags": [
             "@category",
             "@since"
@@ -293497,8 +293497,8 @@
           "exportKind": "const",
           "filePath": "src/ClaimSelfCheck.tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
-          "line": 158,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-158-claimselfcheckreview",
+          "line": 172,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-172-claimselfcheckreview",
           "currentTags": [
             "@category",
             "@since"
@@ -293607,8 +293607,8 @@
           "exportKind": "type",
           "filePath": "src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
-          "line": 140,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-140-claimselfcheckfailurereason",
+          "line": 142,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-142-claimselfcheckfailurereason",
           "currentTags": [
             "@category",
             "@since"
@@ -293629,8 +293629,8 @@
           "exportKind": "class",
           "filePath": "src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
-          "line": 168,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-168-claimselfcheckerror",
+          "line": 170,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-170-claimselfcheckerror",
           "currentTags": [
             "@category",
             "@since"
@@ -621599,8 +621599,8 @@
           "exportKind": "type",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 74,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-74-practicekgtoolid",
+          "line": 75,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-75-practicekgtoolid",
           "currentTags": [
             "@category",
             "@since"
@@ -621621,8 +621621,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 90,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-90-practicekgtoolkey",
+          "line": 91,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-91-practicekgtoolkey",
           "currentTags": [
             "@category",
             "@since"
@@ -621643,8 +621643,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 107,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-107-practicekgfailurereasonattribute",
+          "line": 108,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-108-practicekgfailurereasonattribute",
           "currentTags": [
             "@category",
             "@since"
@@ -621665,8 +621665,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 131,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-131-practicekgprocesscpu",
+          "line": 132,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-132-practicekgprocesscpu",
           "currentTags": [
             "@category",
             "@since"
@@ -621687,8 +621687,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 163,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-163-practicekgprocessrss",
+          "line": 164,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-164-practicekgprocessrss",
           "currentTags": [
             "@category",
             "@since"
@@ -621709,8 +621709,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 190,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-190-practicekgtelemetryinstruments",
+          "line": 191,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-191-practicekgtelemetryinstruments",
           "currentTags": [
             "@category",
             "@since"

@@ -10,6 +10,7 @@ import {
 import { ReviewItem } from "@beep/law-practice-domain/values/ReviewItem";
 import {
   ClaimSelfCheck,
+  ClaimSelfCheckCandidates,
   ClaimSelfCheckInput,
   ClaimSelfCheckLive,
   UsptoClaimSet,
@@ -31,6 +32,7 @@ import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -279,6 +281,33 @@ describe("ClaimSelfCheck read-only review items", () => {
     VerdictProjectorLive
   );
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("refuses amplified review responses explicitly without implying unchecked claims are clean", () =>
+      Effect.gen(function* () {
+        const original = yield* input;
+        const checker = yield* ClaimSelfCheck;
+        const checked = yield* checker.candidates(original);
+        const repeated = yield* Effect.fromOption(A.head(checked.candidates));
+        const result = yield* claimSelfCheckReview(ClaimSelfCheckReviewRequest.make({ input: original })).pipe(
+          Effect.provideService(ClaimSelfCheck, {
+            ...checker,
+            candidates: () =>
+              Effect.succeed(
+                ClaimSelfCheckCandidates.make({
+                  candidates: A.replicate(repeated, 5000),
+                  undecomposed: checked.undecomposed,
+                })
+              ),
+          }),
+          Effect.result
+        );
+        assert.isTrue(Result.isFailure(result));
+        if (Result.isFailure(result)) {
+          assert.strictEqual(result.failure.reason, "review-response-too-large");
+          assert.isTrue(Str.includes("All supplied claims still require review")(result.failure.message));
+          assert.isTrue(Str.includes("0 could not be checked")(result.failure.message));
+        }
+      })
+    );
     it.effect("quotes each actual claim, preserves evidence and round-trips the review envelope", () =>
       Effect.gen(function* () {
         const original = yield* input;

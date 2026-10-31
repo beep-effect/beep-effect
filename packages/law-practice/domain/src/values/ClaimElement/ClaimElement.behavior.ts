@@ -913,7 +913,7 @@ const decodeTree = S.decodeEffect(ClaimElementTree);
  * console.log(A.some(tree.edges, ({ kind }) => kind === "functional")) // true
  * ```
  *
- * @category domain-logic
+ * @category parsing
  * @since 0.0.0
  */
 export const decomposeClaim: {
