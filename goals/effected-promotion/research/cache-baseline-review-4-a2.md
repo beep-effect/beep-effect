@@ -11,7 +11,7 @@ No manifest changes. The cause is the source move this PR makes: `@beep/repo-wor
 `src/internal/patterns.ts` to the public `src/WorkspacePatterns.ts` leaf, and repo-cli's `TsconfigSync.plan.ts`,
 `CreatePackage.command.ts`, `Quality/ChangesetGraph.ts` and `Quality/Tasks.ts` import that leaf.
 `bun run beep lint policy-fingerprint --write` then regenerates `standards/policy-tools.fingerprint.json` and the
-matching `inputs` of each seal in `turbo.json`. Measured against `origin/main` (807e82235a), key by key:
+matching `inputs` of each seal in `turbo.json`. Measured against `origin/main` (f16d82e9f1), key by key:
 
 - six seals (`goals-doctor`, `goals-index`, `knowledge`, `lint-deprecated-apis`, `lint-roadmap-refs`, `quality`) swap
   one input, `packages/tooling/library/repo-workspaces/src/internal/patterns.ts` for

@@ -108,6 +108,21 @@ const flagValue = (flag: string): O.Option<string> =>
     (index) => A.get(process.argv, index + 1)
   );
 
+// --- frozen retired reader -----------------------------------------------------
+
+// Frozen copy of repo-cli `workspacePatternsFrom` as it stood when this 3-A4 record was made.
+// 4-A1 (#2380) retired it from `@beep/repo-cli/test/Quality` when QAS discovery moved onto
+// `@beep/repo-workspaces`; the parity record keeps the reader it measured.
+const workspacePatternsFrom = (workspaces: unknown): ReadonlyArray<string> => {
+  if (A.isArray(workspaces)) {
+    return A.filter(workspaces, P.isString);
+  }
+  if (P.isObject(workspaces) && P.hasProperty(workspaces, "packages") && A.isArray(workspaces.packages)) {
+    return A.filter(workspaces.packages, P.isString);
+  }
+  return [];
+};
+
 // --- verdicts -----------------------------------------------------------------
 
 // A reader's verdict on one manifest: what it projected, or that it rejected
@@ -334,17 +349,20 @@ const SITES: ReadonlyArray<Site> = [
     adopted: ({ text, path }) => verdictOf(readPackageVerifyWorkspace(text, path, "name", "dir"), (w) => w.scripts),
   },
   {
-    // The pattern quarter of this site left with QAS `workspacePatternsFrom`
-    // in 4-A1 (#2380: members come from `@beep/repo-workspaces`
-    // `WorkspaceDiscovery`); the 3-A4 run recorded all four.
-    site: "repo-cli Quality/internal/QualityArtifactSupport.ts (name, scripts, dependencies)",
+    site: "repo-cli Quality/internal/QualityArtifactSupport.ts (name, scripts, dependencies, patterns)",
     oracle: ({ text }) =>
-      verdictOf(decodeQualityArtifactOracle(text), (d) => [d.name, d.scripts ?? null, dependencies(d)]),
+      verdictOf(decodeQualityArtifactOracle(text), (d) => [
+        d.name,
+        d.scripts ?? null,
+        dependencies(d),
+        workspacePatternsFrom(d.workspaces),
+      ]),
     adopted: ({ text, path }) =>
       verdictOf(readWorkspacePackageText(text, path, "/dir", "dir"), (info) => [
         info.name,
         info.packageJson.scripts ?? null,
         dependencies(info.packageJson),
+        workspacePatternsFrom(info.packageJson.workspaces),
       ]),
   },
   {
