@@ -28,10 +28,11 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -349,7 +350,7 @@ describe("Vault review ownership and detached conflicts", () => {
         );
         yield* engine.syncOnce(syncInput(root));
         const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
-        expect(O.isNone(conflict.syncItemId)).toBe(true);
+        assertNone(conflict.syncItemId);
         const foreign = MarkConflictReviewedInput.make({
           conflictId: conflict.id,
           workspaceId: WorkspaceIdentity.WorkspaceId.make(12),
@@ -437,10 +438,10 @@ it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
       const root = yield* makeVaultRoot();
       yield* handle.failNext("pollEvents", false);
       const failedBootstrap = yield* engine.syncOnce(syncInput(root));
-      expect(O.isNone(failedBootstrap.cursorPosition)).toBe(true);
-      expect(O.isNone(yield* cursors.find(FindSyncCursorInput.make({ provider: "box", workspaceId })))).toBe(true);
+      assertNone(failedBootstrap.cursorPosition);
+      assertNone(yield* cursors.find(FindSyncCursorInput.make({ provider: "box", workspaceId })));
       const recovered = yield* engine.syncOnce(syncInput(root));
-      expect(O.isSome(recovered.cursorPosition)).toBe(true);
+      pipe(recovered.cursorPosition, O.isSome, assertTrue);
       expect(recovered.failedOperations).toBe(0);
     })
   );

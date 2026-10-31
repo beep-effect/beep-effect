@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T09:50:57.776Z",
+  "generatedAt": "2026-10-31T10:20:46.371Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -584250,8 +584250,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/VaultSync.reconcile.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.reconcile.ts",
-          "line": 149,
-          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-reconcile-ts-149-makevaultsyncreconciliation",
+          "line": 152,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-reconcile-ts-152-makevaultsyncreconciliation",
           "currentTags": [
             "@internal",
             "@category",
@@ -584273,9 +584273,10 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/VaultSync.review.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.review.ts",
-          "line": 63,
-          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-review-ts-63-makevaultsyncreview",
+          "line": 66,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-review-ts-66-makevaultsyncreview",
           "currentTags": [
+            "@param",
             "@internal",
             "@category",
             "@since"
