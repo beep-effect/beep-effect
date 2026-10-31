@@ -55,8 +55,10 @@ import { yeetCommand } from "./Yeet/index.ts";
  *
  * **Details**
  *
- * This is the command-tree root consumed by `Command.run` in the bin entry point, so registering a
- * new command group here is what makes it reachable as `beep <group>`.
+ * This is the eager reference tree: it imports every group. The bin does not run it; it dispatches
+ * argv-first through the lazy manifest in `internal/dispatch/Dispatch.manifest.ts`, which imports
+ * only the named group and renders the rest from static help. A new group is registered both
+ * here and in that manifest; `test/dispatch-manifest.test.ts` fails until the two agree.
  *
  * **Example** (Confirm a command group is registered)
  *
