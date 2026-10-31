@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "hold-ledger",
+    "packetId": "goal-packet/v1:c93e290cc37fedb4ed13b9a1a838757872d399f2d9bbd396541c4066ff7d3aa4",
+    "title": "Hold Ledger",
+    "status": "active",
+    "created": "2026-10-31",
+    "updated": "2026-10-31",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/hold-ledger",
+  "lifecycle": "active",
+  "mission": "Record every dependency-shaped temporary decision as a probe-backed hold on the claim envelope, derive the configs that enforce it from an in-repo ledger, and re-check holds mechanically, with renewal only on fresh evidence.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/expiring-repo-facts",
+    "graduated": "2026-10-31"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/hold-ledger/README.md",
+    "goals/hold-ledger/SPEC.md",
+    "goals/hold-ledger/PLAN.md",
+    "goals/hold-ledger/GOAL.md",
+    "goals/hold-ledger/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/hold-ledger/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/hold-ledger/GOAL.md)\" -le 4000",
+    "jq . goals/hold-ledger/ops/manifest.json",
+    "rg -n \"hold-ledger|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/hold-ledger",
+    "git diff --check -- goals/hold-ledger",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
