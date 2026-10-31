@@ -144,8 +144,10 @@ point into the upstream checkout.
 
 ## Runtime implementation map
 
-- [`Git.ts`](src/Git.ts) owns the public service, repository-specific SSH config
-  resolution, and service/test-double construction. It re-exports the model contracts.
+- [`Git.ts`](src/Git.ts) owns repository operations and service/test-double construction.
+  It re-exports the model contracts.
+- [`internal/execution.ts`](src/internal/execution.ts) binds the process spawner and
+  captures ambient SSH settings once, then resolves repository config per network call.
 - [`Git.models.ts`](src/Git.models.ts) owns parsed repository models and their pure
   formatting helpers, retaining the original Git schema identity scope.
 - [`internal/parsers.ts`](src/internal/parsers.ts) decodes command output using each
@@ -159,7 +161,7 @@ point into the upstream checkout.
   pins and the conservative decision to append SSH BatchMode. It performs no config reads.
 - [`internal/run.ts`](src/internal/run.ts) owns scoped, concurrent stdout/stderr collection.
 
-A network call resolves repository config through the service before applying the pure
+A network call resolves repository config through the execution module before applying the pure
 SSH policy. Local commands use only the base environment. The internal modules are
 implementation details; consumers use the public service and command constructors.
 Classification depends on the error contracts and process collector; neither depends

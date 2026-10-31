@@ -79,7 +79,7 @@ type ClassifiedFor<K extends ClassifyKind> = Extract<
   }
 >;
 
-/** A classified run with the spawner already provided: `makeShape`'s `runFor` and `runForNetwork`. */
+/** A classified run with its spawner bound by the execution module. */
 type RunFor = {
   <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K): Effect.Effect<ClassifiedFor<K>>;
   <K extends ClassifyKind>(cwd: string, kind: K): (invocation: GitInvocation) => Effect.Effect<ClassifiedFor<K>>;

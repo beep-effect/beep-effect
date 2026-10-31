@@ -9,15 +9,12 @@
 import { $GitId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
-import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
-import * as HashSet from "effect/HashSet";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -31,7 +28,7 @@ import {
   UnknownRefError,
 } from "./Git.errors.ts";
 import { GitCommand } from "./GitCommand.ts";
-import { runClassified } from "./internal/classification.ts";
+import { make as makeExecution } from "./internal/execution.ts";
 import {
   parseBranchList,
   parseCommitInfo,
@@ -49,7 +46,7 @@ import {
   parseSubmoduleStatus,
   parseWorktreeList,
 } from "./internal/parsers.ts";
-import { BASE_ENV, OPENSSH_VARIANTS, sshEnv } from "./internal/sshEnvironment.ts";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   BranchEntry,
   CommitInfo,
@@ -66,7 +63,7 @@ import type {
   WorktreeEntry,
 } from "./Git.models.ts";
 import type { GitConfigScope, GitInvocation } from "./GitCommand.ts";
-import type { ClassifiedFor, ClassifyKind, RunFor } from "./internal/classification.ts";
+import type { Execution } from "./internal/execution.ts";
 
 /**
  * Git failure contracts retained at the service import path.
@@ -232,33 +229,6 @@ const rejectNonNaturalNumber: {
         )
 );
 
-/**
- * The ssh-related environment, read once at layer construction. None of these
- * can change under a running service, so none is re-read per call — unlike
- * their git-config counterparts, which are repository-local.
- */
-const SshFromEnv = S.Struct({
-  /** `GIT_SSH_COMMAND` — a full command line; the first rung. */
-  command: S.Option(S.String).pipe(
-    $I.annoteKey("SshFromEnv.command", { description: "GIT_SSH_COMMAND, a full command line with highest precedence." })
-  ),
-  /** `GIT_SSH` — a program name with no argument support; the third rung. */
-  program: S.Option(S.String).pipe(
-    $I.annoteKey("SshFromEnv.program", { description: "GIT_SSH, a program name with no argument support." })
-  ),
-  /** `GIT_SSH_VARIANT` — overrides git's basename inference of the grammar. */
-  variant: S.Option(S.String).pipe(
-    $I.annoteKey("SshFromEnv.variant", {
-      description: "GIT_SSH_VARIANT, overriding basename inference of the SSH grammar.",
-    })
-  ),
-}).pipe(
-  $I.annoteSchema("SshFromEnv", {
-    description: "The optional SSH environment settings captured at layer construction.",
-  })
-);
-type SshFromEnv = typeof SshFromEnv.Type;
-
 /** The `{ index }` option the stash pop/apply/drop members accept. */
 type StashIndexOptions = { readonly index?: number };
 
@@ -288,100 +258,8 @@ const refFailureArms = (cwd: string, ref: string) => ({
   unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
 });
 
-/** Builds the `Git.Service` shape over an already-resolved `ChildProcessSpawner`. */
-const makeShape: {
-  (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: SshFromEnv): GitShape;
-  (ssh: SshFromEnv): (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) => GitShape;
-} = dual(2, (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], ssh: SshFromEnv): GitShape => {
-  const runFor: RunFor = dual(
-    3,
-    <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K): Effect.Effect<ClassifiedFor<K>> =>
-      runClassified(invocation, cwd, kind, BASE_ENV).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-      )
-  );
-
-  /** One `git config --get <key>` at `cwd`; unset and failure both read as `""`. */
-  const readConfig: {
-    (cwd: string, key: string): Effect.Effect<string>;
-    (key: string): (cwd: string) => Effect.Effect<string>;
-  } = dual(
-    2,
-    (cwd: string, key: string): Effect.Effect<string> =>
-      Effect.map(runFor(GitCommand.configGet(key), cwd, "quiet"), (classified) =>
-        classified._tag === "success" ? Str.trim(classified.output) : ""
-      )
-  );
-
-  /**
-   * Resolves the spawn environment for a member that reaches a remote,
-   * following git's OWN precedence order rather than a simplification of it:
-   * `GIT_SSH_COMMAND` \> `core.sshCommand` \> `GIT_SSH` \> plain `ssh` (each
-   * rung verified against git 2.55).
-   *
-   * **Details**
-   *
-   * The config reads are why this is per-call rather than per-service:
-   * `core.sshCommand` and `ssh.variant` are both repository-local, while one
-   * `Git` instance serves every `cwd` a caller hands it. Each is skipped when
-   * its environment counterpart already decides the answer, and the two run
-   * concurrently, so the common case costs one round trip on a member about
-   * to touch the network anyway.
-   *
-   * They deliberately run through `runFor` (BASE_ENV, no ssh pin): a local
-   * config read needs no ssh, and routing them through the network path would
-   * recurse.
-   */
-  const resolveSshEnv = Effect.fnUntraced(function* (cwd: string) {
-    const [fromConfig, variantFromConfig] = yield* Effect.all(
-      [
-        O.isSome(ssh.command) ? Effect.succeed("") : readConfig(cwd, "core.sshCommand"),
-        O.isSome(ssh.variant) ? Effect.succeed("") : readConfig(cwd, "ssh.variant"),
-      ],
-      { concurrency: "unbounded" }
-    );
-
-    // The variant decides the argument GRAMMAR, so it is checked first: a
-    // non-OpenSSH variant means `-o BatchMode=yes` is not a thing git's ssh
-    // invocation understands, whatever the command happens to be named.
-    const variant = pipe(
-      ssh.variant,
-      O.getOrElse(() => variantFromConfig),
-      Str.trim,
-      Str.toLowerCase
-    );
-    if (!HashSet.has(OPENSSH_VARIANTS, variant)) {
-      return { ...BASE_ENV };
-    }
-
-    const command = Str.trim(O.getOrElse(ssh.command, () => fromConfig));
-    if (command !== "") {
-      return sshEnv(command);
-    }
-    // No COMMAND anywhere, so GIT_SSH is the deciding rung if it is set. It
-    // names a program and takes no arguments, so pinning anything here would
-    // displace it rather than extend it — decline instead.
-    if (O.isSome(ssh.program)) {
-      return { ...BASE_ENV };
-    }
-    return sshEnv("ssh");
-  });
-
-  /**
-   * `runFor` for a member that reaches a remote. Everything else spawns with
-   * `BASE_ENV` alone — a member that never invokes ssh has no business
-   * pinning an ssh command, and would pay the config read for nothing.
-   */
-  const runForNetwork: RunFor = dual(
-    3,
-    Effect.fnUntraced(function* <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K) {
-      const env = yield* resolveSshEnv(cwd);
-      return yield* runClassified(invocation, cwd, kind, env).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-      );
-    })
-  );
-
+/** Builds repository operations over bound local and network execution capabilities. */
+const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   const show: GitShape["show"] = dual(
     3,
     Effect.fn("Git.show")(function* (cwd: string, ref: string, path: string) {
@@ -2011,7 +1889,7 @@ const makeShape: {
     worktreeList,
     worktreeRemove,
   };
-});
+};
 
 /**
  * The {@link Git} service shape.
@@ -3591,8 +3469,7 @@ const stubOf = <K extends keyof GitStubs>(
  * that — a caller running two mutating calls (or a mutating call alongside a
  * read) against one `cwd` at once owns the race.
  *
- * **Every spawn already runs under a 30 s timeout** (this module's
- * `GIT_TIMEOUT`): a command that has not answered in time fails as a
+ * **Every spawn already runs under the classification module's 30 s timeout**: a command that has not answered in time fails as a
  * {@link GitCommandError} with `detail` set to `"timed out after 30s"`.
  *
  * That ceiling is per run, not per member call. The network-touching members
@@ -3657,37 +3534,9 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * @category constructors
    * @since 0.0.0
    */
-  static readonly make: Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> = Effect.gen(
-    function* () {
-      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      // The AMBIENT ENVIRONMENT is read ONCE, here, and never again — it
-      // cannot change under a running service. The read goes through
-      // ConfigProvider (whose default is `fromEnv()`) rather than
-      // `process.env`, so a test provides a provider instead of mutating the
-      // environment and `src/` keeps its zero-`node:` boundary. A blank value
-      // is treated as absent — an exported-but-empty GIT_SSH_COMMAND is not
-      // an ssh configuration worth preserving.
-      //
-      // `core.sshCommand` is NOT read here: it is repository-local, so it
-      // belongs to a cwd rather than to the service, and is resolved per
-      // network-touching call instead.
-      // A source-level ConfigError degrades to "absent" rather than escaping:
-      // the layer's error channel is `never` by contract, and an unreadable
-      // provider is answered with the pin that cannot hang.
-      const read = (name: string) =>
-        Config.String(name).pipe(
-          Config.option,
-          Effect.orElseSucceed(O.none<string>),
-          // A blank value is treated as absent — an exported-but-empty
-          // variable is not a configuration worth preserving.
-          Effect.map(O.filter((value) => Str.trim(value) !== ""))
-        );
-      const [command, program, variant] = yield* Effect.all(
-        [read("GIT_SSH_COMMAND"), read("GIT_SSH"), read("GIT_SSH_VARIANT")],
-        { concurrency: "unbounded" }
-      );
-      return makeShape(spawner, { command, program, variant });
-    }
+  static readonly make: Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> = Effect.map(
+    makeExecution,
+    makeShape
   );
 
   /**

@@ -3556,6 +3556,39 @@ describe("Git — remaining tiers (round 2)", () => {
       );
     }
 
+    it.effect("resolves each repository's current SSH config per network call on one service", () =>
+      Effect.gen(function* () {
+        let version = 1;
+        let probes = 0;
+        const network: Array<{ readonly cwd: string | undefined; readonly ssh: string | undefined }> = [];
+        const recording = scripted((args, options) => {
+          if (isSshProbe(args)) {
+            probes += 1;
+            return args[2] === "core.sshCommand" ? { stdout: `ssh -i ${options.cwd}/key-${version}\n` } : { exit: 1 };
+          }
+          if (args[0] === "ls-remote") {
+            network.push({ cwd: options.cwd, ssh: options.env?.GIT_SSH_COMMAND });
+            return { stdout: "abc\trefs/heads/main\n" };
+          }
+          return { stdout: "abc\n" };
+        });
+        yield* Effect.gen(function* () {
+          const git = yield* Git;
+          yield* git.lsRemote("/repo/a", "ssh://git@example.invalid/a.git");
+          yield* git.lsRemote("/repo/b", "ssh://git@example.invalid/b.git");
+          version = 2;
+          yield* git.lsRemote("/repo/a", "ssh://git@example.invalid/a.git");
+          yield* git.revParse("/repo/a", "HEAD");
+        }).pipe(provideGit(recording));
+        assert.deepStrictEqual(network, [
+          { cwd: "/repo/a", ssh: "ssh -i /repo/a/key-1 -o BatchMode=yes" },
+          { cwd: "/repo/b", ssh: "ssh -i /repo/b/key-1 -o BatchMode=yes" },
+          { cwd: "/repo/a", ssh: "ssh -i /repo/a/key-2 -o BatchMode=yes" },
+        ]);
+        assert.strictEqual(probes, 6);
+      })
+    );
+
     it.effect("reads the ambient environment ONCE, at layer construction", () =>
       Effect.gen(function* () {
         // Two members off one service instance must carry the same pins: the
