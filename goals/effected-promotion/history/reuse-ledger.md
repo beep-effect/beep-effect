@@ -209,7 +209,14 @@ the facade is deleted and `@beep/schema` drops `jsonc-parser`. Parity is recorde
 `research/jsonc-owner-switch-differential-r3a.json` (`--compare`, `ops/jsonc-owner-switch-differential.ts`):
 1,438 tracked JSONC and facade-consumed JSON documents decode equal under both parsers with 0 unclassified
 differences and 1,438 kit encode round trips, and twelve generator check or dry runs against one fixed input
-tree are byte-identical before and after. The `jsonc-parser` editing facade and its users leave in R3b.
+tree are byte-identical before and after. A fixed 42-case negative and edge corpus classifies every case
+(`equal`, `both-reject`, `legacy-reject-kit-accept`, `legacy-accept-kit-reject`, `value-differs`) and
+allowlists exactly three intended divergences by case id: BOM tolerance (the kit scanner treats U+FEFF as
+whitespace), the 256-deep nesting cap (`NestingDepthExceeded` from `internal/limits.ts`) and JSON.parse
+`__proto__` semantics (an own data property instead of a prototype assignment that dropped the key; no
+adopted site merges a decoded object through `Object.assign`). The rejection message text changes from
+`Invalid JSONC input (...)` to `JSONC parse failed with N error(s): ...`. The `jsonc-parser` editing facade
+and its users leave in R3b.
 
 | Site | Map id | Status | Notes |
 | --- | --- | --- | --- |
