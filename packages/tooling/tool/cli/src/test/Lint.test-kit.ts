@@ -7,6 +7,19 @@
 
 export * from "@beep/repo-cli/commands/Lint";
 /**
+ * Policy fingerprint graph internals, for focused tests.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export {
+  makePolicyGraph,
+  moduleSyntax,
+  renderClosureInputs,
+  resolvePackageSubpath,
+} from "../commands/Lint/internal/PolicyFingerprintGraph.ts";
+/**
  * Schema-first inventory merge, exposed so tests can drive `--write` regeneration on fixture documents.
  *
  * @category testing
