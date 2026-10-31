@@ -1159,6 +1159,14 @@ instead of silently splitting delivery or weakening scope.
   no target composition or completion row follows. The existing approved native
   safety exception stops subsequent callbacks after resource exhaustion.
 
+- **2026-10-31 direct dictionary reentrancy:** a private owner-aware semaphore
+  and source-equivalent key-table/insertion checks preserve thirteen direct
+  comparison-mutation histories, 26 outcomes and 49 ordered events. Original
+  histories remain unchanged. Repeated retries consume bounded work, and
+  interruption releases ownership. Unicode/split tables, forked callback
+  mutation, retained registry work ownership and cleaner integration remain
+  open. No canonical completion or normalization law follows.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

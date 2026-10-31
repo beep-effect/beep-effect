@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "d0924f46aff757cde121505c35ccd6aead9b75e358589b4f95681358b788754d",
+  "planSha256": "9f4c3a5bd53a2e9250e296e95be4db833939bf28c2823597e816ce1367aa902c",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -474,6 +474,26 @@
         {
           "path": "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
           "sha256": "814406f61958dfe9d43b32cad562378372e07fa5f32f5e5a5437457e6ea5e3ff"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-dictionary-reentrancy.py",
+          "sha256": "d458969dbbad47bde537307c4f8372797ecd12174898e63dbd049399a62e3e36"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-dictionary-reentrancy.py",
+          "sha256": "b15fab3da62557da71517a422bff3286c2447667147930a78e6102dce4f81661"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-dictionary-reentrancy.md",
+          "sha256": "109daa30600d82bc2700d06088cf3b8b7f4c3bfaa305ccddb29d28daaf760034"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationDictionaryReentrancy.test.ts",
+          "sha256": "f065c28f72520b98efb9e59dee285aec583d36e76f07cc33d353740127137f90"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/dictionary-reentrancy.json",
+          "sha256": "68a3835c917bab252d004d2066b7ca45927deca1d358f68ed957b1ecbfecb9da"
         }
       ],
       "workflowState": "audit",

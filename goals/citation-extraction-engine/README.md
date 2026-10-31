@@ -26,6 +26,10 @@ The [cleaner sequence source corpus](./history/evidence/2026-10-31-cleaner-pipel
 adds 1,155 cases and 51 custom scenes, including lazy steps, live registry
 mutation and non-string callback values. The portable audit now has eleven
 components; target cleaner contracts and composition remain open.
+[Direct dictionary comparison mutation](./history/evidence/2026-10-31-dictionary-reentrancy.md)
+now matches thirteen additional source histories without deadlocking or using
+stale comparison results; Unicode tables and composed cleaner ownership remain
+open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -109,8 +109,9 @@ export class CitationRuntimeDictionaryFailure extends S.TaggedError<
 ) {}
 /**
  * Captured source-equivalent comparison and shared work accounting. Comparison
- * may read current key state. Reentrant table mutation through comparison is
- * not implemented by this first private backend and remains a proof frontier.
+ * may read or directly mutate the table in the same fiber. Lookup restarts
+ * after key removal/replacement or table rebuild, matching the source checks.
+ * Forked callback mutation and mutation from accounting hooks are not covered.
  * @internal
  * @category services
  * @since 0.0.0
@@ -169,8 +170,9 @@ const indexOfHash = (hash: bigint, size: number) => Number(hash & BigInt(size - 
 /**
  * Allocate a fresh private combined/general-key table. Source pointer identity
  * is checked before cached hash/equality; growth rebuilds with stored hashes.
- * Unicode-specialized/split tables, exact hash production, source comparison
- * reentrancy and final owner/document integration remain separate obligations.
+ * Direct same-fiber comparison reentrancy is supported. Unicode-specialized/
+ * split tables, exact hash production, forked callback mutation and final
+ * owner/document integration remain separate obligations.
  * @internal
  * @category operations
  * @since 0.0.0
@@ -183,6 +185,29 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   const maximumSteps = limits.iterations;
   const comparison = yield* CitationRuntimeDictionaryComparison;
   const mutex = yield* Semaphore.make(1);
+  let owner = O.none<number>();
+  // Direct callback recursion keeps the same owner. Other fibers still wait;
+  // acquireUseRelease clears ownership on success, failure and interruption.
+  const serial = <A, E, R>(body: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    Effect.withFiber((fiber) =>
+      Effect.suspend(() =>
+        O.isSome(owner) && owner.value === fiber.id
+          ? body
+          : mutex.withPermit(
+              Effect.acquireUseRelease(
+                Effect.sync(() => {
+                  owner = O.some(fiber.id);
+                }),
+                () => body,
+                () =>
+                  Effect.sync(() => {
+                    owner = O.none();
+                  })
+              )
+            )
+      )
+    );
+  let keysEpoch = 0;
   let capacity = 0;
   let usable = 0;
   let buckets = HashMap.empty<number, typeof Cell.Type>();
@@ -200,25 +225,30 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     return CitationRuntimeDictionaryKey.make({ objectId: decoded.objectId, hash: decoded.hash });
   });
   const lookup = Effect.fn("Citation.runtimeDictionaryLookup")(function* (key: CitationRuntimeDictionaryKey) {
-    if (capacity === 0) return O.none<typeof Hit.Type>();
-    let perturb = unsigned(key.hash);
-    let index = indexOfHash(perturb, capacity);
+    // CPython's DKIX_KEY_CHANGED retries with the original caller-supplied
+    // hash. Replacing only a value or deleting an unrelated key does not retry.
     while (true) {
-      yield* step;
-      const cell = HashMap.get(buckets, index);
-      if (O.isNone(cell)) return O.none<typeof Hit.Type>();
-      if (cell.value._tag === "Active") {
-        const entry = yield* Effect.fromOption(HashMap.get(entries, cell.value.entryId), invalid);
-        // CPython tests the key pointer before comparing the cached hash.
-        if (
-          entry.objectId === key.objectId ||
-          (entry.storedHash === key.hash &&
-            (yield* comparison.equal(entry.objectId, key.objectId).pipe(Effect.mapError(freshFailure))))
-        )
-          return O.some(Hit.make({ entryId: entry.entryId, bucket: index }));
+      if (capacity === 0) return O.none<typeof Hit.Type>();
+      const epoch = keysEpoch;
+      let perturb = unsigned(key.hash);
+      let index = indexOfHash(perturb, capacity);
+      while (true) {
+        yield* step;
+        const cell = HashMap.get(buckets, index);
+        if (O.isNone(cell)) return O.none<typeof Hit.Type>();
+        if (cell.value._tag === "Active") {
+          const entry = yield* Effect.fromOption(HashMap.get(entries, cell.value.entryId), invalid);
+          if (entry.objectId === key.objectId) return O.some(Hit.make({ entryId: entry.entryId, bucket: index }));
+          if (entry.storedHash === key.hash) {
+            const equal = yield* comparison.equal(entry.objectId, key.objectId).pipe(Effect.mapError(freshFailure));
+            const current = HashMap.get(entries, entry.entryId);
+            if (keysEpoch !== epoch || O.isNone(current) || current.value.objectId !== entry.objectId) break;
+            if (equal) return O.some(Hit.make({ entryId: entry.entryId, bucket: index }));
+          }
+        }
+        perturb >>= BigInt(5);
+        index = indexOfHash(BigInt(index) * BigInt(5) + perturb + BigInt(1), capacity);
       }
-      perturb >>= BigInt(5);
-      index = indexOfHash(BigInt(index) * BigInt(5) + perturb + BigInt(1), capacity);
     }
   });
   const emptySlot = Effect.fn("Citation.runtimeDictionaryEmptySlot")(function* (
@@ -302,6 +332,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
       storedHash: key.hash,
       value: decodedValue,
     });
+    if (next.buckets !== buckets || next.capacity !== capacity) keysEpoch += 1;
     capacity = next.capacity;
     buckets = HashMap.set(next.buckets, index, Cell.cases.Active.make({ entryId: entry.entryId }));
     usable = next.usable - 1;
@@ -321,6 +352,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     return O.some(copyEntry(entry));
   });
   const clear = Effect.sync(() => {
+    if (capacity !== 0) keysEpoch += 1;
     capacity = 0;
     usable = 0;
     buckets = HashMap.empty();
@@ -335,16 +367,14 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     )
   );
   return CitationRuntimeDictionary.of({
-    get: Effect.fn("Citation.serialRuntimeDictionaryGet")((key: CitationRuntimeDictionaryKey) =>
-      mutex.withPermit(get(key))
-    ),
+    get: Effect.fn("Citation.serialRuntimeDictionaryGet")((key: CitationRuntimeDictionaryKey) => serial(get(key))),
     set: Effect.fn("Citation.serialRuntimeDictionarySet")((key: CitationRuntimeDictionaryKey, value: number) =>
-      mutex.withPermit(set(key, value))
+      serial(set(key, value))
     ),
     remove: Effect.fn("Citation.serialRuntimeDictionaryRemove")((key: CitationRuntimeDictionaryKey) =>
-      mutex.withPermit(remove(key))
+      serial(remove(key))
     ),
-    clear: mutex.withPermit(clear),
-    read: mutex.withPermit(read),
+    clear: serial(clear),
+    read: serial(read),
   });
 });

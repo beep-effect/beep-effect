@@ -153,7 +153,12 @@
         "goals/citation-extraction-engine/ops/check-parity.ts",
         "goals/citation-extraction-engine/ops/verify-parity-controls.py",
         "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-pipeline-source.md",
-        "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json"
+        "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
+        "goals/citation-extraction-engine/ops/probe-dictionary-reentrancy.py",
+        "goals/citation-extraction-engine/ops/verify-dictionary-reentrancy.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-dictionary-reentrancy.md",
+        "packages/law-practice/server/test/CitationDictionaryReentrancy.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/dictionary-reentrancy.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

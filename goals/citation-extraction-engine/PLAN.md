@@ -146,6 +146,14 @@ source component; it still rejects default completion. See
 history/evidence/2026-10-31-cleaner-pipeline-source.md. Capture does not qualify a
 composed target cleaner or advance any canonical completion row.
 
+Latest registry prerequisite fix (2026-10-31): the private general-key table now
+admits direct same-fiber comparison mutation and restarts when the key table or
+compared insertion changes. Thirteen source histories preserve all 26 outcomes
+and 49 ordered events, alongside the original eight histories. Repeated restart
+work remains bounded and interrupted ownership is released. See
+history/evidence/2026-10-31-dictionary-reentrancy.md. Unicode tables, retained
+registry work ownership and the composed cleaner remain open; no row advances.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use
