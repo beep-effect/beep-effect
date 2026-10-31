@@ -213,6 +213,17 @@ bun goals/beep-cli-composition/ops/g4-fingerprint-replay.ts --commits 400 --toda
 
 `--today` names the last commit with the v1 declaration.
 
+## Cache baseline
+
+`beep cache audit` reported 618 blocking findings after the change: 584
+`configuration-drift` rows (the rewritten fingerprint edge on every policy
+task, 188 subjects) and 34 `unreviewed-expansion` rows (the new seal tasks).
+The reviewed request [`g4-cache-baseline-request.json`](g4-cache-baseline-request.json)
+names exactly those subjects against the basis
+[`g4-cache-baseline-review.md`](g4-cache-baseline-review.md); scope, profile and
+epoch are unchanged and no qualification is granted. The audit then reports 0
+blocking findings.
+
 ## What is left
 
 - The shared seal is the floor (109 of 400): the shell reaches 360 modules
