@@ -41,6 +41,8 @@ are fixed, never before.
 
 ## Current Blockers
 
+- **Contextual predicate repair with 29-claim retention (2026-10-31):** [comparison](history/2026-10-31-predicate-comparison.md) records **31/538 complete structures (5.76%)**, retaining all 29 baseline passes with two gains and zero losses. Edge F1 is 29.3067% (previously 29.2580%). Frozen labels, sources, scorer and all historical results remain unchanged. 449 structural mismatches and 58 input failures remain. Two new regression tests and all package verifications pass. The goal remains active and human acceptance incomplete.
+
 - **Discourse-role repair with pass retention (2026-10-28):** [the comparison](history/2026-10-28-discourse-comparison.md) records **29/538 complete matches (5.39%)**, retaining all previous 21. Final [paired gate](history/2026-10-28-v10-retention.json) has eight gains and zero losses. Edge F1 is slightly lower at 29.26%; recall improves but precision declines. All old labels/results/scorer remain unchanged. 451 structural mismatches and 58 input failures remain; eight new regressions and all package checks pass. Full goal/human acceptance remain incomplete.
 
 

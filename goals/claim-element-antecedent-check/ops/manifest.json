@@ -6,7 +6,7 @@
     "title": "Claim Element Antecedent Check",
     "status": "active",
     "created": "2026-10-14",
-    "updated": "2026-10-28",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-element-antecedent-check",
@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "User-directed discourse-role repair reaches 29/538 complete structures (5.39%), retaining every baseline 21 with eight gains and no losses. All labels, old results and scorer remain unchanged; regressing 25-match trial source/results retained at 828e34b258. Diagnostic edge F1 29.26% slightly declines while recall improves; precision declines. 451 structural mismatches, 58 input failures, no selected undecomposed claims. Eight new synthetic regressions and all package checks pass. Human agreement, adjudicated FP and full-goal publication/closeout remain incomplete. See history/2026-10-28-discourse-comparison.md."
+  "statusNote": "User-directed contextual predicate repair reaches 31/538 exact structures (5.76%), retaining every baseline 29 with two gains and zero losses. Frozen labels, sources, scorer and old results remain unchanged. v11 source/result preserved at 4046f1178d; formatter-clean v12 has identical per-claim scores. Edge precision 33.3765%, recall 26.1216%, F1 29.3067%. 449 mismatches, 58 input failures, no selected undecomposed claims. 87 focused tests and all package checks pass; historical integrity and paired retention gates pass. Human agreement, adjudicated FP and publication/closeout remain incomplete. See history/2026-10-31-predicate-comparison.md."
 }

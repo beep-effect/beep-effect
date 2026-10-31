@@ -350,7 +350,10 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
   const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
   const purposeParticiple = O.contains(current, "used") && O.contains(next, "for");
   return (
-    (O.exists(current, (word) => HashSet.has(predicateWords, word)) || finite || purposeParticiple || (participle && complement)) &&
+    (O.exists(current, (word) => HashSet.has(predicateWords, word)) ||
+      finite ||
+      purposeParticiple ||
+      (participle && complement)) &&
     (!O.exists(next, (word) => HashSet.has(nominalFollowers, word)) || clauseVerb) &&
     !nominal
   );

@@ -10,11 +10,17 @@ describe("purpose predicates and response idioms", () => {
   it.effect("keeps purpose participles and response connective text out of entity names", () =>
     Effect.gen(function* () {
       const claims = yield* normalizePatentClaims([
-        ["1", "A method comprising receiving a control channel (CCH) used for feedback in response to transmission on a carrier."],
+        [
+          "1",
+          "A method comprising receiving a control channel (CCH) used for feedback in response to transmission on a carrier.",
+        ],
       ]);
       const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
       assert.deepStrictEqual(
-        A.map(A.flatMap(tree.elements, (element) => element.terms), (term) => term.anchor.quote),
+        A.map(
+          A.flatMap(tree.elements, (element) => element.terms),
+          (term) => term.anchor.quote
+        ),
         ["A method", "a control channel (CCH)", "feedback", "transmission", "a carrier"]
       );
     })
@@ -27,7 +33,10 @@ describe("purpose predicates and response idioms", () => {
       ]);
       const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
       assert.deepStrictEqual(
-        A.map(A.flatMap(tree.elements, (element) => element.terms), (term) => term.anchor.quote),
+        A.map(
+          A.flatMap(tree.elements, (element) => element.terms),
+          (term) => term.anchor.quote
+        ),
         ["A fixture", "a used bracket", "a response unit", "a panel", "strips"]
       );
     })
