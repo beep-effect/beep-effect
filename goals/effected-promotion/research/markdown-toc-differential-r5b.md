@@ -1,7 +1,8 @@
 # Markdown TOC differential: roadmap PR R5b
 
-Run 2026-10-31 on lane `refactor/markdown-toc-onto-beep-markdown` (base
-`origin/main` f77a32de6d) by `ops/markdown-toc-differential.ts` against a
+Run 2026-10-31 on lane `refactor/markdown-toc-onto-beep-markdown` at commit
+694491e86c, a clean tree after the lane merged `origin/main` 8f619d205c, by
+`ops/markdown-toc-differential.ts` against a
 disposable `@effect/markdown-toc@0.1.0` install (`remarkable` 1.7.4) under
 `~/.cache/beep/markdown-toc-oracle`. The machine-readable report is
 `markdown-toc-differential-r5b.json`; this note classifies what it records.
@@ -17,7 +18,7 @@ implementations with `bullets: "-"` / `bullet: "-"`:
 
 | Corpus | Files | Oracle headings | Kit == oracle | Page's embedded TOC == oracle |
 | --- | --- | --- | --- | --- |
-| docgen module pages | 3,372 | 36,219 | 3,372 | 3,372 |
+| docgen module pages | 3,378 | 36,267 | 3,378 | 3,378 |
 
 So the TOC block of every generated page is byte-identical to what
 `@effect/markdown-toc` rendered for the same content: the generated docs do not
@@ -27,9 +28,9 @@ change. The 168 `index.md` module indexes carry no TOC block and are skipped.
 
 | Corpus | Files | Oracle headings | Identical | Differing | Kit errors |
 | --- | --- | --- | --- | --- | --- |
-| `git ls-files -- '*.md'` | 8,748 | 70,487 | 8,709 | 39 | 0 |
+| `git ls-files -- '*.md'` | 8,805 | 71,064 | 8,766 | 39 | 0 |
 
-No heading of the 70,487 slugs differently between the two implementations: the
+No heading of the 71,064 slugs differently between the two implementations: the
 39 differing files all differ in which lines the two **parsers** read as
 headings, never in the slug, title or anchor of a heading both agree on. Three
 classes cover all 39:

@@ -1,7 +1,7 @@
 {
   "tool": "goals/effected-promotion/ops/markdown-toc-differential.ts",
-  "commit": "f77a32de6daf0e440994d157d42e8c7825e2af25",
-  "dirty": true,
+  "commit": "694491e86c908485cdc7b97be43481f190a7a69b",
+  "dirty": false,
   "oracle": {
     "dir": "~/.cache/beep/markdown-toc-oracle",
     "markdownToc": "0.1.0",
@@ -9,18 +9,18 @@
   },
   "corpora": {
     "docgen": {
-      "files": 3372,
-      "identical": 3372,
+      "files": 3378,
+      "identical": 3378,
       "differing": 0,
-      "oracleHeadings": 36219,
+      "oracleHeadings": 36267,
       "kitErrors": 0,
-      "embeddedIdentical": 3372
+      "embeddedIdentical": 3378
     },
     "tracked": {
-      "files": 8748,
-      "identical": 8709,
+      "files": 8805,
+      "identical": 8766,
       "differing": 39,
-      "oracleHeadings": 70487,
+      "oracleHeadings": 71064,
       "kitErrors": 0,
       "embeddedIdentical": 0
     }
