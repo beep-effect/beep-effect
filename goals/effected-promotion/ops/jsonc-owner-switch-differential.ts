@@ -50,16 +50,29 @@
  *    is the running checkout's tracked files, which grows when `main` is merged.
  *
  * The input tree is a detached worktree of the base revision so the before and
- * after runs read identical files while only the code differs:
- *
- *   git worktree add --detach "$HOME/.cache/beep/effected-r3a-jsonc-parity" <base-rev>
- *   ln -s "$PWD/node_modules" "$HOME/.cache/beep/effected-r3a-jsonc-parity/node_modules"
+ * after runs read identical files while only the code differs. The script owns
+ * that tree: `--inputs-rev <rev>` makes it create a fresh `git worktree add
+ * --detach` of `<rev>` under `$HOME/.cache/beep/jsonc-owner-switch-differential/`
+ * (with a `node_modules` symlink to the running checkout's install), run every
+ * generator there, restore only that worktree between runs, and remove it when
+ * the run ends, failed or interrupted runs included. No checkout the script did
+ * not create is ever written; `--inputs-root` is refused. Both committed reports
+ * measure base revision 921b92fcd8. The before report was recorded by this
+ * script at e2912c32de, which still read a hand-made worktree of that revision
+ * through `--inputs-root`; the generator paths are normalized, so the location
+ * of the input tree does not enter any hash.
  *
  * Usage (from the repo root):
  *
- *   bun goals/effected-promotion/ops/jsonc-owner-switch-differential.ts --inputs-root <worktree> [--out <report.json>]
- *   bun goals/effected-promotion/ops/jsonc-owner-switch-differential.ts --inputs-root <worktree> --compare <baseline.json> [--out <report.json>]
+ *   bun goals/effected-promotion/ops/jsonc-owner-switch-differential.ts --inputs-rev <base-rev> [--out <report.json>]
+ *   bun goals/effected-promotion/ops/jsonc-owner-switch-differential.ts --inputs-rev <base-rev> --compare <baseline.json> [--out <report.json>]
  *   bun goals/effected-promotion/ops/jsonc-owner-switch-differential.ts --skip-generators [--out <report.json>]
+ *
+ * The R3a after report:
+ *
+ *   bun goals/effected-promotion/ops/jsonc-owner-switch-differential.ts --inputs-rev 921b92fcd8 \
+ *     --compare goals/effected-promotion/research/jsonc-owner-switch-differential-r3a-before.json \
+ *     --out goals/effected-promotion/research/jsonc-owner-switch-differential-r3a.json
  *
  * The report names the code revision it measured (`codeRev`); a dirty checkout
  * is refused unless `--allow-dirty` is passed, and then `dirtyAllowed: true` is
@@ -67,12 +80,15 @@
  *
  * Exit code 1 when the checkout is dirty without `--allow-dirty`, the corpus
  * or the edge leg has an unclassified difference, a round trip fails, a
- * generator leaves the input tree dirty, or `--compare` finds a difference.
+ * generator leaves the input tree dirty, the owned input tree cannot be
+ * created, restored or removed, or `--compare` finds a difference.
  */
+import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -82,7 +98,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -221,9 +236,29 @@ const basename = (path: string): string =>
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) => stream.pipe(Stream.decodeText(), Stream.mkString);
 
+// `ChildProcessSpawner.string` ignores the exit status, so every git call checks it: a failed
+// `worktree add`, `reset` or `clean` must stop the run instead of passing as empty output.
 const git = Effect.fn("JsoncDifferential.git")(function* (cwd: string, args: ReadonlyArray<string>) {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  return yield* spawner.string(ChildProcess.make("git", [...args], { cwd }));
+  const result = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* ChildProcess.make("git", [...args], {
+        cwd,
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      return yield* Effect.all(
+        { stdout: collectText(handle.stdout), stderr: collectText(handle.stderr), exitCode: handle.exitCode },
+        { concurrency: "unbounded" }
+      );
+    })
+  );
+  if (Number(result.exitCode) !== 0) {
+    return yield* DifferentialFailure.make({
+      message: `git ${A.join(args, " ")} (in ${cwd}) exited ${result.exitCode}: ${Str.trim(result.stderr)}`,
+    });
+  }
+  return result.stdout;
 });
 
 const revParse = (cwd: string) => Effect.map(git(cwd, ["rev-parse", "HEAD"]), Str.trim);
@@ -640,7 +675,55 @@ const normalize =
 
 const head = (text: string): string => Str.slice(0, 240)(text);
 
-const runGenerator = Effect.fn("JsoncDifferential.runGenerator")(function* (inputsRoot: string, generator: Generator) {
+// --- owned input tree ----------------------------------------------------------
+
+const INPUTS_PARENT = `${NodeOS.homedir()}/.cache/beep/jsonc-owner-switch-differential`;
+
+// A detached worktree this script created. Only `ownedInputs` constructs one, so it is the only
+// tree a generator run may change and the only tree the script restores or removes.
+interface OwnedInputs {
+  readonly root: string;
+}
+
+// A finalizer cannot fail, so a cleanup step that does is reported on stderr and the run goes on.
+const logRelease = (what: string) =>
+  Effect.catchCause((cause: Cause.Cause<unknown>) => Console.error(`cleanup: ${what} failed: ${Cause.pretty(cause)}`));
+
+// Creates a fresh holder directory and a detached worktree of `rev` inside it, and removes both
+// when the scope closes. The worktree is never a path the caller chose, so no user checkout,
+// editor buffer or background job's output can be inside it.
+const ownedInputs = Effect.fn("JsoncDifferential.ownedInputs")(function* (rev: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const commit = yield* Effect.map(git(repoRoot, ["rev-parse", "--verify", `${rev}^{commit}`]), Str.trim);
+  yield* fs.makeDirectory(INPUTS_PARENT, { recursive: true });
+  const holder = yield* Effect.acquireRelease(
+    fs.makeTempDirectory({ directory: INPUTS_PARENT, prefix: "inputs-" }),
+    (path) =>
+      fs
+        .remove(path, { recursive: true, force: true })
+        .pipe(Effect.andThen(git(repoRoot, ["worktree", "prune"])), logRelease(`removing ${path}`))
+  );
+  const root = `${holder}/inputs`;
+  yield* Effect.acquireRelease(Effect.as(git(repoRoot, ["worktree", "add", "--detach", root, commit]), root), (path) =>
+    git(repoRoot, ["worktree", "remove", "--force", path]).pipe(logRelease(`git worktree remove ${path}`))
+  );
+  yield* fs.symlink(`${repoRoot}node_modules`, `${root}/node_modules`);
+  yield* Console.log(`inputs: detached worktree of ${commit} at ${root} (removed at exit)`);
+  return { root } satisfies OwnedInputs;
+});
+
+// Restores the owned worktree after a run that changed it. `node_modules` is the symlink this
+// script placed; `-e` keeps `git clean` from deleting it.
+const restoreOwnedInputs = Effect.fn("JsoncDifferential.restoreOwnedInputs")(function* (inputs: OwnedInputs) {
+  yield* git(inputs.root, ["reset", "--hard", "--quiet", "HEAD"]);
+  yield* git(inputs.root, ["clean", "-fd", "--quiet", "-e", "node_modules"]);
+  if (yield* isDirty(inputs.root)) {
+    return yield* DifferentialFailure.make({ message: `${inputs.root} is still dirty after the restore` });
+  }
+});
+
+const runGenerator = Effect.fn("JsoncDifferential.runGenerator")(function* (inputs: OwnedInputs, generator: Generator) {
+  const inputsRoot = inputs.root;
   const result = yield* Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make("bun", [cliEntry, ...generator.argv], {
@@ -662,8 +745,7 @@ const runGenerator = Effect.fn("JsoncDifferential.runGenerator")(function* (inpu
   const stderr = clean(result.stderr);
   const treeClean = !(yield* isDirty(inputsRoot));
   if (!treeClean) {
-    yield* git(inputsRoot, ["checkout", "--", "."]);
-    yield* git(inputsRoot, ["clean", "-fd"]);
+    yield* restoreOwnedInputs(inputs);
   }
   const run = {
     id: generator.id,
@@ -683,12 +765,12 @@ const runGenerator = Effect.fn("JsoncDifferential.runGenerator")(function* (inpu
   return run;
 });
 
-const runGenerators = Effect.fn("JsoncDifferential.runGenerators")(function* (inputsRoot: string) {
-  const inputsRev = yield* revParse(inputsRoot);
-  if (yield* isDirty(inputsRoot)) {
-    return yield* DifferentialFailure.make({ message: `${inputsRoot} is dirty; the input tree must be clean` });
+const runGenerators = Effect.fn("JsoncDifferential.runGenerators")(function* (inputs: OwnedInputs) {
+  const inputsRev = yield* revParse(inputs.root);
+  if (yield* isDirty(inputs.root)) {
+    return yield* DifferentialFailure.make({ message: `${inputs.root} is dirty; the input tree must be clean` });
   }
-  const runs = yield* Effect.forEach(GENERATORS, (generator) => runGenerator(inputsRoot, generator));
+  const runs = yield* Effect.forEach(GENERATORS, (generator) => runGenerator(inputs, generator));
   return { inputsRev, runs };
 });
 
@@ -777,14 +859,20 @@ const program = Effect.gen(function* () {
       message: `${repoRoot} is dirty; commit first so codeRev names the measured code, or pass --allow-dirty (recorded as dirtyAllowed)`,
     });
   }
+  if (hasFlag("--inputs-root")) {
+    return yield* DifferentialFailure.make({
+      message:
+        "--inputs-root is refused: the script restores its input tree between runs, so it only runs generators in a worktree it creates; pass --inputs-rev <rev>",
+    });
+  }
   const corpus = yield* runCorpus();
   const edges = yield* runEdges();
-  const inputsRoot = flagValue("--inputs-root");
+  const inputsRev = flagValue("--inputs-rev");
   const generators = hasFlag("--skip-generators")
     ? O.none()
-    : O.isSome(inputsRoot)
-      ? O.some(yield* runGenerators(Str.replace(/\/$/, "")(inputsRoot.value)))
-      : yield* DifferentialFailure.make({ message: "pass --inputs-root <worktree> or --skip-generators" });
+    : O.isSome(inputsRev)
+      ? O.some(yield* Effect.scoped(Effect.flatMap(ownedInputs(inputsRev.value), runGenerators)))
+      : yield* DifferentialFailure.make({ message: "pass --inputs-rev <rev> or --skip-generators" });
   const base: Report = {
     schemaVersion: 1,
     tool: TOOL,
