@@ -1523,7 +1523,7 @@ const transformFencedContent = (
   markdown = false
 ): EffectImportFenceTransformSummary => {
   const [fences, parserWarnings]: readonly [ReadonlyArray<ScriptFence | FencedCodeBlockDetail>, ReadonlyArray<string>] =
-    markdown ? [scriptFences(content), A.empty<string>()] : extractFencedCodeBlockDetails(content);
+    markdown ? scriptFences(content) : extractFencedCodeBlockDetails(content);
   let warnings = A.fromIterable(parserWarnings);
   let rewrittenContent = content;
   let rootImportsRewritten = 0;
@@ -1546,6 +1546,15 @@ const transformFencedContent = (
       continue;
     }
     const sourceSummary = transformed.value;
+    // A fence inside a blockquote or list item keeps a prefix on every written line; a splice of the
+    // rewritten code would end the container, so that fence is reported for a hand edit instead.
+    if (sourceSummary.rewritten && !fence.inPlace) {
+      warnings = A.append(
+        warnings,
+        `${file}#fence-${ordinal}: root Effect import in a fence inside a blockquote or list item; rewrite it by hand`
+      );
+      continue;
+    }
     rootImportsRewritten += sourceSummary.rootImportsRewritten;
     rootExportsRewritten += sourceSummary.rootExportsRewritten;
     emittedImports += sourceSummary.emittedImports;

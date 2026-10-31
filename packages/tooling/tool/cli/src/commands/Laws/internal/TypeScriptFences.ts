@@ -13,6 +13,11 @@
  * fence typecheck law and the root Effect import law read fences through this
  * module, so they agree on which blocks are code.
  *
+ * Both extractors return `[fences, warnings]`. A text with no run of three
+ * backticks or tildes holds no fence and is not parsed. A text the parser
+ * refuses (its nesting or inline guards tripped) yields no fences and one
+ * warning, which every law reports as a finding instead of passing the file.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -28,6 +33,7 @@ import type { CodeFence } from "@beep/markdown/MarkdownFence";
 
 const $I = $RepoCliId.create("commands/Laws/internal/TypeScriptFences");
 
+const FENCE_RUN = /`{3}|~{3}/u;
 const TYPESCRIPT_LANGUAGE = /^(typescript|tsx|mts|cts|ts)(?![\w-])/iu;
 const SCRIPT_LANGUAGE = /^(typescript|javascript|tsx|jsx|mts|cts|mjs|cjs|ts|js)(?![\w-])/iu;
 
@@ -80,16 +86,20 @@ export class TypeScriptFence extends S.Opaque<TypeScriptFence, { readonly brand:
  *
  * **Details**
  *
- * `code` is `content.slice(codeStart, codeEnd)`: the body from the line after
- * the opening fence up to the closing fence's line, as written, so a rewrite
- * can splice a new body back into the same span.
+ * `code` is the body as CommonMark reads it (container prefixes and fence
+ * indentation removed). `codeStart` and `codeEnd` are the half-open span of the
+ * body as written, from the line after the opening fence up to the closing
+ * fence's line. `inPlace` is `true` when the written body is `code` (a closed,
+ * unindented, top-level fence, CRLF read as LF), so a rewrite of `code` can be
+ * spliced back into the span; for any other fence a splice would drop the
+ * container prefixes, so a rewrite must be done by hand.
  *
  * **Example** (Describe a script fence)
  *
  * ```ts
  * import { ScriptFence } from "@beep/repo-cli/test/Laws"
  *
- * const fence = ScriptFence.make({ code: "const a = 1\n", codeStart: 6, codeEnd: 18, extension: ".ts" })
+ * const fence = ScriptFence.make({ code: "const a = 1\n", codeStart: 6, codeEnd: 18, extension: ".ts", inPlace: true })
  * console.log(fence.codeEnd - fence.codeStart) // 12
  * ```
  *
@@ -102,30 +112,42 @@ export class ScriptFence extends S.Opaque<ScriptFence, { readonly brand: unique 
     codeStart: S.Natural,
     codeEnd: S.Natural,
     extension: S.Literals([".ts", ".tsx"]),
+    inPlace: S.Boolean,
   }).pipe(
     $I.annoteSchema("ScriptFence", {
-      description: "One TypeScript or JavaScript fence body with its half-open source span and parse extension.",
+      description:
+        "One TypeScript or JavaScript fence body as CommonMark reads it, with its half-open written span, parse extension and whether the span holds that body verbatim.",
     })
   )
 ) {}
 
-// The fences whose info string opens with a language word `pattern` captures, with that word lowercased.
+type LanguageFence = { readonly fence: CodeFence; readonly language: string };
+
+// The fences whose info string opens with a language word `pattern` captures, with that word lowercased,
+// and the parse failure as a warning (with no fences) when the parser refused the text.
 const fencesWithLanguage = (
   content: string,
   pattern: RegExp
-): ReadonlyArray<{ readonly fence: CodeFence; readonly language: string }> =>
-  Result.match(MarkdownDocument.parseResult(content), {
-    onFailure: A.empty,
-    onSuccess: (document) =>
-      A.getSomes(
-        A.map(MarkdownFence.fences(document), (fence) =>
-          O.map(O.fromNullishOr(pattern.exec(fence.infoString)?.[1]), (word) => ({
-            fence,
-            language: Str.toLowerCase(word),
-          }))
-        )
-      ),
-  });
+): readonly [fences: ReadonlyArray<LanguageFence>, warnings: ReadonlyArray<string>] =>
+  FENCE_RUN.test(content)
+    ? Result.match(MarkdownDocument.parseResult(content), {
+        onFailure: (error): readonly [ReadonlyArray<LanguageFence>, ReadonlyArray<string>] => [
+          A.empty(),
+          A.of(`cannot read fences: ${error.message}`),
+        ],
+        onSuccess: (document): readonly [ReadonlyArray<LanguageFence>, ReadonlyArray<string>] => [
+          A.getSomes(
+            A.map(MarkdownFence.fences(document), (fence) =>
+              O.map(O.fromNullishOr(pattern.exec(fence.infoString)?.[1]), (word) => ({
+                fence,
+                language: Str.toLowerCase(word),
+              }))
+            )
+          ),
+          A.empty(),
+        ],
+      })
+    : [A.empty(), A.empty()];
 
 /**
  * Extract every TypeScript fence of a Markdown or JSDoc text.
@@ -136,25 +158,32 @@ const fencesWithLanguage = (
  * import { typescriptFences } from "@beep/repo-cli/test/Laws"
  *
  * const fence = "`".repeat(3)
- * const [first] = typescriptFences(["# Title", `${fence}ts skip-type-checking`, "const a = 1", fence].join("\n"))
+ * const [[first]] = typescriptFences(["# Title", `${fence}ts skip-type-checking`, "const a = 1", fence].join("\n"))
  * console.log(first?.infoString, first?.codeLineIndex) // "ts skip-type-checking" 2
  * ```
  *
  * @param content - Markdown or JSDoc text.
- * @returns Fences in source order.
+ * @returns Fences in source order, and one warning when the text cannot be parsed.
  * @category utilities
  * @since 0.0.0
  */
-export const typescriptFences = (content: string): ReadonlyArray<TypeScriptFence> =>
-  A.map(fencesWithLanguage(content, TYPESCRIPT_LANGUAGE), ({ fence, language }) =>
-    TypeScriptFence.make({
-      code: fence.value,
-      infoString: Str.trim(fence.infoString),
-      language,
-      openingLineIndex: fence.line,
-      codeLineIndex: fence.line + 1,
-    })
-  );
+export const typescriptFences = (
+  content: string
+): readonly [fences: ReadonlyArray<TypeScriptFence>, warnings: ReadonlyArray<string>] => {
+  const [fences, warnings] = fencesWithLanguage(content, TYPESCRIPT_LANGUAGE);
+  return [
+    A.map(fences, ({ fence, language }) =>
+      TypeScriptFence.make({
+        code: fence.value,
+        infoString: Str.trim(fence.infoString),
+        language,
+        openingLineIndex: fence.line,
+        codeLineIndex: fence.line + 1,
+      })
+    ),
+    warnings,
+  ];
+};
 
 /**
  * Extract every TypeScript or JavaScript fence of a Markdown text with its body span.
@@ -165,21 +194,29 @@ export const typescriptFences = (content: string): ReadonlyArray<TypeScriptFence
  * import { scriptFences } from "@beep/repo-cli/test/Laws"
  *
  * const fence = "`".repeat(3)
- * const [first] = scriptFences([`${fence}jsx`, "const a = <b />", fence].join("\n"))
- * console.log(first?.extension, first?.codeStart) // ".tsx" 7
+ * const [[first]] = scriptFences([`${fence}jsx`, "const a = <b />", fence].join("\n"))
+ * console.log(first?.extension, first?.codeStart, first?.inPlace) // ".tsx" 7 true
  * ```
  *
  * @param content - Markdown text.
- * @returns Fences in source order.
+ * @returns Fences in source order, and one warning when the text cannot be parsed.
  * @category utilities
  * @since 0.0.0
  */
-export const scriptFences = (content: string): ReadonlyArray<ScriptFence> =>
-  A.map(fencesWithLanguage(content, SCRIPT_LANGUAGE), ({ fence, language }) =>
-    ScriptFence.make({
-      code: fence.body,
-      codeStart: fence.bodyStart,
-      codeEnd: fence.bodyEnd,
-      extension: language === "tsx" || language === "jsx" ? ".tsx" : ".ts",
-    })
-  );
+export const scriptFences = (
+  content: string
+): readonly [fences: ReadonlyArray<ScriptFence>, warnings: ReadonlyArray<string>] => {
+  const [fences, warnings] = fencesWithLanguage(content, SCRIPT_LANGUAGE);
+  return [
+    A.map(fences, ({ fence, language }) =>
+      ScriptFence.make({
+        code: fence.value,
+        codeStart: fence.bodyStart,
+        codeEnd: fence.bodyEnd,
+        extension: language === "tsx" || language === "jsx" ? ".tsx" : ".ts",
+        inPlace: !fence.unterminated && Str.replace(/\r\n?/gu, "\n")(fence.body) === fence.value,
+      })
+    ),
+    warnings,
+  ];
+};

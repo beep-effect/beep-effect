@@ -126,6 +126,16 @@ describe("doctest analyzer", () => {
     expect(A.map(parsed.sections, (section) => section.name)).toEqual(["Details"]);
   });
 
+  it("masks fences with the line scanner when the Markdown parser refuses the comment", () => {
+    const deep = Str.repeat(300)(">");
+    const parsed = parseJSDocSections(
+      ParseJSDocSectionsOptions.make({
+        commentText: `/** Lead.\n *\n * **Details**\n *\n * ${deep} x\n *\n * ~~~md\n * **Example** (Quoted)\n * ~~~\n */`,
+      })
+    );
+    expect(A.map(parsed.sections, (section) => section.name)).toEqual(["Details"]);
+  });
+
   it("chooses a safe upstream name delimiter and rejects both delimiters", () => {
     expect(O.getOrUndefined(quotedDoctestName("Decode none"))).toBe('name="Decode none"');
     expect(O.getOrUndefined(quotedDoctestName('Decode "none"'))).toBe("name='Decode \"none\"'");
@@ -187,6 +197,36 @@ describe("doctest rewrite planning", () => {
 
       const second = analyzeDoctestSourceForTesting("packages/example/src/index.ts", rewritten);
       expect(second.findings).toEqual([]);
+    })
+  );
+
+  it.effect("keeps a four-marker opener whole when it plans the marker rewrite", () =>
+    Effect.gen(function* () {
+      const fence = "~".repeat(4);
+      const inner = "~".repeat(3);
+      const source = A.join(
+        [
+          "/**",
+          " * **Example** (Long fence)",
+          " *",
+          ` * ${fence}ts`,
+          " * const text = `",
+          ` * ${inner}`,
+          " * `",
+          " * console.log(text.length) // 5",
+          ` * ${fence}`,
+          " */",
+          "export const value = 2",
+        ],
+        "\n"
+      );
+      const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
+      expect(analysis.fences).toBe(1);
+      const plan = O.getOrThrow(O.fromUndefinedOr(analysis.findings[0]?.plan));
+
+      const rewritten = yield* rewriteDoctestSourceForTesting("packages/example/src/index.ts", source, [plan]);
+      expect(Str.split(rewritten, "\n")[3]).toBe(` * ${fence}${plan.expectedInfoString}`);
+      expect(analyzeDoctestSourceForTesting("packages/example/src/index.ts", rewritten).fences).toBe(1);
     })
   );
 

@@ -1433,6 +1433,55 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("reports root imports in blockquote and list-item fences for a hand edit instead of splicing", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const markdown = A.join(
+            [
+              "# Guide",
+              "",
+              "> ```ts",
+              '> import { Effect } from "effect"',
+              "> console.log(Effect.void)",
+              "> ```",
+              "",
+              "- step",
+              "",
+              "  ```ts",
+              '  import { flow } from "effect"',
+              "  console.log(flow)",
+              "  ```",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("docs/guide.md", markdown);
+
+          const written = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              write: true,
+              strictCheck: true,
+              mode: "markdown",
+              enforceDocumentation: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["docs"],
+            })
+          );
+          expect(yield* readProjectFile("docs/guide.md")).toBe(markdown);
+          expect(written.scannedFences).toBe(2);
+          expect(written.rootImportsRewritten).toBe(0);
+          expect(written.changedFiles).toEqual(["docs/guide.md"]);
+          expect(written.strictFailure).toBe(true);
+          expect(written.parserWarnings).toEqual([
+            "docs/guide.md: docs/guide.md#fence-2: root Effect import in a fence inside a blockquote or list item; rewrite it by hand",
+            "docs/guide.md: docs/guide.md#fence-1: root Effect import in a fence inside a blockquote or list item; rewrite it by hand",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("keeps the Markdown gate advisory until explicitly enforced and supports promoted writes", () =>
       Effect.andThen(
         temporaryWorkingDirectory,

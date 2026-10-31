@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * A {@link MarkdownFence} is one TypeScript fence of a guidance Markdown file.
+ * A {@link TypecheckFence} is one TypeScript fence of a guidance Markdown file.
  * The law typechecks every `checked` fence against the workspace's real
  * packages and records one {@link MarkdownFenceVerdict} per fence. A fence
  * whose info string carries docgen's `skip-type-checking` token is a reviewed
@@ -96,9 +96,9 @@ export type MarkdownFenceDisposition = typeof MarkdownFenceDisposition.Type;
  * **Example** (Describe a checked fence)
  *
  * ```ts
- * import { MarkdownFence } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
+ * import { TypecheckFence } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  *
- * const fence = MarkdownFence.make({
+ * const fence = TypecheckFence.make({
  *   path: "docs/README.md",
  *   line: 4,
  *   infoString: "ts",
@@ -113,7 +113,7 @@ export type MarkdownFenceDisposition = typeof MarkdownFenceDisposition.Type;
  * @category models
  * @since 0.0.0
  */
-export class MarkdownFence extends S.Opaque<MarkdownFence, { readonly brand: unique symbol }>()(
+export class TypecheckFence extends S.Opaque<TypecheckFence, { readonly brand: unique symbol }>()(
   S.Struct({
     path: S.String,
     line: S.Int,
@@ -122,7 +122,7 @@ export class MarkdownFence extends S.Opaque<MarkdownFence, { readonly brand: uni
     body: S.String,
     disposition: MarkdownFenceDisposition,
   }).pipe(
-    $I.annoteSchema("MarkdownFence", {
+    $I.annoteSchema("TypecheckFence", {
       description: "One TypeScript fence of a guidance Markdown file with its location and disposition.",
     })
   )
@@ -175,10 +175,10 @@ export class MarkdownFenceDiagnostic extends S.Opaque<MarkdownFenceDiagnostic, {
  * **Example** (Build a skipped verdict)
  *
  * ```ts
- * import { MarkdownFence, MarkdownFenceVerdict } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
+ * import { TypecheckFence, MarkdownFenceVerdict } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  * import * as S from "effect/Schema"
  *
- * const fence = MarkdownFence.make({
+ * const fence = TypecheckFence.make({
  *   path: "docs/README.md",
  *   line: 1,
  *   infoString: "ts skip-type-checking",
@@ -194,9 +194,9 @@ export class MarkdownFenceDiagnostic extends S.Opaque<MarkdownFenceDiagnostic, {
  * @since 0.0.0
  */
 export const MarkdownFenceVerdict = S.TaggedUnion({
-  passed: { fence: MarkdownFence },
-  failed: { fence: MarkdownFence, diagnostics: S.Array(MarkdownFenceDiagnostic) },
-  skipped: { fence: MarkdownFence },
+  passed: { fence: TypecheckFence },
+  failed: { fence: TypecheckFence, diagnostics: S.Array(MarkdownFenceDiagnostic) },
+  skipped: { fence: TypecheckFence },
 }).pipe(
   $I.annoteSchema("MarkdownFenceVerdict", {
     description: "Passed, failed, or skipped check verdict for one Markdown TypeScript fence.",
@@ -255,7 +255,9 @@ export class MarkdownFencesOptions extends S.Opaque<MarkdownFencesOptions, { rea
  *
  * `fences` counts every TypeScript fence on the guidance surface; it equals
  * `checkedFences + optOutFences + generatedFences`. `failures` holds the
- * failed verdicts in path and line order.
+ * failed verdicts in path and line order. `unreadable` holds one
+ * `markdown-parse` diagnostic per file the CommonMark parser refused (its
+ * fences could not be read); a strict run fails on either.
  *
  * **Example** (Read an empty summary)
  *
@@ -287,10 +289,12 @@ export class MarkdownFencesSummary extends S.Opaque<MarkdownFencesSummary, { rea
     optOutFences: S.Natural,
     generatedFences: S.Natural,
     failures: ArrayKeyDefaultEmpty(MarkdownFenceVerdict.cases.failed),
+    unreadable: ArrayKeyDefaultEmpty(MarkdownFenceDiagnostic),
     strictFailure: S.Boolean,
   }).pipe(
     $I.annoteSchema("MarkdownFencesSummary", {
-      description: "Fence counts by disposition and the failed verdicts of one Markdown fence typecheck run.",
+      description:
+        "Fence counts by disposition, the failed verdicts and the files the parser refused (one markdown-parse diagnostic each) of one Markdown fence typecheck run.",
     })
   )
 ) {}

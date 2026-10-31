@@ -29,7 +29,10 @@ const $I = $RepoCliId.create("commands/Laws/SchemaTagIdioms.model");
  * (inline or through `S.Struct`) fix `_tag`, which must be `S.TaggedClass` or
  * `S.TaggedError`. `single-literal-field` matches a required schema field
  * fixed to one `S.Literal(v)`, inline or through a private const used only as
- * field values, which must be `S.tag(v)`.
+ * field values, which must be `S.tag(v)`. `unreadable-markdown` marks a
+ * Markdown file or JSDoc block that may bind `effect/Schema` but whose fences
+ * the CommonMark parser refused (a nesting or inline guard tripped), so the
+ * law could not check them.
  *
  * **Example** (Identify a struct-tag finding)
  *
@@ -42,9 +45,15 @@ const $I = $RepoCliId.create("commands/Laws/SchemaTagIdioms.model");
  * @category models
  * @since 0.0.0
  */
-export const SchemaTagIdiomRule = LiteralKit(["struct-tag", "class-tag", "single-literal-field"]).pipe(
+export const SchemaTagIdiomRule = LiteralKit([
+  "struct-tag",
+  "class-tag",
+  "single-literal-field",
+  "unreadable-markdown",
+]).pipe(
   $I.annoteSchema("SchemaTagIdiomRule", {
-    description: "Rule that detected a non-idiomatic Effect v4 schema tag form.",
+    description:
+      "Rule that detected a non-idiomatic Effect v4 schema tag form, or a text whose fences could not be read.",
   })
 );
 

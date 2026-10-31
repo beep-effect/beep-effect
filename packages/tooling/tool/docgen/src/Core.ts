@@ -61,6 +61,14 @@ class FencedCodeBlock extends S.Opaque<FencedCodeBlock, { readonly brand: unique
  * Use when a caller must edit fence metadata or code against the exact source
  * slice that was analyzed.
  *
+ * **Details**
+ *
+ * `inPlace` is `true` when the written body is the code CommonMark reads (a
+ * closed, unindented fence outside any blockquote or list item, CRLF read as
+ * LF), so new code can be spliced over `codeStart`..`codeEnd`; a fence inside a
+ * container keeps a prefix or indentation on every line that a splice would
+ * drop.
+ *
  * **Example** (Inspect a fence info span)
  *
  * ```ts
@@ -85,9 +93,11 @@ export class FencedCodeBlockDetail extends S.Opaque<FencedCodeBlockDetail, { rea
     infoEnd: S.Natural,
     codeStart: S.Natural,
     codeEnd: S.Natural,
+    inPlace: S.Boolean,
   }).pipe(
     $I.annoteSchema("FencedCodeBlockDetail", {
-      description: "Extracted TypeScript fence with raw metadata and half-open source offsets.",
+      description:
+        "Extracted TypeScript fence with raw metadata, half-open source offsets and whether its written body can be spliced in place.",
     })
   )
 ) {}
@@ -316,21 +326,26 @@ const isTypeScriptFence = (metadata: string): boolean =>
 const unterminatedFenceWarning = (content: string): string =>
   `Code block does not have a matching closing fence:\n${content}`;
 
+// A fence needs a run of three backticks or tildes; a text without one is not parsed.
+const fenceRunPattern = /`{3}|~{3}/u;
+
 // Every fence of the text, read as CommonMark by `@beep/markdown`, and one warning per unterminated fence.
 const codeFences = (content: string): [fences: ReadonlyArray<CodeFence>, warnings: Array<string>] =>
-  Result.match(MarkdownDocument.parseResult(content), {
-    onFailure: (error): [ReadonlyArray<CodeFence>, Array<string>] => [A.empty(), [`${error.message}:\n${content}`]],
-    onSuccess: (document): [ReadonlyArray<CodeFence>, Array<string>] => {
-      const fences = MarkdownFence.fences(document);
-      return [
-        fences,
-        A.map(
-          A.filter(fences, (fence) => fence.unterminated),
-          () => unterminatedFenceWarning(content)
-        ),
-      ];
-    },
-  });
+  !fenceRunPattern.test(content)
+    ? [A.empty(), []]
+    : Result.match(MarkdownDocument.parseResult(content), {
+        onFailure: (error): [ReadonlyArray<CodeFence>, Array<string>] => [A.empty(), [`${error.message}:\n${content}`]],
+        onSuccess: (document): [ReadonlyArray<CodeFence>, Array<string>] => {
+          const fences = MarkdownFence.fences(document);
+          return [
+            fences,
+            A.map(
+              A.filter(fences, (fence) => fence.unterminated),
+              () => unterminatedFenceWarning(content)
+            ),
+          ];
+        },
+      });
 
 const isTypeCheckableFence = (fence: CodeFence): boolean => {
   const metadata = Str.toLowerCase(fence.infoString);
@@ -432,6 +447,7 @@ export const extractFencedCodeBlockDetails = (
       infoEnd: fence.infoEnd,
       codeStart: fence.bodyStart,
       codeEnd: fence.bodyEnd,
+      inPlace: !fence.unterminated && Str.replace(/\r\n?/gu, "\n")(fence.body) === fence.value,
     })
   );
   return [examples, warnings];

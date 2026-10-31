@@ -68,6 +68,18 @@ describe("Core", () =>
       expect(detail.extension).toBe(".ts");
     });
 
+    it("should mark only verbatim fence bodies as spliceable in place", () => {
+      const source =
+        "```ts\r\nconst a = 1\r\n```\n\n> ```ts\n> const b = 2\n> ```\n\n- item\n\n  ```ts\n  const c = 3\n  ```\n\n```ts\nconst d = 4";
+      const [details] = Core.extractFencedCodeBlockDetails(source);
+
+      expect(A.map(details, (detail) => detail.inPlace)).toEqual([true, false, false, false]);
+    });
+
+    it("should not parse a text without a fence marker run", () => {
+      expect(Core.extractFencedCodeBlockDetails("a `` b ~~ c")).toEqual([[], []]);
+    });
+
     it("should preserve compatibility output beside detailed extraction", () => {
       const source = "~~~tsx custom=value\nconst view = <div />\n~~~";
       const [blocks] = Core.extractFencedCodeBlocks(source);

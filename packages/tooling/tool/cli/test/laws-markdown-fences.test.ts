@@ -2,14 +2,15 @@ import {
   collectMarkdownFences,
   formatMarkdownFenceFailure,
   isMarkdownFenceSurfacePath,
-  MarkdownFence,
   MarkdownFenceDiagnostic,
   MarkdownFenceTypechecker,
   MarkdownFenceVerdict,
   mapFenceDiagnostics,
+  scanMarkdownFenceFile,
   stagedFenceFileName,
+  TypecheckFence,
 } from "@beep/repo-cli/commands/Laws";
-import { typescriptFences } from "@beep/repo-cli/test/Laws";
+import { scriptFences, typescriptFences } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -69,7 +70,7 @@ const withStubCompiler =
     );
 
 const checkedFence = (path: string, line: number, body: string, language: "ts" | "tsx" = "ts") =>
-  MarkdownFence.make({ path, line, infoString: language, language, body, disposition: "checked" });
+  TypecheckFence.make({ path, line, infoString: language, language, body, disposition: "checked" });
 
 const failureText = <A, E>(exit: Exit.Exit<A, E>): string => (Exit.isFailure(exit) ? String(exit.cause) : "");
 
@@ -158,10 +159,57 @@ describe("Markdown fence typecheck law", () => {
           `  ${fence}`
         );
 
-        expect(A.map(typescriptFences(markdown), (item) => [item.language, item.openingLineIndex, item.code])).toEqual([
+        expect(
+          A.map(typescriptFences(markdown)[0], (item) => [item.language, item.openingLineIndex, item.code])
+        ).toEqual([
           ["ts", 0, "const quoted = 1\n"],
           ["tsx", 6, "const listed = <b />\n"],
         ]);
+      })
+    );
+
+    it.effect("marks container fences as not spliceable and reads their code without the prefix", () =>
+      Effect.sync(() => {
+        const markdown = markdownOf(
+          `${fence}ts`,
+          'import * as Effect from "effect"',
+          fence,
+          "",
+          `> ${fence}ts`,
+          '> import * as Option from "effect"',
+          `> ${fence}`,
+          "",
+          "- item",
+          "",
+          `  ${fence}js`,
+          '  import * as Schema from "effect"',
+          `  ${fence}`
+        );
+        const [fences, warnings] = scriptFences(markdown);
+
+        expect(warnings).toEqual([]);
+        expect(A.map(fences, (item) => [item.code, item.inPlace])).toEqual([
+          ['import * as Effect from "effect"\n', true],
+          ['import * as Option from "effect"\n', false],
+          ['import * as Schema from "effect"\n', false],
+        ]);
+      })
+    );
+
+    it.effect("reports a text the parser refuses instead of passing it", () =>
+      Effect.sync(() => {
+        const markdown = `${Str.repeat(300)(">")} ${fence}ts\nconst deep = 1\n`;
+        const [fences, warnings] = typescriptFences(markdown);
+        const [collected, diagnostics] = A.separate(scanMarkdownFenceFile("docs/deep.md", markdown));
+
+        expect(fences).toEqual([]);
+        expect(warnings).toHaveLength(1);
+        expect(collected).toEqual([]);
+        expect(A.map(diagnostics, (item) => [item.path, item.line, item.code])).toEqual([
+          ["docs/deep.md", 1, "markdown-parse"],
+        ]);
+        expect(collectMarkdownFences("docs/deep.md", markdown)).toEqual([]);
+        expect(typescriptFences("no fence here")).toEqual([[], []]);
       })
     );
 
@@ -182,7 +230,7 @@ describe("Markdown fence typecheck law", () => {
         );
 
         expect(
-          A.map(typescriptFences(markdown), (item) => [item.language, item.openingLineIndex, item.codeLineIndex])
+          A.map(typescriptFences(markdown)[0], (item) => [item.language, item.openingLineIndex, item.codeLineIndex])
         ).toEqual([
           ["ts", 0, 1],
           ["mts", 7, 8],

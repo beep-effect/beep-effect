@@ -35,6 +35,7 @@ import {
   ImpureFence,
   MarkPlan,
   PureFence,
+  ScannedDoctestFence,
   TypeOnlyFence,
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
@@ -500,12 +501,7 @@ const parseFenceInfo = (raw: string): FenceInfo => {
 const canonicalInfoString = (title: string): O.Option<string> =>
   O.map(quotedDoctestName(title), (name) => `ts ${doctestSourceMarker} ${name}`);
 
-type ScannedFence = {
-  readonly code: string;
-  readonly codeStartLine: number;
-  readonly infoString: string;
-  readonly location: FenceLocation;
-};
+type ScannedFence = ScannedDoctestFence;
 
 const scanSourceFences = (file: string, source: string): ReadonlyArray<ScannedFence> => {
   const owners = ownersByJSDocStart(file, source);
@@ -524,7 +520,7 @@ const scanSourceFences = (file: string, source: string): ReadonlyArray<ScannedFe
       const rawCode = Str.slice(detail.codeStart, detail.codeEnd)(unwrapped);
       const trimmedCodeOffset = O.getOrElse(Str.indexOf(detail.code)(rawCode), () => 0);
       const title = exampleTitles[index];
-      return {
+      return ScannedDoctestFence.make({
         code: detail.code,
         codeStartLine: lineAt(detail.codeStart + trimmedCodeOffset),
         infoString: detail.infoString,
@@ -537,7 +533,7 @@ const scanSourceFences = (file: string, source: string): ReadonlyArray<ScannedFe
             exampleTitle: O.fromUndefinedOr(title),
           }),
         }),
-      };
+      });
     });
   });
 };
@@ -725,6 +721,53 @@ export const analyzeDoctestSourceForTesting: {
   return { fences: fences.length, findings: A.flatMap(fences, (fence) => findingForFence(source, fence)) };
 });
 
+/**
+ * Scans an in-memory source file for the JSDoc TypeScript fences the analyzer reads.
+ *
+ * **Example** (Scan one example fence)
+ *
+ * ```ts
+ * import { scanDoctestFencesForTesting } from "@beep/repo-cli/test/Docgen"
+ *
+ * const fence = "`".repeat(3)
+ * const source = ["/**", " * **Example** (One)", " *", ` * ${fence}ts`, " * 1 + 1", ` * ${fence}`, " *" + "/"].join("\n")
+ * console.log(scanDoctestFencesForTesting("packages/example/src/index.ts", source)[0]?.codeStartLine) // 5
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const scanDoctestFencesForTesting: {
+  (source: string): (file: string) => ReadonlyArray<ScannedDoctestFence>;
+  (file: string, source: string): ReadonlyArray<ScannedDoctestFence>;
+} = dual(2, scanSourceFences);
+
+/**
+ * Computes the analyzer findings for one scanned fence of a source file.
+ *
+ * **Example** (Find an unmarked pure fence)
+ *
+ * ```ts
+ * import { FenceLocation, ScannedDoctestFence } from "@beep/repo-cli/commands/Docgen"
+ * import { doctestFenceFindingsForTesting } from "@beep/repo-cli/test/Docgen"
+ *
+ * const fence = ScannedDoctestFence.make({
+ *   code: "1 + 1",
+ *   codeStartLine: 5,
+ *   infoString: "ts",
+ *   location: FenceLocation.make({ file: "packages/example/src/index.ts", startLine: 4, endLine: 6, exampleTitle: "One" }),
+ * })
+ * console.log(doctestFenceFindingsForTesting("", fence)[0]?.kind) // "pure-unmarked"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const doctestFenceFindingsForTesting: {
+  (fence: ScannedDoctestFence): (source: string) => ReadonlyArray<DoctestFinding>;
+  (source: string, fence: ScannedDoctestFence): ReadonlyArray<DoctestFinding>;
+} = dual(2, findingForFence);
+
 const gitErrorAdapter: GitCommandErrorAdapter<DoctestAnalysisError> = {
   onSpawnFailure: (commandLine) => () => DoctestAnalysisError.make({ message: `Failed to spawn ${commandLine}.` }),
   onNonZeroExit: ({ commandLine, exitCode }) =>
@@ -904,7 +947,7 @@ const applyMarkerEdit = (
 ): Effect.Effect<ReadonlyArray<string>, DoctestRewriteError> => {
   const openingIndex = plan.location.startLine - 1;
   const opening = lines[openingIndex];
-  if (opening === undefined || !/(?:```|~~~)/.test(opening)) {
+  if (opening === undefined || !/`{3,}|~{3,}/.test(opening)) {
     return DoctestRewriteError.make({
       message: "Opening fence no longer matches the analyzed location.",
       file,
@@ -914,7 +957,8 @@ const applyMarkerEdit = (
   return replaceSourceLine(
     lines,
     openingIndex,
-    Str.replace(/((?:```|~~~)).*$/, `$1${plan.expectedInfoString}`)(opening),
+    // Keep the whole marker run: a four-backtick opener cut to three would let a ``` line in the body close it.
+    Str.replace(/(`{3,}|~{3,}).*$/, `$1${plan.expectedInfoString}`)(opening),
     DoctestRewriteError.make({
       message: "Opening fence no longer matches the analyzed location.",
       file,
