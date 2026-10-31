@@ -925,7 +925,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("SAST test requires a standard command");
           }
-          A.appendInPlace(commands, [command.command, ...command.args]);
+          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
           return Effect.succeed(qualityCommandHandle("", 0));
         });
         yield* runGithubChecks("sast").pipe(
