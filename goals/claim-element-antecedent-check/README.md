@@ -63,6 +63,8 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [Isolated repository repair ready for review](history/2026-10-31-delivery-unblocker-ready.json): upstream PR #2402 has a passing content-final receipt with explicit local skips and an identical-tree review-trigger head. Hosted checks, its review window and merge remain pending; the claim delivery PR is still unpublished.
+
 - **Current full strict public slice (2026-10-31):** [audit and regression](history/2026-10-31-current-strict-public-slice.md) distinguish the original legacy foot subset from a full current claim 9 comparison for US20110074901A1. Both tests pass; the unchanged scorer accepts the full frozen tree and the checker reproduces the examiner-cited “the brush roller” at 44–60. Source labels/results and 37/538 remain unchanged. This is a post-measurement regression witness, not new held-out accuracy.
 
 - **Current autonomous evaluation (2026-10-31):** [report](history/2026-10-31-autonomous-evaluation.md) records **37/538**, all 34 protected claims retained and three gains, with unchanged references/results. Independent automated reference review yields 33 agree/3 revise/14 uncertain out of 50; seven of eight conventions reach consensus. Current-runtime allowed review yields 21 erroneous-alert claims, seven negative and two unknown in the original 30-claim sample: 70.0–76.7% identification bounds and a conditional 52.1–88.2% Wilson envelope. Actual attorney flags remain false. 99 focused tests and all three package verifications pass. Historical human holds below are superseded by the current authority.

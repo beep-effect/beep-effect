@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Autonomous acceptance v1 applied: v16 strict 37/538, all 34 protected passes retained. Independent reference and allowed reviews complete with uncertainty and high alert noise explicit; actual-attorney fields false. References and previous results unchanged. P4 publication/readiness and P5 closeout remain active."
+  "statusNote": "Autonomous acceptance v1 applied: strict 37/538, all 34 protected passes retained; actual-attorney fields false. References and previous results unchanged. Upstream delivery repair PR #2402 is ready for repository review with a passing content-final receipt and four explicit local skips; required hosted checks, review window and merge remain pending. The claim PR is unpublished. P4/P5 remain active."
 }
