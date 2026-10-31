@@ -409,7 +409,7 @@ const bindingOf = (sf: ts.SourceFile, name: string): { kind: BindingKind; node?:
  * declaration so several promoted names never produce overlapping edits.
  */
 const promotionEdits = (sf: ts.SourceFile, specifiers: ReadonlyArray<ts.ImportSpecifier>): ReadonlyArray<Edit> => {
-  const byDeclaration = new Map<ts.ImportDeclaration, Set<ts.ImportSpecifier>>();
+  const byDeclaration = new Map<ts.ImportDeclaration | ts.JSDocImportTag, Set<ts.ImportSpecifier>>();
   for (const specifier of specifiers) {
     const declaration = specifier.parent.parent.parent;
     const set = byDeclaration.get(declaration) ?? new Set<ts.ImportSpecifier>();

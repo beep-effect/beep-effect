@@ -178,3 +178,128 @@ export class PolicyToolsFingerprint extends S.Opaque<PolicyToolsFingerprint, { r
     })
   )
 ) {}
+
+/**
+ * One workspace package the import graph can enter: its directory and raw
+ * `exports` / `imports` maps.
+ *
+ * **Example** (Describe a workspace)
+ *
+ * ```ts
+ * import { PolicyWorkspace } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * const workspace = { name: "@beep/x", directory: "packages/x", exports: { ".": "./src/index.ts" }, imports: undefined }
+ * console.log(S.is(PolicyWorkspace)(workspace)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyWorkspace extends S.Opaque<PolicyWorkspace, { readonly brand: unique symbol }>()(
+  S.Struct({
+    name: S.String,
+    directory: S.String,
+    exports: S.Unknown,
+    imports: S.Unknown,
+  }).pipe(
+    $I.annoteSchema("PolicyWorkspace", {
+      description: "A workspace package's directory and its raw exports and imports maps.",
+    })
+  )
+) {}
+
+/**
+ * The fixed entry points of the CLI being fingerprinted.
+ *
+ * **Example** (Describe the repo CLI layout)
+ *
+ * ```ts
+ * import { PolicyCliLayout } from "@beep/repo-cli/commands/Lint"
+ *
+ * const layout = PolicyCliLayout.make({
+ *   shell: ["cli/src/bin.ts"],
+ *   rootModule: "cli/src/commands/Root.ts",
+ *   rootBinding: "rootCommand",
+ *   commandsDirectory: "cli/src/commands",
+ * })
+ * console.log(layout.rootBinding) // "rootCommand"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyCliLayout extends S.Opaque<PolicyCliLayout, { readonly brand: unique symbol }>()(
+  S.Struct({
+    shell: S.Array(S.String).pipe(
+      $I.annoteKey("PolicyCliLayout.shell", { description: "Modules the bin loads for every invocation." })
+    ),
+    rootModule: S.String.pipe(
+      $I.annoteKey("PolicyCliLayout.rootModule", { description: "The module that defines the root command." })
+    ),
+    rootBinding: S.String.pipe(
+      $I.annoteKey("PolicyCliLayout.rootBinding", { description: "The root command's binding in its module." })
+    ),
+    commandsDirectory: S.String.pipe(
+      $I.annoteKey("PolicyCliLayout.commandsDirectory", {
+        description: "Directory of every command module; the shell walk never enters it.",
+      })
+    ),
+  }).pipe($I.annoteSchema("PolicyCliLayout", { description: "Entry points of the CLI being fingerprinted." }))
+) {}
+
+/**
+ * One resolved command on an argv path.
+ *
+ * **Example** (Describe a command node)
+ *
+ * ```ts
+ * import { PolicyCommandNode } from "@beep/repo-cli/commands/Lint"
+ *
+ * const node = PolicyCommandNode.make({ module: "cli/src/commands/Lint/LintLaws.command.ts", binding: "lintLawsCommand", name: "laws" })
+ * console.log(node.name) // "laws"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyCommandNode extends S.Opaque<PolicyCommandNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    module: S.String,
+    binding: S.String,
+    name: S.String,
+  }).pipe(
+    $I.annoteSchema("PolicyCommandNode", {
+      description: "A command on an argv path: its defining module, binding and command name.",
+    })
+  )
+) {}
+
+/**
+ * The modules a fingerprint key reaches.
+ *
+ * **Example** (Describe an empty closure)
+ *
+ * ```ts
+ * import { PolicyClosure } from "@beep/repo-cli/commands/Lint"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const closure = PolicyClosure.make({ modules: HashSet.empty(), opaqueWorkspaces: HashSet.empty() })
+ * console.log(HashSet.size(closure.modules)) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyClosure extends S.Opaque<PolicyClosure, { readonly brand: unique symbol }>()(
+  S.Struct({
+    modules: S.HashSet(S.String).pipe(
+      $I.annoteKey("PolicyClosure.modules", { description: "Every module reached, repo-relative." })
+    ),
+    opaqueWorkspaces: S.HashSet(S.String).pipe(
+      $I.annoteKey("PolicyClosure.opaqueWorkspaces", {
+        description: "Workspace directories holding a reached non-literal dynamic import.",
+      })
+    ),
+  }).pipe($I.annoteSchema("PolicyClosure", { description: "The modules one fingerprint key reaches." }))
+) {}

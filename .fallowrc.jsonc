@@ -125,9 +125,6 @@
     // Vendored upstream skill tree (shadcn showcase assets and scripts) pinned by
     // skills-lock.json; beep skills update rewrites it byte-for-byte from upstream.
     ".claude/skills/shadcn/**",
-    // Claude Code launches these by path from .claude/settings.json (the two
-    // graft shims and the repo-owned loader); no import graph reaches them.
-    ".claude/helpers/**",
     // Browser QA operators copy this documented harness template beside the app
     // under test; it is a distributed resource, not workspace-owned source.
     ".claude/skills/browser-qa-loop/resources/qa-capture-template.mjs",
@@ -348,8 +345,7 @@
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
   "duplicates": {
-    // The two graft shims are one-line delegations to the repo-owned loader.
-    "ignore": [".claude/skills/shadcn/**", ".claude/helpers/**"]
+    "ignore": [".claude/skills/shadcn/**"]
   },
   "health": {
     // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
@@ -362,14 +358,11 @@
     "maxCyclomatic": 20,
     "maxCrap": 30,
     "maxUnitSize": 60,
-    // The graft shims are generated; the loader's platform trust checks are
-    // security-boundary code kept whole rather than split for a ceiling.
     // The manual TS6-bridge tools (goal codemod, JSDoc census) entered discovery
     // only so dead-code analysis sees the bridge's consumers; complexity scope
     // stays as on main, where both paths were never health-scored.
     "ignore": [
       ".claude/skills/shadcn/**",
-      ".claude/helpers/**",
       "goals/schema-opaque-default/ops/codemod/**",
       "scratchpad/.jsdoc-loop/census.ts"
     ],
@@ -537,7 +530,7 @@
       },
       {
         "files": [
-          "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"
+          "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts"
         ],
         "functions": ["walk"],
         "maxCognitive": 19,

@@ -22,7 +22,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { parseDocument } from "yaml";
+import { parseDocument, stringify } from "yaml";
 import { readFixtureText } from "./helpers/models-fixtures.ts";
 
 const manifestFixtures = [
@@ -89,6 +89,35 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
         const target = yield* freshTarget();
         yield* store.init(target, seedModelsManifest);
         expect(yield* encodeManifest(yield* store.load(target))).toEqual(yield* encodeManifest(seedModelsManifest));
+      })
+    );
+
+    it.effect("drops bindings and targets of a retired role instead of failing the manifest", () =>
+      Effect.gen(function* () {
+        const store = yield* ModelsManifestStore;
+        const seed = yield* encodeManifest(seedModelsManifest);
+        const retiredBinding = { role: "graft.deep", surface: "proxy-workflow", modelId: "claude-opus-5-5" };
+        const retiredTarget = {
+          id: "home.beep-graft.env",
+          root: "home",
+          path: "$HOME/.config/beep-graft/env",
+          optional: true,
+          locators: [
+            {
+              _tag: "env-key",
+              binding: { role: "graft.deep", surface: "proxy-workflow", field: "model" },
+              render: { _tag: "verbatim" },
+              key: "GRAFT_MODEL",
+            },
+          ],
+        };
+        const legacy = {
+          ...seed,
+          bindings: [...seed.bindings, retiredBinding],
+          targets: [...seed.targets, retiredTarget],
+        };
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", stringify(legacy)));
+        expect(yield* encodeManifest(loaded)).toEqual(seed);
       })
     );
 

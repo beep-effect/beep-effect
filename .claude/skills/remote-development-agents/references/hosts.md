@@ -22,8 +22,7 @@ the current installed slices for actual limits. Versioned initial proof-slice
 settings are in `ops/agent-runs-worker.slice`: 8 GiB aggregate maximum, 200% CPU,
 512 tasks and 256 MiB maximum swap. Control/observation has a separate 1 GiB
 slice. Do not copy these values to another host or assume they are unchanged.
-Use the installed `beep-worker-yeet` wrapper for Beep proof jobs. Graft has its
-own bounded wrapper; do not replace it with unbounded indexing.
+Use the installed `beep-worker-yeet` wrapper for Beep proof jobs.
 
 ## tbk-worker
 

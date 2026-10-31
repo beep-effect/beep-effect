@@ -34166,78 +34166,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts": {
-          "lines": 99.09,
-          "statements": 99.1,
-          "branches": 100,
-          "functions": 97.82,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts": {
-          "lines": 99.39,
-          "statements": 98.87,
-          "branches": 96.92,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 2,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts": {
-          "lines": 95.73,
-          "statements": 95.66,
-          "branches": 88.4,
-          "functions": 89.9,
-          "uncovered": {
-            "lines": 13,
-            "statements": 14,
-            "branches": 8,
-            "functions": 11
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Graft/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts": {
           "lines": 30.7,
           "statements": 30.76,
@@ -34934,6 +34862,78 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Lint/LintCircular.command.ts": {
+          "lines": 89.47,
+          "statements": 89.47,
+          "branches": 77.77,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts": {
+          "lines": 100,
+          "statements": 96.96,
+          "branches": 92.3,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/LintGoalPackets.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/LintJsdoc.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/LintLaws.command.ts": {
+          "lines": 91.66,
+          "statements": 92.85,
+          "branches": 75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/LintPolicy.command.ts": {
+          "lines": 50,
+          "statements": 50,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 2,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts": {
           "lines": 67.08,
           "statements": 69.38,
@@ -34944,6 +34944,18 @@
             "statements": 60,
             "branches": 17,
             "functions": 24
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/PackageScripts.command.ts": {
+          "lines": 21.05,
+          "statements": 17.39,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 15,
+            "statements": 19,
+            "branches": 12,
+            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts": {
@@ -34968,6 +34980,30 @@
             "statements": 11,
             "branches": 7,
             "functions": 6
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts": {
+          "lines": 95.57,
+          "statements": 94.89,
+          "branches": 87.61,
+          "functions": 91.3,
+          "uncovered": {
+            "lines": 13,
+            "statements": 17,
+            "branches": 13,
+            "functions": 12
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts": {
@@ -35052,6 +35088,18 @@
             "statements": 15,
             "branches": 7,
             "functions": 4
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts": {
+          "lines": 62.22,
+          "statements": 61.15,
+          "branches": 40.84,
+          "functions": 62.5,
+          "uncovered": {
+            "lines": 51,
+            "statements": 54,
+            "branches": 42,
+            "functions": 9
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts": {
@@ -35232,6 +35280,42 @@
             "statements": 19,
             "branches": 27,
             "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts": {
+          "lines": 92.85,
+          "statements": 92.85,
+          "branches": 77.77,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts": {
+          "lines": 96.07,
+          "statements": 94.48,
+          "branches": 89.37,
+          "functions": 92.14,
+          "uncovered": {
+            "lines": 12,
+            "statements": 21,
+            "branches": 22,
+            "functions": 11
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintJson.ts": {
+          "lines": 97.87,
+          "statements": 91.52,
+          "branches": 86.66,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 1,
+            "statements": 5,
+            "branches": 4,
+            "functions": 3
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts": {
