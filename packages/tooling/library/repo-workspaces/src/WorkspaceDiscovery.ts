@@ -37,8 +37,8 @@ import * as Str from "effect/String";
 import { enumerate } from "./internal/enumerate.ts";
 import { findLayerRoot } from "./internal/layerRoot.ts";
 import { dependencyBlocksOf, manifestVersionOf } from "./internal/manifestFields.ts";
-import { readPatterns } from "./internal/patterns.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
+import { WorkspacePatterns } from "./WorkspacePatterns.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 
@@ -777,7 +777,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
      */
     const discoverAt = Effect.fnUntraced(
       function* (root: string) {
-        const patterns = yield* readPatterns(root).pipe(
+        const patterns = yield* WorkspacePatterns.read(root).pipe(
           Effect.mapError((failure) =>
             WorkspaceDiscoveryError.make({
               root,
