@@ -1,5 +1,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
-import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
+import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+import { MarkdownFence } from "@beep/markdown/MarkdownFence";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { getSomesStruct } from "@beep/utils/Option";
@@ -7,6 +8,7 @@ import { constant, dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Regex from "effect/RegExp";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import type { SourceFile } from "ts-morph";
@@ -349,16 +351,18 @@ const blankLinesLike = (value: string): string =>
     "\n"
   );
 
+// Blank every fence body (any language) so section markers quoted inside code are not read as sections.
 const maskFencedContent = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
-  const normalized = A.join(
-    A.map(lines, (line) => Str.replace(/^(\s*)(```|~~~).*$/, "$1$2ts")(line)),
-    "\n"
-  );
-  const [blocks] = extractFencedCodeBlocks(normalized);
-  const masked = A.reduce(blocks, normalized, (text, block) =>
-    Str.isEmpty(block.code)
-      ? text
-      : Str.replace(new RegExp(Regex.escape(block.code), "g"), blankLinesLike(block.code))(text)
+  const text = A.join(lines, "\n");
+  const fences = Result.match(MarkdownDocument.parseResult(text), {
+    onFailure: A.empty,
+    onSuccess: MarkdownFence.fences,
+  });
+  const masked = A.reduce(
+    A.reverse(fences),
+    text,
+    (current, fence) =>
+      `${Str.slice(0, fence.bodyStart)(current)}${blankLinesLike(fence.body)}${Str.slice(fence.bodyEnd)(current)}`
   );
   return Str.split(/\r?\n/)(masked);
 };

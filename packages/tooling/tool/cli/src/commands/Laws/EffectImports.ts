@@ -18,7 +18,7 @@ import { A, Str } from "@beep/utils";
 import { compileAndExpand } from "@beep/walker/Expand";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -30,7 +30,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
+import { scriptFences } from "./internal/TypeScriptFences.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
+import type { FencedCodeBlockDetail } from "@beep/repo-docgen/Core";
 import type {
   ExportDeclaration,
   ExportDeclarationStructure,
@@ -40,6 +42,7 @@ import type {
   OptionalKind,
   SourceFile,
 } from "ts-morph";
+import type { ScriptFence } from "./internal/TypeScriptFences.ts";
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 
@@ -1504,27 +1507,6 @@ class EffectImportFenceTransformSummary extends S.Opaque<
   )
 ) {}
 
-const markdownImportFencePattern =
-  /^ {0,3}(`{3,}|~{3,})(typescript|javascript|tsx|jsx|mts|cts|mjs|cjs|ts|js)(?![\w-])[^\r\n]*\r?\n([\s\S]*?)^ {0,3}\1[ \t]*$/gim;
-
-const markdownImportFences = (content: string) =>
-  pipe(
-    Str.matchAll(markdownImportFencePattern)(content),
-    A.fromIterable,
-    A.map((match) => {
-      const openingLength = O.getOrElse(Str.indexOf("\n")(match[0]), constant(-1)) + 1;
-      const code = match[3] ?? "";
-      const codeStart = (match.index ?? 0) + openingLength;
-      const language = Str.toLowerCase(match[2] ?? "ts");
-      return {
-        code,
-        codeStart,
-        codeEnd: codeStart + Str.length(code),
-        extension: language === "tsx" || language === "jsx" ? (".tsx" as const) : (".ts" as const),
-      };
-    })
-  );
-
 const ROOT_EFFECT_IMPORT_PATTERN = /["']effect(?:\/[^"']+)?["']/u;
 
 const tryTransformSourceFile = (
@@ -1540,9 +1522,8 @@ const transformFencedContent = (
   content: string,
   markdown = false
 ): EffectImportFenceTransformSummary => {
-  const [fences, parserWarnings] = markdown
-    ? [markdownImportFences(content), A.empty<string>()]
-    : extractFencedCodeBlockDetails(content);
+  const [fences, parserWarnings]: readonly [ReadonlyArray<ScriptFence | FencedCodeBlockDetail>, ReadonlyArray<string>] =
+    markdown ? [scriptFences(content), A.empty<string>()] : extractFencedCodeBlockDetails(content);
   let warnings = A.fromIterable(parserWarnings);
   let rewrittenContent = content;
   let rootImportsRewritten = 0;

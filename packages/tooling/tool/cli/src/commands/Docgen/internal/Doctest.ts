@@ -51,10 +51,8 @@ const sourceDigest = (source: string): string => `effect-hash:${Hash.string(sour
 const lineAtOffset = (source: string, offset: number): number =>
   Str.split(/\r?\n/)(Str.slice(0, offset)(source)).length;
 
-const maskJSDocStars: (comment: string) => string = flow(
-  Str.replace(/^([ \t]*)\* /gm, "$1  "),
-  Str.replace(/^([ \t]*)\*(?!\/)/gm, "$1 ")
-);
+// The comment with each line's leading `*` frame removed; lines stay one to one with the source.
+const unwrapJSDocStars: (comment: string) => string = Str.replace(/^[ \t]*\*(?!\/) ?/gm, "");
 
 const ownersByJSDocStart = (file: string, source: string): MutableHashMap.MutableHashMap<number, Node> => {
   const project = createInMemoryTsMorphProject();
@@ -512,8 +510,10 @@ type ScannedFence = {
 const scanSourceFences = (file: string, source: string): ReadonlyArray<ScannedFence> => {
   const owners = ownersByJSDocStart(file, source);
   return A.flatMap(rawJSDocSpans(source), (span) => {
-    const masked = maskJSDocStars(span.text);
-    const [details] = extractFencedCodeBlockDetails(masked);
+    const unwrapped = unwrapJSDocStars(span.text);
+    const [details] = extractFencedCodeBlockDetails(unwrapped);
+    const firstLine = lineAtOffset(source, span.start);
+    const lineAt = (offset: number): number => firstLine + lineAtOffset(unwrapped, offset) - 1;
     const exampleTitles = pipe(
       parseJSDocSections(ParseJSDocSectionsOptions.make({ commentText: span.text })).sections,
       A.filter((section) => section.name === "Example"),
@@ -521,19 +521,17 @@ const scanSourceFences = (file: string, source: string): ReadonlyArray<ScannedFe
     );
     const owner = MutableHashMap.get(owners, span.start);
     return A.map(details, (detail, index) => {
-      const absoluteStart = span.start + detail.fenceStart;
-      const absoluteEnd = span.start + detail.fenceEnd;
-      const rawCode = Str.slice(detail.codeStart, detail.codeEnd)(masked);
+      const rawCode = Str.slice(detail.codeStart, detail.codeEnd)(unwrapped);
       const trimmedCodeOffset = O.getOrElse(Str.indexOf(detail.code)(rawCode), () => 0);
       const title = exampleTitles[index];
       return {
         code: detail.code,
-        codeStartLine: lineAtOffset(source, span.start + detail.codeStart + trimmedCodeOffset),
+        codeStartLine: lineAt(detail.codeStart + trimmedCodeOffset),
         infoString: detail.infoString,
         location: FenceLocation.make({
           file,
-          startLine: lineAtOffset(source, absoluteStart),
-          endLine: lineAtOffset(source, absoluteEnd),
+          startLine: lineAt(detail.fenceStart),
+          endLine: lineAt(detail.fenceEnd),
           ...O.getSomesStruct({
             enclosingSymbol: O.flatMap(owner, ownJSDocNodeName),
             exampleTitle: O.fromUndefinedOr(title),

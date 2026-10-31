@@ -116,6 +116,16 @@ describe("doctest analyzer", () => {
     expect(parsed.sections[0]?.title).toBe("Real title");
   });
 
+  it("ignores section headings and tags inside a fence of any language", () => {
+    const parsed = parseJSDocSections(
+      ParseJSDocSectionsOptions.make({
+        commentText:
+          "/** Lead.\n *\n * **Details**\n *\n * ~~~md\n * **Example** (Quoted)\n * @since 0.0.0\n * ~~~\n *\n * @category models\n */",
+      })
+    );
+    expect(A.map(parsed.sections, (section) => section.name)).toEqual(["Details"]);
+  });
+
   it("chooses a safe upstream name delimiter and rejects both delimiters", () => {
     expect(O.getOrUndefined(quotedDoctestName("Decode none"))).toBe('name="Decode none"');
     expect(O.getOrUndefined(quotedDoctestName('Decode "none"'))).toBe("name='Decode \"none\"'");
@@ -177,6 +187,34 @@ describe("doctest rewrite planning", () => {
 
       const second = analyzeDoctestSourceForTesting("packages/example/src/index.ts", rewritten);
       expect(second.findings).toEqual([]);
+    })
+  );
+
+  it.effect("finds the fences of an indented member JSDoc and reports their source lines", () =>
+    Effect.sync(() => {
+      const source = A.join(
+        [
+          "export class Box {",
+          "  /**",
+          "   * **Example** (Member example)",
+          "   *",
+          "   * ```ts",
+          "   * console.log(1 + 1) // 2",
+          "   * ```",
+          "   */",
+          "  static readonly value = 2",
+          "}",
+        ],
+        "\n"
+      );
+      const analysis = analyzeDoctestSourceForTesting("packages/example/src/index.ts", source);
+      expect(analysis.fences).toBe(1);
+      expect(analysis.findings[0]?.location).toMatchObject({
+        startLine: 5,
+        endLine: 7,
+        exampleTitle: "Member example",
+      });
+      expect(analysis.findings[0]?.plan?.consoleRewrites).toMatchObject([{ line: 6 }]);
     })
   );
 

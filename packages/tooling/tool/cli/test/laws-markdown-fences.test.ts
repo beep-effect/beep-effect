@@ -144,6 +144,27 @@ describe("Markdown fence typecheck law", () => {
       })
     );
 
+    it.effect("reads fences inside blockquotes and list items without their container prefix", () =>
+      Effect.sync(() => {
+        const markdown = markdownOf(
+          `> ${fence}ts`,
+          "> const quoted = 1",
+          `> ${fence}`,
+          "",
+          "- item",
+          "",
+          `  ${fence}tsx`,
+          "  const listed = <b />",
+          `  ${fence}`
+        );
+
+        expect(A.map(typescriptFences(markdown), (item) => [item.language, item.openingLineIndex, item.code])).toEqual([
+          ["ts", 0, "const quoted = 1\n"],
+          ["tsx", 6, "const listed = <b />\n"],
+        ]);
+      })
+    );
+
     it.effect("parses four-marker and tilde fences with exact closing runs", () =>
       Effect.sync(() => {
         const four = Str.repeat(4)("`");

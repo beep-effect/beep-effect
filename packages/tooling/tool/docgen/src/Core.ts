@@ -7,6 +7,8 @@
 
 import chalk from "@beep/chalk";
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+import { MarkdownFence } from "@beep/markdown/MarkdownFence";
 import { MarkdownToc } from "@beep/markdown/MarkdownToc";
 import { FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
@@ -17,6 +19,7 @@ import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Checker from "./Checker.ts";
@@ -25,6 +28,7 @@ import * as Domain from "./Domain.ts";
 import * as Parser from "./Parser.ts";
 import * as Printer from "./Printer.ts";
 import { writeDocgenProofManifest } from "./ProofManifest.ts";
+import type { CodeFence } from "@beep/markdown/MarkdownFence";
 
 const $I = $RepoDocgenId.create("Core");
 
@@ -273,6 +277,8 @@ export const SKIP_TYPE_CHECKING_FENCE_METADATA = "skip-type-checking";
  *
  * **Details**
  *
+ * Fences are the CommonMark fences `@beep/markdown` `MarkdownFence.fences`
+ * reads, so a marker run inside prose or indented four columns opens none.
  * Fences tagged with {@link SKIP_TYPE_CHECKING_FENCE_METADATA} are intentionally ignored.
  * Unterminated fences are reported as warnings so docgen can continue parsing the module.
  *
@@ -307,22 +313,27 @@ const isTypeScriptFence = (metadata: string): boolean =>
     A.some((prefix) => Str.startsWith(prefix)(metadata))
   );
 
-const fencePattern = /(?:```|~~~)(.*?)\n([\s\S]*?)(?:(```|~~~)|$)/g;
+const unterminatedFenceWarning = (content: string): string =>
+  `Code block does not have a matching closing fence:\n${content}`;
 
-const fenceMatches: (content: string) => ReadonlyArray<RegExpMatchArray> = flow(
-  Str.matchAll(fencePattern),
-  A.fromIterable
-);
+// Every fence of the text, read as CommonMark by `@beep/markdown`, and one warning per unterminated fence.
+const codeFences = (content: string): [fences: ReadonlyArray<CodeFence>, warnings: Array<string>] =>
+  Result.match(MarkdownDocument.parseResult(content), {
+    onFailure: (error): [ReadonlyArray<CodeFence>, Array<string>] => [A.empty(), [`${error.message}:\n${content}`]],
+    onSuccess: (document): [ReadonlyArray<CodeFence>, Array<string>] => {
+      const fences = MarkdownFence.fences(document);
+      return [
+        fences,
+        A.map(
+          A.filter(fences, (fence) => fence.unterminated),
+          () => unterminatedFenceWarning(content)
+        ),
+      ];
+    },
+  });
 
-const fenceWarnings = (content: string, matches: ReadonlyArray<RegExpMatchArray>): Array<string> =>
-  pipe(
-    matches,
-    A.filter((match) => match[3] === undefined),
-    A.map(() => `Code block does not have a matching closing fence:\n${content}`)
-  );
-
-const isTypeCheckableFenceMatch = (match: RegExpMatchArray): boolean => {
-  const metadata = Str.toLowerCase(match[1] ?? "");
+const isTypeCheckableFence = (fence: CodeFence): boolean => {
+  const metadata = Str.toLowerCase(fence.infoString);
   const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
   return isTypeScriptFence(metadata) && !isSkipTypeChecking;
 };
@@ -363,20 +374,13 @@ const isTypeCheckableFenceMatch = (match: RegExpMatchArray): boolean => {
 export const extractFencedCodeBlocks = (
   content: string
 ): [examples: Array<FencedCodeBlock>, warnings: Array<string>] => {
-  const matches = fenceMatches(content);
-  const warnings = fenceWarnings(content, matches);
-
-  const examples = pipe(
-    matches,
-    A.filter(isTypeCheckableFenceMatch),
-    A.map((match) =>
-      FencedCodeBlock.make({
-        code: Str.trim(match[2] ?? ""),
-        extension: fenceExtension(match[1] ?? ""),
-      })
-    )
+  const [fences, warnings] = codeFences(content);
+  const examples = A.map(A.filter(fences, isTypeCheckableFence), (fence) =>
+    FencedCodeBlock.make({
+      code: Str.trim(fence.body),
+      extension: fenceExtension(fence.infoString),
+    })
   );
-
   return [examples, warnings];
 };
 
@@ -390,8 +394,11 @@ export const extractFencedCodeBlocks = (
  *
  * **Details**
  *
- * This extractor shares the same match pass, language filtering, and warnings
- * as {@link extractFencedCodeBlocks}; offsets refer to the supplied string.
+ * This extractor shares the same `@beep/markdown` fence pass, language
+ * filtering, and warnings as {@link extractFencedCodeBlocks}; offsets refer to
+ * the supplied string. `codeStart` is the start of the line after the opening
+ * fence and `codeEnd` the start of the closing fence's line (the end of the
+ * block for an unterminated fence), so the span covers whole body lines.
  *
  * **Example** (Read exact source offsets)
  *
@@ -413,35 +420,21 @@ export const extractFencedCodeBlocks = (
 export const extractFencedCodeBlockDetails = (
   content: string
 ): [examples: Array<FencedCodeBlockDetail>, warnings: Array<string>] => {
-  const matches = fenceMatches(content);
-  const examples = pipe(
-    matches,
-    A.filter(isTypeCheckableFenceMatch),
-    A.map((match) => {
-      const matched = match[0];
-      const infoString = match[1] ?? "";
-      const rawCode = match[2] ?? "";
-      const fenceStart = match.index ?? 0;
-      const infoStart = fenceStart + 3;
-      const infoEnd = infoStart + infoString.length;
-      const codeStart = infoEnd + 1;
-      const closingLength = match[3]?.length ?? 0;
-      const fenceEnd = fenceStart + matched.length;
-      const codeEnd = fenceEnd - closingLength;
-      return FencedCodeBlockDetail.make({
-        code: Str.trim(rawCode),
-        extension: fenceExtension(infoString),
-        infoString,
-        fenceStart,
-        fenceEnd,
-        infoStart,
-        infoEnd,
-        codeStart,
-        codeEnd,
-      });
+  const [fences, warnings] = codeFences(content);
+  const examples = A.map(A.filter(fences, isTypeCheckableFence), (fence) =>
+    FencedCodeBlockDetail.make({
+      code: Str.trim(fence.body),
+      extension: fenceExtension(fence.infoString),
+      infoString: fence.infoString,
+      fenceStart: fence.fenceStart,
+      fenceEnd: fence.fenceEnd,
+      infoStart: fence.infoStart,
+      infoEnd: fence.infoEnd,
+      codeStart: fence.bodyStart,
+      codeEnd: fence.bodyEnd,
     })
   );
-  return [examples, fenceWarnings(content, matches)];
+  return [examples, warnings];
 };
 
 const getExampleFiles = Effect.fn("getExampleFiles")(function* (modules: ReadonlyArray<Domain.Module>) {
