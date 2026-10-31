@@ -451,47 +451,52 @@ const EDGE_CASES: ReadonlyArray<EdgeCase> = [
 ];
 
 // The divergences R3a accepts, by case id: the outcome the kit must show and why.
-const INTENDED_DIVERGENCES: HashMap.HashMap<string, { readonly outcome: EdgeOutcome; readonly reason: string }> =
-  HashMap.make(
-    [
-      "bom-prefixed",
-      {
-        outcome: "legacy-reject-kit-accept",
-        reason:
-          "BOM tolerance: the kit scanner treats U+FEFF as whitespace; jsonc-parser rejected it (InvalidSymbol@0:1). No tracked document carries a BOM (corpus leg).",
-      },
-    ],
-    [
-      "depth-257",
-      {
-        outcome: "legacy-accept-kit-reject",
-        reason:
-          "Nesting cap: the kit rejects collections nested deeper than MAX_NESTING_DEPTH (256, internal/limits.ts) with NestingDepthExceeded instead of risking a RangeError defect; jsonc-parser recursed without a cap.",
-      },
-    ],
-    [
-      "depth-300",
-      {
-        outcome: "legacy-accept-kit-reject",
-        reason: "Nesting cap, as depth-257.",
-      },
-    ],
-    [
-      "proto-key-object-value",
-      {
-        outcome: "value-differs",
-        reason:
-          "JSON.parse semantics: the kit defines `__proto__` as an own data property; jsonc-parser assigned it and so set the result's prototype and dropped the key. No @beep/jsonc consumer feeds a decoded object into a [[Set]] merge (Object.assign, R.union); spreads create own properties.",
-      },
-    ],
-    [
-      "proto-key-primitive-value",
-      {
-        outcome: "value-differs",
-        reason: "JSON.parse `__proto__` semantics, as proto-key-object-value (jsonc-parser dropped the key).",
-      },
-    ]
-  );
+const IntendedDivergence = S.Struct({ outcome: EdgeOutcome, reason: S.String });
+type IntendedDivergence = typeof IntendedDivergence.Type;
+
+const INTENDED_DIVERGENCES: HashMap.HashMap<string, IntendedDivergence> = HashMap.fromIterable<
+  string,
+  IntendedDivergence
+>([
+  [
+    "bom-prefixed",
+    {
+      outcome: "legacy-reject-kit-accept",
+      reason:
+        "BOM tolerance: the kit scanner treats U+FEFF as whitespace; jsonc-parser rejected it (InvalidSymbol@0:1). No tracked document carries a BOM (corpus leg).",
+    },
+  ],
+  [
+    "depth-257",
+    {
+      outcome: "legacy-accept-kit-reject",
+      reason:
+        "Nesting cap: the kit rejects collections nested deeper than MAX_NESTING_DEPTH (256, internal/limits.ts) with NestingDepthExceeded instead of risking a RangeError defect; jsonc-parser recursed without a cap.",
+    },
+  ],
+  [
+    "depth-300",
+    {
+      outcome: "legacy-accept-kit-reject",
+      reason: "Nesting cap, as depth-257.",
+    },
+  ],
+  [
+    "proto-key-object-value",
+    {
+      outcome: "value-differs",
+      reason:
+        "JSON.parse semantics: the kit defines `__proto__` as an own data property; jsonc-parser assigned it and so set the result's prototype and dropped the key. No @beep/jsonc consumer feeds a decoded object into a [[Set]] merge (Object.assign, R.union); spreads create own properties.",
+    },
+  ],
+  [
+    "proto-key-primitive-value",
+    {
+      outcome: "value-differs",
+      reason: "JSON.parse `__proto__` semantics, as proto-key-object-value (jsonc-parser dropped the key).",
+    },
+  ],
+]);
 
 const MESSAGE_SHAPE_CASE = "trailing-content";
 
@@ -697,22 +702,29 @@ const compareReports = (baseline: Report, current: Report): ReadonlyArray<Differ
     compareField("corpus", "unclassified", baseline.corpus.unclassified, current.corpus.unclassified),
     compareField("corpus", "encode.roundTrip", baseline.corpus.encode.roundTrip, current.corpus.encode.roundTrip),
   ]);
-  const edges = A.getSomes([
-    compareField("edges", "cases", baseline.edges.cases, current.edges.cases),
-    compareField("edges", "equal", baseline.edges.equal, current.edges.equal),
-    compareField("edges", "bothReject", baseline.edges.bothReject, current.edges.bothReject),
-    compareField("edges", "intended", baseline.edges.intended, current.edges.intended),
-    compareField("edges", "unclassified", baseline.edges.unclassified, current.edges.unclassified),
-    ...A.flatMap(baseline.edges.records, (before) =>
-      O.match(
-        A.findFirst(current.edges.records, (record) => record.id === before.id),
-        {
-          onNone: () => [{ subject: `edge:${before.id}`, field: "record", baseline: "present", current: "missing" }],
-          onSome: (after) => A.getSomes([compareField(`edge:${before.id}`, "outcome", before.outcome, after.outcome)]),
-        }
-      )
-    ),
-  ]);
+  // Summary counts and per-record outcomes are separate lists: a missing record is already a
+  // Difference, so it must not pass through A.getSomes (which keeps only Some values).
+  const edges = A.appendAll(
+    A.getSomes([
+      compareField("edges", "cases", baseline.edges.cases, current.edges.cases),
+      compareField("edges", "equal", baseline.edges.equal, current.edges.equal),
+      compareField("edges", "bothReject", baseline.edges.bothReject, current.edges.bothReject),
+      compareField("edges", "intended", baseline.edges.intended, current.edges.intended),
+      compareField("edges", "unclassified", baseline.edges.unclassified, current.edges.unclassified),
+    ]),
+    A.flatMap(
+      baseline.edges.records,
+      (before): ReadonlyArray<Difference> =>
+        O.match(
+          A.findFirst(current.edges.records, (record) => record.id === before.id),
+          {
+            onNone: () => [{ subject: `edge:${before.id}`, field: "record", baseline: "present", current: "missing" }],
+            onSome: (after) =>
+              A.getSomes([compareField(`edge:${before.id}`, "outcome", before.outcome, after.outcome)]),
+          }
+        )
+    )
+  );
   const baselineRuns = O.getOrElse(
     O.map(O.fromNullishOr(baseline.generators), (leg) => leg.runs),
     () => A.empty<GeneratorRun>()
