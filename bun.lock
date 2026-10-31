@@ -3989,6 +3989,7 @@
         "@beep/colors": "workspace:^",
         "@beep/config-file": "workspace:^",
         "@beep/duckdb": "workspace:^",
+        "@beep/epistemics": "workspace:^",
         "@beep/exiftool": "workspace:^",
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
