@@ -154,6 +154,14 @@ work remains bounded and interrupted ownership is released. See
 history/evidence/2026-10-31-dictionary-reentrancy.md. Unicode tables, retained
 registry work ownership and the composed cleaner remain open; no row advances.
 
+Latest cleaner implementation (2026-10-31): the private lazy executor captures
+runtime/Clock, keeps membership and value lookup separate, preserves host values
+and shares reentrant text reservations/deadlines. Forged/restored/reused charges
+fail closed. All 440 primitive text outputs pass through actual reserved stages;
+raw-source and intermediate bounds remain distinct. See
+history/evidence/2026-10-31-cleaner-execution-core.md. Global admission/native
+adapters, full custom host/registry proof, maps and public Layer remain open.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

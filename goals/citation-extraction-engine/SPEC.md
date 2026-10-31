@@ -1167,6 +1167,14 @@ instead of silently splitting delivery or weakening scope.
   mutation, retained registry work ownership and cleaner integration remain
   open. No canonical completion or normalization law follows.
 
+- **2026-10-31 private cleaner execution:** a captured lazy cursor/registry port
+  now preserves opaque host values and separate membership/get dispatch. Nested
+  calls share one reservation ledger and enclosing deadlines. Live handle fields
+  preserve ownership; decoded data does not issue authority. All 440 frozen
+  primitive text vectors pass through the actual reserved stage helpers. Global
+  admission, native/default owners, full custom replay, maps and public Layer
+  remain open; no canonical completion or normalization law follows.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

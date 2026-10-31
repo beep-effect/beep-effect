@@ -30,6 +30,11 @@ components; target cleaner contracts and composition remain open.
 now matches thirteen additional source histories without deadlocking or using
 stale comparison results; Unicode tables and composed cleaner ownership remain
 open.
+The [private lazy execution seam](./history/evidence/2026-10-31-cleaner-execution-core.md)
+now captures runtime/Clock, preserves host values and shares nested text
+reservations. All 440 primitive text vectors pass through reserved literal
+stages. Global admission, the native stage adapter and full host/registry replay
+remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
