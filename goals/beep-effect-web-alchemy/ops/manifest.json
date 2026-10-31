@@ -6,7 +6,7 @@
     "title": "beep-effect.com web app on Alchemy",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-28",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/beep-effect-web-alchemy",
@@ -65,17 +65,17 @@
     {
       "id": "P3",
       "name": "CI deploy",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
