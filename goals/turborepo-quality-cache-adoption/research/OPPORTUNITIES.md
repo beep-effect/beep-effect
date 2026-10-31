@@ -371,6 +371,35 @@ workstation's memory protection policy.
   before changing tracked files. No current full pass or cache qualification
   is inferred from its completed gates.
 
+### Protect the quality harness from competing stale-port reclaimers
+
+- Work: attribute a coverage failure in the existing forty-server identity test;
+  one response belonged to another server. The original failure is retained
+  privately and its exact cause remains unproven.
+- Evidence: a controlled interleaving at the real filesystem unlink boundary
+  makes the original allocator return the same reserved port to two servers.
+  The regression fails on duplicate port identity; existing request assertions
+  and server counts remain intact.
+- Response: pin the inspected inode with a hard link until acquisition finishes.
+  Reclaim only the matching inode with no other live reclaimer link; remove
+  abandoned staging/reclaimer links only after their owning process exits.
+- Prevention: keep a failing-original control, real HTTP response checks, and
+  explicit abandoned/live reclaimer cases. A focused pass is not whole-proof,
+  hosted, cache-performance, or goal-acceptance evidence.
+
+- Publication review caught the allocator function's complexity and a plain
+  Vitest import in the added test. Separate inode reclamation from intent
+  ownership, and use the existing Effect-aware Vitest entry point. The native
+  boundary control needs no policy exception or lowered threshold. Current
+  Fallow audit and health checks pass; retain the interrupted package attempt
+  as unproven and complete the normal proof and hosted review before closure.
+
+- Additional source review found fixture setup could overwrite another job's
+  reservation. Publish complete marker files with an exclusive hard link;
+  atomically retire only markers still owned by this live test process. Keep
+  a direct occupied-marker refusal control and wrap fixture offsets within
+  the allocator range. This repairs the test setup without weakening the
+  server-identity assertions.
 
 ### 2026-10-31: real Cargo applicability graphs exceed the synthetic capture cap
 

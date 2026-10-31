@@ -51,9 +51,6 @@
     name = "explore"
     enabled = true
   [[skills.config]]
-    name = "graft"
-    enabled = true
-  [[skills.config]]
     name = "grill-me"
     enabled = true
   [[skills.config]]

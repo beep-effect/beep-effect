@@ -64,12 +64,12 @@ const extractJsonObject = (text: string, label: string): JsonRecord => {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start < 0 || end < start) {
-    fail(`${label}: no JSON object found in command output`);
+    return fail(`${label}: no JSON object found in command output`);
   }
   try {
     return asRecord(JSON.parse(text.slice(start, end + 1)), label);
   } catch (error) {
-    fail(`${label}: JSON parse failed: ${String(error)}`);
+    return fail(`${label}: JSON parse failed: ${String(error)}`);
   }
 };
 

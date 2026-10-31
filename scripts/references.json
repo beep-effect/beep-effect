@@ -6,59 +6,48 @@
   "members": [
     {
       "name": "effect",
-      "url": "git@github.com:Effect-TS/effect.git",
-      "tier": "deep"
+      "url": "git@github.com:Effect-TS/effect.git"
     },
     {
       "name": "effect-tsgo",
-      "url": "git@github.com:Effect-TS/tsgo.git",
-      "tier": "deep"
+      "url": "git@github.com:Effect-TS/tsgo.git"
     },
     {
       "name": "ai-plugin-marketplace-manager",
-      "url": "git@github.com:spencerbeggs/ai-plugin-marketplace-manager.git",
-      "tier": "deep"
+      "url": "git@github.com:spencerbeggs/ai-plugin-marketplace-manager.git"
     },
     {
       "name": "okfit",
-      "url": "git@github.com:spencerbeggs/okfit.git",
-      "tier": "deep"
+      "url": "git@github.com:spencerbeggs/okfit.git"
     },
     {
       "name": "tsdoctor",
-      "url": "git@github.com:spencerbeggs/tsdoctor.git",
-      "tier": "deep"
+      "url": "git@github.com:spencerbeggs/tsdoctor.git"
     },
     {
       "name": "effected",
-      "url": "git@github.com:spencerbeggs/effected.git",
-      "tier": "deep"
+      "url": "git@github.com:spencerbeggs/effected.git"
     },
     {
       "name": "pluginfinity",
-      "url": "git@github.com:spencerbeggs/pluginfinity.git",
-      "tier": "deep"
+      "url": "git@github.com:spencerbeggs/pluginfinity.git"
     },
     {
       "name": "vitest-agent",
-      "url": "git@github.com:spencerbeggs/vitest-agent.git",
-      "tier": "deep"
+      "url": "git@github.com:spencerbeggs/vitest-agent.git"
     },
     {
       "name": "t3code",
-      "url": "https://github.com/pingdotgg/t3code.git",
-      "tier": "deep"
+      "url": "https://github.com/pingdotgg/t3code.git"
     },
     {
       "name": "opencode",
       "url": "https://github.com/anomalyco/opencode.git",
-      "branch": "v2",
-      "tier": "deep"
+      "branch": "v2"
     },
     {
       "name": "alchemy",
-      "url": "https://github.com/alchemy-run/alchemy.git",
-      "tier": "deep"
+      "url": "https://github.com/alchemy-run/alchemy.git"
     }
   ]
 }
