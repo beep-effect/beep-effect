@@ -14,7 +14,7 @@
       "reason": "Record only the root judge-rubric policy fingerprint task adding FFmpeg.command.ts to generated inputs after the command-builder extraction, retaining accepted main qualification-v3/profile state; no command/cache/qualification change.",
       "basis": {
         "path": "docs/reports/ffmpeg-judge-cache-input-review-2026-10-31.md",
-        "sha256": "67cff9301248465230f76141ccf20fdc5caa7f5e2d982d73fd67339580080dc9"
+        "sha256": "2e56b174ead875272c89926ab5feb660e54fc7ac54281a90c2b5d8555e6fd6bd"
       }
     },
     "@beep/acp": {
@@ -6170,6 +6170,7 @@
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
+            "packages/drivers/github/src/GitHubContent.ts",
             "packages/drivers/github/src/GitHubError.ts",
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
@@ -6473,7 +6474,10 @@
             "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts",
             "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
@@ -134458,7 +134462,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "8ba42cf249eb6288f719a6778bc9f2b4d2ac6a50da1d3ffd45ad894ea7775ae7"
+        "sha256": "c56508e1a9dc7cc1320f4717cef284dc9b81771d3b6a0feaa6078b7ff01dc574"
       }
     ]
   }

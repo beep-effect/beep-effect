@@ -1,28 +1,51 @@
-import { CacheConformanceTarget, CacheProducerBinding } from "@beep/repo-cli/commands/Cache";
+import { $RepoCliId } from "@beep/identity/packages";
+import { CacheConformanceBearers, CacheConformanceTarget, CacheProducerBinding } from "@beep/repo-cli/commands/Cache";
 import {
   assertCacheProducerUploadRuntime,
   CacheProducerAdapterLaunch,
+  CacheProducerExecutionProfile,
   CacheProducerUploadApproval,
   CacheProducerUploadRuntime,
+  hashCacheProducerContract,
   hashCacheProducerUploadKey,
   hashCacheProducerUploadTarget,
+  initializeCacheProducerIssuer,
+  loadCacheProducerExecutionRuntime,
+  revokeCacheProducerIssuer,
 } from "@beep/repo-cli/test/Cache";
+import { CacheTaskContract } from "@beep/repo-configs/cache";
+import { LiteralKit } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { bearers, targetFor } from "./cache-conformance-server.ts";
-import { input as bundleInput } from "./helpers/cache-producer-bundle-fixture.ts";
+import { input as bundleInput, contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const namespace = "team_beep_signed_canary_v1";
+const $I = $RepoCliId.create("test/cache-producer-upload-runtime");
+const BackendCapability = LiteralKit(["reader", "writer", "foreign", "unknown", "accessKey", "secretKey"]).pipe(
+  $I.annoteSchema("BackendCapability", {
+    description: "Transport or storage capabilities that must not carry an artifact key.",
+  })
+);
 const encodeTarget = S.encodeEffect(S.fromJsonString(CacheConformanceTarget));
+const decodeContract = S.decodeUnknownEffect(CacheTaskContract);
+const encodeExecutionProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
 const fixture = Effect.fn("ProducerUploadRuntimeTest.fixture")(function* () {
   const target = CacheConformanceTarget.make({
     ...targetFor({ url: "http://127.0.0.1:19427/" }),
@@ -61,6 +84,28 @@ const fixture = Effect.fn("ProducerUploadRuntimeTest.fixture")(function* () {
 });
 
 it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
+  it.effect.each(BackendCapability.literals)("keeps the artifact signing key out of backend %s", (role) =>
+    Effect.gen(function* () {
+      const [binding, runtime] = yield* fixture();
+      const aliased = Match.value(role).pipe(
+        Match.whenOr("accessKey", "secretKey", (field) =>
+          CacheProducerUploadRuntime.make({
+            ...runtime,
+            adapter: O.map(runtime.adapter, (adapter) =>
+              CacheProducerAdapterLaunch.make({ ...adapter, [field]: runtime.signing })
+            ),
+          })
+        ),
+        Match.orElse((field) =>
+          CacheProducerUploadRuntime.make({
+            ...runtime,
+            bearers: CacheConformanceBearers.make({ ...runtime.bearers, [field]: runtime.signing }),
+          })
+        )
+      );
+      assertTrue(yield* assertCacheProducerUploadRuntime(binding, O.some(aliased)).pipe(Effect.isFailure));
+    })
+  );
   it.effect.prop(
     "constrains schema-generated storage buckets even with a newly matching approval",
     { candidate: S.Struct({ bucket: S.NonEmptyString, useApproved: S.Boolean }) },
@@ -294,6 +339,154 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
         );
         expect(failure.message).toBe("Producer upload target differs from its approved bounded pilot profile.");
       }
+    })
+  );
+});
+
+const executionFixture = Effect.fn("ProducerUploadRuntimeTest.executionFixture")(function* (
+  withUploadApproval: typeof S.Boolean.Type = true
+) {
+  const [original, runtime] = yield* fixture();
+  const before = yield* decodeContract(contractInput);
+  const contract = CacheTaskContract.make({ ...before, clients: { ...before.clients, stable: original.client } });
+  const binding = CacheProducerBinding.make({
+    ...original,
+    uploadApproval: withUploadApproval ? original.uploadApproval : O.none(),
+    policyDigest: yield* hashCacheProducerContract(contract),
+  });
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const parent = yield* fs.makeTempDirectoryScoped();
+  const directory = path.join(parent, "issuer");
+  yield* initializeCacheProducerIssuer(directory, binding, contract);
+  const adapter = O.getOrThrow(runtime.adapter);
+  const profile = CacheProducerExecutionProfile.make({ target: runtime.target, adapterExecutable: adapter.executable });
+  const file = path.join(directory, "runtime.json");
+  yield* fs.writeFileString(file, yield* encodeExecutionProfile(profile), { mode: 0o600 });
+  const names = profile.target.credentials;
+  const environment = {
+    TURBO_REMOTE_CACHE_SIGNATURE_KEY: Redacted.value(runtime.signing),
+    R2_ACCESS_KEY_ID: Redacted.value(adapter.accessKey),
+    R2_SECRET_ACCESS_KEY: Redacted.value(adapter.secretKey),
+    [names.reader]: Redacted.value(runtime.bearers.reader),
+    [names.writer]: Redacted.value(runtime.bearers.writer),
+    [names.foreign]: Redacted.value(runtime.bearers.foreign),
+    [names.unknown]: Redacted.value(runtime.bearers.unknown),
+  };
+  return { fs, path, directory, file, profile, binding, runtime, environment };
+});
+const denyCredentialLookup = ConfigProvider.make(() =>
+  Effect.die("Private producer approval must be checked before credential lookup.")
+);
+
+it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer))("closed producer capability loading", (it) => {
+  it.effect("loads only capabilities matching the pre-provisioned private approval", () =>
+    Effect.gen(function* () {
+      const { directory, binding, runtime, environment } = yield* executionFixture();
+      const [approved, loaded] = yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(environment))
+      );
+      expect(approved).toEqual(binding);
+      expect(loaded.target).toEqual(runtime.target);
+      expect(Redacted.value(loaded.signing)).toBe(Redacted.value(runtime.signing));
+      expect(Redacted.value(O.getOrThrow(loaded.adapter).accessKey)).toBe(environment.R2_ACCESS_KEY_ID);
+    })
+  );
+  it.effect.prop(
+    "requires every generated signing key to match the independent key identity",
+    { candidate: S.Struct({ key: S.NonEmptyString, useApproved: S.Boolean }) },
+    ({ candidate }) =>
+      Effect.gen(function* () {
+        const { directory, environment } = yield* executionFixture();
+        const signing = candidate.useApproved ? environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY : candidate.key;
+        const accepted = yield* loadCacheProducerExecutionRuntime(directory).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnvRecord({ ...environment, TURBO_REMOTE_CACHE_SIGNATURE_KEY: signing })
+          ),
+          Effect.isSuccess
+        );
+        expect(accepted).toBe(signing === environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY);
+      }),
+    { arbitrary: fcRuns(20) }
+  );
+  it.effect("refuses a store without upload approval before any credential lookup", () =>
+    Effect.gen(function* () {
+      const { directory } = yield* executionFixture(false);
+      const failure = yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, denyCredentialLookup),
+        Effect.flip
+      );
+      expect(failure.message).toBe("The producer store has no independently approved upload.");
+    })
+  );
+  it.effect("refuses a changed destination before any credential lookup", () =>
+    Effect.gen(function* () {
+      const { directory, fs, file, profile } = yield* executionFixture();
+      const target = CacheConformanceTarget.make({
+        ...profile.target,
+        storage: O.some({ ...O.getOrThrow(profile.target.storage), bucket: "unapproved-bucket" }),
+      });
+      yield* fs.writeFileString(
+        file,
+        yield* encodeExecutionProfile(CacheProducerExecutionProfile.make({ ...profile, target }))
+      );
+      (yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, denyCredentialLookup),
+        Effect.result
+      )).pipe(Result.isFailure, assertTrue);
+    })
+  );
+  it.effect("honors revocation before any credential lookup", () =>
+    Effect.gen(function* () {
+      const { directory } = yield* executionFixture();
+      yield* revokeCacheProducerIssuer(directory);
+      (yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, denyCredentialLookup),
+        Effect.result
+      )).pipe(Result.isFailure, assertTrue);
+    })
+  );
+  it.effect("refuses missing runtime configuration before any credential lookup", () =>
+    Effect.gen(function* () {
+      const { fs, directory, file } = yield* executionFixture();
+      yield* fs.remove(file);
+      (yield* loadCacheProducerExecutionRuntime(directory).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, denyCredentialLookup),
+        Effect.result
+      )).pipe(Result.isFailure, assertTrue);
+      expect(yield* fs.exists(file)).toBe(false);
+    })
+  );
+  it.effect("fails closed when required credentials are absent", () =>
+    Effect.gen(function* () {
+      const { directory, fs, path } = yield* executionFixture();
+      const material = path.join(directory, "issuer.key");
+      const before = yield* fs.readFile(material);
+      assertTrue(
+        yield* loadCacheProducerExecutionRuntime(directory).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({})),
+          Effect.isFailure
+        )
+      );
+      expect(yield* fs.readFile(material)).toEqual(before);
+    })
+  );
+  it.effect("rejects a relative executable even with the approved destination and credentials", () =>
+    Effect.gen(function* () {
+      const { fs, file, profile, directory, environment } = yield* executionFixture();
+      yield* fs.writeFileString(
+        file,
+        yield* encodeExecutionProfile(
+          CacheProducerExecutionProfile.make({ ...profile, adapterExecutable: "relative/adapter" })
+        )
+      );
+      assertTrue(
+        yield* loadCacheProducerExecutionRuntime(directory).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(environment)),
+          Effect.isFailure
+        )
+      );
     })
   );
 });

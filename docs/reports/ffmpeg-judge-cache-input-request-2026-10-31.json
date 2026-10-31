@@ -1,11 +1,11 @@
 {
-  "previous": "921f97055f51a6e6117576e7929b872b7f1de1122ed7315b2083352a7aa7a119",
+  "previous": "fc1afbb089bec054bc84f88cd61a5559e36f14c040817590944f97e0d3b47365",
   "review": {
     "reviewer": "Codex native reviewer /root/policy_pr (gpt-6.1-sol, medium)",
     "reason": "Record only the root judge-rubric policy fingerprint task adding FFmpeg.command.ts to generated inputs after the command-builder extraction, retaining accepted main qualification-v3/profile state; no command/cache/qualification change.",
     "basis": {
       "path": "docs/reports/ffmpeg-judge-cache-input-review-2026-10-31.md",
-      "sha256": "67cff9301248465230f76141ccf20fdc5caa7f5e2d982d73fd67339580080dc9"
+      "sha256": "2e56b174ead875272c89926ab5feb660e54fc7ac54281a90c2b5d8555e6fd6bd"
     }
   },
   "subjects": ["//"],
