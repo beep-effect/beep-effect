@@ -13,8 +13,10 @@ import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -179,7 +181,8 @@ const makeScriptedSpawnerLayer = (
 const makeLayer = (
   commands: Array<ChildProcess.StandardCommand>,
   overrides: Partial<SpawnScript> = {},
-  renameFailureTarget: O.Option<string> = O.none()
+  renameFailureTarget: O.Option<string> = O.none(),
+  failManifestRestore = false
 ) =>
   FFmpeg.makeLayer().pipe(
     Layer.provide(makeScriptedSpawnerLayer(commands, overrides)),
@@ -194,7 +197,8 @@ const makeLayer = (
             // Produce a native error before the destination changes; all other
             // filesystem operations retain their real behavior.
             rename: Effect.fn("FileSystem.FileSystem.rename")((source: string, destination: string) =>
-              O.exists(renameFailureTarget, (target) => path.basename(destination) === target)
+              O.exists(renameFailureTarget, (target) => path.basename(destination) === target) ||
+              (failManifestRestore && path.basename(source) === "previous-manifest.json")
                 ? fs.rename(`${source}.missing`, destination)
                 : fs.rename(source, destination)
             ),
@@ -207,10 +211,14 @@ const makeLayer = (
 class Commands extends Context.Service<Commands, Array<ChildProcess.StandardCommand>>()(
   "@beep/ffmpeg/test/FFmpeg.capture.failures.test/Commands"
 ) {}
-const makeTestLayer = (overrides: Partial<SpawnScript> = {}, renameFailureTarget: O.Option<string> = O.none()) =>
+const makeTestLayer = (
+  overrides: Partial<SpawnScript> = {},
+  renameFailureTarget: O.Option<string> = O.none(),
+  failManifestRestore = false
+) =>
   Layer.unwrap(
     Effect.map(Commands, (commands) =>
-      Layer.mergeAll(NodeServices.layer, makeLayer(commands, overrides, renameFailureTarget))
+      Layer.mergeAll(NodeServices.layer, makeLayer(commands, overrides, renameFailureTarget, failManifestRestore))
     )
   ).pipe(Layer.provideMerge(Layer.sync(Commands, () => [])));
 
@@ -331,6 +339,90 @@ describe("@beep/ffmpeg capture failures", () => {
                 }
               }
               expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+            })
+          )
+        );
+      }
+    );
+  }
+
+  for (const operation of ["extractFrames", "extractFramesAt"]) {
+    const firstFrame = operation === "extractFrames" ? "sample_frame_00000.png" : "sample_at_00000.png";
+    it.layer(makeTestLayer())(`rejects a directory manifest for ${operation}`, (it) => {
+      it.effect(`rejects a directory manifest for ${operation}`, () =>
+        withTempDirectory((directory) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const ffmpeg = yield* FFmpeg;
+            const videoPath = path.join(directory, "sample.mp4");
+            const outDir = path.join(directory, "frames");
+            const manifestPath = path.join(outDir, "existing-manifest-directory");
+            yield* fs.writeFileString(videoPath, "video");
+            yield* fs.makeDirectory(manifestPath, { recursive: true });
+            yield* fs.writeFileString(path.join(manifestPath, "keep.txt"), "preserved directory contents");
+            yield* fs.writeFileString(path.join(outDir, firstFrame), "original frame");
+            const request = {
+              manifestPath: O.some(manifestPath),
+              outDir,
+              overwrite: true,
+              prefix: O.none(),
+              videoPath,
+            };
+            const error = yield* Effect.flip(
+              operation === "extractFrames"
+                ? ffmpeg.extractFrames(ExtractFramesRequest.make({ ...request, fps: 1 }))
+                : ffmpeg.extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
+            );
+            expect(error.operation).toBe(operation);
+            expect(error.message).toContain("to be a file");
+            expect((yield* fs.stat(manifestPath)).type).toBe("Directory");
+            expect(yield* fs.readFileString(path.join(manifestPath, "keep.txt"))).toBe("preserved directory contents");
+            expect(yield* fs.readFileString(path.join(outDir, firstFrame))).toBe("original frame");
+            expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+          })
+        )
+      );
+    });
+    it.layer(makeTestLayer({}, O.some(firstFrame), true))(
+      `retains recovery data when restoring ${operation} manifest fails`,
+      (it) => {
+        it.effect(`retains recovery data when restoring ${operation} manifest fails`, () =>
+          withTempDirectory((directory) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const ffmpeg = yield* FFmpeg;
+              const videoPath = path.join(directory, "sample.mp4");
+              const outDir = path.join(directory, "frames");
+              const manifestPath = path.join(outDir, "old-manifest.json");
+              yield* fs.writeFileString(videoPath, "video");
+              yield* fs.makeDirectory(outDir);
+              yield* fs.writeFileString(manifestPath, "original manifest");
+              yield* fs.writeFileString(path.join(outDir, firstFrame), "original frame");
+              const request = {
+                manifestPath: O.some(manifestPath),
+                outDir,
+                overwrite: true,
+                prefix: O.none(),
+                videoPath,
+              };
+              const exit = yield* Effect.exit(
+                operation === "extractFrames"
+                  ? ffmpeg.extractFrames(ExtractFramesRequest.make({ ...request, fps: 1 }))
+                  : ffmpeg.extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
+              );
+              expect(Exit.isFailure(exit)).toBe(true);
+              const recoveryDirectory = yield* Effect.fromOption(
+                A.findFirst(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))
+              );
+              const backupPath = path.join(outDir, recoveryDirectory, "previous-manifest.json");
+              expect(yield* fs.readFileString(backupPath)).toBe("original manifest");
+              expect(yield* fs.exists(manifestPath)).toBe(false);
+              expect(yield* fs.readFileString(path.join(outDir, firstFrame))).toBe("original frame");
+              if (Exit.isFailure(exit)) {
+                expect(Cause.pretty(exit.cause)).toContain(`Recovery copy retained at "${backupPath}"`);
+              }
             })
           )
         );

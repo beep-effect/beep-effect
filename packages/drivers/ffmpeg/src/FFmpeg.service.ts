@@ -813,7 +813,8 @@ const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* 
   path: Path.Path,
   manifestPath: string,
   tempDir: string,
-  operation: string
+  operation: string,
+  preserveStaging: Effect.Effect<void>
 ) {
   const exists = yield* fs
     .exists(manifestPath)
@@ -823,6 +824,7 @@ const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* 
       )
     );
   if (!exists) return Effect.void;
+  yield* ensureFile(fs, manifestPath, "previous manifest", operation);
 
   const backupPath = path.join(tempDir, "previous-manifest.json");
   yield* fs
@@ -832,13 +834,16 @@ const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* 
         FFmpegError.fromUnknown(operation, `Failed to park previous manifest: "${manifestPath}"`, { cause })
       )
     );
-  return fs
-    .rename(backupPath, manifestPath)
-    .pipe(
-      Effect.mapError((cause) =>
-        FFmpegError.fromUnknown(operation, `Failed to restore previous manifest: "${manifestPath}"`, { cause })
+  return fs.rename(backupPath, manifestPath).pipe(
+    Effect.tapError(() => preserveStaging),
+    Effect.mapError((cause) =>
+      FFmpegError.fromUnknown(
+        operation,
+        `Failed to restore previous manifest: "${manifestPath}". Recovery copy retained at "${backupPath}".`,
+        { cause }
       )
-    );
+    )
+  );
 });
 
 const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
@@ -846,7 +851,8 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
   path: Path.Path,
   context: ExtractContext,
   tempDir: string,
-  tempFrames: ReadonlyArray<TempFrame>
+  tempFrames: ReadonlyArray<TempFrame>,
+  preserveStaging: Effect.Effect<void>
 ) {
   const finalPadding = paddingForCount(Math.max(context.expectedFrameCount, A.length(tempFrames)));
   let planned = A.empty<PlannedFrameCommit>();
@@ -874,7 +880,14 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
     yield* preflightWritable(fs, frame.targetPath, context.request.overwrite, "frame output");
   }
 
-  const restoreManifest = yield* parkPreviousManifest(fs, path, context.manifestPath, tempDir, "extractFrames");
+  const restoreManifest = yield* parkPreviousManifest(
+    fs,
+    path,
+    context.manifestPath,
+    tempDir,
+    "extractFrames",
+    preserveStaging
+  );
   // Once any frame changes, the previous manifest no longer describes the batch.
   for (const frame of planned) {
     yield* fs.rename(frame.sourcePath, frame.targetPath).pipe(
@@ -980,19 +993,27 @@ const withStagingDirectory = <A2>(
   fs: FileSystem.FileSystem,
   directory: string,
   operation: string,
-  use: (tempDir: string) => Effect.Effect<A2, FFmpegError>
+  use: (tempDir: string, preserveStaging: Effect.Effect<void>) => Effect.Effect<A2, FFmpegError>
 ): Effect.Effect<A2, FFmpegError> =>
-  Effect.acquireUseRelease(
-    fs.makeTempDirectory({ directory, prefix: `.beep-ffmpeg-${operation}-` }).pipe(
-      Effect.mapError((cause) =>
-        FFmpegError.fromUnknown(operation, `Failed to create temporary staging directory in "${directory}".`, {
-          cause,
-        })
-      )
-    ),
-    use,
-    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
-  );
+  Effect.gen(function* () {
+    const preserveStaging = yield* Ref.make(false);
+    return yield* Effect.acquireUseRelease(
+      fs.makeTempDirectory({ directory, prefix: `.beep-ffmpeg-${operation}-` }).pipe(
+        Effect.mapError((cause) =>
+          FFmpegError.fromUnknown(operation, `Failed to create temporary staging directory in "${directory}".`, {
+            cause,
+          })
+        )
+      ),
+      (tempDir) => use(tempDir, Ref.set(preserveStaging, true)),
+      (tempDir) =>
+        Ref.get(preserveStaging).pipe(
+          Effect.flatMap((preserve) =>
+            preserve ? Effect.void : fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+          )
+        )
+    );
+  });
 
 const useMetadataTagsExtensions = HashSet.make(".m4v", ".mov", ".mp4");
 
@@ -1077,7 +1098,8 @@ const commitTimestampedFrames = Effect.fn("FFmpeg.commitTimestampedFrames")(func
   path: Path.Path,
   context: ExtractAtContext,
   tempDir: string,
-  staged: ReadonlyArray<StagedTimestampedFrame>
+  staged: ReadonlyArray<StagedTimestampedFrame>,
+  preserveStaging: Effect.Effect<void>
 ) {
   for (const frame of staged) {
     yield* preflightWritable(
@@ -1089,7 +1111,14 @@ const commitTimestampedFrames = Effect.fn("FFmpeg.commitTimestampedFrames")(func
     );
   }
 
-  const restoreManifest = yield* parkPreviousManifest(fs, path, context.manifestPath, tempDir, "extractFramesAt");
+  const restoreManifest = yield* parkPreviousManifest(
+    fs,
+    path,
+    context.manifestPath,
+    tempDir,
+    "extractFramesAt",
+    preserveStaging
+  );
   let committed = A.empty<TimestampedFrame>();
   for (const frame of staged) {
     const targetPath = path.join(context.outDir, frame.fileName);
@@ -1238,19 +1267,11 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
       probe
     );
 
-    return yield* Effect.acquireUseRelease(
-      fs
-        .makeTempDirectory({ directory: context.outDir, prefix: ".beep-ffmpeg-extract-frames-" })
-        .pipe(
-          Effect.mapError((cause) =>
-            FFmpegError.fromUnknown(
-              "extractFrames",
-              `Failed to create temporary frame directory in "${context.outDir}".`,
-              { cause }
-            )
-          )
-        ),
-      Effect.fnUntraced(function* (tempDir) {
+    return yield* withStagingDirectory(
+      fs,
+      context.outDir,
+      "extractFrames",
+      Effect.fnUntraced(function* (tempDir, preserveStaging) {
         const tempPattern = path.join(tempDir, `${context.prefix}_%0${context.padding}d.png`);
         const args = buildExtractFramesArgs(
           BuildExtractFramesArgsOptions.make({
@@ -1290,7 +1311,9 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
         }
 
         const tempFrames = yield* readTempFrames(fs, path, tempDir, context.prefix);
-        const frames = yield* commitFrames(fs, path, context, tempDir, tempFrames).pipe(Effect.uninterruptible);
+        const frames = yield* commitFrames(fs, path, context, tempDir, tempFrames, preserveStaging).pipe(
+          Effect.uninterruptible
+        );
         const resultValue = ExtractFramesResult.make({
           frameCount: A.length(frames),
           frames,
@@ -1308,8 +1331,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
           })
         );
         return resultValue;
-      }),
-      (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+      })
     );
   });
 
@@ -1470,7 +1492,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
       fs,
       outDir,
       "extractFramesAt",
-      Effect.fnUntraced(function* (tempDir) {
+      Effect.fnUntraced(function* (tempDir, preserveStaging) {
         const staged = yield* Effect.forEach(
           A.map(request.timestampsSeconds, (timestampSeconds, index) => ({ index, timestampSeconds })),
           Effect.fnUntraced(function* (entry) {
@@ -1528,7 +1550,9 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
           { concurrency: 4 }
         );
 
-        const frames = yield* commitTimestampedFrames(fs, path, context, tempDir, staged).pipe(Effect.uninterruptible);
+        const frames = yield* commitTimestampedFrames(fs, path, context, tempDir, staged, preserveStaging).pipe(
+          Effect.uninterruptible
+        );
         return ExtractFramesAtResult.make({
           frameCount: A.length(frames),
           frames,
