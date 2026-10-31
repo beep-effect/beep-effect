@@ -54,8 +54,7 @@ reseed from fresh main before the next. The final unit must carry `/reflect`, th
 
 Safety rails: never force-push; never stash clear/drop/pop; never branch-delete,
 worktree-prune, reset-hard, or clean; never revert unexplained out-of-scope main-checkout changes;
-never edit `docs/_internal/**` (the `.github/workflows/**` rail was dropped by operator
-decision on 2026-10-31, #2403); never use admin merge or lower gates;
+never edit `docs/_internal/**` (workflow rail dropped 2026-10-31, see SPEC); never use admin merge or lower gates;
 never weaken `.gitleaks.toml` in-PR; never mutate `.claude/settings.json` or repo settings; never
 trust self-reports. The full verbatim rail and all budgets/playbooks are in normative `SPEC.md`.
 
