@@ -20,7 +20,7 @@ type Observation = Readonly<{
   step: number;
 }>;
 type BatchManifest = Readonly<Record<string, Readonly<{ group: string; manualReason?: string; scripted: boolean }>>>;
-type ParsedCli = Readonly<{ kind: "all" | "batch" | "entry" | "list"; value?: string }>;
+type ParsedCli = Readonly<{ kind: "all" | "batch" | "entry" | "list"; value?: string | undefined }>;
 type RuntimeState = {
   copiedEditorText?: string;
 };
@@ -46,6 +46,13 @@ const HOME_PATH = /\/(?:@fs\/)?home\/[^/\s]+/g;
 const usage = "Usage: bun runner.ts --batch <surface-group> | --entry <atlas-id> | --list | --all";
 
 class ConcurrentRunnerError extends Error {}
+
+// Playwright reads an undefined option exactly like an absent one, so dropping undefined fields
+// only satisfies exactOptionalPropertyTypes; behaviour is unchanged.
+const definedOptions = <T extends Record<string, unknown>>(options: T): { [K in keyof T]?: Exclude<T[K], undefined> } =>
+  Object.fromEntries(Object.entries(options).filter(([, value]) => value !== undefined)) as {
+    [K in keyof T]?: Exclude<T[K], undefined>;
+  };
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   Object.prototype.toString.call(value) === "[object Object]";
@@ -162,12 +169,15 @@ const toLocator = (page: Page, spec: LocatorSpec): Locator => {
           spec.name === undefined || spec.nameMatch === undefined
             ? spec.name
             : new RegExp(`^${Str.replace(REGEXP_META, "\\$&")(spec.name)}(?:\\s|$)`);
-        return root.getByRole(spec.role, { exact: spec.nameMatch === undefined ? spec.exact : undefined, name });
+        return root.getByRole(
+          spec.role,
+          definedOptions({ exact: spec.nameMatch === undefined ? spec.exact : undefined, name })
+        );
       }
       case "test-id":
         return page.getByTestId(spec.id);
       case "text":
-        return page.getByText(spec.text, { exact: spec.exact });
+        return page.getByText(spec.text, definedOptions({ exact: spec.exact }));
     }
   })();
   return spec.nth === undefined ? locator : locator.nth(spec.nth);
@@ -255,7 +265,7 @@ const executeClick = async (
   const options = step.options;
   if (options?.upload !== undefined) {
     const chooserPromise = page.waitForEvent("filechooser");
-    await locator.click({ force: options.force });
+    await locator.click(definedOptions({ force: options.force }));
     const chooser = await chooserPromise;
     if ("fromDownloadSlot" in options.upload) {
       const downloadPath = downloads.get(options.upload.fromDownloadSlot);
@@ -271,7 +281,10 @@ const executeClick = async (
     return;
   }
   if (options?.downloadSlot !== undefined) {
-    const [download] = await Promise.all([page.waitForEvent("download"), locator.click({ force: options.force })]);
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      locator.click(definedOptions({ force: options.force })),
+    ]);
     await saveDownload(download, options.downloadSlot, downloads, entryDirectory);
     return;
   }
@@ -281,12 +294,14 @@ const executeClick = async (
     await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
     return;
   }
-  await locator.click({
-    button: options?.button,
-    force: options?.force,
-    modifiers: options?.modifiers as Array<"Alt" | "Control" | "Meta" | "Shift"> | undefined,
-    position: options?.position,
-  });
+  await locator.click(
+    definedOptions({
+      button: options?.button,
+      force: options?.force,
+      modifiers: options?.modifiers as Array<"Alt" | "Control" | "Meta" | "Shift"> | undefined,
+      position: options?.position,
+    })
+  );
   await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: new URL(BASE_URL).origin });
 };
 
