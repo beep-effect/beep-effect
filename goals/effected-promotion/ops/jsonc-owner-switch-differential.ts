@@ -45,6 +45,9 @@
  *    its normalized stdout and stderr (ANSI, durations, timestamps and the two
  *    roots replaced) and whether the input tree stayed clean. `--compare`
  *    re-runs the matrix with the current code and fails on any difference.
+ *    The corpus leg is compared by its non-equal counts (files - equal,
+ *    both-reject, unclassified, files - round trips), not its size: the corpus
+ *    is the running checkout's tracked files, which grows when `main` is merged.
  *
  * The input tree is a detached worktree of the base revision so the before and
  * after runs read identical files while only the code differs:
@@ -695,12 +698,16 @@ const compareField = (subject: string, field: string, baseline: unknown, current
   baseline === current ? O.none() : O.some({ subject, field, baseline: String(baseline), current: String(current) });
 
 const compareReports = (baseline: Report, current: Report): ReadonlyArray<Difference> => {
+  // The corpus is the running checkout's own tracked files, so its size grows when the lane merges
+  // `main` (a new tsconfig or *.jsonc file). Each report decodes its whole corpus with both owners,
+  // so the compare checks the counts that are not "equal" (and not "round trips"), never the size.
+  const notEqual = (leg: CorpusLeg): number => leg.files - leg.equal;
+  const notRoundTripped = (leg: CorpusLeg): number => leg.files - leg.encode.roundTrip;
   const corpus = A.getSomes([
-    compareField("corpus", "files", baseline.corpus.files, current.corpus.files),
-    compareField("corpus", "equal", baseline.corpus.equal, current.corpus.equal),
+    compareField("corpus", "files-equal", notEqual(baseline.corpus), notEqual(current.corpus)),
     compareField("corpus", "bothReject", baseline.corpus.bothReject, current.corpus.bothReject),
     compareField("corpus", "unclassified", baseline.corpus.unclassified, current.corpus.unclassified),
-    compareField("corpus", "encode.roundTrip", baseline.corpus.encode.roundTrip, current.corpus.encode.roundTrip),
+    compareField("corpus", "files-encode.roundTrip", notRoundTripped(baseline.corpus), notRoundTripped(current.corpus)),
   ]);
   // Summary counts and per-record outcomes are separate lists: a missing record is already a
   // Difference, so it must not pass through A.getSomes (which keeps only Some values).
