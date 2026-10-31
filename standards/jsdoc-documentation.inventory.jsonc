@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T12:29:19.060Z",
+  "generatedAt": "2026-10-31T12:44:51.804Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -528437,8 +528437,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 353,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-353-computepolicyfingerprint",
+          "line": 360,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-360-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -528459,8 +528459,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 811,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-811-policytoolsfingerprintpolicy",
+          "line": 904,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-904-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -528481,8 +528481,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 889,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-889-lintpolicyfingerprintcommand",
+          "line": 982,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-982-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -529445,8 +529445,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ToolingSchemaFirst.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts",
-          "line": 341,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-toolingschemafirst-command-ts-341-lintcommandtestkit",
+          "line": 332,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-toolingschemafirst-command-ts-332-lintcommandtestkit",
           "currentTags": [
             "@internal",
             "@category",
@@ -529468,8 +529468,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ToolingSchemaFirst.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts",
-          "line": 486,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-toolingschemafirst-command-ts-486-linttoolingschemafirstcommand",
+          "line": 477,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-toolingschemafirst-command-ts-477-linttoolingschemafirstcommand",
           "currentTags": [
             "@category",
             "@since"

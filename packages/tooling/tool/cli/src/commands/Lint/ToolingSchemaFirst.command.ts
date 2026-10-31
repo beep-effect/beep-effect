@@ -113,6 +113,29 @@ export const collectTypeScriptFiles = Effect.fn("Lint.collectTypeScriptFiles")(f
 
   const visitedCanonicalDirs = MutableHashSet.empty<string>();
 
+  const isSourceFile = (entry: string, candidate: string, isSymlinkPath: boolean): boolean =>
+    !isSymlinkPath && Str.endsWith(".ts")(entry) && !isExcludedTypeScriptSourcePath(candidate);
+
+  const readEntry = Effect.fnUntraced(function* (
+    currentPath: string,
+    entry: string
+  ): Effect.fn.Return<ReadonlyArray<string>, LintFileDiscoveryError, FileSystem.FileSystem | Path.Path> {
+    const candidate = path.join(currentPath, entry);
+    const canonicalCandidate = yield* fs
+      .realPath(candidate)
+      .pipe(LintFileDiscoveryError.mapError(root, candidate, "Failed to resolve canonical path"));
+    const stat = yield* fs
+      .stat(candidate)
+      .pipe(LintFileDiscoveryError.mapError(root, candidate, "Failed to stat path"));
+    if (!isContainedLintPath(path, canonicalRoot, canonicalCandidate)) return A.empty<string>();
+    const isSymlinkPath = path.resolve(candidate) !== canonicalCandidate;
+    if (stat.type === "Directory") {
+      if (isSymlinkPath || isExcludedTypeScriptSourcePath(`${candidate}/`)) return A.empty<string>();
+      return yield* walk(candidate);
+    }
+    return isSourceFile(entry, candidate, isSymlinkPath) ? [candidate] : A.empty<string>();
+  });
+
   const walk = Effect.fn("Lint.collectTypeScriptFiles.walk")(function* (
     currentPath: string
   ): Effect.fn.Return<ReadonlyArray<string>, LintFileDiscoveryError, FileSystem.FileSystem | Path.Path> {
@@ -138,40 +161,8 @@ export const collectTypeScriptFiles = Effect.fn("Lint.collectTypeScriptFiles")(f
       .readDirectory(currentPath)
       .pipe(LintFileDiscoveryError.mapError(root, currentPath, "Failed to read directory"));
 
-    let results = A.empty<string>();
-
-    for (const entry of entries) {
-      const candidate = path.join(currentPath, entry);
-      const canonicalCandidate = yield* fs
-        .realPath(candidate)
-        .pipe(LintFileDiscoveryError.mapError(root, candidate, "Failed to resolve canonical path"));
-      const stat = yield* fs
-        .stat(candidate)
-        .pipe(LintFileDiscoveryError.mapError(root, candidate, "Failed to stat path"));
-
-      if (!isContainedLintPath(path, canonicalRoot, canonicalCandidate)) {
-        continue;
-      }
-
-      const isSymlinkPath = path.resolve(candidate) !== canonicalCandidate;
-
-      if (stat.type === "Directory") {
-        if (isSymlinkPath) {
-          continue;
-        }
-        if (isExcludedTypeScriptSourcePath(`${candidate}/`)) {
-          continue;
-        }
-        results = A.appendAll(results, yield* walk(candidate));
-        continue;
-      }
-
-      if (!isSymlinkPath && Str.endsWith(".ts")(entry) && !isExcludedTypeScriptSourcePath(candidate)) {
-        results = A.append(results, candidate);
-      }
-    }
-
-    return results;
+    const results = yield* Effect.forEach(entries, (entry) => readEntry(currentPath, entry), { concurrency: 1 });
+    return A.flatten(results);
   });
 
   return A.sort(yield* walk(root), Order.String);
