@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R4, refactor/yaml-out-of-repo-cli)",
+      "reason": "Record the R4 manifest edit that drops the npm yaml dependency from @beep/repo-ai-metrics and adds the @beep/yaml workspace dependency (compose.ts renders through the kit); the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r4.md",
+        "sha256": "9b829d985b12bb1ef727af56985f5444981afcd01ef907bb6d7796a3c1a54f43"
       }
     },
     "@beep/repo-cli": {
@@ -102253,7 +102253,8 @@
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
           "@beep/utils#audit",
-          "@beep/xdg#audit"
+          "@beep/xdg#audit",
+          "@beep/yaml#audit"
         ],
         "configuration": {
           "cache": false,
@@ -102327,7 +102328,8 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -102390,7 +102392,8 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -102440,7 +102443,8 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": false,
@@ -102575,7 +102579,8 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -102788,7 +102793,8 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": false,
@@ -102842,7 +102848,8 @@
           "@beep/test-utils#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -102901,7 +102908,8 @@
           "@beep/test-utils#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
