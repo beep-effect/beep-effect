@@ -11,6 +11,29 @@ Historical leads remain in the [exploration ledger](../../../explorations/turbor
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
 
+## 2026-10-31: inherited dependency advisories interrupt protected qualification
+
+PR #2368's Security job found newly reviewed `glob` and `minimatch`
+advisories in dependency state shared with `main`. The affected installed
+versions were `glob` 10.5.0/13.0.6 and `minimatch` 5.1.9/9.0.9/10.2.6.
+The repair lane pins `glob` 14.0.3 and `minimatch` 11.0.3 and regenerates
+the lockfile without changing scanner exceptions. Cache policy audit passes.
+
+The first complete `@beep/glob` package check exposed removed upstream
+test-oracle APIs (`AST`, `makeRe`, `levelTwoFileOptimize`). A direct runtime
+probe also found changed empty-path and dot-segment matching semantics.
+These are introduced compatibility failures, not inherited-red waivers.
+Keep the dependency repair in draft until the old dialect contract and
+its independent assertions are preserved against a secure oracle. Owner:
+this goal's dependency repair lane. Prevent recurrence by checking oracle
+API and dialect compatibility before calling a security upgrade final.
+The same uncapped optimizer cloning existed in the vendored engine. Its
+repair now enforces the existing expansion cap before cloning and before
+pairwise preprocessing. The focused hostile-input suite passes 20 tests,
+including first-excess and oversized direct-input controls; this does not
+turn the still-red complete oracle suite into a pass.
+The signed trial remains inactive and the credential helper remains unrun.
+
 ## 2026-10-29: request tags need their own captured evidence
 
 The closed-producer source inspection found that `CacheFixtureEvent.tagPresent`

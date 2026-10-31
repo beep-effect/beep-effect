@@ -39,7 +39,7 @@ import * as Str from "effect/String";
 import { assertValidPattern } from "./assertValidPattern.ts";
 import { AST } from "./ast.ts";
 import { expand } from "./braceExpansion.ts";
-import { assertCap, MAX_GLOBSTAR_RECURSION } from "./limits.ts";
+import { assertCap, EXPANSION_MAX, GuardExceeded, MAX_GLOBSTAR_RECURSION } from "./limits.ts";
 import { GLOBSTAR } from "./types.ts";
 import type { EngineOptionsInput, MMRegExp, ParseReturn, ParseReturnFiltered, Platform } from "./types.ts";
 
@@ -335,12 +335,15 @@ const dedupeGlobstarRun = (parts: Array<string>, gs: number): void => {
 };
 
 // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
-const splitGlobstarParents = (parts: Array<string>, globParts: Array<Array<string>>): boolean => {
+const splitGlobstarParents = (parts: Array<string>, globParts: Array<Array<string>>, max: number): boolean => {
   let didSomething = false;
   let gs = parts.indexOf("**");
   while (gs !== -1) {
     dedupeGlobstarRun(parts, gs);
     if (parts[gs + 1] === ".." && isNamedSegment(parts[gs + 2]) && isNamedSegment(parts[gs + 3])) {
+      if (globParts.length >= max) {
+        throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, globParts.length + 1);
+      }
       didSomething = true;
       // edit parts in place, and push the new one
       parts.splice(gs, 1);
@@ -1245,11 +1248,15 @@ export class Minimatch {
    * @since 0.0.0
    */
   firstPhasePreProcess(globParts: Array<Array<string>>) {
+    const max = assertCap("braceExpandMax", this.options.braceExpandMax ?? EXPANSION_MAX);
+    if (globParts.length > max) {
+      throw GuardExceeded.fromReason("ExpansionBudgetExceeded", max, globParts.length);
+    }
     let didSomething = false;
     do {
       didSomething = false;
       for (const parts of globParts) {
-        if (this.#firstPhaseParts(parts, globParts)) didSomething = true;
+        if (this.#firstPhaseParts(parts, globParts, max)) didSomething = true;
       }
     } while (didSomething);
 
@@ -1257,9 +1264,9 @@ export class Minimatch {
   }
 
   // One first-phase pass over one alternative; true when anything changed.
-  #firstPhaseParts(parts: Array<string>, globParts: Array<Array<string>>): boolean {
+  #firstPhaseParts(parts: Array<string>, globParts: Array<Array<string>>, max: number): boolean {
     // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
-    let didSomething = splitGlobstarParents(parts, globParts);
+    let didSomething = splitGlobstarParents(parts, globParts, max);
 
     // <pre>/<e>/<rest> -> <pre>/<rest>
     if (!this.preserveMultipleSlashes && squeezeEmptyAndDotParts(parts)) didSomething = true;

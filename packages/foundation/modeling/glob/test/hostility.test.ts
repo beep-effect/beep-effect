@@ -169,6 +169,31 @@ describe("hostility: globstar backtracking", () => {
   });
 });
 
+describe("hostility: optimizer expansion", () => {
+  it("rejects the first optimizer-generated alternative above the shared expansion cap", () => {
+    try {
+      new Minimatch("a/**/../b/c", { optimizationLevel: 2, braceExpandMax: 1 });
+      assert.fail("expected a GuardExceeded throw");
+    } catch (error) {
+      assertInstanceOf(error, GuardExceeded);
+      assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+      assert.strictEqual(error.limit, 1);
+      assert.strictEqual(error.actual, 2);
+    }
+    const matcher = new Minimatch("a/**/../b/c", { optimizationLevel: 2, braceExpandMax: 2 });
+    assert.strictEqual(matcher.globParts.length, 2);
+    assert.isTrue(matcher.match("a/b/c"));
+  });
+
+  it("bounds an oversized direct preprocessing input before the pairwise phase", () => {
+    const matcher = new Minimatch("*", { braceExpandMax: 1 });
+    assert.strictEqual(
+      reasonOf(() => matcher.firstPhasePreProcess([["a"], ["b"]])),
+      "ExpansionBudgetExceeded"
+    );
+  });
+});
+
 describe("hostility: internal cap wiring", () => {
   it("dies on NaN or non-integer caps everywhere they are accepted", () => {
     assert.throws(() => new Minimatch("a", { maxGlobstarRecursion: Number.NaN }), InvalidCap);
@@ -176,6 +201,7 @@ describe("hostility: internal cap wiring", () => {
     assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: Number.NaN }), InvalidCap);
     assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: 0 }), InvalidCap);
     assert.throws(() => new Minimatch("+(a)", { maxExtglobRecursion: Number.NaN }), InvalidCap);
+    assert.throws(() => new Minimatch("a", { optimizationLevel: 2, braceExpandMax: Number.NaN }), InvalidCap);
   });
 });
 

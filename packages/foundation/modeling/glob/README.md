@@ -212,4 +212,12 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 
 ### Dependency backlog
 
-None.
+The security upgrade to minimatch 11 removes the prior upstream AST and
+regular-expression oracle APIs and changes some empty-path and dot-segment
+semantics. Preserve the existing dialect contract while migrating these test
+oracles; a successful dependency install is not a passing package proof.
+
+The vendored optimizer applies `braceExpandMax` to generated globstar-parent
+alternatives as well as brace expansion. It rejects the first excess member
+with the existing typed `ExpansionBudgetExceeded` signal before the pairwise
+optimization phase.
