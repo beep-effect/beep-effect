@@ -12,8 +12,8 @@ and the History section below records every regeneration since.
 | Command | What it does |
 | --- | --- |
 | `bun run beep lint effect-schema-inventory --write` | Regenerates every `*.jsonl` file and `INDEX.md` from `.repos/effect` at the pin. It builds the new directory in a sibling temporary directory and renames it into place, so a failed write leaves the committed fixture untouched. A stale `*.jsonl` is dropped only when every line decodes as a row; this README and foreign files are carried over. |
-| `bun run beep lint effect-schema-inventory --check` | The default mode. Regenerates in memory and fails with a per-file drift report unless every owned fixture file is byte-identical and every generated lane prompt under `goals/effect-schema-parity/ops/prompts/` re-renders to its committed bytes outside its graft section. Writes nothing. |
-| `bun run beep lint effect-schema-inventory --prompt <module>` | Writes a lane prompt for one module: each row resolved at the pin to its full declaration and JSDoc block, plus local graft context. Fails when graft cannot be read. Defaults to `goals/effect-schema-parity/ops/prompts/<slug>.md`; `--out <path>` overrides it. |
+| `bun run beep lint effect-schema-inventory --check` | The default mode. Regenerates in memory and fails with a per-file drift report unless every owned fixture file is byte-identical and every generated lane prompt under `goals/effect-schema-parity/ops/prompts/` re-renders to its committed bytes. Writes nothing. |
+| `bun run beep lint effect-schema-inventory --prompt <module>` | Writes a lane prompt for one module: each row resolved at the pin to its full declaration and JSDoc block. Defaults to `goals/effect-schema-parity/ops/prompts/<slug>.md`; `--out <path>` overrides it. |
 
 All three modes fail loud when the catalog entry has no valid immutable source pin, when
 `.repos/effect` is missing or is not a git checkout, or when it lacks the pinned
@@ -101,14 +101,14 @@ The first loop covers the 23 modules that have rows; the empty `enable` module h
 
 ## Hosted verification
 
-Hosted CI never reads `.repos/effect`, graft, or a model. `packages/tooling/tool/cli/test/effect-schema-inventory-fixture.test.ts` runs in the repo-cli unit lane on Bun and on Node and checks the committed files alone:
+Hosted CI never reads `.repos/effect` or a model. `packages/tooling/tool/cli/test/effect-schema-inventory-fixture.test.ts` runs in the repo-cli unit lane on Bun and on Node and checks the committed files alone:
 
 - the JSONL file set equals the module list, and every row decodes with `EffectSchemaInventoryRow` and re-encodes to its exact line;
 - `(module, symbol, kind)` identities are unique, and each row's `module`, `file`, and `importable` match its module-list entry;
 - every row's `sha` equals the `INDEX.md` pin line and the root `package.json` catalog pin, so an Effect bump PR fails until it regenerates this fixture with `--write`;
 - the `INDEX.md` row digest matches the JSONL bytes, and re-rendering `INDEX.md` from the committed rows reproduces it byte for byte.
 
-Hosted CI cannot verify the lane prompts: re-rendering a prompt needs the pinned sources, so prompt verification runs only in local `--check`, which splices each committed prompt's graft section (local graft output) into the re-render and compares every other byte. `--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-401/`) follows the same local-regenerate, hosted-verify split.
+Hosted CI cannot verify the lane prompts: re-rendering a prompt needs the pinned sources, so prompt verification runs only in local `--check`, which compares each re-rendered prompt with its committed bytes. `--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-401/`) follows the same local-regenerate, hosted-verify split.
 
 ## Verification
 
