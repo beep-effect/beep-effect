@@ -6,7 +6,7 @@ import { makeNativeRepository, VersionConflictError } from "@beep/effect-drizzle
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { layer as makeSqliteLayer } from "@effect/sql-sqlite-bun/SqliteClient";
-import { assert, expect } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { numeric, sqliteTable, text } from "drizzle-orm/sqlite-core";
@@ -502,11 +502,13 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
       expect(filter(concurrentUpdates, isSuccess)).toHaveLength(1);
       const concurrentWinner = getOrThrow(findFirst(concurrentUpdates, isSuccess));
       const concurrentLoser = getOrThrow(findFirst(concurrentUpdates, isFailure));
-      assertTrue(hasFails(concurrentLoser));
-      assertFalse(hasDies(concurrentLoser));
-      assertFalse(hasInterrupts(concurrentLoser));
-      const concurrentConflict = getOrThrow(Cause.findErrorOption(concurrentLoser.cause));
-      assert(is(VersionConflictError)(concurrentConflict));
+      concurrentLoser.pipe(hasFails, assertTrue);
+      concurrentLoser.pipe(hasDies, assertFalse);
+      concurrentLoser.pipe(hasInterrupts, assertFalse);
+      const concurrentConflict = concurrentLoser.cause.pipe(Cause.findErrorOption, getOrThrow);
+      if (!is(VersionConflictError)(concurrentConflict)) {
+        throw new Error("SQLite concurrent loser did not return VersionConflictError");
+      }
       expect(concurrentConflict.table).toBe(SqliteUser.sql.tableName);
       expect(concurrentConflict.id).toBe(concurrentSeed.id);
       expect(concurrentConflict.expectedVersion).toBe(concurrentSeed.rowVersion);
