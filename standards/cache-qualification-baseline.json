@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R2a, chore/vitest-setup-glob-shim-on-beep-glob)",
-      "reason": "Record the R2a root manifest edit (toml, picomatch and @types/picomatch leave devDependencies and the catalog; @beep/glob joins devDependencies for the vitest.setup.ts Bun.Glob shim) and the one-time cache-key move of the vitest.setup.ts global test input; the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "Codex native reviewer /root/policy_pr (gpt-6.1-sol, medium)",
+      "reason": "Record only the root judge-rubric policy fingerprint task adding FFmpeg.command.ts to generated inputs after the command-builder extraction; no command/cache/qualification change.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r2a.md",
-        "sha256": "e5535b412a04adb1387762ce6172851bf42b400be4bcc326bf3595ffa4ad0dcd"
+        "path": "docs/reports/ffmpeg-judge-cache-input-review-2026-10-31.md",
+        "sha256": "58cd400cbaae5669382e8c97c16c12a9c8abd2fcd877a813938bbe6021b8297b"
       }
     },
     "@beep/acp": {
@@ -5213,6 +5213,7 @@
             "./tsconfig.packages.json",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/FFmpeg.capture.models.ts",
+            "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
@@ -134262,7 +134263,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "7af7a9fd6c7209f84475d275ac0ceb2cab46d3e1a0a2d6e6429d9bd1d1b2badf"
+        "sha256": "f1afe334b0e8d2974befbbfd4fe2a92c7431691b288443c27b35c30ffb4704e1"
       }
     ]
   }
