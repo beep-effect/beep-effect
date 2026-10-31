@@ -4,9 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -176,3 +179,36 @@ export const requireCacheSupervisorCapture: {
     );
   })
 );
+
+/**
+ * Allocate scoped supervisor storage outside every task input mount.
+ *
+ * **Example** (Reference private host storage)
+ * ```ts
+ * import { makePrivateSupervisorStorage } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof makePrivateSupervisorStorage === "function")
+ * ```
+ *
+ * @internal
+ * @category resources
+ * @since 0.0.0
+ */
+export const makePrivateSupervisorStorage = Effect.fn("CachePilot.makePrivateSupervisorStorage")(function* (
+  root: string,
+  mounts: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* fs
+    .makeTempDirectoryScoped({
+      directory: "/tmp",
+      prefix: "beep-cache-supervisor-",
+    })
+    .pipe(Effect.flatMap(fs.realPath));
+  if (A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: directory })))
+    return yield* CacheCommandError.new("Private supervisor storage must remain outside every source input mount.");
+  yield* fs.chmod(directory, 0o700);
+  // Resolve worker imports without placing private captures inside a source mount.
+  yield* fs.symlink(path.join(root, "node_modules"), path.join(directory, "node_modules"));
+  return directory;
+});

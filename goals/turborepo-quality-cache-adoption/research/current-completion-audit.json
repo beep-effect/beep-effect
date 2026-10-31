@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "a5c62133cbf7d74af84c17f3596edd067efab7d340d33a6cc809ceaa467d4b98",
+  "specSha256": "dac9820e8e2517f97f503a05869b5424f663978dc50cf7dd815d3a4d0648f33f",
   "acceptance": [
     {
       "id": "AC-01",
@@ -296,5 +296,30 @@
       "sourceRevision": "6958340c791e94e88eee64d56cf2aecfbeedfa2b",
       "pathScope": "The relative artifact path binds bytes at sourceRevision, not the current working tree."
     }
-  }
+  },
+  "priorSpecSha256AtExternalGeneratorReview": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "externalVerdictSourceReview": {
+    "path": "research/external-verdict-source-review.json",
+    "sha256": "ae85bba291a9cc1c408096051ef231b2f6e2c650850fc0b954c49190c823a7a1",
+    "scope": "One source-reviewed fresh external verdict boundary; 199 fresh boundaries and 2372 remaining final-disposition gaps. No advisory execution or qualification."
+  },
+  "generatorBoundarySourceReview": {
+    "path": "research/generator-boundary-source-review.json",
+    "sha256": "25109344bd6772a3d27ac4ab4f999de6b2a72a860041c5e647ee47a4b2cedcb1",
+    "scope": "Nine source-reviewed write/pure decomposition leads with 23 exact source bindings. No final exclusion, generator execution or reuse grant."
+  },
+  "priorSpecSha256AtAcceptedFeatureMerge": {
+    "producerBeforeJoin": "de743393b37e2e810547c01663d2d71d3c05bf5f1d3442410341e818399861ab",
+    "acceptedFeature": "a5c62133cbf7d74af84c17f3596edd067efab7d340d33a6cc809ceaa467d4b98",
+    "producerConformanceJoin": {
+      "local": "a7ffc01125a38900ef8ec40f1541303c61990ca56de643869b8b55681cdd5599",
+      "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+    },
+    "acceptedFeatureConformanceJoin": {
+      "local": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
+      "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+    },
+    "acceptedCommit": "0e601a3d55f88d875ca49d47931e216a5a328aa2"
+  },
+  "acceptedFeatureMergeCheckpoint": "research/accepted-feature-merge-checkpoint.json"
 }

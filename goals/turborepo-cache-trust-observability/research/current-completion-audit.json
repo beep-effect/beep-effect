@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "35423c3fba45ba4be7c3f22126060d94f7165c57c8358fd07fbc622d345a73e2",
+  "specSha256": "bd73698b8b56d96f228e110c19dd879df587861e622189ac90243621779a4515",
   "acceptance": [
     {
       "id": "AC-01",
@@ -22,7 +22,10 @@
       "requirement": "Reader, fork, writer, backend and storage roles satisfy the independent capability matrix; tenant escape and direct invocation negatives pass.",
       "status": "unproven",
       "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology.",
-      "partialEvidence": ["research/private-pilot-storage-checkpoint.json"]
+      "partialEvidence": [
+        "research/private-pilot-storage-checkpoint.json",
+        "research/closed-producer-upload-checkpoint.json"
+      ]
     },
     {
       "id": "AC-03",
@@ -36,7 +39,8 @@
       "source": "SPEC.md:159",
       "requirement": "Protected producer receipts and direct result classes preserve provenance/fault causes despite Turbo recomputation.",
       "status": "unproven",
-      "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient."
+      "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient.",
+      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
     },
     {
       "id": "AC-05",
@@ -44,7 +48,10 @@
       "requirement": "Logs/metrics/receipts pass synthetic-secret and artifact-content safety tests with bounded labels, volume and retention.",
       "status": "unproven",
       "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps.",
-      "partialEvidence": ["research/private-pilot-storage-checkpoint.json"]
+      "partialEvidence": [
+        "research/private-pilot-storage-checkpoint.json",
+        "research/closed-producer-upload-checkpoint.json"
+      ]
     },
     {
       "id": "AC-06",
@@ -59,7 +66,10 @@
       "requirement": "Relevant package/protocol checks pass; failures are attributed and no introduced regression remains.",
       "status": "unproven",
       "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure.",
-      "partialEvidence": ["research/private-pilot-storage-checkpoint.json"]
+      "partialEvidence": [
+        "research/private-pilot-storage-checkpoint.json",
+        "research/closed-producer-upload-checkpoint.json"
+      ]
     },
     {
       "id": "AC-08",
@@ -365,8 +375,63 @@
     "sha256": "2a096026904b801aae90b7c6c7d2e353605ef7d3c06089442af4883a59f09b4d",
     "scope": "Hosted0d coverage-gap attribution; new26-test-per-runtime containment refusal and exact guard-removal control. Diagnostic only; fresh final/CI acceptance required. Floors unchanged."
   },
+  "ownedUploadPreparation": "Source-bound checkpoint retains the actual guest-alias counterexample; corrected native confinement and protected publication are pending. No acceptance criterion is complete.",
+  "priorSpecSha256BeforeUploadDirectoryIntegration": {
+    "ownedUpload": "a6c8d08537ed58b9892d276b362608500ee6e41e1ba8278f985af3fa11414083",
+    "main": "fe2990a36afd1a640a44b1092d2c934abadfa1f2344e35d777b631a02e8f2a22"
+  },
+  "priorSpecSha256AtSignedAdapterExec": "febc955266dba6fb3603b48c32ab135014437413ef4fb6029efa6eaecf20e0bb",
+  "signedAdapterLaunchCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/signed-adapter-launch-checkpoint.json",
+    "sha256": "a9ecca51b701c49b32ed49d58bf7c71dceeb215d80b769ea4ddeb8cabb13d04a",
+    "scope": "Pinned exec-boundary component: process/lifecycle checks, default infra audit+Docgen and two private source-copy negatives. Actual owned backend, protected R2 publication, qualification and rollout remain pending."
+  },
+  "priorSpecSha256AtOwnedAdapterLifecycle": "640cbd9ada24cedbb67fe2c5eb8e009158a6b6f2ed6c265064d1089c6877a577",
+  "ownedAdapterLifecycleCheckpoint": {
+    "path": "research/owned-adapter-lifecycle-checkpoint.json",
+    "sha256": "1b81c4e88ab83354063b9b655d634e755eea172c7265586f7a5f4ab096ae08ba",
+    "status": "local component passed; integrated/package/protected proof remains pending",
+    "allAcceptanceUnproven": true
+  },
+  "priorSpecSha256AtAcceptedProducerIntegration": {
+    "producer": "e1b082711df70e86074ffe8e6c81e03dfe79abc6ceeae2be4d9a8a5a3bcaff0f",
+    "acceptedMain": "821f7a7284c14e49f484d784caa09eea41d9d9c70e1e631bcedbec59a7fe874b"
+  },
+  "ownedAdapterIntegrationCheckpoint": {
+    "path": "research/owned-adapter-integration-checkpoint.json",
+    "sha256": "272d12c8846f43a71d70ff93d7288c6902ae8c167e2bb35ab4b2041ccbbc0b02",
+    "allAcceptanceUnproven": true
+  },
+  "producerIntegrationPolicyReview": {
+    "path": "research/producer-integration-policy-review.json",
+    "sha256": "d24e75934317b90811cd4fd6f3a115428ec79a1cdd987586efa4915f34e72cbe",
+    "scope": "Introduced inline compilation/catalog fixes, canonical assertion semantics and one reviewed real-process platform judgment. Full package/final/hosted proof remains pending.",
+    "allAcceptanceUnproven": true
+  },
+  "priorSpecSha256AtFallowRepair": "a837d9b38c01565703776bdf34c93b0ab4fe516bed556215ed71380b08f68fd4",
+  "producerFallowRepairCheckpoint": {
+    "path": "research/producer-fallow-repair-checkpoint.json",
+    "sha256": "9266cb28ca37d0f3153b0fd6d978a942bf0af470f3e20e33768f1fe18b061eb0",
+    "scope": "Introduced complexity/duplication repaired;163 focused tests per runtime, source-removal integrity control, real synthetic adapter lifecycle and canonical policy/documentation checks. Complete package/final/hosted and all actual signed/deployed acceptance remain pending.",
+    "allAcceptanceUnproven": true
+  },
+  "priorSpecSha256AtExecutionCoverage": "7c8a4475cd3db0ef372870fc9bce0e3b2c574cdc40ed645c266631cbfa4cb6ec",
+  "producerExecutionCoverageRepair": "research/producer-execution-coverage-repair.json",
+  "priorSpecSha256AtExecutionPublicationPolicy": "695224a4be385c42ba244f7232f1e427b1f94802da554e84beb570a42bbe65e6",
+  "priorSpecSha256AtSingletonFrameRepair": "db20fe6452e70de776fb9f700b145b3ef13acaf8c5a94d55d3d698446577d10e",
+  "producerExecutionCoverageRepairCheckpoint": "research/producer-execution-coverage-repair.json",
+  "priorSpecSha256BeforeUploadLifetimeReview": "cbd4f88340be9925375e47cf644399f2fcc7453ac6e4f4af6bcd117ed9f38cf3",
+  "producerUploadLifetimeCheckpoint": "research/producer-upload-lifetime-checkpoint.json",
   "priorSpecSha256AtConformanceBindRepair": "821f7a7284c14e49f484d784caa09eea41d9d9c70e1e631bcedbec59a7fe874b",
+  "priorSpecSha256AtAcceptedConformanceMerge": {
+    "local": "e8f5fb1ba06b92ab6a9dcd291b3ae8f97291cce4e2569e92669ccec93357cf04",
+    "accepted": "4abd0d6fc7c4e0401893ee5cc581053bf33db9d07fd4be48804a922dc873c21e"
+  },
   "priorSpecSha256AtDependencySecurityRepair": "4abd0d6fc7c4e0401893ee5cc581053bf33db9d07fd4be48804a922dc873c21e",
   "dependencySecurityCompatibilityCheckpoint": "research/dependency-security-compatibility-checkpoint.json",
-  "priorSpecSha256AtSecondPhaseSecurityReview": "98f7ff8cee753d056cd178f5e90d5bd0534fc3444836bc62998a4da7bc7d77e6"
+  "priorSpecSha256AtSecondPhaseSecurityReview": "98f7ff8cee753d056cd178f5e90d5bd0534fc3444836bc62998a4da7bc7d77e6",
+  "priorSpecSha256AtAcceptedSecurityMerge": {
+    "local": "0c6289dde74055a394df45acf940fbe9cea28db1d87ae01fd9ab719caf294a25",
+    "accepted": "35423c3fba45ba4be7c3f22126060d94f7165c57c8358fd07fbc622d345a73e2"
+  }
 }

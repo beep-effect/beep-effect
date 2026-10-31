@@ -217,10 +217,22 @@ classification with unchanged configuration, not runtime or adoption proof.
 more exact Portless commands: Bun watchers, Vite development, Storybook
 development and Vite preview. All twelve configured persistent executable
 computations now have source-bound keep-fresh dispositions. Finite build
-counterparts remain unfinished. The current total is 198 reviewed fresh
+counterparts remain unfinished. At that checkpoint the total was 198 reviewed fresh
 boundaries with 2,373 final-disposition gaps; no service was launched.
 
 
+### External verdict and generator boundary review
+
+The current `repo-sanity:bun-audit` command reads current vulnerability data and
+selects clock-expiring exceptions, so its whole-command verdict stays fresh.
+The source-bound review changes one population row, bringing the reviewed fresh
+boundaries to 199 with 2,372 final-disposition gaps. Its separate pure policy
+prerequisite remains unqualified. The nine configured code generators now have
+source-reviewed write behavior and explicit pure rendering/check candidates;
+this grants no final exclusion or reuse. No generator was executed and no
+cache flag, qualification state or production runtime changed. See
+[the external review](research/external-verdict-source-review.json) and
+[the generator review](research/generator-boundary-source-review.json).
 ### Go workspace feature disposition
 
 The accepted-source census at dcca confirms zero Go files/modules/root workspace
@@ -348,3 +360,11 @@ standalone controls, the package's explicit test-file isolation and its measured
 cost. Node and Bun each pass 4,501 existing tests with full parser coverage, and
 default package verification passes. This is a verification-reliability component;
 current final/hosted/review/merge proof and the full adoption goal remain open.
+
+### Accepted feature evidence joined to producer work
+
+`research/accepted-feature-merge-checkpoint.json` records the accepted feature
+commit, both retained source-review paths and the unique-computation counter
+check. All branch additions and prior SPEC provenance are retained; the same
+external audit remains one computation. Current combined proof and every
+qualification, rollout, observation and full-goal requirement remain unfinished.

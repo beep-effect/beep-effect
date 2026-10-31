@@ -578,6 +578,151 @@ coverage diagnostic fills the reported gap while retaining every floor. See
 Fresh current-head full final and hosted acceptance remain required.
 
 
+### Owned upload preparation checkpoint, 2026-10-29
+
+Closed execution, paired independent approval and private storage repair are in
+`research/closed-producer-upload-checkpoint.json`. Keep all acceptance criteria
+unproven until current native, hosted/protected publication and deployed trust
+evidence pass; integrate accepted runtime and socket repairs through main first.
+
+
+### Signed adapter exec prerequisite
+
+The explicit signed launcher and its actual child-environment checks pass,
+as do the default infra package audit and Docgen. Two private source-copy
+mutants fail the intended checksum and artifact-key-isolation assertions.
+See [the checkpoint](research/signed-adapter-launch-checkpoint.json).
+The parent-owned adapter lifecycle, actual R2/protected producer execution and
+all remaining goal gates stay open. The separate producer branch still needs
+the accepted prerequisite integration from PR2367 through main.
+
+### Owned upload backend lifecycle component
+
+The producer now acquires the actual bounded backend only for the late upload
+phase. The approved target includes storage identity; parent capabilities are
+snapshotted; startup uses a private pipe; live executable/PID/listener and
+resource observations precede and follow the callback. Issuance requires its
+cleanup-bound lifecycle receipt. Node and Bun each pass 112 focused tests in
+seven files, including generated pin/storage cases. The real synthetic adapter
+lab retains its 33 controls plus nine runtime/host controls; the actual Bun
+controller passes success, callback-failure and interruption cleanup. Three
+removed guards fail their intended tests, with exact source restoration.
+
+See [the lifecycle checkpoint](research/owned-adapter-lifecycle-checkpoint.json).
+Complete package/final/hosted proof follows accepted prerequisite integration.
+Actual R2 grants, normal-source stable/canary execution, immutable publication,
+qualification and observation remain required. All goal acceptance is unproven.
+
+
+### Accepted prerequisite integration, 2026-10-30
+
+PR #2367 merged as `dcca065b86e48c2ec1b014d998da133cc04c7e60` after
+complete canonical final, current-head hosted checks, resolved review threads
+and the review window. Its lane is archived and retired. The producer branch
+now integrates that accepted main revision, preserving the pinned `/tools`
+launch aliases, private storage refusal, repaired orchestration cleanup tests
+and its separate owned-upload/backend lifecycle. Earlier checkpoint receipts
+retain their original source scope. Fresh combined runtime and complete
+package/final/hosted proof remain required; no qualification or activation is
+claimed by resolving this merge.
+
+
+### Integrated producer policy review
+
+Normal publication found four inline schema compilation errors and one stale
+instrumentation shard. Three Boolean Exit assertions now use canonical
+helpers without inventing payload/Cause expectations. The one remaining
+platform-provenance judgment retains the real filesystem because the subject
+launches a real child and observes its marker and process cleanup. The current
+root policy and quick package checks pass. The interrupted complete audit is
+not a pass; fresh complete package/final/hosted proof remains required. See
+[the review](research/producer-integration-policy-review.json).
+
+
+### Producer complexity and verified-reader repair
+
+The normal pre-push gates attributed two complexity findings and one clone group
+to the producer implementation. Canonical complete-URL constraints, the shared
+dependency reader and independently named preflight cases remove them. Focused
+Fallow audit and health pass with no baseline/threshold changes. The expanded
+13-file runtime replay passes 163 tests per runtime, and the current generated
+byte-integrity property also passes separately on Node/Bun. Removing its real
+digest check fails the intended assertion, with exact restoration. The real
+Bun controller replays actual adapter success, callback failure and interruption
+cleanup. Final source-bound evidence and complete/final/hosted gates remain
+required; no goal criterion or deployed trust state is completed here.
+
+
+### Producer execution coverage repair
+
+PR #2368 remains a component in progress. Its integrated head completed the
+default package audit, but full final failed on two opaque JSDoc child exits
+and terminated coverage, while hosted CI exposed three introduced per-file
+coverage regressions. Both exact JSDoc commands pass serially without source
+changes. The repaired source passes 153 focused tests per runtime, quick package
+checks and Effect test policy; the Node diagnostic meets all unchanged floors.
+The exact-decoder and upload/admission/refusal tests are recorded in
+[the coverage repair checkpoint](research/producer-execution-coverage-repair.json).
+Complete committed-source package/final and hosted proof remain required. No
+goal acceptance criterion, credential bootstrap or deployed signed trial is
+completed by these local component checks.
+
+
+The first publication of this repair stopped before pushing on root inline
+schema policy and the fixture exit rule's Fallow score. Both are repaired in
+the same component. The fresh 153-case replays pass on each runtime, with
+current quick, inline, Fallow audit/health and unchanged Node coverage floors
+passing. Normal publication and complete committed-source proof still follow.
+
+
+Hosted Lint Policy at ac7f rejected the fixture's import-scoped diagnostic
+suppression. The complete package audit had passed on that head. Remove the
+native HTTP import and suppression, use Effect's ephemeral TCP server for
+upload composition, and keep the dedicated real Unix transport test. The
+fixed socket-path assertion and successful PUT/failed-graph assertions remain.
+Re-run root tsgo-rule policy, both runtime suites, normal publication, and
+current-head package/final/hosted checks before ready; the earlier head's
+passes are historical evidence only.
+
+
+The repaired upload fixture passed normal publication at 001f. A nonquiet root
+lint replay also exposed a source-owned platform read in the adapter test gate.
+The existing platform helper removes that warning; both 153-case runtime suites,
+quick lint/check and complete root oxlint pass again, with unchanged coverage
+floors. Commit this final correction before fresh normal publication and full
+source-bound package/final/hosted verification.
+
+
+The full final at 401 passed every noncoverage lane but exposed two remaining
+new-file refusal gaps. Correct the hosted wire fixture and assert the specific
+provenance error. Use Stream.rechunk(1) instead of an unreachable local tail
+queue while retaining final-pull refusal of both batched and delayed frames.
+Current 45-case suites pass per runtime; both modules measure 100%, with two
+causal guard controls failing as intended. Fresh committed-source full package,
+full final, hosted checks and review remain required before readiness.
+
+
+### Owned upload admission and lifetime review, 2026-10-30
+
+Review of PR #2368 found the backend's fixed lifetime started before upload
+admission. The upload now owns one admitted scope around backend acquisition,
+worker/proxy execution, verification and cleanup. Its nine-minute load bound
+leaves verification/stop time under the unchanged ten-minute backend cap. The
+shared storage helper moves to the existing evidence role, avoiding a runner/
+adapter import cycle. Seventy focused cases pass per runtime; two causal
+controls fail the intended assertions and restore exact source. See the
+[source-bound checkpoint](research/producer-upload-lifetime-checkpoint.json).
+Generated inventory/catalog, complete current package/final proof and hosted
+review remain required. This component activates no cache or credential.
+
+### Owned approval refusal coverage repair
+
+`research/producer-approval-refusal-checkpoint.json` binds the current test and
+private worker contract repair to the hosted gap and its immutable coverage
+artifacts. The admission-reordering control fails once for the intended reason;
+176 cases pass per local provider with full scoped runner-file coverage. Current
+full/hosted proof and all nine whole-goal criteria remain unproven.
+
 ### Dependency security compatibility checkpoint, 2026-10-31 UTC
 
 The [compatibility checkpoint](research/dependency-security-compatibility-checkpoint.json)

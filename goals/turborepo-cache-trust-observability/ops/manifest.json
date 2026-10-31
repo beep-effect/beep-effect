@@ -94,6 +94,15 @@
     "research/private-pilot-storage-checkpoint.json",
     "research/private-orchestration-cleanup-checkpoint.json",
     "research/private-storage-refusal-coverage-checkpoint.json",
+    "research/closed-producer-upload-checkpoint.json",
+    "research/signed-adapter-launch-checkpoint.json",
+    "research/owned-adapter-lifecycle-checkpoint.json",
+    "research/owned-adapter-integration-checkpoint.json",
+    "research/producer-integration-policy-review.json",
+    "research/producer-fallow-repair-checkpoint.json",
+    "research/producer-execution-coverage-repair.json",
+    "research/producer-upload-lifetime-checkpoint.json",
+    "research/producer-approval-refusal-checkpoint.json",
     "research/dependency-security-compatibility-checkpoint.json"
   ],
   "agentLaunchers": [

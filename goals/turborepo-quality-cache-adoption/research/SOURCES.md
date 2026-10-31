@@ -299,6 +299,8 @@ binds changed runner source bytes. Historical claims above keep their dates.
   classification of all twelve configured persistent executable computations.
   Their finite build counterparts retain independent qualification duties.
 
+- `external-verdict-source-review.json`: current advisory and expiring-exception source review; one whole-command keep-fresh disposition, no fresh advisory verdict or reuse grant.
+- `generator-boundary-source-review.json`: all nine configured generator write boundaries, 23 exact source bindings and explicit offline/pure decomposition leads; no execution, final exclusion or qualification.
 
 ### Retained native future-flag availability, 2026-10-30
 
@@ -387,3 +389,7 @@ or deployment authority.
   cases and full parser coverage. The extra local runtime is recorded explicitly.
 - Default package verification passes; current final/hosted/review acceptance
   and all full-goal obligations remain separately unproven.
+
+- [Accepted feature join](accepted-feature-merge-checkpoint.json):
+  [PR #2369](https://github.com/beep-effect/beep-effect/pull/2369), exact accepted
+  commit, preserved branch evidence and unique computation counts.

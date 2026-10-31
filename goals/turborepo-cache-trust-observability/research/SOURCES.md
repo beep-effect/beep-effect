@@ -476,6 +476,41 @@ scoped Istanbul library combine the diagnostic counters. See the source-bound
 repair checkpoint. New published-head canonical and hosted acceptance remain
 required.
 
+
+- `closed-producer-upload-checkpoint.json`: owned upload preparation, paired target/key approval, source/runtime snapshots, actual synthetic guest-alias counterexample and scoped private storage repair; current protected native acceptance remains pending.
+
+
+### Signed adapter exec controls
+
+The signed-adapter-launch checkpoint binds the explicit launcher, real child
+environment observations, default infra package audit/Docgen and two private
+source-copy controls. Its selected test executable is inert. It establishes no
+R2 capability, protected producer authority or resource/listener attestation.
+The ordinary adapter lifecycle and cache configuration remain unchanged.
+
+- `owned-adapter-lifecycle-checkpoint.json`: source-bound local implementation
+  and proof for late owned-backend acquisition, approved storage identity,
+  private pipe startup, fixed real resource/lifetime observations and
+  issuer-bound cleanup. Separates 112-test Node/Bun orchestration, real
+  synthetic adapter/controller cases and three intended guard failures from
+  the unperformed R2/protected/qualification/observation gates.
+
+- `owned-adapter-integration-checkpoint.json`: accepted PR #2367 main integration with the owned backend/upload path; fresh 142-test Node and Bun replays and package lint/check. Earlier checkpoints retain their original source scope; complete and protected proof remains pending.
+
+- `producer-integration-policy-review.json`: exact source repair, canonical assertion semantics, one source-reviewed real-process platform judgment, and scoped passing checks; interrupted complete proof is explicitly not acceptance.
+
+- `producer-fallow-repair-checkpoint.json`: introduced complexity/duplication attribution, canonical upload-profile and shared-reader repair, current 163-case dual-runtime replay, intended digest-removal failure with exact restoration, real synthetic controller cleanup and canonical documentation/policy checks. Complete package/final/hosted and all real trust/adoption gates remain required.
+
+
+- [Upload lifetime review checkpoint](producer-upload-lifetime-checkpoint.json)
+  binds the current admitted lifecycle, unchanged backend caps, seventy focused
+  cases per runtime and exact-restored regression controls. The inert peer and
+  controlled admission do not prove actual R2 grants or protected publication.
+
+- [Owned approval refusal checkpoint](producer-approval-refusal-checkpoint.json):
+  immutable hosted gap, current exact source hashes, admission-order negative
+  control, and 176-case Node/Bun runner coverage. Local controlled evidence only.
+
 - [Dependency security compatibility checkpoint](dependency-security-compatibility-checkpoint.json):
   patched dependency identities, independent legacy-reference provenance,
   complete package and cross-runtime test/coverage proof, and restored negative

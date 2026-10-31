@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "owned-cache-adapter-lifecycle-checkpoint/v1",
+  "authority": "local-component-only; no qualification or deployment authority",
+  "sourceBaseRevision": "eea662d4ce30ffa03c771112840f03b146173262",
+  "specSha256": "e1b082711df70e86074ffe8e6c81e03dfe79abc6ceeae2be4d9a8a5a3bcaff0f",
+  "sourceSha256": {
+    "infra/r2-cache/policy_runtime.py": "e7bfdadc442e6652f31ea844790ebd3733ca66a2c789c0aaa3b9939005a9fe6c",
+    "infra/r2-cache/policy-lab.py": "ce3b2015c210f50ece8115e5143403c37840c261d778ec38b217526ade8d3f5e",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.schemas.ts": "c2d8fb0625f897d8036cdf01c00b81b1758c6dec44a0f47529132412b1075133",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.ts": "a2aee0157e9acff99c7719beae7f5070ac1f1df76d1086146597f6d179f3788d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": "c9c4d67d8fde32c1acd3533309002e637b3666c7e72c4130cd85c7632ca7455a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "a36fd218a3518ae0ad1778bf2f43a4da14c34b739915da12a26e37b18ced88bf",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.schemas.ts": "79e8661ab46b6b9a9d43bcb6dbfde7c8175d669f83747c43c3c03878a550c51c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "07fa051c0f53516263fed0146a0fab66168bf71ff6e0c120bfdc0ec7d15a5828",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "336acde639cd721303ebd37d3f7ec1fa91d18aa6753f8f96c545cbca96653514",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "4ffeae2588d38154fa33281cddbce6c07db166dff484ad22b2bd5dfa5cd17be3",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "662a6d380b0a7d5db2b1633c5d8b607f3aaf76a5d21ef618b70a1d3509bf2fb7",
+    "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "ce51046959228c34a10a9cc024cc3af19e0795bb9d865cd4a402bf875a91edd2",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "4605f1d53dd83591b24eb8415af21e324211c1c69a3f1854c1ade5ba3bd35d8f",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "73598e32b01dd9854ef820ee1a266b6106171205b75ac605a4ac280145f9336a",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "03a79e6075ca696e63b94c5a61808bb2e98f0535422de2b9bf3f5a52b74ee72c"
+  },
+  "behavior": [
+    "Acquire the actual backend after complete synthetic/native preparation, only around the approved upload.",
+    "Independently bind the storage endpoint/bucket and executable digest through the target fingerprint.",
+    "Snapshot storage and client capabilities; never give the backend the artifact/issuer key or task the storage keys.",
+    "Use existing private storage outside input mounts, an anonymous startup pipe, fixed user-unit caps and ordered bounded frames.",
+    "Require the same executable, PID and owned loopback listener before/after load; successful cleanup precedes returned observation.",
+    "Authenticate the sanitized lifecycle inside the existing producer bundle; reject missing/foreign lifecycle evidence.",
+    "Include infrastructure implementation and Python executable in the inspected workflow identity."
+  ],
+  "verification": {
+    "node": {
+      "tests": 112,
+      "files": 7,
+      "exit": 0,
+      "elapsedSeconds": 14.519,
+      "finishedAt": "2026-10-30T03:40:48.725318+00:00"
+    },
+    "bun": {
+      "tests": 112,
+      "files": 7,
+      "exit": 0,
+      "elapsedSeconds": 11.515,
+      "finishedAt": "2026-10-30T03:40:45.721324+00:00"
+    },
+    "quickPackage": {
+      "exit": 0,
+      "elapsedSeconds": 13.791,
+      "finishedAt": "2026-10-30T03:40:46.972030+00:00"
+    },
+    "infraDefaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 24.189,
+      "finishedAt": "2026-10-30T03:20:36.413687+00:00",
+      "auditSeconds": 9.9,
+      "docgenSeconds": 12.7
+    },
+    "actualPolicyLab": {
+      "wire": 20,
+      "startup": 1,
+      "pinnedNative": 12,
+      "runtimeControls": 9,
+      "liveRuntimeObservations": 4,
+      "exit": 0,
+      "elapsedSeconds": 10.126,
+      "finishedAt": "2026-10-30T03:20:21.867576+00:00",
+      "adapterOutputBytes": 0,
+      "ownedUnitsStopped": true,
+      "actualR2Calls": false
+    },
+    "actualController": {
+      "runtime": "Bun runtime harness with the NodeServices process layer",
+      "cases": ["success", "callback-failure", "interruption"],
+      "callbacksPerCase": 1,
+      "ownedListenerAbsentAfterEach": true,
+      "storageCredentials": "synthetic only; no R2 requests",
+      "exit": 0,
+      "elapsedSeconds": 3.519,
+      "finishedAt": "2026-10-30T03:25:30.383787+00:00"
+    },
+    "controllerProtocolScope": "Inert real Python pipe peer for fourteen protocol/refusal cases plus schema-generated pin property; not a backend/process-attestation substitute.",
+    "controllerCoverage": {
+      "runtime": "Node V8",
+      "source": "Cache.adapter.ts production bytes unchanged after this measurement",
+      "lines": 98.14,
+      "statements": 98.14,
+      "branches": 94.44,
+      "functions": 100,
+      "scope": "Focused controller coverage; complete package/hosted regression remains pending."
+    },
+    "guardRemovalControls": {
+      "schemaVersion": "owned-adapter-guard-controls/v1",
+      "rows": [
+        {
+          "case": "executable-pin",
+          "exit": 1,
+          "intendedAssertion": true,
+          "sourceSha256": "a2aee0157e9acff99c7719beae7f5070ac1f1df76d1086146597f6d179f3788d",
+          "restoredExactly": true,
+          "passed": true
+        },
+        {
+          "case": "issuer-lifecycle-binding",
+          "exit": 1,
+          "intendedAssertion": true,
+          "sourceSha256": "07fa051c0f53516263fed0146a0fab66168bf71ff6e0c120bfdc0ec7d15a5828",
+          "restoredExactly": true,
+          "passed": true
+        },
+        {
+          "case": "listener-ownership",
+          "exit": 1,
+          "intendedAssertion": true,
+          "workingSourceUnchanged": true,
+          "sourceSha256": "e7bfdadc442e6652f31ea844790ebd3733ca66a2c789c0aaa3b9939005a9fe6c",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    "canonicalInventories": {
+      "schemaCatalog": "regenerated",
+      "jsdoc": "regenerated",
+      "schemaFirst": {
+        "exit": 0,
+        "elapsedSeconds": 36.062,
+        "finishedAt": "2026-10-30T03:39:35.403350+00:00"
+      },
+      "introducedAdvisories": 0
+    }
+  },
+  "limits": [
+    "Current complete repo-cli package audit/Docgen and combined final/hosted proof remain pending until accepted prerequisite main is consumed once.",
+    "No actual R2 grant exercise or normal-source stable/canary upload was performed by these synthetic component probes.",
+    "No protected immutable producer publication, qualification grant, signing activation, rotation, rollback or representative observation acceptance.",
+    "The real CI execution driver still needs platform/resource qualification; no unbounded fallback is permitted.",
+    "All nine goal acceptance criteria remain unproven."
+  ],
+  "productionChanges": false
+}
