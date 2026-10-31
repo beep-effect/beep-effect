@@ -10,14 +10,14 @@
   },
   "packetPath": "goals/codex-security-findings-2026-10-28",
   "lifecycle": "active",
-  "mission": "Retain closure of seven Cloud findings and remediate the 20 additional dependency alerts discovered on 2026-10-31.",
+  "mission": "Retain closure of seven Cloud findings and resolve all 29 additional GitHub security alerts discovered on 2026-10-31.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until PR #2389 is merged through repository gates, all seven Cloud findings remain resolved, and all 20 supplemental dependency alerts are resolved.",
+    "statement": "Not achieved until PR #2389 is merged through repository gates, all seven Cloud findings remain resolved, and all 20 dependency, four code-scanning and five secret-scanning alerts are resolved with evidence.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -61,7 +61,8 @@
     "research/qualification.md",
     "research/2026-10-31-closeout.md",
     "research/2026-10-31-dependencies.md",
-    "research/2026-10-31-review.md"
+    "research/2026-10-31-review.md",
+    "research/2026-10-31-scanning.md"
   ],
   "agentLaunchers": [
     {
@@ -96,7 +97,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All seven Cloud findings merged and verified Fixed; 20 supplemental dependency alerts tracked separately in ops/dependabot.json."
+    "note": "Fixes for all seven Cloud findings merged and the findings are verified Fixed; 20 supplemental dependency alerts and nine scanning alerts are tracked in separate catalogs."
   },
   "closeoutPolicy": {
     "fixed": "Fixed",
@@ -189,10 +190,16 @@
     "status": "completed-retained",
     "finalPullRequest": 2389
   },
-  "statusNote": "All seven Cloud findings merged and verified Fixed; 20 supplemental dependency alerts tracked separately in ops/dependabot.json.",
+  "statusNote": "Fixes for all seven Cloud findings merged and the findings are verified Fixed; 20 supplemental dependency alerts and nine scanning alerts are tracked in separate catalogs.",
   "supplementalDependencies": {
     "catalog": "ops/dependabot.json",
     "expectedCount": 20,
     "status": "in-progress"
+  },
+  "supplementalScanning": {
+    "catalog": "ops/scanning.json",
+    "codeScanningCount": 4,
+    "secretScanningCount": 5,
+    "status": "complete"
   }
 }

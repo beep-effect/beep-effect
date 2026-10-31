@@ -49,7 +49,9 @@ same blocker repeats after reasonable investigation.
 
 ## Current acceptance — 2026-10-31
 
-The seven Cloud findings merged in #2333 and are Fixed. PR #2389 carries
-20 newer dependency fixes (#450–#469) in `ops/dependabot.json`. Finish its
+The fixes for the seven Cloud findings merged in #2333, and the findings are Fixed. PR #2389 carries
+20 newer dependency fixes (#450–#469) in `ops/dependabot.json`. Nine additional
+code/secret-scanning alerts are tracked in `ops/scanning.json`; resolve each
+with strict evidence and verify zero open alerts in every inventory. Finish its
 hosted review, merge, exact alert closure and completion receipt; preserve
 the original Cloud catalog and historical evidence.

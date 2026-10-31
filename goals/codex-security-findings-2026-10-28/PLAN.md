@@ -52,3 +52,12 @@ Controls and focused regressions are implemented. See
 remaining repository proof, publication, merge and exact-ID closure are pending.
 This supplemental packet is part of the resumed
 [October 20 goal](../codex-security-findings-2026-10-20/GOAL.md).
+
+## Supplemental scanning acceptance — October 31
+
+The broader authenticated inventory also found four stale CodeQL alerts and
+five secret-scanning alerts. Their separate sanitized catalog is
+`ops/scanning.json`, with source validation and exact closure reasons in
+`research/2026-10-31-scanning.md`. All nine must be resolved with evidence,
+without accepted risk, before final completion. Preserve the original seven
+Cloud IDs and twenty dependency IDs.

@@ -117,3 +117,12 @@ merged and the operator requested full closure.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+## Supplemental scanning acceptance — October 31
+
+The broader authenticated inventory also found four stale CodeQL alerts and
+five secret-scanning alerts. Their separate sanitized catalog is
+`ops/scanning.json`, with source validation and exact closure reasons in
+`research/2026-10-31-scanning.md`. All nine must be resolved with evidence,
+without accepted risk, before final completion. Preserve the original seven
+Cloud IDs and twenty dependency IDs.
