@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T23:24:05.126Z",
+  "generatedAt": "2026-10-31T23:40:16.808Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 165,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
-    "publicModules": 3583,
-    "publicExports": 25353,
+    "publicModules": 3585,
+    "publicExports": 25355,
     "openModules": 165,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -197077,8 +197077,8 @@
           "exportKind": "class",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 75,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-75-patentdocumentnormalizationerror",
+          "line": 76,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-76-patentdocumentnormalizationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -197099,8 +197099,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 530,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-530-normalizepatentclaims",
+          "line": 537,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-537-normalizepatentclaims",
           "currentTags": [
             "@category",
             "@since"
@@ -197121,8 +197121,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 595,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-595-normalizepatentapplicationdocument",
+          "line": 602,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-602-normalizepatentapplicationdocument",
           "currentTags": [
             "@effects",
             "@category",
@@ -266059,9 +266059,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 5,
-        "publicModuleCount": 5,
-        "publicExportCount": 44
+        "sourceFileCount": 7,
+        "publicModuleCount": 7,
+        "publicExportCount": 46
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -266102,6 +266102,50 @@
       "modules": [
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 1,
+          "anchor": "packages-drivers-git-src-git-errors-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 7,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 1,
+          "anchor": "packages-drivers-git-src-git-models-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 15,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
           "line": 1,
@@ -266119,7 +266163,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 25,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -266215,10 +266259,10 @@
         {
           "symbolName": "GitCommandError",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 291,
-          "anchor": "packages-drivers-git-src-git-ts-291-gitcommanderror",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 59,
+          "anchor": "packages-drivers-git-src-git-errors-ts-59-gitcommanderror",
           "currentTags": [
             "@public",
             "@category",
@@ -266238,10 +266282,10 @@
         {
           "symbolName": "NotARepositoryError",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 391,
-          "anchor": "packages-drivers-git-src-git-ts-391-notarepositoryerror",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 159,
+          "anchor": "packages-drivers-git-src-git-errors-ts-159-notarepositoryerror",
           "currentTags": [
             "@public",
             "@category",
@@ -266261,10 +266305,10 @@
         {
           "symbolName": "UnknownRefError",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 438,
-          "anchor": "packages-drivers-git-src-git-ts-438-unknownreferror",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 206,
+          "anchor": "packages-drivers-git-src-git-errors-ts-206-unknownreferror",
           "currentTags": [
             "@public",
             "@category",
@@ -266284,10 +266328,10 @@
         {
           "symbolName": "NonFastForwardError",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 499,
-          "anchor": "packages-drivers-git-src-git-ts-499-nonfastforwarderror",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 267,
+          "anchor": "packages-drivers-git-src-git-errors-ts-267-nonfastforwarderror",
           "currentTags": [
             "@public",
             "@category",
@@ -266307,10 +266351,10 @@
         {
           "symbolName": "MergeConflictError",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 566,
-          "anchor": "packages-drivers-git-src-git-ts-566-mergeconflicterror",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 334,
+          "anchor": "packages-drivers-git-src-git-errors-ts-334-mergeconflicterror",
           "currentTags": [
             "@public",
             "@category",
@@ -266330,10 +266374,10 @@
         {
           "symbolName": "DirtyWorktreeError",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 625,
-          "anchor": "packages-drivers-git-src-git-ts-625-dirtyworktreeerror",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 393,
+          "anchor": "packages-drivers-git-src-git-errors-ts-393-dirtyworktreeerror",
           "currentTags": [
             "@public",
             "@category",
@@ -266351,12 +266395,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "NotStubbedError",
+          "exportKind": "class",
+          "filePath": "src/Git.errors.ts",
+          "repoPath": "packages/drivers/git/src/Git.errors.ts",
+          "line": 444,
+          "anchor": "packages-drivers-git-src-git-errors-ts-444-notstubbederror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "LsTreeEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 677,
-          "anchor": "packages-drivers-git-src-git-ts-677-lstreeentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 37,
+          "anchor": "packages-drivers-git-src-git-models-ts-37-lstreeentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266376,10 +266442,10 @@
         {
           "symbolName": "NameStatusEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 732,
-          "anchor": "packages-drivers-git-src-git-ts-732-namestatusentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 91,
+          "anchor": "packages-drivers-git-src-git-models-ts-91-namestatusentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266399,10 +266465,10 @@
         {
           "symbolName": "CommitInfo",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1128,
-          "anchor": "packages-drivers-git-src-git-ts-1128-commitinfo",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 135,
+          "anchor": "packages-drivers-git-src-git-models-ts-135-commitinfo",
           "currentTags": [
             "@public",
             "@category",
@@ -266422,10 +266488,10 @@
         {
           "symbolName": "CommitLogEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1191,
-          "anchor": "packages-drivers-git-src-git-ts-1191-commitlogentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 199,
+          "anchor": "packages-drivers-git-src-git-models-ts-199-commitlogentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266445,10 +266511,10 @@
         {
           "symbolName": "StatusRenderOptions",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1346,
-          "anchor": "packages-drivers-git-src-git-ts-1346-statusrenderoptions",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 263,
+          "anchor": "packages-drivers-git-src-git-models-ts-263-statusrenderoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -266468,10 +266534,10 @@
         {
           "symbolName": "StatusRenderOptions",
           "exportKind": "namespace",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1377,
-          "anchor": "packages-drivers-git-src-git-ts-1377-statusrenderoptions",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 294,
+          "anchor": "packages-drivers-git-src-git-models-ts-294-statusrenderoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -266491,10 +266557,10 @@
         {
           "symbolName": "StatusEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1402,
-          "anchor": "packages-drivers-git-src-git-ts-1402-statusentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 319,
+          "anchor": "packages-drivers-git-src-git-models-ts-319-statusentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266514,10 +266580,10 @@
         {
           "symbolName": "SubmoduleStatusEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1587,
-          "anchor": "packages-drivers-git-src-git-ts-1587-submodulestatusentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 441,
+          "anchor": "packages-drivers-git-src-git-models-ts-441-submodulestatusentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266537,10 +266603,10 @@
         {
           "symbolName": "LsRemoteEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1679,
-          "anchor": "packages-drivers-git-src-git-ts-1679-lsremoteentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 491,
+          "anchor": "packages-drivers-git-src-git-models-ts-491-lsremoteentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266560,10 +266626,10 @@
         {
           "symbolName": "StashEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1793,
-          "anchor": "packages-drivers-git-src-git-ts-1793-stashentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 586,
+          "anchor": "packages-drivers-git-src-git-models-ts-586-stashentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266583,10 +266649,10 @@
         {
           "symbolName": "BranchEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1839,
-          "anchor": "packages-drivers-git-src-git-ts-1839-branchentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 621,
+          "anchor": "packages-drivers-git-src-git-models-ts-621-branchentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266606,10 +266672,10 @@
         {
           "symbolName": "RefEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1893,
-          "anchor": "packages-drivers-git-src-git-ts-1893-refentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 658,
+          "anchor": "packages-drivers-git-src-git-models-ts-658-refentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266629,10 +266695,10 @@
         {
           "symbolName": "ConfigListEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 1952,
-          "anchor": "packages-drivers-git-src-git-ts-1952-configlistentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 693,
+          "anchor": "packages-drivers-git-src-git-models-ts-693-configlistentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266652,10 +266718,10 @@
         {
           "symbolName": "WorktreeEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 2005,
-          "anchor": "packages-drivers-git-src-git-ts-2005-worktreeentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 729,
+          "anchor": "packages-drivers-git-src-git-models-ts-729-worktreeentry",
           "currentTags": [
             "@public",
             "@category",
@@ -266675,12 +266741,56 @@
         {
           "symbolName": "LsFilesEntry",
           "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 2153,
-          "anchor": "packages-drivers-git-src-git-ts-2153-lsfilesentry",
+          "filePath": "src/Git.models.ts",
+          "repoPath": "packages/drivers/git/src/Git.models.ts",
+          "line": 790,
+          "anchor": "packages-drivers-git-src-git-models-ts-790-lsfilesentry",
           "currentTags": [
             "@public",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  DirtyWorktreeError,\n  GitCommandError,\n  MergeConflictError,\n  NonFastForwardError,\n  NotARepositoryError,\n  NotStubbedError,\n  UnknownRefError,\n} from \"./Git.errors.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Git.ts",
+          "repoPath": "packages/drivers/git/src/Git.ts",
+          "line": 74,
+          "anchor": "packages-drivers-git-src-git-ts-74-export-dirtyworktreeerror-gitcommanderror-mergeconflicterror-nonfastforwarderror-notarepositoryerror-notstubbederror-unknownreferror-from-git-errors-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  BranchEntry,\n  CommitInfo,\n  CommitLogEntry,\n  ConfigListEntry,\n  LsFilesEntry,\n  LsRemoteEntry,\n  LsTreeEntry,\n  NameStatusEntry,\n  RefEntry,\n  StashEntry,\n  StatusEntry,\n  StatusRenderOptions,\n  SubmoduleStatusEntry,\n  WorktreeEntry,\n} from \"./Git.models.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/Git.ts",
+          "repoPath": "packages/drivers/git/src/Git.ts",
+          "line": 89,
+          "anchor": "packages-drivers-git-src-git-ts-89-export-branchentry-commitinfo-commitlogentry-configlistentry-lsfilesentry-lsremoteentry-lstreeentry-namestatusentry-refentry-stashentry-statusentry-statusrenderoptions-submodulestatusentry-worktreeentry-from-git-models-ts",
+          "currentTags": [
             "@category",
             "@since"
           ],
@@ -266700,8 +266810,8 @@
           "exportKind": "interface",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 4089,
-          "anchor": "packages-drivers-git-src-git-ts-4089-gitshape",
+          "line": 1907,
+          "anchor": "packages-drivers-git-src-git-ts-1907-gitshape",
           "currentTags": [
             "@public",
             "@category",
@@ -266723,32 +266833,10 @@
           "exportKind": "type",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 5597,
-          "anchor": "packages-drivers-git-src-git-ts-5597-gitstubs",
+          "line": 3415,
+          "anchor": "packages-drivers-git-src-git-ts-3415-gitstubs",
           "currentTags": [
             "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "NotStubbedError",
-          "exportKind": "class",
-          "filePath": "src/Git.ts",
-          "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 5621,
-          "anchor": "packages-drivers-git-src-git-ts-5621-notstubbederror",
-          "currentTags": [
             "@category",
             "@since"
           ],
@@ -266768,8 +266856,8 @@
           "exportKind": "class",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 5719,
-          "anchor": "packages-drivers-git-src-git-ts-5719-git",
+          "line": 3511,
+          "anchor": "packages-drivers-git-src-git-ts-3511-git",
           "currentTags": [
             "@public",
             "@category",
@@ -629654,8 +629742,8 @@
           "exportKind": "interface",
           "filePath": "src/Journal.ts",
           "repoPath": "packages/foundation/modeling/jsonl/src/Journal.ts",
-          "line": 1540,
-          "anchor": "packages-foundation-modeling-jsonl-src-journal-ts-1540-journalclass",
+          "line": 1525,
+          "anchor": "packages-foundation-modeling-jsonl-src-journal-ts-1525-journalclass",
           "currentTags": [
             "@public",
             "@category",
@@ -629677,8 +629765,8 @@
           "exportKind": "const",
           "filePath": "src/Journal.ts",
           "repoPath": "packages/foundation/modeling/jsonl/src/Journal.ts",
-          "line": 1632,
-          "anchor": "packages-foundation-modeling-jsonl-src-journal-ts-1632-journal",
+          "line": 1617,
+          "anchor": "packages-foundation-modeling-jsonl-src-journal-ts-1617-journal",
           "currentTags": [
             "@public",
             "@category",

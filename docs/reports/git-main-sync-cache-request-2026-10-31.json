@@ -1,0 +1,20 @@
+{
+  "previous": "108a3fe7a0eec11ba8d117c94f97dd299d1ac933a8e34d458d17904645b8939d",
+  "review": {
+    "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 main sync)",
+    "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
+    "basis": {
+      "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
+      "sha256": "7a6c6ad266b2500bce43892d81997070adf60f37a4d25f762a721d7fcaa81bc2"
+    }
+  },
+  "subjects": ["//", "@beep/git"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

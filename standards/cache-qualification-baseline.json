@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (W0 lane, refactor/beep-cli-w0-retirements)",
-      "reason": "Re-record the cache posture of the root, repo-cli and repo-docgen subjects after the W0 retirements: the quality policy seal loses the JSDocMigrate inputs, repo-cli drops the runpod and codex-sdk dependencies, and the repo-docgen docs:aggregate script points at docgen aggregate; no qualification is granted.",
+      "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 main sync)",
+      "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/w0-cache-baseline-review.md",
-        "sha256": "a68dffb3991b610426c7ec34d0586a3bdd812abc98a1fbf2baa35f15375da706"
+        "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
+        "sha256": "7a6c6ad266b2500bce43892d81997070adf60f37a4d25f762a721d7fcaa81bc2"
       }
     },
     "@beep/acp": {
@@ -498,11 +498,11 @@
       }
     },
     "@beep/git": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 main sync)",
+      "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
+        "sha256": "7a6c6ad266b2500bce43892d81997070adf60f37a4d25f762a721d7fcaa81bc2"
       }
     },
     "@beep/github": {
@@ -3242,9 +3242,15 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             "packages/drivers/git/package.json",
+            "packages/drivers/git/src/Git.errors.ts",
+            "packages/drivers/git/src/Git.models.ts",
             "packages/drivers/git/src/Git.ts",
             "packages/drivers/git/src/GitCommand.ts",
+            "packages/drivers/git/src/internal/classification.ts",
+            "packages/drivers/git/src/internal/execution.ts",
+            "packages/drivers/git/src/internal/parsers.ts",
             "packages/drivers/git/src/internal/run.ts",
+            "packages/drivers/git/src/internal/sshEnvironment.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -3656,9 +3662,15 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             "packages/drivers/git/package.json",
+            "packages/drivers/git/src/Git.errors.ts",
+            "packages/drivers/git/src/Git.models.ts",
             "packages/drivers/git/src/Git.ts",
             "packages/drivers/git/src/GitCommand.ts",
+            "packages/drivers/git/src/internal/classification.ts",
+            "packages/drivers/git/src/internal/execution.ts",
+            "packages/drivers/git/src/internal/parsers.ts",
             "packages/drivers/git/src/internal/run.ts",
+            "packages/drivers/git/src/internal/sshEnvironment.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -4065,9 +4077,15 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             "packages/drivers/git/package.json",
+            "packages/drivers/git/src/Git.errors.ts",
+            "packages/drivers/git/src/Git.models.ts",
             "packages/drivers/git/src/Git.ts",
             "packages/drivers/git/src/GitCommand.ts",
+            "packages/drivers/git/src/internal/classification.ts",
+            "packages/drivers/git/src/internal/execution.ts",
+            "packages/drivers/git/src/internal/parsers.ts",
             "packages/drivers/git/src/internal/run.ts",
+            "packages/drivers/git/src/internal/sshEnvironment.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -5636,9 +5654,15 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             "packages/drivers/git/package.json",
+            "packages/drivers/git/src/Git.errors.ts",
+            "packages/drivers/git/src/Git.models.ts",
             "packages/drivers/git/src/Git.ts",
             "packages/drivers/git/src/GitCommand.ts",
+            "packages/drivers/git/src/internal/classification.ts",
+            "packages/drivers/git/src/internal/execution.ts",
+            "packages/drivers/git/src/internal/parsers.ts",
             "packages/drivers/git/src/internal/run.ts",
+            "packages/drivers/git/src/internal/sshEnvironment.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -6167,9 +6191,15 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             "packages/drivers/git/package.json",
+            "packages/drivers/git/src/Git.errors.ts",
+            "packages/drivers/git/src/Git.models.ts",
             "packages/drivers/git/src/Git.ts",
             "packages/drivers/git/src/GitCommand.ts",
+            "packages/drivers/git/src/internal/classification.ts",
+            "packages/drivers/git/src/internal/execution.ts",
+            "packages/drivers/git/src/internal/parsers.ts",
             "packages/drivers/git/src/internal/run.ts",
+            "packages/drivers/git/src/internal/sshEnvironment.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -48857,7 +48887,7 @@
       {
         "computation": "@beep/git#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#audit",
           "@beep/identity#audit",
@@ -48922,7 +48952,7 @@
       {
         "computation": "@beep/git#build",
         "command": "bun run beep:build",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
@@ -48976,7 +49006,7 @@
       {
         "computation": "@beep/git#check",
         "command": "bun run beep:check",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
@@ -49017,7 +49047,7 @@
       {
         "computation": "@beep/git#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
@@ -49068,7 +49098,7 @@
       {
         "computation": "@beep/git#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/git#transit",
           "@beep/repo-docgen#transit"
@@ -49105,9 +49135,59 @@
         }
       },
       {
+        "computation": "@beep/git#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
+        "dependencies": [
+          "@beep/fc-runs#transit",
+          "@beep/identity#transit",
+          "@beep/schema#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vite.shared.ts",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/git#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -49142,7 +49222,7 @@
       {
         "computation": "@beep/git#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/fc-runs#transit",
@@ -49209,7 +49289,7 @@
       {
         "computation": "@beep/git#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -49238,7 +49318,7 @@
       {
         "computation": "@beep/git#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -49293,7 +49373,7 @@
       {
         "computation": "@beep/git#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-laws"
         ],
@@ -49347,7 +49427,7 @@
       {
         "computation": "@beep/git#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
@@ -49391,7 +49471,7 @@
       {
         "computation": "@beep/git#test",
         "command": "bun run beep:test",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
@@ -49441,7 +49521,7 @@
       {
         "computation": "@beep/git#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
@@ -135121,7 +135201,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "712500c29d69370b36e545af764c67b59c6ec7d8168f346227c950cfc3b55846"
+        "sha256": "64444c02445b3fe8a55923b801e3eb7571370f7420cab869e9520ffcec636950"
       }
     ]
   }
