@@ -84,6 +84,20 @@ const jsdocRatchet = {
   state: "FAILURE",
   workflow: "Check",
 };
+// A failing check whose own text carries gh's "no checks reported" phrase.
+const failingChecksJson = JSON.stringify([
+  {
+    bucket: "fail",
+    completedAt: "2026-09-25T18:15:00Z",
+    description: "no checks reported upstream",
+    link: link(9),
+    name: "Check / Gate",
+    startedAt: "2026-09-25T18:10:00Z",
+    state: "FAILURE",
+    workflow: "Check",
+  },
+]);
+
 const checksJson = JSON.stringify([
   jsdocRatchet,
   {
@@ -363,19 +377,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (i
     Effect.gen(function* () {
       const root = yield* tempRoot();
       const recorder = yield* makeRecorder;
-      const failing = JSON.stringify([
-        {
-          bucket: "fail",
-          completedAt: "2026-09-25T18:15:00Z",
-          description: "no checks reported upstream",
-          link: link(9),
-          name: "Check / Gate",
-          startedAt: "2026-09-25T18:10:00Z",
-          state: "FAILURE",
-          workflow: "Check",
-        },
-      ]);
-      const answers = ghAnswers.pipe(HashMap.set("pr checks", failing), HashMap.set("pr checks --required", failing));
+      const answers = ghAnswers.pipe(
+        HashMap.set("pr checks", failingChecksJson),
+        HashMap.set("pr checks --required", failingChecksJson)
+      );
       const exitCodes = HashMap.make(["pr checks", 1], ["pr checks --required", 1]);
       const snapshot = yield* collectYeetStatus(contextFor(root), true).pipe(
         withFakeRunner(recorder, Duration.zero, false, answers, exitCodes)
