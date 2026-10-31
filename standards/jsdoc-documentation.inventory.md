@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-28T21:43:09.922Z
+Generated: 2026-10-31T08:03:36.536Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 33 |
 | publicModules | 3562 |
-| publicExports | 25307 |
+| publicExports | 25309 |
 | openModules | 225 |
 | openExports | 130 |
 | missingExportExamples | 6 |
@@ -70,13 +70,13 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 12 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
 | 13 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 48 | 0 | 0 |
 | 14 | `@beep/npm-spec` | `packages/foundation/modeling/npm-spec` | clean | 13 | 72 | 0 | 0 |
-| 15 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
-| 16 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
-| 17 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
-| 18 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
-| 19 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 10 | 0 | 0 |
-| 20 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 65 | 646 | 17 | 0 |
-| 21 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 92 | 0 | 0 |
+| 15 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
+| 16 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
+| 17 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
+| 18 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
+| 19 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 94 | 0 | 0 |
+| 20 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 10 | 0 | 0 |
+| 21 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 65 | 646 | 17 | 0 |
 | 22 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 23 | `@beep/md` | `packages/foundation/modeling/md` | clean | 11 | 311 | 0 | 0 |
 | 24 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 106 | 374 | 3 | 5 |
