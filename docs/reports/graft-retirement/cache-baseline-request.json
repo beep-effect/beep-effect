@@ -1,5 +1,5 @@
 {
-  "previous": "d9376177110c2e43f810b16b9658cb546b0205fb2677bd58dc2bf5d425506e9e",
+  "previous": "1b8a9e66553c922ce33218a24bcd1ceeb2fae2aafbd2c82fe3bbca1521d93af6",
   "review": {
     "reviewer": "Claude Opus 5.5 (graft retirement, chore/retire-graft)",
     "reason": "Record the root turbo.json drift after the retired graft env names and graft/ input exclusions are removed; no qualification is granted.",
@@ -16,5 +16,7 @@
   ],
   "profile": "local-linux-x64-bun1.4.2",
   "epoch": "qualification-v2",
-  "subjects": ["//"]
+  "subjects": [
+    "//"
+  ]
 }

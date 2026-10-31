@@ -262,7 +262,6 @@
     "jsonc-parser": "catalog:",
     "sharp": "catalog:",
     "tar": "catalog:",
-    "tinyglobby": "catalog:",
     "ts-morph": "catalog:",
     "vitest": "catalog:",
     "yaml": "catalog:"

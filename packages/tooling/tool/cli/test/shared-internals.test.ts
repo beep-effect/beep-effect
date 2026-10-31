@@ -43,8 +43,6 @@ import {
   envValue,
   GhPageInfo,
   GhPrView,
-  globMatches,
-  globPatternToRegExp,
   intEnvValue,
   isUnresolvedSecretReference,
   JsoncModification,
@@ -214,39 +212,6 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(yield* decode('{"x":3,"y":4}')).toEqual({ x: 3, y: 4 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
-  });
-
-  describe("GlobPattern", { concurrent: false }, () => {
-    it("compiles ** across segments and * within a segment", () => {
-      const re = globPatternToRegExp("src/**/*.ts");
-      expect(re.test("src/a/b/c.ts")).toBe(true);
-      expect(re.test("src/a.ts")).toBe(true);
-      expect(re.test("src/a/b.tsx")).toBe(false);
-      expect(re.test("other/a.ts")).toBe(false);
-    });
-
-    it("matches a single segment wildcard without crossing slashes", () => {
-      const re = globPatternToRegExp("src/*.ts");
-      expect(re.test("src/a.ts")).toBe(true);
-      expect(re.test("src/a/b.ts")).toBe(false);
-    });
-
-    it("lets a bare double star cross separators", () => {
-      const re = globPatternToRegExp("src/**");
-      expect(re.test("src/a/b/c.ts")).toBe(true);
-      expect(re.test("other/src/a.ts")).toBe(false);
-    });
-
-    it("escapes regex metacharacters literally", () => {
-      expect(globPatternToRegExp("a.b").test("a.b")).toBe(true);
-      expect(globPatternToRegExp("a.b").test("axb")).toBe(false);
-    });
-
-    it("globMatches curries a predicate", () => {
-      const matchesTests = globMatches("**/*.test.ts");
-      expect(matchesTests("src/a.test.ts")).toBe(true);
-      expect(matchesTests("src/a.ts")).toBe(false);
-    });
   });
 
   describe("Jsonc editing", { concurrent: false }, () => {
