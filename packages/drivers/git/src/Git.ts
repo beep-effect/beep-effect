@@ -13,29 +13,49 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { constant, dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
-import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import {
+  DirtyWorktreeError,
+  GitCommandError,
+  MergeConflictError,
+  NonFastForwardError,
+  NotARepositoryError,
+  NotStubbedError,
+  UnknownRefError,
+} from "./Git.errors.ts";
 import { GitCommand } from "./GitCommand.ts";
-import { runCollected } from "./internal/run.ts";
+import { runClassified } from "./internal/classification.ts";
 import { BASE_ENV, OPENSSH_VARIANTS, sshEnv } from "./internal/sshEnvironment.ts";
 import type { GitConfigScope, GitInvocation } from "./GitCommand.ts";
-import type { Collected } from "./internal/run.ts";
+import type { ClassifiedFor, ClassifyKind, RunFor } from "./internal/classification.ts";
+
+/**
+ * Git failure contracts retained at the service import path.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export {
+  DirtyWorktreeError,
+  GitCommandError,
+  MergeConflictError,
+  NonFastForwardError,
+  NotARepositoryError,
+  NotStubbedError,
+  UnknownRefError,
+} from "./Git.errors.ts";
 
 const $I = $GitId.create("Git");
 
-/** git's own ceiling: a run that has not answered in 30s is not going to. */
-const GIT_TIMEOUT = Duration.seconds(30);
 const encodeJsonString = S.encodeEffect(S.fromJsonString(S.String));
 const NonNegativeInteger = S.Finite.check(S.isMultipleOf(1), S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("NonNegativeInteger", {
@@ -62,416 +82,6 @@ const stringAt =
   (index: number) =>
   (args: IArguments): boolean =>
     P.isString(args[index]);
-
-/**
- * git ran and failed in a way that is not one of the recognized domain cases
- * ({@link NotARepositoryError} / {@link UnknownRefError}), or the spawn itself
- * failed before git could run at all.
- *
- * **Details**
- *
- * `exitCode` and `stderr` are populated when git actually ran. `detail`
- * carries a human-readable explanation whenever the failure is not summed up
- * by an exit code: an absorbed spawn-level `PlatformError`, a per-run timeout,
- * a pre-spawn guard refusal, or output git produced that the member could not
- * parse. `kind` discriminates a pre-spawn guard rejection (`"refused"`) from a
- * genuine git failure (`"failed"`) structurally, so composed retry/fallback
- * logic never has to parse the prose in `message` or `detail`.
- *
- * **`message` is the rendering; `detail` is the datum.** `message` composes a
- * one-line prose from the redacted argv, the cwd, and — whenever `detail` is
- * set — `detail` itself. A consumer forwarding the underlying reason should map
- * `detail` through only when it is set: falling back to `message` nests one
- * rendered message inside another
- * (`git … in cwd: git … in cwd failed (exit N): …`). When `detail` is absent,
- * git ran and failed — `exitCode` and `stderr` are the data to forward. Note
- * that `detail` may be set after git ran
- * and exited successfully (e.g. `Git.log` sets `detail: "unparseable log output: …"`
- * with `kind: "failed"`), so routing on `detail !== undefined` rather than
- * assuming git never started is the correct consumer boundary.
- *
- * **Example** (Inspect a failed invocation)
- *
- * ```ts
- * import { GitCommandError } from "@beep/git/Git";
- *
- * const error = GitCommandError.make({ kind: "failed", args: ["status"], cwd: "/repo", exitCode: 1, stderr: "failure" });
- * console.log(error.message); // git status in /repo failed (exit 1): failure
- * ```
- *
- * @public
- * @category errors
- * @since 0.0.0
- */
-export class GitCommandError extends S.TaggedError<GitCommandError, { readonly brand: unique symbol }>(
-  $I`GitCommandError`
-)(
-  "GitCommandError",
-  {
-    /**
-     * Discriminates a pre-spawn guard rejection from a genuine git failure.
-     * `"refused"` — a pre-spawn guard (an option-like ref) rejected the
-     * invocation and no process was ever spawned. `"failed"` — git actually ran
-     * and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback
-     * logic routes on this instead of matching `detail` prose.
-     */
-    kind: S.Literals(["refused", "failed"]).pipe(
-      $I.annoteKey("GitCommandError.kind", {
-        description:
-          'Discriminates a pre-spawn guard rejection from a genuine git failure. `"refused"` — a pre-spawn guard (an option-like ref) rejected the invocation and no process was ever spawned. `"failed"` — git actually ran and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback logic routes on this instead of matching `detail` prose.',
-      })
-    ),
-    /**
-     * The REDACTED argument vector, without the leading `git`.
-     *
-     * **Details**
-     *
-     * Sensitive positionals — config values, a URL's embedded userinfo — are
-     * already masked by the constructor's redaction mask before this error is
-     * constructed (`configSet`'s value reads `<redacted>`; a
-     * `https://user:token@host/...` remote keeps everything but its
-     * `userinfo@`). The raw argv is never persisted in an error value, and
-     * `message` renders this redacted vector.
-     */
-    args: S.Array(S.String).pipe(
-      $I.annoteKey("GitCommandError.args", { description: "The REDACTED argument vector, without the leading `git`." })
-    ),
-    /** The working directory the command ran in. */
-    cwd: S.String.pipe(
-      $I.annoteKey("GitCommandError.cwd", { description: "The working directory the command ran in." })
-    ),
-    /** git's exit code, when it produced one. */
-    exitCode: S.optionalKey(S.Finite).pipe(
-      $I.annoteKey("GitCommandError.exitCode", { description: "git's exit code, when it produced one." })
-    ),
-    /** git's stderr, captured under `LC_ALL=C`. */
-    stderr: S.String.pipe(
-      $I.annoteKey("GitCommandError.stderr", { description: "git's stderr, captured under `LC_ALL=C`." })
-    ),
-    /**
-     * A human-readable reason, set whenever an exit code does not sum up the
-     * failure: an absorbed spawn failure, a timeout, a pre-spawn guard refusal,
-     * or output git produced that the member could not parse. `message` renders
-     * it verbatim when present.
-     */
-    detail: S.optionalKey(S.String).pipe(
-      $I.annoteKey("GitCommandError.detail", {
-        description:
-          "A human-readable reason, set whenever an exit code does not sum up the failure: an absorbed spawn failure, a timeout, a pre-spawn guard refusal, or output git produced that the member could not parse. `message` renders it verbatim when present.",
-      })
-    ),
-  },
-  $I.annoteError<GitCommandError>("GitCommandError", {
-    description:
-      "git ran and failed in a way that is not one of the recognized domain cases (NotARepositoryError / UnknownRefError), or the spawn itself failed before git could run at all.",
-  })
-) {
-  /**
-   * Renders the invocation and its failure into a one-line message.
-   *
-   * **Example** (Render the failure message)
-   *
-   * ```ts
-   * import { GitCommandError } from "@beep/git/Git";
-   *
-   * const error = GitCommandError.make({ kind: "failed", args: ["status"], cwd: "/repo", exitCode: 1, stderr: "failure" });
-   * console.log(error.message); // git status in /repo failed (exit 1): failure
-   * ```
-   *
-   * @since 0.0.0
-   */
-  override get message(): string {
-    return this.detail !== undefined
-      ? `git ${A.join(this.args, " ")} in ${this.cwd}: ${this.detail}`
-      : `git ${A.join(this.args, " ")} in ${this.cwd} failed (exit ${this.exitCode ?? "?"}): ${this.stderr}`;
-  }
-}
-
-/**
- * `cwd` is not inside a git work tree.
- *
- * **Example** (Identify a directory outside a repository)
- *
- * ```ts
- * import { NotARepositoryError } from "@beep/git/Git";
- *
- * const error = NotARepositoryError.make({ cwd: "/outside" });
- * console.log(error.message); // not a git repository: /outside
- * ```
- *
- * @public
- * @category errors
- * @since 0.0.0
- */
-export class NotARepositoryError extends S.TaggedError<NotARepositoryError, { readonly brand: unique symbol }>(
-  $I`NotARepositoryError`
-)(
-  "NotARepositoryError",
-  {
-    /** The working directory that is not a git repository. */
-    cwd: S.String.pipe(
-      $I.annoteKey("NotARepositoryError.cwd", { description: "The working directory that is not a git repository." })
-    ),
-  },
-  $I.annoteError<NotARepositoryError>("NotARepositoryError", { description: "`cwd` is not inside a git work tree." })
-) {
-  /**
-   * Renders the failing directory into a one-line message.
-   *
-   * **Example** (Render the failure message)
-   *
-   * ```ts
-   * import { NotARepositoryError } from "@beep/git/Git";
-   *
-   * const error = NotARepositoryError.make({ cwd: "/outside" });
-   * console.log(error.message); // not a git repository: /outside
-   * ```
-   *
-   * @since 0.0.0
-   */
-  override get message(): string {
-    return `not a git repository: ${this.cwd}`;
-  }
-}
-
-/**
- * `ref` does not resolve to an object in the repository at `cwd`.
- *
- * **Example** (Identify an unresolved ref)
- *
- * ```ts
- * import { UnknownRefError } from "@beep/git/Git";
- *
- * const error = UnknownRefError.make({ cwd: "/repo", ref: "missing" });
- * console.log(error.message); // unknown ref 'missing' in /repo
- * ```
- *
- * @public
- * @category errors
- * @since 0.0.0
- */
-export class UnknownRefError extends S.TaggedError<UnknownRefError, { readonly brand: unique symbol }>(
-  $I`UnknownRefError`
-)(
-  "UnknownRefError",
-  {
-    /** The ref (or ref range) that failed to resolve. */
-    ref: S.String.pipe(
-      $I.annoteKey("UnknownRefError.ref", { description: "The ref (or ref range) that failed to resolve." })
-    ),
-    /** The working directory the ref was resolved against. */
-    cwd: S.String.pipe(
-      $I.annoteKey("UnknownRefError.cwd", { description: "The working directory the ref was resolved against." })
-    ),
-  },
-  $I.annoteError<UnknownRefError>("UnknownRefError", {
-    description: "`ref` does not resolve to an object in the repository at `cwd`.",
-  })
-) {
-  /**
-   * Renders the unresolvable ref into a one-line message.
-   *
-   * **Example** (Render the failure message)
-   *
-   * ```ts
-   * import { UnknownRefError } from "@beep/git/Git";
-   *
-   * const error = UnknownRefError.make({ cwd: "/repo", ref: "missing" });
-   * console.log(error.message); // unknown ref 'missing' in /repo
-   * ```
-   *
-   * @since 0.0.0
-   */
-  override get message(): string {
-    return `unknown ref '${this.ref}' in ${this.cwd}`;
-  }
-}
-
-/**
- * A `git push` was rejected because the remote ref has moved: the classic
- * non-fast-forward rejection (`fetch first` / `non-fast-forward`), or a
- * `--force-with-lease` lease failure (`stale info`).
- *
- * **Details**
- *
- * The typed signal a fetch-then-retry (or rebase-then-retry) fallback
- * branches on — every other push failure stays a {@link GitCommandError}.
- * Only `Git.push` can fail with this error.
- *
- * **Example** (Inspect a rejected refspec)
- *
- * ```ts
- * import { NonFastForwardError } from "@beep/git/Git";
- *
- * const error = NonFastForwardError.make({ cwd: "/repo", refspec: "main" });
- * console.log(error.message); // push of 'main' rejected as non-fast-forward in /repo
- * ```
- *
- * @public
- * @category errors
- * @since 0.0.0
- */
-export class NonFastForwardError extends S.TaggedError<NonFastForwardError, { readonly brand: unique symbol }>(
-  $I`NonFastForwardError`
-)(
-  "NonFastForwardError",
-  {
-    /** The working directory the push ran in. */
-    cwd: S.String.pipe(
-      $I.annoteKey("NonFastForwardError.cwd", { description: "The working directory the push ran in." })
-    ),
-    /** The refspec that was rejected, when the caller passed one. */
-    refspec: S.optionalKey(S.String).pipe(
-      $I.annoteKey("NonFastForwardError.refspec", {
-        description: "The refspec that was rejected, when the caller passed one.",
-      })
-    ),
-  },
-  $I.annoteError<NonFastForwardError>("NonFastForwardError", {
-    description:
-      "A `git push` was rejected because the remote ref has moved: the classic non-fast-forward rejection (`fetch first` / `non-fast-forward`), or a `--force-with-lease` lease failure (`stale info`).",
-  })
-) {
-  /**
-   * Renders the rejected push into a one-line message.
-   *
-   * **Example** (Render the failure message)
-   *
-   * ```ts
-   * import { NonFastForwardError } from "@beep/git/Git";
-   *
-   * const error = NonFastForwardError.make({ cwd: "/repo", refspec: "main" });
-   * console.log(error.message); // push of 'main' rejected as non-fast-forward in /repo
-   * ```
-   *
-   * @since 0.0.0
-   */
-  override get message(): string {
-    return this.refspec !== undefined
-      ? `push of '${this.refspec}' rejected as non-fast-forward in ${this.cwd}`
-      : `push rejected as non-fast-forward in ${this.cwd}`;
-  }
-}
-
-/**
- * A merge-shaped operation (`pull`, `stash pop`, `stash apply`) stopped with
- * conflict markers in the working tree.
- *
- * **Gotchas**
- *
- * The typed signal a resolve-or-abort recovery branches on. The conflicted
- * state is REAL: git has already written conflict markers, and (for `pull`)
- * `MERGE_HEAD` is set — the caller owns resolving or aborting. Detection
- * matches git's conflict report, which lands on STDOUT for a merge and on
- * stderr for a rebase-mode pull; both streams are inspected.
- *
- * **Example** (Inspect a conflicted merge)
- *
- * ```ts
- * import { MergeConflictError } from "@beep/git/Git";
- *
- * const error = MergeConflictError.make({ cwd: "/repo" });
- * console.log(error.message); // merge conflict in /repo: fix conflicts (or abort) before continuing
- * ```
- *
- * @public
- * @category errors
- * @since 0.0.0
- */
-export class MergeConflictError extends S.TaggedError<MergeConflictError, { readonly brand: unique symbol }>(
-  $I`MergeConflictError`
-)(
-  "MergeConflictError",
-  {
-    /** The working directory the merge ran in. */
-    cwd: S.String.pipe(
-      $I.annoteKey("MergeConflictError.cwd", { description: "The working directory the merge ran in." })
-    ),
-  },
-  $I.annoteError<MergeConflictError>("MergeConflictError", {
-    description:
-      "A merge-shaped operation (`pull`, `stash pop`, `stash apply`) stopped with conflict markers in the working tree.",
-  })
-) {
-  /**
-   * Renders the conflicted merge into a one-line message.
-   *
-   * **Example** (Render the failure message)
-   *
-   * ```ts
-   * import { MergeConflictError } from "@beep/git/Git";
-   *
-   * const error = MergeConflictError.make({ cwd: "/repo" });
-   * console.log(error.message); // merge conflict in /repo: fix conflicts (or abort) before continuing
-   * ```
-   *
-   * @since 0.0.0
-   */
-  override get message(): string {
-    return `merge conflict in ${this.cwd}: fix conflicts (or abort) before continuing`;
-  }
-}
-
-/**
- * A merge-shaped operation refused to start because local modifications would
- * be overwritten — git's refusal reads
- * `Your local changes ... would be overwritten by merge`.
- *
- * **Details**
- *
- * The typed "commit or stash first" signal. Unlike {@link MergeConflictError}
- * the working tree is UNTOUCHED — git aborted before changing anything.
- * Only the merge-shaped methods (`pull`, `stashPop`, `stashApply`) can fail
- * with this error.
- *
- * **Example** (Inspect a blocked merge)
- *
- * ```ts
- * import { DirtyWorktreeError } from "@beep/git/Git";
- *
- * const error = DirtyWorktreeError.make({ cwd: "/repo" });
- * console.log(error.message); // local changes would be overwritten in /repo: commit or stash them first
- * ```
- *
- * @public
- * @category errors
- * @since 0.0.0
- */
-export class DirtyWorktreeError extends S.TaggedError<DirtyWorktreeError, { readonly brand: unique symbol }>(
-  $I`DirtyWorktreeError`
-)(
-  "DirtyWorktreeError",
-  {
-    /** The working directory whose local changes blocked the operation. */
-    cwd: S.String.pipe(
-      $I.annoteKey("DirtyWorktreeError.cwd", {
-        description: "The working directory whose local changes blocked the operation.",
-      })
-    ),
-  },
-  $I.annoteError<DirtyWorktreeError>("DirtyWorktreeError", {
-    description:
-      "A merge-shaped operation refused to start because local modifications would be overwritten — git's refusal reads `Your local changes ... would be overwritten by merge`.",
-  })
-) {
-  /**
-   * Renders the blocked operation into a one-line message.
-   *
-   * **Example** (Render the failure message)
-   *
-   * ```ts
-   * import { DirtyWorktreeError } from "@beep/git/Git";
-   *
-   * const error = DirtyWorktreeError.make({ cwd: "/repo" });
-   * console.log(error.message); // local changes would be overwritten in /repo: commit or stash them first
-   * ```
-   *
-   * @since 0.0.0
-   */
-  override get message(): string {
-    return `local changes would be overwritten in ${this.cwd}: commit or stash them first`;
-  }
-}
 
 /**
  * One entry of a `git ls-tree` listing.
@@ -569,273 +179,6 @@ export class NameStatusEntry extends S.Opaque<NameStatusEntry, { readonly brand:
     ),
   }).pipe($I.annoteSchema("NameStatusEntry", { description: "One entry of a `git diff --name-status` listing." }))
 ) {}
-
-/**
- * The outcome of classifying one completed run (or spawn failure) against
- * git's stderr taxonomy. Never leaked outside this module — every `Git`
- * method maps it to its own public return type.
- */
-const Classified = S.TaggedUnion({
-  success: {
-    output: S.String.pipe($I.annoteKey("Classified.success.output", { description: "The completed run's stdout." })),
-  },
-  absent: {},
-  refMissing: {},
-  notARepository: {},
-  unknownRef: {},
-  nonFastForward: {},
-  mergeConflict: {},
-  dirtyWorktree: {},
-  failure: {
-    error: GitCommandError.pipe(
-      $I.annoteKey("Classified.failure.error", { description: "The classified command failure." })
-    ),
-  },
-}).pipe($I.annoteSchema("Classified", { description: "The private outcome of classifying a Git run." }));
-type Classified = typeof Classified.Type;
-
-/**
- * Which method-specific classification rows apply on top of the shared
- * taxonomy: `"show"` enables the absent-at-ref degrade, `"refExists"` enables
- * the exit-1-is-false degrade, `"quiet"` enables the silent-exit-1-is-absent
- * degrade, `"noSuchRemote"` enables the no-such-remote degrade, `"push"`
- * enables the rejected-non-fast-forward row, `"merge"` enables the
- * dirty-worktree and merge-conflict rows, `"log"` enables the unborn-HEAD
- * degrade, `"generic"` enables none of them.
- */
-const ClassifyKind = LiteralKit(["show", "refExists", "quiet", "noSuchRemote", "push", "merge", "log", "generic"]).pipe(
-  $I.annoteSchema("ClassifyKind", { description: "The method-specific Git classification taxonomy." })
-);
-type ClassifyKind = typeof ClassifyKind.Type;
-
-/** Outcomes available to each classification mode. */
-// classify only emits mode-specific outcomes after checking that exact mode.
-type ClassifiedFor<K extends ClassifyKind> = Extract<
-  Classified,
-  {
-    readonly _tag:
-      | "success"
-      | "notARepository"
-      | "unknownRef"
-      | "failure"
-      | (K extends "show" | "quiet" | "noSuchRemote" | "log" ? "absent" : never)
-      | (K extends "refExists" ? "refMissing" : never)
-      | (K extends "push" ? "nonFastForward" : never)
-      | (K extends "merge" ? "mergeConflict" | "dirtyWorktree" : never);
-  }
->;
-
-/** A classified run with the spawner already provided: `makeShape`'s `runFor` and `runForNetwork`. */
-type RunFor = {
-  <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K): Effect.Effect<ClassifiedFor<K>>;
-  <K extends ClassifyKind>(cwd: string, kind: K): (invocation: GitInvocation) => Effect.Effect<ClassifiedFor<K>>;
-};
-
-const NOT_A_REPOSITORY = "not a git repository";
-// Unanchored substring matching against LC_ALL=C-pinned phrases: a path or ref
-// name that happens to literally contain one of these phrases could misclassify.
-// Accepted for now; anchoring is deliberately deferred until a real collision
-// is observed.
-const UNKNOWN_REF_PATTERNS = [
-  "unknown revision",
-  "bad revision",
-  "Not a valid object name",
-  "invalid object name",
-  // fetch's missing-remote-ref shape — the typed signal a tag-then-branch
-  // fetch fallback (Effect.orElse) branches on.
-  "couldn't find remote ref",
-];
-const ABSENT_AT_REF_PATTERNS = ["does not exist in", "exists on disk, but not in"];
-// Push-rejection shapes (probed against git 2.54 under LC_ALL=C): the remote
-// moved (`fetch first`), the classic wording (`non-fast-forward`), and a
-// --force-with-lease lease failure (`stale info`). All ride the `! [rejected]`
-// line, which is required alongside one of these so an unrelated stderr
-// mention cannot misclassify.
-const PUSH_REJECTED_PATTERNS = ["non-fast-forward", "fetch first", "stale info"];
-// Merge-conflict shapes: git's merge machinery reports `CONFLICT (` and
-// `Automatic merge failed` on STDOUT (probed: pull and stash pop alike), while
-// a rebase-mode pull reports `could not apply` on stderr — both streams are
-// matched.
-const MERGE_CONFLICT_PATTERNS = ["CONFLICT (", "Automatic merge failed", "could not apply"];
-// The dirty-worktree refusal (`error: Your local changes to the following
-// files would be overwritten by merge`) arrives on stderr, before git touches
-// anything.
-const DIRTY_WORKTREE_PATTERN = "would be overwritten by";
-// An unborn HEAD: `git log` in a repository whose current branch carries no
-// commits exits 128 with `fatal: your current branch '<name>' does not have
-// any commits yet` (probed against git 2.54 under LC_ALL=C). A history that
-// does not exist yet is the EMPTY history, so this degrades rather than
-// failing — scoped to the `"log"` kind, because for every other member an
-// unborn HEAD is a genuine failure to report.
-const UNBORN_HEAD_PATTERN = "does not have any commits yet";
-
-const matchesAny: {
-  (stderr: string, patterns: ReadonlyArray<string>): boolean;
-  (patterns: ReadonlyArray<string>): (stderr: string) => boolean;
-} = dual(2, (stderr: string, patterns: ReadonlyArray<string>): boolean =>
-  A.some(patterns, (pattern) => Str.includes(pattern)(stderr))
-);
-
-/**
- * A spawn-level failure. The non-NotFound arms keep the underlying diagnostic:
- * flattening the PlatformError to its reason tag alone drops module/method/cause
- * detail a caller debugging a PermissionDenied or TimedOut spawn genuinely needs.
- */
-const spawnFailure = (outcome: PlatformError.PlatformError, cwd: string, args: ReadonlyArray<string>): Classified => ({
-  _tag: "failure",
-  error: GitCommandError.make({
-    kind: "failed",
-    args,
-    cwd,
-    stderr: "",
-    detail:
-      outcome.reason._tag === "NotFound"
-        ? "git is not installed (or the working directory does not exist)"
-        : `spawn failed: ${outcome.reason._tag}: ${outcome.message}`,
-  }),
-});
-
-/** A non-zero exit no classification row claimed. */
-const exitFailure = ({ exitCode, stderr }: Collected, cwd: string, args: ReadonlyArray<string>): Classified => ({
-  _tag: "failure",
-  error: GitCommandError.make({
-    kind: "failed",
-    args,
-    cwd,
-    exitCode,
-    stderr,
-  }),
-});
-
-/** The rows every kind shares, checked before the kind-specific ones. */
-const sharedFailureRow = (stderr: string): Classified | undefined => {
-  if (Str.includes(NOT_A_REPOSITORY)(stderr)) return { _tag: "notARepository" };
-  return matchesAny(stderr, UNKNOWN_REF_PATTERNS) ? { _tag: "unknownRef" } : undefined;
-};
-
-const classifyMerge = ({ stderr, stdout }: Collected): Classified | undefined => {
-  // The dirty refusal is checked FIRST: it aborts before any merge starts,
-  // so its stderr can never carry conflict text — but checking it first
-  // keeps the ordering explicit rather than incidental.
-  if (Str.includes(DIRTY_WORKTREE_PATTERN)(stderr)) return { _tag: "dirtyWorktree" };
-  return matchesAny(stdout, MERGE_CONFLICT_PATTERNS) || matchesAny(stderr, MERGE_CONFLICT_PATTERNS)
-    ? { _tag: "mergeConflict" }
-    : undefined;
-};
-
-/** The method-specific classification rows; `undefined` falls through to the generic failure. */
-const KIND_ROWS: { readonly [K in ClassifyKind]: (outcome: Collected) => Classified | undefined } = {
-  show: ({ stderr }) => (matchesAny(stderr, ABSENT_AT_REF_PATTERNS) ? { _tag: "absent" } : undefined),
-  refExists: ({ exitCode }) => (exitCode === 1 ? { _tag: "refMissing" } : undefined),
-  // --quiet probes (symbolic-ref) and config --get signal "unset" as a
-  // silent exit 1; any stderr text means a real failure instead.
-  quiet: ({ exitCode, stderr }) => (exitCode === 1 && stderr === "" ? { _tag: "absent" } : undefined),
-  noSuchRemote: ({ stderr }) => (Str.includes("No such remote")(stderr) ? { _tag: "absent" } : undefined),
-  push: ({ stderr }) =>
-    Str.includes("[rejected]")(stderr) && matchesAny(stderr, PUSH_REJECTED_PATTERNS)
-      ? { _tag: "nonFastForward" }
-      : undefined,
-  merge: classifyMerge,
-  log: ({ stderr }) => (Str.includes(UNBORN_HEAD_PATTERN)(stderr) ? { _tag: "absent" } : undefined),
-  generic: () => undefined,
-};
-
-/**
- * Classifies one completed run (or spawn-level `PlatformError`) against
- * git's stderr taxonomy. Written once — every `Git` method funnels through
- * this before deciding its own return value.
- *
- * **Details**
- *
- * `args` is the invocation's REDACTED argv: it is the only argv this
- * function may persist into a `GitCommandError`, per the redaction policy.
- */
-const classify: {
-  (
-    outcome: Collected | PlatformError.PlatformError,
-    cwd: string,
-    args: ReadonlyArray<string>,
-    kind: ClassifyKind
-  ): Classified;
-  (
-    cwd: string,
-    args: ReadonlyArray<string>,
-    kind: ClassifyKind
-  ): (outcome: Collected | PlatformError.PlatformError) => Classified;
-} = dual(
-  4,
-  (
-    outcome: Collected | PlatformError.PlatformError,
-    cwd: string,
-    args: ReadonlyArray<string>,
-    kind: ClassifyKind
-  ): Classified => {
-    if (outcome instanceof PlatformError.PlatformError) return spawnFailure(outcome, cwd, args);
-    if (outcome.exitCode === 0) return { _tag: "success", output: outcome.stdout };
-    return sharedFailureRow(outcome.stderr) ?? KIND_ROWS[kind](outcome) ?? exitFailure(outcome, cwd, args);
-  }
-);
-
-/**
- * Runs an invocation's command in `cwd`, classifies the outcome, and never
- * fails: a spawn-level `PlatformError` and a per-run timeout are both
- * absorbed into the `"failure"` classification rather than escaping the
- * effect's error channel.
- *
- * **Details**
- *
- * The argv handed to `classify` — and therefore persisted into any
- * `GitCommandError` — is the invocation's REDACTED argv, never the raw one:
- * the redaction mask the pure constructor carries is applied here, at the
- * single classification choke point (the redaction policy).
- *
- * This is also the single ENVIRONMENT choke point: `env` (computed once in
- * {@link Git.layer}) is applied here the same way `cwd` is, so every one of
- * the service's members is spawned with the pins and nothing else in the
- * package needs to know they exist.
- */
-const runClassified: {
-  <K extends ClassifyKind>(
-    invocation: GitInvocation,
-    cwd: string,
-    kind: K,
-    env: Record<string, string>
-  ): Effect.Effect<ClassifiedFor<K>, never, ChildProcessSpawner.ChildProcessSpawner>;
-  <K extends ClassifyKind>(
-    cwd: string,
-    kind: K,
-    env: Record<string, string>
-  ): (invocation: GitInvocation) => Effect.Effect<ClassifiedFor<K>, never, ChildProcessSpawner.ChildProcessSpawner>;
-} = dual(
-  4,
-  (
-    invocation: GitInvocation,
-    cwd: string,
-    kind: ClassifyKind,
-    env: Record<string, string>
-  ): Effect.Effect<Classified, never, ChildProcessSpawner.ChildProcessSpawner> => {
-    const args = invocation.redactedArgs;
-    const command = ChildProcess.setEnv(ChildProcess.setCwd(invocation.command, cwd), env);
-    return runCollected(command).pipe(
-      Effect.map(classify(cwd, args, kind)),
-      Effect.catch((platformError) => Effect.succeed(classify(platformError, cwd, args, kind))),
-      Effect.timeoutOrElse({
-        duration: GIT_TIMEOUT,
-        orElse: () =>
-          Effect.succeed<Classified>({
-            _tag: "failure",
-            error: GitCommandError.make({
-              kind: "failed",
-              args,
-              cwd,
-              stderr: "",
-              detail: "timed out after 30s",
-            }),
-          }),
-      })
-    );
-  }
-);
 
 /** Splits `-z` (NUL-terminated) output into its constituent entries. */
 const parseNulSeparated = (output: string): ReadonlyArray<string> =>
@@ -5419,31 +4762,6 @@ export type GitStubs = {
 };
 
 /**
- * A test double invoked a Git method without an explicit stub.
- *
- * **Example** (Identify an unstubbed method defect)
- *
- * ```ts
- * import { NotStubbedError } from "@beep/git/Git";
- *
- * const defect = NotStubbedError.make({ message: "A Git method needs a stub." });
- * console.log(defect._tag, defect.message); // NotStubbedError A Git method needs a stub.
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class NotStubbedError extends S.TaggedError<NotStubbedError, { readonly brand: unique symbol }>(
-  $I`NotStubbedError`
-)(
-  "NotStubbedError",
-  { message: S.String },
-  $I.annoteError<NotStubbedError>("NotStubbedError", {
-    description: "A Git test double method was invoked without an explicit stub.",
-  })
-) {}
-
-/**
  * The default for every {@link Git.makeTest} method a test did not stub: a
  * defect naming the method, so an unexercised call fails loudly instead of
  * succeeding with a lie or failing with a dishonest typed error.
@@ -5475,7 +4793,7 @@ const stubOf = <K extends keyof GitStubs>(
  * **Details**
  *
  * Every method takes `cwd` explicitly and classifies git's stderr/exit-code
- * taxonomy exactly once, in this module's private `classify` step — a
+ * taxonomy exactly once, in the internal classification module — a
  * spawn-level `PlatformError` and `Cause.TimeoutError` never escape a `Git`
  * method; every failure surfaces as {@link GitCommandError},
  * {@link NotARepositoryError}, {@link UnknownRefError}, or one of the three

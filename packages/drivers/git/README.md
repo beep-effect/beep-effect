@@ -144,8 +144,12 @@ point into the upstream checkout.
 
 ## Runtime implementation map
 
-- [`Git.ts`](src/Git.ts) owns the public service, parsed models, error classification,
+- [`Git.ts`](src/Git.ts) owns the public service, parsed models,
   repository-specific SSH config resolution, and service/test-double construction.
+- [`Git.errors.ts`](src/Git.errors.ts) owns the failure contracts. The service module
+  re-exports the same constructors, with their original schema identifiers.
+- [`internal/classification.ts`](src/internal/classification.ts) applies the ordered
+  exit/stderr taxonomy, redacted error arguments, environment pins, and timeout handling.
 - [`GitCommand.ts`](src/GitCommand.ts) owns pure invocation construction and redaction masks.
 - [`internal/sshEnvironment.ts`](src/internal/sshEnvironment.ts) owns the fixed environment
   pins and the conservative decision to append SSH BatchMode. It performs no config reads.
@@ -154,6 +158,11 @@ point into the upstream checkout.
 A network call resolves repository config through the service before applying the pure
 SSH policy. Local commands use only the base environment. The internal modules are
 implementation details; consumers use the public service and command constructors.
+Classification depends on the error contracts and process collector; neither depends
+on the service implementation. Shared failures take precedence over mode-specific
+degradation, except for a recognized `show` path-absence diagnostic: a missing filename
+such as `not a git repository` must still produce `Option.none`. That exception requires
+Git's `fatal: path '` prefix, so absence wording inside an invalid ref remains an error.
 
 ## Port notes
 
