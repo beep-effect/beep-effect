@@ -65,6 +65,14 @@
       ],
       "installedTreeHash": "5c9be0bc9e03ad6572ec45537163331194896c91310b0835b3933fc4a3a7e8c6"
     },
+    "graft": {
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/graft",
+        ".agents/skills/graft"
+      ],
+      "installedTreeHash": "29fb832863ed616988037c294d37d1f869f69bd12bb825c44bdd8480329dfdd8"
+    },
     "grill-me": {
       "_tag": "vendored",
       "sourceType": "github",
@@ -320,7 +328,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "3aff17be9207bd99a740d0ecee9d1877a68c3cb3dacbb544bf41ed5c74a86060"
+      "installedTreeHash": "703b2f45bc17148150f5ef029e62995cea5cd1980e92878c21874b6f4a8be3f0"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -415,7 +423,7 @@
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
       ],
-      "installedTreeHash": "a7b5c5c12544ce5c473c3466602254bbe6d3e996f0f4feadabcd60d7ce2b50f2"
+      "installedTreeHash": "9a0d1310679bad3817a42fcd632679165c0f8f398e11481279f2cfa14571e961"
     },
     "schema-first-development": {
       "_tag": "local",
@@ -745,7 +753,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "fde5538625eefbc824e4c668639f627b5cead0d77d1c4fc43fdb4661ae9df68f"
+      "installedTreeHash": "c3df65c22da6174aaa36c97c9fe8d055ed42d793c72323078839d1f4136fa977"
     }
   }
 }

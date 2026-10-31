@@ -11,6 +11,7 @@ import { O } from "@beep/utils";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Headers from "effect/http/Headers";
 import * as HttpServer from "effect/http/HttpServer";
@@ -18,6 +19,8 @@ import * as HttpServerError from "effect/http/HttpServerError";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Num from "effect/Number";
+import * as NetAddress from "effect/net/NetAddress";
+import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -171,6 +174,50 @@ export const serveCacheLoopback = Effect.fn("Cache.serveLoopback")(function* <E,
   return HttpServer.formatAddress(server.address);
 });
 
+/**
+ * Serve an app through an owner-only Unix socket for the caller's scope.
+ *
+ * **Details**
+ * Allocates a fresh mode0700 directory and mode0600 socket under the short
+ * system temporary root. The server closes before its directory is removed.
+ * The address stays redacted: a supervisor may mount only this socket into a
+ * private network namespace and use the platform's Unix-capable HTTP client.
+ * The listener runs in the actual Bun runtime; Node clients can connect through
+ * their platform HTTP agent. Transport supplies neither upload authorization
+ * nor producer trust. The upstream still enforces role, method and tenant policy.
+ *
+ * **Example** (Reference the private socket server)
+ * ```ts
+ * import { serveCachePrivateSocket } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * import * as HttpServerResponse from "effect/http/HttpServerResponse"
+ * const program = serveCachePrivateSocket(
+ *   Effect.succeed(HttpServerResponse.empty({ status: 204 })), 1024
+ * ).pipe(Effect.scoped)
+ * console.assert(Effect.isEffect(program))
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const serveCachePrivateSocket = Effect.fn("Cache.servePrivateSocket")(function* <E, R>(
+  app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+  maxRequestBodySize: number
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "beep-cache-socket-" });
+  yield* fs.chmod(directory, 0o700);
+  const socket = path.join(directory, "cache.sock");
+  const server = yield* BunHttpServer.make({ unix: socket, maxRequestBodySize }).pipe(Effect.catchDefect(bindFailure));
+  yield* server.serve(app);
+  if (!NetAddress.isUnixPathAddress(server.address))
+    return yield* CacheCommandError.new("Private cache server did not bind a Unix socket.");
+  yield* fs.chmod(socket, 0o600);
+  return Redacted.make(server.address);
+}, CacheCommandError.mapError("Cannot run the private cache socket server."));
+
 const readFixtureBody = Effect.fn("CacheFixture.readBody")(function* (request: HttpServerRequest.HttpServerRequest) {
   const contentLength = Headers.get(request.headers, "content-length").pipe(O.flatMap(Num.parse));
   if (O.exists(contentLength, Num.isGreaterThan(bodyLimit))) return Result.fail(413);
@@ -213,7 +260,12 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
   const events = yield* Ref.make(A.empty<CacheFixtureEvent>());
   const sequence = yield* Ref.make(0);
   const scenario = yield* Ref.make(CacheFixtureScenario.make({ id: "initial", fault: "none" }));
-  const makeReply = (id: number, current: CacheFixtureScenario, role: CacheFixtureEvent["role"]) =>
+  const makeReply = (
+    id: number,
+    current: CacheFixtureScenario,
+    role: CacheFixtureEvent["role"],
+    requestTag: O.Option<string>
+  ) =>
     Effect.fn("CacheFixture.reply")(function* (
       status: number,
       operation: CacheFixtureEvent["operation"],
@@ -231,6 +283,9 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
         digest: O.isSome(artifact) && status === 200 ? O.some(yield* hashBytes(body)) : O.none(),
         bytes: S.Natural.make(body.byteLength),
         tagPresent: O.isSome(tag),
+        requestTagSha256: O.isSome(requestTag)
+          ? O.some(yield* hashBytes(new TextEncoder().encode(requestTag.value)))
+          : O.none(),
       });
       yield* Ref.update(events, (all) => (all.length < requestLimit + 1 ? A.append(all, event) : all));
       return HttpServerResponse.uint8Array(operation === "put" ? new Uint8Array() : body, {
@@ -310,7 +365,7 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     const id = yield* Ref.updateAndGet(sequence, (n) => Math.min(n + 1, requestLimit + 1));
     const bearer = Headers.get(request.headers, "authorization");
     const role = fixtureRole(credentials, bearer);
-    const reply = makeReply(id, current, role);
+    const reply = makeReply(id, current, role, Headers.get(request.headers, "x-artifact-tag"));
     if (id > requestLimit) return yield* reply(429, "rejected");
     if (role === "unknown") return yield* reply(401, "rejected");
     return yield* routeRequest(request, role, current, reply);

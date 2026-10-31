@@ -1194,8 +1194,20 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       ];
     // An abandoned publication's backup copies an untouched target; a writer that
     // died between recording `abandoned` and dropping it leaves it for here.
-    if (initial.publication.state._tag === "abandoned")
+    if (initial.publication.state._tag === "abandoned") {
+      if (!(yield* ownsArtifacts(backupDirectory, initial, "publication", initial.publication)))
+        return [
+          ModelsRecoveryReport.make({
+            journal: initial.id,
+            role: "publication",
+            result: refuse(
+              "foreign-artifact",
+              "Abandoned publication contains a foreign artifact; nothing was removed."
+            ),
+          }),
+        ];
       yield* Effect.forEach(O.toArray(initial.publication.backup), discard, { discard: true });
+    }
     let journal = initial;
     const reports: Array<ModelsRecoveryReport> = [];
     for (const role of ModelsPublicationRole.literals) {

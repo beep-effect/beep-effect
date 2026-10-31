@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "cache-node-runtime-control-checkpoint/v1",
+  "recordedAt": "2026-10-29T06:16:07.887023+00:00",
+  "authority": "component-observation-only",
+  "headAtVerification": "e496c1943ef462a8523f6f1c8ce4f72bc2d37973",
+  "sourceState": "uncommitted-working-tree-with-exact-file-digests",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts": "015467e91f40b15e017c9ffa0d68db60ff544802992a8bb5196b15d624e99508",
+    "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "b5f33103981030a70914e817a78bb0045e804a2630f24909adf26adc73070e18",
+    "vitest.setup.ts": "9f1c67ae3e198038bba956514c018f5e22e87161355a736e34dd74419a403f6b"
+  },
+  "priorCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
+    "sha256": "1ce40bd4d9ae3c5be6449081291d17f603f2323dc277f87d184abd18fb8d5abd",
+    "scope": "Earlier Bun-only CPU observations and request-settlement evidence remain unchanged and source-bound."
+  },
+  "hostedAttribution": {
+    "run": 40824190945,
+    "job": 123283641116,
+    "failedTests": 1,
+    "otherPassedTests": 4164,
+    "cause": "Node Bun.serve compatibility layer buffers the body before handler dispatch; the streaming handshake deadlocked in the shim.",
+    "introduced": true,
+    "baselineExpanded": false
+  },
+  "runtimeBoundary": {
+    "nodeVersion": "24.22.1",
+    "bunVersion": "1.4.4",
+    "nodeReproduction": {
+      "result": "failed",
+      "cause": "five-second operation timeout",
+      "seconds": 9.4
+    },
+    "nodeFixedSingleControl": {
+      "result": "passed",
+      "seconds": 8.05
+    },
+    "childDeadlineSeconds": 45,
+    "childOutputMaxChars": 16384,
+    "childWorkers": 1,
+    "originalBodyDeadlineSeconds": 5,
+    "nodeSkipsControl": false,
+    "productionProxyChanged": false
+  },
+  "verification": {
+    "nodeIntegration": {
+      "passed": 271,
+      "files": 11,
+      "seconds": 36.89
+    },
+    "bunIntegration": {
+      "passed": 271,
+      "files": 11,
+      "seconds": 27.4
+    },
+    "nodeV8CoverageControl": {
+      "passed": 1,
+      "skipped": 20,
+      "seconds": 16.16,
+      "scope": "Single actual-runtime control with Node V8 instrumentation; no aggregate coverage-pass claim."
+    },
+    "packageQuick": {
+      "lintSeconds": 5.4,
+      "checkSeconds": 12.8
+    },
+    "fallow": {
+      "auditNewFindings": 0,
+      "healthNewFindings": 0
+    },
+    "effectVitest": {
+      "files": 3009,
+      "retainedFindings": 546,
+      "introducedFindings": 0,
+      "inventoryChanged": false
+    },
+    "cpuControl": {
+      "independentNodeParents": 3,
+      "eachRunsRealBunControl": true,
+      "cpuQuotaPercent": 100,
+      "memoryMaxBytes": 4294967296,
+      "tasksMax": 512,
+      "result": "passed",
+      "scope": "Actual Node parent and real Bun streaming child; no AWS runtime equivalence claim."
+    },
+    "counterfactuals": {
+      "proxySourceSha256": "015467e91f40b15e017c9ffa0d68db60ff544802992a8bb5196b15d624e99508",
+      "restoredProxySha256": "015467e91f40b15e017c9ffa0d68db60ff544802992a8bb5196b15d624e99508",
+      "testSourceSha256": "b5f33103981030a70914e817a78bb0045e804a2630f24909adf26adc73070e18",
+      "results": [
+        {
+          "control": "early-receipt",
+          "runtime": "bun",
+          "exit": 1,
+          "failedTests": 1,
+          "parentPropagatedFailure": false
+        },
+        {
+          "control": "early-receipt",
+          "runtime": "node",
+          "exit": 1,
+          "failedTests": 1,
+          "parentPropagatedFailure": true
+        },
+        {
+          "control": "empty-upload-fallback",
+          "runtime": "bun",
+          "exit": 1,
+          "failedTests": 1,
+          "parentPropagatedFailure": false
+        },
+        {
+          "control": "empty-upload-fallback",
+          "runtime": "node",
+          "exit": 1,
+          "failedTests": 1,
+          "parentPropagatedFailure": true
+        }
+      ]
+    }
+  },
+  "specSha256": "32bf10d431a81ecb290cc01f7fe79814b61b25eaec9e02a68745ea5f862d2358",
+  "productionChanges": false,
+  "notProven": [
+    "New exact-head hosted CI pass",
+    "Protected producer publication and task/upload join",
+    "Deployed grants, tenant and signed epoch readiness",
+    "Current full computation qualification/adoption",
+    "Representative seven/seven/fourteen-day windows"
+  ]
+}

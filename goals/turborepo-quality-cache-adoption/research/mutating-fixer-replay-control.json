@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "cache-mutating-fixer-replay-control/v1",
+  "recordedAt": "2026-10-29T21:36:35.939781+00:00",
+  "authority": "Disposable synthetic native Turbo/Biome boundary observation; no real computation qualification or production cache change",
+  "rows": [
+    {
+      "channel": "stable",
+      "clientVersion": "2.11.10",
+      "clientSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+      "biomeSha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "first": {
+        "hash": "eac1b37d2b16350b",
+        "cache": "MISS",
+        "exit": 0,
+        "summarySha256": "2ca62d7f52580495bc6a881eda3e689aeccc8732c4c34c52bf788303a1d5fe6f",
+        "stdoutBytes": 245,
+        "stderrBytes": 0
+      },
+      "replay": {
+        "hash": "eac1b37d2b16350b",
+        "cache": "HIT",
+        "exit": 0,
+        "summarySha256": "a686387f895120bd5b8d11a61ab451f86a1e01c7d27cfc5fa2e7a9a67c03fbcf",
+        "stdoutBytes": 258,
+        "stderrBytes": 0
+      },
+      "cacheDisabledControl": {
+        "hash": "86d844f3cc9be5b7",
+        "cache": "MISS",
+        "exit": 0,
+        "summarySha256": "26f71f2af9366882e4f4d414dbf8fccfc7b9496bcb3e455c6d922f8c02f57f39",
+        "stdoutBytes": 245,
+        "stderrBytes": 0
+      },
+      "inputBeforeSha256": "be9c8f066b681c63ec1c80f905451304f2ecd93033f29c0526f5177e2329bbae",
+      "requiredFormattedSha256": "1d7b39821faa1a85a6a011dc5b00ec335fc8c8bc0304d28f770596aecddd4e2d",
+      "actualReplaySha256": "be9c8f066b681c63ec1c80f905451304f2ecd93033f29c0526f5177e2329bbae",
+      "replayPerformedRequiredMutation": false,
+      "disabledControlPerformedRequiredMutation": true,
+      "outputs": []
+    },
+    {
+      "channel": "canary",
+      "clientVersion": "2.11.9-canary.1",
+      "clientSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+      "biomeSha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57",
+      "first": {
+        "hash": "eac1b37d2b16350b",
+        "cache": "MISS",
+        "exit": 0,
+        "summarySha256": "4abef7c1c594658a85b9e3b7f959a242f56faadb21bce3ab05161b5af4374545",
+        "stdoutBytes": 245,
+        "stderrBytes": 0
+      },
+      "replay": {
+        "hash": "eac1b37d2b16350b",
+        "cache": "HIT",
+        "exit": 0,
+        "summarySha256": "96ca6ff3bd864d8ee08dd19562f78ba1e08ddee99e7681f13dcfd95e692b0862",
+        "stdoutBytes": 258,
+        "stderrBytes": 0
+      },
+      "cacheDisabledControl": {
+        "hash": "86d844f3cc9be5b7",
+        "cache": "MISS",
+        "exit": 0,
+        "summarySha256": "9597e4336e359ca5fbc5c8619f4a34926e29f6d46fceffe43b325e359c9f617b",
+        "stdoutBytes": 245,
+        "stderrBytes": 0
+      },
+      "inputBeforeSha256": "be9c8f066b681c63ec1c80f905451304f2ecd93033f29c0526f5177e2329bbae",
+      "requiredFormattedSha256": "1d7b39821faa1a85a6a011dc5b00ec335fc8c8bc0304d28f770596aecddd4e2d",
+      "actualReplaySha256": "be9c8f066b681c63ec1c80f905451304f2ecd93033f29c0526f5177e2329bbae",
+      "replayPerformedRequiredMutation": false,
+      "disabledControlPerformedRequiredMutation": true,
+      "outputs": []
+    }
+  ],
+  "temporaryRootsRemoved": true,
+  "remoteCacheUsed": false,
+  "sourceCheckoutChanged": false
+}

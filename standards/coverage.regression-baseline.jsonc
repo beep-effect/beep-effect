@@ -41519,6 +41519,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-tsconfig/src/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -42276,18 +42288,6 @@
             "statements": 34,
             "branches": 30,
             "functions": 17
-          }
-        },
-        "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts": {
-          "lines": 92.77,
-          "statements": 92.43,
-          "branches": 68.75,
-          "functions": 81.25,
-          "uncovered": {
-            "lines": 13,
-            "statements": 14,
-            "branches": 5,
-            "functions": 12
           }
         },
         "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts": {

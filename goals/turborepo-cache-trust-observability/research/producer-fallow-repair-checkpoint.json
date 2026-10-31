@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "cache-producer-fallow-repair-checkpoint/v1",
+  "authority": "Source-bound local component proof only. No full-goal acceptance, task qualification, protected publication or deployment authority.",
+  "sourceParent": "2e4f001e7f50706d2d23d608aa9794fc7dbbc543",
+  "acceptedBase": "dcca065b86e48c2ec1b014d998da133cc04c7e60",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.ts": "c449f54dc200df7c555ccd6ab8893e78ee17d3ac12fd95f06fb44afd694f89bc",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts": "828401b9fe19b2bda81f8ef85bc9d553ba4669f2975838466f718f3ddf67e15a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "6b564420644d95700c8abad0d62277d96fc16a40abab71ab4914f4ea4d4dbce6",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "df7ad1db4c1a64bfef8bcdd1e8252a83774a0e425406bad2e09f9d2672f14bb4",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "89854809fe45b0854477c9e362ca1bbcc3f2d68c5465039d943df0efe70a6550",
+    "packages/tooling/tool/cli/test/cache-dependencies.test.ts": "cc0201c908ec778c174df691467006148947701d084184fc0a31e3dd65de6b98",
+    "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "9df039bd9716aa9f74b755606ef093d77104ce1961a4f4558b4a1dec0f5135e9",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "fa89337b86d4674f9bde58ccd9c50836155344498693e58ccaf47d49f1f5ebc9"
+  },
+  "attribution": {
+    "normalPublicationExit": 1,
+    "publicationSeconds": 612.724,
+    "pushed": false,
+    "introduced": [
+      "Upload validator complexity30",
+      "Preflight test cognition17",
+      "One shared descriptor-read clone group"
+    ],
+    "completePackageInterrupted": true,
+    "interruptedAuditIsPassingProof": false,
+    "thresholdsOrBaselinesRelaxed": false
+  },
+  "repair": [
+    "One canonical loopback URL and one schema-derived canonical R2 endpoint constraint preserve independent approval, namespace, capability and executable-pin requirements. Empty query/fragment delimiters are explicitly rejected despite matching approval hashes.",
+    "The existing dependency owner exposes one contained, digest-verified UTF-8/schema reader to all three callers; installed-tree verification remains separate.",
+    "Eight preflight cases report independently, with shared filesystem-fault preparation and every callback/marker/cleanup expectation retained.",
+    "A schema-generated descriptor is replaced with different valid encoded bytes; stale-digest acceptance fails the new property."
+  ],
+  "verification": {
+    "node163": {
+      "exit": 0,
+      "elapsedSeconds": 28.907,
+      "finishedAt": "2026-10-30T05:14:52.027817+00:00"
+    },
+    "bun163": {
+      "exit": 0,
+      "elapsedSeconds": 18.312,
+      "finishedAt": "2026-10-30T05:14:42.456352+00:00"
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 12.275,
+      "finishedAt": "2026-10-30T05:01:41.785302+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 9.109,
+      "finishedAt": "2026-10-30T05:08:38.827697+00:00"
+    },
+    "fallowHealth": {
+      "exit": 0,
+      "elapsedSeconds": 8.685,
+      "finishedAt": "2026-10-30T05:00:28.731445+00:00"
+    },
+    "rootInline": {
+      "exit": 0,
+      "elapsedSeconds": 6.189,
+      "finishedAt": "2026-10-30T05:04:49.320135+00:00"
+    },
+    "effectPolicy": {
+      "exit": 0,
+      "elapsedSeconds": 41.367,
+      "finishedAt": "2026-10-30T05:04:19.427302+00:00"
+    },
+    "schemaFirst": {
+      "exit": 0,
+      "elapsedSeconds": 39.324,
+      "finishedAt": "2026-10-30T05:04:17.854134+00:00"
+    },
+    "docgenScoped": {
+      "exit": 0,
+      "elapsedSeconds": 39.194,
+      "finishedAt": "2026-10-30T05:15:03.338137+00:00"
+    },
+    "documentationInventory": {
+      "exit": 0,
+      "elapsedSeconds": 265.561,
+      "finishedAt": "2026-10-30T05:18:49.259319+00:00"
+    },
+    "realController": {
+      "exit": 0,
+      "elapsedSeconds": 2.121,
+      "finishedAt": "2026-10-30T05:06:20.880335+00:00"
+    }
+  },
+  "documentation": {
+    "packages": 183,
+    "openPackages": 17,
+    "openExports": 99,
+    "openModules": 166,
+    "rootPolicyOpen": 0,
+    "introducedOpenExports": 0,
+    "canonicalInventorySha256": "69ccedb440cc0e4f5173c77e755a8222e863aca03ef43fa25171366fa5cfd7fd",
+    "initialExampleImportFinding": "Corrected the new example from the package root to the stable @beep/schema/Sha256 module before canonical regeneration."
+  },
+  "realController": {
+    "cases": ["success", "callback-failure", "interruption"],
+    "passed": true,
+    "scope": "Actual Bun parent, pinned adapter, user-unit resources/listener and cleanup using synthetic credentials. No native R2 upload, real credential grant, issuer or protected workflow proof. The later dependency edit only corrected the JSDoc example import."
+  },
+  "integrityControl": {
+    "mutation": "Replace the digest-verified read with the same bounded contained read, leaving strict UTF-8 and descriptor schema decoding intact.",
+    "expectedNativeFailure": 1,
+    "controlDriverExit": 0,
+    "intendedAssertionFailed": true,
+    "sourceRestoredExactly": true,
+    "sourceSha256": "828401b9fe19b2bda81f8ef85bc9d553ba4669f2975838466f718f3ddf67e15a",
+    "seconds": 3.042
+  },
+  "remaining": [
+    "Complete default repo-cli package audit and Docgen on the committed integrating source",
+    "Fresh canonical final, current-head hosted checks, reviews and review window",
+    "Human credential handoff, actual normal-source stable/canary execution and immutable protected producer publication",
+    "Real CLI/protected workflow invocation; actual AWS user-manager/toolchain preflight",
+    "All task/feature qualification and adoption, production trust/rotation/rollback, representative 7/7/14-day observations and final same-PR reflection/lifecycle"
+  ],
+  "productionChanges": false
+}

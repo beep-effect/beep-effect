@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "verification-route",
+    "packetId": "goal-packet/v1:6649f2c41038f499966c51d8f6c8bff51687f3345939382eef023fef06fae1c3",
+    "title": "Verification Route",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-28",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/verification-route",
+  "lifecycle": "active",
+  "mission": "Run only the checks a change kind can affect, cheapest first, proven by replay over merged PRs: footprint record, classify, route, census, final-check, hosted skip-satisfied.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/verification-route",
+    "graduated": "2026-10-28"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/verification-route/README.md",
+    "goals/verification-route/SPEC.md",
+    "goals/verification-route/PLAN.md",
+    "goals/verification-route/GOAL.md",
+    "goals/verification-route/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/verification-route/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Slice 1: schemas, route, census",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Slice 2: refinements, both layers, final-check",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Slice 3: hosted per lane",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/verification-route/GOAL.md)\" -le 4000",
+    "jq . goals/verification-route/ops/manifest.json",
+    "rg -n \"verification-route|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/verification-route",
+    "git diff --check -- goals/verification-route",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep quality package-verify @beep/repo-cli"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

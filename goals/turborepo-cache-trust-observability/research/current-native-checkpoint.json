@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "cache-native-refresh-checkpoint/v1",
+  "authority": "frozen working-tree protocol source bytes, not a production readiness or task qualification receipt",
+  "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts": "372946cd9f8ba53c36bb5fd86ba8fcaf282a794901e6b567e42bf3eba473d285",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts": "3b3ee62f31dd4d806424d4bcf8804af1887a41e0803e677786b5ffdbbffaba91",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "37e9104467328d0ef00344cbce851b03baf617472c36427231c87dfe25d870de",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.schemas.ts": "06755023fb171e18935c2e9f88e3ef725736cde570e3354d54f67954fd8ce53d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts": "8468c854c363d18f38288c64000fc1e3524e4a7764ec323c897e9bed84ee4e6a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.schemas.ts": "d636805dcb99e0fd5220dd8a79da328902bca3dec4b547e56d095d193b26088c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts": "8b708c0e8254ff0e320ff7897954ff9769a1f0c7f418df8157d9099b162ba7b6"
+  },
+  "selectionControl": {
+    "pinnedNative": "--skip-infer",
+    "singlePackageFixture": "--single-package",
+    "withoutSinglePackage": "native dry run returned zero tasks; rejected as nonexecution"
+  },
+  "evidence": {
+    "stable": {
+      "path": "goals/turborepo-cache-trust-observability/research/current-native-stable.json",
+      "sha256": "3649f96e07d69f08cf85945c87084146e9e7040f78e16496cd4d97561079d46d",
+      "nativeCases": 6,
+      "transportCases": 3,
+      "isolatedRoots": 9,
+      "wireEvents": 23
+    },
+    "canary": {
+      "path": "goals/turborepo-cache-trust-observability/research/current-native-canary.json",
+      "sha256": "237a47a1e8c2199192c5d7624a02a54314f7466de69196a09135d3a2d335e641",
+      "nativeCases": 6,
+      "transportCases": 3,
+      "isolatedRoots": 9,
+      "wireEvents": 23
+    }
+  },
+  "focusedVerification": {
+    "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts test/ecosystem-polarity.test.ts",
+    "files": 11,
+    "passed": 271,
+    "seconds": 27.4,
+    "scope": "Current Bun runtime control after Node compatibility repair; native artifact/source maps retain their original authority."
+  },
+  "limits": [
+    "The new six-case matrix omits wrong-team; retained conformance RC-021 supplies exact-client synthetic rejection evidence at its recorded lab scope.",
+    "No current production R2/AWS role, tenant, rotation or rollback proof is asserted.",
+    "Transport rejection and synthetic replay do not qualify real repository computations.",
+    "Representative seven/seven/fourteen-day observations have not been completed."
+  ],
+  "verificationSourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+    "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+    "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+    "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+    "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+    "packages/tooling/tool/cli/test/cache-conformance.test.ts": "d3cf2d1c31dc0b7b74e390db5dd6a9ff92fc930a2761b5827a3619ce0cc315be",
+    "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "b5f33103981030a70914e817a78bb0045e804a2630f24909adf26adc73070e18",
+    "packages/tooling/tool/cli/test/cache-conformance-command.test.ts": "650c922c3f1199bb38a5964c3f2424e886f449fa940e7642009edee3c91bc761",
+    "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts": "8b5e91105eafb6aea4b014e41db31f8c93404aedfcb36932bce34ba2f8da01f1"
+  },
+  "retainedConformance": {
+    "stable": {
+      "path": "goals/turborepo-cache-conformance/research/runs/local-bruno-loopback-native-stable.json",
+      "sha256": "e6fc4865971b3cdaa4e3eec2de6158acd3c8f61ec28daabda9d9067c44d07351",
+      "observedAt": "2026-10-24T18:55:30.889Z",
+      "client": {
+        "channel": "stable",
+        "version": "2.11.10",
+        "executableSha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "backend": {
+        "id": "brunojppb/turbo-cache-server",
+        "release": "4.0.20",
+        "digest": "sha256:52334c002a55276b29e059caaf19c83326d50ede4280a13dbe48aebde0b816fd"
+      },
+      "caseIds": ["RC-021", "RC-022"],
+      "scope": "Retained exact-client lab wrong-team and epoch controls; no production tenant binding or warm-secret proof."
+    },
+    "canary": {
+      "path": "goals/turborepo-cache-conformance/research/runs/local-bruno-loopback-native-canary.json",
+      "sha256": "cd02319ee787b3a3d9bf425c5951ac146d05a54c2c9b34137a89bdcb73f30485",
+      "observedAt": "2026-10-24T18:55:33.488Z",
+      "client": {
+        "channel": "canary",
+        "version": "2.11.9-canary.1",
+        "executableSha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb"
+      },
+      "backend": {
+        "id": "brunojppb/turbo-cache-server",
+        "release": "4.0.20",
+        "digest": "sha256:52334c002a55276b29e059caaf19c83326d50ede4280a13dbe48aebde0b816fd"
+      },
+      "caseIds": ["RC-021", "RC-022"],
+      "scope": "Retained exact-client lab wrong-team and epoch controls; no production tenant binding or warm-secret proof."
+    }
+  },
+  "fallowAudit": {
+    "blockingFindings": 0,
+    "command": "bun run beep quality fallow audit --base origin/main --check --out .beep/fallow/audit.repair.json --quiet"
+  },
+  "priorFocusedVerification": {
+    "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+    "focusedVerification": {
+      "command": "bunx --bun vitest run --config vitest.config.ts test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts",
+      "files": 5,
+      "passed": 136,
+      "seconds": 6.15
+    },
+    "verificationSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+      "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+      "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "9c768c5dadd4968c6e278554f02867de0d99435677f06ab1942baa9ed0533a9d"
+    }
+  },
+  "verificationIntegrationRevision": "e496c1943ef462a8523f6f1c8ce4f72bc2d37973",
+  "priorPostureIntegration": {
+    "focusedVerification": {
+      "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts",
+      "files": 9,
+      "passed": 240,
+      "seconds": 19.44,
+      "scope": "Posture/protocol integration on the merged tree. Native observations retain their original artifact bytes and protocol-source bindings."
+    },
+    "verificationSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+      "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+      "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/cache-conformance.test.ts": "f82894ec318ca4136afbcd3585d166a2a28b96c061bf8c51c102f9cfbef9bc56",
+      "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "d8bc35e3cb0ebe6d02c1b54666f241fcc5dfe6d9213ca908686be11528b59f4b"
+    },
+    "verificationIntegrationRevision": "e90ec4819e4d436f5e7a60f00a52b767e006e716"
+  },
+  "priorBackendResultIntegration": {
+    "revision": "aa6e0e293bb8afc9f64192eefa71f55123e30969",
+    "focusedVerification": {
+      "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts",
+      "files": 10,
+      "passed": 249,
+      "seconds": 23.84,
+      "scope": "Current signing/protocol/backend-result integration. Original native artifact bytes and protocol source hashes unchanged; historical 136 and 240 test source snapshots retained separately."
+    },
+    "verificationSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+      "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+      "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/cache-conformance.test.ts": "d3cf2d1c31dc0b7b74e390db5dd6a9ff92fc930a2761b5827a3619ce0cc315be",
+      "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "4608adcf2cc724d43708f13b434828b60781ff042ba556615afa97c72c527547",
+      "packages/tooling/tool/cli/test/cache-conformance-command.test.ts": "650c922c3f1199bb38a5964c3f2424e886f449fa940e7642009edee3c91bc761"
+    },
+    "verificationIntegrationRevision": "Working merge of 3f57a219864c8302b2078132a1fd40554f61966c and reviewed main 9e06ce011505c859d69e210a2084fa9cfd27efb8"
+  },
+  "priorCaptureSeamVerification": {
+    "focusedVerification": {
+      "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts",
+      "files": 10,
+      "passed": 256,
+      "seconds": 29.2,
+      "scope": "Current integrated signing/protocol/backend-result and bounded capture suite. Original native artifacts and protocol source maps remain historical and unchanged."
+    },
+    "verificationSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+      "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+      "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/cache-conformance.test.ts": "d3cf2d1c31dc0b7b74e390db5dd6a9ff92fc930a2761b5827a3619ce0cc315be",
+      "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "2322f0514314b51acaf6186dc17521cbbeaef8e398952ccf003054d0f34189d1",
+      "packages/tooling/tool/cli/test/cache-conformance-command.test.ts": "650c922c3f1199bb38a5964c3f2424e886f449fa940e7642009edee3c91bc761"
+    },
+    "verificationIntegrationRevision": "Capture component seam repair after018058f88fb907c479ac4a8b4135b002d4942b9d"
+  },
+  "priorHostedCaptureVerification": {
+    "focusedVerification": {
+      "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts test/ecosystem-polarity.test.ts",
+      "files": 11,
+      "passed": 271,
+      "seconds": 33.19,
+      "scope": "Current capture/protocol/posture suite plus inherited main ecosystem-polarity integration. Native artifact bytes and protocol sources retain their original proof scope."
+    },
+    "verificationSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+      "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+      "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/cache-conformance.test.ts": "d3cf2d1c31dc0b7b74e390db5dd6a9ff92fc930a2761b5827a3619ce0cc315be",
+      "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "2322f0514314b51acaf6186dc17521cbbeaef8e398952ccf003054d0f34189d1",
+      "packages/tooling/tool/cli/test/cache-conformance-command.test.ts": "650c922c3f1199bb38a5964c3f2424e886f449fa940e7642009edee3c91bc761",
+      "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts": "8b5e91105eafb6aea4b014e41db31f8c93404aedfcb36932bce34ba2f8da01f1"
+    },
+    "verificationIntegrationRevision": "bde1beb3c8"
+  },
+  "verificationSourceState": "uncommitted-working-tree-with-exact-file-digests",
+  "currentCaptureCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json",
+    "sha256": "c62719843df9e914203675f1a8ebf5f93c5d7c831a65c83c681754948fac6950"
+  },
+  "priorRequestCompletionVerification": {
+    "focusedVerification": {
+      "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts test/cache-runtime.test.ts test/shared-internals.test.ts test/cache-conformance.test.ts test/cache-conformance-lab.test.ts test/cache-conformance-command.test.ts test/ecosystem-polarity.test.ts",
+      "files": 11,
+      "passed": 271,
+      "seconds": 28.54,
+      "scope": "Current protocol/posture/capture suite after hosted assertion repair and request-completion settlement. Native artifact bytes and protocol source scope remain unchanged."
+    },
+    "verificationSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "e03cc66fbc1ea4ed6ea3c0783b7070b3b757c879c71f355296642907d9c5e483",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "dad2ef5164389f950f7a8b5c63eaf89c78818558c67209c9ec4b3397ebac6d33",
+      "packages/tooling/tool/cli/test/cache-protocol-runner.test.ts": "81bef677f21f621fa72eb9a0ed3aac126fdde57efae4011164de6d502dba4ce9",
+      "packages/tooling/tool/cli/test/cache-protocol.test.ts": "0376fd82905be9664ac410d5213da75c5f1e841a5455228d440970fbeed311b2",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "baba5b57f8c8794ff4bda1274fd4f4a6ae7f8b19596ecb853f5e27a210894aa9",
+      "packages/tooling/tool/cli/test/turbo-cache.test.ts": "595b11dde0faf0261841f2168d169d6af80d7f1413bf9eeee0944cc7ea10b52e",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "51ed48a9451bdbe8b9c7b93db514e375af1eb8dc1a91dff3d2f8c91c07ed4b25",
+      "packages/tooling/tool/cli/test/shared-internals.test.ts": "46d73e193c0fbbd16ce01dcb784552d0f0b5e92df41b051a98877a8038f7e2c5",
+      "packages/tooling/tool/cli/test/cache-conformance.test.ts": "d3cf2d1c31dc0b7b74e390db5dd6a9ff92fc930a2761b5827a3619ce0cc315be",
+      "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts": "dd339a3a81a7b6437ea121ef01cb5b6ec11b539aad3ce0581a648304f74d5b76",
+      "packages/tooling/tool/cli/test/cache-conformance-command.test.ts": "650c922c3f1199bb38a5964c3f2424e886f449fa940e7642009edee3c91bc761",
+      "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts": "8b5e91105eafb6aea4b014e41db31f8c93404aedfcb36932bce34ba2f8da01f1"
+    },
+    "verificationIntegrationRevision": "c3a816a2a1",
+    "verificationSourceState": "committed-integration-source-with-exact-file-digests",
+    "currentCaptureCheckpoint": {
+      "path": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
+      "sha256": "1ce40bd4d9ae3c5be6449081291d17f603f2323dc277f87d184abd18fb8d5abd"
+    }
+  },
+  "nodeIntegrationVerification": {
+    "files": 11,
+    "passed": 271,
+    "seconds": 36.89,
+    "scope": "Actual Node CLI entrypoint with one worker; interrupted streaming assertion invokes the real Bun runtime."
+  },
+  "replyErrorCoverageCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/reply-error-coverage-checkpoint.json",
+    "sha256": "e584ed096093741dc6324c4a4d619d427e6c7a1ded384fb418b8f2dfdbd7ad5c",
+    "scope": "Tests-only repair; earlier implementation/runtime proofs retain their original source bindings."
+  }
+}

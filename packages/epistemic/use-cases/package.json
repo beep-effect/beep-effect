@@ -48,7 +48,8 @@
     "./EdgeAuthority": "./src/EdgeAuthority/index.ts",
     "./ExecutionLedger": "./src/ExecutionLedger/index.ts",
     "./internal/*": null,
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./Retention": "./src/Retention/index.ts"
   },
   "files": [
     "src/**/*.ts",

@@ -31,7 +31,7 @@ const $I = $LawPracticeDomainId.create("values/OfficeCode/OfficeCode");
  * console.log(OfficeCode.is.XX("XX")) // true
  * ```
  *
- * @see https://www.wipo.int/documents/d/standards/docs-en-03-03-01.pdf
+ * @see {@link https://www.wipo.int/documents/d/standards/docs-en-03-03-01.pdf} for the WIPO ST.3 two-letter office codes.
  * @category value-objects
  * @since 0.0.0
  */

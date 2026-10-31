@@ -307,6 +307,24 @@ describe("review lane review window", () => {
   });
 });
 
+describe("review lane author reviews", () => {
+  // Must-fail fixture (ruling 81, amended 2026-10-28): the pull request
+  // author's own review submissions (thread replies) never form a round and
+  // are counted beside the reviews; a flip without an author excludes nothing.
+  it("counts a review by the flip's author beside the rounds, never as one", () => {
+    const authored = ReviewLaneFlipRow.make({ ...base(), headSha: SHA_A, at: at(5), author: O.some("Octocat") });
+    const byAuthor = review(9, 8, O.some(SHA_B), HUMAN);
+    const reviewed = [review(2, 6, O.some(SHA_A)), byAuthor, mergeReady(15, SHA_B)];
+    const first = (rows: ReadonlyArray<ReviewLaneRow>) =>
+      A.getUnsafe(buildYeetEconomicsReviewLane([ledger(rows)], O.none()).roundsToReady.pullRequests, 0);
+    expect(first([authored, ...reviewed])).toMatchObject({ rounds: 1, reviews: 1, authorReviews: 1 });
+    expect(first([flip(5), ...reviewed])).toMatchObject({ rounds: 2, reviews: 2, authorReviews: 0 });
+    const section = buildYeetEconomicsReviewLane([ledger([authored, ...reviewed])], O.none());
+    expect(section.roundsToReady.authorReviews).toBe(1);
+    expect(A.getUnsafe(renderYeetEconomicsReviewLane(section), 0)).toContain("unassigned reviews 0; author reviews 1");
+  });
+});
+
 describe("review lane reviewer precision", () => {
   it("is fixed over fixed, rejected and immaterial, with intentional and unknown beside it", () => {
     const rows = [
@@ -421,7 +439,7 @@ describe("review lane reviewer precision", () => {
     const lines = renderYeetEconomicsReviewLane(buildYeetEconomicsReviewLane([ledger(twoRounds)], O.none()));
     expect(A.length(lines)).toBe(3);
     expect(A.getUnsafe(lines, 0)).toBe(
-      "review lane (rounds to ready; its own denominators, never summed with the lane populations): 1 closed PR(s), 0 open; rounds p50 2, p95 2; mix: 2 round(s) 1; unassigned reviews 0"
+      "review lane (rounds to ready; its own denominators, never summed with the lane populations): 1 closed PR(s), 0 open; rounds p50 2, p95 2; mix: 2 round(s) 1; unassigned reviews 0; author reviews 0"
     );
     expect(A.getUnsafe(lines, 1)).toContain(`precision (${YEET_ECONOMICS_PRECISION_METHOD}): beep-reviewer n/a (`);
     expect(A.getUnsafe(lines, 2)).toBe(

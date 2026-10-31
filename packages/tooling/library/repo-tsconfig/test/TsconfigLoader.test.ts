@@ -540,6 +540,36 @@ layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":tr
 layer(
   fixtureLayer(
     tree(
+      ["/proj/base.json", '{"compilerOptions":{"strict":true,"outDir":"out"}}'],
+      ["/proj/app/tsconfig.json", "{ not valid jsonc"]
+    )
+  ),
+  { timeout: "30 seconds" }
+)("TsconfigLoader.resolveDocument, document already in hand", (it) => {
+  it.effect("resolves the given document's extends chain without reading the named file again", () =>
+    Effect.gen(function* () {
+      // The file on disk is malformed, so any re-read would fail with TsconfigParseError:
+      // the in-memory document is the config at that path.
+      const document = yield* TsconfigLoader.load("/proj/base.json");
+      const resolved = yield* TsconfigLoader.resolveDocument(
+        { extends: "../base.json", compilerOptions: { declaration: true } },
+        "/proj/app/tsconfig.json"
+      );
+      assert.strictEqual(resolved.configPath, "/proj/app/tsconfig.json");
+      assert.deepStrictEqual(resolved.extendedPaths, ["/proj/base.json", "/proj/app/tsconfig.json"]);
+      assert.deepStrictEqual(resolved.compilerOptions, { strict: true, outDir: "/proj/out", declaration: true });
+      // The same document resolved at its own path equals resolve() of that path.
+      const fromDisk = yield* TsconfigLoader.resolve("/proj/base.json");
+      assert.deepStrictEqual(yield* TsconfigLoader.resolveDocument(document, "/proj/base.json"), fromDisk);
+      const reread = yield* Effect.flip(TsconfigLoader.resolve("/proj/app/tsconfig.json"));
+      assert.strictEqual(reread._tag, "TsconfigParseError");
+    })
+  );
+});
+
+layer(
+  fixtureLayer(
+    tree(
       ["/proj/base.json", '{"compilerOptions":{"strict":true,"noEmit":false}}'],
       ["/proj/app/tsconfig.json", '{"extends":"../base.json","compilerOptions":{"noEmit":true,"declaration":true}}']
     )
