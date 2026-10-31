@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 export * from "../commands/Skills/internal/SkillFrontmatterCheck.ts";
+export * from "../internal/Codeowners.ts";
 export * from "../internal/cli/EnvConfig.ts";
 export * from "../internal/cli/Jsonc.ts";
 export * from "../internal/cli/Labs/index.ts";
