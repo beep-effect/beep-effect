@@ -110,6 +110,27 @@ export * from "./HeavyAdmission.ts";
  */
 export * from "./LaneTimings.ts";
 /**
+ * Public verification-route schemas: change atoms, footprints, plans, corpus and reports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Route.schemas.ts";
+/**
+ * Public verification-route service contracts.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Route.service.ts";
+/**
+ * Public total footprint record and its pure selection queries.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./RouteFootprints.ts";
+/**
  * Public runner-loss rerun decision export.
  *
  * @category cli-commands
