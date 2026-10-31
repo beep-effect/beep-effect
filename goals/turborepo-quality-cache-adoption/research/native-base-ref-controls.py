@@ -55,7 +55,8 @@ cache.chmod(0o700)
 rows = []
 observed_versions = {}
 for channel, binary in clients.items():
-    for flag in [False, True]:
+    for setting in ["absent", "false", "true"]:
+        flag = setting == "true"
         with tempfile.TemporaryDirectory(dir=cache, prefix=channel + "-") as name:
             root = Path(name)
             (root / "home").mkdir(mode=0o700)
@@ -80,7 +81,7 @@ for channel, binary in clients.items():
                 "packageManager": "bun@" + bun_version, "workspaces": ["packages/*"],
             }))
             (root / "turbo.json").write_text(json.dumps({
-                "futureFlags": {"githubActionsRemoteBaseRefFallback": flag},
+                "futureFlags": {"githubActionsRemoteBaseRefFallback": flag} if setting != "absent" else {},
                 "remoteCache": {"enabled": False},
                 "tasks": {"probe": {"cache": False, "inputs": ["input.txt"], "outputs": []}},
             }))
@@ -150,7 +151,7 @@ for channel, binary in clients.items():
                 assert (b"unable to detect git range" in stderr) == conservative, (channel, flag, case, stderr[:800])
                 assert not list(root.glob("packages/*/execution.marker")), "Dry selection unexpectedly executed a task."
                 rows.append({
-                    "channel": channel, "flag": flag, "case": case, "exitCode": code,
+                    "channel": channel, "setting": setting, "flag": flag, "case": case, "exitCode": code,
                     "selectedTasks": tasks, "conservativeAllTasks": conservative,
                     "explicitBaseRefused": refused,
                     "elapsedSeconds": round(time.monotonic() - started, 6),
@@ -164,8 +165,8 @@ assert all(hashlib.sha256(Path(p).read_bytes()).hexdigest() == digest for p, dig
 revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True, timeout=5).strip()
 assert revision == source_revision, "Source revision changed during execution."
 for channel in clients:
-    for flag in [False, True]:
-        assert len({row["taskHashes"]["a#probe"] for row in rows if row["channel"] == channel and row["flag"] == flag and not row["explicitBaseRefused"]}) == 1, "Base selection changed an unchanged task hash."
+    for setting in ["absent", "false", "true"]:
+        assert len({row["taskHashes"]["a#probe"] for row in rows if row["channel"] == channel and row["setting"] == setting and not row["explicitBaseRefused"]}) == 1, "Base selection changed an unchanged task hash."
 report = {
     "schemaVersion": "cache-native-base-ref-controls/v1",
     "scope": "Synthetic native dry selection only; no task execution, hosted run, qualification or production timing claim.",
