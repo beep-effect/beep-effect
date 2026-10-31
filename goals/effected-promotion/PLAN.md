@@ -106,7 +106,7 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | R5a (in review, this PR) | DeletePackage key removal, typed frontmatter (`ReflectionArtifact`, `SkillFrontmatterCheck`), KnowledgeDoctor `beep-historical` | #2143, 4-CI |
 | R8 (merged, #2298) | managed-section templates: Observability render, Explore Atlas, Models.render (LabIdentitySegment excluded; GhOps to the follow-up goal) | main |
 | 3-A6 (merged, #2329) | `TsconfigValidator` + docgen `readTSConfig`; delete repo-utils `schemas/TSConfig.ts`; `@beep/tsconfig` closed view | 3-2, 3-3, 3-A3, 3-A4 |
-| 4-A1 (in review, this PR) | repo-cli QAS discovery onto `WorkspaceDiscovery` (#143), discovery only, `resolvePathWithinRoot` post-filter | 3-A4 (merged), 4-W-a (merged) |
+| 4-A1 (in review, this PR) | repo-cli QAS discovery onto `WorkspaceDiscovery` (#143), discovery only, kit `containWithinRoot` plus the `resolvePathWithinCanonicalRoot` guard | 3-A4 (merged), 4-W-a (merged) |
 | 4-A2 | public `WorkspacePatterns` leaf; CreatePackage, TsconfigSync.plan, ConfigUpdater, ChangesetGraph, Tasks pattern readers (3 fallow suppressions out) | 3-A4, 4-W-a, R2b |
 | 4-A3 | repo-utils Workspaces/Dependencies/DependencyIndex onto the kit; `beep topo-sort` onto `DependencyGraph.sort()` with the jsdoc-inventory reorder in the same PR | 3-A3, 4-W-a, 4-A1 |
 | 4-A4 (in review, this PR) | `Lint/EcosystemPolarity.ts` onto `SourceBoundary.scan` | 4-W-b |
