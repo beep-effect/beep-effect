@@ -437,6 +437,25 @@ Record a null bump.
       })
     );
 
+    it.effect("selects members through ./-prefixed and negated ./-prefixed workspace patterns", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writePackageJson(tmpDir, "package.json", {
+          private: true,
+          workspaces: ["./packages/*", "!./packages/private-*"],
+        });
+        yield* writePackageJson(tmpDir, "packages/demo/package.json", { name: "@beep/demo", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "packages/private-x/package.json", {
+          name: "@beep/private-x",
+          version: "0.0.0",
+        });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["packages/demo/package.json"]);
+      })
+    );
+
     it.effect("accepts tracked workspace changesets through the release-path check", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

@@ -169,8 +169,12 @@ const readWorkspacePatterns = Effect.fn("ChangesetGraph.readWorkspacePatterns")(
   );
 });
 
+// `git ls-files` prints repo-relative paths without a `./` prefix, so a `./packages/*` entry
+// (which git pathspecs used to accept) drops its leading dot segments before compiling.
+const stripLeadingDotSegments = Str.replace(/^(?:\.\/)+/, "");
+
 const packageJsonGlob = (pattern: string): string =>
-  `${pipe(pattern, normalizePath, stripTrailingSlashes)}/package.json`;
+  `${pipe(pattern, normalizePath, stripLeadingDotSegments, stripTrailingSlashes)}/package.json`;
 
 // `<pattern>/package.json` for one workspace entry; a `!pattern` keeps its bang,
 // so the set reads it as an exclusion. Git pathspecs expand neither braces nor
