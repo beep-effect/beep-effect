@@ -197,7 +197,7 @@ type FixtureRequest = Pick<Message.OutgoingRequest<FixtureRpc>, "context" | "rpc
  * const request = makeRequest({ rpc: StreamRpc, payload: { id: 123 } });
  * ```
  *
- * @category test helpers
+ * @category fixtures
  * @since 0.0.0
  */
 export function makeRequest(
