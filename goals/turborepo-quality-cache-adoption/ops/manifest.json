@@ -35,9 +35,9 @@
     "goals/turborepo-quality-cache-adoption/research/SOURCES.md",
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md",
-    "research/native-base-ref-controls.py",
-    "research/native-base-ref-controls.json",
-    "research/base-ref-feature-review.json"
+    "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.py",
+    "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.json",
+    "goals/turborepo-quality-cache-adoption/research/base-ref-feature-review.json"
   ],
   "researchReports": [
     "research/SOURCES.md",
