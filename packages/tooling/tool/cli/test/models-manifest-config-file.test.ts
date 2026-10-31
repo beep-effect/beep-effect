@@ -145,6 +145,49 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
       })
     );
 
+    it.effect("keeps the active roles of a target that mixes them with a retired role", () =>
+      Effect.gen(function* () {
+        const store = yield* ModelsManifestStore;
+        const seed = yield* encodeManifest(seedModelsManifest);
+        const block = (blockId: string, roles: ReadonlyArray<string>) => ({
+          _tag: "md-generated-block",
+          blockId,
+          filter: { roles, surfaces: [] },
+          includeSuperseded: false,
+        });
+        const mixedTarget = {
+          id: "home.mixed.doctrine",
+          root: "home",
+          path: "$HOME/.mixed/AGENTS.md",
+          optional: true,
+          locators: [
+            block("mixed-roles", ["qa.judge", "jsdoc.migrate-titles"]),
+            block("retired-only", ["jsdoc.migrate-titles"]),
+            {
+              _tag: "env-key",
+              binding: { role: "jsdoc.migrate-titles", surface: "grok-cli", field: "model" },
+              render: { _tag: "verbatim" },
+              key: "JSDOC_MODEL",
+            },
+          ],
+        };
+        const retiredOnlyTarget = {
+          id: "home.retired-only.doctrine",
+          root: "home",
+          path: "$HOME/.retired-only/AGENTS.md",
+          optional: true,
+          locators: [block("retired-only", ["jsdoc.migrate-titles"])],
+        };
+        const legacy = { ...seed, targets: [...seed.targets, mixedTarget, retiredOnlyTarget] };
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", stringify(legacy)));
+        const expected = {
+          ...seed,
+          targets: [...seed.targets, { ...mixedTarget, locators: [block("mixed-roles", ["qa.judge"])] }],
+        };
+        expect(yield* encodeManifest(loaded)).toEqual(expected);
+      })
+    );
+
     it.effect("reports a YAML syntax error as a typed parse failure", () =>
       Effect.gen(function* () {
         const store = yield* ModelsManifestStore;
