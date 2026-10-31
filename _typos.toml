@@ -209,7 +209,16 @@ Mathematisch = "Mathematisch"
 
 # Preserve libxml2's exact diagnostic enum in source-audit evidence only.
 [type.citation-html-audit]
-extend-glob = ["html-cleaner-audit.json"]
+extend-glob = ["html-cleaner-audit.json", "html-kernel-cases.json"]
 
 [type.citation-html-audit.extend-words]
 STRUCURE = "STRUCURE"
+
+# Immutable upstream musl notice: retain author names and original spelling.
+[type.citation-musl-notice]
+extend-glob = ["wasi-libc-libc-top-half-musl-COPYRIGHT"]
+
+[type.citation-musl-notice.extend-words]
+Wich = "Wich"
+TRE = "TRE"
+contibutors = "contibutors"

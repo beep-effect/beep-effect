@@ -113,6 +113,13 @@ Native worker framing, shared operation deadline and parser qualification remain
 open; no canonical completion row advances. See
 history/evidence/2026-10-31-html-input-preparation.md.
 
+Latest native core evidence (2026-10-31): the authenticated private WASM host
+matches 1,097 complete source outcomes with the approved depth-resource failure.
+Two clean builds are identical. Closed imports, fixed memory maximum, retained
+notices, output limits and failure recovery have focused proof. The owned
+worker, complete IPC accounting, shared deadline and engine translation remain
+open. See history/evidence/2026-10-31-html-kernel.md. No completion row advances.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

@@ -125,7 +125,19 @@
         "goals/citation-extraction-engine/ops/verify-html-input-controls.py",
         "packages/law-practice/use-cases/test/fixtures/eyecite/html-input.json",
         "packages/law-practice/server/src/internal/Citation/HtmlInput.ts",
-        "packages/law-practice/server/test/CitationHtmlInput.test.ts"
+        "packages/law-practice/server/test/CitationHtmlInput.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-html-kernel.md",
+        "goals/citation-extraction-engine/history/evidence/html-kernel-rebuild.json",
+        "goals/citation-extraction-engine/ops/build-html-kernel.py",
+        "goals/citation-extraction-engine/ops/probe-html-kernel.py",
+        "goals/citation-extraction-engine/ops/verify-html-kernel-controls.py",
+        "packages/law-practice/server/assets/citation-html/kernel.c",
+        "packages/law-practice/server/assets/citation-html/kernel.wasm",
+        "packages/law-practice/server/assets/citation-html/build-receipt.json",
+        "packages/law-practice/server/assets/citation-html/notices.json",
+        "packages/law-practice/server/src/internal/Citation/HtmlKernel.ts",
+        "packages/law-practice/server/test/CitationHtmlKernel.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/html-kernel-cases.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

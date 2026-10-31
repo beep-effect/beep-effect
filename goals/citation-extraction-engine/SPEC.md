@@ -1122,6 +1122,15 @@ instead of silently splitting delivery or weakening scope.
   lifecycle qualification remain open. The lxml BSD notice is retained. No
   canonical completion, normalization law or new safety exception follows.
 
+- **2026-10-31 private HTML native core:** the pinned WASM asset and closed host
+  reproduce 1,097 source outcomes, including 840 exact successes, 238 declaration
+  rejections, 16 parser-error categories and the three approved resource failures.
+  Two clean builds are byte-identical. Runtime notices, closed imports, fixed
+  memory maximum and output bounds have focused proof. Synchronous evaluation
+  belongs in the pending owned worker; parent interruption, framing, shared
+  deadlines, full engine translation, maps and Layer qualification remain open.
+  No canonical completion or normalization law follows.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

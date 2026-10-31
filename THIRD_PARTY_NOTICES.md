@@ -644,3 +644,32 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+## Citation HTML WebAssembly runtime
+
+The private `packages/law-practice/server/assets/citation-html/kernel.wasm`
+links unchanged libxml2 2.12.3 with the WASI SDK 34 runtime. The authored C
+adapter implements eyecite text selection and adapts lxml wrapper merging;
+the Free Law Project and lxml notices above apply to those adaptations.
+
+The packaged [notice inventory](packages/law-practice/server/assets/citation-html/notices.json)
+records exact source revisions, source and notice digests, and linked object
+names. Complete runtime license texts and retained source notices ship in
+[licenses](packages/law-practice/server/assets/citation-html/licenses/):
+
+- libxml2: Daniel Veillard, with the distinct Gary Pennington, Bjorn Reese and
+  Daniel Stenberg notices for dictionary, list and trio material. The main
+  permission notice is retained in libxml2-Copyright and the additional notices
+  in their individually named files.
+- wasi-libc: the upstream aggregate license and Apache 2.0, Apache 2.0 with LLVM
+  Exceptions, and MIT alternatives; the musl COPYRIGHT and cloudlibc BSD notice
+  are retained separately. The linked dlmalloc public-domain notice names Doug
+  Lea and CC0. Unlinked emmalloc and fts implementations are not incorporated.
+- LLVM compiler runtime: the complete compiler-rt LICENSE.TXT, including LLVM
+  Exceptions and legacy license terms, is retained.
+
+This asset is built from checksum-verified official source and SDK archives.
+Its build receipt records feature switches, canonical build paths, exports,
+compiler version and memory maximum. Rebuilding is maintainer tooling; the
+engine does not require the SDK, C compiler or Python at runtime. Worker and
+engine lifecycle qualification is tracked separately in the citation goal.

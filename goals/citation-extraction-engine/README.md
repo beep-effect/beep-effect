@@ -13,6 +13,9 @@ the native parser backend and its full qualification remain open.
 Bounded [Unicode input preparation](./history/evidence/2026-10-31-html-input-preparation.md)
 now matches 1,075 source decisions, including exact buffer bytes and declaration
 rejection, with captured limits, Clock and cooperative interruption.
+The [private native core](./history/evidence/2026-10-31-html-kernel.md) now matches
+1,097 complete source outcomes under the approved safety exception. Two clean
+builds are identical; the owned worker, shared deadlines and Layer remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
