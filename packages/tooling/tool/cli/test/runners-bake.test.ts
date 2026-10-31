@@ -888,19 +888,28 @@ describe("runner bake planning and argv", () => {
         const repoRoot = yield* findRepoRoot();
         const caller = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
         const script = yield* fs.readFileString(path.join(repoRoot, "scripts", "cloud", "bootstrap.sh"));
+        const worker = yield* fs.readFileString(path.join(repoRoot, "scripts", "cloud", "fetch.sh"));
 
         expect(caller).toContain('BEEP_CLOUD_VENDOR=cursor exec bash "${REPO_ROOT}/scripts/cloud/bootstrap.sh"');
         expect(script).not.toContain("https://bun.sh/install");
-        expect(script).toContain(
+        expect(worker).not.toContain("https://bun.sh/install");
+        expect(script).toContain('bash "${REPO_ROOT}/scripts/cloud/fetch.sh" bun "${run_dir}" "${BUN_VERSION}"');
+        expect(worker).toContain(
           "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
         );
-        expect(script).toContain(".bun-linux-x64.sha256");
-        expect(script).toContain("sha256sum --check --strict -");
-        expect(O.getOrElse(constant(-1))(Str.indexOf("sha256sum --check --strict -")(script))).toBeLessThan(
+        expect(worker).toContain(".bun-linux-x64.sha256");
+        expect(worker).toContain("sha256sum --check --strict -");
+        expect(worker).toContain('unzip -oq "${archive}"');
+        expect(O.getOrElse(constant(-1))(Str.indexOf("sha256sum --check --strict -")(worker))).toBeLessThan(
+          O.getOrElse(constant(-1))(Str.indexOf('unzip -oq "${archive}"')(worker))
+        );
+        expect(script).toContain('if ! wait "${pid}"; then');
+        expect(script).toContain('bun) die "bun ${BUN_VERSION} download or checksum failed."');
+        expect(O.getOrElse(constant(-1))(Str.indexOf('if ! wait "${pid}"; then')(script))).toBeLessThan(
           O.getOrElse(constant(-1))(Str.indexOf('install -m 0755 "${run_dir}/bun/bun-linux-x64/bun"')(script))
         );
-        expect(script).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');
-        expect(script).not.toContain('grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"');
+        expect(worker).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');
+        expect(worker).not.toContain('grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"');
       })
     );
   });

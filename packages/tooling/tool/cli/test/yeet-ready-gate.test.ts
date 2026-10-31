@@ -1793,88 +1793,94 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ready head after the Gr
 
   // These tests run serially. Each owns one fork, advances the shared TestClock,
   // and joins the fork before the next test can use that clock.
-  it.effect("refuses a push during the budget wait without a ready mutation", () =>
-    Effect.gen(function* () {
-      const flip = yield* waitingFlip(true);
-      const fiber = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView()),
-        finalCheck: passingFinalCheck,
-        squashCommitlint: passingSquashCommitlint,
-        recordInherited: () => Effect.void,
-        markReady: flip.markReady,
-        requestReview: stubReviewerRequest,
-        findMonitor: () => Effect.succeedNone,
-      }).pipe(Effect.flip, Effect.forkChild);
-      yield* TestClock.adjust(Duration.seconds(1));
-      expect(yield* Ref.get(flip.probes)).toBe(1);
-      expect(yield* Ref.get(flip.restReads)).toBe(0);
-      yield* Ref.set(flip.liveHead, "fedcba9876");
-      yield* TestClock.adjust(Duration.minutes(11));
-      const error = yield* Fiber.join(fiber);
-      expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 1 });
-      expect(error.message).toContain(`confirmed ${headSha}, live fedcba9876`);
-      expect(error.message).toContain("Re-run `bun run beep yeet ready`");
-      expect(yield* Ref.get(flip.mutations)).toBe(0);
-      expect(yield* Ref.get(flip.restReads)).toBe(1);
-    })
-  );
+  it.layer(TestClock.layer())("own TestClock", (it) => {
+    it.effect("refuses a push during the budget wait without a ready mutation", () =>
+      Effect.gen(function* () {
+        const flip = yield* waitingFlip(true);
+        const fiber = yield* runYeetReadyGate(context, {
+          read: () => Effect.succeed(prView()),
+          finalCheck: passingFinalCheck,
+          squashCommitlint: passingSquashCommitlint,
+          recordInherited: () => Effect.void,
+          markReady: flip.markReady,
+          requestReview: stubReviewerRequest,
+          findMonitor: () => Effect.succeedNone,
+        }).pipe(Effect.flip, Effect.forkChild);
+        yield* TestClock.adjust(Duration.seconds(1));
+        expect(yield* Ref.get(flip.probes)).toBe(1);
+        expect(yield* Ref.get(flip.restReads)).toBe(0);
+        yield* Ref.set(flip.liveHead, "fedcba9876");
+        yield* TestClock.adjust(Duration.minutes(11));
+        const error = yield* Fiber.join(fiber);
+        expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 1 });
+        expect(error.message).toContain(`confirmed ${headSha}, live fedcba9876`);
+        expect(error.message).toContain("Re-run `bun run beep yeet ready`");
+        expect(yield* Ref.get(flip.mutations)).toBe(0);
+        expect(yield* Ref.get(flip.restReads)).toBe(1);
+      })
+    );
+  });
 
-  it.effect("flips a stable confirmed head once after the wait", () =>
-    Effect.gen(function* () {
-      const flip = yield* waitingFlip(true);
-      const confirmed = yield* Ref.make("");
-      const fiber = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView()),
-        finalCheck: passingFinalCheck,
-        squashCommitlint: passingSquashCommitlint,
-        recordInherited: () => Effect.void,
-        markReady: (number, head) => Ref.set(confirmed, head).pipe(Effect.andThen(flip.markReady(number, head))),
-        requestReview: stubReviewerRequest,
-        findMonitor: () => Effect.succeedNone,
-      }).pipe(Effect.forkChild);
-      yield* TestClock.adjust(Duration.minutes(11));
-      expect((yield* Fiber.join(fiber))._tag).toBe("flip");
-      expect(yield* Ref.get(confirmed)).toBe(headSha);
-      expect(yield* Ref.get(flip.mutations)).toBe(1);
-      expect(yield* Ref.get(flip.restReads)).toBe(1);
-    })
-  );
+  it.layer(TestClock.layer())("own TestClock", (it) => {
+    it.effect("flips a stable confirmed head once after the wait", () =>
+      Effect.gen(function* () {
+        const flip = yield* waitingFlip(true);
+        const confirmed = yield* Ref.make("");
+        const fiber = yield* runYeetReadyGate(context, {
+          read: () => Effect.succeed(prView()),
+          finalCheck: passingFinalCheck,
+          squashCommitlint: passingSquashCommitlint,
+          recordInherited: () => Effect.void,
+          markReady: (number, head) => Ref.set(confirmed, head).pipe(Effect.andThen(flip.markReady(number, head))),
+          requestReview: stubReviewerRequest,
+          findMonitor: () => Effect.succeedNone,
+        }).pipe(Effect.forkChild);
+        yield* TestClock.adjust(Duration.minutes(11));
+        expect((yield* Fiber.join(fiber))._tag).toBe("flip");
+        expect(yield* Ref.get(confirmed)).toBe(headSha);
+        expect(yield* Ref.get(flip.mutations)).toBe(1);
+        expect(yield* Ref.get(flip.restReads)).toBe(1);
+      })
+    );
+  });
 
-  it.effect("repeats the full gate and attribution confirmation after an expired wait", () =>
-    Effect.gen(function* () {
-      const flip = yield* waitingFlip(false);
-      const reads = yield* Ref.make(0);
-      const records = yield* Ref.make(0);
-      const inherited = [YeetReadyInheritedRed.make({ check: "Lint", attribution: "inherited from main" })];
-      const dependencies = {
-        read: () =>
-          Ref.update(reads, (n) => n + 1).pipe(
-            Effect.as(
-              prView({
-                failingRequiredCheckCount: 1,
-                checks: [YeetWatchCheck.make({ name: "Lint", outcome: "fail", required: true })],
-              })
-            )
-          ),
-        finalCheck: passingFinalCheck,
-        squashCommitlint: passingSquashCommitlint,
-        recordInherited: () => Ref.update(records, (n) => n + 1),
-        markReady: flip.markReady,
-      };
-      const fiber = yield* runYeetReadyGate(context, dependencies, inherited).pipe(Effect.flip, Effect.forkChild);
-      yield* TestClock.adjust(Duration.minutes(11));
-      expect((yield* Fiber.join(fiber)).message).toContain("GraphQL budget too low");
-      expect(yield* Ref.get(flip.restReads)).toBe(0);
-      expect(yield* Ref.get(flip.mutations)).toBe(0);
-      yield* runYeetReadyGate(
-        context,
-        { ...dependencies, markReady: () => Effect.void, findMonitor: () => Effect.succeedNone },
-        inherited
-      );
-      expect(yield* Ref.get(reads)).toBe(6);
-      expect(yield* Ref.get(records)).toBe(2);
-    })
-  );
+  it.layer(TestClock.layer())("own TestClock", (it) => {
+    it.effect("repeats the full gate and attribution confirmation after an expired wait", () =>
+      Effect.gen(function* () {
+        const flip = yield* waitingFlip(false);
+        const reads = yield* Ref.make(0);
+        const records = yield* Ref.make(0);
+        const inherited = [YeetReadyInheritedRed.make({ check: "Lint", attribution: "inherited from main" })];
+        const dependencies = {
+          read: () =>
+            Ref.update(reads, (n) => n + 1).pipe(
+              Effect.as(
+                prView({
+                  failingRequiredCheckCount: 1,
+                  checks: [YeetWatchCheck.make({ name: "Lint", outcome: "fail", required: true })],
+                })
+              )
+            ),
+          finalCheck: passingFinalCheck,
+          squashCommitlint: passingSquashCommitlint,
+          recordInherited: () => Ref.update(records, (n) => n + 1),
+          markReady: flip.markReady,
+        };
+        const fiber = yield* runYeetReadyGate(context, dependencies, inherited).pipe(Effect.flip, Effect.forkChild);
+        yield* TestClock.adjust(Duration.minutes(11));
+        expect((yield* Fiber.join(fiber)).message).toContain("GraphQL budget too low");
+        expect(yield* Ref.get(flip.restReads)).toBe(0);
+        expect(yield* Ref.get(flip.mutations)).toBe(0);
+        yield* runYeetReadyGate(
+          context,
+          { ...dependencies, markReady: () => Effect.void, findMonitor: () => Effect.succeedNone },
+          inherited
+        );
+        expect(yield* Ref.get(reads)).toBe(6);
+        expect(yield* Ref.get(records)).toBe(2);
+      })
+    );
+  });
 });
 
 // The default re-request runs real git, so it is proven against a scratch clone
