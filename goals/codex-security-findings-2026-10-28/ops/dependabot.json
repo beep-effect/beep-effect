@@ -1,0 +1,368 @@
+{
+  "schema": "security-dependency-closeout/v1",
+  "capturedAt": "2026-10-31",
+  "repository": "beep-effect/beep-effect",
+  "count": 20,
+  "alerts": [
+    {
+      "number": 469,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/469",
+      "ghsa": "GHSA-8hxf-qr8p-62x4",
+      "severity": "medium",
+      "package": "zip",
+      "ecosystem": "rust",
+      "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "vulnerableRange": ">= 0.6.0, < 9.0.0",
+      "firstPatched": "9.0.0",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "9.2.0",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 468,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/468",
+      "ghsa": "GHSA-q7v9-x93c-xqv3",
+      "severity": "high",
+      "package": "zip",
+      "ecosystem": "rust",
+      "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "vulnerableRange": ">= 1.3.0, < 9.0.0",
+      "firstPatched": "9.0.0",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "9.2.0",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 467,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/467",
+      "ghsa": "GHSA-6627-m3xw-93mp",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.30.0, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 466,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/466",
+      "ghsa": "GHSA-9c4x-gm8v-wgc4",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.30.0, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 465,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/465",
+      "ghsa": "GHSA-8mx5-7m5m-r77g",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.10.0, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 464,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/464",
+      "ghsa": "GHSA-cwqr-hh33-gh44",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.20.4, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 463,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/463",
+      "ghsa": "GHSA-rfpc-qcw5-3pc4",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.22.0, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 462,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/462",
+      "ghsa": "GHSA-69hj-f68j-2879",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": "<= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 461,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/461",
+      "ghsa": "GHSA-j8f7-rjxc-mr56",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.20.4, <= 4.0.8",
+      "firstPatched": "4.0.9",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 460,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/460",
+      "ghsa": "GHSA-m462-7rxw-wvpg",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.30.0, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 459,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/459",
+      "ghsa": "GHSA-fq56-3cx3-fjxp",
+      "severity": "medium",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.22.0, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 458,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/458",
+      "ghsa": "GHSA-m665-v7pm-7grj",
+      "severity": "critical",
+      "package": "zip",
+      "ecosystem": "rust",
+      "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "vulnerableRange": "<= 9.0.4",
+      "firstPatched": "9.0.5",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "9.2.0",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 457,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/457",
+      "ghsa": "GHSA-vp88-798v-h67f",
+      "severity": "low",
+      "package": "rustls",
+      "ecosystem": "rust",
+      "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "vulnerableRange": ">= 0.23.44, < 0.23.46",
+      "firstPatched": "0.23.46",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "0.23.46",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 456,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/456",
+      "ghsa": "GHSA-w44r-93j7-qv28",
+      "severity": "low",
+      "package": "rustls",
+      "ecosystem": "rust",
+      "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "vulnerableRange": "< 0.23.46",
+      "firstPatched": "0.23.46",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "0.23.46",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 455,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/455",
+      "ghsa": "GHSA-c8m5-c952-6cm4",
+      "severity": "medium",
+      "package": "rustls",
+      "ecosystem": "rust",
+      "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "vulnerableRange": "< 0.23.46",
+      "firstPatched": "0.23.46",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "0.23.46",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 454,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/454",
+      "ghsa": "GHSA-h2v8-394m-p7vv",
+      "severity": "low",
+      "package": "rustls",
+      "ecosystem": "rust",
+      "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
+      "vulnerableRange": "< 0.23.46",
+      "firstPatched": "0.23.46",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "0.23.46",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 453,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/453",
+      "ghsa": "GHSA-9vhv-jxww-xfm5",
+      "severity": "low",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.20.4, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 452,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/452",
+      "ghsa": "GHSA-567q-5qvw-pf92",
+      "severity": "low",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.22.0, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 451,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/451",
+      "ghsa": "GHSA-v4x8-3wr5-3wq8",
+      "severity": "high",
+      "package": "filelock",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 3.20.4, <= 4.2.0",
+      "firstPatched": "4.2.1",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "4.2.5",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    },
+    {
+      "number": 450,
+      "url": "https://github.com/beep-effect/beep-effect/security/dependabot/450",
+      "ghsa": "GHSA-xmj3-9gf7-h52w",
+      "severity": "low",
+      "package": "setuptools",
+      "ecosystem": "pip",
+      "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
+      "vulnerableRange": ">= 38.2.2, < 84.1.0",
+      "firstPatched": "84.1.0",
+      "state": "open",
+      "disposition": "remediate",
+      "remediation": {
+        "status": "implemented-and-focused-proof-passed",
+        "resolvedVersion": "84.2.1",
+        "evidence": "research/2026-10-31-dependencies.md"
+      }
+    }
+  ]
+}

@@ -382,3 +382,44 @@ Four feature decisions are now final current-tree no-change decisions; the other
 thirty-one feature reviews remain pending. The 199 fresh whole-command
 dispositions and 2,372 gaps are retained from their existing source snapshot,
 not refreshed or requalified here. No phase or whole-goal criterion is completed.
+
+### Quiet-log hash presentation, 2026-10-31
+
+The [source review](research/errors-only-feature-review.json) retains the absent
+`errorsOnlyShowHash` default: the existing cache probe obtains hashes from JSON
+summaries, with no named log-only consumer or measured execution benefit. The
+[new native controls](research/native-log-controls.json) cover 24 actual native
+cases and six intended driver refusals. Success visibility changes as documented;
+failure output and exit status remain intact. Constant-cache-directory monorepo
+controls preserve the task hash, inputs, restored bytes and executable mode.
+
+Stable remains 2.11.10. The registry has advanced canary to 2.11.11-canary.1, so
+this review freezes separate [feature-local pins](research/errors-only-client-pins.json).
+Older canary results keep their historical identity. Repository consumers and
+the baseline pin file are unchanged.
+
+This branch proposes a fifth final no-change feature decision, leaving thirty
+reviews pending; four are already accepted on main. The historical computation
+disposition snapshot is not refreshed, and every whole-goal criterion remains
+unproven. No cache mode, runtime signing or deployed service changes.
+
+The accepted-main refresh after #2399 preserves this decision and its frozen
+feature-local native evidence. The only changed bound census file adds a
+goals-ops typecheck lane assertion; its errors-only assertions are unchanged.
+The source hash is refreshed after inspecting that diff. The production probe
+still reads structured summaries, and the optional flag remains absent. This
+adds no feature decision, native replay, task qualification or activation.
+
+A review caught that the two reproduction drivers still defaulted to the older
+shared pin observation. Their default and help text now name the feature-local
+`errors-only-client-pins.json` used by the retained evidence. Explicit `--pins`
+remains available; historical reports and the broader shared pin file are unchanged.
+
+The corrected drivers were then genuinely replayed on their unchanged frozen
+feature-local clients: all 24 native cases and six refusal controls passed.
+The current report binds the executed driver bytes at `ec979dd5db` and fresh
+private report digests. The prior report is retained byte-identically in
+`research/native-log-controls-before-pin-default-fix.json`; its driver contents
+can be reconstructed at `70145eb55b`, without asserting that was its original
+execution commit. No old execution was relabeled with new source hashes.
+This preserves the same feature decision and grants no task qualification.

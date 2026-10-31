@@ -56,7 +56,7 @@ version = "1.0.3"
 ecosystem = "npm"
 ignore = true
 effectiveUntil = 2027-01-14T00:00:00Z
-reason = "GHSA-hp3w-g68c-fv3c: no fixed npm release at the 2026-10-17 recheck (alexei/sprintf.js#237 open; latest 1.1.3 is affected). Consumers/owners: @beep/doc-text (mammoth) and @beep/repo-docgen (remarkable and gray-matter's js-yaml 3 via markdown-toc), all via argparse 1.0.10 CLI entrypoints with package-authored templates. Exit: fixed sprintf-js passes consumers and OSV, or every argparse 1 path is removed. Recheck by 2027-01-14; receipt: goals/repository-simplification-residue/history/receipts/hold-register.md."
+reason = "GHSA-hp3w-g68c-fv3c: no fixed npm release at the 2026-10-17 recheck (alexei/sprintf.js#237 open; latest 1.1.3 is affected). Consumer/owner: @beep/doc-text (mammoth), via argparse 1.0.10 CLI entrypoints with package-authored templates; @beep/repo-docgen left the list when @effect/markdown-toc (remarkable, gray-matter) was dropped for @beep/markdown (effected-promotion R5b). Exit: fixed sprintf-js passes consumers and OSV, or every argparse 1 path is removed. Recheck by 2027-01-14; receipt: goals/repository-simplification-residue/history/receipts/hold-register.md."
 
 # GHSA-gcqx-w48m-w2h4 (deepmerge prototype pollution) has no patched release as
 # of the 2026-10-27 recheck: npm latest is 4.3.1, inside the 4.2.0-4.3.1 range,
