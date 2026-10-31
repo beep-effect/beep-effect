@@ -1040,3 +1040,5 @@ from the existing eleven-minute admission-wait control. The narrower runner
 coverage replay was 100 percent across statements, branches and functions. These controls are not a
 protected inspection run, full supervised pilot, upload, or task qualification.
 All whole-goal acceptance criteria and observation windows remain open.
+
+Accepted-main R5b integration uses the [root-scoped review](research/producer-accepted-r5b-baseline-review-2026-10-31.md) and [CAS request](research/producer-accepted-r5b-baseline-request-2026-10-31.json). The accepted current-runtime v3 profile and all non-root reviews are preserved; no qualification or rollout is granted.

@@ -584,3 +584,5 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   [bounded compare-and-swap request](producer-quality-closure-baseline-request-2026-10-31.json):
   four added policy inputs, root-only acknowledgement, unchanged runtime scope
   and byte-identical qualification ledger. No qualification or activation.
+
+Accepted-main R5b integration uses the [root-scoped review](producer-accepted-r5b-baseline-review-2026-10-31.md) and [CAS request](producer-accepted-r5b-baseline-request-2026-10-31.json). The accepted current-runtime v3 profile and all non-root reviews are preserved; no qualification or rollout is granted.
