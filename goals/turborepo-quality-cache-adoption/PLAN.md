@@ -382,3 +382,23 @@ Four feature decisions are now final current-tree no-change decisions; the other
 thirty-one feature reviews remain pending. The 199 fresh whole-command
 dispositions and 2,372 gaps are retained from their existing source snapshot,
 not refreshed or requalified here. No phase or whole-goal criterion is completed.
+
+### Quiet-log hash presentation, 2026-10-31
+
+The [source review](research/errors-only-feature-review.json) retains the absent
+`errorsOnlyShowHash` default: the existing cache probe obtains hashes from JSON
+summaries, with no named log-only consumer or measured execution benefit. The
+[new native controls](research/native-log-controls.json) cover24 actual native
+cases and six intended driver refusals. Success visibility changes as documented;
+failure output and exit status remain intact. Constant-cache-directory monorepo
+controls preserve the task hash, inputs, restored bytes and executable mode.
+
+Stable remains2.11.10. The registry has advanced canary to2.11.11-canary.1, so
+this review freezes separate [feature-local pins](research/errors-only-client-pins.json).
+Older canary results keep their historical identity. Repository consumers and
+the baseline pin file are unchanged.
+
+This branch proposes a fifth final no-change feature decision, leaving thirty
+reviews pending; four are already accepted on main. The historical computation
+disposition snapshot is not refreshed, and every whole-goal criterion remains
+unproven. No cache mode, runtime signing or deployed service changes.

@@ -647,11 +647,11 @@
         "Exact-client regression evidence",
         "Change only one experimental flag at a time"
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "beepUseCase": "Existing cache probe reads hashes from JSON summaries; no current log-only success-hash consumer.",
+      "expectedBenefit": "No measured execution benefit for current consumers; retain the current output default.",
+      "correctnessCase": "Twenty-four pinned native execution/presentation/restore controls and six driver refusals; current stable and freshly frozen canary.",
+      "disposition": "Retain the absent errorsOnlyShowHash default; reopen for a named quiet-log hash consumer.",
+      "acceptanceStatus": "accepted-retain-current-default",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -663,6 +663,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "sourceApplicability": {
+        "report": "errors-only-feature-review.json",
+        "nativeReport": "native-log-controls.json",
+        "pins": "errors-only-client-pins.json",
+        "scope": "Final no-change presentation decision only; no actual computation qualification or performance claim."
       }
     },
     {
