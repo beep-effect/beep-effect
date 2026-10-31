@@ -114,7 +114,7 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | R4 | `yaml` out of repo-cli and ai-metrics runtime deps (Runners to `effect/encoding/Yaml`; Models.locator kept with a reason if the kit lacks a visitor) | 3-3, 3-A4, 4-A2 |
 | R6 | one fence extractor (docgen `Core.ts`, `EffectImports.ts`, `TypeScriptFences.ts`, `Doctest.ts`) or deferred per W4-q | R2b, R5b, #2144 |
 | W5 (merged, #2245) | `@beep/github-actions` (drivers); runner-file adopters (`CiOperational`, `Ci.command`, `CiAdmission`, `CiRerunRunnerLoss`, github-commands #87); `@azure/storage-blob` exact pin; `ActionCache.resolvePaths` split first | 4-S, 3-A8, W4-j resolved |
-| R3a | `@beep/schema/Jsonc` owner switch and deletion | 3-A6, R5a |
+| R3a (merged, #2430) | `@beep/schema/Jsonc` owner switch and deletion | 3-A6, R5a |
 | R3b | `jsonc-parser` out of repo-cli, repo-configs, root; Skills formatter collapse | R3a, R4, R5a |
 | C | close (Closeout definition of done) | every row above |
 

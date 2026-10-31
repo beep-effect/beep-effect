@@ -12,6 +12,7 @@
 
 import * as NodeURL from "node:url";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   DomainError,
   encodePackageJsonCanonicalPrettyEffect,
@@ -38,7 +39,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { formatJsonValue } from "../../internal/cli/Json.ts";
-import { applyJsoncModification, decodeJsoncTextAs, JsoncModification } from "../../internal/cli/Jsonc.ts";
+import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import {
   encodeLabManifestJson,
   isLabsWorkspacePath,
@@ -183,9 +184,11 @@ const readLanguageServicePluginProfiles = Effect.fn("CreatePackage.readLanguageS
   const content = yield* fs
     .readFileString(filePath)
     .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${filePath}"`)));
-  const config = yield* decodeJsoncTextAs(TypeScriptPluginsConfig)(content).pipe(
-    Effect.mapError(DomainError.newCauseMessage(`Failed to decode canonical TypeScript plugins in "${filePath}"`))
-  );
+  const config = yield* Jsonc.bind(TypeScriptPluginsConfig)
+    .decode(content)
+    .pipe(
+      Effect.mapError(DomainError.newCauseMessage(`Failed to decode canonical TypeScript plugins in "${filePath}"`))
+    );
   const effectLanguageServicePlugins = A.filter(config.compilerOptions.plugins, isEffectLanguageServicePlugin);
 
   if (!A.isReadonlyArrayNonEmpty(effectLanguageServicePlugins)) {

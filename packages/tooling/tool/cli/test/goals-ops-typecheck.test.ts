@@ -1,6 +1,6 @@
 import { GlobSet } from "@beep/glob";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/test/Quality";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
@@ -40,12 +40,12 @@ const OpsTsconfig = S.Struct({
   include: S.NonEmptyArray(S.String),
   exclude: S.Array(S.String),
 });
-const decodeOpsTsconfig = decodeJsoncTextAs(OpsTsconfig);
+const decodeOpsTsconfig = Jsonc.bind(OpsTsconfig).decode;
 
 const OpsManifest = S.Struct({
   opsScripts: S.Array(S.Struct({ path: S.String })).pipe(S.optionalKey),
 });
-const decodeOpsManifest = decodeJsoncTextAs(OpsManifest);
+const decodeOpsManifest = Jsonc.bind(OpsManifest).decode;
 
 const goalsRelative = (globKey: string): string => Str.slice(GOALS_PREFIX.length)(globKey);
 

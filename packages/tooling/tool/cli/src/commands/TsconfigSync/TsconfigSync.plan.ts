@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   collectTsConfigPaths,
   DomainError,
@@ -42,7 +43,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { applyJsoncModification, decodeJsoncTextAs, JsoncModification } from "../../internal/cli/Jsonc.ts";
+import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
 import { FALLOW_BOUNDARY_CONFIG_PATH, renderFallowBoundaryConfig } from "../Fallow/Fallow.command.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
@@ -83,9 +84,9 @@ const referenceEntries = (paths: ReadonlyArray<string>): ReadonlyArray<{ readonl
   A.map(paths, (entry) => ({ path: entry }));
 
 const parseJsonc = Effect.fn(function* <Schema extends S.Top>(content: string, filePath: string, schema: Schema) {
-  return yield* decodeJsoncTextAs(schema)(content).pipe(
-    Effect.mapError(DomainError.newCauseMessage(`Failed to parse JSONC in "${filePath}"`))
-  );
+  return yield* Jsonc.bind(schema)
+    .decode(content)
+    .pipe(Effect.mapError(DomainError.newCauseMessage(`Failed to parse JSONC in "${filePath}"`)));
 });
 
 const parseJsonObject = Effect.fn(function* (content: string, filePath: string) {
