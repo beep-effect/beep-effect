@@ -709,6 +709,20 @@ describe("runtime step routing", () => {
 });
 
 it.layer(NodeServices.layer, { timeout: "10 seconds" })("native signing configuration", (it) => {
+  it.effect("canonicalizes an explicitly selected client without requiring an installed Turbo package", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const native = path.join(root, "verified-client");
+      const alias = path.join(root, "client-alias");
+      yield* fs.writeFileString(native, "caller-verified fixture");
+      yield* fs.symlink(native, alias);
+      expect(yield* Census.resolveCacheTurboBinary(root, O.some(alias))).toBe(yield* fs.realPath(native));
+      const missing = yield* Census.resolveCacheTurboBinary(root).pipe(Effect.flip);
+      expect(missing.message).toContain("Native Turbo is not installed");
+    })
+  );
   it.effect("rejects missing, malformed UTF-8, oversized and symlinked root policies without raw causes", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
