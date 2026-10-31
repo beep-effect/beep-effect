@@ -1,7 +1,9 @@
 # Markdown TOC differential: roadmap PR R5b
 
 Run 2026-10-31 on lane `refactor/markdown-toc-onto-beep-markdown` at commit
-694491e86c, a clean tree after the lane merged `origin/main` 8f619d205c, by
+ae75405fd7, a clean tree after the lane merged `origin/main` f16d82e9f1 and took the #2407 review fix
+(`MarkdownSlug.headingLine`: a multi-line setext heading's lines join with one space, without their
+continuation prefixes), by
 `ops/markdown-toc-differential.ts` against a
 disposable `@effect/markdown-toc@0.1.0` install (`remarkable` 1.7.4) under
 `~/.cache/beep/markdown-toc-oracle`. The machine-readable report is
@@ -28,11 +30,12 @@ change. The 168 `index.md` module indexes carry no TOC block and are skipped.
 
 | Corpus | Files | Oracle headings | Identical | Differing | Kit errors |
 | --- | --- | --- | --- | --- | --- |
-| `git ls-files -- '*.md'` | 8,805 | 71,064 | 8,766 | 39 | 0 |
+| `git ls-files -- '*.md'` | 8,826 | 71,154 | 8,787 | 39 | 0 |
 
-No heading of the 71,064 slugs differently between the two implementations: the
+No heading of the 71,154 slugs differently between the two implementations: the
 39 differing files all differ in which lines the two **parsers** read as
-headings, never in the slug, title or anchor of a heading both agree on. Three
+headings, never in the slug, title or anchor of a heading both agree on. The
+tracked corpus's multi-line setext headings, where the kit departs from the oracle, all sit in these 39 files. Three
 classes cover all 39:
 
 1. **A frontmatter block at the top of the file** (4 files: `explorations/
