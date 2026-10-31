@@ -45,6 +45,20 @@ const runDocsWorker = Effect.fn("Lint.docsWorker")(function* (
   if (exitCode !== 0) return yield* failWithReportedExit(`lint jsdoc: failed with exit code ${exitCode}.`, exitCode);
 });
 
+/**
+ * Checks one package, or the non-workspace sources, with the repo-owned documentation oxlint rules.
+ *
+ * **Example** (Inspect the subcommand name)
+ *
+ * ```ts
+ * import { lintJsdocCommand } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(lintJsdocCommand.name) // jsdoc
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const lintJsdocCommand = Command.make(
   "jsdoc",
   {

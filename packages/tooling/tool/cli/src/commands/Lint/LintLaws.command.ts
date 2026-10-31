@@ -15,6 +15,20 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { resolveLawsPackageScope, scanLawsPackage } from "../Laws/LawsPackage.ts";
 import { resolveLintPackage } from "./internal/LintPackage.ts";
 
+/**
+ * Runs the package-scoped law checks for one workspace.
+ *
+ * **Example** (Inspect the subcommand name)
+ *
+ * ```ts
+ * import { lintLawsCommand } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(lintLawsCommand.name) // laws
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const lintLawsCommand = Command.make(
   "laws",
   {
