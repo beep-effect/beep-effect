@@ -29,7 +29,7 @@ and rewrites JSDoc example imports in the same change.
 | --- | --- | --- |
 | G1 | Parallel vitest projects for repo-cli; the suites that need isolation (cwd changes, module mocks, global stubs) stay in a serial project. | now |
 | G2 | Shard the repo-cli coverage run (blob reports, merged lcov) or give it more workers. | now |
-| G3 | Argv-first lazy dispatch with a static help manifest in `bin-main.ts` and `commands/Root.ts`, written so it moves to the composition app unchanged. | now |
+| G3 | Argv-first lazy dispatch with a static help manifest in `bin-main.ts` and `commands/Root.ts`, written so it moves to the composition app unchanged. | done: `research/g3-lazy-dispatch.md` |
 | G4 | Per-task policy fingerprint from each command's import graph instead of the repo-cli package closure. | now |
 | W0 | Retirements after zero-consumer checks: the D11 instruments plus the candidates the map found (`yeet pre-push-hook`, `plan-contract-check`, `fallow-fixture-check`, `goals migrate-conventions`, `goals repair-fork`, `lint goal-packets`, `docs aggregate`). Cache tier B was held for `goals/turborepo-cache-conformance`; recheck it now that that goal has closed. | now |
 | W1 | In-package hygiene: a shared entry-path constant for the ten self paths, misfiled subcommands moved (tmpfs-reap and residue-reap under worktree, cache-policy under cache), the schema and engine splits, and the verifier's must-fix list below. Exit gate: zero library-to-tool edges. | effected-promotion close |

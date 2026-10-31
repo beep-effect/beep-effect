@@ -40,6 +40,9 @@ the gate fix lanes G1 to G4 and the W0 retirements.
 - [`research/design-record.md`](./research/design-record.md): measured gate
   costs, coupling, the verified package map, the invalidation simulation, and
   the overlap with `goals/effected-promotion`.
+- [`research/g3-lazy-dispatch.md`](./research/g3-lazy-dispatch.md): G3 lazy
+  dispatch design, the 501-path help surface diff and the startup timings
+  (`beep --help` 1.61 s / 511 MB to 0.25 s / 115 MB).
 - `standards/architecture/DECISIONS.md`, entry 2026-10-28 "One beep App
   Composes beep-Prefixed Command Tools".
 
