@@ -37,6 +37,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import * as SchemaStatics from "./internal/schemaStatics.ts";
 import type { TString } from "@beep/types";
 import type { PayloadEncoding } from "effect/http-api/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
@@ -86,37 +87,6 @@ const beepBase = BeepBase.make("beep");
 const MODULE_CHARACTERS = /^[A-Za-z0-9_-]+$/;
 const MODULE_LEADING_ALPHA = /^[A-Za-z]/;
 const BASE_CHARACTERS = /^[A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?$/;
-const SCHEMA_PROTOCOL_KEYS: ReadonlyArray<PropertyKey> = [
-  "~effect/Schema/Schema",
-  "annotate",
-  "annotateKey",
-  "ast",
-  "check",
-  "make",
-  "makeEffect",
-  "makeOption",
-  "pipe",
-  "rebuild",
-];
-
-const preserveSchemaStatics = <Schema extends S.Top>(
-  source: Schema,
-  annotated: Schema["Rebuild"]
-): AnnotatedSchema<Schema> => {
-  for (const key of Reflect.ownKeys(source)) {
-    if (A.contains(SCHEMA_PROTOCOL_KEYS, key) || Reflect.getOwnPropertyDescriptor(annotated, key) !== undefined) {
-      continue;
-    }
-
-    const descriptor = Reflect.getOwnPropertyDescriptor(source, key);
-
-    if (descriptor !== undefined) {
-      Reflect.defineProperty(annotated, key, descriptor);
-    }
-  }
-
-  return annotated as AnnotatedSchema<Schema>;
-};
 
 /**
  * Bootstrap identity annotation helper for schemas defined before `make` exists.
@@ -943,8 +913,6 @@ type StrictKeyIdentifier<Struct extends object, Identifier extends TString.NonEm
 
 type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<Struct, KeyIdentifierPath<Identifier>>;
 
-type SchemaStatics<Schema extends S.Top> = Omit<Schema, keyof Schema["Rebuild"] | keyof S.Top>;
-
 /**
  * Rebuilt schema type that retains custom statics after annotations are applied.
  *
@@ -960,7 +928,7 @@ type SchemaStatics<Schema extends S.Top> = Omit<Schema, keyof Schema["Rebuild"] 
  * @since 0.0.0
  * @category models
  */
-export type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
+export type AnnotatedSchema<Schema extends S.Top> = SchemaStatics.Preserved<Schema>;
 
 /**
  * Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,
@@ -1940,7 +1908,7 @@ const createComposer = <
   ): ((self: Schema) => AnnotatedSchema<Schema>) => {
     const annotation = annote(identifier, extras);
 
-    return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
+    return (self: Schema): AnnotatedSchema<Schema> => SchemaStatics.preserve(self, self.annotate(annotation));
   };
 
   function annoteKey<Parent extends object>(): <
@@ -1978,7 +1946,7 @@ const createComposer = <
   ): ((self: Schema) => AnnotatedSchema<Schema>) => {
     const annotation = annote(identifier, extras);
 
-    return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
+    return (self: Schema): AnnotatedSchema<Schema> => SchemaStatics.preserve(self, self.annotate(annotation));
   };
 
   type LooseOntologyKeyOptions = KeyAnnotationExtras<unknown> & {
