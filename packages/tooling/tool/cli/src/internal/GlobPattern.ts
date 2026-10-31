@@ -17,25 +17,7 @@
  * @since 0.0.0
  */
 
-import * as Str from "effect/String";
-
-/**
- * Escape a single character for safe literal inclusion in a `RegExp` source.
- *
- * **Example** (Escape regex metacharacter)
- *
- * ```ts
- * import { escapeRegexChar } from "@beep/repo-cli/test/SharedInternals"
- *
- * console.log(escapeRegexChar("."))
- * ```
- *
- * @param char - The character to escape.
- * @returns The character with regex metacharacters backslash-escaped.
- * @category utilities
- * @since 0.0.0
- */
-export const escapeRegexChar = (char: string): string => Str.replace(/[.+?^${}()|[\]\\]/g, "\\$&")(char);
+import * as Regex from "effect/RegExp";
 
 /**
  * Compile a glob pattern into an anchored `RegExp`.
@@ -90,7 +72,7 @@ export const globPatternToRegExp = (pattern: string): RegExp => {
       continue;
     }
 
-    source += escapeRegexChar(char ?? "");
+    source += Regex.escape(char ?? "");
     index += 1;
   }
 
