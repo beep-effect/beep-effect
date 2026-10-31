@@ -11,8 +11,8 @@ No manifest changes. The cause is the source move this PR makes: repo-utils `Wor
 members through the new `packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts`, which runs
 `@beep/repo-workspaces` `WorkspaceDiscovery` and `DependencyGraph`. `bun run beep lint policy-fingerprint --write`
 regenerates `standards/policy-tools.fingerprint.json` and the matching `inputs` of each seal in `turbo.json`.
-Measured against the lane base (f9b40dbb3b, the head of #2433, the second 4-A2 PR; the lane was rebuilt there by
-cherry-pick after #2418 closed), key by key:
+Measured against `origin/main` 900023804b, on which the lane was rebuilt by cherry-pick once #2433 merged (it was
+first cut from #2418, then rebuilt on f9b40dbb3b, the head of #2433; the counts are the same against both), key by key:
 
 - `shared` removes the four deleted repo-utils files and adds nothing;
 - six seals (`goals-doctor`, `goals-index`, `knowledge`, `lint-deprecated-apis`, `lint-roadmap-refs`, `quality`)
