@@ -90,9 +90,11 @@ cleanup_run_dir() {
   rm -rf -- "${run_dir}"
 }
 trap cleanup_run_dir EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
-trap 'exit 129' HUP
+# Defer exits until each launched worker has been recorded for cleanup.
+pending_signal=0
+trap 'pending_signal=130' INT
+trap 'pending_signal=143' TERM
+trap 'pending_signal=129' HUP
 
 # Symlink into /usr/local/bin when we can, so tools resolve for every shell the
 # vendor spawns (login, non-login, the agent's own exec daemon). Claude and
@@ -216,6 +218,12 @@ if [ "${BEEP_CLOUD_SKIP_OP:-0}" != "1" ]; then
   log "fetching 1Password CLI ${OP_PINNED_VERSION}"
   fetch_op & pids+=("$!:op")
 fi
+
+# Every started worker now has a cleanup owner; signals can exit immediately.
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+[ "${pending_signal}" = "0" ] || exit "${pending_signal}"
 
 op_ok=1
 node_ok=1

@@ -34,10 +34,13 @@ const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
   for (const scenario of [
-    { signal: "", exitCode: 1, name: "failed Bun download" },
-    { signal: "TERM", exitCode: 143, name: "TERM interruption" },
-    { signal: "HUP", exitCode: 129, name: "HUP interruption" },
-    { signal: "INT", exitCode: 130, name: "INT interruption" },
+    { signal: "", phase: "wait", exitCode: 1, name: "failed Bun download" },
+    { signal: "TERM", phase: "wait", exitCode: 143, name: "TERM interruption" },
+    { signal: "TERM", phase: "register", exitCode: 143, name: "TERM before PID registration" },
+    { signal: "HUP", phase: "wait", exitCode: 129, name: "HUP interruption" },
+    { signal: "HUP", phase: "register", exitCode: 129, name: "HUP before PID registration" },
+    { signal: "INT", phase: "wait", exitCode: 130, name: "INT interruption" },
+    { signal: "INT", phase: "register", exitCode: 130, name: "INT before PID registration" },
   ]) {
     it.effect(
       `settles parallel cloud downloads before cleanup after ${scenario.name}`,
@@ -60,11 +63,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
         yield* fs.writeFileString(
           bashEnv,
           `first_wait_pid=""
-export BEEP_BOOTSTRAP_PARENT=$$
+signal_sent=0
+trap 'if [[ "$BEEP_BOOTSTRAP_PHASE" == register && "$BASH_COMMAND" == pids+=* && "$signal_sent" == 0 ]]; then signal_sent=1; kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi' DEBUG
 wait() {
   [ "$#" -eq 1 ] || return 86
   if [ -z "$first_wait_pid" ]; then
     first_wait_pid="$1"
+    if [ "$BEEP_BOOTSTRAP_PHASE" = wait ] && [ -n "$BEEP_BOOTSTRAP_SIGNAL" ]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi
   elif [ "$1" != "$first_wait_pid" ]; then
     : > "$BEEP_BOOTSTRAP_FIXTURE/release-node"
   fi
@@ -86,7 +91,6 @@ case "$*" in
 esac
 case "$*" in
   *bun-linux-x64.zip*)
-    if [ -n "$BEEP_BOOTSTRAP_SIGNAL" ]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$BEEP_BOOTSTRAP_PARENT"; fi
     ;;
   *index.tab*)
     while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-node" ]; do sleep 0.01; done
@@ -116,6 +120,7 @@ exec /bin/rm "$@"
             BASH_ENV: bashEnv,
             BEEP_BOOTSTRAP_FIXTURE: root,
             BEEP_BOOTSTRAP_SIGNAL: scenario.signal,
+            BEEP_BOOTSTRAP_PHASE: scenario.phase,
             BEEP_CLOUD_SKIP_OP: "1",
             BEEP_CLOUD_VENDOR: "fixture",
             HOME: home,
