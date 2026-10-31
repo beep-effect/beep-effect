@@ -76,3 +76,13 @@ The final generated JSDoc inventory is refreshed for the refactored source, and 
 ## Completion-audit correction: full current public slice
 
 [The current strict public-slice audit](2026-10-31-current-strict-public-slice.md) records a completion gap that the earlier local summary did not distinguish: the original foot test now preserves a legacy subset, not full current-tree equality. An additional regression uses unchanged frozen US20110074901A1 claim 9, whose full tree passes the unchanged scorer and whose missing “the brush roller” finding matches the recorded examiner phrase at characters 44–60. Both public-slice tests pass. It is a post-measurement witness using existing labels, with no added benchmark claim or changed 37/538 result. Publication was stopped before push to include this stronger evidence; hosted readiness remains pending.
+
+## Current smoke, real MCP dispatch and publication checkpoint
+
+The current v19 runtime repeats the same external IPRally sample with the original input hash and an identical result to v16: one claim/tree, 523 tokens, 78 unreviewed findings, 16 coverage warnings and no undecomposed claim. The versioned receipt retains its non-US/non-gold status, null accuracy and external raw data.
+
+A selected current native MCP integration test passes, proving actual tool dispatch returns source-quoted advisory items and candidate evidence while the stored `kg_candidate_claims` response remains identical before/after. One selected test passes; the other 38 cases are explicitly skipped, not counted as passed. Tool hints are read-only, non-destructive, idempotent and closed-world.
+
+The publication attempt on `dca7a95972` passes 24 collected gates, including regenerated documentation, schema/test policies, static analysis, Fallow and packet checks. It stops before push solely because two generated schema-catalog shards are stale. That failed attempt is retained in a separate receipt. Catalog regeneration changes generated metadata only; final publication, hosted checks and closeout remain pending.
+
+The canonical schema-catalog writer updates only the two named shards (five added lines/one removed line). The subsequent full catalog check passes with 9,352 entries across 173 shards. All 20 v19 runtime file hashes remain unchanged; the measured implementation, labels and previous results are preserved.
