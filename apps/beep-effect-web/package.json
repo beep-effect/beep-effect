@@ -1,0 +1,58 @@
+{
+  "name": "@beep/beep-effect-web",
+  "version": "0.0.0",
+  "description": "beep-effect.com public website (TanStack Start on Cloudflare via Alchemy)",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/apps/beep-effect-web",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "apps/beep-effect-web"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "beep:build": "vite build",
+    "beep:check": "tsrs -p tsconfig.check.json",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage",
+    "dev": "portless beep-effect-web.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+    "lint": "bun run beep:lint",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+    "lint:fix": "bun run beep:lint:fix",
+    "lint:jsdoc": "beep-cli lint jsdoc --package .",
+    "lint:laws": "beep-cli lint laws --package .",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
+    "test": "bun run beep:test"
+  },
+  "dependencies": {
+    "@beep/public-site": "workspace:^",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@alchemy.run/cloudflare": "catalog:",
+    "@effect/platform-bun": "catalog:",
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "alchemy": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}
