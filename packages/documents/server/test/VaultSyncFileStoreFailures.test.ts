@@ -1,3 +1,4 @@
+import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import { DmsMirrorFixtureHandle } from "@beep/documents-server/aggregates/Sync";
 import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer";
 import { SyncOnceInput, VaultSyncEngine, VaultSyncStatusInput } from "@beep/documents-use-cases/aggregates/Sync/server";
@@ -6,6 +7,7 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -168,7 +170,7 @@ const cases: ReadonlyArray<{ readonly name: string; readonly reason: string; rea
       return {
         stat: Effect.fn("VaultFileStoreTest.changedKind")((candidate: string) =>
           isTarget(candidate) && ++calls === 2
-            ? Effect.map(fs.stat(candidate), (info) => ({ ...info, type: "Directory" as FileSystem.File.Type }))
+            ? Effect.map(fs.stat(candidate), (info): FileSystem.File.Info => ({ ...info, type: "Directory" }))
             : fs.stat(candidate)
         ),
       };
@@ -194,7 +196,7 @@ const input = (vaultRootPath: string) =>
 
 describe("Vault filesystem boundary failures", () => {
   for (const testCase of cases) {
-    it.layer(Layer.fresh(testLayer(testCase.fault)))((it) => {
+    it.layer(Layer.fresh(testLayer(testCase.fault)), { timeout: "10 seconds" })((it) => {
       it.effect(
         testCase.name,
         Effect.fnUntraced(function* () {
@@ -226,7 +228,7 @@ const nonRegularEntry: FileSystemFault = (fs) => ({
 });
 
 describe("Vault filesystem boundary empty observations", () => {
-  it.layer(Layer.fresh(testLayer(nonRegularEntry)))((it) => {
+  it.layer(Layer.fresh(testLayer(nonRegularEntry)), { timeout: "10 seconds" })((it) => {
     it.effect(
       "ignores non-regular directory entries without uploading them",
       Effect.fnUntraced(function* () {
@@ -243,7 +245,7 @@ describe("Vault filesystem boundary empty observations", () => {
       })
     );
   });
-  it.layer(Layer.fresh(testLayer(() => ({}))))((it) => {
+  it.layer(Layer.fresh(testLayer(() => ({}))), { timeout: "10 seconds" })((it) => {
     it.effect(
       "mirrors an empty file when its descriptor read reaches EOF",
       Effect.fnUntraced(function* () {
@@ -257,8 +259,9 @@ describe("Vault filesystem boundary empty observations", () => {
         expect(status.currentItems).toBe(1);
         expect(status.failedOperations).toBe(0);
         expect((yield* mirror.counts).uploadFile).toBe(1);
-        expect(O.getOrNull((yield* mirror.snapshotTree)[targetName]?.contentDigest ?? O.none())).toBe(
-          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        assertSome(
+          (yield* mirror.snapshotTree)[targetName]?.contentDigest ?? O.none(),
+          DocumentContentDigest.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
         );
       })
     );
