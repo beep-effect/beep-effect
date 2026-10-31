@@ -1,3 +1,12 @@
+/**
+ * Office-action source-text fixtures shared by the law-practice test suites,
+ * re-exported from the package's `./test` surface.
+ *
+ * @internal
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
@@ -6,7 +15,21 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+
+/**
+ * Web Crypto digest and secure-random services for fixture hashing.
+ *
+ * @internal
+ * @since 0.0.0
+ */
 export const TestCrypto = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
+
+/**
+ * Builds a verified source-text identity for a fixture text.
+ *
+ * @internal
+ * @since 0.0.0
+ */
 export const fixtureSource = Effect.fn("OfficeActionFixture.source")(function* (text: string) {
   const hex = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
   const digest = SourceTextDigest.make(`sha256:${hex}`);

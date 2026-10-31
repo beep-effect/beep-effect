@@ -89,6 +89,26 @@ export { EffectOutput } from "./internal/effectOutput.ts";
  */
 export { AnswerLogMemory, ReviewItemStoreMemory, VerdictLogMemory } from "./internal/logMemory.ts";
 /**
+ * Decodes a one-page fixture OCR result with fixed engine, digest and timing
+ * metadata around the given text.
+ *
+ * **Example** (Decode a fixture OCR page)
+ *
+ * ```ts
+ * import { fixtureOcrPage } from "@beep/law-practice-use-cases/test"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const page = yield* fixtureOcrPage("Claims 1-3 are rejected.")
+ *   console.log(page.pageNumber) // 1
+ * })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { fixtureOcrPage } from "./internal/officeActionFixture.ts";
+/**
  * Spike entity input schema exported for package-local schema parity tests.
  *
  * **Example** (Decode entity input schema)

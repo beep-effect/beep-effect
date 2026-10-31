@@ -4,6 +4,7 @@
  * docket here is synthetic.
  */
 
+import { TestCrypto } from "@beep/law-practice-domain/test";
 import { DocketDueDate } from "@beep/law-practice-domain/values/DocketDeadline";
 import { ReviewItem } from "@beep/law-practice-domain/values/ReviewItem";
 import {
@@ -35,7 +36,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TestCrypto } from "./officeActionFixtures.ts";
 import type { DocketCandidateDateSource } from "@beep/law-practice-use-cases/DocketIntake";
 
 const NEEDS_REVIEW_EVENT = "evt-needs-review-1";

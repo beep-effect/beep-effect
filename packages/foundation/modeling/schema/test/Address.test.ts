@@ -5,12 +5,14 @@ import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { base58, bech32, bech32m } from "@scure/base";
-import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
 import * as S from "effect/Schema";
+
+const failureMessage = <A>(exit: Exit.Exit<A, S.SchemaError>): string =>
+  pipe(exit, Exit.findErrorOption, Option.getOrThrow).message;
 
 const decodeUnknownCryptoWalletAddressEffect = S.decodeUnknownEffect(CryptoWalletAddress);
 const CryptoWalletAddressPayload = S.Struct({ address: CryptoWalletAddress });
@@ -75,29 +77,23 @@ describe("CryptoWalletAddress", () => {
     Effect.fnUntraced(function* () {
       const failure1 = yield* Effect.exit(decodeUnknownCryptoWalletAddressEffect(Str.toUpperCase(evmChecksummed)));
       pipe(failure1, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure1) && Exit.hasFails(failure1)) {
-        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure1)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure2 = yield* Effect.exit(
         decodeUnknownCryptoWalletAddressEffect("52908400098527886e0f7030069857d2e4169ee7")
       );
       pipe(failure2, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure2) && Exit.hasFails(failure2)) {
-        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure2)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure3 = yield* Effect.exit(
         decodeUnknownCryptoWalletAddressEffect("0x52908400098527886E0F7030069857D2E4169Ee7")
       );
       pipe(failure3, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure3) && Exit.hasFails(failure3)) {
-        expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure3)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
     })
   );
 
@@ -108,55 +104,41 @@ describe("CryptoWalletAddress", () => {
         decodeUnknownCryptoWalletAddressEffect("tb1qqypqxpq9qcrsszg2pvxq6rs0zqg3yyc5f8j3j2")
       );
       pipe(failure4, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure4) && Exit.hasFails(failure4)) {
-        expect(pipe(failure4.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure4)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure5 = yield* Effect.exit(
         decodeUnknownCryptoWalletAddressEffect("bc1qQypqxpq9qcrsszg2pvxq6rs0zqg3yyc5fcj4z3")
       );
       pipe(failure5, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure5) && Exit.hasFails(failure5)) {
-        expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure5)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure6 = yield* Effect.exit(decodeUnknownCryptoWalletAddressEffect("16L5yRNPTuciSgXGHqYwn9N6NeoKqopAv"));
       pipe(failure6, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure6) && Exit.hasFails(failure6)) {
-        expect(pipe(failure6.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure6)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure7 = yield* Effect.exit(decodeUnknownCryptoWalletAddressEffect(bitcoinBase58UnsupportedVersion));
       pipe(failure7, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure7) && Exit.hasFails(failure7)) {
-        expect(pipe(failure7.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure7)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure8 = yield* Effect.exit(decodeUnknownCryptoWalletAddressEffect(bitcoinWitnessEmptyProgram));
       pipe(failure8, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure8) && Exit.hasFails(failure8)) {
-        expect(pipe(failure8.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure8)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure9 = yield* Effect.exit(decodeUnknownCryptoWalletAddressEffect(bitcoinWitnessUnsupportedVersion));
       pipe(failure9, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure9) && Exit.hasFails(failure9)) {
-        expect(pipe(failure9.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure9)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure10 = yield* Effect.exit(decodeUnknownCryptoWalletAddressEffect(bitcoinTaprootUnsupportedVersion));
       pipe(failure10, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure10) && Exit.hasFails(failure10)) {
-        expect(pipe(failure10.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure10)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
     })
   );
 
@@ -169,18 +151,14 @@ describe("CryptoWalletAddress", () => {
         )
       );
       pipe(failure11, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure11) && Exit.hasFails(failure11)) {
-        expect(pipe(failure11.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure11)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
       const failure12 = yield* Effect.exit(decodeUnknownCryptoWalletAddressEffect("O0Il"));
       pipe(failure12, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure12) && Exit.hasFails(failure12)) {
-        expect(pipe(failure12.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
-          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-        );
-      }
+      expect(failureMessage(failure12)).toContain(
+        "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+      );
     })
   );
 
@@ -189,9 +167,7 @@ describe("CryptoWalletAddress", () => {
     Effect.fnUntraced(function* () {
       const failure13 = yield* Effect.exit(decodeCryptoWalletAddressPayloadEffect({ address: "invalid" }));
       pipe(failure13, Exit.hasFails, assertTrue);
-      if (Exit.isFailure(failure13) && Exit.hasFails(failure13)) {
-        expect(pipe(failure13.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`at ["address"]`);
-      }
+      expect(failureMessage(failure13)).toContain(`at ["address"]`);
     })
   );
 });

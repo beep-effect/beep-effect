@@ -1001,14 +1001,7 @@ export class BoxProvisioningApplier extends Context.Service<BoxProvisioningAppli
    * @since 0.0.0
    */
   static readonly makeLayerFromBox = (box: B.Box["Service"]): Layer.Layer<BoxProvisioningApplier> =>
-    Layer.unwrap(
-      Effect.map(Effect.all([Digest.Digest, SecureRandom.SecureRandom]), ([digest, secureRandom]) =>
-        Layer.succeed(
-          BoxProvisioningApplier,
-          BoxProvisioningApplier.of(makeService(box, noopApplyJournal, digest, secureRandom))
-        )
-      )
-    ).pipe(Layer.provide(NodeCrypto.layer));
+    BoxProvisioningApplier.makeLayerFromBoxAndJournal(box, noopApplyJournal);
 
   /** Construct an applier layer with an explicit durable journal sink. */
   static readonly makeLayerFromBoxAndJournal = (
