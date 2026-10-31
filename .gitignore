@@ -174,3 +174,7 @@ explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/g
 
 # Native fontconfig runtime artifacts created by tooling subprocesses.
 /packages/tooling/var/cache/fontconfig/
+
+# Alchemy local state and TanStack Start build cache
+.alchemy/
+.tanstack/

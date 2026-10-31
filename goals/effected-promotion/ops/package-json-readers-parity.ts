@@ -26,6 +26,7 @@
  *   bun goals/effected-promotion/ops/package-json-readers-parity.ts [--out <report.json>]
  */
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import {
   EffectSchemaInventoryPin,
@@ -35,14 +36,12 @@ import {
 import {
   CatalogUsageRootManifest,
   readCatalogUsageManifest,
-  readChangesetGraphRootPatterns,
   readChangesetGraphWorkspaceManifest,
   readChangesetStatusWorkspacePackage,
   readPackageVerifyWorkspace,
   readQualityTaskManifest,
   readRootCatalogs,
   readWorkspacePackageText,
-  workspacePatternsFromPackageJson,
 } from "@beep/repo-cli/test/Quality";
 import { applyJsoncModification, JsoncModification } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -53,7 +52,6 @@ import {
 } from "@beep/repo-cli/test/VersionSync";
 import { readPackageJson as readDocgenPackageJson } from "@beep/repo-docgen/Configuration";
 import { readManifestVersion as readDocgenManifestVersion } from "@beep/repo-docgen/Version";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -163,12 +161,6 @@ const ChangesetGraphOracle = S.Struct({
   ),
 });
 const decodeChangesetGraphOracle = S.decodeUnknownEffect(S.fromJsonString(ChangesetGraphOracle));
-const changesetGraphOraclePatterns = (document: typeof ChangesetGraphOracle.Type): ReadonlyArray<string> =>
-  P.isUndefined(document.workspaces)
-    ? A.empty()
-    : A.isArray(document.workspaces)
-      ? (document.workspaces as ReadonlyArray<string>)
-      : ((document.workspaces as { readonly packages?: ReadonlyArray<string> }).packages ?? A.empty());
 
 // ChangesetStatus `ChangesetStatusPackageJson`, then the site's name check.
 const decodeChangesetStatusOracle = S.decodeUnknownEffect(
@@ -185,7 +177,7 @@ const decodePackageVerifyOracle = S.decodeUnknownEffect(
 );
 
 // QualityArtifactSupport `PackageJson` over its JSONC record read.
-const decodeQualityArtifactOracle = decodeJsoncTextAs(
+const decodeQualityArtifactOracle = Jsonc.bind(
   S.Struct({
     name: S.String,
     scripts: S.optionalKey(StringRecord),
@@ -196,7 +188,7 @@ const decodeQualityArtifactOracle = decodeJsoncTextAs(
     peerDependencies: S.optionalKey(StringRecord),
     optionalDependencies: S.optionalKey(StringRecord),
   })
-);
+).decode;
 
 // Quality.schemas `PackageJsonDocument` (Tasks).
 const decodeTasksOracle = S.decodeUnknownEffect(
@@ -210,26 +202,26 @@ const decodeTasksOracle = S.decodeUnknownEffect(
 );
 
 // CatalogUsage.schemas `CatalogUsageManifestDependencies` (JSONC, defaulted).
-const decodeCatalogUsageOracle = decodeJsoncTextAs(
+const decodeCatalogUsageOracle = Jsonc.bind(
   S.Struct(R.fromEntries(A.map(DependencyBuckets, (bucket) => [bucket, S.optionalKey(StringRecord)] as const)))
-);
+).decode;
 
 // CatalogUsage root: the unchanged `CatalogUsageRootManifest` over the old JSONC read.
-const decodeCatalogUsageRootOracle = decodeJsoncTextAs(CatalogUsageRootManifest);
+const decodeCatalogUsageRootOracle = Jsonc.bind(CatalogUsageRootManifest).decode;
 const catalogUsageRootProjection = (root: CatalogUsageRootManifest) => [root.catalog, root.catalogs, root.overrides];
 
 // BunResolver `BunPackageJsonDocument` (JSONC, `packageManager` defaults to "").
-const decodeBunResolverOracle = decodeJsoncTextAs(S.Struct({ packageManager: S.optionalKey(S.String) }));
+const decodeBunResolverOracle = Jsonc.bind(S.Struct({ packageManager: S.optionalKey(S.String) })).decode;
 
 // RootCatalog `RootPackageJsonDocument` (JSONC, both records default to {}).
-const decodeRootCatalogOracle = decodeJsoncTextAs(
+const decodeRootCatalogOracle = Jsonc.bind(
   S.Struct({ catalog: S.optionalKey(StringRecord), devDependencies: S.optionalKey(StringRecord) })
-);
+).decode;
 
 // PackageTestTypecheck `PackageManifestDocument` (JSONC; an unreadable manifest is no package).
-const decodePackageTestTypecheckOracle = decodeJsoncTextAs(
+const decodePackageTestTypecheckOracle = Jsonc.bind(
   S.Struct({ name: S.String, scripts: S.optionalKey(StringRecord) })
-);
+).decode;
 const testTypecheckProjection = (name: O.Option<string>, scripts: Readonly<Record<string, string>> | undefined) =>
   O.match(O.filter(name, Str.isNonEmpty), { onNone: () => NOT_APPLICABLE, onSome: (value) => [value, scripts ?? {}] });
 
@@ -286,7 +278,7 @@ const inventoryPinOracle = (text: string) =>
   });
 
 // docgen `Configuration.ts` `PackageJsonSchema` (JSONC through config-file).
-const decodeDocgenConfigurationOracle = decodeJsoncTextAs(S.Struct({ homepage: S.String, name: S.String }));
+const decodeDocgenConfigurationOracle = Jsonc.bind(S.Struct({ homepage: S.String, name: S.String })).decode;
 
 // docgen `Version.ts` `PackageManifestVersion`.
 const decodeDocgenVersionOracle = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ version: S.String })));
@@ -327,11 +319,9 @@ const updatedBytes = <E>(
   }).pipe(Effect.orElseSucceed(() => REJECTED));
 
 const SITES: ReadonlyArray<Site> = [
-  {
-    site: "repo-cli Quality/ChangesetGraph.ts root (workspace patterns)",
-    oracle: ({ text }) => verdictOf(decodeChangesetGraphOracle(text), changesetGraphOraclePatterns),
-    adopted: ({ text, path }) => verdictOf(readChangesetGraphRootPatterns(text, path), (patterns) => patterns),
-  },
+  // The ChangesetGraph root (workspace patterns) site recorded in the 3-A4 run
+  // left this script in 4-A2: the reader moved onto `@beep/repo-workspaces`
+  // `WorkspacePatterns` (ops/workspace-patterns-adoption-parity.ts).
   {
     site: "repo-cli Quality/ChangesetGraph.ts member (name, private)",
     oracle: ({ text }) => verdictOf(decodeChangesetGraphOracle(text), (d) => [d.name ?? null, d.private === true]),
@@ -376,24 +366,13 @@ const SITES: ReadonlyArray<Site> = [
       ]),
   },
   {
-    site: "repo-cli Quality/Tasks.ts (name, scripts, workspace patterns)",
-    oracle: ({ text }) =>
-      verdictOf(decodeTasksOracle(text), (d) => [
-        d.name ?? null,
-        d.scripts ?? {},
-        P.isUndefined(d.workspaces)
-          ? []
-          : A.isArray(d.workspaces)
-            ? d.workspaces
-            : (d.workspaces as { readonly packages: ReadonlyArray<string> }).packages,
-      ]),
+    // The workspace-pattern third of this site left in 4-A2 (the root patterns
+    // come from `@beep/repo-workspaces` `WorkspacePatterns` now); the 3-A4
+    // run recorded all three.
+    site: "repo-cli Quality/Tasks.ts (name, scripts)",
+    oracle: ({ text }) => verdictOf(decodeTasksOracle(text), (d) => [d.name ?? null, d.scripts ?? {}]),
     adopted: ({ text, path }) =>
-      verdictOf(
-        Effect.flatMap(readQualityTaskManifest(text, path), (m) =>
-          Effect.map(workspacePatternsFromPackageJson(m, path), (patterns) => [m, patterns] as const)
-        ),
-        ([m, patterns]) => [m.name ?? null, m.scripts ?? {}, patterns]
-      ),
+      verdictOf(readQualityTaskManifest(text, path), (m) => [m.name ?? null, m.scripts ?? {}]),
   },
   {
     site: "repo-cli Quality/CatalogUsage.ts root (catalog, catalogs, overrides)",

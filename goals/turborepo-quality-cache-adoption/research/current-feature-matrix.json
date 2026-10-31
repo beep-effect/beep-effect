@@ -871,11 +871,11 @@
         "Exact-client regression evidence",
         "Change only one experimental flag at a time"
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "beepUseCase": "Current hosted and curated quality callers provide explicit remote refs or frozen SHAs through TURBO_SCM_BASE.",
+      "expectedBenefit": "No additional selection reduction for the current explicit-base path; retain the absent flag.",
+      "correctnessCase": "36 native selection cases across absent/false/true settings on both frozen clients, including explicit invalid-base refusal, plus three driver refusal controls.",
+      "disposition": "Retain absent GitHub event-base fallback; reopen for a named implicit-base caller.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -887,6 +887,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "sourceApplicability": {
+        "report": "base-ref-feature-review.json",
+        "nativeReport": "native-base-ref-controls.json",
+        "pins": "errors-only-client-pins.json",
+        "scope": "Final no-change applicability decision only; no real task qualification or CI timing claim."
       }
     },
     {
@@ -1056,9 +1062,9 @@
   ],
   "reviewCounts": {
     "acceptedNotApplicable": 1,
-    "acceptedRetainCurrentAbsence": 3,
+    "acceptedRetainCurrentAbsence": 4,
     "acceptedRetainCurrentDefault": 1,
-    "pending": 30
+    "pending": 29
   },
   "nativeAvailabilityCounts": {
     "flagCasesAccepted": 56,

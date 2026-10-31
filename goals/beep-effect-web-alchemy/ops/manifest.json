@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "beep-effect-web-alchemy",
+    "packetId": "goal-packet/v1:90548beaf27d1f069b2ccca7d805bc0af01a74700ca38c037bfef67e3f85d7fd",
+    "title": "beep-effect.com web app on Alchemy",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-28",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/beep-effect-web-alchemy",
+  "lifecycle": "active",
+  "mission": "Default TanStack Start app at apps/beep-effect-web served at https://beep-effect.com via an Alchemy v2 per-package stack on Cloudflare",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/beep-effect-web-alchemy/README.md",
+    "goals/beep-effect-web-alchemy/SPEC.md",
+    "goals/beep-effect-web-alchemy/PLAN.md",
+    "goals/beep-effect-web-alchemy/GOAL.md",
+    "goals/beep-effect-web-alchemy/research/SOURCES.md",
+    "goals/beep-effect-web-alchemy/research/alchemy-fit-2026-10-28.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/alchemy-fit-2026-10-28.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/beep-effect-web-alchemy/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Scaffold",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "First deploy (local)",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "CI deploy",
+      "status": "in-progress"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/beep-effect-web-alchemy/GOAL.md)\" -le 4000",
+    "jq . goals/beep-effect-web-alchemy/ops/manifest.json",
+    "rg -n \"beep-effect-web-alchemy|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/beep-effect-web-alchemy",
+    "git diff --check -- goals/beep-effect-web-alchemy",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 
 import * as NodeURL from "node:url";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -51,7 +53,7 @@ const sourceInvolvingIntroducedDuplication = (audit: JsonRecord): number => {
 };
 
 const fail = (message: string): never => {
-  console.error(message);
+  Effect.runSync(Console.error(message));
   process.exit(1);
 };
 
@@ -117,4 +119,4 @@ expectEqual(
   expectedAuditSummary.source_duplication_introduced
 );
 
-console.log("fallow audit baseline holds the zero-source-duplication contract");
+Effect.runSync(Console.log("fallow audit baseline holds the zero-source-duplication contract"));

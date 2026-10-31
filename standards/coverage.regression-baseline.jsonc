@@ -2725,6 +2725,69 @@
         }
       }
     },
+    "@beep/beep-effect-web": {
+      "path": "apps/beep-effect-web",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "apps/beep-effect-web/src/PublicHosts.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/beep-effect-web/src/router.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/beep-effect-web/src/routes/__root.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/beep-effect-web/src/routes/index.tsx": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/box": {
       "path": "packages/drivers/box",
       "lines": 50.96,
@@ -42725,6 +42788,18 @@
             "functions": 1
           }
         },
+        "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts": {
           "lines": 100,
           "statements": 100,
@@ -42930,18 +43005,6 @@
           }
         },
         "packages/tooling/library/repo-workspaces/src/internal/packedInstallPlan.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/library/repo-workspaces/src/internal/patterns.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -44841,18 +44904,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/HttpProtocol/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Jsonc.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
