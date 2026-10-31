@@ -263,6 +263,27 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
   )
 );
 it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("offers an unrecorded page again before advancing discovery", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      for (const name of ["a", "b", "c", "d"]) yield* f.fs.writeFileString(`${f.dir}/rollout-${name}.jsonl`, line);
+      const d = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({ ...f.input([f.dir]), maxEntries: 64, maxFiles: 2 })
+      );
+      const paths = (page: { readonly sources: ReadonlyArray<{ readonly path: string }> }) =>
+        A.map(page.sources, (source) => source.path);
+      const first = yield* d.next;
+      expect(first.sources).toHaveLength(2);
+      // The sweep for the first page never recorded its reads (an interrupted cycle).
+      expect(paths(yield* d.next)).toEqual(paths(first));
+      const recorded = yield* runDiscoveredTranscriptSweep(f.config, d, policy);
+      expect(recorded.sweep.outcomes).toHaveLength(2);
+      const later = yield* d.next;
+      expect(A.intersection(paths(later), paths(first))).toEqual([]);
+    })
+  )
+);
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("closes owned helper processes with its scope and rejects reopening", () =>
     Effect.gen(function* () {
       const f = yield* fixture();

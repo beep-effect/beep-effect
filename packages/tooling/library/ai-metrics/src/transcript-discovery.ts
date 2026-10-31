@@ -363,7 +363,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     if (event.kind === "link") root.excludedLinks += 1;
     return event.kind === "file" ? yield* candidateFromFile(root, event.relative) : O.none();
   });
-  const next = Effect.gen(function* () {
+  const nextPage = Effect.gen(function* () {
     if (closed) return yield* failure("closed");
     const eligible = A.filter(roots, (root) => root.state !== "retired");
     let finished: ReadonlyArray<Sha256Hex> = [];
@@ -396,6 +396,9 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
       yield* visitRoot(root);
     }
     let recorded = false;
+    const releaseOwnPage = () => {
+      if (O.exists(unrecorded, (page) => page.recordReads === recordReads)) unrecorded = O.none();
+    };
     const recordReads = Effect.fn("AiMetrics.discovery.recordReads")(
       function* (sweep: TranscriptSweepReport) {
         if (
@@ -408,14 +411,18 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
               o.root.cycle !== o.cycle ||
               A.filter(sweep.outcomes, (result) => result.sourceId === o.sourceId).length !== 1
           )
-        )
+        ) {
+          // An inconsistent page is never re-offered; the next traversal rediscovers it.
+          releaseOwnPage();
           return yield* failure("changed");
+        }
         for (const observation of observations) {
           const outcome = A.findFirst(sweep.outcomes, (r) => r.sourceId === observation.sourceId);
           if (O.isNone(outcome)) return yield* failure("changed");
           recordReadOutcome(observation.root.read, outcome.value);
         }
         recorded = true;
+        releaseOwnPage();
         return report(operations, sources.length);
       },
       semaphore.withPermitsIfAvailable(1),
@@ -434,6 +441,24 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
       })
     )
   );
+  // A page whose reads were never recorded (its sweep was interrupted or failed) is offered
+  // again before discovery advances, so its unattempted candidates are not dropped. The
+  // per-attempt schedule cursor then resumes after the file that consumed the last cycle.
+  let unrecorded: O.Option<Effect.Success<typeof nextPage>> = O.none();
+  const next = Effect.suspend(() => {
+    if (closed) return Effect.fail(failure("closed"));
+    return O.match(unrecorded, {
+      onSome: Effect.succeed,
+      onNone: () =>
+        nextPage.pipe(
+          Effect.tap((page) =>
+            Effect.sync(() => {
+              unrecorded = A.isReadonlyArrayNonEmpty(page.sources) ? O.some(page) : O.none();
+            })
+          )
+        ),
+    });
+  });
   const suspend = suspendRoots.pipe(
     semaphore.withPermitsIfAvailable(1),
     Effect.flatMap((result) => (O.isNone(result) ? Effect.fail(failure("busy")) : Effect.void))
