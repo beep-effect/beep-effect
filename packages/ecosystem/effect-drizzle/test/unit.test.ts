@@ -5,6 +5,7 @@ import * as pg from "@beep/effect-drizzle/pg";
 import { fcRuns } from "@beep/fc-runs";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { defineRelations, getTableName, is as isDrizzleEntity, SQL, sql } from "drizzle-orm";
 import { getTableConfig, PgDialect } from "drizzle-orm/pg-core";
 import { findFirst, head, map, sort } from "effect/Array";
@@ -833,7 +834,8 @@ describe("varchar authoring modes", () => {
         return expect.fail("varchar injection unexpectedly produced a variant field");
       }
       expect(yield* decodeEffect(injected.schema)("42")).toBe(42);
-      expect(isFailure(yield* exit(decodeEffect(injected.schema)("123")))).toBe(true);
+      const overBound = yield* exit(decodeEffect(injected.schema)("123"));
+      overBound.pipe(isFailure, assertTrue);
     })
   );
 

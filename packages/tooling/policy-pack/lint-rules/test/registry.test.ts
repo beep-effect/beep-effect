@@ -1,6 +1,6 @@
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep/lint-rules";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -21,7 +21,7 @@ const BiomePluginConfig = S.Struct({
   ...BiomePluginSection.fields,
   overrides: S.Array(BiomePluginSection).pipe(S.optionalKey),
 });
-const decodeBiomePluginConfig = decodeJsoncTextAs(BiomePluginConfig);
+const decodeBiomePluginConfig = Jsonc.bind(BiomePluginConfig).decode;
 
 const sortedRuleNames = [...RULE_NAMES].sort();
 const RuleRegistryArbitrary = Arbitrary.schema(RuleRegistrySchema);

@@ -206,8 +206,6 @@
     {"file":"packages/foundation/modeling/schema/src/Http/Http.headers.shared.ts","symbol":"StringOrUrl","kind":"union","owner":"@beep/schema","identity":"StringOrUrl","description":"A string or URL."},
     {"file":"packages/foundation/modeling/schema/src/HttpProtocol/HttpProtocol.schema.ts","symbol":"HttpProtocol","kind":"literal-kit","owner":"@beep/schema","identity":"HttpProtocol","description":"An HTTP protocol (\"http\" or \"https\")"},
     {"file":"packages/foundation/modeling/schema/src/HttpProtocol/HttpProtocol.schema.ts","symbol":"Schema","kind":"literal-kit","owner":"@beep/schema"},
-    {"file":"packages/foundation/modeling/schema/src/Jsonc.ts","symbol":"JsoncParseDiagnostic","kind":"struct-const","owner":"@beep/schema","identity":"JsoncParseDiagnostic","description":"Single JSONC parse diagnostic produced by jsonc-parser."},
-    {"file":"packages/foundation/modeling/schema/src/Jsonc.ts","symbol":"JsoncTextToUnknown","kind":"codec","owner":"@beep/schema","identity":"JsoncTextToUnknown","description":"Schema transformation that parses JSONC text into unknown values."},
     {"file":"packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.errors.ts","symbol":"LiteralKitEmptySubsetError","kind":"tagged-error","owner":"@beep/schema"},
     {"file":"packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.errors.ts","symbol":"LiteralKitKeyCollisionError","kind":"tagged-error","owner":"@beep/schema"},
     {"file":"packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.errors.ts","symbol":"LiteralKitTaggedUnionLiteralError","kind":"tagged-error","owner":"@beep/schema"},

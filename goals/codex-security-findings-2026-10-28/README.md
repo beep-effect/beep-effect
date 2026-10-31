@@ -10,8 +10,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 Capture, validate, remediate, and close every open Codex Cloud security finding
 for `kriegcloud/beep-effect` in the 7-finding batch captured on 2026-10-28.
-Ship the fixes through one Yeet-driven PR, close the exact captured findings, and
-leave no packet-applicable finding open.
+Retain merged remediation and exact finding closure. Deliver final readiness
+and completion evidence through PR #2416 with no packet-applicable finding open.
 
 ## Launch
 
@@ -32,12 +32,16 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-The fixes for the seven Cloud findings merged in PR #2333 and individually verified Fixed
-on 2026-10-31. The live Cloud view shows zero open findings. Twenty newer
-Dependabot alerts are appended separately in `ops/dependabot.json`; their
-upstream dependency updates, qualification, merge and closure are in progress.
+The fixes for the seven Cloud findings merged in #2333; every exact ID is
+verified Fixed. All fifteen Cloud findings across both packets are Fixed.
+The twenty supplemental dependency fixes merged in #2389, whose 35 hosted
+check jobs ultimately passed. IDs #450–#469 remain externally open despite
+fixed versions in the dependency graph. The four code-scanning and five
+secret-scanning alerts are resolved, with zero open inventories.
 
-See [current closure evidence](research/2026-10-31-closeout.md).
+PR #2416 delivers final receipt reconciliation. Its genuine canonical readiness
+must be captured before merge; exact dependency closure and post-merge receipts
+remain required. See [accepted closeout evidence](research/2026-10-31-accepted-closeout.md).
 
 ## Findings at a glance
 
@@ -51,7 +55,7 @@ materially invalid.
 - Do not use Codex's Create PR or patch-apply controls.
 - Browser closure is post-merge and must match the captured Codex ID allowlist.
 
-## Execution update — 2026-10-28
+## Historical execution update — 2026-10-28
 
 All seven complete Cloud reports were reviewed and their source defects validated.
 Controls and focused regressions are implemented. See
@@ -62,26 +66,20 @@ This supplemental packet is part of the resumed
 
 ## Final acceptance — October 31
 
-PR [#2389](https://github.com/beep-effect/beep-effect/pull/2389) contains the
-final dependency remediation and packet reconciliation. Historical source fixes
-remain in merged PRs #1930 and #2333. The
-[closeout reflection](history/reflections/2026-10-31-codex.md) records the current
-qualification and tooling lessons.
-
-The manifest deliberately retains active declared status with prospective
-`completed-retained` closeout. After the final PR merges, exact external alert
-closure and head-bound readiness are verified before `goals completion refresh`
-records the clone-scoped acceptance receipt and derives the retained lifecycle.
-An implementation snapshot showing open dependency alerts is not a closure
-claim; the post-merge receipt is the final evidence.
+Implementation and dependency fixes merged in #2389; original source fixes
+remain in merged #1930 and #2333. The
+[closeout reflection](history/reflections/2026-10-31-codex.md) retains their
+qualification and tooling lessons. #2416 is the final receipt PR for both
+packets. Its head-bound readiness, merge, exact external closure and verified
+completion receipts remain required; the proposal is not a completion claim.
 
 ## Supplemental scanning acceptance — October 31
 
 The broader authenticated inventory also found four stale CodeQL alerts and
 five secret-scanning alerts. Their separate sanitized catalog is
 `ops/scanning.json`, with source validation and exact closure reasons in
-`research/2026-10-31-scanning.md`. All nine must be resolved with evidence,
-without accepted risk, before final completion. Preserve the original seven
+`research/2026-10-31-scanning.md`. All nine are saved resolved or dismissed with evidence and zero open
+inventories; preserve those exact dispositions through final completion. Preserve the original seven
 Cloud IDs and twenty dependency IDs.
 
 Shared PR #2399 repaired the inherited policy-tooling failures and merged as
@@ -89,3 +87,23 @@ Shared PR #2399 repaired the inherited policy-tooling failures and merged as
 This packet retains distinct test-only coverage repairs and consumes the shared
 implementation through main. The strict readiness contract and security
 finding inventories remain unchanged; see the decision and review records.
+
+## Final receipt reconciliation — October 31
+
+Implementation PR #2389 merged at `ac8993e7773065c55b11e6b71b0f1471a0105d2f`.
+All 35 hosted check jobs ultimately passed on its accepted head; the separate
+optional Vercel statuses report deployment rate limits. The merge preceded this
+lane's positive canonical readiness capture. Later green checks do not supply
+that missing historical observation.
+
+Final closeout PR [#2416](https://github.com/beep-effect/beep-effect/pull/2416)
+retains the merged implementation and must obtain genuine final-head canonical
+`merge-ready: yes` while it is still open. Preserve that evidence before merge.
+After #2416 merges and all exact external statuses are verified, run
+`goals completion refresh` for both packets. Their declared lifecycle remains
+`active` with prospective `completed-retained` until verified receipts derive
+completion. No gate is weakened and no readiness receipt is fabricated.
+
+Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
+fixed versions in the dependency graph alone do not establish closure. See the
+[accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

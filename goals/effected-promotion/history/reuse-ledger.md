@@ -48,7 +48,7 @@ manifests with 0 full-schema failures.
 | lab `scratchpad/test/cli/boundary.test.ts` and `scratchpad/test/engine/purity.test.ts` (`SourceBoundary` scans) | - | 4-W-b | Import `@beep/repo-workspaces/SourceBoundary`; both suites pass unchanged under Node and Bun. |
 | lab-wide `layering.int.test.ts` (with `lab-layers.json`), `peerClosure.int.test.ts`, `SourceBoundarySelf.int.test.ts`, and both PROMOTED maps | - | 4-W-a, 4-W-b | `layering.int`, `lab-layers.json` and `peerClosure.int` stay in place (correction 3), read the package leaves and are deleted by C; `layering.int` maps `@beep/repo-workspaces` to the `workspaces` lab module, which has no source left (its directory holds only the 3 canon exceptions of these two suites, live until C). `SourceBoundarySelf.int` moved into the package in 4-W-b. Both PROMOTED map notes record `workspaces` as promoted whole. |
 | repo-cli `Quality/internal/QualityArtifactSupport.ts` `discoverWorkspacePackages` | #143 | adopted (4-A1) | Members come from `WorkspaceDiscovery` (discovery only) run with the kit's new opt-in `containWithinRoot` (upstream link-following stays the default), so an escaping link is skipped before its manifest is read; each is guarded again through `resolvePathWithinCanonicalRoot` and its as-read manifest decoded by the unchanged strict `LenientManifest` reader. The hand-rolled `expandWorkspacePattern` (and its `fallow-ignore` complexity suppression) and the module's `workspacePatternsFrom` are deleted. Parity: the discovery, `CoverageScope` and `CoverageRegression` surfaces are identical before and after, thirteen probe shifts are classified (`research/qas-discovery-adoption-parity-4-a1.json`), and the `jsdoc-inventory` output differs only in `generatedAt`. The Exception Ledger row "Duplicate workspace discovery and dependency graph" drops QAS and stays for 4-A2 and 4-A3. |
-| repo-cli `workspacePatternsFrom` copies (`ChangesetGraph`, `CreatePackage`, `TsconfigSync.plan`, `ConfigUpdater`, `Quality/Tasks.ts`) | #146, #148, #149, #150 | 4-A2 | Through a public `WorkspacePatterns` leaf (`internal/patterns` today). |
+| repo-cli `workspacePatternsFrom` copies (`ChangesetGraph`, `CreatePackage`, `TsconfigSync.plan`, `ConfigUpdater`, `Quality/Tasks.ts`) | #146, #148, #149, #150 | adopted (4-A2) | `internal/patterns` promoted to the public `WorkspacePatterns` leaf; ChangesetGraph and Tasks read `WorkspacePatterns.read`, TsconfigSync builds its syncpack sources from it, CreatePackage projects its root manifest through `WorkspacePatterns.fromManifest`; the three `fallow-ignore` suppressions (the copied `applyJsoncModification` wrapper, ConfigUpdater included) are gone with the wrapper. Parity: 122 patterns, 189 matched package directories and three CLI check outputs identical (`research/workspace-patterns-adoption-parity-4-a2.json`). |
 | repo-utils `Workspaces.ts`, `Dependencies.ts`, `DependencyIndex.ts`; `beep topo-sort` | #139, #142, #238, #239, #268 | 4-A3 | Onto `WorkspaceDiscovery` and `DependencyGraph.sort()`; the differential's 186-member, 1,301-edge parity is the baseline. |
 
 ## `@beep/lockfiles` (wave 3-5, W3-g)
@@ -85,7 +85,7 @@ manifests with 0 full-schema failures.
 | lab `xdg` `XdgConfig` | - | adopted in 3-3; promoted in 4-X | Imports `@beep/config-file` (`ConfigResolver` type); now the `@beep/xdg/XdgConfig` subpath (W4-c). |
 | lab `cli` `ConfigIssueRenderer` | - | adopted in 3-3 | Takes the structural `{ readonly issue }` and no longer imports the package (promotion map row "cli-kit -> config-file"). |
 | `Struct.deepMerge` and jsonl `internal/merge.ts` | - | excluded | Different merge semantics from config-file's `deepMerge`, which stays in the package. |
-| docgen `readTSConfig` and the `@beep/schema/Jsonc` consumers | - | excluded here; `readTSConfig` adopted in 3-A6 | `readTSConfig` moved with the `TsconfigValidator` in 3-A6 (`@beep/repo-tsconfig` section); the `@beep/schema/Jsonc` consumers belong to the jsonc adoption (Exception Ledger "Duplicate JSONC model"). |
+| docgen `readTSConfig` and the `@beep/schema/Jsonc` consumers | - | excluded here; `readTSConfig` adopted in 3-A6 | `readTSConfig` moved with the `TsconfigValidator` in 3-A6 (`@beep/repo-tsconfig` section); the `@beep/schema/Jsonc` consumers were adopted in R3a (`@beep/jsonc` section). |
 ## `@beep/github-reporting` (wave 3-1, W3-b)
 
 | Site | Map id | Status | Notes |
@@ -201,6 +201,33 @@ pick what the kit picks.
 | repo-utils `schemas/PackageJson.ts` version fields | #243 | adopted in 3-A3 | `version` is the kit `SemVer.FromString` and `packageManager` the kit `PackageManagerRange`; no tracked manifest changes verdict. |
 | repo-cli `EffectResolver` `VERSION_SPECIFIER_PATTERN`, `TurboResolver` `STABLE_VERSION_PATTERN` | - | excluded | Shape checks on a specifier or schema URL; neither parses nor orders versions. |
 
+## `@beep/jsonc` (roadmap R3a, SPEC W4-o)
+
+R3a is the owner switch: every `@beep/schema/Jsonc` importer decodes through `Jsonc.bind(schema).decode`,
+the facade is deleted and `@beep/schema` drops `jsonc-parser`. Parity is recorded in
+`research/jsonc-owner-switch-differential-r3a-before.json` (the pre-switch code) and
+`research/jsonc-owner-switch-differential-r3a.json` (`--compare`, `ops/jsonc-owner-switch-differential.ts`):
+1,438 tracked JSONC and facade-consumed JSON documents decode equal under both parsers with 0 unclassified
+differences and 1,438 kit encode round trips, and twelve generator check or dry runs against one fixed input
+tree are byte-identical before and after. A fixed 42-case negative and edge corpus classifies every case
+(`equal`, `both-reject`, `legacy-reject-kit-accept`, `legacy-accept-kit-reject`, `value-differs`) and
+allowlists exactly three intended divergences by case id: BOM tolerance (the kit scanner treats U+FEFF as
+whitespace), the 256-deep nesting cap (`NestingDepthExceeded` from `internal/limits.ts`) and JSON.parse
+`__proto__` semantics (an own data property instead of a prototype assignment that dropped the key; no
+adopted site merges a decoded object through `Object.assign`). The rejection message text changes from
+`Invalid JSONC input (...)` to `JSONC parse failed with N error(s): ...`. The `jsonc-parser` editing facade
+and its users leave in R3b.
+
+| Site | Map id | Status | Notes |
+| --- | --- | --- | --- |
+| `@beep/schema/Jsonc` (`JsoncTextToUnknown`, `decodeJsoncTextAs`, `JsoncParseDiagnostic`) | #1 | retired (R3a) | Deleted with its test, both export entries, the root barrel line, the generated aliases and the catalog, inventory and span rows. `decodeJsoncTextAs(X)` is `Jsonc.bind(X).decode`; `JsoncTextToUnknown` is `Jsonc.JsoncFromString`; `JsoncParseDiagnostic` is `JsoncParseErrorDetail` (neither had an importer outside the facade). |
+| repo-cli `@beep/schema/Jsonc` importers (20 source files, 3 tests) and the root-barrel import in `KnowledgeDoctor.baseline.ts` | #255 | adopted (R3a) | `Jsonc.bind(schema).decode` at every site; `readArtifact`, `TsconfigSync.plan` `parseJsonc` and `readSealFile` keep their schema-generic signatures. `jsonc-parser` stays for the editing facade until R3b. |
+| repo-cli `internal/cli/Jsonc.ts` `decodeJsoncTextAs` re-export (`ConfigUpdater`, `CreatePackage.command`, `TsconfigSync.plan`, `Quality/Tasks`) | #2 (decode half) | re-export removed (R3a) | The four callers import `@beep/jsonc` directly; the editing facade (`JsoncModification`, `applyJsoncModification`, `jsonText`) is R3b's. |
+| `@beep/lint-rules` `test/registry.test.ts` Biome plugin config decode | - | adopted (R3a) | `Jsonc.bind(BiomePluginConfig).decode`; `@beep/jsonc` is a devDependency. |
+| packet ops scripts `tsconfig-sync-parity.ts`, `lockfiles-adoption-parity.ts`, `package-json-readers-parity.ts` | - | adopted (R3a) | Same owner switch; their recorded reports are unchanged. |
+| `@beep/utils/Schema` `TextDecodeTo` and `Jsonc.bind` `Codec`-view generics | - | kit extended (R3a) | Both are generic over the target schema (`Target extends S.Top`), so an `S.Opaque` class keeps its branded type; pinned in `jsonc/test/Jsonc.test.ts`. |
+| `@beep/repo-configs` `AllowlistJsoncTextToUnknown` | #10 | queued: R3b | A copy of the facade's decode with its own error prefix; goes with the repo-configs `jsonc-parser` drop. |
+
 ## `@beep/commands` drivers (roadmap R9, SPEC W4-l)
 
 R9 moves four drivers' hand-rolled child-process folds onto `@beep/commands`, each with the kit option the map
@@ -311,10 +338,10 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | Site | Map id | Verdict | Status | Notes |
 | --- | --- | --- | --- | --- |
 | repo-cli Quality/internal/QualityArtifactSupport.ts | #143 | partial | adopted (4-A1) | Workspaces half: QAS discovery onto `WorkspaceDiscovery`, discovery only, kit `containWithinRoot` plus a `resolvePathWithinCanonicalRoot` guard (the `@beep/repo-workspaces` row above has the parity; the package.json half is 3-A4's row above). |
-| repo-cli Quality/Tasks.ts | #146 | partial | queued: 4-A2 | Tasks pattern reader; `coverageGraphClosure` needs a name-keyed adjacency constructor. |
-| repo-cli CreatePackage/CreatePackage.command.ts | #148 | partial | queued: 4-A2 | Pattern reader through the public `WorkspacePatterns` leaf. |
-| repo-cli TsconfigSync/TsconfigSync.plan.ts | #149 | partial | queued: 4-A2 | Pattern reader through the public `WorkspacePatterns` leaf. |
-| repo-cli Quality/ChangesetGraph.ts | #150 | partial | queued: 4-A2 | Pattern reader through the public `WorkspacePatterns` leaf. |
+| repo-cli Quality/Tasks.ts | #146 | partial | adopted (4-A2) | `workspaceTaskOwners` reads `WorkspacePatterns.read(repoRoot)`; `coverageGraphClosure` still needs a name-keyed adjacency constructor (excluded below). |
+| repo-cli CreatePackage/CreatePackage.command.ts | #148 | partial | adopted (4-A2) | `WorkspacePatterns.fromManifest` over the root manifest it edits; the copied `applyJsoncModification` wrapper and its suppression are gone. |
+| repo-cli TsconfigSync/TsconfigSync.plan.ts | #149 | partial | adopted (4-A2) | Canonical syncpack sources from `WorkspacePatterns.read(rootDir)`; `readRootPackageJson` and the copied wrapper are gone. |
+| repo-cli Quality/ChangesetGraph.ts | #150 | partial | adopted (4-A2) | `collectWorkspacePackageJsonFiles` reads `WorkspacePatterns.read(repoRoot)`; `readChangesetGraphRootPatterns` is gone. |
 | repo-utils Workspaces.ts | #139 | partial | queued: 4-A3 | repo-utils Workspaces/Dependencies/DependencyIndex onto the kit. |
 | repo-utils DependencyIndex.ts | #142 | partial | queued: 4-A3 | repo-utils Workspaces/Dependencies/DependencyIndex onto the kit. |
 | repo-utils Workspaces.ts | #238 | partial | queued: 4-A3 | repo-utils Workspaces/Dependencies/DependencyIndex onto the kit. |
@@ -355,9 +382,9 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli internal/GlobPattern.ts, internal/quality/TestTypecheckCoverage.ts | #263 | partial | adopted in R2b | `internal/GlobPattern.ts` is deleted (see #57). TestTypecheckCoverage's tsc matcher stays: it mirrors tsgo's `include` semantics (a bare directory is a recursive subtree), which no glob dialect expresses. |
 | repo-cli internal/GlobPattern.ts | #305 | partial | adopted in R2b | `internal/GlobPattern.ts` is deleted (see #57). |
 | repo-cli Knowledge/KnowledgeDoctor.leases.ts, Skills/Skills.patches.ts CODEOWNERS compilers | (none) | partial | excluded (R2b) | Not a map site; found by the R2b `git grep '[^/]*'` owner census. `globTokens`/`globSource`/`codeownersPattern` implement the gitignore/CODEOWNERS dialect: a slash anywhere anchors the pattern to the root, a trailing slash matches only below a directory, and a matched directory owns everything under it. `@beep/glob` has no spelling for directory ownership or slash-anchoring, the same reason #263 keeps the tsc `include` matcher. The two copies are identical; their deduplication into one repo-cli internal module is a defect outside R2b's files (KnowledgeDoctor is R5a's). |
-| schema Jsonc.ts | #1 | confirmed | queued: R3a | Importers re-point to `@beep/jsonc`; `schema/src/Jsonc.ts` is deleted (W4-o). |
-| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | queued: R3a; R3b | Owner switch in R3a, `jsonc-parser` drop in R3b. |
-| repo-cli internal/cli/Jsonc.ts | #2 | partial | queued: R3b | `internal/cli/Jsonc.ts` stays a sync facade without the `decodeJsoncTextAs` re-export (W4-o). |
+| schema Jsonc.ts | #1 | confirmed | migrated (R3a, W4-o) | `@beep/schema/Jsonc` deleted; every importer decodes through `Jsonc.bind`. See the `@beep/jsonc` section above. |
+| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | owner switch migrated (R3a, W4-o); `jsonc-parser` drop queued: R3b | The decode owner is `@beep/jsonc` (see the section above); the editing facade's `jsonc-parser` leaves in R3b. |
+| repo-cli internal/cli/Jsonc.ts | #2 | partial | re-export removed (R3a); editing facade queued: R3b | R3a removed the `decodeJsoncTextAs` re-export (W4-o); the sync editing facade moves onto `JsoncModifier`/`JsoncFormatter` in R3b. |
 | repo-cli internal/cli/Json.ts | #3 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
 | repo-cli Skills/Skills.render.ts | #4 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
 | repo-cli Models | #5 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
