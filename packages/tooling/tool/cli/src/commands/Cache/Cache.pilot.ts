@@ -117,6 +117,7 @@ const CachePilotRunType = S.toType(CachePilotRun);
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot");
 const decodeSignedPilotRun = S.decodeUnknownEffect(S.toType(CacheSignedPilotRun));
+const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;
 const PilotMode = LiteralKit(["local", "signed"]);
 const PilotCapability = S.Redacted(S.NonEmptyString);
 class PilotTransport extends S.Opaque<PilotTransport, { readonly brand: unique symbol }>()(
@@ -1245,7 +1246,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         if (id === "missing-child-config") changedFixture = PilotRoot.make({ ...fixture, omitChild: true });
         else {
           const change = Effect.fn("CachePilot.changeChild")(function* (text: string) {
-            const config = yield* Jsonc.bind(S.JsonObject).decode(text);
+            const config = yield* decodeJsonObjectText(text);
             const tasks = yield* decodeJsonObject(config.tasks);
             const lint = yield* decodeJsonObject(tasks.lint);
             const declared = yield* decodeArrayString(lint.env);
@@ -1282,7 +1283,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "dependency-source": () => "tsconfig.json",
         })(id);
         original = yield* readBytes(fixture.source, changedPath).pipe(Effect.flatMap(decodeText));
-        const config = yield* Jsonc.bind(S.JsonObject).decode(original);
+        const config = yield* decodeJsonObjectText(original);
         if (id === "root-lint-config") {
           const files = yield* decodeJsonObject(config.files);
           const includes = yield* decodeArrayString(files.includes);
@@ -1320,7 +1321,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       });
       const applyMutation = Effect.fn("CachePilot.applyMutation")(function* () {
         if (id === "root-task-config") {
-          const config = yield* Jsonc.bind(S.JsonObject).decode(original);
+          const config = yield* decodeJsonObjectText(original);
           const global = yield* decodeJsonObject(config.global);
           const declared = yield* decodeArrayString(global.env);
           changedText = yield* JsonStringCodec(S.JsonObject).encode(
@@ -1369,7 +1370,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       else {
         const manifest = yield* readBytes(fixture.identity, "package.json").pipe(
           Effect.flatMap(decodeText),
-          Effect.flatMap(Jsonc.bind(S.JsonObject).decode)
+          Effect.flatMap(decodeJsonObjectText)
         );
         const scripts = yield* decodeJsonObject(manifest.scripts);
         yield* writeContainedFileString(
@@ -1571,7 +1572,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             );
             const manifest = yield* readBytes(root.identity, "package.json").pipe(
               Effect.flatMap(decodeText),
-              Effect.flatMap(Jsonc.bind(S.JsonObject).decode)
+              Effect.flatMap(decodeJsonObjectText)
             );
             const scripts = yield* decodeJsonObject(manifest.scripts);
             yield* writeContainedFileString(root.identity, "capture-probe.ts", probe);

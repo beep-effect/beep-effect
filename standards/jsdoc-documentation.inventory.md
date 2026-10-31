@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T07:31:18.882Z
+Generated: 2026-10-31T10:46:21.559Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 164 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3568 |
-| publicExports | 25360 |
+| publicModules | 3569 |
+| publicExports | 25359 |
 | openModules | 166 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 280 | 0 | 0 |
 | 5 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 228 | 0 | 0 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
-| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 169 | 974 | 0 | 0 |
+| 7 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 168 | 969 | 0 | 0 |
 | 8 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
 | 9 | `@beep/glob` | `packages/foundation/modeling/glob` | clean | 4 | 9 | 0 | 0 |
 | 10 | `@beep/memfs` | `packages/tooling/test-kit/memfs` | clean | 3 | 23 | 0 | 0 |
@@ -201,7 +201,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 143 | `@beep/xstate` | `packages/drivers/xstate` | clean | 6 | 26 | 0 | 0 |
 | 144 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
 | 145 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 27 | 0 | 0 |
-| 146 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 104 | 2 | 0 |
+| 146 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 30 | 108 | 2 | 0 |
 | 147 | `@beep/openclaw` | `packages/drivers/openclaw` | clean | 9 | 130 | 0 | 0 |
 | 148 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 6 | 0 | 0 |
 | 149 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 33 | 0 | 0 |
@@ -450,7 +450,7 @@ Export findings:
 - `src/commands/Ci/CiLane.ts:405` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1553` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
-- `src/commands/CreatePackage/CreatePackage.command.ts:122` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
+- `src/commands/CreatePackage/CreatePackage.command.ts:119` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:354` `IntakeRecord` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:405` `IntakeResult` (class) - 1 example import violation(s)

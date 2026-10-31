@@ -40,6 +40,8 @@ const TurboWorkspaceList = S.Struct({
   packages: S.Struct({ items: S.Array(S.Struct({ name: S.String, path: S.String })) }),
 });
 const TurboConfiguration = S.Struct({ tasks: S.Record(S.String, S.Unknown) });
+const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;
+const decodeTurboConfigurationText = Jsonc.bind(TurboConfiguration).decode;
 const TurboDefinition = S.Struct({
   ...CacheTaskConfiguration.fields,
   passThroughEnv: S.String.pipe(S.Array, S.OptionFromNullOr),
@@ -502,10 +504,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   );
   const rootJson = yield* fs
     .readFileString(paths.join(root, "turbo.json"))
-    .pipe(
-      Effect.flatMap(Jsonc.bind(S.JsonObject).decode),
-      CacheCommandError.mapError("Invalid root Turbo configuration.")
-    );
+    .pipe(Effect.flatMap(decodeJsonObjectText), CacheCommandError.mapError("Invalid root Turbo configuration."));
   const rootConfig = yield* decodeTurboConfiguration(rootJson).pipe(
     CacheCommandError.mapError("Root Turbo tasks are invalid.")
   );
@@ -524,7 +523,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
         const child = yield* fs
           .readFileString(paths.join(root, childPath))
           .pipe(
-            Effect.flatMap(Jsonc.bind(TurboConfiguration).decode),
+            Effect.flatMap(decodeTurboConfigurationText),
             CacheCommandError.mapError("Invalid child Turbo configuration.")
           );
         tasks = A.appendAll(

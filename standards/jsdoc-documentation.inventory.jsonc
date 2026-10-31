@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T07:31:18.882Z",
+  "generatedAt": "2026-10-31T10:46:21.559Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 164,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
-    "publicModules": 3568,
-    "publicExports": 25360,
+    "publicModules": 3569,
+    "publicExports": 25359,
     "openModules": 166,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -10398,8 +10398,8 @@
           "exportKind": "type",
           "filePath": "src/Schema.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Schema.ts",
-          "line": 104,
-          "anchor": "packages-foundation-modeling-utils-src-schema-ts-104-textdecodeto",
+          "line": 107,
+          "anchor": "packages-foundation-modeling-utils-src-schema-ts-107-textdecodeto",
           "currentTags": [
             "@typeParam",
             "@category",
@@ -10421,8 +10421,8 @@
           "exportKind": "const",
           "filePath": "src/Schema.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Schema.ts",
-          "line": 143,
-          "anchor": "packages-foundation-modeling-utils-src-schema-ts-143-maketextdecodeto",
+          "line": 153,
+          "anchor": "packages-foundation-modeling-utils-src-schema-ts-153-maketextdecodeto",
           "currentTags": [
             "@typeParam",
             "@param",
@@ -17281,9 +17281,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 169,
-        "publicModuleCount": 169,
-        "publicExportCount": 974
+        "sourceFileCount": 168,
+        "publicModuleCount": 168,
+        "publicExportCount": 969
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -19755,28 +19755,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/Jsonc.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Jsonc.ts",
-          "line": 1,
-          "anchor": "packages-foundation-modeling-schema-src-jsonc-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 4,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/LiteralKit/LiteralKit.errors.ts",
           "repoPath": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.errors.ts",
           "line": 1,
@@ -21028,7 +21006,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 44,
+          "exportCount": 43,
           "remediationStatus": "resolved"
         }
       ],
@@ -34656,96 +34634,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "JsoncParseDiagnostic",
-          "exportKind": "class",
-          "filePath": "src/Jsonc.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Jsonc.ts",
-          "line": 35,
-          "anchor": "packages-foundation-modeling-schema-src-jsonc-ts-35-jsoncparsediagnostic",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "JsoncTextToUnknown",
-          "exportKind": "const",
-          "filePath": "src/Jsonc.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Jsonc.ts",
-          "line": 96,
-          "anchor": "packages-foundation-modeling-schema-src-jsonc-ts-96-jsonctexttounknown",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "JsoncTextToUnknown",
-          "exportKind": "type",
-          "filePath": "src/Jsonc.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Jsonc.ts",
-          "line": 114,
-          "anchor": "packages-foundation-modeling-schema-src-jsonc-ts-114-jsonctexttounknown",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "decodeJsoncTextAs",
-          "exportKind": "const",
-          "filePath": "src/Jsonc.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/Jsonc.ts",
-          "line": 141,
-          "anchor": "packages-foundation-modeling-schema-src-jsonc-ts-141-decodejsonctextas",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "LiteralKitTaggedUnionLiteralError",
           "exportKind": "class",
           "filePath": "src/LiteralKit/LiteralKit.errors.ts",
@@ -42196,34 +42084,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Jsonc.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/index.ts",
-          "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 150,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-150-export-from-jsonc-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "export * from \"./LiteralKit/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 155,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-155-export-from-literalkit-index-ts",
+          "line": 154,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-154-export-from-literalkit-index-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42244,8 +42110,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 160,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-160-export-from-localdate-index-ts",
+          "line": 159,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-159-export-from-localdate-index-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42266,8 +42132,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 165,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-165-export-from-mappedliteralkit-index-ts",
+          "line": 164,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-164-export-from-mappedliteralkit-index-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42288,8 +42154,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 170,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-170-export-from-markdown-ts",
+          "line": 169,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-169-export-from-markdown-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42310,8 +42176,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 175,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-175-export-from-mimetype-ts",
+          "line": 174,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-174-export-from-mimetype-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42332,8 +42198,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 182,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-182-export-as-patternontology-from-patternontology-index-ts",
+          "line": 181,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-181-export-as-patternontology-from-patternontology-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -42354,8 +42220,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 200,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-200-export-from-port-ts",
+          "line": 199,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-199-export-from-port-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -42376,8 +42242,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 205,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-205-export-from-posixpath-ts",
+          "line": 204,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-204-export-from-posixpath-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42398,8 +42264,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 210,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-210-export-from-saferemotehost-ts",
+          "line": 209,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-209-export-from-saferemotehost-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42420,8 +42286,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 215,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-215-export-as-schemautils-from-schemautils-index-ts",
+          "line": 214,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-214-export-as-schemautils-from-schemautils-index-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42442,8 +42308,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 220,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-220-export-from-semanticversion-ts",
+          "line": 219,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-219-export-from-semanticversion-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42464,8 +42330,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 225,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-225-export-from-severitylevel-ts",
+          "line": 224,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-224-export-from-severitylevel-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42486,8 +42352,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 230,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-230-export-from-sha256-ts",
+          "line": 229,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-229-export-from-sha256-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42508,8 +42374,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 235,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-235-export-from-slug-ts",
+          "line": 234,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-234-export-from-slug-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42530,8 +42396,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 240,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-240-export-from-territorycode-ts",
+          "line": 239,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-239-export-from-territorycode-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42552,8 +42418,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 245,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-245-export-from-url-ts",
+          "line": 244,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-244-export-from-url-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -42574,8 +42440,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/modeling/schema/src/index.ts",
-          "line": 250,
-          "anchor": "packages-foundation-modeling-schema-src-index-ts-250-export-from-xml-ts",
+          "line": 249,
+          "anchor": "packages-foundation-modeling-schema-src-index-ts-249-export-from-xml-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -210595,8 +210461,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 118,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-118-generateretentionreport",
+          "line": 138,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-138-generateretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210617,8 +210483,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 229,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-229-encoderetentionreport",
+          "line": 249,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-249-encoderetentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210639,8 +210505,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 244,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-244-renderretentionreport",
+          "line": 264,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-264-renderretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210661,8 +210527,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 291,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-291-evaluateretentioncandidate",
+          "line": 311,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-311-evaluateretentioncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -474335,8 +474201,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-90-resolvecacheturbobinary",
+          "line": 92,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-92-resolvecacheturbobinary",
           "currentTags": [
             "@category",
             "@since"
@@ -474357,8 +474223,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 163,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-163-joincachecensusplan",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-165-joincachecensusplan",
           "currentTags": [
             "@category",
             "@since"
@@ -474379,8 +474245,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 236,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-236-iscachetaskinspectionarg",
+          "line": 238,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-238-iscachetaskinspectionarg",
           "currentTags": [
             "@param",
             "@returns",
@@ -474403,8 +474269,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 262,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-262-cachetaskselectionargs",
+          "line": 264,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-264-cachetaskselectionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -474425,8 +474291,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-391-collectcachetaskselection",
+          "line": 393,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-393-collectcachetaskselection",
           "currentTags": [
             "@category",
             "@since"
@@ -474447,8 +474313,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 470,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-470-collectcachecensus",
+          "line": 472,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-472-collectcachecensus",
           "currentTags": [
             "@category",
             "@since"
@@ -477643,8 +477509,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 95,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-95-readcachesignaturerequired",
+          "line": 98,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-98-readcachesignaturerequired",
           "currentTags": [
             "@category",
             "@since"
@@ -477665,8 +477531,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 185,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-185-collectcachegitexclusions",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-188-collectcachegitexclusions",
           "currentTags": [
             "@category",
             "@since"
@@ -477687,8 +477553,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 212,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-212-collectcachetoolchain",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-215-collectcachetoolchain",
           "currentTags": [
             "@category",
             "@since"
@@ -477709,8 +477575,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 300,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-300-hashcachetoolchain",
+          "line": 303,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-303-hashcachetoolchain",
           "currentTags": [
             "@category",
             "@since"
@@ -477731,8 +477597,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 332,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-332-fingerprintcachecomputation",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-335-fingerprintcachecomputation",
           "currentTags": [
             "@category",
             "@since"
@@ -477753,8 +477619,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 419,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-419-projectcachesignedroot",
+          "line": 422,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-422-projectcachesignedroot",
           "currentTags": [
             "@category",
             "@since"
@@ -477775,8 +477641,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 460,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-460-projectcacheactivation",
+          "line": 463,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-463-projectcacheactivation",
           "currentTags": [
             "@category",
             "@since"
@@ -477797,8 +477663,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.fingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
-          "line": 531,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-531-projectcachesignedactivation",
+          "line": 534,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-fingerprint-ts-534-projectcachesignedactivation",
           "currentTags": [
             "@category",
             "@since"
@@ -478722,8 +478588,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2239,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2239-runcachepilotfortesting",
+          "line": 2240,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2240-runcachepilotfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -478745,8 +478611,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2267,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2267-runcachepilotexperiment",
+          "line": 2268,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2268-runcachepilotexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -478767,8 +478633,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2305,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2305-runcachesignedpilotworker",
+          "line": 2306,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2306-runcachesignedpilotworker",
           "currentTags": [
             "@internal",
             "@category",
@@ -478790,8 +478656,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2335,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2335-runcachesignedpilotuploadworker",
+          "line": 2336,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2336-runcachesignedpilotuploadworker",
           "currentTags": [
             "@internal",
             "@category",
@@ -479193,8 +479059,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.profile.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.profile.ts",
-          "line": 52,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-profile-ts-52-rendercacheidentitylintprofile",
+          "line": 53,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-profile-ts-53-rendercacheidentitylintprofile",
           "currentTags": [
             "@category",
             "@since"
@@ -479215,8 +479081,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.profile.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.profile.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-profile-ts-90-verifycacheidentitylintprofile",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-profile-ts-91-verifycacheidentitylintprofile",
           "currentTags": [
             "@category",
             "@since"
@@ -479237,8 +479103,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.profile.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.profile.ts",
-          "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-profile-ts-117-writecacheidentitylintprofile",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-profile-ts-118-writecacheidentitylintprofile",
           "currentTags": [
             "@category",
             "@since"
@@ -492138,8 +492004,8 @@
           "exportKind": "const",
           "filePath": "src/commands/CreatePackage/CreatePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-122-resolvecreatepackagetemplatedir",
+          "line": 119,
+          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-119-resolvecreatepackagetemplatedir",
           "currentTags": [
             "@param",
             "@returns",
@@ -492166,8 +492032,8 @@
           "exportKind": "class",
           "filePath": "src/commands/CreatePackage/CreatePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
-          "line": 775,
-          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-775-templatecontext",
+          "line": 774,
+          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-774-templatecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -492188,8 +492054,8 @@
           "exportKind": "const",
           "filePath": "src/commands/CreatePackage/CreatePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
-          "line": 1123,
-          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1123-createpackagecommand",
+          "line": 1122,
+          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1122-createpackagecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -492210,8 +492076,8 @@
           "exportKind": "const",
           "filePath": "src/commands/CreatePackage/CreatePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
-          "line": 1975,
-          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1975-createpackagescripts",
+          "line": 1974,
+          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1974-createpackagescripts",
           "currentTags": [
             "@internal",
             "@category",
@@ -517088,8 +516954,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 82,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-82-knowledge-doctor-baseline-path",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-83-knowledge-doctor-baseline-path",
           "currentTags": [
             "@category",
             "@since"
@@ -517110,8 +516976,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 98,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-98-knowledge-doctor-promotions-path",
+          "line": 99,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-99-knowledge-doctor-promotions-path",
           "currentTags": [
             "@category",
             "@since"
@@ -517132,8 +516998,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 114,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-114-knowledge-doctor-identity-path",
+          "line": 115,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-115-knowledge-doctor-identity-path",
           "currentTags": [
             "@category",
             "@since"
@@ -517154,8 +517020,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 130,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-130-knowledge-doctor-baseline-note",
+          "line": 131,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-131-knowledge-doctor-baseline-note",
           "currentTags": [
             "@category",
             "@since"
@@ -517176,8 +517042,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 160,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-160-knowledgebaselinegroup",
+          "line": 161,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-161-knowledgebaselinegroup",
           "currentTags": [
             "@category",
             "@since"
@@ -517198,8 +517064,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 179,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-179-knowledgebaselinegroup",
+          "line": 180,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-180-knowledgebaselinegroup",
           "currentTags": [
             "@category",
             "@since"
@@ -517220,8 +517086,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-195-knowledgesealablespanclass",
+          "line": 196,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-196-knowledgesealablespanclass",
           "currentTags": [
             "@category",
             "@since"
@@ -517242,8 +517108,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 211,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-211-knowledgesealablespanclass",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-212-knowledgesealablespanclass",
           "currentTags": [
             "@category",
             "@since"
@@ -517264,8 +517130,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 242,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-242-knowledgebaselineentry",
+          "line": 243,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-243-knowledgebaselineentry",
           "currentTags": [
             "@category",
             "@since"
@@ -517286,8 +517152,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 286,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-286-knowledgedoctorbaseline",
+          "line": 287,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-287-knowledgedoctorbaseline",
           "currentTags": [
             "@category",
             "@since"
@@ -517308,8 +517174,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 319,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-319-knowledgedoctorpromotion",
+          "line": 320,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-320-knowledgedoctorpromotion",
           "currentTags": [
             "@category",
             "@since"
@@ -517330,8 +517196,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 345,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-345-knowledgedoctorpromotions",
+          "line": 346,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-346-knowledgedoctorpromotions",
           "currentTags": [
             "@category",
             "@since"
@@ -517352,8 +517218,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 370,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-370-knowledgeidentitymapping",
+          "line": 371,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-371-knowledgeidentitymapping",
           "currentTags": [
             "@category",
             "@since"
@@ -517374,8 +517240,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 395,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-395-knowledgedoctoridentity",
+          "line": 396,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-396-knowledgedoctoridentity",
           "currentTags": [
             "@category",
             "@since"
@@ -517396,8 +517262,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 439,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-439-knowledgesealfiles",
+          "line": 440,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-440-knowledgesealfiles",
           "currentTags": [
             "@category",
             "@since"
@@ -517418,8 +517284,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 521,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-521-readknowledgesealfiles",
+          "line": 524,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-524-readknowledgesealfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -517442,8 +517308,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 582,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-582-makeknowledgebaselinekey",
+          "line": 585,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-585-makeknowledgebaselinekey",
           "currentTags": [
             "@param",
             "@returns",
@@ -517466,8 +517332,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 640,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-640-knowledgefindingdocumentpath",
+          "line": 643,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-643-knowledgefindingdocumentpath",
           "currentTags": [
             "@param",
             "@returns",
@@ -517490,8 +517356,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 670,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-670-isknowledgegovernancekind",
+          "line": 673,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-673-isknowledgegovernancekind",
           "currentTags": [
             "@param",
             "@returns",
@@ -517514,8 +517380,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 715,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-715-isknowledgebaselineable",
+          "line": 718,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-718-isknowledgebaselineable",
           "currentTags": [
             "@param",
             "@returns",
@@ -517538,8 +517404,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 769,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-769-knowledgeidentityinput",
+          "line": 772,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-772-knowledgeidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -517560,8 +517426,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 799,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-799-knowledgeidentityresolution",
+          "line": 802,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-802-knowledgeidentityresolution",
           "currentTags": [
             "@category",
             "@since"
@@ -517582,8 +517448,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 852,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-852-resolveknowledgedocumentidentity",
+          "line": 855,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-855-resolveknowledgedocumentidentity",
           "currentTags": [
             "@param",
             "@returns",
@@ -517606,8 +517472,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 935,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-935-knowledgeremovedpackagenames",
+          "line": 938,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-938-knowledgeremovedpackagenames",
           "currentTags": [
             "@param",
             "@returns",
@@ -517630,8 +517496,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 997,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-997-knowledgebaselinegroupinput",
+          "line": 1000,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1000-knowledgebaselinegroupinput",
           "currentTags": [
             "@category",
             "@since"
@@ -517652,8 +517518,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1070,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1070-classifyknowledgebaselinegroup",
+          "line": 1073,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1073-classifyknowledgebaselinegroup",
           "currentTags": [
             "@param",
             "@returns",
@@ -517676,8 +517542,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1096,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1096-knowledgemintinput",
+          "line": 1099,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1099-knowledgemintinput",
           "currentTags": [
             "@category",
             "@since"
@@ -517698,8 +517564,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1168,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1168-mintknowledgebaseline",
+          "line": 1171,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1171-mintknowledgebaseline",
           "currentTags": [
             "@param",
             "@returns",
@@ -517722,8 +517588,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1289,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1289-encodeknowledgebaselinetext",
+          "line": 1292,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1292-encodeknowledgebaselinetext",
           "currentTags": [
             "@param",
             "@returns",
@@ -517746,8 +517612,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1329,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1329-verifyknowledgebaselinetext",
+          "line": 1332,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1332-verifyknowledgebaselinetext",
           "currentTags": [
             "@param",
             "@returns",
@@ -517770,8 +517636,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1362,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1362-knowledgemintacceptance",
+          "line": 1365,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1365-knowledgemintacceptance",
           "currentTags": [
             "@category",
             "@since"
@@ -517792,8 +517658,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1403,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1403-knowledgesealguardinput",
+          "line": 1406,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1406-knowledgesealguardinput",
           "currentTags": [
             "@category",
             "@since"
@@ -517814,8 +517680,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1629,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1629-knowledgesealguard",
+          "line": 1632,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1632-knowledgesealguard",
           "currentTags": [
             "@param",
             "@returns",
@@ -517838,8 +517704,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1685,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1685-knowledgedoctorcheckinput",
+          "line": 1688,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1688-knowledgedoctorcheckinput",
           "currentTags": [
             "@category",
             "@since"
@@ -517860,8 +517726,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1781,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1781-checkknowledgedoctorreport",
+          "line": 1784,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1784-checkknowledgedoctorreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -517884,8 +517750,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1921,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1921-knowledgedoctorgatefailure",
+          "line": 1924,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1924-knowledgedoctorgatefailure",
           "currentTags": [
             "@param",
             "@returns",
@@ -562157,8 +562023,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.plan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
-          "line": 1315,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1315-tsconfigsyncplan",
+          "line": 1312,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1312-tsconfigsyncplan",
           "currentTags": [
             "@category",
             "@since"
@@ -581697,9 +581563,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 28,
-        "publicModuleCount": 28,
-        "publicExportCount": 104
+        "sourceFileCount": 30,
+        "publicModuleCount": 30,
+        "publicExportCount": 108
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -581947,6 +581813,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/Sync/VaultSync.config.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.config.ts",
           "line": 1,
@@ -581965,6 +581853,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 7,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Sync/VaultSync.file-store.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-file-store-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
           "remediationStatus": "resolved"
         },
         {
@@ -583547,6 +583457,75 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "ObservedFile",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 34,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-34-observedfile",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ObservedFolder",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 56,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-56-observedfolder",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VaultScanObservation",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 75,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-75-vaultscanobservation",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "DOCUMENTS_SYNC_MAX_ATTEMPTS_ENV",
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/VaultSync.config.ts",
@@ -583701,12 +583680,35 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "makeVaultSyncFileStore",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Sync/VaultSync.file-store.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts",
+          "line": 74,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-file-store-ts-74-makevaultsyncfilestore",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "makeVaultSyncEngine",
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/VaultSyncEngine.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
-          "line": 430,
-          "anchor": "packages-documents-server-src-aggregates-sync-vaultsyncengine-service-ts-430-makevaultsyncengine",
+          "line": 397,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsyncengine-service-ts-397-makevaultsyncengine",
           "currentTags": [
             "@effects",
             "@category",

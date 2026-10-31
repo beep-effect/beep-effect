@@ -19,6 +19,7 @@ import type * as Path from "effect/Path";
 import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.profile");
+const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;
 const SupportedIncludes = S.TupleWithRest(S.Tuple([S.Literal("**")]), [S.String.check(S.isPattern(/^!.+/))]).pipe(
   $I.annoteSchema("SupportedIncludes", {
     description: "Reviewed root scanner selection: one universal positive selector followed only by exclusions.",
@@ -50,7 +51,7 @@ const profilePath = "biome.identity.jsonc";
  * @since 0.0.0
  */
 export const renderCacheIdentityLintProfile = Effect.fn("CacheProfile.render")(function* (source: string) {
-  const config = yield* Jsonc.bind(S.JsonObject).decode(source);
+  const config = yield* decodeJsonObjectText(source);
   yield* decodeRoot(config.root);
   if (R.has(config, "extends"))
     return yield* CacheCommandError.new("Identity lint profile cannot inherit another config.");
