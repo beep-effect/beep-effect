@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T19:52:57.141Z",
+  "generatedAt": "2026-10-31T20:39:41.926Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 164,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
-    "publicModules": 3576,
-    "publicExports": 25352,
+    "publicModules": 3577,
+    "publicExports": 25357,
     "openModules": 166,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -381337,9 +381337,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 27,
-        "publicModuleCount": 27,
-        "publicExportCount": 244
+        "sourceFileCount": 28,
+        "publicModuleCount": 28,
+        "publicExportCount": 250
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -381797,6 +381797,27 @@
           "remediationStatus": "resolved"
         },
         {
+          "docKind": "jsdoc",
+          "filePath": "src/WorkspacePatterns.ts",
+          "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-1-module",
+          "currentTags": [
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
           "docKind": "packageDocumentation",
           "filePath": "src/WorkspaceRoot.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
@@ -381925,7 +381946,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 20,
+          "exportCount": 21,
           "remediationStatus": "resolved"
         },
         {
@@ -381969,7 +381990,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         }
       ],
@@ -385898,6 +385919,94 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "WorkspacePatternReadFailureKind",
+          "exportKind": "const",
+          "filePath": "src/WorkspacePatterns.ts",
+          "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+          "line": 55,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-55-workspacepatternreadfailurekind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "WorkspacePatternReadFailureKind",
+          "exportKind": "type",
+          "filePath": "src/WorkspacePatterns.ts",
+          "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+          "line": 66,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-66-workspacepatternreadfailurekind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "WorkspacePatternReadError",
+          "exportKind": "class",
+          "filePath": "src/WorkspacePatterns.ts",
+          "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+          "line": 92,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-92-workspacepatternreaderror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "WorkspacePatterns",
+          "exportKind": "class",
+          "filePath": "src/WorkspacePatterns.ts",
+          "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+          "line": 180,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-180-workspacepatterns",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "WORKSPACE_MARKERS",
           "exportKind": "const",
           "filePath": "src/WorkspaceRoot.ts",
@@ -387075,12 +387184,31 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  type FindWorkspaceRootOptions,\n  WORKSPACE_MARKERS,\n  WorkspaceRoot,\n  WorkspaceRootNotFoundError,\n  type WorkspaceRootShape,\n} from \"./WorkspaceRoot.ts\";",
+          "symbolName": "export {\n  WorkspacePatternReadError,\n  WorkspacePatternReadFailureKind,\n  WorkspacePatterns,\n} from \"./WorkspacePatterns.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/index.ts",
           "line": 124,
-          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-124-export-type-findworkspacerootoptions-workspace-markers-workspaceroot-workspacerootnotfounderror-type-workspacerootshape-from-workspaceroot-ts",
+          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-124-export-workspacepatternreaderror-workspacepatternreadfailurekind-workspacepatterns-from-workspacepatterns-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  type FindWorkspaceRootOptions,\n  WORKSPACE_MARKERS,\n  WorkspaceRoot,\n  WorkspaceRootNotFoundError,\n  type WorkspaceRootShape,\n} from \"./WorkspaceRoot.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/library/repo-workspaces/src/index.ts",
+          "line": 129,
+          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-129-export-type-findworkspacerootoptions-workspace-markers-workspaceroot-workspacerootnotfounderror-type-workspacerootshape-from-workspaceroot-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -387098,8 +387226,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/index.ts",
-          "line": 131,
-          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-131-export-type-workspacesnapshotatfailure-workspacesnapshots-type-workspacesnapshotsoptions-type-workspacesnapshotsshape-type-workspacesnapshotworktreefailure-from-workspacesnapshots-ts",
+          "line": 136,
+          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-136-export-type-workspacesnapshotatfailure-workspacesnapshots-type-workspacesnapshotsoptions-type-workspacesnapshotsshape-type-workspacesnapshotworktreefailure-from-workspacesnapshots-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -387117,8 +387245,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/index.ts",
-          "line": 138,
-          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-138-export-packagestatesnapshot-workspacestatesnapshot-from-workspacestatesnapshot-ts",
+          "line": 143,
+          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-143-export-packagestatesnapshot-workspacestatesnapshot-from-workspacestatesnapshot-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -387136,8 +387264,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/index.ts",
-          "line": 139,
-          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-139-export-workspaces-type-workspacesgitoptions-type-workspacesoptions-type-workspacesservices-from-workspaces-ts",
+          "line": 144,
+          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-144-export-workspaces-type-workspacesgitoptions-type-workspacesoptions-type-workspacesservices-from-workspaces-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -387155,8 +387283,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/index.ts",
-          "line": 145,
-          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-145-export-type-findworkspacerootsyncoptions-findworkspacerootsync-type-getworkspacepackagessyncoptions-getworkspacepackagessync-type-syncdirectoryentry-syncenumerationbound-type-syncenumerationobserver-type-syncfilesystem-type-syncpath-syncrootceiling-type-workspacediscoveryskip-type-workspacediscoveryskipkind-workspaceenumerationdeptherror-type-workspacessyncoptions-from-workspacessync-ts",
+          "line": 150,
+          "anchor": "packages-tooling-library-repo-workspaces-src-index-ts-150-export-type-findworkspacerootsyncoptions-findworkspacerootsync-type-getworkspacepackagessyncoptions-getworkspacepackagessync-type-syncdirectoryentry-syncenumerationbound-type-syncenumerationobserver-type-syncfilesystem-type-syncpath-syncrootceiling-type-workspacediscoveryskip-type-workspacediscoveryskipkind-workspaceenumerationdeptherror-type-workspacessyncoptions-from-workspacessync-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -387394,12 +387522,31 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  type FindWorkspaceRootOptions,\n  WorkspaceRoot,\n  WorkspaceRootNotFoundError,\n  type WorkspaceRootShape,\n} from \"./WorkspaceRoot.ts\";",
+          "symbolName": "export {\n  WorkspacePatternReadError,\n  WorkspacePatternReadFailureKind,\n  WorkspacePatterns,\n} from \"./WorkspacePatterns.ts\";",
           "exportKind": "re-export",
           "filePath": "src/testing.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/testing.ts",
           "line": 74,
-          "anchor": "packages-tooling-library-repo-workspaces-src-testing-ts-74-export-type-findworkspacerootoptions-workspaceroot-workspacerootnotfounderror-type-workspacerootshape-from-workspaceroot-ts",
+          "anchor": "packages-tooling-library-repo-workspaces-src-testing-ts-74-export-workspacepatternreaderror-workspacepatternreadfailurekind-workspacepatterns-from-workspacepatterns-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  type FindWorkspaceRootOptions,\n  WorkspaceRoot,\n  WorkspaceRootNotFoundError,\n  type WorkspaceRootShape,\n} from \"./WorkspaceRoot.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/testing.ts",
+          "repoPath": "packages/tooling/library/repo-workspaces/src/testing.ts",
+          "line": 79,
+          "anchor": "packages-tooling-library-repo-workspaces-src-testing-ts-79-export-type-findworkspacerootoptions-workspaceroot-workspacerootnotfounderror-type-workspacerootshape-from-workspaceroot-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -457272,7 +457419,7 @@
         "srcDir": "src",
         "sourceFileCount": 485,
         "publicModuleCount": 483,
-        "publicExportCount": 4483
+        "publicExportCount": 4482
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -465201,7 +465348,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -479624,8 +479771,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 807,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-807-revokecacheproducerissuer",
+          "line": 806,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-806-revokecacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -492893,8 +493040,8 @@
           "exportKind": "const",
           "filePath": "src/commands/CreatePackage/CreatePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
-          "line": 1122,
-          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1122-createpackagecommand",
+          "line": 1113,
+          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1113-createpackagecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -492915,8 +493062,8 @@
           "exportKind": "const",
           "filePath": "src/commands/CreatePackage/CreatePackage.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
-          "line": 1974,
-          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1974-createpackagescripts",
+          "line": 1965,
+          "anchor": "packages-tooling-tool-cli-src-commands-createpackage-createpackage-command-ts-1965-createpackagescripts",
           "currentTags": [
             "@internal",
             "@category",
@@ -541619,8 +541766,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 38,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-38-export-changesetgrapherror-from-quality-errors-ts",
+          "line": 39,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-39-export-changesetgrapherror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -541641,8 +541788,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 88,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-88-changesetgraphpackagereference",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-89-changesetgraphpackagereference",
           "currentTags": [
             "@category",
             "@since"
@@ -541663,8 +541810,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-122-changesetgraphsummary",
+          "line": 123,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-123-changesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -541685,32 +541832,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-196-changesetsparseclosingfenceline",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "readChangesetGraphRootPatterns",
-          "exportKind": "const",
-          "filePath": "src/commands/Quality/ChangesetGraph.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 263,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-263-readchangesetgraphrootpatterns",
+          "line": 204,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-204-changesetsparseclosingfenceline",
           "currentTags": [
             "@param",
             "@returns",
@@ -541733,8 +541856,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 299,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-299-readchangesetgraphworkspacemanifest",
+          "line": 270,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-270-readchangesetgraphworkspacemanifest",
           "currentTags": [
             "@param",
             "@returns",
@@ -541757,8 +541880,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 367,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-367-collectworkspacepackagejsonfiles",
+          "line": 340,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-340-collectworkspacepackagejsonfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -541781,8 +541904,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 475,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-475-changesetpackagereferencesfromtext",
+          "line": 439,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-439-changesetpackagereferencesfromtext",
           "currentTags": [
             "@category",
             "@since"
@@ -541803,8 +541926,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 584,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-584-findmissingchangesetpackagereferences",
+          "line": 548,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-548-findmissingchangesetpackagereferences",
           "currentTags": [
             "@param",
             "@returns",
@@ -541827,8 +541950,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 655,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-655-makechangesetgraphsummary",
+          "line": 619,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-619-makechangesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -541849,8 +541972,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 682,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-682-runchangesetgraphcheck",
+          "line": 646,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-646-runchangesetgraphcheck",
           "currentTags": [
             "@category",
             "@since"
@@ -562040,8 +562163,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.plan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
-          "line": 1312,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1312-tsconfigsyncplan",
+          "line": 1304,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1304-tsconfigsyncplan",
           "currentTags": [
             "@category",
             "@since"
