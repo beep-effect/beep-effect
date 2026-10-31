@@ -108,8 +108,9 @@ The fleet convention migration completed through PR #855 and its D27 recovery
 closeout. All 160 tracked goal packets plus `_template` now use
 `initiative-manifest/v2`; the retained apply report is
 [`packet-convention-migration/history/fleet-migration-report.md`](./packet-convention-migration/history/fleet-migration-report.md).
-Use `bun run beep goals migrate-conventions --preview` and
-`bun run beep explore --check` as drift checks. Do not restore legacy wire
+Use `bun run beep explore --check` as the drift check; its fleet lint
+reports duplicate ids, dependency cycles and dangling references. (`goals
+migrate-conventions` was retired in beep-cli-composition W0.) Do not restore legacy wire
 shapes or infer a convention from historical packet examples.
 
 ## Lifecycle

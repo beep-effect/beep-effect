@@ -7,7 +7,6 @@
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Jsonc } from "@beep/jsonc/Jsonc";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -23,13 +22,9 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { csvValues } from "../../../internal/cli/Flags.ts";
-import { readStdinDocument } from "../../../internal/cli/Stdin.ts";
-import { commandTextForStep, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import {
   FallowFeatureFamily,
   FallowReportEnvelope,
-  FindingAttributionKind,
   fallowEnvelopeFileName,
 } from "../../Quality/internal/FallowEnvelope.schema.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -50,36 +45,6 @@ type FallowOkEnvelope = FallowReportOk;
 type FallowFinding = FallowReportFinding;
 const FallowEnvelope = FallowReportEnvelope;
 type FallowEnvelope = FallowReportEnvelope;
-
-class FallowYeetIssueFixture extends S.Opaque<FallowYeetIssueFixture, { readonly brand: unique symbol }>()(
-  S.Struct({
-    id: S.String,
-    sourceFeature: FallowFeatureFamily,
-    sourceEnvelopeRef: S.String,
-    sourceFindingId: S.String,
-    tool: S.tag("fallow"),
-    parser: S.String,
-    subCategory: S.String,
-    blocking: S.tag(false),
-    attribution: FindingAttributionKind,
-  }).pipe(
-    $I.annoteSchema("FallowYeetIssueFixture", {
-      description: "Expected Yeet issue projection for one Fallow fixture finding.",
-    })
-  )
-) {}
-
-class FallowFixtureDocument extends S.Opaque<FallowFixtureDocument, { readonly brand: unique symbol }>()(
-  S.Struct({
-    schemaVersion: S.tag("fallow-quality-enforcement/report-fixtures/v1"),
-    fixtures: S.NonEmptyArray(FallowEnvelope),
-    yeetIssueFixtures: S.NonEmptyArray(FallowYeetIssueFixture),
-  }).pipe(
-    $I.annoteSchema("FallowFixtureDocument", {
-      description: "Checked-in Fallow report envelope fixture document.",
-    })
-  )
-) {}
 
 // `.beep/fallow` is gitignored, regenerable state. An advisory phase must never
 // fail a publish over it, so the two envelope defects that are pure leftovers —
@@ -127,9 +92,6 @@ class FallowEnvelopeDefect extends S.Opaque<FallowEnvelopeDefect, { readonly bra
 ) {}
 
 const decodeFallowEnvelopeJson = S.decodeUnknownEffect(S.fromJsonString(FallowEnvelope));
-const decodeFallowFixtureDocumentJsonc = Jsonc.bind(FallowFixtureDocument).decode;
-const decodeRepoRunPlanJson = S.decodeUnknownEffect(S.fromJsonString(RepoRunPlan));
-const decodeQualityIssueIndexJson = S.decodeUnknownEffect(S.fromJsonString(QualityIssueIndex));
 const encodeQualityIssueIndexJson = S.encodeUnknownEffect(S.fromJsonString(QualityIssueIndex));
 
 const readFileText = Effect.fn("YeetFallowFeedback.readFileText")(function* (
@@ -244,16 +206,6 @@ const writeQualityIssueIndex = Effect.fn("YeetFallowFeedback.writeQualityIssueIn
   yield* fs
     .writeFileString(absoluteEmitPath, `${json}\n`)
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to write "${absoluteEmitPath}".`)));
-});
-
-const readQualityIssueIndex = Effect.fn("YeetFallowFeedback.readQualityIssueIndex")(function* (
-  emitPath: string
-): Effect.fn.Return<QualityIssueIndex, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const absoluteEmitPath = yield* resolveRepoPath(emitPath);
-  const text = yield* readFileText(absoluteEmitPath);
-  return yield* decodeQualityIssueIndexJson(text).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to decode emitted QualityIssueIndex "${absoluteEmitPath}".`))
-  );
 });
 
 const fallbackPackageName = "@beep/root" as const;
@@ -522,9 +474,6 @@ const envelopePaths = Effect.fn("YeetFallowFeedback.envelopePaths")(function* (
   );
 });
 
-const spaceValues = (value: string): ReadonlyArray<string> =>
-  pipe(Str.split(value, " "), A.map(Str.trim), A.filter(Str.isNonEmpty));
-
 const readEnvelopeEntries = Effect.fn("YeetFallowFeedback.readEnvelopeEntries")(function* (
   fromPath: string
 ): Effect.fn.Return<ReadonlyArray<FallowEnvelopeEntry>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
@@ -597,164 +546,4 @@ export const runYeetFallowFeedback = Effect.fn("YeetFallowFeedback.runYeetFallow
   yield* assertEnvelopeFamilyConsistency(surviving);
   yield* writeQualityIssueIndex(options.emit, issueIndexFromEnvelopes(surviving, true));
   yield* Console.log(`[yeet] Fallow advisory issue index written to ${options.emit}`);
-});
-
-const fixtureIssueMatches = (issue: QualityIssue, fixture: FallowYeetIssueFixture): boolean =>
-  issue.tool === fixture.tool &&
-  issue.parser === fixture.parser &&
-  issue.subCategory === fixture.subCategory &&
-  issue.blocking === fixture.blocking &&
-  issue.attribution === fixture.attribution &&
-  issue.sourceAnchor === fixture.sourceFindingId;
-
-const fixtureDiagnostics = (
-  index: QualityIssueIndex,
-  fixtures: ReadonlyArray<FallowYeetIssueFixture>,
-  assertions: ReadonlyArray<string>
-): ReadonlyArray<string> => [
-  ...(A.contains(assertions, "QualityIssueIndex") && index.schemaVersion !== "yeet-quality-issue-index/v1"
-    ? ["emitted document is not a QualityIssueIndex"]
-    : []),
-  ...(A.contains(assertions, "tool=fallow") && A.some(index.issues, (issue) => issue.tool !== "fallow")
-    ? ["expected every issue.tool to be fallow"]
-    : []),
-  ...(A.contains(assertions, "blocking=false") && A.some(index.issues, (issue) => issue.blocking)
-    ? ["expected every Fallow advisory issue to be nonblocking"]
-    : []),
-  ...(A.contains(assertions, "attribution") && A.some(index.issues, (issue) => issue.attribution === undefined)
-    ? ["expected every Fallow issue to carry attribution"]
-    : []),
-  ...A.flatMap(fixtures, (fixture) =>
-    A.some(index.issues, (issue) => fixtureIssueMatches(issue, fixture))
-      ? []
-      : [`missing Yeet issue fixture projection for ${fixture.id}`]
-  ),
-];
-
-/**
- * Decode checked-in Fallow fixtures and assert Yeet issue projection invariants.
- *
- * @category commands
- * @since 0.0.0
- */
-export const runYeetFallowFixtureCheck = Effect.fn("YeetFallowFeedback.runYeetFallowFixtureCheck")(function* (options: {
-  readonly assertions: string;
-  readonly emit: string;
-  readonly fixturePath: string;
-}): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const absoluteFixturePath = yield* resolveRepoPath(options.fixturePath);
-  const fixtureText = yield* readFileText(absoluteFixturePath);
-  const document = yield* decodeFallowFixtureDocumentJsonc(fixtureText).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to decode Fallow fixture document "${options.fixturePath}".`))
-  );
-  yield* assertAdvisoryEnvelopes(document.fixtures, true);
-  const index = issueIndexFromEnvelopes(document.fixtures, true);
-  yield* writeQualityIssueIndex(options.emit, index);
-  const emittedIndex = yield* readQualityIssueIndex(options.emit);
-  const diagnostics = fixtureDiagnostics(emittedIndex, document.yeetIssueFixtures, csvValues(options.assertions));
-  if (!A.isReadonlyArrayEmpty(diagnostics)) {
-    return yield* YeetCommandError.make({
-      message: `Fallow fixture check failed:\n${A.join(
-        A.map(diagnostics, (diagnostic) => `- ${diagnostic}`),
-        "\n"
-      )}`,
-      exitCode: 1,
-    });
-  }
-  yield* Console.log(`[yeet] Fallow fixture check ok: ${options.fixturePath}`);
-});
-
-const readStdinText = (fromStdin: boolean): Effect.Effect<string, YeetCommandError> =>
-  readStdinDocument(fromStdin, {
-    missingFlag: "yeet plan-contract-check requires --from-stdin.",
-    noStdin: "yeet plan-contract-check --from-stdin received no stdin.",
-    readFailurePrefix: "Failed to read yeet plan stdin",
-  }).pipe(Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 })));
-
-const decodePlanText = Effect.fn("YeetFallowFeedback.decodePlanText")(function* (
-  text: string
-): Effect.fn.Return<RepoRunPlan, YeetCommandError> {
-  const jsonText = Str.trim(text);
-  return yield* decodeRepoRunPlanJson(jsonText).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to decode yeet run plan."))
-  );
-});
-
-const fallowAdvisoryPrecedenceDiagnostics = (
-  plan: RepoRunPlan,
-  stepIndex: number,
-  step: RepoRunPlan["steps"][number]
-): ReadonlyArray<string> => {
-  if (step.id !== "advisory:01-fallow-feedback") {
-    return [];
-  }
-  const laterPhaseBeforeAdvisory = pipe(
-    plan.steps,
-    A.take(stepIndex),
-    A.filter((candidate) => candidate.phase === "full" || candidate.phase === "publish"),
-    A.map((candidate) => candidate.id)
-  );
-  return [
-    ...(step.phase === "feedback" ? [] : [`expected step phase feedback, got ${step.phase}`]),
-    ...(A.isReadonlyArrayEmpty(laterPhaseBeforeAdvisory)
-      ? []
-      : [
-          `expected Fallow advisory feedback before full/publish step(s), got before it: ${A.join(laterPhaseBeforeAdvisory, ", ")}`,
-        ]),
-  ];
-};
-
-/**
- * Assert a named Yeet plan step exists with exact command shape.
- *
- * @category commands
- * @since 0.0.0
- */
-export const runYeetPlanContractCheck = Effect.fn("YeetFallowFeedback.runYeetPlanContractCheck")(function* (options: {
-  readonly expectArgs: string;
-  readonly expectCommand: string;
-  readonly expectStepId: string;
-  readonly expectStepLabel: string;
-  readonly fromStdin: boolean;
-}): Effect.fn.Return<void, YeetCommandError> {
-  const text = yield* readStdinText(options.fromStdin);
-  const plan = yield* decodePlanText(text);
-  const step = A.findFirst(plan.steps, (candidate) => candidate.id === options.expectStepId);
-  if (O.isNone(step)) {
-    return yield* YeetCommandError.make({
-      message: `missing yeet plan step ${options.expectStepId}`,
-      exitCode: 1,
-    });
-  }
-  const stepIndex = A.findFirstIndex(plan.steps, (candidate) => candidate.id === options.expectStepId);
-  const expectedArgs = spaceValues(options.expectArgs);
-  const diagnostics = [
-    ...(step.value.label === options.expectStepLabel
-      ? []
-      : [`expected step label ${options.expectStepLabel}, got ${step.value.label}`]),
-    ...(step.value.command === options.expectCommand
-      ? []
-      : [`expected step command ${options.expectCommand}, got ${step.value.command}`]),
-    ...(A.join(step.value.args, " ") === A.join(expectedArgs, " ")
-      ? []
-      : [`expected step args ${A.join(expectedArgs, " ")}, got ${A.join(step.value.args, " ")}`]),
-    ...pipe(
-      stepIndex,
-      O.match({
-        onNone: () => [],
-        onSome: (index) => fallowAdvisoryPrecedenceDiagnostics(plan, index, step.value),
-      })
-    ),
-  ];
-  if (!A.isReadonlyArrayEmpty(diagnostics)) {
-    return yield* YeetCommandError.make({
-      message: `yeet plan-contract-check failed for ${options.expectStepId}:\n${A.join(
-        A.map(diagnostics, (diagnostic) => `- ${diagnostic}`),
-        "\n"
-      )}`,
-      command: commandTextForStep(step.value),
-      exitCode: 1,
-    });
-  }
-  yield* Console.log(`[yeet] plan contract ok: ${options.expectStepId}`);
 });

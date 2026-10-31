@@ -109,12 +109,10 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     Effect.gen(function* () {
       yield* runQualityCommand(["profile"]);
       yield* runQualityCommand(["scheduler"]);
-      yield* runQualityCommand(["jsdoc-migrate"]);
 
       const output = yield* consoleText();
       expect(output).toContain("Quality profile commands:");
       expect(output).toContain("Quality scheduler commands:");
-      expect(output).toContain("JSDoc carrier-migration commands:");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
@@ -218,7 +216,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
           ["github-checks", "not-a-mode"],
           ["profile", "config", "not-a-profile"],
           ["turbo-config-proof", "--selector", "not-a-selector"],
-          ["jsdoc-migrate", "titles", "--limit-files", "not-an-integer"],
+          ["residue-reap", "--qualification-views-keep", "not-an-integer"],
         ],
         (argv) => Effect.exit(runQualityCommand(argv))
       );
