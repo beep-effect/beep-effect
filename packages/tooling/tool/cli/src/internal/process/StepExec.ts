@@ -1226,6 +1226,119 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
 });
 
 /**
+ * Result of {@link runFoldedStdout}: the folded stdout value beside the bounded stderr text.
+ *
+ * **Example** (Read a folded stdout value)
+ *
+ * ```ts
+ * import { FoldedStdout } from "@beep/repo-cli/test/Process"
+ *
+ * const result = FoldedStdout.make({ exitCode: 0, value: "digest", stderr: "", truncated: false })
+ * console.log(result.value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FoldedStdout extends S.Opaque<FoldedStdout, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exitCode: S.Finite,
+    value: S.String,
+    stderr: S.String,
+    truncated: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("FoldedStdout", {
+      description:
+        "Subprocess result whose stdout was folded while streaming, with bounded stderr flagged when it hit the bound.",
+    })
+  )
+) {}
+
+/**
+ * Options for {@link runFoldedStdout}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunFoldedStdoutOptions = SpawnFields & {
+  readonly command: string;
+  readonly args: ReadonlyArray<string>;
+  /** Consumes the raw stdout bytes as they arrive and reduces them to one value. */
+  readonly fold: (
+    stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+  ) => Effect.Effect<string, PlatformError.PlatformError>;
+  readonly stderrBound?: OutputBound | undefined;
+};
+
+/**
+ * Spawn a command and fold its stdout while it streams, never buffering it whole.
+ *
+ * **Details**
+ *
+ * For output too large for a bounded capture that the caller only needs reduced (a digest, a
+ * count), the `fold` consumes stdout chunk by chunk, so memory stays at whatever the fold keeps.
+ * stderr is captured separately under `stderrBound` (default {@link repoRunOutputBound}) for the
+ * failure message; `truncated` reports only whether that stderr capture was clipped. Nonzero exit
+ * codes are represented in the result, stdin defaults to `"ignore"`, and the same pipe deadline as
+ * {@link runCapturedStreams} ends a fold whose pipe an escaped descendant holds open.
+ *
+ * **Example** (Count stdout bytes without buffering them)
+ *
+ * ```ts
+ * import { runFoldedStdout } from "@beep/repo-cli/test/Process"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ *
+ * const size = runFoldedStdout({
+ *   command: "git",
+ *   args: ["log", "--oneline"],
+ *   fold: (stdout) =>
+ *     stdout.pipe(
+ *       Stream.runFold(() => 0, (total: number, chunk: Uint8Array) => total + chunk.length),
+ *       Effect.map(String)
+ *     )
+ * })
+ * console.log(Effect.isEffect(size)) // true
+ * ```
+ *
+ * @param options - Command, spawn fields, stdout fold, and stderr bound.
+ * @returns The folded stdout value, bounded stderr, exit code, and stderr truncation flag.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runFoldedStdout = Effect.fn("StepExec.runFoldedStdout")(function* (
+  options: RunFoldedStdoutOptions
+): Effect.fn.Return<
+  FoldedStdout,
+  PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  return yield* Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* makeAdmittedChild(options, {
+        stdin: options.stdin ?? "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
+      const [value, stderr, exitCode] = yield* Effect.all(
+        [
+          options.fold(handle.stdout.pipe(Stream.interruptWhen(deadline))),
+          foldDecodedText(
+            decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)),
+            options.stderrBound ?? repoRunOutputBound,
+            false
+          ),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
+      return FoldedStdout.make({ exitCode, value, stderr: stderr.text, truncated: stderr.truncated });
+    })
+  );
+});
+
+/**
  * Options for {@link runToExit}.
  *
  * @category models
