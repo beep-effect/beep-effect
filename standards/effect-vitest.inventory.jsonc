@@ -2077,15 +2077,15 @@
       "reason": "The permission bracket is intentionally shorter than the surrounding test: the unreadable-directory assertion must observe failed access before chmod restoration, while the interruption regression holds mode 0 until cancellation. A shared acquireUseRelease helper makes both paths use the same restoration finalizer; moving it to it.layer or the whole test scope changes the observed lifetime. Node and Bun pass all 10 integration tests; a dropped-restoration mutation fails the mode-before-cleanup assertion (0 instead of 448) and restores the source afterward. See research/pr1323-readiness-and-interruption-proof.md. Owner: @beep/professional-desktop. Exit: EV003 recognizes a deliberately shorter-than-test permission bracket as its own judgment class. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/evaluation/allowed.main.ts:50:program@27#1",
+      "id": "EV003:packages/law-practice/server/test/evaluation/allowed.main.ts:55:program@27#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/evaluation/allowed.main.ts",
-      "line": 50,
-      "endLine": 171,
+      "line": 55,
+      "endLine": 177,
       "symbol": "program",
-      "occurrence": "v2:a180f6d8dc92d4ea9d29ac3566bb857cff40a24c6ef0c20e8793c942b9c081c6",
+      "occurrence": "v2:2c662ecc441e9778f59ce6164927c4baf5c26b72069f46e9d1e26a77938dbf4b",
       "class": "resource-wrapper",
       "evidence": "function* () { const fs = yield* FileSystem.FileSystem; const crypto = yield* Crypto.Crypto; const output = yield* Config.String(\"CLAIM_ALLOWED_OUTPUT\"); const implementationFile = yield* Config.Strin",
       "replacement": {
@@ -2096,18 +2096,18 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Owner: @beep/law-practice-server. This file is an executable offline evaluation entrypoint using BunRuntime.runMain, not an it test. Native filesystem/crypto services verify immutable on-disk source and runtime hashes and write a fresh versioned result directory. Moving its program into it.layer would remove its CLI contract. Exit: retire when the detector excludes executable evaluation main entrypoints or the evaluator becomes a dedicated command package."
+      "reason": "Owner: @beep/law-practice-server. Executable offline evaluation main, registered as a Fallow entrypoint and invoked by the fixed replay protocol. Per-source scoped live adapter layers and exact on-disk hash checks are the subject; this is not an it test. Moving the command into it.layer would remove its CLI contract. Exit: retire when the detector excludes CLI evaluation entrypoints or the evaluator becomes a dedicated command package."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/evaluation/positive.main.ts:70:program@27#1",
+      "id": "EV003:packages/law-practice/server/test/evaluation/positive.main.ts:84:program@27#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/evaluation/positive.main.ts",
-      "line": 70,
-      "endLine": 235,
+      "line": 84,
+      "endLine": 251,
       "symbol": "program",
-      "occurrence": "v2:64f907e88fe667e83a31bd1950b2b654d79fcae57468e9e6a99a381a3a585cf4",
+      "occurrence": "v2:098c169f33bf3a351b4a69a64b973f5b4ff9f5174dea3da2aafca6db1c19f23d",
       "class": "resource-wrapper",
       "evidence": "function* () { const fs = yield* FileSystem.FileSystem; const crypto = yield* Crypto.Crypto; const output = yield* Config.String(\"CLAIM_EVALUATION_OUTPUT\"); const packet = \"goals/claim-element-anteced",
       "replacement": {
@@ -2118,7 +2118,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Owner: @beep/law-practice-server. This file is an executable offline evaluation entrypoint using BunRuntime.runMain, not an it test. Native filesystem/crypto services verify immutable on-disk source and runtime hashes and write a fresh versioned result directory. Moving its program into it.layer would remove its CLI contract. Exit: retire when the detector excludes executable evaluation main entrypoints or the evaluator becomes a dedicated command package."
+      "reason": "Owner: @beep/law-practice-server. Executable offline evaluation main, registered as a Fallow entrypoint and invoked by the fixed replay protocol. Per-source scoped live adapter layers and exact on-disk hash checks are the subject; this is not an it test. Moving the command into it.layer would remove its CLI contract. Exit: retire when the detector excludes CLI evaluation entrypoints or the evaluator becomes a dedicated command package."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/AgentMessage.layer.test.ts:10:query@55#1",

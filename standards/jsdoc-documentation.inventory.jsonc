@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T10:05:36.830Z",
+  "generatedAt": "2026-10-31T10:14:20.828Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -188563,8 +188563,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
-          "line": 60,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-60-isdesignatedhead",
+          "line": 66,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-66-isdesignatedhead",
           "currentTags": [
             "@category",
             "@since"
@@ -188585,8 +188585,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
-          "line": 79,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-79-iscountedhead",
+          "line": 82,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-82-iscountedhead",
           "currentTags": [
             "@category",
             "@since"

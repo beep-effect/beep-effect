@@ -13,7 +13,6 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { ClaimTermRef } from "@beep/law-practice-domain/values/ClaimElement";
 import type { TextAnchor } from "@beep/provenance/TextAnchor";
 
 const Manifest = S.Struct({
@@ -40,7 +39,7 @@ const assertAnchor = (text: string, anchor: TextAnchor): void =>
   assert.strictEqual(Str.slice(anchor.startChar, anchor.endChar)(text), anchor.quote);
 
 const assertEndpoint = Effect.fn("ReferenceIntegrity.assertEndpoint")(function* (
-  ref: ClaimTermRef,
+  ref: (typeof ClaimElementEdge.cases.antecedent.Type)["referring"],
   source: typeof Source.Type,
   trees: ReadonlyArray<ClaimElementTree>
 ) {
@@ -85,7 +84,7 @@ const assertReferenceTree = Effect.fn("ReferenceIntegrity.assertTree")(function*
   trees: ReadonlyArray<ClaimElementTree>
 ) {
   assert.strictEqual(tree.producer, "llm");
-  const edgeValues = yield* Effect.forEach(tree.edges, encodeReferenceEdge);
+  const edgeValues = yield* Effect.forEach(tree.edges, (edge) => encodeReferenceEdge(edge));
   assert.strictEqual(A.dedupe(edgeValues).length, tree.edges.length);
   const claimOption = A.findFirst(source.claims, (c) => c.claimNumber === tree.claimNumber);
   if (O.isNone(claimOption)) return yield* Effect.die(`Missing source claim ${tree.claimNumber}`);

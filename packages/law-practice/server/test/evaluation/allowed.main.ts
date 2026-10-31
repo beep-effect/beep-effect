@@ -132,32 +132,31 @@ const program = Effect.gen(function* () {
             )
           ).pipe(Effect.provide(context), Effect.result);
         }).pipe(Effect.scoped);
-        const result = yield* Effect.gen(function* () {
-          if (checked._tag === "Success") {
-            const report = checked.success;
-            if (report.claimSet.claims.length !== row.claimCount)
-              return yield* StructuralEvaluationError.make({
-                message: `Allowed adapter claim count mismatch: ${row.patentNumber}`,
-              });
-            yield* fs.writeFileString(`${output}/${row.patentNumber}.prediction.json`, yield* encodeReport(report));
-            return {
-              ...row,
-              status: "checked",
-              checkedClaims: report.claimSet.claims.length,
-              trees: report.report.trees.length,
-              undecomposed: report.report.undecomposed.length,
-              findings: report.report.findings.length,
-            };
-          }
+        const progress = Console.log(`Replayed frozen allowed set ${index + 1}/${inputs.length}: ${row.patentNumber}`);
+        if (checked._tag === "Success") {
+          const report = checked.success;
+          if (report.claimSet.claims.length !== row.claimCount)
+            return yield* StructuralEvaluationError.make({
+              message: `Allowed adapter claim count mismatch: ${row.patentNumber}`,
+            });
+          yield* fs.writeFileString(`${output}/${row.patentNumber}.prediction.json`, yield* encodeReport(report));
+          yield* progress;
           return {
             ...row,
-            status: "input-failed",
-            failureReason: checked.failure.reason,
-            failureMessage: checked.failure.message,
+            status: "checked",
+            checkedClaims: report.claimSet.claims.length,
+            trees: report.report.trees.length,
+            undecomposed: report.report.undecomposed.length,
+            findings: report.report.findings.length,
           };
-        });
-        yield* Console.log(`Replayed frozen allowed set ${index + 1}/${inputs.length}: ${row.patentNumber}`);
-        return result;
+        }
+        yield* progress;
+        return {
+          ...row,
+          status: "input-failed",
+          failureReason: checked.failure.reason,
+          failureMessage: checked.failure.message,
+        };
       }),
     { concurrency: 1 }
   );
