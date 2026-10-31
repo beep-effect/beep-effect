@@ -19,6 +19,7 @@ import shared, { fcDeepSweepActive, packageTestTimeout, vitestDoctestActive } fr
  */
 const isolatedSuites = [
   "test/bun-runtime-version.test.ts",
+  "test/cache-acceptance.test.ts",
   "test/cache-conformance-command.test.ts",
   "test/cache-operational-acceptance.test.ts",
   "test/cache-pilot-orchestration.test.ts",
@@ -59,7 +60,6 @@ const isolatedSuites = [
   "test/goals-graph.test.ts",
   "test/goals-manifest-capabilities.test.ts",
   "test/goals-materialize.test.ts",
-  "test/goals-packet-convention-migration.test.ts",
   "test/goals-set-risk-tier.test.ts",
   "test/goals-set-status-stream.test.ts",
   "test/identity-registration-removal.test.ts",

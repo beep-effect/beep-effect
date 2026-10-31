@@ -13,6 +13,13 @@ The 2026-10-31 closeout adds all 20 newly observed Dependabot alerts in
 a separate catalog. The prior session-only unmerged hold ended when #2333
 merged and the operator requested full closure.
 
+Current delivery: implementation PR #2389 is merged. Final receipt PR #2416
+must capture genuine canonical readiness before merge, retain exact external
+closure evidence, and yield verified post-merge receipts for both packets.
+The twenty supplemental dependency alerts remain open despite fixed graph
+versions; all fifteen Cloud findings are Fixed and code/secret inventories
+show zero open alerts. The final PR changes evidence only.
+
 ## Non-Goals
 
 - No accepted-risk or `Won't fix` disposition.
@@ -68,8 +75,11 @@ merged and the operator requested full closure.
 - [ ] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
 - [ ] Yeet repair and verify are green on the complete remediation scope.
-- [ ] The branch is published, hosted checks and reviews are closed, and the PR
-      is mergeable and merged.
+- [ ] Final receipt PR #2416 is published; its exact final head has genuine
+      canonical readiness before merge, all reviews are closed, and it is merged.
+- [ ] Both packets retain active declared lifecycle until verified post-merge
+      completion receipts derive `completed-retained`; all supplemental dependency
+      and scanning IDs are resolved with exact evidence and zero-open inventories.
 - [ ] All 7 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
@@ -139,3 +149,23 @@ five secret-scanning alerts. Their separate sanitized catalog is
 `research/2026-10-31-scanning.md`. All nine must be resolved with evidence,
 without accepted risk, before final completion. Preserve the original seven
 Cloud IDs and twenty dependency IDs.
+
+## Final receipt reconciliation — October 31
+
+Implementation PR #2389 merged at `ac8993e7773065c55b11e6b71b0f1471a0105d2f`.
+All 35 hosted check jobs ultimately passed on its accepted head; the separate
+optional Vercel statuses report deployment rate limits. The merge preceded this
+lane's positive canonical readiness capture. Later green checks do not supply
+that missing historical observation.
+
+Final closeout PR [#2416](https://github.com/beep-effect/beep-effect/pull/2416)
+retains the merged implementation and must obtain genuine final-head canonical
+`merge-ready: yes` while it is still open. Preserve that evidence before merge.
+After #2416 merges and all exact external statuses are verified, run
+`goals completion refresh` for both packets. Their declared lifecycle remains
+`active` with prospective `completed-retained` until verified receipts derive
+completion. No gate is weakened and no readiness receipt is fabricated.
+
+Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
+fixed versions in the dependency graph alone do not establish closure. See the
+[accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

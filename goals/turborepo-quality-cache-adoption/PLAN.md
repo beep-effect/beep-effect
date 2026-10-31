@@ -383,6 +383,18 @@ thirty-one feature reviews remain pending. The 199 fresh whole-command
 dispositions and 2,372 gaps are retained from their existing source snapshot,
 not refreshed or requalified here. No phase or whole-goal criterion is completed.
 
+
+### Current signed-worker diagnostic, 2026-10-31
+
+The trust owner's [worker observation](../turborepo-cache-trust-observability/research/normal-source-worker-observation.json)
+retains a full stable-client matrix on accepted source without worker or native
+launch changes. Its outer diagnostic caller differs from the ordinary CLI,
+whose corrected attempts still failed. This narrows the investigation but
+qualifies or adopts no computation. Current-canary CLI proof, protected R2
+publication, all remaining feature/disposition work and real windows stay open.
+The credential bootstrap is independently verified; do not repeat the older
+pending human-credential request.
+
 ### Quiet-log hash presentation, 2026-10-31
 
 The [source review](research/errors-only-feature-review.json) retains the absent
@@ -423,3 +435,31 @@ private report digests. The prior report is retained byte-identically in
 can be reconstructed at `70145eb55b`, without asserting that was its original
 execution commit. No old execution was relabeled with new source hashes.
 This preserves the same feature decision and grants no task qualification.
+
+
+### GitHub event-base fallback applicability
+
+The [source review](research/base-ref-feature-review.json) retains the absent
+`githubActionsRemoteBaseRefFallback` flag. Current hosted callers pass a fetched
+remote base or frozen coverage SHA, and the curated native calls receive that
+explicit value through `TURBO_SCM_BASE`. The flag benefits implicit event-base
+inference, which is a different path from these reviewed callers.
+
+The [native controls](research/native-base-ref-controls.json) executed 36 native selection cases
+on stable 2.11.10 and frozen canary 2.11.11-canary.1 across absent, false and true
+settings. Explicit refs and SHAs selected the changed fixture task in every
+setting; an invalid explicit base failed, while absent implicit refs warned and
+selected all tasks. The unchanged task hash stayed fixed within each setting.
+Three driver refusals passed, and no task executed. This is not a real CI timing
+or qualification result. It proposes a sixth final feature decision and leaves
+29 feature reviews pending; whole-goal acceptance remains unproven.
+
+The opt-in `turbo-config-proof` diagnostic is recorded separately: it deliberately
+offers ambient affected and explicit filter-range dry selectors, and no automatic
+workflow/script caller was found. This review does not treat its dry-plan output
+as quality-task execution or assign it a measured time saving.
+
+Accepted-main #2386 integration changes the bound Quality command only by its
+producer-verifier import and cache-policy layer provision. Exhaustive byte
+comparison preserves every explicit-base helper. The source-applicability hash
+is refreshed after that review; native driver and execution receipts are unchanged.

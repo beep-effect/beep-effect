@@ -12,6 +12,7 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, vi } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -119,8 +120,8 @@ describe("SqlTest offline coverage", () => {
 
       expect(result.driver).toBe("node-sqlite");
       expect(result.bodies).toEqual(["alpha", "beta"]);
-      expect(O.isSome(result.databasePath)).toBe(true);
-      expect(O.isSome(result.tempDir)).toBe(true);
+      result.databasePath.pipe(O.isSome, assertTrue);
+      result.tempDir.pipe(O.isSome, assertTrue);
     })
   );
 
@@ -149,7 +150,7 @@ describe("SqlTest offline coverage", () => {
         )
       );
 
-      expect(Exit.isFailure(migrateExit)).toBe(true);
+      migrateExit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(migrateExit)) {
         const failure = Cause.squash(migrateExit.cause);
         expect(SqlTestHarnessError.is(failure)).toBe(true);
@@ -159,7 +160,7 @@ describe("SqlTest offline coverage", () => {
         }
       }
 
-      expect(Exit.isFailure(seedExit)).toBe(true);
+      seedExit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(seedExit)) {
         const failure = Cause.squash(seedExit.cause);
         expect(SqlTestHarnessError.is(failure)).toBe(true);
@@ -180,8 +181,8 @@ describe("SqlTest offline coverage", () => {
 
       expect(result.driver).toBe("pglite-inprocess");
       expect(result.bodies).toEqual(["alpha", "beta"]);
-      expect(O.isSome(result.databasePath)).toBe(true);
-      expect(O.isSome(result.tempDir)).toBe(true);
+      result.databasePath.pipe(O.isSome, assertTrue);
+      result.tempDir.pipe(O.isSome, assertTrue);
     })
   );
 
@@ -200,7 +201,7 @@ describe("SqlTest offline coverage", () => {
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
         expect(SqlTestHarnessError.is(failure)).toBe(true);
@@ -232,7 +233,7 @@ describe("SqlTest offline coverage", () => {
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
         expect(SqlTestHarnessError.is(failure)).toBe(true);
@@ -248,7 +249,7 @@ describe("SqlTest offline coverage", () => {
     Effect.gen(function* () {
       const exit = yield* makePgliteTestcontainerResource().pipe(Effect.scoped, Effect.exit);
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
         expect(SqlTestHarnessError.is(failure)).toBe(true);
@@ -355,7 +356,7 @@ describe("SqlTest offline coverage", () => {
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
         expect(SqlTestHarnessError.is(failure)).toBe(true);

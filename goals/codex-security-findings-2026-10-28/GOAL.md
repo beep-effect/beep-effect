@@ -4,8 +4,8 @@ Repo root: the current working directory. Do not assume an absolute path.
 
 Outcome: fix and close the 7 Codex security findings captured on
 2026-10-28 for `kriegcloud/beep-effect`: 1 Low, 6 Informational.
-Ship one Yeet-driven PR to mergeable, merge it, then resolve the exact captured
-Codex IDs until no packet-applicable finding remains open.
+Retain merged implementation and exact closure; finish final receipt PR #2416
+with genuine pre-merge readiness and verified post-merge completion evidence.
 
 Read first:
 
@@ -39,7 +39,7 @@ Rules:
 4. Keep raw report bodies ignored under `raw/`. Tracked records may contain only
    sanitized metadata, summaries, decisions, changed files, and proof.
 5. Run focused tests, affected package checks, packet validation, then Yeet
-   repair/verify. Publish one intentional PR and monitor through mergeable.
+   repair/verify. Qualify #2416 and preserve its authentic final-head readiness before merge.
 6. After merge, close only the exact 7-ID allowlist in Codex as Fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
 
@@ -49,9 +49,19 @@ same blocker repeats after reasonable investigation.
 
 ## Current acceptance — 2026-10-31
 
-The fixes for the seven Cloud findings merged in #2333, and the findings are Fixed. PR #2389 carries
-20 newer dependency fixes (#450–#469) in `ops/dependabot.json`. Nine additional
-code/secret-scanning alerts are tracked in `ops/scanning.json`; resolve each
-with strict evidence and verify zero open alerts in every inventory. Finish its
-hosted review, merge, exact alert closure and completion receipt; preserve
-the original Cloud catalog and historical evidence.
+The seven Cloud IDs are Fixed after #2333 merge. #2389 merged the twenty
+newer dependency fixes (#450–#469), but their alerts remain open pending graph
+reconciliation. The nine code/secret-scanning alerts are resolved; preserve
+zero-open inventories and all exact identities. #2416 is the final receipt PR.
+
+## Final receipt reconciliation — October 31
+
+#2389 merged before this lane captured positive canonical readiness; later
+green checks cannot replace it. Hold #2416 until its genuine final-head
+`merge-ready: yes` is recorded while open. Preserve the verdict, then obtain the
+owning security session’s explicit merge release to the designated coordinator.
+After #2416 merges and exact dependency closure is verified, run
+`bun run beep goals completion refresh --slug codex-security-findings-2026-10-28`.
+Refresh the linked packet too. Keep declared lifecycle active and prospective
+`completed-retained` until verified receipts derive completion. See the
+[accepted report](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

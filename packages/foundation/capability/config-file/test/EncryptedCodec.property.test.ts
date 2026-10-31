@@ -10,7 +10,7 @@ import { ConfigEncryptionError } from "@beep/config-file/EncryptedCodec";
 
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   it.effect.prop(
-    name + ": decoding an encoded value succeeds and recovers the value",
+    `${name}: decoding an encoded value succeeds and recovers the value`,
     [Arbitrary.schema(schema)],
     ([value]) =>
       Effect.gen(function* () {
@@ -42,7 +42,7 @@ const encryptedJsonc = EncryptedCodec(generatedKey)(JsoncCodec);
 
 for (const codec of [encryptedJson, encryptedJsonc]) {
   it.effect.prop(
-    codec.name + ": decrypting an encoded value succeeds and preserves document fidelity",
+    `${codec.name}: decrypting an encoded value succeeds and preserves document fidelity`,
     [Arbitrary.schema(S.Json)],
     ([value]) =>
       Effect.gen(function* () {

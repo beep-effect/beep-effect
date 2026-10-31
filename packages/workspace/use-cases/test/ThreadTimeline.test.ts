@@ -5,7 +5,7 @@ import { fcRuns } from "@beep/test-utils";
 import { Thread } from "@beep/workspace-use-cases/public";
 import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -83,7 +83,7 @@ describe("ThreadTimeline", () => {
         threadId,
       });
       assertNone(appendInput.parentTurnId);
-      expect(yield* encodeServerThreadAppendTurnInput(appendInput)).toStrictEqual({
+      deepStrictEqual(yield* encodeServerThreadAppendTurnInput(appendInput), {
         content: encodedContent,
         parentTurnId: O.none(),
         role: "user",

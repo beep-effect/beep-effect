@@ -12,7 +12,7 @@ describe("ClosingList whitespace branch coverage", () => {
   it.effect("admits control and U+2000–U+200A whitespace in the opening gap only", () =>
     Effect.sync(() => {
       for (const gap of ["\t", "\n", "\v", "\f", "\r", "\u2000", "\u2005", "\u200a"]) {
-        const text = "refs" + gap + "#7";
+        const text = `refs${gap}#7`;
         assert.deepStrictEqual(harvestReferenceLists(text), [
           HarvestedReferenceList.make({
             keyword: "refs",

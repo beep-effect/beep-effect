@@ -79,7 +79,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 40,
+      "line": 41,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the documents-sync target SQL and unique-index enforcement; schema-derived arbitrary round-trips for the Sync* entities live with the domain model tests (packages/documents/domain/test/Sync*.test.ts)."
     },
@@ -1860,24 +1860,6 @@
       "reason": "Hot-path finding record constructed as plain literals by every inventory rule; S.Struct keeps that construction allocation-light while the annotated schema still owns the shape. Values are aggregated in-process and never decoded from IO."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
-      "symbol": "computeJSDocMigrateBinding",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 188,
-      "owner": "@beep/repo-cli",
-      "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
-      "symbol": "JSDocMigrateScannedBlock",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "In-memory scan result produced once per doc block while walking an 11k+-block corpus; S.Struct plus the same-name type keeps the hot loop literal-based while the annotated schema owns the shape. Never decoded or persisted - the persisted row is JSDocMigrateExtractRecord."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
       "symbol": "JSDocMigrateBlockStats",
       "kind": "object-struct-schema",
@@ -1891,7 +1873,7 @@
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/repo-cli",
-      "reason": "Structural parameter contract of the pure block rewriter; callers project it from the schema-decoded JSDocMigrateTitleRecord, so the IO boundary is already class-modeled and this struct is never decoded itself."
+      "reason": "Structural parameter contract of the pure block rewriter; its one caller, the effected port runner scratchpad/effected/runner/DocsMigrate.ts, builds it directly from in-memory extraction results, so this struct is never decoded itself."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
