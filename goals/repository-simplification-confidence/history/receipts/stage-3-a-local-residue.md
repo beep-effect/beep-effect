@@ -46,15 +46,15 @@ The proposed recovery destination follows the out-of-checkout residue store conv
 | `~/YeeBois/projects/beep-effect11/.serena` | Serena project state | `beep-effect11` root, `main` | 3 | 11384 | `fc4a18d1157342838511b6a0e7ce6b26e1e8c351521e0555b1245b0a188ccf64` | 2026-10-09T20:33Z | live: 88 process cwds; ledger `open` 2026-10-31 | `~/.cache/beep/residue/beep-effect11/.serena` | owner disposition needed: live clone |
 | `~/YeeBois/projects/beep-effect12/.impeccable` | impeccable hook state | `beep-effect12` root, `main` | 1 | 10397 | `829c7c4e184ab3a0e23746aa107fe2fd2599ef3c6e41349f8f523f3ba6790324` | 2026-10-21T18:59Z | live: 4 process cwds | retain in place | retained: user-plugin state |
 | `~/YeeBois/projects/beep-effect13/.impeccable` | impeccable hook state | `beep-effect13` root, `main` | 1 | 12490 | `37dbeac75b28f67bd83b64da5645a5626bbfb106f97c452035d7a4d88dd5c09d` | 2026-10-20T16:35Z | live: 24 process cwds; ledger `open` 2026-10-29 | retain in place | retained: user-plugin state |
-| `~/YeeBois/projects/beep-effect14/.serena` | Serena project state | `beep-effect14` root, `main` | 3 | 11384 | `a7f5347be307170ae176b998d482702128cfd02f437ec4c834d123421f0bd412` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect14/.serena` | owner disposition needed: idle clone root |
+| `~/YeeBois/projects/beep-effect14/.serena` | Serena project state | `beep-effect14` root, `main` | 3 | 11384 | `a7f5347be307170ae176b998d482702128cfd02f437ec4c834d123421f0bd412` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect14/.serena` | archived 2026-10-31 (operator ruling) |
 | `~/YeeBois/projects/beep-effect16/.impeccable` | impeccable hook state | `beep-effect16` root, `main` | 1 | 6040 | `f40fa10a1933369271fb2843ab675a6c94d2097493b8b663a4ada555bf4fa475` | 2026-10-21T03:18Z | idle: 0 process cwds; ledger none | retain in place | retained: user-plugin state |
-| `~/YeeBois/projects/beep-effect16/.serena` | Serena project state | `beep-effect16` root, `main` | 3 | 11384 | `7f5785d8e23d122666edd3f9c1e86804ad03895a8de26ab6dd0db1356050a9eb` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect16/.serena` | owner disposition needed: idle clone root |
+| `~/YeeBois/projects/beep-effect16/.serena` | Serena project state | `beep-effect16` root, `main` | 3 | 11384 | `7f5785d8e23d122666edd3f9c1e86804ad03895a8de26ab6dd0db1356050a9eb` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect16/.serena` | archived 2026-10-31 (operator ruling) |
 | `~/YeeBois/projects/beep-effect18/.impeccable` | impeccable hook state | `beep-effect18` root, `main` | 2 | 3071 | `2b573ab069bbda9522bba21bdc7fe213531c88be066c1f278585f3cd5b6c33fb` | 2026-10-21T03:19Z | idle: 0 process cwds; ledger none | retain in place | retained: user-plugin state |
-| `~/YeeBois/projects/beep-effect18/.serena` | Serena project state | `beep-effect18` root, `main` | 3 | 11384 | `cee6a1860b2983623450a5422e1155a6d4186c41aa0fdb47506bdf6d876a8d4b` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect18/.serena` | owner disposition needed: idle clone root |
+| `~/YeeBois/projects/beep-effect18/.serena` | Serena project state | `beep-effect18` root, `main` | 3 | 11384 | `cee6a1860b2983623450a5422e1155a6d4186c41aa0fdb47506bdf6d876a8d4b` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect18/.serena` | archived 2026-10-31 (operator ruling) |
 | `~/YeeBois/projects/beep-effect19/.impeccable` | impeccable hook state | `beep-effect19` root, `main` | 1 | 249 | `de8d71842a24fdd7045854d7e6c30067a56292648712932b63a132cc207bb5e0` | 2026-10-21T03:19Z | idle: 0 process cwds; ledger none | retain in place | retained: user-plugin state |
 | `~/YeeBois/projects/beep-effect2/.serena` | Serena project state | `beep-effect2` root, `main` | 4 | 13426 | `9dedea79e21bae024377cbf1daba574fa7c978483d4c3362913dc9ab25c2f149` | 2026-10-09T20:33Z | live: 27 process cwds; ledger `open` 2026-10-31 | `~/.cache/beep/residue/beep-effect2/.serena` | owner disposition needed: live clone |
 | `~/YeeBois/projects/beep-effect20/.impeccable` | impeccable hook state | `beep-effect20` root, `main` | 1 | 3131 | `b98e1d914872d09e94702be17fecaa27c8c66ace885670e7e445097d47382bf9` | 2026-10-21T03:20Z | idle: 0 process cwds; ledger none | retain in place | retained: user-plugin state |
-| `~/YeeBois/projects/beep-effect20/.serena` | Serena project state | `beep-effect20` root, `main` | 3 | 11384 | `4747a92627c565620937031657071b2ce4f9301713ca4b021eee702d77ec6e41` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect20/.serena` | owner disposition needed: idle clone root |
+| `~/YeeBois/projects/beep-effect20/.serena` | Serena project state | `beep-effect20` root, `main` | 3 | 11384 | `4747a92627c565620937031657071b2ce4f9301713ca4b021eee702d77ec6e41` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger none | `~/.cache/beep/residue/beep-effect20/.serena` | archived 2026-10-31 (operator ruling) |
 | `~/YeeBois/projects/beep-effect21/.impeccable` | impeccable hook state | `beep-effect21` root, `main` | 1 | 2349 | `9ba363412e907cdb83ec0e7ac6b9743c704fdc39cce8ef6c656413f584a1b53c` | 2026-10-21T03:20Z | idle: 0 process cwds; ledger none | retain in place | retained: user-plugin state |
 | `~/YeeBois/projects/beep-effect22/.impeccable` | impeccable hook state | `beep-effect22` root, `main` | 1 | 2446 | `2baa8dec1d464f4373dd42c790e8e5b99efb44ac5c77670d67569771d64b2133` | 2026-10-21T03:22Z | idle: 0 process cwds; ledger `done` 2026-10-31 | retain in place | retained: user-plugin state |
 | `~/YeeBois/projects/beep-effect22/.serena` | Serena project state | `beep-effect22` root, `main` | 3 | 11386 | `e1a0a0f3f2d278c4be88a99bed2d307e9c8f0ab2d37e023784fc1cc052bb8660` | 2026-10-14T08:51Z | idle: 0 process cwds; ledger `done` 2026-10-31 | `~/.cache/beep/residue/beep-effect22/.serena` | owner disposition needed: idle clone root |
@@ -67,15 +67,15 @@ The proposed recovery destination follows the out-of-checkout residue store conv
 | `~/YeeBois/projects/beep-effect5/.serena` | Serena project state | `beep-effect5` root, `feat/beep-effect-web-alchemy` | 4 | 13426 | `1e353ece5c1ce85c69f7e25ebba183c21e8241e14db18a758dffd21c45591a9a` | 2026-10-09T20:33Z | live: 16 process cwds; ledger `open` 2026-10-28; PR #2391 | `~/.cache/beep/residue/beep-effect5/.serena` | owner disposition needed: live clone |
 | `~/YeeBois/projects/beep-effect6/.impeccable` | impeccable hook state | `beep-effect6` root, `main` | 1 | 931 | `8984bf7d9bb50ea512d6dfc0618e9cd45162e3ed7379d2d4a9ffd925edbe27d4` | 2026-10-20T16:24Z | live: ledger `open` 2026-10-29 | retain in place | retained: user-plugin state |
 | `~/YeeBois/projects/beep-effect6/.serena` | Serena project state | `beep-effect6` root, `main` | 4 | 13426 | `9384a4aa8922c8b2bf12c56b4bb30f8d8a1e677d92dc6d9605209754dc5a4248` | 2026-10-09T20:33Z | live: ledger `open` 2026-10-29 | `~/.cache/beep/residue/beep-effect6/.serena` | owner disposition needed: live clone |
-| `~/YeeBois/projects/beep-effect7/.serena` | Serena project state | `beep-effect7` root, `main` | 4 | 13426 | `d23b134221733fc66874dc76d91a9a3487a6b43368c63818476f1b788405c0d7` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger `done` 2026-10-14 | `~/.cache/beep/residue/beep-effect7/.serena` | owner disposition needed: idle clone root |
+| `~/YeeBois/projects/beep-effect7/.serena` | Serena project state | `beep-effect7` root, `main` | 4 | 13426 | `d23b134221733fc66874dc76d91a9a3487a6b43368c63818476f1b788405c0d7` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger `done` 2026-10-14 | `~/.cache/beep/residue/beep-effect7/.serena` | archived 2026-10-31 (operator ruling) |
 | `~/YeeBois/projects/beep-effect8/.impeccable` | impeccable hook state | `beep-effect8` root, `main` | 1 | 3552 | `96f84bfde764d005f1ff52fcf7aac9f4739216b02d31cf5dd5bc89f3fd92e05d` | 2026-10-23T01:06Z | idle: 0 process cwds; ledger `done` 2026-10-23 | retain in place | retained: user-plugin state |
-| `~/YeeBois/projects/beep-effect8/.serena` | Serena project state | `beep-effect8` root, `main` | 3 | 11383 | `849d09166011797b1778e2f549c55f4b6e83eeab4db0e1327e1c46b772bf7fc1` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger `done` 2026-10-23 | `~/.cache/beep/residue/beep-effect8/.serena` | owner disposition needed: idle clone root |
+| `~/YeeBois/projects/beep-effect8/.serena` | Serena project state | `beep-effect8` root, `main` | 3 | 11383 | `849d09166011797b1778e2f549c55f4b6e83eeab4db0e1327e1c46b772bf7fc1` | 2026-10-09T20:33Z | idle: 0 process cwds; ledger `done` 2026-10-23 | `~/.cache/beep/residue/beep-effect8/.serena` | archived 2026-10-31 (operator ruling) |
 | `~/YeeBois/projects/beep-effect9/.impeccable` | impeccable hook state | `beep-effect9` root, `main` | 1 | 1051 | `d465268a62e077d0bbff77541ba606bcdc9ebe1386a26b01c87081ccf67c3abc` | 2026-10-20T16:34Z | live: 3 process cwds; ledger `open` 2026-10-31 | retain in place | retained: user-plugin state |
 | `~/YeeBois/projects/beep-effect9/.serena` | Serena project state | `beep-effect9` root, `main` | 3 | 11383 | `c94027eec54724d202757e86526315860c02fcdbcc3cb7c1e992e4da049b9b0b` | 2026-10-09T20:33Z | live: 3 process cwds; ledger `open` 2026-10-31 | `~/.cache/beep/residue/beep-effect9/.serena` | owner disposition needed: live clone |
 
-## Cleanup this pass: none
+## Cleanup in the census pass: none
 
-Nothing was moved or deleted. The brief allows cleanup only when the owning checkout is removed or its branch is merged, with no live process and no open ledger row, and only through an existing backed-up, drift-fenced path (`beep quality residue-reap` or `beep worktree remove --archive`). No row met both conditions:
+The census pass moved and deleted nothing. The brief allows cleanup only when the owning checkout is removed or its branch is merged, with no live process and no open ledger row, and only through an existing backed-up, drift-fenced path (`beep quality residue-reap` or `beep worktree remove --archive`). No row met both conditions:
 
 - All 18 non-plugin rows sit in clone roots. A clone root is never removed, and new sessions re-enter it without notice. Its owner is the clone itself, not a merged lane.
 - `residue-reap` discovers only closed classes (`codex-*`, `turbo-*`, `checkout-*`, `beep-cache-disposable`, `merged-preview`, `qualification-views`). None of them covers `.serena`, `sst-env.d.ts` or `tools/skillopt/.venv`.
@@ -91,7 +91,7 @@ Nothing was moved or deleted. The brief allows cleanup only when the owning chec
   - `beep-effect6`: `.serena`, open ledger row.
 
   Each needs the live session in that clone to archive the path, or to confirm the archive, before it is moved.
-- **7 rows in idle clone roots:** `.serena` in `beep-effect14`, `beep-effect16`, `beep-effect18`, `beep-effect20`, `beep-effect22`, `beep-effect7` and `beep-effect8`. Each has no process cwd, no open ledger row, no write since 2026-10-14, and inert content. They need either an orchestrator archive-only ruling like the one the S44 orchestrator gave #2099 on 2026-10-23, or a `residue-reap` class for disabled-tool project state. Either one would archive them with the hashes above.
+- **7 rows in idle clone roots:** `.serena` in `beep-effect14`, `beep-effect16`, `beep-effect18`, `beep-effect20`, `beep-effect22`, `beep-effect7` and `beep-effect8`. The operator then ruled archive-only for these, the same disposition as #2099 (see the archive pass below). Six were archived. `beep-effect22` failed the re-check and is held.
 - **17 `.impeccable` rows** are retained as user-plugin state. No action is needed.
 
 ## Earlier "left in place" rows (2026-10-23 receipt)
@@ -101,3 +101,37 @@ Of the 29 rows:
 - **Two checkouts are gone:** `beep-effect2-worktrees/effect-vitest-capability-leaves` and `effect-vitest-inventory-proof`. Their tracked `goals` rows left with them.
 - **Tracked working-tree content stays with its checkout's own retirement:** the remaining `goals`, `packages`, `explorations`, `scratchpad`, `.changeset` and `tools` rows.
 - **`.serena` and `sst-env.d.ts` rows** are carried into the table above with today's liveness.
+
+## Archive pass (2026-10-31, operator ruling)
+
+The operator ruled archive-only for the seven idle `.serena` rows (relayed by the program orchestrator: "Yes, archive them"), the same disposition as #2099. Each clone was re-checked at about 17:20Z, immediately before its move:
+
+- **Process cwds:** none for any of the seven (`/proc/*/cwd` under the clone root, excluding nested worktrees).
+- **Ledger:** the latest row for each clone is `done` or absent.
+- **Tracking:** `.serena` holds no tracked file in any of the seven.
+- **Writes:** The only non-dependency writes since 2026-10-24 are fleet maintenance, not session work. On 2026-10-31 at 15:27–15:30Z every clone root was fast-forwarded to `f16d82e9f1` by `git pull`, which also wrote the tracked files, the `node_modules` refresh and the generated `infra/ci-runners` SDK output. On 2026-10-28 at about 19:20Z the `.direnv` flake profiles were refreshed. Excluding those, the newest `.beep` write is 2026-10-28 in `beep-effect8`, 2026-10-27 in `beep-effect7` and `beep-effect16`, and 2026-09-25 in the rest. No `.serena` content has been written since 2026-10-09.
+- **Held:** `beep-effect22` recorded Claude session writes on 2026-10-31 at 07:45–08:04Z (`.beep/inbox/sessions`, `.turbo/runs`), with its ledger row `done` at 08:04Z. A session less than a day old fails the "no recent writes" check, so this row stays in place and is archived only after a later idle re-check.
+
+Each directory was moved with `mv -nT` to `~/.cache/beep/residue/<clone>/.serena`. The manifest digest (the convention of the 2026-10-23 receipt, hashed without a trailing newline) was recomputed on the archive, and it equals the pre-move digest in every row. The source path no longer exists. The documented shell manifest command reproduces the `beep-effect7` digest. Nothing was deleted.
+
+Restore: first confirm the original path is absent. Then verify the archive against its digest:
+
+```sh
+(cd <archive> && find . -type f -print0 | sort -z | xargs -0 sha256sum | sed 's#  ./#  #' | LC_ALL=C sort | head -c -1 | sha256sum)
+```
+
+Then run the row's command.
+
+| Path | Files | Bytes | Manifest SHA-256 (before = after) | Archive | Restore |
+| --- | ---: | ---: | --- | --- | --- |
+| `~/YeeBois/projects/beep-effect7/.serena` | 4 | 13426 | `d23b134221733fc66874dc76d91a9a3487a6b43368c63818476f1b788405c0d7` | `~/.cache/beep/residue/beep-effect7/.serena` | `mv -nT ~/.cache/beep/residue/beep-effect7/.serena ~/YeeBois/projects/beep-effect7/.serena` |
+| `~/YeeBois/projects/beep-effect8/.serena` | 3 | 11383 | `849d09166011797b1778e2f549c55f4b6e83eeab4db0e1327e1c46b772bf7fc1` | `~/.cache/beep/residue/beep-effect8/.serena` | `mv -nT ~/.cache/beep/residue/beep-effect8/.serena ~/YeeBois/projects/beep-effect8/.serena` |
+| `~/YeeBois/projects/beep-effect14/.serena` | 3 | 11384 | `a7f5347be307170ae176b998d482702128cfd02f437ec4c834d123421f0bd412` | `~/.cache/beep/residue/beep-effect14/.serena` | `mv -nT ~/.cache/beep/residue/beep-effect14/.serena ~/YeeBois/projects/beep-effect14/.serena` |
+| `~/YeeBois/projects/beep-effect16/.serena` | 3 | 11384 | `7f5785d8e23d122666edd3f9c1e86804ad03895a8de26ab6dd0db1356050a9eb` | `~/.cache/beep/residue/beep-effect16/.serena` | `mv -nT ~/.cache/beep/residue/beep-effect16/.serena ~/YeeBois/projects/beep-effect16/.serena` |
+| `~/YeeBois/projects/beep-effect18/.serena` | 3 | 11384 | `cee6a1860b2983623450a5422e1155a6d4186c41aa0fdb47506bdf6d876a8d4b` | `~/.cache/beep/residue/beep-effect18/.serena` | `mv -nT ~/.cache/beep/residue/beep-effect18/.serena ~/YeeBois/projects/beep-effect18/.serena` |
+| `~/YeeBois/projects/beep-effect20/.serena` | 3 | 11384 | `4747a92627c565620937031657071b2ce4f9301713ca4b021eee702d77ec6e41` | `~/.cache/beep/residue/beep-effect20/.serena` | `mv -nT ~/.cache/beep/residue/beep-effect20/.serena ~/YeeBois/projects/beep-effect20/.serena` |
+
+After this pass, #1854 has 12 rows left:
+
+- 11 rows in live clones, owner-held.
+- `beep-effect22/.serena`, held pending an idle re-check.
