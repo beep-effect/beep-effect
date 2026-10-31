@@ -1014,9 +1014,79 @@ export const decomposeClaim: {
         ? [{ kind: "depends-on-element", dependent: edge.referring.path, ancestor: edge.introducing.path }]
         : [];
     });
+    // A bare object explicitly defined by `to form` is a structural result,
+    // even though bare wording does not establish legal antecedent basis.
+    // Later limitations may refine that result through an immediate parent.
+    const resultDependencies = A.flatMap(
+      input.elements,
+      (element): ReadonlyArray<EncodedEdge> =>
+        O.match(
+          O.filter(
+            A.head(element.terms),
+            (term) =>
+              element.kind === "functional-relation" &&
+              term.anchor.startChar === element.anchor.startChar &&
+              isReferringDeterminer(term.determiner)
+          ),
+          {
+            onNone: () => [],
+            onSome: (subject) => {
+              const origins = A.flatMap(ancestors, (ancestor) =>
+                A.map(
+                  A.filter(
+                    ancestor.terms,
+                    (term) =>
+                      term.determiner === "bare" &&
+                      term.head === subject.head &&
+                      O.isSome(
+                        Str.match(/\bto form\s*$/iu)(
+                          Str.slice(0, term.anchor.startChar - ancestor.anchor.startChar)(ancestor.anchor.quote)
+                        )
+                      ) &&
+                      A.some(
+                        antecedents,
+                        (edge) =>
+                          edge.kind === "antecedent" &&
+                          edge.referring.path === element.path &&
+                          edge.referring.anchor.startChar === subject.anchor.startChar &&
+                          edge.introducing.path === ancestor.path &&
+                          edge.introducing.anchor.startChar === term.anchor.startChar
+                      )
+                  ),
+                  () => ancestor
+                )
+              );
+              if (origins.length !== 1) return [];
+              const origin = O.getOrThrow(A.head(origins));
+              const parents = A.filter(
+                ancestors,
+                (ancestor) =>
+                  A.some(referencesOf(claim), (number) => Str.startsWith(`${number}.`)(ancestor.path)) &&
+                  (ancestor.path === origin.path ||
+                    (ancestor.kind === "functional-relation" &&
+                      O.exists(
+                        A.head(ancestor.terms),
+                        (term) => term.anchor.startChar === ancestor.anchor.startChar && term.head === subject.head
+                      )))
+              );
+              return O.match(parents.length === 1 ? A.head(parents) : O.none(), {
+                onNone: () => [],
+                onSome: (parent): ReadonlyArray<EncodedEdge> => [
+                  { kind: "depends-on-element", dependent: element.path, ancestor: parent.path },
+                ],
+              });
+            },
+          }
+        )
+    );
     const linked = {
       ...input,
-      edges: [...A.filter(input.edges, (edge) => edge.kind !== "antecedent"), ...antecedents, ...bodyDependencies],
+      edges: [
+        ...A.filter(input.edges, (edge) => edge.kind !== "antecedent"),
+        ...antecedents,
+        ...bodyDependencies,
+        ...resultDependencies,
+      ],
     };
     return yield* decodeTree(linked).pipe(
       Effect.mapError((error) =>

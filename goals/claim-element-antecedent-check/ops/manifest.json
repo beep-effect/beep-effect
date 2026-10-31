@@ -60,17 +60,17 @@
     {
       "id": "P2",
       "name": "Deterministic implementation + USPTO adapter + labelled set",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Review items + evaluation",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",
@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "User supersedes mandatory attorney presence: autonomous acceptance v1 governs independent automated reference review and current-runtime allowed adjudication, with immutable old labels/results, explicit uncertainty and actual-attorney fields false. Current structural baseline 34/538, all 34 protected. Autonomous completion and required Yeet/closeout work remain active; historical human blockers are superseded authority records."
+  "statusNote": "Autonomous acceptance v1 applied: v16 strict 37/538, all 34 protected passes retained. Independent reference and allowed reviews complete with uncertainty and high alert noise explicit; actual-attorney fields false. References and previous results unchanged. P4 publication/readiness and P5 closeout remain active."
 }

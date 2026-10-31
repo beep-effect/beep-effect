@@ -55,21 +55,15 @@ Sibling goals:
 
 ## Current Phase
 
-P2, in progress. P0 and P1 merged in #1764. The deterministic rules, service,
-native USPTO adapter and recorded first contract slice are implemented locally.
-ODP access works. The source selection is qualified and frozen: 60 positive
-families / 538 selected claims and 200 allowed sets / 3,184 source claims.
-All 60 families now have semantic-reference drafts covering all 538 selected
-claims. Independent semantic criticism, convention decisions and actual attorney
-agreement remain incomplete. The P3 read-only tool is implemented and verified.
-The first structural measurement triggered the explicit poor-floor stop condition;
-the subsequent user-directed repair is recorded below; publication remains pending. Closeout remains incomplete.
+P2/P3 are measured under autonomous acceptance v1. The fixed benchmark is **37/538**, retaining every protected pass. Independent source reviews and the current-runtime allowed sample are complete with uncertainty retained. Findings remain advisory; alert noise and structural recovery remain poor. P4 publication/readiness and P5 closeout are in progress; attorney attendance is optional.
 
 ## Current Acceptance Authority
 
 The user explicitly requires autonomous completion without attorney presence. [Autonomous acceptance v1](research/AUTONOMOUS-ACCEPTANCE-v1.md) governs current work: independent automated review/adjudication, immutable references/results, explicit uncertainty and optional later attorney review. Historical human-hold records remain intact and are superseded for current completion.
 
 ## Latest Evidence
+
+- **Current autonomous evaluation (2026-10-31):** [report](history/2026-10-31-autonomous-evaluation.md) records **37/538**, all 34 protected claims retained and three gains, with unchanged references/results. Independent automated reference review yields 33 agree/3 revise/14 uncertain out of 50; seven of eight conventions reach consensus. Current-runtime allowed review yields 21 erroneous-alert claims, seven negative and two unknown in the original 30-claim sample: 70.0–76.7% identification bounds and a conditional 52.1–88.2% Wilson envelope. Actual attorney flags remain false. 99 focused tests and all three package verifications pass. Historical human holds below are superseded by the current authority.
 
 - **User-directed structural repair while attorney review is unavailable (2026-10-31):** [comparison](history/2026-10-31-quantity-comparison.md) records **34/538 exact structures (6.32%)**, retaining all 31 previous passes with three gains and zero losses. Edge F1 rises to 29.5816%; 446 mismatches/58 input failures remain. Predicate/quantity-context fixes have three new regressions, 94 focused tests and all package verifications passing. Every reference label, prior result and review packet is intact. Existing allowed review/results remain v13 evidence; no v14 adjudicated FP estimate is claimed.
 

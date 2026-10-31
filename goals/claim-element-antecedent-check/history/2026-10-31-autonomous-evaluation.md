@@ -1,0 +1,41 @@
+# Autonomous evaluation and structural repair — 2026-10-31
+
+The fixed benchmark improves from 34/538 to **37/538 exact claim structures (6.8773%)**. All 34 protected passes remain; claims 9, 10 and 11 in `11575704-root-1` are the three gains. The original 0/538 measurement and every intervening result remain separate records. No reference label, selected claim, equality criterion or failed-input denominator was changed.
+
+## Recurring gap repaired
+
+The closest headlamp-family predictions already matched their terms, spans and functional clauses but lacked result-refinement dependencies. An ancestor introduces a result through “to form”; a dependent claim then starts a functional limitation with that result's referring term. The decomposer now links that refinement to the unique immediate-parent element, including through a parent refinement. It requires a unique source-defined result, exact normalized head and antecedent identity. Proper introductions retain precedence. Generic bare terms, ambiguous definitions and sibling-only definitions do not qualify. This is a structural relation: existing advisory antecedent warnings remain independently visible.
+
+The intermediate v15 checkpoint added quantified-object predicate and “to form” boundaries and measured 34/538. It is retained separately. v16 adds the conservative result dependencies above; it has 99 focused domain tests, including direct/transitive and ambiguity/branch controls. Independent code review found no actionable defect in this bounded repair; it did not certify general parsing correctness.
+
+## Same benchmark, same labels
+
+| Version | Exact structures | Typed-edge F1 | Input failures | Structural mismatches |
+| --- | ---: | ---: | ---: | ---: |
+| v14 protected baseline | 34/538 | 29.5816% | 58 | 446 |
+| v15 intermediate | 34/538 | 29.7755% | 58 | 446 |
+| v16 | 37/538 | 29.8169% | 58 | 443 |
+
+v16 has 1,840 matching typed edges, 5,432 predicted edges and 6,910 reference edges: precision 33.8733%, recall 26.6281%. Exact structures remain the primary metric. There are no undecomposed selected claims among successfully normalized inputs. The score remains poor; these improvements do not establish general reliability or held-out accuracy. The full evaluation and summary retain rule/CPC/feature slices. The paired retention receipt lists every retained and gained claim and an empty lost set.
+
+## Acceptance without mandatory attorney attendance
+
+The user explicitly superseded mandatory attorney presence. `research/AUTONOMOUS-ACCEPTANCE-v1.md` defines independent automated source review and bounded unresolved outcomes. Two separate GPT-6.1-Sol sessions at medium effort reviewed the frozen six-family, 50-claim reference sample without runtime predictions or parser rules. Original extractor/critic labels remain untouched; review proposals are overlays only.
+
+After two bounded rounds, both reviewers agree at self-assessed confidence at least 0.95 on **33 existing references**, **three proposed revisions**, and leave **14 uncertain**. Agreement with the existing reference is 33/50 (66%); it is neither attorney agreement nor calibrated accuracy. The three revision proposals concern selector heads in `13575735-root-1` claims 1/3 and same-clause nominal antecedence in `11299450-root-1` claim 6. Seven of eight convention questions reach consensus; the distributive “each” edge remains unresolved. The summary validates 154 literal source quotations. Self-assessed confidence and separate sessions do not remove shared-model error. All unresolved claims remain in the benchmark denominator.
+
+## Current allowed-claim automated review
+
+The same 200-set/3,184-claim cohort yields 196 checked sets and 3,108 checked claims; four sets/76 claims fail input normalization and remain reported. There are 21,531 raw advisory findings and no undecomposed checked claims. Counts are coverage and alert volume, not false-positive labels.
+
+The original random 30-claim sample is unchanged. A versioned v16 input includes full canonical source and dependency context for all 30, with **109 findings and six no-finding confirmations (115 questions)**. Two separate source-grounded automated reviewers independently answered all questions. The importer verifies authority, runtime/input hashes, exact question ownership, confidence thresholds and literal source quotations; 605 quotations pass. Consensus has 69 wrong, 30 right and 16 uncertain statements. Fourteen uncertain statements concern chain-work-limit warnings whose runtime event cannot be verified from source alone.
+
+At claim level, 21 sampled claims have at least one agreed erroneous advisory finding, seven have all statements agreed right, and two remain unknown. The fixed-cohort erroneous-alert proportion is therefore identified between **70.0% and 76.7%**. The conditional 95% Wilson envelope is **52.1%–88.2%**, spanning the lower bound's lower interval and upper bound's upper interval. No point estimate substitutes a value for unknown outcomes. The interval approximates sampling uncertainty conditional on automated judgments; it does not cover correlated model error. This is not finding-level precision, legal-defect prevalence, specificity on independently clean claims, or all-USPTO prevalence. Prior predictions informed repairs, so this is not fresh held-out validation.
+
+This high alert noise is a material limitation. Findings remain advisory review items and do not block drafts or pipelines. The [USPTO MPEP §2173.05(e)](https://www.uspto.gov/web/offices/pac/mpep/s2173.html) explains that a missing explicit antecedent does not by itself establish indefiniteness when context or inherent features supply an ascertainable basis. Automated source judgments here do not determine the ultimate legal outcome. Actual-attorney agreement and adjudication flags remain false throughout.
+
+## Verification and preserved evidence
+
+All three law-practice package verifications pass for v16 (domain, use-cases, server). The four automated-adjudication boundary tests pass, covering disagreement, low confidence, ownership, invalid provenance, source evidence and prevention of human-authority promotion. The separate human import paths retain their authority guards. The same IPRally smoke remains explicitly non-US/non-gold: one claim/tree, 15,523 tokens, 78 findings, 16 coverage warnings, no undecomposed claim; no licensed source data is committed.
+
+`autonomous-review-v1/` contains byte-preserved reviewer receipts, the v16 allowed input, and reproducible derived summaries. Round-one and round-two reference reviews remain separate. `2026-10-31-v16-retention.json`, `2026-10-31-allowed-v16-coverage.json`, versioned runtime/sample freezes and evaluation outputs bind this measurement. Historical review packets and original labels/results are retained. Independent automated review satisfies the revised P2/P3 measurement procedure with explicitly unresolved outcomes; it does not repair gold or certify legal validity. Yeet publication, hosted readiness and final reflection remain separate delivery gates.

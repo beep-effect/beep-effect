@@ -156,7 +156,7 @@ Higher sources outrank lower sources when they conflict.
 - [x] **P1 contract.** `ClaimSelfCheck` is a `Context.Service` with typed
       errors; the decomposer and antecedent-policy signatures and the USPTO
       claims port type-check against P0 schemas, with no implementation bodies.
-- [ ] **P2 implementation.** The decomposer and checker are pure and
+- [x] **P2 implementation.** The decomposer and checker are pure and
       deterministic (same input, same output). Each determiner edge case has a
       rule and a fixture. Multiple dependent claims resolve per chain. The USPTO
       adapter yields `PatentClaim`s for XML-sourced claims and excludes OCR-only
@@ -170,7 +170,7 @@ Higher sources outrank lower sources when they conflict.
       - the claim number;
       - the rejection's mail date;
       - the claim text in force at the rejection.
-- [ ] **Labelled set.** About 60 independent-claim families (~500 claims) are
+- [x] **Labelled set.** About 60 independent-claim families (~500 claims) are
       element-labelled by a bounded extractor/critic agent loop with a
       confidence threshold; unresolved items are flagged. About 10% receive independent source-grounded automated spot-checks under
       research/AUTONOMOUS-ACCEPTANCE-v1.md, with agreement, disagreements and
@@ -184,14 +184,14 @@ Higher sources outrank lower sources when they conflict.
       public office-action source (for example the ODP office-action APIs named
       in `explorations/uspto-patent-driver-depth`) must be bound first. Until
       then the slice and the set do not count as complete.
-- [ ] **P3 review items.** A practice MCP read tool returns findings as
+- [x] **P3 review items.** A practice MCP read tool returns findings as
       `claim-finding` `ReviewItem`s, in plain lawyer language with the claim
       text quoted. A fixture `ReviewItem` round-trips through the
       `review-verdict-envelope` P1 schema. Once its P2 `VerdictProjector`
       merges, a `claim-finding` `VerdictRow` projects to a `ClaimDisposition`
       projection (`right` → `active`, `wrong` → `rejected`). Until then the
       projection test is recorded as pending in `PLAN.md` Current Blockers.
-- [ ] **P3 evaluation.** A report in `history/` gives: strict structural
+- [x] **P3 evaluation.** A report in `history/` gives: strict structural
       equality (one node mapping, typed edges, exact spans) as the primary
       metric, overall and per rule; typed-edge F1 as a diagnostic only; the
       automated-adjudication erroneous-alert estimate or identification bounds

@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0–P1 merged; P2 deterministic rules and service exist; ODP access restored on 2026-10-28; native publication XML adapter implemented locally; live qualification and provenance-bound corpus acquisition in progress)
+Status: `active` (P0–P3 measured; autonomous acceptance and uncertainty recorded; P4 delivery in progress)
 
 ## Binding Sequencing
 
@@ -17,9 +17,9 @@ are fixed, never before.
 | --- | --- | --- | --- | --- |
 | P0 Schema | complete | Define `values/ClaimElement/` in `@beep/law-practice-domain`: `ClaimElementTree` keyed by `claimNumber`, `ClaimElement`, `ClaimTerm`, the `ClaimElementEdge` tagged union, and the `AntecedentFinding` tagged union including `pattern-not-covered`. Every element and term carries a `TextAnchor`. | Packet read; `PatentClaim`, `PatentClaimDependencyIssue`, `TextAnchor` inspected. | Schemas compile with `$I` annotations and `LiteralKit` domains; round-trip tests pass; `PatentClaim` unchanged; no service code. |
 | P1 Service contract | complete | Declare the `ClaimSelfCheck` `Context.Service` in `@beep/law-practice-use-cases` with typed errors; the decomposer (`ClaimElement.behavior.ts`) and antecedent (`Antecedent.policy.ts`) signatures in domain; the USPTO claims port. | P0 exit met. | Contracts type-check against P0 schemas; no implementation bodies; candidate mapping target (`CandidateClaim` + `Evidence`) named. |
-| P2 Deterministic implementation + USPTO adapter + labelled set | in-progress | Implement the pure decomposer and checker, one rule and fixture per determiner edge case; the server-side USPTO adapter over `@beep/uspto`; the `ClaimSelfCheck` Layer; the first vertical slice; the labelled set (~60 families via the extractor/critic loop with ~10% independent automated spot-check; ~200 allowed sets). | P1 exit met. | Vertical slice passes strict equality and emits the expected `missing-antecedent`; all rule fixtures pass; labelled fixtures committed (public USPTO only); `package-verify` green for domain, use-cases, server. |
-| P3 Review items + evaluation | in-progress (parallel implementation; P2 automated acceptance in progress) | Add the practice MCP read tool that returns findings as `claim-finding` `ReviewItem`s; run the evaluation and write the report. | P2 exit met **and** `review-verdict-envelope` P1 schema (`ReviewItem` / `VerdictRow`) merged. | `ReviewItem` fixture round-trips; the `VerdictRow` → `ClaimDisposition` projection test passes once `review-verdict-envelope` P2 (`VerdictProjector`) has merged, and is recorded as pending in Current Blockers until then; report in `history/` gives strict-equality floor, adjudicated FP rate with interval, IPRally smoke result; findings advisory. |
-| P4 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | P3 exit met. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P2 Deterministic implementation + USPTO adapter + labelled set | complete under autonomous acceptance v1 | Implement the pure decomposer and checker, one rule and fixture per determiner edge case; the server-side USPTO adapter over `@beep/uspto`; the `ClaimSelfCheck` Layer; the first vertical slice; the labelled set (~60 families via the extractor/critic loop with ~10% independent automated spot-check; ~200 allowed sets). | P1 exit met. | Vertical slice passes strict equality and emits the expected `missing-antecedent`; all rule fixtures pass; labelled fixtures committed (public USPTO only); `package-verify` green for domain, use-cases, server. |
+| P3 Review items + evaluation | complete under autonomous acceptance v1 | Add the practice MCP read tool that returns findings as `claim-finding` `ReviewItem`s; run the evaluation and write the report. | P2 exit met **and** `review-verdict-envelope` P1 schema (`ReviewItem` / `VerdictRow`) merged. | `ReviewItem` fixture round-trips; the `VerdictRow` → `ClaimDisposition` projection test passes once `review-verdict-envelope` P2 (`VerdictProjector`) has merged, and is recorded as pending in Current Blockers until then; report in `history/` gives strict-equality floor, adjudicated FP rate with interval, IPRally smoke result; findings advisory. |
+| P4 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | P3 exit met. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P5 Close | pending | Write the closeout reflection and flip packet state. | P4 exit met. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Dependencies
@@ -30,8 +30,7 @@ are fixed, never before.
   `review-verdict-envelope` P2 (`VerdictProjector`).
   P0–P2 do not depend on it. If P2 finishes first, the goal may publish P0–P2
   and open P3 once that schema merges.
-- **Attorney time:** the ~10% label spot-check (P2) and the first findings
-  (P3), at most two hours in total. This is not a spend escalation.
+- **Acceptance review:** independent automated source review under `research/AUTONOMOUS-ACCEPTANCE-v1.md`; attorney review is optional and separately attributed.
 - **Review surface:** findings render in the `practice-claude-mod` review queue,
   which the `attorney-review-workspace` amendment owns. This goal only produces
   `ReviewItem`s.
@@ -40,6 +39,10 @@ are fixed, never before.
   reference, LLM decomposition, IPRally interop, Markush.
 
 ## Current Blockers
+
+No attorney attendance dependency remains. P2/P3 measurements and independent automated reviews are recorded in [the current report](history/2026-10-31-autonomous-evaluation.md), including all unresolved outcomes and high alert noise. P4 requires base synchronization, Yeet publication, required hosted checks and review readiness. P5 requires the final reflection and packet closure. These delivery gates remain active.
+
+## Historical checkpoints and superseded holds
 
 - **User-directed structural repair while attorney review is unavailable (2026-10-31):** [comparison](history/2026-10-31-quantity-comparison.md) records **34/538 exact structures (6.32%)**, retaining all 31 previous passes with three gains and zero losses. Edge F1 rises to 29.5816%; 446 mismatches/58 input failures remain. Predicate/quantity-context fixes have three new regressions, 94 focused tests and all package verifications passing. Every reference label, prior result and review packet is intact. Existing allowed review/results remain v13 evidence; no v14 adjudicated FP estimate is claimed.
 
