@@ -1,5 +1,5 @@
+import { GlobSet } from "@beep/glob";
 import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/test/Quality";
-import { globMatches } from "@beep/repo-cli/test/SharedInternals";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
@@ -47,20 +47,20 @@ const OpsManifest = S.Struct({
 });
 const decodeOpsManifest = decodeJsoncTextAs(OpsManifest);
 
-type OpsTsconfig = typeof OpsTsconfig.Type;
-
 const goalsRelative = (globKey: string): string => Str.slice(GOALS_PREFIX.length)(globKey);
 
-// `include`/`exclude` patterns resolve against goals/, the directory holding the tsconfig.
-const isCheckedBy =
-  (config: OpsTsconfig) =>
-  (goalsRelativePath: string): boolean =>
-    A.some(config.include, (pattern) => globMatches(pattern)(goalsRelativePath)) &&
-    !A.some(config.exclude, (pattern) => globMatches(pattern)(goalsRelativePath));
-
+// `include`/`exclude` patterns resolve against goals/, the directory holding the tsconfig. The
+// set accepts a goals-relative path that some include matches and no exclude (`!`) rejects.
 const loadOpsTsconfig = Effect.suspend(() =>
   decodeOpsTsconfig(O.getOrElse(A.head(R.values(opsTsconfigText)), () => ""))
+).pipe(
+  Effect.flatMap((config) => GlobSet.compile([...config.include, ...A.map(config.exclude, (pattern) => `!${pattern}`)]))
 );
+
+const isCheckedBy =
+  (globs: GlobSet) =>
+  (goalsRelativePath: string): boolean =>
+    globs.matches(goalsRelativePath);
 
 // Registered `opsScripts` TypeScript entries, as goals-relative paths.
 const registeredOpsScripts = Effect.forEach(
@@ -86,12 +86,12 @@ describe("goals ops typecheck project", () => {
   it.effect(
     "includes every registered opsScripts TypeScript entry",
     Effect.fnUntraced(function* () {
-      const config = yield* loadOpsTsconfig;
+      const globs = yield* loadOpsTsconfig;
       const scripts = yield* registeredOpsScripts;
 
       assertTrue(A.isReadonlyArrayNonEmpty(scripts));
       deepStrictEqual(
-        A.filter(scripts, (script) => !isCheckedBy(config)(script)),
+        A.filter(scripts, (script) => !isCheckedBy(globs)(script)),
         []
       );
     })
@@ -100,11 +100,11 @@ describe("goals ops typecheck project", () => {
   it.effect(
     "includes every TypeScript file under a goals ops directory",
     Effect.fnUntraced(function* () {
-      const config = yield* loadOpsTsconfig;
+      const globs = yield* loadOpsTsconfig;
 
       assertTrue(A.isReadonlyArrayNonEmpty(opsTypeScriptFiles));
       deepStrictEqual(
-        A.filter(opsTypeScriptFiles, (file) => !isCheckedBy(config)(file)),
+        A.filter(opsTypeScriptFiles, (file) => !isCheckedBy(globs)(file)),
         []
       );
     })
