@@ -34,7 +34,7 @@ const EXACT_VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
 // Legacy `effect-smol` snapshot URLs still match so sync rewrites them to `Effect-TS/effect`.
 const EFFECT_SNAPSHOT_PATTERN = /^https:\/\/pkg\.pr\.new\/Effect-TS\/effect(?:-smol)?\/(.+)@([0-9a-f]+)$/i;
 const LOCKSTEP_EFFECT_PACKAGE_PREFIX = "@effect/";
-const NON_LOCKSTEP_EFFECT_PACKAGES = ["@effect/markdown-toc", "@effect/tsgo"] as const;
+const NON_LOCKSTEP_EFFECT_PACKAGES = ["@effect/tsgo"] as const;
 
 class EffectCatalogPackage extends S.Opaque<EffectCatalogPackage, { readonly brand: unique symbol }>()(
   S.Struct({
