@@ -1,5 +1,6 @@
 {
   "catalog": {
+    "@alchemy.run/cloudflare": "2.0.0-beta.84",
     "@arizeai/phoenix-client": "7.16.2",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.0",
@@ -38,6 +39,8 @@
     "@effect/sql-sqlite-bun": "4.0.6",
     "@effect/sql-sqlite-node": "4.0.6",
     "@effect/tsgo": "0.59.0",
+    "@tanstack/react-router": "1.170.46",
+    "@tanstack/react-start": "1.169.4",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@typescript/typescript6": "6.0.2",
     "@effect/vitest": "4.0.6",
@@ -144,6 +147,7 @@
     "@xstate/test": "2.0.0-alpha.4",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
+    "alchemy": "2.0.0-beta.84",
     "ast-v8-to-istanbul": "1.0.7",
     "babel-plugin-annotate-pure-calls": "^0.5.0",
     "babel-plugin-react-compiler": "^1.0.0",
@@ -606,6 +610,7 @@
     "packages/drivers/commands",
     "packages/drivers/git",
     "packages/drivers/github",
-    "packages/drivers/github-actions"
+    "packages/drivers/github-actions",
+    "apps/beep-effect-web"
   ]
 }
