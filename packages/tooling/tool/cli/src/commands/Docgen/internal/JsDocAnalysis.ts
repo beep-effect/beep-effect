@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -14,8 +15,8 @@ import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { globPatternToRegExp } from "../../../internal/GlobPattern.ts";
 import {
   byIssueAscending,
   DocgenAnalysisSummary,
@@ -23,6 +24,7 @@ import {
   DocgenExportAnalysis,
   DocgenPackageAnalysis,
 } from "../Docgen.schemas.ts";
+import { getDeclaredJsDocs } from "./JsDocNodes.ts";
 import { loadDocgenConfigDocument } from "./Workspace.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type * as FileSystem from "effect/FileSystem";
@@ -37,25 +39,14 @@ const relativePathWithinPackage = (absolutePackagePath: string, absoluteFilePath
   normalizeSlashes(path.relative(absolutePackagePath, absoluteFilePath));
 
 const getJsDocs = (node: Node): ReadonlyArray<JSDoc> => {
-  if (Node.isJSDocable(node)) {
-    return node.getJsDocs();
-  }
-
-  if (Node.isVariableDeclaration(node)) {
-    const statement = node.getVariableStatement();
-    if (statement !== undefined) {
-      return statement.getJsDocs();
-    }
+  if (Node.isJSDocable(node) || Node.isVariableDeclaration(node)) {
+    return getDeclaredJsDocs(node);
   }
 
   // `export default <expression>` resolves to the expression itself; its JSDoc
   // lives on the owning ExportAssignment statement.
   const parent = node.getParent();
-  if (parent !== undefined && Node.isExportAssignment(parent)) {
-    return parent.getJsDocs();
-  }
-
-  return A.empty();
+  return parent !== undefined && Node.isExportAssignment(parent) ? parent.getJsDocs() : A.empty();
 };
 
 const getOwningJsDocs = (node: Node): ReadonlyArray<JSDoc> => pipe(getJsDocs(node), A.last, O.toArray);
@@ -351,6 +342,15 @@ const analyzeModuleFileoverview = (
   );
 };
 
+// docgen.json exclude patterns are developer configuration: a guard trip is a
+// wiring defect. The dot dialect keeps the previous matcher's behaviour, which
+// let `*` match a dot-leading segment; negation and comment prefixes stay the
+// literal characters they were to it.
+// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
+// minimatch magic here where the old compiler read them literally; no live
+// pattern uses them (R2b oracle, `dialectMagic` section).
+const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
+
 const sourceFileMatchesExclude = (
   absolutePackagePath: string,
   srcDir: string,
@@ -365,9 +365,9 @@ const sourceFileMatchesExclude = (
   const srcRelative = Str.startsWith(`${srcDir}/`)(packageRelative)
     ? Str.slice(srcDir.length + 1)(packageRelative)
     : packageRelative;
-  const patternRegex = globPatternToRegExp(normalizedPattern);
+  const compiled = Result.getOrThrow(GlobPattern.compileResult(normalizedPattern, excludeGlob));
 
-  return A.some([packageRelative, srcRelative], (candidate) => patternRegex.test(candidate));
+  return A.some([packageRelative, srcRelative], (candidate) => compiled.matches(candidate));
 };
 
 const getSourceFiles = (

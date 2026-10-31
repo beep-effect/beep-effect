@@ -1,0 +1,147 @@
+# Hold Ledger Spec
+
+## Objective
+
+Record every dependency-shaped temporary decision in the repo as a
+probe-backed **hold**: a `HoldProposition` inside the `@beep/epistemics` claim
+envelope. Keep the holds in an append-only, schema-checked ledger in the repo,
+and derive the configs that enforce them from that ledger. Re-check holds
+mechanically, in `beep holds probe` and before `deps:update` bumps, and allow
+renewal only with fresh evidence. Graduated from
+[`explorations/expiring-repo-facts`](../../explorations/expiring-repo-facts/README.md);
+its [`BRIEF.md`](../../explorations/expiring-repo-facts/BRIEF.md) and
+[`DECISIONS.md`](../../explorations/expiring-repo-facts/DECISIONS.md) are the
+design record.
+
+## Non-Goals
+
+- Test skips, `@ts-expect-error`, `biome-ignore` and fallow suppressions. Test
+  skips are a gated wave 2 in the exploration `MAP.md`; covering the rest
+  would grow the inventory, against S31.
+- A GitHub-issue or database ledger of record. Issues are only a regenerable
+  projection.
+- The wake service, daemon or dispatcher. Those belong to
+  [`goals/wake-service`](../wake-service/README.md).
+- Automatic merges outside the normal yeet gate.
+- Any new paid service, endpoint or quota purchase.
+
+## Source Hierarchy
+
+1. The operator request captured in
+   `explorations/expiring-repo-facts/CAPTURE.md`.
+2. `AGENTS.md`, `CLAUDE.md`, and the schema-first and effect-first skills.
+3. `standards/ARCHITECTURE.md` and
+   `standards/architecture/07-non-slice-families.md`.
+4. This `SPEC.md`.
+5. `PLAN.md`.
+6. `GOAL.md`.
+7. The exploration packet, `research/`, `ops/` and `history/` files.
+
+Higher sources outrank lower sources when they conflict.
+
+## Target Surfaces
+
+- `packages/tooling/tool/cli/src/commands/` — a new `Holds` command group with
+  `admit`, `probe`, `why` and `lint` (with `--write`), plus the
+  `HoldProposition` schema.
+- The ledger files: an append-only claims file plus single-writer ledger,
+  following `research/README.md`. Choose the location and record it in the
+  Decision Log.
+- `syncpack.config.ts` — the held group's `dependencies` derived from the
+  ledger.
+- Root `package.json` — the `deps:update` script runs due probes first.
+- `osv-scanner.toml` and the root `overrides` and `patchedDependencies`:
+  record anchors now; rendering them from the ledger is allowed.
+- `goals/repository-simplification-residue/history/receipts/hold-register.md`
+  — superseded by the ledger, with a pointer.
+- A skill or runbook explaining how agents admit, probe and renew holds.
+
+## Constraints
+
+- **Schema.** `HoldProposition` is schema-first: a LiteralKit kind, a
+  `Scripted | Judgement` tagged-union falsifier, and an
+  `Unpin | Rewrite | EscalateToGoal` tagged-union exit action. It is
+  instantiated with `makeClaimEnvelope`.
+- **Envelope fields.** `validTime` is the lease. A renewal is a new claim
+  version that `supersedes` the previous one, so the renewal count is derived.
+  `supportedBy` holds dated probe runs with commit SHAs.
+- **Probe trust.**
+  - Every Scripted probe runs a control at the known-bad version, which must
+    reproduce the recorded failure signature. If it doesn't, the verdict is
+    `ProbeBroken`: it escalates and never unpins.
+  - The probe pins its runtime (for example `vitest --bun`).
+  - A flip needs two consecutive passing candidate runs.
+- **Catalogs.** Probes resolve Bun `catalog:` references themselves.
+- **Lockstep families.** `@lexical/**`, and pairs like tsgo with tsrs, are
+  single holds with group subjects and group probes.
+- **Lifetime.** The default maximum is 180 days from creation, after which the
+  exit action is `EscalateToGoal` whatever the probe says. Due-soon opens at
+  two-thirds of the lease, with jitter.
+- **Judgement holds.** A Judgement hold renews only with a diff-bound verdict
+  from the `qa.judge` pin.
+- **Completeness.** `beep holds lint` fails on a hold-shaped config entry with
+  no live record, and on a record whose anchors are gone. `--write`
+  tombstones an orphaned record. A re-introduced hold cites its tombstone.
+- **Scratch installs.** These go under `~/.cache/beep/`, never `/tmp`, and
+  never install into the main checkout.
+- **Public repo.** Probe output in the ledger contains no secrets, home paths
+  or client data.
+
+## Acceptance Criteria
+
+- [ ] The `HoldProposition` schema exists with the fields and tagged unions
+      above, plus unit tests for the verdict rules (a passing control gives
+      `ProbeBroken`; one passing run is not a flip; two are).
+- [ ] The jsdom hold record runs end to end through
+      `beep holds probe jsdom-vitest-eventtarget`. It reproduces the
+      `EventTarget` signature at 30.1.0 under `vitest --bun` and reports a
+      verdict for npm latest.
+- [ ] syncpack's held list is derived from the ledger, and `syncpack lint`
+      passes with an identical ignore set before and after.
+- [ ] Every row in the manual hold register and every dependency-shaped site
+      (held group, exact pins including `statelyai`, overrides, patches, OSV
+      exceptions) has a live record with an exit condition. The register file
+      points to the ledger.
+- [ ] `beep holds lint` runs in the cheap gate and fails on an unrecorded
+      hold-shaped entry and on an orphaned record.
+- [ ] `bun run deps:update` runs due probes first, and unpins and tombstones a
+      flipped hold in the same commit. A fixture test covers a flipped hold
+      and a held one.
+- [ ] `beep holds why <pkg>` prints live and tombstoned records with their
+      evidence.
+- [ ] Agent guidance (a skill or runbook) documents admit, probe, renew and
+      escalate.
+- [ ] No unrelated refactors or formatting churn.
+
+## Verification Matrix
+
+| Check | Command or evidence | Required result |
+| --- | --- | --- |
+| Packet launcher size | `test "$(wc -m < goals/hold-ledger/GOAL.md)" -le 4000` | Passes |
+| Manifest JSON | `jq . goals/hold-ledger/ops/manifest.json` | Passes |
+| Whitespace | `git diff --check -- goals/hold-ledger` | Passes |
+| Package handoff | `bun run beep quality package-verify @beep/repo-cli` | Passes |
+| Holds lint | `bun run beep holds lint # this goal creates the command` | Passes on the PR head |
+| jsdom probe receipt | `bun run beep holds probe jsdom-vitest-eventtarget # this goal creates the command` output, attached in `history/` | Control reproduces the signature |
+
+## Stop Conditions
+
+- Required source files are missing or materially contradictory.
+- Any spend: purchases, paid services, quota top-ups or plan changes need the
+  operator.
+- The same blocker repeats after reasonable investigation.
+
+Scope growth, destructive side effects and policy calls are not stops: decide
+them and record each in the Decision Log.
+
+## Decision Log
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-31 | The unit is a hold on `makeClaimEnvelope`; the ledger lives in the repo; wave 1 is dependency-shaped holds; renewal needs evidence plus a 180-day maximum; probes need a control and two passes; the `Holds` command group lives in the repo CLI; `deps:update` re-checks holds; the first slice is jsdom. | Settled in the exploration align and shape rounds, [`DECISIONS.md`](../../explorations/expiring-repo-facts/DECISIONS.md). | Reopen the exploration at `align`. |
+
+## Exception Ledger
+
+| Exception | Scope | Owner | Rationale | Removal condition |
+| --- | --- | --- | --- | --- |
+| None | N/A | N/A | N/A | N/A |

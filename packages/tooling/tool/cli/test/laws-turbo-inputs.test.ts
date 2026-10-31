@@ -1,5 +1,5 @@
 import { $RepoCliId } from "@beep/identity/packages";
-import { policyToolsFingerprint, StepExec } from "@beep/repo-cli/test/PackageScripts";
+import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -13,6 +13,13 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import {
+  policyCliFixtureFiles,
+  withFingerprintMarker,
+  writeFixtureFiles,
+  writeFixtureFingerprint,
+} from "./support/PolicyCliFixture.ts";
 
 const $I = $RepoCliId.create("test/laws-turbo-inputs");
 
@@ -83,9 +90,13 @@ const lawHashes = Effect.fn("LawsTurboTest.lawHashes")(function* (root: string, 
   expect(run.exitCode, run.output).toBe(0);
   expect(run.truncated).toBe(false);
   const summary = yield* decodeSummary(run.output);
-  return A.map(["@fixture/consumer#lint:laws", "//#lint:native-runtime:roots", "//#lint:policy-fingerprint"], (id) => {
+  const seal = "//#lint:policy-fingerprint:lint-laws";
+  return A.map(["@fixture/consumer#lint:laws", "//#lint:native-runtime:roots", seal], (id) => {
     const task = O.getOrThrow(A.findFirst(summary.tasks, (row) => row.taskId === id));
-    if (id !== "//#lint:policy-fingerprint") expect(task.dependencies).toEqual(["//#lint:policy-fingerprint"]);
+    if (id !== seal) {
+      expect(task.dependencies).toHaveLength(1);
+      expect(A.every(task.dependencies, Str.startsWith("//#lint:policy-fingerprint:")), id).toBe(true);
+    }
     return task;
   });
 });
@@ -132,17 +143,27 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         private: true,
         packageManager: "bun@1.4.2",
         workspaces: ["packages/*", "packages/tooling/policy-pack/*"],
-        scripts: { "lint:policy-fingerprint": "echo fingerprint", "lint:native-runtime:roots": "echo roots" },
+        scripts: {
+          "lint:policy-fingerprint": "echo fingerprint",
+          "lint:native-runtime:roots": "beep-cli laws native-runtime --check",
+        },
       });
-      yield* writeJson(root, "packages/cli/package.json", {
-        name: "@beep/repo-cli",
-        dependencies: { "@fixture/helper": "workspace:*" },
+      // Both law commands reach the helper; nothing else outside the fixture CLI.
+      yield* writeFixtureFiles(
+        root,
+        policyCliFixtureFiles([
+          { group: "lint", leaves: [{ name: "laws", imports: ["@fixture/helper"] }] },
+          { group: "laws", leaves: [{ name: "native-runtime", imports: ["@fixture/helper"] }] },
+        ])
+      );
+      yield* writeJson(root, "packages/helper/package.json", {
+        name: "@fixture/helper",
+        exports: { ".": "./src/index.ts" },
       });
-      yield* writeJson(root, "packages/helper/package.json", { name: "@fixture/helper" });
       yield* writeJson(root, "packages/consumer/package.json", {
         name: "@fixture/consumer",
         dependencies: { "@fixture/upstream": "workspace:*" },
-        scripts: { "lint:laws": "echo laws" },
+        scripts: { "lint:laws": "beep-cli lint laws --package ." },
       });
       yield* writeJson(root, "packages/upstream/package.json", { name: "@fixture/upstream" });
       yield* writeJson(root, "packages/unrelated/package.json", { name: "@fixture/unrelated" });
@@ -152,7 +173,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       });
       yield* writeFile(root, ".gitignore", "node_modules\n.turbo\n");
       const sourceFiles = [
-        "packages/cli/src/index.ts",
         "packages/helper/src/index.ts",
         "packages/consumer/src/index.ts",
         "packages/consumer/test/example.tsx",
@@ -170,15 +190,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         ["standards/effect-laws.allowlist.jsonc", "tsconfig.proof.json", "packages/consumer/tsconfig.test.json"],
         (file) => writeFile(root, file, "{}\n")
       );
-      const fingerprint = yield* policyToolsFingerprint(root);
-      yield* writeJson(root, "standards/policy-tools.fingerprint.json", fingerprint);
       yield* writeJson(root, "turbo.json", {
         futureFlags: { affectedUsingTaskInputs: true, filterUsingTasks: true, globalConfiguration: true },
         tasks: {
-          ...config.tasks,
-          "//#lint:policy-fingerprint": { cache: true, outputs: [], inputs: fingerprint.inputs },
+          ...withFingerprintMarker(config.tasks),
+          "//#lint:policy-fingerprint": { cache: true, outputs: [], inputs: [] },
         },
       });
+      yield* writeFixtureFingerprint(root);
       const baseline = yield* lawHashes(root, binary);
       const assertMutation = Effect.fnUntraced(function* (file: string, changed: ReadonlyArray<boolean>) {
         const original = yield* fs.readFileString(path.join(root, file));
