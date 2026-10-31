@@ -231,6 +231,7 @@ const TaskPhase = LiteralKit(["P0", "P1", "P2", "P3"]).pipe(
     description: "Packet phase for a task.",
   })
 );
+type TaskPhase = typeof TaskPhase.Type;
 
 const RepoCommandPhase = LiteralKit(["P1", "P2", "P3", "none"]).pipe(
   $I.annoteSchema("RepoCommandPhase", {
@@ -284,6 +285,7 @@ const FindingAttributionKind = LiteralKit(["introduced", "inherited-adjacent", "
     description: "Attribution class used in Fallow envelopes and Yeet issue fixtures.",
   })
 );
+type FindingAttributionKind = typeof FindingAttributionKind.Type;
 
 const ResidualRiskLevel = LiteralKit(["low", "medium", "high"]).pipe(
   $I.annoteSchema("ResidualRiskLevel", {
@@ -640,14 +642,6 @@ const FallowReportBaseFields = {
   attributionKinds: S.NonEmptyArray(FindingAttributionKind),
   findingAttributionSummary: FindingAttributionSummary,
 };
-
-class FallowReportBase extends S.Opaque<FallowReportBase, { readonly brand: unique symbol }>()(
-  S.Struct(FallowReportBaseFields).pipe(
-    $I.annoteSchema("FallowReportBase", {
-      description: "Common metadata required on every Fallow report envelope.",
-    })
-  )
-) {}
 
 class FallowReportOk extends S.Opaque<FallowReportOk, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -1164,7 +1158,6 @@ const expectedFallowCommandSubcommands = [
 const fallowCommandContractCommand =
   "bun run beep quality fallow command-contract-check --assert audit,dead-code,health,boundaries,flags,security,fix-preview --require-envelope --out-dir .beep/fallow";
 const fallowBoundaryConfigCheckCommand = "bun run beep quality fallow boundaries config-check --check";
-const fallowAuditBaselineCommand = "bun goals/fallow-quality-enforcement/ops/validate-fallow-audit-baseline.ts";
 const knownNonzeroRawAcceptanceCommands = [
   "bun run fallow:audit -- --base origin/main --gate new-only",
   "bun run fallow:dead-code:json -- --summary",

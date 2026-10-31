@@ -483,6 +483,10 @@ Promotion (wave 4-W-b, the `./testing` cluster):
 - **reachability** — `PackedInstall` is the one `./testing` module that loads `@beep/commands`, the operational adapter that packs and installs; `test/reachability.test.ts` admits it and the `./testing` entry.
 - **test-environment** — the testing suites read package sources through the raw-glob `test/support/sourceGraph.ts` (`sourceTexts`), the real-tree and real-manager suites take the `nodeHost` layer and write their fixtures through Effect `FileSystem`, and no file carries an `@effect-diagnostics` skip directive. `PackedInstallPlan` and `SourceBoundary` gain schema-derived round-trip properties.
 
+Adoption (wave 4-A1):
+
+- **containment** — `WorkspaceDiscoveryOptions.containWithinRoot` (default `false`, so discovery still follows links as upstream does) skips a literal member, a wildcard base or a listed directory whose real path leaves the root's real path before its `package.json` is read and before a `**` descent walks into it; a dangling link is skipped the same way, and a member behind a link that stays inside the root is still discovered at its link path. Upstream has no such option. The repo CLI's Quality discovery turns it on (`test/WorkspaceDiscoveryContainment.test.ts`).
+
 Carried from the port:
 
 - **native-runtime** — Effect hash collections and own-key-safe records replace native collections, frozen/null-prototype defaults and Object.* operations, with explicit snapshot version order (packages/tooling/library/repo-workspaces/test/DependencyGraph.test.ts:34; packages/tooling/library/repo-workspaces/test/PackedInstallPlan.test.ts; packages/tooling/library/repo-workspaces/test/WorkspaceSnapshots.test.ts:768; packages/tooling/library/repo-workspaces/test/WorkspacePackage.test.ts:331).

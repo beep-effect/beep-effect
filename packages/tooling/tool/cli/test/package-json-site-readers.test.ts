@@ -17,7 +17,6 @@ import {
   readQualityTaskManifest,
   readRootCatalogs,
   readWorkspacePackageText,
-  workspacePatternsFrom,
   workspacePatternsFromPackageJson,
 } from "@beep/repo-cli/test/Quality";
 import { readPackageManagerField, readRootPackageJsonText } from "@beep/repo-cli/test/VersionSync";
@@ -138,10 +137,4 @@ describe("package.json site readers on strict JSON", () => {
       strictEqual(error._tag, "QualityTaskConfigurationError");
     })
   );
-
-  it("QualityArtifactSupport reads both workspace forms", () => {
-    deepStrictEqual(workspacePatternsFrom(["apps/*"]), ["apps/*"]);
-    deepStrictEqual(workspacePatternsFrom({ packages: ["packages/*"] }), ["packages/*"]);
-    deepStrictEqual(workspacePatternsFrom({ catalog: {} }), []);
-  });
 });

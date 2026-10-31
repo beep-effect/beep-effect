@@ -1,5 +1,5 @@
 {
-  "previous": "b733417d9f3089aae017cf929b3418c3b2aff23872fdb407d50879422c5d4ca5",
+  "previous": "dae1a7f687210e754b5cdbcff37660f43bb1231c1ad61b6403517b3d76662dc3",
   "review": {
     "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R5b, refactor/markdown-toc-onto-beep-markdown)",
     "reason": "Record the dependency-only drift of @beep/repo-docgen (gains a direct @beep/markdown edge, already upstream through @beep/md, and drops @effect/markdown-toc) and @beep/effect-drizzle (gains @beep/markdown as a devDependency for assemble-readme.ts) and the root manifest (@effect/markdown-toc leaves devDependencies) for the R5b table-of-contents adoption; the turbo coupling is measured in the review; no qualification is granted.",
