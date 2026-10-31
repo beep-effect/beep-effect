@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "aef24aa0876023e1b140926d527f32dfec3589b3017529b104786cd0630dba3f",
+  "specSha256": "285117df2068fd7568d62796fab21ef16f771e4099d9f45f16504a391bfb9725",
   "acceptance": [
     {
       "id": "AC-01",
@@ -326,7 +326,7 @@
   "cargoWorkspaceFeatureReview": {
     "path": "research/cargo-workspace-feature-review.json",
     "scope": "Current-tree no-change discovery decision; real Rust computations, qualification and all nine full acceptance criteria remain open.",
-    "sha256": "682807d50b3fbcc1e938073c4bf7719f277636bbae2c5c8780e757ce08a62de8"
+    "sha256": "b260673a1b4eb2eff61b90e0462cc1b72cc91d974f5fa9a572f010de7f80502e"
   },
   "priorSpecSha256AtHeldReplyReadinessReview": "0260cefc164f9ad091c0a31d31463f04132bd04f3787dfe30ace9fe876b27a6c",
   "priorSpecSha256AtAcceptedProducerMerge": {

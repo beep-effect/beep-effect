@@ -102,7 +102,7 @@ head = subprocess.check_output(
 ).strip()
 rows = []
 cache = Path.home() / ".cache/beep/turbo-cargo-feature-probe"
-cache.mkdir(mode=0o700, exist_ok=True)
+cache.mkdir(mode=0o700, parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix="current-source-", dir=cache) as tmp:
     private = Path(tmp)
     (private / "home").mkdir()

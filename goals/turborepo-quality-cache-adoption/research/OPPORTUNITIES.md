@@ -374,11 +374,12 @@ workstation's memory protection policy.
 
 ### 2026-10-31: real Cargo applicability graphs exceed the synthetic capture cap
 
-The current-source dry graph was 1,199,745 bytes, exceeding the synthetic
+The initial, superseded dry graph was 1,199,745 bytes, exceeding the synthetic
 selection helper's one-MiB output bound. The native process had completed; its
 fixture was cleaned. A separate applicability capture retains the ten-second
 process deadline and caps stdout at eight MiB and stderr at one MiB. It records
-actual byte counts and both original/adapted invoke hashes; no canonical verifier
+actual retained byte counts of 1,194,393 and 1,194,401 bytes and both
+original/adapted invoke hashes; no canonical verifier
 or production policy changed.
 
 The first applicability assertion also wrongly expected only the two selected

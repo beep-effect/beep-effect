@@ -16,6 +16,22 @@ if __debug__ is False:
     raise SystemExit(64)
 import argparse
 
+def assert_discovery_row(row):
+    """Require the exact discovery contrast captured by both pinned clients."""
+    expected = ["web-a", "web-b"]
+    if row["shape"] == "virtual-root-workspace" and row["enabled"]:
+        expected = [
+            "app-a-native",
+            "app-b-native",
+            "native-workspace",
+            "shared-native",
+            "web-a",
+            "web-b",
+        ]
+    assert row["exit"] == 0, row
+    assert sorted(row["packages"]) == expected, row
+
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--output", type=Path)
 arguments = parser.parse_args()
@@ -23,7 +39,7 @@ repo = Path(__file__).resolve().parents[3]
 out = (arguments.output or repo / ".beep/cargo-feature-review/synthetic").resolve()
 out.mkdir(mode=0o700, parents=True, exist_ok=True)
 cache = Path.home() / ".cache/beep/turbo-cargo-feature-probe"
-cache.mkdir(mode=0o700, exist_ok=True)
+cache.mkdir(mode=0o700, parents=True, exist_ok=True)
 shared = (
     repo
     / "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py"
@@ -236,30 +252,29 @@ for channel, binary in clients.items():
                     p.write_bytes(data)
                     p.chmod(0o600)
                 data = json.loads(stdout) if code == 0 else {}
-                rows.append(
-                    {
-                        "channel": channel,
-                        "shape": shape,
-                        "enabled": enabled,
-                        "exit": code,
-                        "packages": data.get("packages", []),
-                        "tasks": [
-                            {
-                                "id": t["taskId"],
-                                "command": t.get("command"),
-                                "dependencies": t.get("dependencies"),
-                                "cache": t.get("cache"),
-                                "outputs": t.get("outputs"),
-                            }
-                            for t in data.get("tasks", [])
-                        ],
-                        "stderrExcerpt": stderr.decode()[:500].replace(
-                            str(root), "<fixture>"
-                        ),
-                    }
-                )
+                row = {
+                    "channel": channel,
+                    "shape": shape,
+                    "enabled": enabled,
+                    "exit": code,
+                    "packages": data.get("packages", []),
+                    "tasks": [
+                        {
+                            "id": t["taskId"],
+                            "command": t.get("command"),
+                            "dependencies": t.get("dependencies"),
+                            "cache": t.get("cache"),
+                            "outputs": t.get("outputs"),
+                        }
+                        for t in data.get("tasks", [])
+                    ],
+                    "stderrExcerpt": stderr.decode()[:500].replace(
+                        str(root), "<fixture>"
+                    ),
+                }
+                assert_discovery_row(row)
+                rows.append(row)
                 if shape == "virtual-root-workspace" and enabled:
-                    assert code == 0
                     config["tasks"]["app-a-native#build"] = {
                         "cache": True,
                         "outputs": ["../../../target/debug/app-a-native"],
