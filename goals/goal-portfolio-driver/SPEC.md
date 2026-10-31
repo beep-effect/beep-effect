@@ -154,8 +154,8 @@ Every exhausted class parks the goal and continues the queue unless its circuit 
 **Safety rails (deny-list + protocol text in GOAL.md + every codex prompt preamble)**: never
 force-push, never stash clear/drop/pop, never branch-delete/worktree-prune/reset-hard/clean (the
 33 stashes/135 branches/7 worktrees are yours), never revert unexplained out-of-scope changes in
-the main checkout (you work there mid-session), never edit `.github/workflows/**` or
-`docs/_internal/**`, never merge with `--admin`/lower gate thresholds, never weaken
+the main checkout (you work there mid-session), never edit `docs/_internal/**` (the
+`.github/workflows/**` rail was dropped by operator decision on 2026-10-31, #2403), never merge with `--admin`/lower gate thresholds, never weaken
 `.gitleaks.toml` in-PR, never mutate `.claude/settings.json` or repo settings, never trust
 self-reports.
 
