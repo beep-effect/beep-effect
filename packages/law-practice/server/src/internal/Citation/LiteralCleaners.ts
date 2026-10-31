@@ -23,6 +23,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationCleanerProduced } from "./CleanerPipeline.ts";
+import { CitationCleanerTextAllocation, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import type { CitationCleanerTextCharge, CitationCleanerWork } from "./CleanerPipeline.ts";
 
@@ -70,6 +71,7 @@ export class CitationLiteralCleanerStage extends S.Opaque<
   S.Struct({
     text: S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16)),
     charges: CitationCleanerProduced.fields.charges,
+    allocation: CitationCleanerTextAllocation,
   }).pipe(
     $I.annoteSchema("CitationLiteralCleanerStage", {
       description:
@@ -133,6 +135,8 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
         return yield* Effect.gen(function* () {
           const output = MutableList.make<string>();
           let produced = 0;
+          let matches = 0;
+          let wholeWhitespace = false;
           const append = Effect.fn("Citation.appendCleanedText")((size: number, render: () => string) =>
             Effect.gen(function* () {
               if (size > outputCeiling - produced) return yield* failure("limit-exceeded");
@@ -158,6 +162,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
                 }
               }
             }
+            if (end > 0) matches++;
             yield* appendRange(end, length);
           } else {
             let unchanged = 0;
@@ -165,31 +170,43 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
             for (let index = 0; index <= length; index++) {
               if (index % 4096 === 0) yield* Effect.yieldNow;
               const char = at(text, index);
-              const matches =
+              const isMatch =
                 cleaner === "underscores"
                   ? char === "_"
                   : cleaner === "inline_whitespace"
                     ? char === " " || char === "\t"
                     : char === "\u200b" || HashSet.has(whitespace, char);
-              if (matches && run < 0) {
-                yield* appendRange(unchanged, index);
+              if (isMatch && run < 0) {
                 run = index;
-              } else if (!matches && run >= 0) {
-                if (cleaner !== "underscores") yield* append(1, () => " ");
-                else if (index - run === 1) yield* append(1, () => "_");
-                unchanged = index;
+              } else if (!isMatch && run >= 0) {
+                if (cleaner !== "underscores" || index - run >= 2) {
+                  yield* appendRange(unchanged, run);
+                  if (cleaner !== "underscores") yield* append(1, () => " ");
+                  matches++;
+                  wholeWhitespace = cleaner !== "underscores" && run === 0 && index === length;
+                  unchanged = index;
+                }
                 run = -1;
               }
             }
             yield* appendRange(unchanged, length);
           }
-          return pipe(output, MutableList.takeAll, A.join(""));
+          const result = pipe(output, MutableList.takeAll, A.join(""));
+          return CitationCleanerTextOutput.make({
+            text: result,
+            allocation:
+              Str.length(result) === 0 ? "empty" : matches === 0 ? "unchanged" : wholeWhitespace ? "space" : "fresh",
+          });
         }).pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(failure("deadline-exceeded")) }));
       },
       Effect.provideService(Clock.Clock, clock)
     );
+  const applyOutput = makeApply(Input, sourceCeiling, () => Effect.void);
   return {
-    apply: makeApply(Input, sourceCeiling, () => Effect.void),
+    applyOutput,
+    apply: Effect.fn("Citation.applyLiteralText")((input: unknown) =>
+      applyOutput(input).pipe(Effect.map((result) => result.text))
+    ),
     stage: Effect.fn("Citation.applyLiteralCleanerStage")(
       function* (input: unknown, work: CitationCleanerWork) {
         const charges: Array<CitationCleanerTextCharge> = [];
@@ -203,7 +220,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
             Effect.asVoid
           )
         );
-        const text = yield* makeApply(
+        const result = yield* makeApply(
           StageInput,
           CitationEngineAbsoluteMaxima.producedTextUtf16,
           reserve
@@ -221,7 +238,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
             }
           )
         );
-        return CitationLiteralCleanerStage.make({ text, charges });
+        return CitationLiteralCleanerStage.make({ ...result, charges });
       },
       Effect.provideService(Clock.Clock, clock)
     ),

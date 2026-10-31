@@ -116,6 +116,13 @@ const Reason = LiteralKit([
   "closed-work",
   "invalid-reservation",
   "runtime-failed",
+  "closed-owner",
+  "identity-exhausted",
+  "invalid-text-allocation",
+  "builtin-input-type",
+  "html-parse-error",
+  "html-unicode-encoding-declaration",
+  "html-unicode-decode-error",
 ]).pipe(
   $I.annoteSchema("Reason", {
     description: "Closed private execution/adapter failures; no native messages, host values or nested causes.",

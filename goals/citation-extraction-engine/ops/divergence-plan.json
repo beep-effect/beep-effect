@@ -173,7 +173,16 @@
         "packages/law-practice/server/assets/citation-html/licenses/wasi-libc-fts-COPYING",
         "packages/law-practice/server/test/CitationHtmlCleanerStage.test.ts",
         "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
-        "packages/law-practice/server/test/CitationCleanerPipeline.test.ts"
+        "packages/law-practice/server/test/CitationCleanerPipeline.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-value-ownership.md",
+        "goals/citation-extraction-engine/ops/probe-cleaner-identities.py",
+        "goals/citation-extraction-engine/ops/verify-cleaner-identities.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
+        "packages/law-practice/server/src/internal/Citation/BuiltinCleaners.ts",
+        "packages/law-practice/server/src/internal/Citation/CleanerTextIdentity.ts",
+        "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
+        "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts",
+        "packages/law-practice/server/test/CitationCleanerValues.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

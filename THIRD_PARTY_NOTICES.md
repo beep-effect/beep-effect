@@ -303,6 +303,17 @@ Source SHA-256:
 Only the candidate-construction operations used by the resolver are exposed;
 set deletion and reentrant mutation are not implemented by this helper.
 
+The cleaner text allocation helpers in `CleanerTextIdentity.ts`,
+`CleanerValues.ts` and `LiteralCleaners.ts` also adapt CPython 3.11.15
+`Modules/_sre/sre.c` substitution and `Objects/unicodeobject.c` substring/join
+identity behavior. Source SHA-256 values are respectively
+`db0b655aad48299782cfa460d6bac5d0093015b675ab193c0526fbc8ef5d2b78` and
+`5dde8eb1b99878b4ea113cd6b5f88bca3667b0e23dc8c5262a07f5ea14d0d82e`.
+The adaptation emits explicit allocation metadata and scoped TypeScript handles
+rather than Python objects. Empty and replacement-space caches are bounded;
+text subclasses flatten without invoking host coercion. Complete source and
+identity observations are recorded in the citation engine packet.
+
 Changes: the adaptation uses schema-owned TypeScript data, captured Effect
 comparison/work services, bounded probes and allocations, typed redacted
 failures, serialized operations and operation-local insertion identities.

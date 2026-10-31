@@ -1198,6 +1198,12 @@ global process ownership. See
   and sixteen notices accompany reproducible assets. Full host/registry/identity
   ownership and engine parity remain open; no rejection waiver is introduced.
 
+- **2026-10-31 cleaner value ownership:** a scoped original-handle arena and
+  concrete builtin invocation preserve 340 pinned text identity/subclass cases
+  and all 45 input-kind controls without coercion. Allocation metadata does not
+  bypass stage production charges. Complete live registry/cursor replay and
+  the public error translator remain open. See the cleaner value ownership evidence.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
@@ -1207,7 +1213,9 @@ spellcheck and formatting in the root tool configuration: `operation-cases`,
 JSON files below the eyecite
 fixture directory. The cleaner-pipeline report additionally retains complete
 source callback traces under its dedicated checker. The html-bytes report retains
-complete byte/non-text outcomes under ops/verify-html-bytes.py. They retain upstream legal spellings, source expressions
+complete byte/non-text outcomes under ops/verify-html-bytes.py. The
+cleaner-identities report retains full text and object-identity observations
+under ops/verify-cleaner-identities.py. They retain upstream legal spellings, source expressions
 or hash-bound payloads. Their separate schema/source/hash/coverage validators
 and corruption controls remain required. These exclusions do not apply to
 authored code or unrelated fixtures. Remove each exact exclusion when its

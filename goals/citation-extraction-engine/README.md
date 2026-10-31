@@ -42,6 +42,11 @@ payload allocation. The [byte stage and pinned GNU converter](./history/evidence
 now preserve byte encoding detection and source decode failures, with complete
 source/relink material. Global admission and full host/registry replay remain open.
 
+The [captured value owner and builtin invocation](./history/evidence/2026-10-31-cleaner-value-ownership.md)
+now preserve 340 text identity/subclass observations and all 45 input-kind
+controls, with no coercion and original stage production charges. Full live
+registry/cursor ownership and all 1,155 sequence cases remain open.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 P0 source acquisition and public prerequisite compatibility are evidenced. The

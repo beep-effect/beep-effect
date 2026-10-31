@@ -179,8 +179,10 @@ GNU libiconv 1.17 backend. Source capture adds 589 byte cases and 45 non-text
 controls; all direct byte outcomes match. Full source/relink material and
 sixteen notices are provided. See
 [byte-stage evidence](./history/evidence/2026-10-31-html-byte-stage.md).
-Full live ownership, complete sequence/non-text replay, global admission and
-maps/public Layer remain open.
+The [captured value owner and builtin invocation](./history/evidence/2026-10-31-cleaner-value-ownership.md)
+now preserve 340 text identity/subclass observations and replay all 45 input-kind
+controls with shared stage charges. Full live registry/cursor ownership, all
+1,155 sequence cases, global admission and maps/public Layer remain open.
 
 ## Delivery Rule
 

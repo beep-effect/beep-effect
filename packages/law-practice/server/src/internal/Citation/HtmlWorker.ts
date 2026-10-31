@@ -30,6 +30,7 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CitationCleanerProduced } from "./CleanerPipeline.ts";
+import { CitationCleanerTextAllocation, citationCleanerHtmlTextOutput } from "./CleanerTextIdentity.ts";
 import { CitationHtmlInputFailure, makeCitationHtmlInput } from "./HtmlInput.ts";
 import {
   CitationHtmlWorkerFailure,
@@ -84,6 +85,7 @@ export class CitationHtmlCleanerStage extends S.Opaque<CitationHtmlCleanerStage,
   S.Struct({
     text: S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16)),
     charges: CitationCleanerProduced.fields.charges,
+    allocation: CitationCleanerTextAllocation,
   }).pipe(
     $I.annoteSchema("CitationHtmlCleanerStage", {
       description: "Complete bounded HTML text plus live text reservations, pending runtime value issuance.",
@@ -390,12 +392,26 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
         .withTextCapacity((remaining) =>
           clean(input, remaining, "bytes").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
         )
-        .pipe(Effect.map(({ value, charges }) => CitationHtmlCleanerStage.make({ text: value, charges }))),
+        .pipe(
+          Effect.map(({ value, charges }) =>
+            CitationHtmlCleanerStage.make({
+              ...citationCleanerHtmlTextOutput(value),
+              charges,
+            })
+          )
+        ),
     stage: (input: unknown, work: CitationCleanerWork) =>
       work
         .withTextCapacity((remaining) =>
           clean(input, remaining, "text").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
         )
-        .pipe(Effect.map(({ value, charges }) => CitationHtmlCleanerStage.make({ text: value, charges }))),
+        .pipe(
+          Effect.map(({ value, charges }) =>
+            CitationHtmlCleanerStage.make({
+              ...citationCleanerHtmlTextOutput(value),
+              charges,
+            })
+          )
+        ),
   };
 });
