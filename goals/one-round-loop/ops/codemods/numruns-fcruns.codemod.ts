@@ -39,7 +39,7 @@ import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { Node, SyntaxKind } from "ts-morph";
 import type { TSMorphServiceError } from "@beep/repo-utils";
-import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-morph";
+import type { CallExpression, ImportDeclaration, ImportSpecifier, ObjectLiteralExpression, SourceFile } from "ts-morph";
 
 const FAST_CHECK_MODULE = "effect/testing";
 const TEST_UTILS_MODULE = "@beep/test-utils";
@@ -99,9 +99,9 @@ const resolveFastCheckAlias = (sourceFile: SourceFile): O.Option<string> =>
         sourceFile.getImportDeclarations(),
         (declaration) => declaration.getModuleSpecifierValue() === FAST_CHECK_MODULE
       ),
-      (declaration) => declaration.getNamedImports()
+      (declaration: ImportDeclaration) => declaration.getNamedImports()
     ),
-    (named) => named.getName() === "FastCheck"
+    (named: ImportSpecifier) => named.getName() === "FastCheck"
   ).pipe(O.map((named) => named.getAliasNode()?.getText() ?? named.getName()));
 
 const isFcAssertCall = (call: CallExpression, fcAlias: string): boolean => {

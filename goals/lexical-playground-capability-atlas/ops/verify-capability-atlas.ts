@@ -688,7 +688,9 @@ if (approvedWaiverScopesStart === -1) {
       ? afterApprovedWaiverScopesHeading
       : afterApprovedWaiverScopesHeading.slice(0, nextSectionStart);
 }
-const recordedWaiverScopeIds = [...approvedWaiverScopesSection.matchAll(/^\| `([^`]+)` \|/gm)].map((match) => match[1]);
+const recordedWaiverScopeIds = [...approvedWaiverScopesSection.matchAll(/^\| `([^`]+)` \|/gm)].map(
+  (match) => match[1] ?? ""
+);
 const unverifiedIds = atlas.capabilities.filter((item) => item.evidenceStatus === "unverified").map((item) => item.id);
 if (/\b(?:TODO|TBD|FIXME|PLACEHOLDER)\b/i.test(evidenceGaps)) {
   fail("P0 evidence-gap ledger contains placeholder text");

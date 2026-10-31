@@ -5756,7 +5756,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5904,7 +5903,6 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -6737,6 +6735,9 @@
             "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
             "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
             "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.ts",
             "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
@@ -133851,7 +133852,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "038dbf3d92fdfe34f0263bbb8183ed4ebfe2085f49d8269b55cbbd95808a0b36"
+        "sha256": "bc2e6d19c56f42ff35fe68a5a5fc80ddb2fd6287bb61547db6ab07a06298a2ae"
       }
     ]
   }
