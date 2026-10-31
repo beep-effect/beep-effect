@@ -155,6 +155,10 @@
       "purpose": "3-A6 parity: records the strict tsconfig verdict over every tracked tsconfig*.json and docgen's resolved compiler options for every docgen.json, and compares a before/after pair against the intended TsconfigValidator verdict shifts."
     },
     {
+      "path": "ops/workspace-patterns-adoption-parity.ts",
+      "purpose": "4-A2 parity: the five repo-cli pattern readers before and after the move onto @beep/repo-workspaces WorkspacePatterns (pattern lists, derived pathspecs, matched directories, syncpack sources, CreatePackage coverage) plus byte-identical tsconfig-sync --check, changeset-graph and create-package dry-run outputs."
+    },
+    {
       "path": "ops/xdg-systemd-differential.ts",
       "purpose": "Wave 4-X differential: @beep/xdg base and search directories against systemd-path over an environment matrix."
     },

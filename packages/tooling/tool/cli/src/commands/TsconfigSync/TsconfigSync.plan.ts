@@ -12,7 +12,6 @@ import {
   resolveWorkspaceDirs,
   topologicalSort,
   workspaceDependencyNames,
-  workspaceGlobsFrom,
 } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import {
@@ -28,6 +27,7 @@ import {
   resolveSubpathExportTarget,
   resolveWildcardExportTarget,
 } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { normalizePath } from "@beep/schema";
 import { TsconfigJson } from "@beep/tsconfig/TsconfigJson";
 import { A, Str, thunkFalse, thunkUndefined } from "@beep/utils";
@@ -42,11 +42,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import {
-  applyJsoncModification as applySharedJsoncModification,
-  decodeJsoncTextAs,
-  JsoncModification,
-} from "../../internal/cli/Jsonc.ts";
+import { applyJsoncModification, decodeJsoncTextAs, JsoncModification } from "../../internal/cli/Jsonc.ts";
 import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
 import { FALLOW_BOUNDARY_CONFIG_PATH, renderFallowBoundaryConfig } from "../Fallow/Fallow.command.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
@@ -102,20 +98,15 @@ const renderDocgenJson = Effect.fn(function* (filePath: string, value: unknown) 
   return yield* renderBiomeJson(filePath, value);
 });
 
-const readRootPackageJson = Effect.fn(function* (rootDir: string) {
-  const path = yield* Path.Path;
-  const filePath = path.join(rootDir, "package.json");
-  const content = yield* readFileString(filePath);
-  const parsed = yield* parseJsonObject(content, filePath);
-  const packageJson = yield* decodePackageJsonEffect(parsed).pipe(
-    Effect.mapError(DomainError.newCause(`Failed to decode package.json at "${filePath}"`))
+/**
+ * The root's workspace patterns through `@beep/repo-workspaces` (4-A2): a
+ * non-empty `pnpm-workspace.yaml` `packages:` list first, else the root
+ * `package.json` `workspaces` field in either shape.
+ */
+const readWorkspacePatterns = Effect.fn(function* (rootDir: string) {
+  return yield* WorkspacePatterns.read(rootDir).pipe(
+    Effect.mapError(DomainError.newCause(`Failed to read workspace patterns under "${rootDir}"`))
   );
-
-  return {
-    filePath,
-    content,
-    packageJson,
-  } as const;
 });
 
 const readFileString = Effect.fn(function* (filePath: string) {
@@ -141,28 +132,12 @@ const readFileString = Effect.fn(function* (filePath: string) {
  * @category utilities
  * @since 0.0.0
  */
-// fallow-ignore-next-line code-duplication -- config-updater helper twin of the CreatePackage/TsconfigSync copy, converged after the tstyche removal and the JSDoc grammar migration. Owner: @beep/repo-cli. Exit: consolidate both onto `@beep/repo-utils` (workspaceGlobsFrom/readPackageJsonFile) and delete the twins.
 const writeFileString = Effect.fn(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs
     .writeFileString(filePath, content)
     .pipe(Effect.mapError(DomainError.newCause(`Failed to write file "${filePath}"`)));
 });
-
-const applyJsoncModification = (
-  content: string,
-  path: ReadonlyArray<string | number>,
-  value: unknown,
-  options?: { readonly isArrayInsertion?: boolean }
-): string =>
-  applySharedJsoncModification(
-    JsoncModification.make({
-      content,
-      path,
-      value,
-      ...(options?.isArrayInsertion === true ? { isArrayInsertion: true } : {}),
-    })
-  );
 
 /**
  * Render a file path relative to the repository root.
@@ -449,7 +424,9 @@ const planRootReferenceSync = Effect.fn(function* (rootDir: string, workspaces: 
     return O.none<PlannedFileChange>();
   }
 
-  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(expected));
+  const nextContent = applyJsoncModification(
+    JsoncModification.make({ content: original, path: ["references"], value: referenceEntries(expected) })
+  );
 
   return O.some(
     PlannedFileChange.cases["root-references"].make({
@@ -622,14 +599,22 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
 
   let nextContent = original;
   for (const key of keysToRemove) {
-    nextContent = applyJsoncModification(nextContent, ["compilerOptions", "paths", key], undefined);
+    nextContent = applyJsoncModification(
+      JsoncModification.make({ content: nextContent, path: ["compilerOptions", "paths", key], value: undefined })
+    );
   }
   for (const key of keysToSet) {
     const expectedValue = HashMap.get(expectedAliases, key);
     if (O.isNone(expectedValue)) {
       continue;
     }
-    nextContent = applyJsoncModification(nextContent, ["compilerOptions", "paths", key], expectedValue.value);
+    nextContent = applyJsoncModification(
+      JsoncModification.make({
+        content: nextContent,
+        path: ["compilerOptions", "paths", key],
+        value: expectedValue.value,
+      })
+    );
   }
 
   const additions = A.length(
@@ -789,11 +774,10 @@ const planRootFallowBoundarySync = Effect.fn(function* (rootDir: string) {
  */
 const planRootSyncpackSync = Effect.fn(function* (rootDir: string) {
   const path = yield* Path.Path;
-  const { packageJson } = yield* readRootPackageJson(rootDir);
+  const workspacePatterns = yield* readWorkspacePatterns(rootDir);
   const syncpackFilePath = path.join(rootDir, "syncpack.config.ts");
   const original = yield* readFileString(syncpackFilePath);
   const current = yield* readSyncpackSources(original);
-  const workspacePatterns = workspaceGlobsFrom(packageJson.workspaces);
   const expected = buildCanonicalSyncpackSources(workspacePatterns);
 
   if (arraysEqual(current, expected)) {
@@ -1019,7 +1003,9 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
     return O.none<PlannedFileChange>();
   }
 
-  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(finalRefPaths));
+  const nextContent = applyJsoncModification(
+    JsoncModification.make({ content: original, path: ["references"], value: referenceEntries(finalRefPaths) })
+  );
   if (Str.equivalence(nextContent, original)) {
     return O.none<PlannedFileChange>();
   }
@@ -1123,7 +1109,9 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
     return O.none<PlannedFileChange>();
   }
 
-  const nextContent = applyJsoncModification(original, ["references"], referenceEntries(expected));
+  const nextContent = applyJsoncModification(
+    JsoncModification.make({ content: original, path: ["references"], value: referenceEntries(expected) })
+  );
   if (Str.equivalence(nextContent, original)) {
     return O.none<PlannedFileChange>();
   }

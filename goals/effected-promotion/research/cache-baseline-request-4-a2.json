@@ -1,0 +1,20 @@
+{
+  "previous": "fc1afbb089bec054bc84f88cd61a5559e36f14c040817590944f97e0d3b47365",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion 4-A2, refactor/workspace-patterns-leaf-adoption)",
+    "reason": "Record the root policy-fingerprint seals after the 4-A2 source move: internal/patterns.ts becomes the public WorkspacePatterns leaf (six seals swap that one input path) and TsconfigSync now reads its patterns through it, so the tsconfig-sync seal gains repo-workspaces and @beep/yaml sources, as measured in the review; no manifest changes and no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-4-a2.md",
+      "sha256": "e9f6d649bf36861727f406a8ef7789bbb5a50ebb922987c2adee94319cc51596"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["//"]
+}
