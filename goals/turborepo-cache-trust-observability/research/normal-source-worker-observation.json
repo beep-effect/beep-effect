@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "cache-signed-worker-observation-checkpoint/v1",
+  "authority": "Accepted-source worker observed through a transparent outer capture diagnostic; ordinary CLI success and protected qualification are not established",
+  "observedAt": "2026-10-31T13:04:25.715369+00:00",
+  "sourceBaseRevision": "b30cd9e6dd96bcb7426a6a69c8f3be2c6f370c94",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "52544a1247f4c332ed13260337704eaeafd55b8dbba594aa86dda86d471c299d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "933bc85de00f51c35d7183629dd4012cf7cbc5c63d1007ed67c61e4f5c63798c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.ts": "bbba2f31931550ac50c19dae940e51611fd2faad478dbfd9500c9b2c477d765a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts": "0d7531b7d343e36ff23931466227c45893b930e631a4c1a480bafe91a8feffc2",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts": "45991ec6c8dc50ef113ccbdc822436e3f55f477f02c43e5b07a998f721967c79",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts": "36c69fa69e539bcacd74cd2bc72b6f601e821ff5c4567eecc0b7ff7c90f5a955",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts": "828401b9fe19b2bda81f8ef85bc9d553ba4669f2975838466f718f3ddf67e15a",
+    "packages/foundation/modeling/identity/turbo.json": "b2cf6ff3291c134a7ee884245d21fbedf5bf6ef87f3c9131407db4492b005a97",
+    "biome.identity.jsonc": "90b39177c97ab3f98238d8565d293f0941ab13a184b479e72cf89e2559b757e8",
+    "bun.lock": "1d6cabcf5379792bda0d893099ded17ac442b0c4d085e15c2e628e9b75f7afe7"
+  },
+  "sourceTrees": {
+    "count": 3,
+    "sameRevision": true,
+    "trackedSourceCleanBeforeAndAfter": true
+  },
+  "preflight": {
+    "frozenInstall": {
+      "exit": 0,
+      "seconds": 43.793
+    },
+    "dependencyCopy": {
+      "exit": 0,
+      "seconds": 249.731,
+      "regularFiles": 212061,
+      "bytes": 4034716264,
+      "matchesActivation": true
+    },
+    "generatedProfile": {
+      "exit": 0
+    },
+    "formattedActivation": {
+      "exit": 0,
+      "seconds": 56.935
+    }
+  },
+  "workerObservation": {
+    "channel": "stable",
+    "client": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "baseKey": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.4",
+      "epoch": "qualification-v3"
+    },
+    "signedKey": {
+      "computation": "@beep/identity#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.4-private-loopback-signed-v1",
+      "epoch": "qualification-v3"
+    },
+    "result": {
+      "exit": 0,
+      "elapsedSeconds": 1089.878,
+      "finishedAt": "2026-10-31T12:57:58.946394+00:00"
+    },
+    "counts": {
+      "captureControls": 4,
+      "nonExecutions": 4,
+      "mutations": 7,
+      "shadows": 10,
+      "freshPairs": 3,
+      "pairs": 3
+    },
+    "receiptBytes": 223581,
+    "receiptSha256": "bd73f292b336fbe4a55ae4dbdf22e1c20fe70b9fb92524d52d42593ab088bc42",
+    "caller": "Private Effect program calling the unchanged runCacheSignedPilotExperiment with NodeServices, NodeCrypto, FsUtilsLive and MemoryStatsLive",
+    "captureObserver": true,
+    "workerRewritten": false,
+    "nativeLaunchOptionsChanged": false,
+    "privateWorkerReceiptCopiedReadOnly": true,
+    "privateDiagnosticCallerSha256": "29118d81e4c99372a49a6339277333c810d2b4b9342d91eadf2a87613c3c5685"
+  },
+  "ordinaryCliAttempts": [
+    {
+      "channel": "stable",
+      "candidate": "initial",
+      "exit": 1,
+      "elapsedSeconds": 209.722,
+      "finishedAt": "2026-10-31T12:15:02.311905+00:00"
+    },
+    {
+      "channel": "canary",
+      "candidate": "initial",
+      "exit": 1,
+      "elapsedSeconds": 291.93,
+      "finishedAt": "2026-10-31T12:16:25.345683+00:00"
+    },
+    {
+      "channel": "stable",
+      "candidate": "formatted",
+      "exit": 1,
+      "elapsedSeconds": 296.265,
+      "finishedAt": "2026-10-31T12:37:21.357868+00:00"
+    },
+    {
+      "channel": "canary",
+      "candidate": "formatted",
+      "exit": 1,
+      "elapsedSeconds": 391.708,
+      "finishedAt": "2026-10-31T12:38:56.707754+00:00"
+    }
+  ],
+  "firstFailureAttribution": {
+    "cause": "Introduced unformatted private activation proposal; both selected lint executions failed while task/input/log identities matched and all three dependencies passed",
+    "sourceNativeLintExit": 0,
+    "privateFileOverlayControl": {
+      "initialExit": 1,
+      "initialCategory": "format",
+      "formattedEquivalentExit": 0,
+      "sameParsedConfiguration": true
+    },
+    "retainedInvalidControl": "Stdin check refused both candidates and is not used as negative/pass evidence"
+  },
+  "remaining": [
+    "Attribute the corrected ordinary CLI refusals using its actual service composition, then obtain uninstrumented stable and current-canary command receipts",
+    "Independently approved protected source/runtime/upload and issuer transport, actual R2 upload, immutable GitHub publication and off-runner acceptance",
+    "Current tuple qualification, supported role/epoch/portability/rollback evidence, full feature and computation adoption, representative windows and final hosted closeout"
+  ],
+  "ordinaryCliSuccess": false,
+  "productionSigningChanged": false,
+  "qualificationGranted": false,
+  "fullGoalAcceptanceCompleted": false,
+  "credentialBootstrap": {
+    "verifiedAt": "2026-10-31T08:15:01.836487+00:00",
+    "exactSuppressedReads": 7,
+    "privateReferenceFiles": 4,
+    "exactEnvWrappersPassed": 4,
+    "directoryMode": "0700",
+    "fileModes": "0600",
+    "runtimeActivated": false,
+    "ciSecretsChanged": false,
+    "handsOnRequiredAtCheckpoint": false
+  }
+}

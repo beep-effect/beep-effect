@@ -936,3 +936,25 @@ Docgen after its separately attributed earlyoom interruption. The checkpoint
 retains both attempts and exact source hashes. After the producer-execution
 parent accepts, replay only this lane's own commits after its recorded boundary
 and obtain fresh combined local/hosted proof; no live producer grant is implied.
+
+
+### Accepted-source worker observation, 2026-10-31
+
+The [worker checkpoint](research/normal-source-worker-observation.json) records
+a full stable-client matrix on accepted source with an outer capture observer:
+three fresh pairs, three signed replay pairs, ten shadows, seven mutations,
+four capture controls and four non-execution cases. Worker code and native
+launch options were unchanged. Its private receipt is retained by digest;
+the three source trees stayed clean.
+
+This is a diagnostic caller using explicit platform layers. Four ordinary CLI
+attempts still failed; the initial pair was traced to an unformatted proposal
+and corrected through a native file-overlay control. The corrected CLI refusals
+remain unattributed. Trace the actual CLI composition and obtain uninstrumented
+stable/current-canary receipts before closing that gate. Protected publication,
+R2 signing, qualification and every full-goal acceptance criterion remain open.
+
+The human credential bootstrap is complete: seven exact suppressed reads and
+four reference-file wrappers passed. No further human credential step remains
+at this checkpoint. Signing and CI secret settings were not activated by that
+verification. Preserve this completion when reading older pending-bootstrap notes.

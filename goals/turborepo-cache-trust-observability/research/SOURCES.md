@@ -564,3 +564,16 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
 - 2026-10-30: `producer-private-output-checkpoint.json` binds the unpublished command repair. The original writer fails two physical mode assertions under a child-only 022 umask. Removing exclusive creation while retaining mode 0600 fails the existing-output refusal assertion; exact source bytes are restored. Nine real filesystem refusal checks cover both producer modes. Current default package, accepted-parent combined and actual protected publication proof remain required.
 
 - The private-output checkpoint also retains the complete c99 package pass and an independent API-contract counterexample. Typed public warming examples fail when the shared writer acquires FileSystem implicitly, then compile after producer-only capability selection. No new public dependency or live activation is retained; refined-source package proof remains required.
+
+
+### Accepted-source worker replay observation, 2026-10-31
+
+- [Worker observation](normal-source-worker-observation.json): stable 2.11.10,
+  accepted source `b30cd9e6dd96bcb7426a6a69c8f3be2c6f370c94`, unchanged worker
+  and native launch options, complete source-validated matrix under an outer
+  capture observer. The ordinary CLI attempts are retained as failures.
+- A private read-only native Biome overlay isolates the initial proposal's
+  formatting defect. Equivalent formatted JSON passes; unchanged source passes.
+  Invalid stdin controls are excluded from the negative/pass evidence.
+- Scope: diagnostic worker observation, without a production, protected
+  publication, ordinary CLI success or operational qualification claim.

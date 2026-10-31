@@ -110,7 +110,8 @@
     "research/acceptance-publication-join-checkpoint.json",
     "research/inspection-governance-checkpoint.json",
     "research/producer-command-publication-checkpoint.json",
-    "research/producer-private-output-checkpoint.json"
+    "research/producer-private-output-checkpoint.json",
+    "research/normal-source-worker-observation.json"
   ],
   "agentLaunchers": [
     {

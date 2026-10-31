@@ -1574,3 +1574,31 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   as interrupted, resolve leaf imports, and regenerate inventory artifacts.
   One inventory attempt was stopped after the additional storage-bound defect;
   the final canonical scan and one hundred focused tests passed.
+
+### Normal-source replay preflight friction, 2026-10-31
+
+- The activation preview requires the current configuration's exact bytes, not
+  equivalent parsed JSON. An initially reformatted private before-copy correctly
+  failed with "Qualification evidence digest mismatch" before task execution.
+  Copy the original bytes and derive only the proposed after-copy; do not relax
+  the guard or alter the frozen source.
+- The completed port-repair coverage log could not be read because GitHub
+  returned "API rate limit exceeded". Preserve the last known failure and its
+  unknown attribution, inspect quota reset metadata once, and continue isolated
+  local work. A failed read is neither a passing check nor an empty finding set.
+- Fresh exact-source stable and canary commands both failed at the signed fresh
+  pair validator after the setup checks passed. The normal command's generic
+  supervisor error hid that stage. A diagnostic-only completion observer retained
+  the existing static error label and source locations, without retaining raw
+  streams or changing launch options. Keep such diagnostic evidence separate
+  from normal-source qualification, and do not relax the fresh-pair validator.
+- The fresh-pair diagnostic found matching task/input/log identities and three
+  successful fresh dependencies, but exit one for identity lint in both roots.
+  The unchanged source passed native Biome. Read-only private overlays then
+  isolated a formatting-only defect in the proposed configuration: the initial
+  bytes failed with category `format`; native-formatted equivalent JSON passed.
+  Format proposal bytes with the pinned repository tool before building the
+  activation reference. Preserve the failed experiments and rebuild the preview.
+- Biome's stdin check refused both original and formatted input, so it was not
+  a valid negative/pass control. Use actual read-only file overlays for this
+  comparison; the successful control changes no tracked source or lint rule.

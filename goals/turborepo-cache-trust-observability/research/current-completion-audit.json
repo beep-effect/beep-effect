@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "3de5e43c85fefd0d79c15cd23ceae94119ff4460d59536c8903c4c839f99c253",
+  "specSha256": "93f42ec17cb921f1665c1a18b1453fc0303a1251dade8289e83315728447c824",
   "acceptance": [
     {
       "id": "AC-01",
@@ -40,9 +40,7 @@
       "requirement": "Protected producer receipts and direct result classes preserve provenance/fault causes despite Turbo recomputation.",
       "status": "unproven",
       "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient.",
-      "partialEvidence": [
-        "research/closed-producer-upload-checkpoint.json"
-      ]
+      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
     },
     {
       "id": "AC-05",
@@ -453,5 +451,11 @@
   "priorSpecSha256AtSeverityConsolidation": "8890b82dedf18902c50d4caf46cc8550bee4f13f4ecb78675ed66473cc47594c",
   "priorSpecSha256AtPrivateProducerOutput": "99964ee6e04423908f74a6c66f9b27d956b3e357b7c7afde560a22e1e0fd543b",
   "producerPrivateOutputCheckpoint": "research/producer-private-output-checkpoint.json",
-  "priorSpecSha256AtProducerWriterServiceBoundary": "9de60aafceafea92b1c4bf888c4e04637fca78b82e0a640e7eb9ced8b8d2e1d5"
+  "priorSpecSha256AtProducerWriterServiceBoundary": "9de60aafceafea92b1c4bf888c4e04637fca78b82e0a640e7eb9ced8b8d2e1d5",
+  "normalSourceWorkerObservation": {
+    "checkpoint": "research/normal-source-worker-observation.json",
+    "scope": "Stable worker-only observed full matrix; ordinary CLI failures remain open; no acceptance criterion completed"
+  },
+  "specNormalizationReview": "Source digest refreshed for the current producer SPEC. All nine acceptance obligations remain unproven; this is not an evidence promotion.",
+  "priorSpecSha256BeforeWorkerObservation": "3de5e43c85fefd0d79c15cd23ceae94119ff4460d59536c8903c4c839f99c253"
 }

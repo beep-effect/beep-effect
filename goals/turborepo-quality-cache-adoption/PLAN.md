@@ -382,3 +382,15 @@ Four feature decisions are now final current-tree no-change decisions; the other
 thirty-one feature reviews remain pending. The 199 fresh whole-command
 dispositions and 2,372 gaps are retained from their existing source snapshot,
 not refreshed or requalified here. No phase or whole-goal criterion is completed.
+
+
+### Current signed-worker diagnostic, 2026-10-31
+
+The trust owner's [worker observation](../turborepo-cache-trust-observability/research/normal-source-worker-observation.json)
+retains a full stable-client matrix on accepted source without worker or native
+launch changes. Its outer diagnostic caller differs from the ordinary CLI,
+whose corrected attempts still failed. This narrows the investigation but
+qualifies or adopts no computation. Current-canary CLI proof, protected R2
+publication, all remaining feature/disposition work and real windows stay open.
+The credential bootstrap is independently verified; do not repeat the older
+pending human-credential request.
