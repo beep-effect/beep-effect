@@ -24,7 +24,7 @@ describe.each(variants)("$name static preservation", ({ annotate }) => {
         Object.preventExtensions(originalAnnotate.call(source, annotations)),
     });
 
-    expect(() => annotate(source)).toThrowError(
+    expect(() => annotate(source)).toThrow(
       expect.objectContaining({
         _tag: "SchemaStaticPreservationError",
         message: "Cannot preserve a custom static on the rebuilt schema.",
