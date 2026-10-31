@@ -528,7 +528,7 @@
       },
       {
         "files": [
-          "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"
+          "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts"
         ],
         "functions": ["walk"],
         "maxCognitive": 19,
