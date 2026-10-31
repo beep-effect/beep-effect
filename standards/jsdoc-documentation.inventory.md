@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T15:35:04.847Z
+Generated: 2026-10-31T16:56:03.453Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 164 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3574 |
-| publicExports | 25328 |
+| publicModules | 3576 |
+| publicExports | 25338 |
 | openModules | 166 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -70,13 +70,13 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 12 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
 | 13 | `@beep/jsonc` | `packages/foundation/modeling/jsonc` | clean | 8 | 48 | 0 | 0 |
 | 14 | `@beep/npm-spec` | `packages/foundation/modeling/npm-spec` | clean | 13 | 72 | 0 | 0 |
-| 15 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
-| 16 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
-| 17 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
-| 18 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
-| 19 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 10 | 0 | 0 |
-| 20 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 64 | 628 | 16 | 0 |
-| 21 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 16 | 92 | 0 | 0 |
+| 15 | `@beep/toml` | `packages/foundation/modeling/toml` | clean | 9 | 68 | 0 | 0 |
+| 16 | `@beep/yaml` | `packages/foundation/modeling/yaml` | clean | 11 | 95 | 0 | 0 |
+| 17 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
+| 18 | `@beep/package-json` | `packages/foundation/modeling/package-json` | clean | 18 | 121 | 0 | 0 |
+| 19 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 18 | 101 | 0 | 0 |
+| 20 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 10 | 0 | 0 |
+| 21 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 64 | 628 | 16 | 0 |
 | 22 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 23 | `@beep/md` | `packages/foundation/modeling/md` | clean | 11 | 311 | 0 | 0 |
 | 24 | `@beep/shared-domain` | `packages/shared/domain` | clean | 106 | 374 | 0 | 0 |
@@ -147,7 +147,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 89 | `@beep/github-actions` | `packages/drivers/github-actions` | clean | 24 | 162 | 0 | 0 |
 | 90 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
 | 91 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 103 | 0 | 0 |
-| 92 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 97 | 0 | 3 |
+| 92 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
 | 93 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 17 | 91 | 0 | 0 |
 | 94 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 9 | 113 | 0 | 0 |
 | 95 | `@beep/exiftool` | `packages/drivers/exiftool` | clean | 5 | 55 | 0 | 0 |
