@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "cache-owned-adapter-integration-checkpoint/v1",
+  "authority": "Current source-bound local integration only. All full-goal criteria remain unproven. No protected producer, R2 grant, deployment or observation acceptance.",
+  "producerParent": "ec00071640d830c4012d558c3db107b9f491df20",
+  "acceptedMain": "dcca065b86e48c2ec1b014d998da133cc04c7e60",
+  "acceptedPrerequisitePr": 2367,
+  "sourceSha256": {
+    "infra/r2-cache/policy_runtime.py": "e7bfdadc442e6652f31ea844790ebd3733ca66a2c789c0aaa3b9939005a9fe6c",
+    "infra/r2-cache/policy-lab.py": "ce3b2015c210f50ece8115e5143403c37840c261d778ec38b217526ade8d3f5e",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.schemas.ts": "c2d8fb0625f897d8036cdf01c00b81b1758c6dec44a0f47529132412b1075133",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.ts": "a2aee0157e9acff99c7719beae7f5070ac1f1df76d1086146597f6d179f3788d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.schemas.ts": "c9c4d67d8fde32c1acd3533309002e637b3666c7e72c4130cd85c7632ca7455a",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "73b1624f92d75e31a3c10faf7d382cc1b336fda3933273a3eeaf6749fa3599df",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.schemas.ts": "79e8661ab46b6b9a9d43bcb6dbfde7c8175d669f83747c43c3c03878a550c51c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "07fa051c0f53516263fed0146a0fab66168bf71ff6e0c120bfdc0ec7d15a5828",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "336acde639cd721303ebd37d3f7ec1fa91d18aa6753f8f96c545cbca96653514",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "4ffeae2588d38154fa33281cddbce6c07db166dff484ad22b2bd5dfa5cd17be3",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "662a6d380b0a7d5db2b1633c5d8b607f3aaf76a5d21ef618b70a1d3509bf2fb7",
+    "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "ce51046959228c34a10a9cc024cc3af19e0795bb9d865cd4a402bf875a91edd2",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "4605f1d53dd83591b24eb8415af21e324211c1c69a3f1854c1ade5ba3bd35d8f",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "73598e32b01dd9854ef820ee1a266b6106171205b75ac605a4ac280145f9336a",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "03a79e6075ca696e63b94c5a61808bb2e98f0535422de2b9bf3f5a52b74ee72c",
+    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "1abd6e27ed1d78f5f91240788b80d08a88043a95bdea9121c3d53da0f37e1abe",
+    "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "2283a850e8e65c55c6a1e869f43718382948f872d21e1e2857a7e10124a34077",
+    "packages/tooling/tool/cli/package.json": "9f43e6fa5edfd4bea8663b41fb285fbeaac729ec6980b951d416039452bcd42e"
+  },
+  "preserved": [
+    "Fixed /tools/bun and /tools/node aliases and PATH",
+    "Private supervisor storage outside every source mount; no source-contained capture",
+    "Owned upload Unix socket, separately scoped backend capabilities and authenticated lifecycle",
+    "Accepted private storage refusal and success/fault cleanup assertions"
+  ],
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 26.662,
+      "finishedAt": "2026-10-30T04:23:34.656111+00:00",
+      "tests": 142,
+      "files": 10
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 17.44,
+      "finishedAt": "2026-10-30T04:23:26.471462+00:00",
+      "tests": 142,
+      "files": 10
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 13.258,
+      "finishedAt": "2026-10-30T04:23:21.828925+00:00",
+      "tests": null,
+      "files": null
+    }
+  },
+  "remaining": [
+    "Default complete repo-cli package audit and Docgen",
+    "Fresh canonical final and current-head hosted/review gates",
+    "Real scoped credential receipt and exact suppressed reads",
+    "Current normal-source stable/canary native execution and immutable protected producer publication",
+    "Task/feature dispositions, signed trust/rotation/rollback and actual 7/7/14-day observation windows"
+  ],
+  "productionChanges": false
+}

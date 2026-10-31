@@ -345,6 +345,8 @@ const runNative = Effect.fn("CacheConformance.runNative")(function* (
       "/tools/turbo",
       "run",
       "build",
+      "--skip-infer",
+      "--single-package",
       "--cache=remote:rw",
       "--env-mode=strict",
       "--no-daemon",

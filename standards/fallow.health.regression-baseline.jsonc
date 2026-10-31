@@ -355,11 +355,6 @@
         "count": 1
       }
     },
-    "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalFixture.ts": {
       "complexity_moderate": {
         "count": 2

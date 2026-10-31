@@ -21,6 +21,8 @@ import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Match from "effect/Match";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -31,8 +33,19 @@ import {
   CacheConformanceProxyEvent,
   CacheConformanceTarget,
 } from "./Cache.conformance.schemas.ts";
-import { classifyCacheConformanceStatus, readCacheConformanceReply } from "./Cache.conformance.wire.ts";
-import { corruptCacheArtifactBody, serveCacheLoopback, tamperCacheArtifactTag } from "./Cache.protocol.fixture.ts";
+import {
+  classifyCacheConformanceBackendResult,
+  classifyCacheConformanceMediaType,
+  classifyCacheConformanceStatus,
+  readCacheConformanceReply,
+} from "./Cache.conformance.wire.ts";
+import { CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
+import {
+  corruptCacheArtifactBody,
+  serveCacheLoopback,
+  serveCachePrivateSocket,
+  tamperCacheArtifactTag,
+} from "./Cache.protocol.fixture.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
 import type {
@@ -67,17 +80,34 @@ export class CacheConformanceProxyOptions extends S.Opaque<
     target: CacheConformanceTarget,
     bearers: CacheConformanceBearers,
     holdMs: S.Int.check(S.isBetween({ minimum: 1, maximum: 300_000 })),
+    maxEvents: S.Int.check(S.isBetween({ minimum: 1, maximum: 5000 })).pipe(
+      S.withDecodingDefaultKey(Effect.succeed(5000)),
+      S.withConstructorDefault(Effect.succeed(5000))
+    ),
+    maxBodyBytes: S.Int.check(S.isBetween({ minimum: 1, maximum: 64 * 1024 * 1024 })).pipe(
+      S.withDecodingDefaultKey(Effect.succeed(64 * 1024 * 1024)),
+      S.withConstructorDefault(Effect.succeed(64 * 1024 * 1024))
+    ),
+    maxCaptureBytes: S.Int.check(S.isBetween({ minimum: 1, maximum: 64 * 1024 * 1024 })).pipe(
+      S.withDecodingDefaultKey(Effect.succeed(64 * 1024 * 1024)),
+      S.withConstructorDefault(Effect.succeed(64 * 1024 * 1024))
+    ),
   }).pipe(
     $I.annoteSchema("CacheConformanceProxyOptions", {
-      description: "Upstream target, role-labelling bearers and the timeout fault's hold duration.",
+      description:
+        "Upstream target, role-labelling bearers, timeout hold and bounded capture budgets callers may lower.",
     })
   )
 ) {}
 
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
-const bodyLimit = 64 * 1024 * 1024;
-const eventLimit = 5000;
+const isNativeTaskHash = S.is(CacheSyntheticRun.fields.taskHash);
 const captureLimit = 64;
+const encodeEvent = S.encodeEffect(S.fromJsonString(CacheConformanceProxyEvent));
+const ScenarioId = S.NonEmptyString.check(S.isMaxLength(96), S.isPattern(/^[A-Za-z0-9._-]+$/)).pipe(
+  $I.annoteSchema("ScenarioId", { description: "Bounded controller-owned scenario label; never request text." })
+);
+const decodeScenarioId = S.decodeUnknownEffect(ScenarioId);
 const hopHeaders = [
   "host",
   "connection",
@@ -202,11 +232,63 @@ const parseProxyRequest = (url: string, rawMethod: string): ProxyRequest => {
 
 const readProxyBody = (request: HttpServerRequest.HttpServerRequest, method: CacheConformanceMethod) =>
   HashSet.has(bodyMethods, method)
-    ? request.arrayBuffer.pipe(
-        Effect.map((buffer) => new Uint8Array(buffer)),
-        Effect.orElseSucceed(() => empty)
-      )
+    ? request.arrayBuffer.pipe(Effect.map((buffer) => new Uint8Array(buffer)))
     : Effect.succeed(empty);
+
+const makeProxyCapture = Effect.fnUntraced(function* (options: CacheConformanceProxyOptions) {
+  const events = yield* Ref.make(A.empty<CacheConformanceProxyEvent>());
+  const requests = yield* Ref.make(0);
+  const captureBytes = yield* Ref.make(0);
+  const invalid = yield* Ref.make(false);
+  const reserved = yield* Ref.make(HashSet.empty<string>());
+  return {
+    admit: Effect.gen(function* () {
+      if (yield* Ref.get(invalid)) return false;
+      return yield* Ref.modify(requests, (count) => (count < options.maxEvents ? [true, count + 1] : [false, count]));
+    }),
+    reserveUpload: Effect.fnUntraced(function* (parsed: ProxyRequest, body: Uint8Array, tag: O.Option<string>) {
+      if (parsed.method !== "PUT" || O.isNone(tag)) return true;
+      const slot = yield* Ref.modify(reserved, (keys) =>
+        HashSet.has(keys, parsed.key) || HashSet.size(keys) < captureLimit
+          ? [true, HashSet.add(keys, parsed.key)]
+          : [false, keys]
+      );
+      const bytes = body.byteLength + new TextEncoder().encode(tag.value).byteLength;
+      return yield* Ref.modify(captureBytes, (used) =>
+        bytes <= options.maxCaptureBytes - used ? [slot, used + bytes] : [false, used]
+      );
+    }),
+    record: Effect.fnUntraced(function* (event: CacheConformanceProxyEvent) {
+      const encoded = yield* encodeEvent(event).pipe(Effect.result);
+      if (Result.isFailure(encoded) || new TextEncoder().encode(encoded.success).byteLength > 4096) {
+        yield* Ref.set(invalid, true);
+        return false;
+      }
+      yield* Ref.update(events, A.append(event));
+      return !(yield* Ref.get(invalid));
+    }),
+    invalidate: Ref.set(invalid, true),
+    events: Effect.gen(function* () {
+      const state = yield* Effect.all({
+        captured: Ref.get(events),
+        requests: Ref.get(requests),
+        invalid: Ref.get(invalid),
+      }).pipe(
+        Effect.repeat({
+          until: (state) => state.invalid || state.captured.length === state.requests,
+          schedule: Schedule.spaced(Duration.millis(10)),
+        }),
+        Effect.timeoutOrElse({
+          duration: Duration.sum(Duration.millis(options.holdMs), Duration.seconds(5)),
+          orElse: () => Effect.fail(CacheCommandError.new("Conformance proxy capture has unfinished requests.")),
+        })
+      );
+      if (state.invalid)
+        return yield* CacheCommandError.new("Conformance proxy capture is incomplete or exceeded its bounds.");
+      return state.captured;
+    }),
+  };
+});
 
 const digestOf = (bytes: Uint8Array, present: boolean) =>
   present ? hashBytes(bytes).pipe(Effect.asSome) : Effect.succeed(O.none<Sha256Hex>());
@@ -242,6 +324,7 @@ const proxyExchange = Effect.fnUntraced(function* (input: {
       onNone: () => "none",
       onSome: (value) => (isArtifactHash(value) ? "valid" : "non-hex"),
     }),
+    taskHash: O.filter(parsed.hash, isNativeTaskHash),
     outcome: O.getOrElse(delivered.outcome, () =>
       O.match(delivered.status, {
         onNone: (): CacheConformanceOutcome => "transport-error",
@@ -249,7 +332,12 @@ const proxyExchange = Effect.fnUntraced(function* (input: {
       })
     ),
     status: delivered.status,
-    contentType: Headers.get(delivered.headers, "content-type").pipe(O.map(Str.slice(0, 128))),
+    backendResult: classifyCacheConformanceBackendResult(
+      Headers.get(delivered.headers, "x-beep-cache-result"),
+      parsed.method,
+      delivered.status
+    ),
+    contentType: classifyCacheConformanceMediaType(Headers.get(delivered.headers, "content-type")),
     requestBytes: S.Natural.make(body.byteLength),
     requestSha256: yield* digestOf(body, body.byteLength > 0),
     requestTagSha256: yield* digestTag(Headers.get(input.request.headers, "x-artifact-tag")),
@@ -262,33 +350,7 @@ const proxyExchange = Effect.fnUntraced(function* (input: {
   });
 });
 
-/**
- * Start a scoped loopback reverse proxy in front of a conformance target.
- *
- * **Details**
- * Requests are forwarded unchanged except for an explicit fault selected with
- * `setScenario`, which applies only to artifact `GET`/`HEAD` reads:
- * `missing-tag`, `tampered-tag` and `tampered-body` rewrite a successful
- * upstream response (tag and byte tampering reuse the protocol fixture's code);
- * `truncated-body` sends part of the body and then aborts the connection;
- * `wrong-team` replays a body and tag the proxy captured on an upload for the
- * same hash under a different team; `status-429` and `status-503` answer
- * without forwarding; `timeout` holds the response for `holdMs`; `reset`
- * aborts before any byte is sent. Events use the exchange receipt vocabulary
- * and describe what the client was delivered: never a URL, bearer, tag value
- * or body. A 404 is classed as a miss only when no upload of that hash in that
- * namespace passed through this proxy.
- *
- * **Example** (Scope a proxy)
- * ```ts
- * import { makeCacheConformanceFaultProxy } from "@beep/repo-cli/commands/Cache"
- * console.assert(typeof makeCacheConformanceFaultProxy === "function")
- * ```
- *
- * @category fixtures
- * @since 0.0.0
- */
-export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFaultProxy")(function* (
+const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHandler")(function* (
   options: CacheConformanceProxyOptions
 ) {
   const client = yield* HttpClient.HttpClient;
@@ -298,7 +360,8 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
     id: "initial",
     fault: "none",
   });
-  const events = yield* Ref.make(A.empty<CacheConformanceProxyEvent>());
+  const capture = yield* makeProxyCapture(options);
+  const reject = (status: number) => capture.invalidate.pipe(Effect.as(HttpServerResponse.empty({ status })));
   const written = yield* Ref.make(HashSet.empty<string>());
   const captures = yield* Ref.make(HashMap.empty<string, Captured>());
   // Later entries win, so a single-token topology labels its bearer `writer`.
@@ -337,7 +400,8 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
           )
         : base;
     return yield* client.execute(outgoing).pipe(
-      Effect.flatMap(readCacheConformanceReply),
+      Effect.flatMap((response) => readCacheConformanceReply(response, options.maxBodyBytes)),
+      Effect.catchTag("CacheCommandError", (error) => capture.invalidate.pipe(Effect.andThen(Effect.fail(error)))),
       Effect.timeoutOption(Duration.millis(target.requestTimeoutMs)),
       Effect.map(O.getOrElse(() => ({ status: O.none<number>(), headers: Headers.empty, body: empty }))),
       Effect.orElseSucceed(() => ({ status: O.none<number>(), headers: Headers.empty, body: empty }))
@@ -473,20 +537,23 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
     yield* Ref.update(written, HashSet.add(parsed.key));
     yield* O.match(Headers.get(request.headers, "x-artifact-tag"), {
       onNone: () => Effect.void,
-      onSome: (tag) =>
-        Ref.update(captures, (all) =>
-          HashMap.size(all) < captureLimit ? HashMap.set(all, parsed.key, { body, tag }) : all
-        ),
+      onSome: (tag) => Ref.update(captures, HashMap.set(parsed.key, { body, tag })),
     });
   });
 
   const app = Effect.gen(function* () {
+    if (!(yield* capture.admit)) return yield* reject(503);
     const request = yield* HttpServerRequest.HttpServerRequest;
     const started = yield* Clock.currentTimeMillis;
     const current = yield* Ref.get(scenario);
     const parsed = parseProxyRequest(request.url, request.method);
     const fault: CacheConformanceFault = parsed.read ? current.fault : "none";
-    const body = yield* readProxyBody(request, parsed.method);
+    const received = yield* readProxyBody(request, parsed.method).pipe(Effect.result);
+    if (Result.isFailure(received)) return yield* reject(413);
+    const body = received.success;
+    if (body.byteLength > options.maxBodyBytes) return yield* reject(413);
+    if (!(yield* capture.reserveUpload(parsed, body, Headers.get(request.headers, "x-artifact-tag"))))
+      return yield* reject(503);
     const delivered = yield* respond(request, fault, parsed.team, parsed.hash, body);
     yield* recordUpload(request, parsed, body, delivered);
     const neverWritten = !HashSet.has(yield* Ref.get(written), parsed.key);
@@ -509,12 +576,84 @@ export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFa
       upstreamStatus: HashSet.has(syntheticFaults, fault) ? O.none() : delivered.status,
       exchange,
     });
-    yield* Ref.update(events, (all) => (all.length < eventLimit ? A.append(all, event) : all));
-    return delivered.response;
+    return (yield* capture.record(event)) ? delivered.response : HttpServerResponse.empty({ status: 503 });
   });
   return {
-    url: yield* serveCacheLoopback(app, bodyLimit),
-    events: Ref.get(events),
-    setScenario: (id: string, fault: CacheConformanceFault) => Ref.set(scenario, { id, fault }),
+    app,
+    events: capture.events,
+    setScenario: (id: string, fault: CacheConformanceFault) =>
+      decodeScenarioId(id).pipe(
+        Effect.mapError(() => CacheCommandError.make({ message: "Conformance proxy scenario label is invalid." })),
+        Effect.flatMap((id) => Ref.set(scenario, { id, fault }))
+      ),
+  };
+});
+
+/**
+ * Start a scoped loopback reverse proxy in front of a conformance target.
+ *
+ * **Details**
+ * Requests are forwarded unchanged except for an explicit fault selected with
+ * `setScenario`, which applies only to artifact `GET`/`HEAD` reads:
+ * `missing-tag`, `tampered-tag` and `tampered-body` rewrite a successful
+ * upstream response (tag and byte tampering reuse the protocol fixture's code);
+ * `truncated-body` sends part of the body and then aborts the connection;
+ * `wrong-team` replays a body and tag the proxy captured on an upload for the
+ * same hash under a different team; `status-429` and `status-503` answer
+ * without forwarding; `timeout` holds the response for `holdMs`; `reset`
+ * aborts before any byte is sent. Events use the exchange receipt vocabulary
+ * and describe what the client was delivered: never a URL, bearer, tag value
+ * or body. A 404 is classed as a miss only when no upload of that hash in that
+ * namespace passed through this proxy.
+ *
+ * **Example** (Scope a proxy)
+ * ```ts
+ * import { makeCacheConformanceFaultProxy } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof makeCacheConformanceFaultProxy === "function")
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const makeCacheConformanceFaultProxy = Effect.fn("CacheConformance.makeFaultProxy")(function* (
+  options: CacheConformanceProxyOptions
+) {
+  const handler = yield* makeCacheConformanceProxyHandler(options);
+  return {
+    url: yield* serveCacheLoopback(handler.app, 64 * 1024 * 1024),
+    events: handler.events,
+    setScenario: handler.setScenario,
   };
 }, CacheCommandError.mapError("Cannot run the conformance fault proxy."));
+
+/**
+ * Observe a fixed upstream through a scoped private Unix socket.
+ *
+ * **Details**
+ * Uses the same bounded capture, failure attribution and header/body limits as
+ * the loopback proxy. Only the address and listener differ. The supplied HTTP
+ * client still owns upstream transport. An owner-only socket lets a supervisor
+ * keep a worker's private network and mount only the chosen endpoint, without
+ * sharing host networking. This observer authenticates no producer and grants
+ * no role: the approved upstream still owns authorization and tenant policy.
+ *
+ * **Example** (Reference the private capture endpoint)
+ * ```ts
+ * import { makeCacheConformanceSocketProxy } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof makeCacheConformanceSocketProxy === "function")
+ * ```
+ *
+ * @internal
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const makeCacheConformanceSocketProxy = Effect.fn("CacheConformance.makeSocketProxy")(function* (
+  options: CacheConformanceProxyOptions
+) {
+  const handler = yield* makeCacheConformanceProxyHandler(options);
+  return {
+    address: yield* serveCachePrivateSocket(handler.app, 64 * 1024 * 1024),
+    events: handler.events,
+    setScenario: handler.setScenario,
+  };
+}, CacheCommandError.mapError("Cannot run the private conformance socket proxy."));

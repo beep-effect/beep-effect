@@ -76,6 +76,6 @@
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:",
-    "minimatch": "10.2.6"
+    "minimatch": "11.0.3"
   }
 }

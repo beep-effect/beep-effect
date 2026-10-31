@@ -1,6 +1,8 @@
 /**
  * Governed egress: the destination boundary for outbound HTTP.
  *
+ * **Details**
+ *
  * This is the second enforcement surface of the execution-authority packet,
  * and it answers a different question from the tier gate. The gate decides
  * *whether a session may invoke an operation*; this decides *whether a request
@@ -174,6 +176,8 @@ const coveredBy = (entry: string, requested: string): boolean =>
 
 /**
  * Build the governed egress `fetch`.
+ *
+ * **Details**
  *
  * Wraps `baseFetch` (defaulting to the platform `fetch`) with the destination
  * check. An allowed destination is delegated; a denied one rejects with

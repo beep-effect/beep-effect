@@ -132,6 +132,8 @@
     "packages/tooling/library/repo-tsconfig/src/**",
     "packages/tooling/library/repo-utils/package.json",
     "packages/tooling/library/repo-utils/src/**",
+    "packages/tooling/library/repo-workspaces/package.json",
+    "packages/tooling/library/repo-workspaces/src/**",
     "packages/tooling/policy-pack/repo-configs/package.json",
     "packages/tooling/policy-pack/repo-configs/src/**",
     "packages/tooling/test-kit/fc-runs/package.json",

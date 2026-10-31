@@ -1,0 +1,182 @@
+{
+  "schemaVersion": "cache-producer-approval-refusal-checkpoint/v1",
+  "recordedAt": "2026-10-30T23:22:03.016205+00:00",
+  "authority": "Focused real test execution and scoped runner-file coverage; controlled admission/adapter/process seams, real filesystem and local HTTP fixtures. Not native Turbo, live R2 or protected producer proof.",
+  "sourceParent": "189d1966b0a7cd768a0b4e13ff0de6e4ada33dba",
+  "specSha256": "0c6289dde74055a394df45acf940fbe9cea28db1d87ae01fd9ab719caf294a25",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "52544a1247f4c332ed13260337704eaeafd55b8dbba594aa86dda86d471c299d",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "08a1647625a29e8bd9bd86fc24663d30d26dfe77e0bd9ce5abcd52984d7a33e2"
+  },
+  "hostedBefore": {
+    "runId": 41138401970,
+    "jobId": 124357685725,
+    "reportArtifacts": [
+      {
+        "artifact": 13018848497,
+        "member": "reports/b4db62d9cd95918658fb1b391dc13081055d79c9aed6798173d5e27b847d8ac4/coverage-final.json",
+        "sha256": "137b8154b5b151afc62bd428f3d357e0549ed5288572ed755bff41a251db9ecb",
+        "runnerPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts"
+      },
+      {
+        "artifact": 13018382981,
+        "member": "reports/b4db62d9cd95918658fb1b391dc13081055d79c9aed6798173d5e27b847d8ac4/coverage-final.json",
+        "sha256": "bc2be7306e67765bfd3f6ceda1e7baebb1855133b084a70f97a1d709a54e2ef8",
+        "runnerPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts"
+      }
+    ],
+    "uncoveredFunctions": [
+      {
+        "name": "(anonymous_17)",
+        "declarationLine": 384,
+        "bodyLine": 384
+      }
+    ],
+    "uncoveredStatements": [
+      {
+        "startLine": 384,
+        "startColumn": 28,
+        "endLine": 384,
+        "endColumn": 108
+      }
+    ],
+    "functionsPct": 95,
+    "linesPct": 98.85,
+    "statementsPct": 98.85,
+    "branchesPct": 100
+  },
+  "repair": {
+    "missingApproval": "Assert the precise approval error before admission, backend/listener acquisition or worker invocation.",
+    "privateParameter": "Require the private capture issuer option explicitly; both exact internal callers already supply it. The public optional parameter and its default are preserved.",
+    "callerInspection": "Graph did not index the private generator. Exhaustive live-source search found exactly the two internal calls in this module, both supplying argument four.",
+    "beforePrivateRefinement": {
+      "node": {
+        "lines": 100,
+        "statements": 100,
+        "functions": 100,
+        "branches": 100
+      },
+      "bun": {
+        "lines": 100,
+        "statements": 100,
+        "functions": 100,
+        "branches": 97.5,
+        "uncoveredBranchLine": 159,
+        "attribution": "Unreachable default for a private argument always supplied by both callers; no bypass/ignore or threshold change."
+      }
+    }
+  },
+  "causalControl": {
+    "recordedAt": "2026-10-30T23:19:26.362986+00:00",
+    "mutation": "Acquire signed admission before checking independent backend approval",
+    "sourceSha256Before": "52544a1247f4c332ed13260337704eaeafd55b8dbba594aa86dda86d471c299d",
+    "sourceSha256After": "52544a1247f4c332ed13260337704eaeafd55b8dbba594aa86dda86d471c299d",
+    "restoredExactly": true,
+    "testExit": 1,
+    "intendedAssertion": true,
+    "testSummaryLines": [
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af",
+      " Test Files  1 failed (1)",
+      "      Tests  1 failed | 22 skipped (23)"
+    ]
+  },
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 26.532,
+      "finishedAt": "2026-10-30T23:21:00.291316+00:00",
+      "runtimeVersion": "v24.22.1",
+      "provider": "v8",
+      "tests": 176,
+      "files": 9,
+      "coverageScope": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+      "coverage": {
+        "lines": {
+          "total": 87,
+          "covered": 87,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 87,
+          "covered": 87,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 20,
+          "covered": 20,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 39,
+          "covered": 39,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "authority": "Local runtime only; hosted Node22 comparison remains required."
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 15.625,
+      "finishedAt": "2026-10-30T23:20:48.831620+00:00",
+      "runtimeVersion": "1.4.4",
+      "provider": "istanbul",
+      "tests": 176,
+      "files": 9,
+      "coverageScope": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+      "coverage": {
+        "lines": {
+          "total": 87,
+          "covered": 87,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 87,
+          "covered": 87,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 20,
+          "covered": 20,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 39,
+          "covered": 39,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "authority": "Local runtime only; hosted Node22 comparison remains required."
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 13.141,
+      "finishedAt": "2026-10-30T23:24:00.590644+00:00",
+      "scope": "Lint and type check only; current full package/final/hosted checks still required."
+    },
+    "effectVitest": {
+      "exit": 0,
+      "elapsedSeconds": 42.612,
+      "finishedAt": "2026-10-30T23:24:31.135382+00:00",
+      "findings": 554,
+      "introduced": 0,
+      "resolved": 0
+    },
+    "canonicalEffectWriter": {
+      "exit": 0,
+      "elapsedSeconds": 39.161,
+      "finishedAt": "2026-10-30T23:22:54.075985+00:00"
+    }
+  },
+  "remaining": "Current complete package/final checks, exact published-head hosted regression comparison, reviews/window/commitlint and canonical merge/retirement. All actual signed protected execution and full program requirements remain.",
+  "productionDeploymentOrCredentialsChanged": false,
+  "coverageFloorChanged": false,
+  "allGoalAcceptanceUnproven": true
+}

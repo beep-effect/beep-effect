@@ -5,7 +5,8 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Package-specific overrides
+      // Registry spies need a fresh module context for every test file, including coverage.
+      isolate: true,
     },
   })
 );

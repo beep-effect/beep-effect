@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-28",
+  "generatedOn": "2026-10-30",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -1502,14 +1502,6 @@
       "status": "exception",
       "owner": "@beep/repo-utils",
       "reason": "Plain data with a non-literal _tag field (_tag: TSCategoryTagBase) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfig",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "Keep-as-class allowlist (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Class semantics: tests assert toBeInstanceOf(TSConfig) and the class decode's excess-property failure message."
     },
     {
       "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
