@@ -14,7 +14,7 @@
       "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
       "basis": {
         "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
-        "sha256": "7d28ca158201375e11f95318ef5d0d0571126cd85777a494644a588b4589c166"
+        "sha256": "2946079ff06f6a00c544aa06f3b0f4cd2b0cd3580d653e2a2deea06a9d2d22a9"
       }
     },
     "@beep/acp": {
@@ -502,7 +502,7 @@
       "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
       "basis": {
         "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
-        "sha256": "7d28ca158201375e11f95318ef5d0d0571126cd85777a494644a588b4589c166"
+        "sha256": "2946079ff06f6a00c544aa06f3b0f4cd2b0cd3580d653e2a2deea06a9d2d22a9"
       }
     },
     "@beep/github": {
@@ -7095,6 +7095,7 @@
             "packages/foundation/modeling/identity/src/Vocab.ts",
             "packages/foundation/modeling/identity/src/index.ts",
             "packages/foundation/modeling/identity/src/internal/generated/SparTerms.ts",
+            "packages/foundation/modeling/identity/src/internal/schemaStatics.ts",
             "packages/foundation/modeling/identity/src/packages.ts",
             "packages/foundation/modeling/jsonc/package.json",
             "packages/foundation/modeling/jsonc/src/Jsonc.ts",
@@ -135164,7 +135165,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "a74cd4a953a50efdf24a21a3c7e141d636eb4c3a52f5aca27cfff4d5c9df399d"
+        "sha256": "0d2a8bc25c92018bb4ee7cb5df74dc2b4b2ff57ffa957e4a4a2a28c7c9258378"
       }
     ]
   }
