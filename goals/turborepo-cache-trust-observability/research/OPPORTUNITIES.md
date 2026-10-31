@@ -1532,3 +1532,15 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   change or privileged operation was used to obtain the pass. This proves the
   current unpublished package implementation, not the future accepted-parent
   combination or real protected producer execution.
+
+### Recheck codec allocation after accepted-parent integration
+
+- Work: publish the protected producer's seventeen owned commits after replaying
+  them onto the accepted implementation. Current policy found seven inline
+  schema-compilation sites in four owned test/fixture files.
+- Response: stop the exact owned publisher and package-audit process trees before
+  editing; retain their interrupted results without claiming a combined pass.
+  Hoist the existing codecs to module scope and reuse them at each call site.
+- Prevention: run the current codec-allocation lint before the next complete
+  package proof. Original source patch equivalence proves replay integrity,
+  not compatibility with a newer policy or current whole-command success.

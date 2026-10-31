@@ -81,6 +81,9 @@ const WorkflowJobs = S.Record(
 type WorkflowJobs = typeof WorkflowJobs.Type;
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownEffect(WorkflowJobs);
+const decodeInspectionPolicy = S.decodeUnknownEffect(
+  S.Struct({ permissions: S.Record(S.String, S.String), on: S.Record(S.String, S.Unknown) })
+);
 const encodeJobsFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const workflowJobs = Effect.fnUntraced(function* (document: Document) {
@@ -1504,9 +1507,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const root = yield* findRepoRoot();
       const text = yield* fs.readFileString(`${root}/.github/workflows/cache-producer-inspect.yml`);
       const workflow = parseDocument(text);
-      const policy = yield* S.decodeUnknownEffect(
-        S.Struct({ permissions: S.Record(S.String, S.String), on: S.Record(S.String, S.Unknown) })
-      )(workflow.toJS());
+      const policy = yield* decodeInspectionPolicy(workflow.toJS());
       expect(policy.permissions).toEqual({ contents: "read" });
       expect(policy.on).toEqual({ workflow_dispatch: null });
       expect(workflow.getIn(["jobs", "inspect", "if"])).toBe("github.ref == 'refs/heads/main'");

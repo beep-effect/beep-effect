@@ -145,6 +145,9 @@ const activation = CacheActivationProjection.make({
 });
 const preview = CacheActivationPreview.make({ activation, source: identity, target: identity });
 const emptyAudit = CachePolicyAuditReport.make({ findings: [], unassessed: [key.computation] });
+const encodeSignedPilotRequest = S.encodeEffect(S.fromJsonString(CacheSignedPilotRequest));
+const decodeProducerObservation = S.decodeEffect(S.fromJsonString(CacheProducerObservation));
+const decodeCompleteReport = S.decodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport));
 const encodeBaselineRequest = S.encodeEffect(S.fromJsonString(CacheBaselineRequest));
 const encodeTransitionRequest = S.encodeEffect(S.fromJsonString(CacheTransitionRequest));
 const encodeActivationRequest = S.encodeEffect(S.fromJsonString(CacheActivationRequest));
@@ -568,10 +571,7 @@ describe("cache qualification command dispatch", () => {
         const request = f.path.join(f.root, "producer-request.json");
         const output = f.path.join(f.root, "private-observation.json");
         const publication = f.path.join(f.root, "cache-producer.json");
-        yield* f.fs.writeFileString(
-          request,
-          yield* S.encodeEffect(S.fromJsonString(CacheSignedPilotRequest))(selected)
-        );
+        yield* f.fs.writeFileString(request, yield* encodeSignedPilotRequest(selected));
         const load = vi
           .spyOn(Workflow, "loadCacheProducerExecutionRuntime")
           .mockReturnValue(Effect.succeed(Tuple.make(binding, runtime)));
@@ -598,13 +598,11 @@ describe("cache qualification command dispatch", () => {
         expect(load).toHaveBeenCalledWith("/trusted/producer");
         deepStrictEqual(run.mock.calls, [[process.cwd(), selected, "/trusted/producer", binding, O.some(runtime)]]);
         const contents = yield* f.fs.readFileString(output);
-        expect(yield* S.decodeEffect(S.fromJsonString(CacheProducerObservation))(contents)).toEqual(observation);
+        expect(yield* decodeProducerObservation(contents)).toEqual(observation);
         expect((yield* f.fs.stat(output)).mode & 0o777).toBe(0o600);
         expect(yield* f.fs.exists(publication)).toBe(publish);
         if (publish) {
-          const report = yield* f.fs
-            .readFileString(publication)
-            .pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport))));
+          const report = yield* f.fs.readFileString(publication).pipe(Effect.flatMap(decodeCompleteReport));
           expect(report.runId).toBe(11);
           expect(report.attempt).toBe(2);
           expect(report.binding).toEqual(binding);

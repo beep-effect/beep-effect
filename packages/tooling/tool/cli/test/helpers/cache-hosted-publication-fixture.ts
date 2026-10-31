@@ -44,6 +44,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const encodeComplete = S.encodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport));
+const encodeApproval = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
 const workflow = "name: Controlled producer\non: workflow_dispatch\n";
 const runRoute = "GET /repos/{owner}/{repo}/actions/runs/{run_id}";
 const artifactRoute = "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}";
@@ -135,11 +136,10 @@ const prepareChannel = Effect.fn("PublishedAcceptanceTest.channel")(function* (
     CacheHostedProducerRunReference.make(reference)
   );
   const archive = yield* zipProducerReport(yield* encodeComplete(report));
-  yield* fs.writeFileString(
-    path.join(directory, "publication.json"),
-    yield* S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval))(approval),
-    { flag: "wx", mode: 0o600 }
-  );
+  yield* fs.writeFileString(path.join(directory, "publication.json"), yield* encodeApproval(approval), {
+    flag: "wx",
+    mode: 0o600,
+  });
   const repository = { id: 33, full_name: "beep-effect/beep-effect", fork: false };
   const run = {
     id: runId,

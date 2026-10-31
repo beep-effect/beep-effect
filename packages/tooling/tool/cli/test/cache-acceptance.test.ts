@@ -69,6 +69,8 @@ import {
 import { canaryInput, contractInput, input } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const ProducerImportRequestJson = S.fromJsonString(CacheProducerImportRequest);
+const encodeHostedApproval = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
+const encodeCompleteReport = S.encodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport));
 
 const setup = Effect.gen(function* () {
   const bundle = yield* S.decodeUnknownEffect(CacheProducerBundle)(input);
@@ -607,8 +609,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
       const { fs, path, trust, published } = yield* publishedSetup;
       const file = path.join(trust.stable, "publication.json");
       const original = yield* fs.readFileString(file);
-      const encode = S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval));
-      yield* fs.writeFileString(file, yield* encode(published.channels.canary.approval));
+      yield* fs.writeFileString(file, yield* encodeHostedApproval(published.channels.canary.approval));
       const mismatch = yield* validateCacheProducerImport(published.request, trust).pipe(
         Effect.provideService(CacheHostedProducerVerifier, published.verifier),
         Effect.flip
@@ -620,7 +621,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
         ...published.channels.stable.approval,
         workflowSha256: Sha256Hex.make(Str.repeat(64)("0")),
       });
-      const changedText = yield* encode(changed);
+      const changedText = yield* encodeHostedApproval(changed);
       for (const replacingDuring of [trust.stable, trust.canary]) {
         const replacing = CacheHostedProducerVerifier.of({
           verify: Effect.fn("AcceptanceTest.replaceApproval")(function* (
@@ -679,9 +680,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
           ...report,
           uploads: [CacheHostedProducerUpload.make({ ...upload, archiveBytes: upload.archiveBytes + 1 })],
         });
-        const archive = yield* zipProducerReport(
-          yield* S.encodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport))(wrongUpload)
-        );
+        const archive = yield* zipProducerReport(yield* encodeCompleteReport(wrongUpload));
         stable.artifact.size_in_bytes = archive.byteLength;
         stable.artifact.digest = `sha256:${yield* S.decodeEffect(Sha256HexFromBytes)(archive)}`;
         const publications = O.getOrThrow(published.request.publications);
