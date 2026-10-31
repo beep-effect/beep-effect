@@ -134,3 +134,25 @@ session/machine ids, quote only the minimal identifying error text.
   both the deriver and fallow.
 - **Would have prevented it:** a GritQL guard on non-literal `Command.make` first arguments, or
   the knowledge doctor's error naming the file and call.
+
+## 2026-10-31 — Force-pushed PR heads are not reachable from `refs/pull/*/head`; one missing head failed the whole census
+
+- **Doing:** the first census over the pinned corpus (6,328 runs, 5,083 PR heads).
+- **Evidence:** `[ci route] git: git merge-base origin/main 6cb733fe… exited 128.`; 4 of 5,083 heads
+  had no local object because a later push replaced them under the same PR ref; `git fetch origin
+  <sha>` fetched all four from GitHub. The census treated one unresolvable head as fatal.
+- **Would have prevented it:** `ensureHeads` checking `git cat-file --batch-check` after the refspec
+  fetch and fetching misses by SHA, and the totality rule applied to heads as well as hunks (an
+  unresolvable head is an `unknown` change, counted, never a failure).
+
+## 2026-10-31 — The replay found the first soundness facts: external inputs and commit metadata
+
+- **Doing:** the first replay at the all-`unknown` record (expected recall 100% by construction).
+- **Evidence:** recall 97.92% (48 skipped lane runs, 1 skipped red). Both skipping heads are PR #1399
+  heads whose tree equals their merge base (a merge of `main` into a branch whose fix had already
+  landed), so `classify` emitted zero atoms; on one, Security was red while green on the base,
+  because `osv-scanner` reads the live advisory database (`check.yml`), and commitlint's input is
+  the commit range, not the tree.
+- **Would have prevented it:** modelling inputs outside the tree from the start: a `commits` atom
+  kind for the commit metadata every new head adds, and an `external` flag on footprints of lanes
+  that read feeds, the clock or the network (always selected). Both landed the same day.

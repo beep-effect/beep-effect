@@ -118,8 +118,15 @@ export class ChangedPathEntry extends S.Opaque<ChangedPathEntry, { readonly bran
 ) {}
 
 /**
- * The input of the pure classifier: the two commits of a diff and its
- * changed-path entries.
+ * The input of the pure classifier: the two commits of a diff, its
+ * changed-path entries, and how many commits `head` adds over `base`.
+ *
+ * **Details**
+ *
+ * `commits` is `git rev-list --count <base>..<head>` and defaults to 0. A head
+ * whose tree equals its base can still add commits (a merge of `main` into a
+ * branch whose fix already landed), and commit-range lanes such as commitlint
+ * read exactly those, so a positive count is a change of its own.
  *
  * **Example** (A diff that touches the lockfile)
  *
@@ -142,9 +149,10 @@ export class ClassifyDiff extends S.Opaque<ClassifyDiff, { readonly brand: uniqu
     base: S.NonEmptyString,
     head: S.NonEmptyString,
     entries: S.Array(ChangedPathEntry),
+    commits: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
   }).pipe(
     $I.annoteSchema("ClassifyDiff", {
-      description: "The base and head commits of a diff and its changed-path entries.",
+      description: "The base and head commits of a diff, its changed-path entries and the commits head adds over base.",
     })
   )
 ) {}
@@ -791,6 +799,11 @@ const atomOrder: Order.Order<ChangeAtom> = Order.combine(
 
 const CLASSIFY_CONCURRENCY = 8;
 
+// The pseudo-path of the one atom that stands for the commits a head adds over its base.
+const COMMITS_PATH = "<commits>";
+const isPositive = (count: number): boolean => count > 0;
+const shortSha = Str.slice(0, 12);
+
 /**
  * Classify a diff into a {@link ChangeSet}, reading file contents only
  * through `readAt`.
@@ -804,12 +817,15 @@ const CLASSIFY_CONCURRENCY = 8;
  * `catalog`/`catalogs`/`workspaces.catalog`, each dependency field split into
  * version, added and removed, then each other top-level field), whose detail
  * lists the changed entries in key order. Every other path yields exactly one
- * atom from {@link pathAtomKind}.
+ * atom from {@link pathAtomKind}. When `diff.commits` is positive, one
+ * `commits` atom (path `<commits>`, no `pkg`, detail
+ * `<n> commit(s) <base12>..<head12>`) follows the path atoms, so a head whose
+ * tree equals its base still selects the commit-range lanes.
  *
  * `pkg` is the owning workspace package at `head`, or at `base` for a deleted
  * path. `digest` is the sha256 hex of `kind`, `path` and `detail` (empty when
- * absent) joined by NUL. Atoms are sorted by path, then census kind order,
- * then detail.
+ * absent) joined by NUL. Path atoms are sorted by path, then census kind
+ * order, then detail; the `commits` atom is always last.
  *
  * **Example** (Classify a docs edit without git)
  *
@@ -842,11 +858,17 @@ export const classifyChangedPaths = Effect.fn("RouteClassify.classifyChangedPath
     (entry) => classifyEntry(read, diff, ChangedPathStatus.is.D(entry.status) ? base : head, entry),
     { concurrency: CLASSIFY_CONCURRENCY }
   );
+  const commitAtoms = yield* Effect.forEach(O.toArray(O.liftPredicate(diff.commits, isPositive)), (count) =>
+    makeAtom(COMMITS_PATH, O.none(), {
+      kind: "commits",
+      detail: O.some(`${count} commit(s) ${shortSha(diff.base)}..${shortSha(diff.head)}`),
+    })
+  );
   const changeSet = ChangeSet.make({
     base: diff.base,
     head: diff.head,
     changedPaths: sortedUniquePaths(A.map(diff.entries, (entry) => entry.path)),
-    atoms: A.sort(A.flatten(atoms), atomOrder),
+    atoms: A.appendAll(A.sort(A.flatten(atoms), atomOrder), commitAtoms),
   });
   yield* Effect.annotateCurrentSpan({
     changedPaths: A.length(changeSet.changedPaths),
@@ -882,6 +904,8 @@ const gitReadAt =
       return O.some(yield* runGitRawOutput(repoRoot, ["cat-file", "blob", blob.value.objectId], routeGitErrors));
     }).pipe(Effect.withSpan("RouteClassify.gitReadAt", { attributes: { ref, path } }));
 
+const decodeCommitCount = S.decodeUnknownOption(S.FiniteFromString.pipe(S.decodeTo(S.Natural)));
+
 const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(function* (input: ClassifyInput) {
   const base = yield* resolveGitCommit(input.repoRoot, input.base, routeGitErrors);
   const head = yield* resolveGitCommit(input.repoRoot, input.head, routeGitErrors);
@@ -893,7 +917,11 @@ const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(funct
   const entries = yield* Effect.fromOption(changedPathEntriesFromNameStatus(output), () =>
     RouteError.new("git", `git diff --name-status -z ${base} ${head} printed output that does not parse.`)
   );
-  return yield* classifyChangedPaths(ClassifyDiff.make({ base, head, entries }), gitReadAt(input.repoRoot));
+  const counted = yield* runGitRawOutput(input.repoRoot, ["rev-list", "--count", `${base}..${head}`], routeGitErrors);
+  const commits = yield* Effect.fromOption(decodeCommitCount(Str.trim(counted)), () =>
+    RouteError.new("git", `git rev-list --count ${base}..${head} printed a count that does not parse.`)
+  );
+  return yield* classifyChangedPaths(ClassifyDiff.make({ base, head, entries, commits }), gitReadAt(input.repoRoot));
 });
 
 /**
@@ -903,7 +931,8 @@ const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(funct
  *
  * `classify` resolves `base` and `head` to commits (the returned
  * {@link ChangeSet} carries the resolved shas), lists the diff with
- * `git diff --name-status -z --no-renames`, and reads files at either commit
+ * `git diff --name-status -z --no-renames`, counts the added commits with
+ * `git rev-list --count <base>..<head>`, and reads files at either commit
  * with `git ls-tree` and `git cat-file blob`. Only a failing git command is
  * an error (`RouteError` reason `git`).
  *

@@ -59,6 +59,7 @@ export const CHANGE_ATOM_KIND_VALUES = [
   "toolchain-pin",
   "env",
   "asset",
+  "commits",
   "unknown",
 ] as const;
 
@@ -200,7 +201,10 @@ export type FootprintPropagation = typeof FootprintPropagation.Type;
  *
  * `kinds` must contain `unknown` (soundness: the catch-all reaches every lane)
  * and is checked at decode. A lane whose `kinds` is exactly the whole domain
- * is unrefined and selects on every change.
+ * is unrefined and selects on every change. `external` marks a lane whose
+ * verdict reads inputs outside the head (an advisory feed, the clock, the
+ * network); the route selects an external lane for every change, whatever
+ * its atoms, because its verdict can flip with no change at all.
  *
  * **Example** (The unrefined footprint of a lane)
  *
@@ -212,6 +216,7 @@ export type FootprintPropagation = typeof FootprintPropagation.Type;
  *   kinds: CHANGE_ATOM_KIND_VALUES,
  *   propagation: "none",
  *   transformer: false,
+ *   external: false,
  *   fixtures: [],
  *   basis: "unrefined",
  * })
@@ -236,12 +241,13 @@ export class CheckFootprint extends S.Opaque<CheckFootprint, { readonly brand: u
     ),
     propagation: FootprintPropagation,
     transformer: S.Boolean,
+    external: S.Boolean,
     fixtures: S.Array(S.NonEmptyString),
     basis: S.NonEmptyString,
   }).pipe(
     $I.annoteSchema("CheckFootprint", {
       description:
-        "Atom kinds that can change one lane's verdict, its propagation class, transformer flag and fixture refs.",
+        "Atom kinds that can change one lane's verdict, its propagation class, transformer and external-input flags, and fixture refs.",
     })
   )
 ) {}
@@ -439,6 +445,9 @@ export class RouteLaneCost extends S.Opaque<RouteLaneCost, { readonly brand: uni
  *
  * A pure row is the sound lower bound of what refining `kind` out of the
  * lane's footprint would have skipped; a mixed row is the upper bound.
+ * Purity is judged over the head's tree kinds (its kinds without `commits`):
+ * a tree kind is pure when it is the head's only tree kind, and `commits` is
+ * pure only on a head with no tree kind; every other occurrence is mixed.
  *
  * @category models
  * @since 0.0.0
@@ -461,6 +470,10 @@ export class RouteCensusRow extends S.Opaque<RouteCensusRow, { readonly brand: u
 /**
  * The loss census over a corpus under one footprint record.
  *
+ * **Details**
+ *
+ * `unresolvedHeads` counts heads whose commit stayed missing after fetching; each counts as one `unknown` atom.
+ *
  * **Example** (An empty census)
  *
  * ```ts
@@ -473,6 +486,7 @@ export class RouteCensusRow extends S.Opaque<RouteCensusRow, { readonly brand: u
  *   heads: 0,
  *   classifiedHeads: 0,
  *   unknownAtomShare: 0,
+ *   unresolvedHeads: 0,
  *   rows: [],
  *   costs: [],
  * })
@@ -490,6 +504,7 @@ export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique 
     heads: S.Int,
     classifiedHeads: S.Int,
     unknownAtomShare: S.Finite,
+    unresolvedHeads: S.Int,
     rows: S.Array(RouteCensusRow),
     costs: S.Array(RouteLaneCost),
   }).pipe(
@@ -530,6 +545,7 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  * `recall` is 1 minus the share of skipped lane runs that went red while the
  * lane was green on main at or before the merge base; an unknown base counts
  * against the route (fail-closed) and is reported in `baseUnknownHeads`.
+ * `unresolvedHeads` counts heads whose commit stayed missing after fetching; each selects every lane and is base-unknown.
  *
  * @category models
  * @since 0.0.0
@@ -543,6 +559,7 @@ export class RouteReplay extends S.Opaque<RouteReplay, { readonly brand: unique 
     skippedLaneRuns: S.Int,
     skippedReds: S.Int,
     baseUnknownHeads: S.Int,
+    unresolvedHeads: S.Int,
     recall: S.Finite,
     perHead: S.Array(RouteReplayHead),
   }).pipe(

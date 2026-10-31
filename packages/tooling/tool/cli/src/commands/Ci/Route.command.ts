@@ -124,7 +124,11 @@ const renderPlan = (plan: RoutePlan): ReadonlyArray<string> => [
     (atom) => `    ${atom.kind}  ${atom.path}${O.match(atom.detail, { onNone: () => "", onSome: (d) => `  (${d})` })}`
   ),
   `  selected (${plan.selected.length}, wave order):`,
-  ...A.map(plan.selected, (row) => `    ${row.lane}  <- ${A.join(row.selectedBy, ", ")}`),
+  ...A.map(
+    plan.selected,
+    (row) =>
+      `    ${row.lane}  <- ${A.isReadonlyArrayNonEmpty(row.selectedBy) ? A.join(row.selectedBy, ", ") : "(external input)"}`
+  ),
   `  skipped (${plan.skipped.length}): ${plan.skipped.length === 0 ? "none" : A.join(plan.skipped, ", ")}`,
 ];
 
@@ -134,7 +138,7 @@ const renderReceipt = (receipt: RouteCorpusReceipt): ReadonlyArray<string> => [
 ];
 
 const renderCensus = (census: RouteCensus): ReadonlyArray<string> => [
-  `[ci route] census over ${census.heads} pull-request heads (${census.classifiedHeads} classified; unknown atom share ${(census.unknownAtomShare * 100).toFixed(1)}%; footprint ${Str.slice(0, 12)(census.footprintDigest)}; corpus ${Str.slice(0, 12)(census.corpusSha256)})`,
+  `[ci route] census over ${census.heads} pull-request heads (${census.classifiedHeads} classified; ${census.unresolvedHeads} unresolved; unknown atom share ${(census.unknownAtomShare * 100).toFixed(1)}%; footprint ${Str.slice(0, 12)(census.footprintDigest)}; corpus ${Str.slice(0, 12)(census.corpusSha256)})`,
   "  kind                 lane               pure heads  pure time    mixed heads  mixed time",
   ...pipe(
     census.rows,
@@ -154,7 +158,7 @@ const renderCensus = (census: RouteCensus): ReadonlyArray<string> => [
 ];
 
 const renderReplay = (replay: RouteReplay): ReadonlyArray<string> => [
-  `[ci route] replay over ${replay.heads} pull-request heads: recall ${(replay.recall * 100).toFixed(2)}% (${replay.skippedReds} skipped red(s) of ${replay.skippedLaneRuns} skipped lane run(s); base unknown on ${replay.baseUnknownHeads} head(s); footprint ${Str.slice(0, 12)(replay.footprintDigest)})`,
+  `[ci route] replay over ${replay.heads} pull-request heads: recall ${(replay.recall * 100).toFixed(2)}% (${replay.skippedReds} skipped red(s) of ${replay.skippedLaneRuns} skipped lane run(s); base unknown on ${replay.baseUnknownHeads} head(s); ${replay.unresolvedHeads} unresolved head(s); footprint ${Str.slice(0, 12)(replay.footprintDigest)})`,
   ...pipe(
     replay.perHead,
     A.filter((head) => head.skippedReds.length > 0),
@@ -245,24 +249,22 @@ const captureCommand = Command.make(
 // census and replay differ only in which reader method runs and how the report prints. The
 // `Command.make` calls stay literal because the knowledge doctor derives the documented command
 // surface statically from bound string names; only the handler body is shared.
-const runCorpusReport =
-  <A, Sch extends S.Top & { readonly Type: A; readonly EncodingServices: never }>(
-    read: (reader: RouteCensusShape, loaded: RouteCorpusLoaded) => Effect.Effect<A, RouteError>,
-    schema: Sch,
-    render: (report: A) => ReadonlyArray<string>
-  ) =>
-  ({ corpus, json }: { readonly corpus: string; readonly json: boolean }) =>
-    Effect.gen(function* () {
-      const root = yield* (yield* RouteGit).repoRoot;
-      const program = Effect.gen(function* () {
-        const receiptPath = yield* resolveCorpusReceipt(root, corpus);
-        const loaded = yield* RouteCorpus.use((service) => service.load(receiptPath));
-        const report = yield* RouteCensusReader.use((reader) => read(reader, loaded));
-        const lines = json ? [yield* encodeJson(schema, report)] : render(report);
-        yield* printLines(lines);
-      });
-      yield* routeFailure(program);
+const runCorpusReport = <A, Sch extends S.Top & { readonly Type: A; readonly EncodingServices: never }>(
+  read: (reader: RouteCensusShape, loaded: RouteCorpusLoaded) => Effect.Effect<A, RouteError>,
+  schema: Sch,
+  render: (report: A) => ReadonlyArray<string>
+) =>
+  Effect.fnUntraced(function* ({ corpus, json }: { readonly corpus: string; readonly json: boolean }) {
+    const root = yield* (yield* RouteGit).repoRoot;
+    const program = Effect.gen(function* () {
+      const receiptPath = yield* resolveCorpusReceipt(root, corpus);
+      const loaded = yield* RouteCorpus.use((service) => service.load(receiptPath));
+      const report = yield* RouteCensusReader.use((reader) => read(reader, loaded));
+      const lines = json ? [yield* encodeJson(schema, report)] : render(report);
+      yield* printLines(lines);
     });
+    yield* routeFailure(program);
+  });
 
 const censusCommand = Command.make(
   "census",

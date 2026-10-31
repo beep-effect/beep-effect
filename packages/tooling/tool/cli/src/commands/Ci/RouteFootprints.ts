@@ -24,12 +24,18 @@ import { CHANGE_ATOM_KIND_VALUES, CheckFootprint } from "./Route.schemas.ts";
 import type { CiLaneId } from "./CiLane.ts";
 import type { ChangeAtom, ChangeAtomKind, FootprintPropagation } from "./Route.schemas.ts";
 
-const unrefined = (lane: CiLaneId, propagation: FootprintPropagation, basis: string): CheckFootprint =>
+const unrefined = (
+  lane: CiLaneId,
+  propagation: FootprintPropagation,
+  basis: string,
+  external = false
+): CheckFootprint =>
   CheckFootprint.make({
     lane,
     kinds: CHANGE_ATOM_KIND_VALUES,
     propagation,
     transformer: false,
+    external,
     fixtures: [],
     basis,
   });
@@ -37,6 +43,11 @@ const unrefined = (lane: CiLaneId, propagation: FootprintPropagation, basis: str
 const BUILD_CLASS = "unrefined; propagation by lane class: the lane reads its package's dependency closure";
 const LOCAL_CLASS = "unrefined; propagation by lane class: the lane reads only the owning package or the root";
 const COVERAGE_CLASS = "unrefined; propagation by lane class: the coverage ratchet moves only on covered packages";
+// Replay evidence (2026-10-31): PR #1399 head 9a2e1b9644 has a tree identical to its merge base,
+// yet Security went red there while green on the base, because osv-scanner reads the live advisory
+// database (check.yml). The same feed reded #2332 with a six-comment-line diff.
+const EXTERNAL_ADVISORY =
+  "unrefined; external: osv-scanner reads the live OSV advisory database, so the verdict can change with no change to the head";
 
 /**
  * The footprint record, total over every lane id.
@@ -74,7 +85,7 @@ export const ROUTE_FOOTPRINTS = {
   "repo-sanity": unrefined("repo-sanity", "none", LOCAL_CLASS),
   sast: unrefined("sast", "none", LOCAL_CLASS),
   secrets: unrefined("secrets", "none", LOCAL_CLASS),
-  security: unrefined("security", "none", LOCAL_CLASS),
+  security: unrefined("security", "none", EXTERNAL_ADVISORY, true),
   "shadcn-lint": unrefined("shadcn-lint", "none", LOCAL_CLASS),
   storybook: unrefined("storybook", "reverse-deps", BUILD_CLASS),
   "test-integration": unrefined("test-integration", "reverse-deps", BUILD_CLASS),
@@ -114,8 +125,18 @@ export const routeFootprintCanonicalJson = (): string =>
       kinds: A.filter(CHANGE_ATOM_KIND_VALUES, (kind) => A.contains(footprint.kinds, kind)),
       propagation: footprint.propagation,
       transformer: footprint.transformer,
+      external: footprint.external,
       fixtures: footprint.fixtures,
     }))
+  );
+
+// The external lanes, each seeded with an empty kind set: required before any atom is read.
+const externalLanes = (): HashMap.HashMap<CiLaneId, HashSet.HashSet<ChangeAtomKind>> =>
+  pipe(
+    routeFootprintList(),
+    A.filter((footprint) => footprint.external),
+    A.map((footprint) => [footprint.lane, HashSet.empty<ChangeAtomKind>()] as const),
+    HashMap.fromIterable
   );
 
 /**
@@ -147,13 +168,18 @@ export const lanesAffectedBy = (kind: ChangeAtomKind): HashSet.HashSet<CiLaneId>
  * The lanes a set of atoms requires, each with the kinds that selected it,
  * in lane-id declaration order. Ordering for execution is `WaveOrder`'s job.
  *
- * **Example** (No atoms require no lanes)
+ * **Details**
+ *
+ * Every `external` lane is required whatever the atoms, with an empty kind
+ * set when no atom selected it: its verdict reads inputs outside the head.
+ *
+ * **Example** (No atoms require only the external lanes)
  *
  * ```ts
  * import { requiredLanes } from "@beep/repo-cli/commands/Ci"
  * import * as HashMap from "effect/HashMap"
  *
- * console.log(HashMap.size(requiredLanes([]))) // 0
+ * console.log(HashMap.has(requiredLanes([]), "security")) // true
  * ```
  *
  * @param atoms - The classified change.
@@ -164,7 +190,7 @@ export const lanesAffectedBy = (kind: ChangeAtomKind): HashSet.HashSet<CiLaneId>
 export const requiredLanes = (
   atoms: ReadonlyArray<ChangeAtom>
 ): HashMap.HashMap<CiLaneId, HashSet.HashSet<ChangeAtomKind>> =>
-  A.reduce(atoms, HashMap.empty<CiLaneId, HashSet.HashSet<ChangeAtomKind>>(), (acc, atom) =>
+  A.reduce(atoms, externalLanes(), (acc, atom) =>
     HashSet.reduce(lanesAffectedBy(atom.kind), acc, (inner, lane) =>
       HashMap.set(
         inner,

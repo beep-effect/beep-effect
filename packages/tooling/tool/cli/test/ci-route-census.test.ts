@@ -13,7 +13,9 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import {
   ciLaneOfPrePushLaneId,
+  ensureRouteHeads,
   jobNameToLane,
+  missingFromBatchCheck,
   orderSelectedLanes,
   prePushLaneId,
   RouteCensusReaderLive,
@@ -35,6 +37,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import censusRunsJson from "./fixtures/ci-route/census/census-runs.json" with { type: "json" };
 import replayRunsJson from "./fixtures/ci-route/census/replay-runs.json" with { type: "json" };
 import type { ChangeAtomKind, CiLaneId, RouteCensus, RouteLaneCost, RouteReplay } from "@beep/repo-cli/commands/Ci";
@@ -53,6 +56,20 @@ const classifierLayer = (atomsFor: (head: string) => ReadonlyArray<ChangeAtom>) 
     })
   );
 
+// Fails for any head outside the table, so a test proves a head was never classified.
+const strictClassifierLayer = (table: Readonly<Record<string, ReadonlyArray<ChangeAtom>>>) =>
+  Layer.succeed(
+    ChangeClassifier,
+    ChangeClassifier.of({
+      classify: Effect.fn("ChangeClassifier.classify")(function* (input) {
+        const atoms = yield* Effect.fromOption(R.get(table, input.head)).pipe(
+          Effect.mapError(() => RouteError.new("classify", `unexpected classify of ${input.head}`))
+        );
+        return ChangeSet.make({ base: input.base, head: input.head, changedPaths: [], atoms });
+      }),
+    })
+  );
+
 const atomsByHead =
   (table: Readonly<Record<string, ReadonlyArray<ChangeAtom>>>) =>
   (head: string): ReadonlyArray<ChangeAtom> =>
@@ -64,7 +81,8 @@ const noAtoms = (): ReadonlyArray<ChangeAtom> => A.empty<ChangeAtom>();
 const gitLayer = (
   mergeBases: Readonly<Record<string, string>>,
   ancestors: ReadonlyArray<readonly [ancestor: string, descendant: string]>,
-  ensured: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>
+  ensured: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>,
+  unresolved: ReadonlyArray<string> = []
 ) =>
   Layer.succeed(
     RouteGit,
@@ -80,6 +98,7 @@ const gitLayer = (
       }),
       ensureHeads: Effect.fn("RouteGit.ensureHeads")(function* (shas) {
         yield* Ref.update(ensured, A.append(shas));
+        return A.filter(shas, (sha) => A.contains(unresolved, sha));
       }),
     })
   );
@@ -135,6 +154,9 @@ const costOf = (costs: ReadonlyArray<RouteLaneCost>, lane: CiLaneId): O.Option<R
 const REPLAY_MERGE_BASES = { a1: "m1", b2: "m9", c3: "zz" };
 const REPLAY_ANCESTORS: ReadonlyArray<readonly [string, string]> = [["m0", "m9"]];
 
+// Lanes a change with no atoms skips: every lane but the external security lane.
+const SKIPPED_WITHOUT_ATOMS = CI_LANE_ID_VALUES.length - 1;
+
 const LANES_WITHOUT_PRE_PUSH_TWIN: ReadonlyArray<CiLaneId> = ["ecosystem", "fallow", "labs", "property", "repo-sanity"];
 
 describe("route joins", () => {
@@ -160,6 +182,55 @@ describe("route joins", () => {
     expect(orderSelectedLanes(selected, (lanes) => lanes, specs)).toEqual(["lint", "check", "labs"]);
     expect(orderSelectedLanes(selected, A.reverse, specs)).toEqual(["check", "lint", "labs"]);
   });
+
+  it("reads missing commits from a batch-check report", () => {
+    expect(missingFromBatchCheck(["aa", "bb", "cc", "dd"], "aa commit 250\nbb missing\ncc tree 31\n")).toEqual([
+      "bb",
+      "cc",
+      "dd",
+    ]);
+  });
+});
+
+describe("route head fetch", () => {
+  it.effect("fetches each head missing after the pull-ref fetch individually and returns the ones still missing", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<string>>([]);
+      const present = yield* Ref.make(HashSet.fromIterable(["a1", "c3"]));
+      const record = (call: string) => Ref.update(calls, A.append(call));
+      const ensure = ensureRouteHeads({
+        fetchCommit: Effect.fn("RouteGit.fetchCommit")(function* (sha) {
+          yield* record(`fetch ${sha}`);
+          // The remote still serves b2 by sha; d4 is gone.
+          if (sha === "b2") {
+            yield* Ref.update(present, HashSet.add(sha));
+          }
+        }),
+        fetchPullHeads: record("fetch pull refs"),
+        missingCommits: Effect.fn("RouteGit.missingCommits")(function* (shas) {
+          yield* record(`check ${A.join(shas, ",")}`);
+          const have = yield* Ref.get(present);
+          return A.filter(shas, (sha) => !HashSet.has(have, sha));
+        }),
+      });
+
+      expect(yield* ensure(["a1", "b2", "c3", "d4"])).toEqual(["d4"]);
+      const log = yield* Ref.get(calls);
+      expect(A.take(log, 2)).toEqual(["fetch pull refs", "check a1,b2,c3,d4"]);
+      expect(
+        A.sort(
+          A.filter(log, (call) => Str.startsWith("fetch ")(call) && call !== "fetch pull refs"),
+          Str.Order
+        )
+      ).toEqual(["fetch b2", "fetch d4"]);
+      assertSome(A.last(log), "check b2,d4");
+      expect(log).toHaveLength(5);
+
+      yield* Ref.set(calls, []);
+      expect(yield* ensure([])).toEqual([]);
+      expect(yield* Ref.get(calls)).toEqual([]);
+    })
+  );
 });
 
 const planLayer = Layer.mergeAll(
@@ -191,12 +262,12 @@ it.layer(planLayer, { timeout: "30 seconds" })("verification route plan", (it) =
     })
   );
 
-  it.effect("selects nothing and skips every lane for a change with no atoms", () =>
+  it.effect("selects only the external lanes for a change with no atoms", () =>
     Effect.gen(function* () {
       const route = yield* VerificationRoute;
       const plan = yield* route.plan(ChangeSet.make({ base: "base", head: "head", changedPaths: [], atoms: [] }));
-      expect(plan.selected).toEqual([]);
-      expect(plan.skipped).toEqual(CI_LANE_ID_VALUES);
+      expect(A.map(plan.selected, (selection) => [selection.lane, selection.selectedBy])).toEqual([["security", []]]);
+      expect(plan.skipped).toEqual(A.filter(CI_LANE_ID_VALUES, (lane) => lane !== "security"));
     })
   );
 });
@@ -221,6 +292,7 @@ it.layer(NodeCrypto.layer)("route census", (it) => {
       expect(census.heads).toBe(2);
       expect(census.classifiedHeads).toBe(2);
       expect(census.unknownAtomShare).toBe(0.25);
+      expect(census.unresolvedHeads).toBe(0);
       expect(census.corpusSha256).toBe("c0ffee");
       expect(census.footprintDigest).toBe(yield* sha256Hex(routeFootprintCanonicalJson()));
       // p1 (pure pkg:catalog): lint 60 s + 30 s shards, check 120 s; the PR Size
@@ -266,6 +338,59 @@ it.layer(NodeCrypto.layer)("route census", (it) => {
       expect(labs.basis).toBe("none");
       assertNone(labs.p50Ms);
       assertNone(labs.source);
+    })
+  );
+
+  it.effect("counts a head missing after ensureHeads as one unknown atom without classifying it", () =>
+    Effect.gen(function* () {
+      const runs = yield* decodeRuns(censusRunsJson);
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      // x2 stays missing after ensureHeads; neither the classifier nor mergeBase knows it.
+      const census = yield* runCensus(
+        runs,
+        strictClassifierLayer({ p1: [atom("pkg:catalog", "package.json")] }),
+        gitLayer({ p1: "m1" }, [], ensured, ["x2"])
+      );
+
+      expect(yield* Ref.get(ensured)).toEqual([["p1", "x2"]]);
+      expect(census.heads).toBe(2);
+      expect(census.unresolvedHeads).toBe(1);
+      expect(census.unknownAtomShare).toBe(0.5);
+      // x2's only kind is the unknown atom, so its lane time is pure unknown time.
+      expect(
+        A.map(census.rows, (row) => [row.kind, row.lane, row.pureHeads, row.pureMs, row.mixedHeads, row.mixedMs])
+      ).toEqual([
+        ["pkg:catalog", "check", 1, 120_000, 0, 0],
+        ["pkg:catalog", "lint", 1, 90_000, 0, 0],
+        ["unknown", "check", 1, 90_000, 0, 0],
+        ["unknown", "lint", 1, 50_000, 0, 0],
+      ]);
+    })
+  );
+
+  it.effect("judges purity over tree kinds, so commits metadata alone is pure only on an empty-tree head", () =>
+    Effect.gen(function* () {
+      const runs = yield* decodeRuns(censusRunsJson);
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const census = yield* runCensus(
+        runs,
+        strictClassifierLayer({
+          p1: [atom("packet", "goals/x/PLAN.md"), atom("commits", "base..head")],
+          x2: [atom("commits", "base..head")],
+        }),
+        gitLayer({ p1: "m1", x2: "m1" }, [], ensured)
+      );
+
+      // p1 {packet, commits}: pure for packet, mixed for commits (it has a tree kind).
+      // x2 {commits}: an empty-tree head, pure for commits.
+      expect(
+        A.map(census.rows, (row) => [row.kind, row.lane, row.pureHeads, row.pureMs, row.mixedHeads, row.mixedMs])
+      ).toEqual([
+        ["packet", "check", 1, 120_000, 0, 0],
+        ["commits", "check", 1, 90_000, 1, 120_000],
+        ["packet", "lint", 1, 90_000, 0, 0],
+        ["commits", "lint", 1, 50_000, 1, 90_000],
+      ]);
     })
   );
 
@@ -320,26 +445,79 @@ describe("route replay", () => {
           gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
         );
 
-        // a1: check red and green on m1 (counts); security red on m1 too (inherited).
+        // With no atoms only the external security lane is selected.
+        // a1: check red and green on m1 (counts).
         // b2: base is m0, the newest main run that is an ancestor of m9 (m2 is not,
-        // and the feat/not-main push of m0 is no base); security green there
+        // and the feat/not-main push of m0 is no base); sast green there
         // (counts), codegen red there (inherited).
         // c3: no base run, so its lint red counts (fail-closed).
         expect(
           A.map(replay.perHead, (head) => [head.headSha, head.mergeBase, head.skippedReds, head.baseUnknown])
         ).toEqual([
           ["a1", "m1", ["check"], false],
-          ["b2", "m9", ["security"], false],
+          ["b2", "m9", ["sast"], false],
           ["c3", "zz", ["lint"], true],
         ]);
-        expect(A.every(replay.perHead, (head) => A.isReadonlyArrayEmpty(head.selected))).toBe(true);
-        expect(A.every(replay.perHead, (head) => head.skipped.length === CI_LANE_ID_VALUES.length)).toBe(true);
+        expect(A.every(replay.perHead, (head) => A.contains(head.selected, "security"))).toBe(true);
+        expect(A.every(replay.perHead, (head) => head.selected.length === 1)).toBe(true);
+        expect(A.every(replay.perHead, (head) => head.skipped.length === SKIPPED_WITHOUT_ATOMS)).toBe(true);
         expect(replay.heads).toBe(3);
-        expect(replay.skippedLaneRuns).toBe(3 * CI_LANE_ID_VALUES.length);
+        expect(replay.skippedLaneRuns).toBe(3 * SKIPPED_WITHOUT_ATOMS);
         expect(replay.skippedReds).toBe(3);
         expect(replay.baseUnknownHeads).toBe(1);
-        expect(replay.recall).toBe(1 - 3 / (3 * CI_LANE_ID_VALUES.length));
+        expect(replay.unresolvedHeads).toBe(0);
+        expect(replay.recall).toBe(1 - 3 / (3 * SKIPPED_WITHOUT_ATOMS));
         expect(replay.corpusSha256).toBe("c0ffee");
       })
+  );
+
+  it.effect("selects every lane for an unresolved head and marks its base unknown", () =>
+    Effect.gen(function* () {
+      const runs = yield* decodeRuns(replayRunsJson);
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      // b2 stays missing after ensureHeads; neither the classifier nor mergeBase knows it.
+      const replay = yield* runReplay(
+        runs,
+        strictClassifierLayer({ a1: [], c3: [] }),
+        gitLayer({ a1: "m1", c3: "zz" }, REPLAY_ANCESTORS, ensured, ["b2"])
+      );
+
+      expect(
+        A.map(replay.perHead, (head) => [head.headSha, head.mergeBase, head.skippedReds, head.baseUnknown])
+      ).toEqual([
+        ["a1", "m1", ["check"], false],
+        ["b2", "<unresolved>", [], true],
+        ["c3", "zz", ["lint"], true],
+      ]);
+      const b2 = yield* Effect.fromOption(A.findFirst(replay.perHead, (head) => head.headSha === "b2"));
+      expect(b2.selected).toEqual(CI_LANE_ID_VALUES);
+      expect(b2.skipped).toEqual([]);
+      expect(replay.unresolvedHeads).toBe(1);
+      expect(replay.baseUnknownHeads).toBe(2);
+      expect(replay.skippedLaneRuns).toBe(2 * SKIPPED_WITHOUT_ATOMS);
+      expect(replay.skippedReds).toBe(2);
+      expect(replay.recall).toBe(1 - 2 / (2 * SKIPPED_WITHOUT_ATOMS));
+    })
+  );
+
+  it.effect("does not count a red on an external lane as a skipped red, even when the base was green", () =>
+    Effect.gen(function* () {
+      const runs = yield* decodeRuns(replayRunsJson);
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const replay = yield* runReplay(
+        runs,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+      );
+
+      // a1 has no atoms and is red on Security while m1, its base, is green there:
+      // the external lane is selected for every change, so the red is not a miss.
+      const a1 = yield* Effect.fromOption(A.findFirst(replay.perHead, (head) => head.headSha === "a1"));
+      expect(a1.baseUnknown).toBe(false);
+      expect(a1.selected).toEqual(["security"]);
+      expect(A.contains(a1.skipped, "security")).toBe(false);
+      expect(A.contains(a1.skippedReds, "security")).toBe(false);
+      expect(a1.skippedReds).toEqual(["check"]);
+    })
   );
 });

@@ -51,11 +51,12 @@ const fixtureReadAt = Effect.fn("routeClassifyTest.fixtureReadAt")(function* (fi
   return read;
 });
 
-const diffOf = (entries: ReadonlyArray<readonly [string, ChangedPathStatus]>): ClassifyDiff =>
+const diffOf = (entries: ReadonlyArray<readonly [string, ChangedPathStatus]>, commits = 0): ClassifyDiff =>
   ClassifyDiff.make({
     base: "base",
     head: "head",
     entries: A.map(entries, ([path, status]) => ChangedPathEntry.make({ path, status })),
+    commits,
   });
 
 /** `[path, kind, pkg, detail]` per atom, with `-` for an absent option. */
@@ -102,6 +103,7 @@ const entriesArbitrary = Arbitrary.array(
   { maxLength: 24 }
 ).pipe(Arbitrary.map(A.dedupeWith((left, right) => left.path === right.path)));
 
+const CommitCount = S.Literals([0, 1, 3]);
 const StringRecord = S.Record(S.String, S.String);
 const StringArray = S.Array(S.String);
 /** Manifest-shaped documents that hit every field family, or raw text that rarely parses. */
@@ -125,6 +127,7 @@ const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const manifestText = (value: typeof ManifestText.Type) =>
   P.isString(value) ? Effect.succeed(value) : encodeJson(value).pipe(Effect.orDie);
 
+const short = Str.slice(0, 12);
 const GIT_ENV = { GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" };
 const GIT_IDENTITY = [
   "-c",
@@ -140,20 +143,24 @@ const TestLayer = Layer.provideMerge(ChangeClassifierLive, NodeServices.layer);
 it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (it) => {
   describe("totality", () => {
     it.effect.prop(
-      "yields exactly one atom per changed path for arbitrary paths and statuses",
-      { entries: entriesArbitrary },
-      ({ entries }) =>
+      "yields one atom per changed path plus one commits atom when the head adds commits",
+      { entries: entriesArbitrary, commits: CommitCount },
+      ({ entries, commits }) =>
         Effect.gen(function* () {
           const changeSet = yield* classifyChangedPaths(
-            diffOf(A.map(entries, (entry) => [entry.path, entry.status] as const)),
+            diffOf(
+              A.map(entries, (entry) => [entry.path, entry.status] as const),
+              commits
+            ),
             memoryReadAt({ "base:package.json": ROOT_MANIFEST, "head:package.json": ROOT_MANIFEST })
           );
           const paths = A.sort(
             A.map(entries, (entry) => entry.path),
             Order.String
           );
-          expect(A.length(changeSet.atoms)).toBe(A.length(entries));
-          expect(A.map(changeSet.atoms, (atom) => atom.path)).toEqual(paths);
+          const commitPaths = commits > 0 ? ["<commits>"] : [];
+          expect(A.map(changeSet.atoms, (atom) => atom.path)).toEqual([...paths, ...commitPaths]);
+          expect(A.length(A.filter(changeSet.atoms, (atom) => atom.kind === "commits"))).toBe(A.length(commitPaths));
           expect(changeSet.changedPaths).toEqual(paths);
         }),
       { arbitrary: fcRuns(60) }
@@ -260,6 +267,37 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
           ["packages/app/package.json", "unknown", "@fixture/app", "package.json changed without a field change"],
           ["packages/new/package.json", "unknown", "@fixture/root", "package.json added"],
           ["packages/old/package.json", "unknown", "@fixture/root", "package.json deleted"],
+        ]);
+      })
+    );
+  });
+
+  describe("commit range", () => {
+    it.effect("an empty-tree head that adds commits yields exactly one commits atom", () =>
+      Effect.gen(function* () {
+        const changeSet = yield* classifyChangedPaths(diffOf([], 2), memoryReadAt({}));
+        expect(rows(changeSet)).toEqual([["<commits>", "commits", "-", "2 commit(s) base..head"]]);
+        expect(changeSet.changedPaths).toEqual([]);
+        expect(changeSet.atoms[0]?.digest).toBe(yield* sha256("commits\u0000<commits>\u00002 commit(s) base..head"));
+      })
+    );
+
+    it.effect("a head with no commits and no paths yields no atoms", () =>
+      Effect.gen(function* () {
+        const changeSet = yield* classifyChangedPaths(diffOf([]), memoryReadAt({}));
+        expect(changeSet.atoms).toEqual([]);
+      })
+    );
+
+    it.effect("a normal edit yields its path atoms followed by one commits atom", () =>
+      Effect.gen(function* () {
+        const changeSet = yield* classifyChangedPaths(
+          diffOf([["docs/runbooks/ci.md", "M"]], 1),
+          memoryReadAt({ "base:package.json": ROOT_MANIFEST, "head:package.json": ROOT_MANIFEST })
+        );
+        expect(rows(changeSet)).toEqual([
+          ["docs/runbooks/ci.md", "docs:markdown", "@fixture/root", "-"],
+          ["<commits>", "commits", "-", "1 commit(s) base..head"],
         ]);
       })
     );
@@ -403,10 +441,21 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
           ["packages/app/package.json", "pkg:script", "@fixture/app", "scripts build changed"],
           ["packages/app/src/index.ts", "src:module", "@fixture/app", "-"],
           ["packages/app/src/old.ts", "src:module", "@fixture/app", "-"],
+          ["<commits>", "commits", "-", `1 commit(s) ${short(base)}..${short(head)}`],
         ]);
 
         const unchanged = yield* classifier.classify(ClassifyInput.make({ repoRoot: root, base: head, head: "HEAD" }));
         expect(unchanged.atoms).toEqual([]);
+
+        // A head whose tree equals its base still adds commits (PR #1399's merge-of-main heads).
+        yield* git("commit", "--quiet", "--no-verify", "--allow-empty", "-m", "empty one");
+        yield* git("commit", "--quiet", "--no-verify", "--allow-empty", "-m", "empty two");
+        const emptyHead = yield* git("rev-parse", "HEAD");
+        const emptyTree = yield* classifier.classify(ClassifyInput.make({ repoRoot: root, base: head, head: "HEAD" }));
+        expect(emptyTree.changedPaths).toEqual([]);
+        expect(rows(emptyTree)).toEqual([
+          ["<commits>", "commits", "-", `2 commit(s) ${short(head)}..${short(emptyHead)}`],
+        ]);
 
         const failure = yield* classifier
           .classify(ClassifyInput.make({ repoRoot: root, base: "no-such-ref", head: "HEAD" }))

@@ -36,6 +36,8 @@ import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "../Yeet/internal/WaveOrder.t
 import { CI_LANE_DESCRIPTORS, CI_LANE_ID_VALUES, CiLaneId } from "./CiLane.ts";
 import {
   CHANGE_ATOM_KIND_VALUES,
+  ChangeAtom,
+  ChangeAtomKind,
   RouteCensus,
   RouteCensusRow,
   RouteError,
@@ -51,7 +53,7 @@ import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubCheckLaneSpec } from "../Quality/Quality.schemas.ts";
 import type { WaveOrderShape } from "../Yeet/internal/WaveOrder.ts";
-import type { ChangeAtom, ChangeAtomKind, ChangeSet, HostedJob, HostedRun } from "./Route.schemas.ts";
+import type { ChangeSet, HostedJob, HostedRun } from "./Route.schemas.ts";
 import type { RouteCensusShape, RouteCorpusLoaded, VerificationRouteShape } from "./Route.service.ts";
 
 const $I = $RepoCliId.create("commands/Ci/RouteCensus");
@@ -64,6 +66,13 @@ const PRE_PUSH_SPEC_ROOT = ".";
 const PARTITION_SUFFIX = / \([^()]*\)$/;
 // Heads classified at once; each classification spawns git.
 const ROUTE_HEAD_CONCURRENCY = 4;
+// Missing head commits fetched by sha at once.
+const ROUTE_FETCH_CONCURRENCY = 4;
+// Shas per `git cat-file --batch-check` call, keeping argv and output small.
+const ROUTE_BATCH_CHECK_CHUNK = 500;
+// A head whose commit cannot be fetched is routed as one unknown atom at this path.
+const UNRESOLVED_HEAD_PATH = "<unresolved head>";
+const UNRESOLVED_MERGE_BASE = "<unresolved>";
 
 const isCiLaneId = S.is(CiLaneId);
 const isUnknownKind = (atom: ChangeAtom): boolean => Str.Equivalence(atom.kind, "unknown");
@@ -440,14 +449,125 @@ export const VerificationRouteLive: Layer.Layer<
 > = Layer.effect(VerificationRoute, Effect.flatMap(changeDetectorAffectedPackages, makeVerificationRoute));
 
 /**
+ * The shas `git cat-file --batch-check` did not report as commits.
+ *
+ * **Details**
+ *
+ * A present commit prints `<sha> commit <size>`; a missing or ambiguous name
+ * prints `<name> missing` or `<name> ambiguous`, and any other object type is
+ * not a head, so every sha without a `commit` line counts as missing.
+ *
+ * **Example** (Read a batch-check report)
+ *
+ * ```ts
+ * import { missingFromBatchCheck } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ *
+ * console.log(missingFromBatchCheck(["aa", "bb"], "aa commit 250\nbb missing\n")) // ["bb"]
+ * ```
+ *
+ * @param shas - The shas that were checked, in order.
+ * @param output - The batch-check stdout.
+ * @returns The checked shas with no `commit` line, in input order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const missingFromBatchCheck: {
+  (output: string): (shas: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (shas: ReadonlyArray<string>, output: string): ReadonlyArray<string>;
+} = dual(2, (shas: ReadonlyArray<string>, output: string): ReadonlyArray<string> => {
+  const commits = HashSet.fromIterable(
+    A.getSomes(
+      A.map(Str.split(output, "\n"), (line) => {
+        const fields = Str.split(Str.trim(line), " ");
+        return pipe(
+          A.get(fields, 1),
+          O.filter((type) => Str.Equivalence(type, "commit")),
+          O.flatMap(() => A.get(fields, 0))
+        );
+      })
+    )
+  );
+  return A.filter(shas, (sha) => !HashSet.has(commits, sha));
+});
+
+/**
+ * The git primitives {@link ensureRouteHeads} composes.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface RouteHeadFetchShape {
+  /** Fetch one commit by sha; a commit the remote no longer serves is logged, not failed. */
+  readonly fetchCommit: (sha: string) => Effect.Effect<void, RouteError>;
+  /** Fetch every `refs/pull/<n>/head` into `refs/remotes/pull/<n>`. */
+  readonly fetchPullHeads: Effect.Effect<void, RouteError>;
+  /** The given shas that are not commits in the local object store, in input order. */
+  readonly missingCommits: (shas: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<string>, RouteError>;
+}
+
+/**
+ * Make pull-request heads present and report the ones that stay missing.
+ *
+ * **Details**
+ *
+ * One pull-ref fetch brings every head a `refs/pull/<n>/head` still names. A
+ * head a force-push replaced has no such ref, so each head still missing is
+ * fetched by its own sha, and whatever is missing after that is returned: the
+ * census routes those heads as `unknown` rather than failing.
+ *
+ * **Example** (Nothing to fetch for no heads)
+ *
+ * ```ts
+ * import { ensureRouteHeads } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ * import * as Effect from "effect/Effect"
+ *
+ * const ensure = ensureRouteHeads({
+ *   fetchCommit: () => Effect.void,
+ *   fetchPullHeads: Effect.void,
+ *   missingCommits: (shas) => Effect.succeed(shas),
+ * })
+ * console.log(Effect.isEffect(ensure([]))) // true
+ * ```
+ *
+ * @param git - The fetch and object-store primitives.
+ * @returns A function from head shas to the heads still missing.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const ensureRouteHeads = (
+  git: RouteHeadFetchShape
+): ((shas: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<string>, RouteError>) =>
+  Effect.fn("RouteGit.ensureHeads")(function* (shas: ReadonlyArray<string>) {
+    if (A.isReadonlyArrayEmpty(shas)) {
+      return A.empty<string>();
+    }
+    yield* git.fetchPullHeads;
+    const missing = yield* git.missingCommits(shas);
+    if (A.isReadonlyArrayEmpty(missing)) {
+      return missing;
+    }
+    yield* Effect.forEach(missing, git.fetchCommit, { concurrency: ROUTE_FETCH_CONCURRENCY, discard: true });
+    const unresolved = yield* git.missingCommits(missing);
+    yield* Effect.annotateCurrentSpan({
+      "route.heads": shas.length,
+      "route.fetchedBySha": missing.length,
+      "route.unresolved": unresolved.length,
+    });
+    return unresolved;
+  });
+
+/**
  * The git reads the census and the replay need, bound to one checkout.
  *
  * @category services
  * @since 0.0.0
  */
 export interface RouteGitShape {
-  /** Make the given pull-request heads present locally, including heads of deleted branches. */
-  readonly ensureHeads: (shas: ReadonlyArray<string>) => Effect.Effect<void, RouteError>;
+  /**
+   * Make the given pull-request heads present locally, including heads of deleted branches and heads a
+   * force-push left unreferenced; returns the heads still missing afterwards.
+   */
+  readonly ensureHeads: (shas: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<string>, RouteError>;
   /** `git merge-base --is-ancestor <ancestor> <descendant>`: exit 0 is true, exit 1 is false. */
   readonly isAncestor: (ancestor: string, descendant: string) => Effect.Effect<boolean, RouteError>;
   /** `git merge-base origin/main <head>`. */
@@ -482,10 +602,12 @@ export class RouteGit extends Context.Service<RouteGit, RouteGitShape>()($I`Rout
  *
  * **Details**
  *
- * `ensureHeads` runs one quiet `git fetch` of every `refs/pull/<n>/head` into
- * `refs/remotes/pull/<n>`: GitHub keeps `refs/pull/<n>/head` after a branch is
- * deleted, so the heads of merged pull requests stay fetchable and diffable. `mergeBase` reads stdout only, so a git warning on
- * stderr never becomes part of the sha.
+ * `ensureHeads` is {@link ensureRouteHeads} over git: one quiet `git fetch` of
+ * every `refs/pull/<n>/head` into `refs/remotes/pull/<n>` (GitHub keeps those
+ * refs after a branch is deleted), then `git cat-file --batch-check` over the
+ * heads, then `git fetch origin <sha>` for each head still missing (a head a
+ * force-push replaced has no pull ref but stays fetchable by sha). `mergeBase`
+ * reads stdout only, so a git warning on stderr never becomes part of the sha.
  *
  * **Example** (Build the git reads for a checkout)
  *
@@ -511,6 +633,19 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
     runRepoCommandCapture("git", args, repoRoot).pipe(Effect.provide(context), Effect.mapError(spawnFailed(args)));
   const gitStdout = (args: ReadonlyArray<string>) =>
     runRepoCommandCaptureRaw("git", args, repoRoot).pipe(Effect.provide(context), Effect.mapError(spawnFailed(args)));
+  // The capture cannot feed stdin, so `sh` prints the shas (passed as positional
+  // arguments, never interpolated) into `git cat-file --batch-check`.
+  const batchCheckMissing = Effect.fnUntraced(function* (shas: ReadonlyArray<string>) {
+    const args = ["-c", 'printf "%s\\n" "$@" | git cat-file --batch-check', "route-batch-check", ...shas];
+    const result = yield* runRepoCommandCaptureRaw("sh", args, repoRoot).pipe(
+      Effect.provide(context),
+      Effect.mapError(RouteError.mapError("git", "Failed to spawn git cat-file --batch-check."))
+    );
+    if (result.exitCode !== 0 || result.truncated) {
+      return yield* RouteError.new("git", `git cat-file --batch-check exited ${result.exitCode}.`);
+    }
+    return missingFromBatchCheck(shas, result.output);
+  });
 
   return RouteGit.of({
     repoRoot: Effect.succeed(repoRoot),
@@ -534,14 +669,27 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
         )
       );
     }),
-    ensureHeads: Effect.fn("RouteGit.ensureHeads")(function* (shas: ReadonlyArray<string>) {
-      if (A.isReadonlyArrayEmpty(shas)) {
-        return;
-      }
-      const result = yield* git(["fetch", "--quiet", "origin", "+refs/pull/*/head:refs/remotes/pull/*"]);
-      if (result.exitCode !== 0) {
-        return yield* RouteError.new("git", `git fetch of pull-request heads exited ${result.exitCode}.`);
-      }
+    ensureHeads: ensureRouteHeads({
+      fetchCommit: Effect.fn("RouteGit.fetchCommit")(function* (sha: string) {
+        const result = yield* git(["fetch", "--quiet", "--no-write-fetch-head", "origin", sha]);
+        if (result.exitCode !== 0) {
+          yield* Effect.logWarning("Route head is not fetchable by sha").pipe(
+            Effect.annotateLogs({ "route.head": sha, "git.exitCode": result.exitCode })
+          );
+        }
+      }),
+      fetchPullHeads: Effect.gen(function* () {
+        const result = yield* git(["fetch", "--quiet", "origin", "+refs/pull/*/head:refs/remotes/pull/*"]);
+        if (result.exitCode !== 0) {
+          return yield* RouteError.new("git", `git fetch of pull-request heads exited ${result.exitCode}.`);
+        }
+      }).pipe(Effect.withSpan("RouteGit.fetchPullHeads")),
+      missingCommits: Effect.fn("RouteGit.missingCommits")(function* (shas: ReadonlyArray<string>) {
+        const missing = yield* Effect.forEach(A.chunksOf(shas, ROUTE_BATCH_CHECK_CHUNK), (chunk) =>
+          batchCheckMissing(chunk)
+        );
+        return A.flatten(missing);
+      }),
     }),
   });
 });
@@ -646,7 +794,17 @@ type HeadEvidence = {
   readonly mergeBase: string;
   readonly atoms: ReadonlyArray<ChangeAtom>;
   readonly jobs: ReadonlyArray<readonly [CiLaneId, HostedJob]>;
+  readonly resolved: boolean;
 };
+
+// Sound by totality: `unknown` reaches every lane, so the route runs everything for the head.
+const unresolvedHeadAtom = (headSha: string): ChangeAtom =>
+  ChangeAtom.make({
+    kind: "unknown",
+    path: UNRESOLVED_HEAD_PATH,
+    detail: O.some(`head ${headSha} is missing after fetching refs/pull/*/head and the sha itself`),
+    digest: headSha,
+  });
 
 const pullRequestHeads = (
   runs: ReadonlyArray<HostedRun>
@@ -693,13 +851,19 @@ const CENSUS_ROW_ORDER: Order.Order<RouteCensusRow> = Order.combineAll([
 ]);
 
 // Each head adds its per-lane machine time to the (kind, lane) row of every
-// kind it contains: as pure time when that kind is its only kind, as mixed
-// time otherwise. A head counts once per row however many jobs or attempts
-// the lane ran.
+// kind it contains, as pure or mixed time. Purity is judged over the tree
+// kinds K' (the head's kinds without `commits`, which nearly every head
+// carries): a tree kind is pure when K' is exactly that kind, and `commits`
+// is pure only on a head with no tree kind at all (an empty-tree head).
+// Otherwise the time is mixed, so `commits` still shows mixed time on every
+// head with tree changes. A head counts once per row however many jobs or
+// attempts the lane ran.
 const censusRows = (heads: ReadonlyArray<HeadEvidence>): ReadonlyArray<RouteCensusRow> => {
   const rows = A.reduce(heads, HashMap.empty<string, RouteCensusRow>(), (acc, head) => {
     const kinds = headKinds(head.atoms);
-    const pure = kinds.length === 1;
+    const treeKinds = A.filter(kinds, (kind) => !ChangeAtomKind.is.commits(kind));
+    const isPure = (kind: ChangeAtomKind): boolean =>
+      ChangeAtomKind.is.commits(kind) ? A.isReadonlyArrayEmpty(treeKinds) : treeKinds.length === 1;
     return A.reduce(laneMsOfHead(head), acc, (laneAcc, [lane, ms]) =>
       A.reduce(kinds, laneAcc, (kindAcc, kind) => {
         const key = `${kind} ${lane}`;
@@ -708,7 +872,7 @@ const censusRows = (heads: ReadonlyArray<HeadEvidence>): ReadonlyArray<RouteCens
           key,
           addHeadToRow(
             O.getOrElse(HashMap.get(kindAcc, key), () => emptyRow(kind, lane)),
-            pure,
+            isPure(kind),
             ms
           )
         );
@@ -747,7 +911,10 @@ const NEWEST_FIRST: Order.Order<HostedRun> = Order.mapInput(
  * `main` push run of the merge base itself, else the latest `main` push run
  * whose head is an ancestor of the merge base; a lane is green there when one
  * of its jobs succeeded. With no base run every skipped red counts
- * (fail-closed) and the head is base-unknown.
+ * (fail-closed) and the head is base-unknown. A head still missing after
+ * `ensureHeads` is unresolved: it is neither classified nor merge-based but
+ * routed as one `unknown` atom (every lane selected, base unknown) and
+ * counted in `unresolvedHeads`.
  *
  * **Example** (Reference the reader constructor)
  *
@@ -772,15 +939,31 @@ export const makeRouteCensusReader: Effect.Effect<
 
   const headEvidence = Effect.fn("RouteCensusReader.headEvidence")(function* (corpus: RouteCorpusLoaded) {
     const heads = pullRequestHeads(corpus.runs);
-    yield* git.ensureHeads(A.map(heads, ([headSha]) => headSha));
+    const unresolved = HashSet.fromIterable(yield* git.ensureHeads(A.map(heads, ([headSha]) => headSha)));
+    if (HashSet.size(unresolved) > 0) {
+      yield* Effect.logWarning("Route heads unresolvable after fetching; routing them as unknown").pipe(
+        Effect.annotateLogs({ "route.unresolved": HashSet.size(unresolved) })
+      );
+    }
     return yield* Effect.forEach(
       heads,
       Effect.fnUntraced(function* ([headSha, runs]: readonly [string, ReadonlyArray<HostedRun>]) {
+        const jobs = hostedLaneJobs(runs);
+        if (HashSet.has(unresolved, headSha)) {
+          const evidence: HeadEvidence = {
+            headSha,
+            mergeBase: UNRESOLVED_MERGE_BASE,
+            atoms: [unresolvedHeadAtom(headSha)],
+            jobs,
+            resolved: false,
+          };
+          return evidence;
+        }
         const mergeBase = yield* git.mergeBase(headSha);
         const changeSet = yield* classifier.classify(
           ClassifyInput.make({ repoRoot: yield* git.repoRoot, base: mergeBase, head: headSha })
         );
-        const evidence: HeadEvidence = { headSha, mergeBase, atoms: changeSet.atoms, jobs: hostedLaneJobs(runs) };
+        const evidence: HeadEvidence = { headSha, mergeBase, atoms: changeSet.atoms, jobs, resolved: true };
         return evidence;
       }),
       { concurrency: ROUTE_HEAD_CONCURRENCY }
@@ -797,6 +980,7 @@ export const makeRouteCensusReader: Effect.Effect<
       heads: heads.length,
       classifiedHeads: A.filter(heads, (head) => A.isReadonlyArrayNonEmpty(head.atoms)).length,
       unknownAtomShare: shareOf(A.filter(atoms, isUnknownKind).length, atoms.length),
+      unresolvedHeads: A.filter(heads, (head) => !head.resolved).length,
       rows: censusRows(heads),
       costs: routeLaneCosts(corpus.runs),
     });
@@ -827,7 +1011,7 @@ export const makeRouteCensusReader: Effect.Effect<
       Effect.fnUntraced(function* (head: HeadEvidence) {
         const required = requiredLanes(head.atoms);
         const skipped = skippedLanes(required);
-        const base = yield* baseRuns(head.mergeBase);
+        const base = head.resolved ? yield* baseRuns(head.mergeBase) : O.none<ReadonlyArray<HostedRun>>();
         const red = lanesConcluded(head.jobs, "failure");
         const baseGreen = O.map(base, (runs) => lanesConcluded(hostedLaneJobs(runs), "success"));
         return RouteReplayHead.make({
@@ -861,6 +1045,7 @@ export const makeRouteCensusReader: Effect.Effect<
       skippedLaneRuns,
       skippedReds,
       baseUnknownHeads: A.filter(perHead, (head) => head.baseUnknown).length,
+      unresolvedHeads: A.filter(heads, (head) => !head.resolved).length,
       recall: 1 - shareOf(skippedReds, skippedLaneRuns),
       perHead,
     });

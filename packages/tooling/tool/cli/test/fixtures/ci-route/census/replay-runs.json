@@ -25,7 +25,7 @@
     "conclusion": "failure",
     "attempt": 1,
     "jobs": [
-      { "name": "Security", "conclusion": "failure" },
+      { "name": "SAST", "conclusion": "failure" },
       { "name": "Codegen Drift", "conclusion": "failure" }
     ]
   },
@@ -51,7 +51,7 @@
     "attempt": 1,
     "jobs": [
       { "name": "Heavy / Check", "conclusion": "success" },
-      { "name": "Security", "conclusion": "failure" }
+      { "name": "Security", "conclusion": "success" }
     ]
   },
   {
@@ -64,7 +64,7 @@
     "conclusion": "failure",
     "attempt": 1,
     "jobs": [
-      { "name": "Security", "conclusion": "success" },
+      { "name": "SAST", "conclusion": "success" },
       { "name": "Codegen Drift", "conclusion": "failure" }
     ]
   },
@@ -78,7 +78,7 @@
     "conclusion": "failure",
     "attempt": 1,
     "jobs": [
-      { "name": "Security", "conclusion": "failure" },
+      { "name": "SAST", "conclusion": "failure" },
       { "name": "Codegen Drift", "conclusion": "success" }
     ]
   },
