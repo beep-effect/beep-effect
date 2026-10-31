@@ -2319,13 +2319,13 @@
       "reason": "Retain the deliberately SHORT PATH acquireUseRelease bracket: prepend only the disposable systemctl shim during fixture-owner reaping, restore the exact previous/unset PATH before later journal/export assertions. Root ownership is already per-test and outer native services runner-owned. Broadening PATH to the entire layer/test or deleting restoration changes global state/isolation. Sequential fixture scope and synchronous final restoration are required. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md. Owner: @beep/repo-cli. Exit: the fixture-owner reaper resolves systemctl through Config or an injected executable path. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:360:withEnvVarEffect@25#1",
+      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:391:withEnvVarEffect@25#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-      "line": 360,
-      "endLine": 384,
+      "line": 391,
+      "endLine": 415,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:7a4f71fe20382ddc1c39e6fb461768ddeb358a00ea78878e97d203874b0453bf",
       "class": "resource-wrapper",
@@ -2979,15 +2979,15 @@
       "reason": "The shorter scope closes a descriptor, temp root, native database, container or assertion helper before post-close assertions, or keeps native worker evidence until before fixture cleanup. Owner: @beep/test-utils. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:669:scoped@31#1",
+      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:672:scoped@33#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
-      "line": 669,
-      "endLine": 687,
+      "line": 672,
+      "endLine": 690,
       "symbol": "scoped",
-      "occurrence": "v2:0c63d418ce9d47364bf3159881babb1bfc14635e8757da13da730608f08dba70",
+      "occurrence": "v2:1088417ca3c3b6a12233e643ccacaef093098736676b8b1ba289455bb62db2f6",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* ChildProcess.make(process.execPath, [\"-e\", \"setInterval(() => {}, 1000)\"], { stdout: \"ignore\", stderr: \"inherit\", }); yield* Deferred.succ",
       "replacement": {
@@ -3001,13 +3001,13 @@
       "reason": "The shorter scope is the runtime ownership subject: one case interrupts its child-owning loop scope and asserts the real child stopped, the other observes immediate finalization on a permanent storage or policy failure. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:771:scoped@22#1",
+      "id": "EV004:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:775:scoped@22#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
-      "line": 771,
-      "endLine": 771,
+      "line": 775,
+      "endLine": 775,
       "symbol": "scoped",
       "occurrence": "v2:a0afa5196773ae2655f93522b5da4b59586711f18c43b935ccb07a725b87a96c",
       "class": "shared-helper-scope-lifetime-review",
@@ -6983,13 +6983,13 @@
       "reason": "Real scoped files are needed for containment, mount-root resolution, issuer byte mutation and bounded report reads, while admission and subprocess execution are controlled doubles (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models mount-root resolution and the supervisor cases move to it."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/changeset-graph.test.ts:11:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/changeset-graph.test.ts:12:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 12,
+      "endLine": 12,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -8655,13 +8655,13 @@
       "reason": "The reaper spawns lsof and git through runCommand, reads /proc/locks, and walks real symlinks and directory mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the reaper's process and procfs probes become injected services."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:13:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 13,
+      "endLine": 13,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -8712,7 +8712,7 @@
       "evidence": "import { NodeServices } from \"@effect/platform-node\";",
       "replacement": {
         "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer."
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "info",
       "confidence": 0.55,
@@ -9599,270 +9599,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The hoisted mock controls the plain findRepoRoot module function that command dispatch calls; it is not a Context.Service, and the selection resets and real-child cases keep both boundaries (goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json). Owner: @beep/repo-cli. Exit: retire when lint dispatch resolves the repository root through an injected service (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts:854:TestClock.adjust@44#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/ai-provider-cli",
-      "file": "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts",
-      "line": 854,
-      "endLine": 854,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:11c7014ec45388f04b016c97a357f800f199dd22c5d349994f5756ca1a2708b9",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"2 minutes\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The owning layer sets concurrent: false so each deadline fixture alone controls the block's TestClock; each test waits for the native request checkpoint before advancing time, then verifies timeout and scoped cleanup, and parallel adjustment reproduced interference. Owner: @beep/ai-provider-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts:926:TestClock.adjust@15#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/ai-provider-cli",
-      "file": "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts",
-      "line": 926,
-      "endLine": 926,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:23155bdefd040c4d3ba39cc36e4ed34564b1b7c51c7109db847d04b25b12c51f",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"30 seconds\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The owning layer sets concurrent: false so each deadline fixture alone controls the block's TestClock; each test waits for the native request checkpoint before advancing time, then verifies timeout and scoped cleanup, and parallel adjustment reproduced interference. Owner: @beep/ai-provider-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts:133:TestClock.adjust@17#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/epistemic-use-cases",
-      "file": "packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts",
-      "line": 133,
-      "endLine": 133,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:53143781e1c5305639fc65642b3964725a5f580dd0215b9a2df8e6015a1c00db",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"1 hour\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Serial, fork-free TestClock advancement proves the detector's clock independence; no forked work or other test shares the advancement. Owner: @beep/epistemic-use-cases. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:464:TestClock.adjust@17#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
-      "line": 464,
-      "endLine": 464,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:e8f89374d90127e038fe9e40fbe70a53e2da90bddcb5bf0e2eb647f23269ccb0",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(Duration.seconds(2))",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The tests run sequentially in one it.layer block, and each forked loop is interrupted and joined before the next test, so no timer fiber survives an adjustment; the real SQLite contention case uses TestClock.withLive and does not adjust. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:689:TestClock.adjust@17#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
-      "line": 689,
-      "endLine": 689,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:71859a5e4c6d63a9807bf00be676ea9d250effecc965e868c21bf5f3e207ffc1",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(Duration.seconds(3))",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The tests run sequentially in one it.layer block, and each forked loop is interrupted and joined before the next test, so no timer fiber survives an adjustment; the real SQLite contention case uses TestClock.withLive and does not adjust. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/accounts-usage.test.ts:922:TestClock.adjust@13#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/accounts-usage.test.ts",
-      "line": 922,
-      "endLine": 922,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:87575d87e20b8bac89bf600f6c186369afedec75d92569c261efc5b1a2b43cad",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"8 seconds\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The owning `live account poller` block runs its tests serially on the shared test clock; the test forks the one poll it owns with forkChild, advances the clock only after the hung /me request has signalled through a Deferred that it is in flight, and joins the fiber before the test ends, so no other test sees the adjustment. Owner: @beep/repo-cli. Exit: retire when the Kimi profile timeout test owns its TestClock in a single-case it.layer(TestClock.layer()) block."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-acceptance.test.ts:597:TestClock.adjust@15#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-acceptance.test.ts",
-      "line": 597,
-      "endLine": 597,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:b86a81525dfecb6357a38a3267a034f6cff03c0669a43f9568812d1eceb0084d",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"25 hours\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The owning suite is concurrent: false, each test provisions new issuers and references from its current Clock, and the 25-hour adjustment expires only the first test's acceptance; no test fiber escapes its scope (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-producer.test.ts:333:TestClock.adjust@13#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-producer.test.ts",
-      "line": 333,
-      "endLine": 333,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:ec605af0272efc75202304accd0889f006455d0f75cd279f2e19afacc4204e44",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"25 hours\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The closed-issuer suite is concurrent: false, every test creates a new issuer and envelope from its current Clock, and the expiry test advances 25 hours to reject its own envelope; no issuer or fiber survives into another test (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1808:TestClock.adjust@13#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1808,
-      "endLine": 1808,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:16af695d6fdd2c50ed44ebc1644b55d8fbbbf2ef74b2adb092cf2a9008c9f844",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(Duration.seconds(1))",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The budget-wait tests run serially in one it.layer block; each creates fresh scripted REST and GraphQL refs, owns one forkChild fiber, advances the TestClock to drive the real budget guard and joins the fiber before the next test. A live clock would add real ten-minute sleeps. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1812:TestClock.adjust@13#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1812,
-      "endLine": 1812,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:f5f72453e622f338e0862cd4adf4696a1dc053d28b030d2d8f26aab9f844d320",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(Duration.minutes(11))",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The budget-wait tests run serially in one it.layer block; each creates fresh scripted REST and GraphQL refs, owns one forkChild fiber, advances the TestClock to drive the real budget guard and joins the fiber before the next test. A live clock would add real ten-minute sleeps. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1835:TestClock.adjust@13#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1835,
-      "endLine": 1835,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:7764f481f1365b5a4273608abe4b751cdc34356a2d93d8d9ca1319b390c0a040",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(Duration.minutes(11))",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The budget-wait tests run serially in one it.layer block; each creates fresh scripted REST and GraphQL refs, owns one forkChild fiber, advances the TestClock to drive the real budget guard and joins the fiber before the next test. A live clock would add real ten-minute sleeps. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1865:TestClock.adjust@13#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
-      "line": 1865,
-      "endLine": 1865,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:5e21b25388c7682b6f1c4a8ae9855d334f4c5d65d7513ddacb5f7fe24a5fb5fb",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(Duration.minutes(11))",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The budget-wait tests run serially in one it.layer block; each creates fresh scripted REST and GraphQL refs, owns one forkChild fiber, advances the TestClock to drive the real budget guard and joins the fiber before the next test. A live clock would add real ten-minute sleeps. Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
     }
   ]
 }
