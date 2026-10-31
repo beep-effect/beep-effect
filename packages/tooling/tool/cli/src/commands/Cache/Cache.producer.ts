@@ -767,8 +767,8 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
   });
   const material = yield* supplied.pipe(
     O.map(Effect.succeed),
-    O.getOrElse(() =>
-      Effect.gen(function* () {
+    O.getOrElse(
+      Effect.fnUntraced(function* () {
         const approved = yield* decodeBindingBytes(approvedHex);
         const bytes = new Uint8Array(persistedMaterialBytes);
         bytes.set(yield* crypto.randomBytes(64));

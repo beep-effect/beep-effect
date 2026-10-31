@@ -1544,3 +1544,15 @@ in the owning producer PR; preserve it until the accepted-parent replay.
 - Prevention: run the current codec-allocation lint before the next complete
   package proof. Original source patch equivalence proves replay integrity,
   not compatibility with a newer policy or current whole-command success.
+
+### Run the required law gate separately from the package audit
+
+- Work: replay the protected producer's final checks after its complete package
+  audit passed. The required effect-fn law found one lazy material-generation
+  callback that directly returned Effect.gen.
+- Response: preserve the interrupted proof, merge the accepted Cargo review,
+  and express the unchanged lazy callback with Effect.fnUntraced. Targeted
+  producer/dispatch cases and scoped package checks pass.
+- Prevention: package audit success does not imply every hosted policy gate
+  passed. Keep those proof authorities separate and run the required package
+  law check before another expensive full replay.
