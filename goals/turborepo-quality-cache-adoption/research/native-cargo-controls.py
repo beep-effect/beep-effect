@@ -21,7 +21,7 @@ parser.add_argument("--output", type=Path)
 arguments = parser.parse_args()
 repo = Path(__file__).resolve().parents[3]
 out = (arguments.output or repo / ".beep/cargo-feature-review/synthetic").resolve()
-out.mkdir(mode=0o700, exist_ok=True)
+out.mkdir(mode=0o700, parents=True, exist_ok=True)
 cache = Path.home() / ".cache/beep/turbo-cargo-feature-probe"
 cache.mkdir(mode=0o700, exist_ok=True)
 shared = (
@@ -406,7 +406,7 @@ report = {
     "recordedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     "authority": "Exploratory synthetic Cargo graph and explicit per-crate cache/output configuration; no current-repository qualification, activation or final feature decision.",
     "sourceRevision": subprocess.check_output(
-        ["git", "-C", str(repo), "rev-parse", "HEAD"], text=True
+        ["git", "-C", str(repo), "rev-parse", "HEAD"], text=True, timeout=5
     ).strip(),
     "driverSha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
     "orchestrator": {

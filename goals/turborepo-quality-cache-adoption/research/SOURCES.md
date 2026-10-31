@@ -420,6 +420,13 @@ python3 goals/turborepo-quality-cache-adoption/research/native-cargo-controls.py
 python3 goals/turborepo-quality-cache-adoption/research/native-cargo-applicability.py
 ```
 
+The retained JSON reports and their driver hashes describe the historical capture.
+The replay drivers were subsequently amended to create missing output parents and
+bound Git discovery/revision reads to five seconds. Their current file hashes
+therefore differ from the historical driver hashes; no new native capture is
+claimed by these maintenance changes. A replay writes fresh reports with the
+updated driver hashes.
+
 Each driver has a three-minute total budget and ten-second native-call deadline.
 The current graph capture has an eight-MiB stdout cap; the synthetic controls use
 one MiB. Both cap stderr at one MiB. Their default raw outputs stay under the

@@ -55,7 +55,7 @@
     "prerequisiteNodes": 90,
     "sameCompleteGraphPerChannel": true,
     "captureBoundBytes": 8388608,
-    "observedBytes": [1199777, 1199785],
+    "observedBytes": [1194393, 1194401],
     "sourceUnchanged": true,
     "taskExecution": false
   },

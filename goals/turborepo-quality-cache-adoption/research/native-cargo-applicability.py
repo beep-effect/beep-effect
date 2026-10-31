@@ -21,7 +21,7 @@ parser.add_argument("--output", type=Path)
 arguments = parser.parse_args()
 repo = Path(__file__).resolve().parents[3]
 out = (arguments.output or repo / ".beep/cargo-feature-review/current").resolve()
-out.mkdir(mode=0o700, exist_ok=True)
+out.mkdir(mode=0o700, parents=True, exist_ok=True)
 shared = (
     repo
     / "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py"
@@ -59,7 +59,9 @@ clients = {
     "canary": Path.home() / ".cache/beep/turbo-goals-clients/2.11.9-canary.1/turbo",
 }
 tracked = (
-    subprocess.check_output(["git", "ls-files", "-z"], cwd=repo).decode().split("\0")
+    subprocess.check_output(["git", "ls-files", "-z"], cwd=repo, timeout=5)
+    .decode()
+    .split("\0")
 )
 tracked = [p for p in tracked if p]
 sources = [
@@ -96,7 +98,7 @@ sources += sorted(
 digests = {p: hashlib.sha256((repo / p).read_bytes()).hexdigest() for p in sources}
 config = json.loads((repo / "turbo.json").read_text())
 head = subprocess.check_output(
-    ["git", "rev-parse", "HEAD"], cwd=repo, text=True
+    ["git", "rev-parse", "HEAD"], cwd=repo, text=True, timeout=5
 ).strip()
 rows = []
 cache = Path.home() / ".cache/beep/turbo-cargo-feature-probe"
@@ -223,7 +225,9 @@ assert all(
     hashlib.sha256((repo / p).read_bytes()).hexdigest() == h for p, h in digests.items()
 )
 assert (
-    subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+    subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=repo, text=True, timeout=5
+    ).strip()
     == head
 )
 report = {

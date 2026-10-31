@@ -1050,8 +1050,8 @@
   ],
   "reviewCounts": {
     "acceptedNotApplicable": 1,
-    "acceptedRetainCurrentAbsence": 2,
-    "pending": 32
+    "acceptedRetainCurrentAbsence": 3,
+    "pending": 31
   },
   "nativeAvailabilityCounts": {
     "flagCasesAccepted": 56,
