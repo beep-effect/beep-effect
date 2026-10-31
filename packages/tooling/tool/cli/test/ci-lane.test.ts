@@ -450,8 +450,10 @@ describe("CI lane partitions", () => {
     ).toEqual([
       { id: "lint-a", packages: 72, weightSeconds: 1132 },
       { id: "lint-b", packages: 67, weightSeconds: 1134 },
-      { id: "repo-cli-1", packages: 1, weightSeconds: 440 },
-      { id: "repo-cli-2", packages: 1, weightSeconds: 440 },
+      { id: "repo-cli-1", packages: 1, weightSeconds: 603 },
+      { id: "repo-cli-2", packages: 1, weightSeconds: 603 },
+      { id: "repo-cli-3", packages: 1, weightSeconds: 603 },
+      { id: "repo-cli-4", packages: 1, weightSeconds: 603 },
       { id: "unit-a", packages: 71, weightSeconds: 1214 },
       { id: "unit-b", packages: 67, weightSeconds: 1214 },
     ]);
@@ -461,13 +463,17 @@ describe("CI lane partitions", () => {
     expect(A.map(CI_LANE_PARTITIONS, (partition) => ({ id: partition.id, shard: partition.shard }))).toEqual([
       { id: "lint-a", shard: undefined },
       { id: "lint-b", shard: undefined },
-      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 2 }) },
-      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 2 }) },
+      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 4 }) },
+      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 4 }) },
+      { id: "repo-cli-3", shard: CiLanePartitionShard.make({ index: 3, total: 4 }) },
+      { id: "repo-cli-4", shard: CiLanePartitionShard.make({ index: 4, total: 4 }) },
       { id: "unit-a", shard: undefined },
       { id: "unit-b", shard: undefined },
     ]);
     expect(partitionPackages("repo-cli-1")).toEqual(["@beep/repo-cli"]);
     expect(partitionPackages("repo-cli-2")).toEqual(["@beep/repo-cli"]);
+    expect(partitionPackages("repo-cli-3")).toEqual(["@beep/repo-cli"]);
+    expect(partitionPackages("repo-cli-4")).toEqual(["@beep/repo-cli"]);
   });
 
   it("rejects a shard whose index exceeds its total or whose total is below two", () => {
@@ -535,7 +541,7 @@ describe("CI lane partitions", () => {
       "--filter=@beep/repo-cli",
       "--summarize",
       "--",
-      "--shard=1/2",
+      "--shard=1/4",
     ];
     expect([...sharded.execution]).toEqual([
       "turbo",
@@ -544,8 +550,8 @@ describe("CI lane partitions", () => {
       ...expectedTurboCacheArgs(shardedShape),
       ...shardedShape,
     ]);
-    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/2"]);
-    expect(sharded.selection).not.toContain("--shard=1/2");
+    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/4"]);
+    expect(sharded.selection).not.toContain("--shard=1/4");
 
     const unitA = O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-a"));
     const unsharded = ciLanePartitionArgsForTesting(
@@ -1054,7 +1060,7 @@ describe("partitioned CI lane execution", () => {
             expect(commands).toHaveLength(1);
             const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
             expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
-            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/2");
+            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/4");
             expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
           })
         )

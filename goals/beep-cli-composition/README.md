@@ -37,9 +37,16 @@ the gate fix lanes G1 to G4 and the W0 retirements.
 
 ## Latest Evidence
 
+- [`research/g4-task-fingerprint.md`](./research/g4-task-fingerprint.md): G4
+  per-task policy fingerprint; 0 stale-green replays over 400 commits and
+  task-instance invalidations halved, with the replay script in
+  [`ops/g4-fingerprint-replay.ts`](./ops/g4-fingerprint-replay.ts).
 - [`research/design-record.md`](./research/design-record.md): measured gate
   costs, coupling, the verified package map, the invalidation simulation, and
   the overlap with `goals/effected-promotion`.
+- [`research/g2-coverage-shards.md`](./research/g2-coverage-shards.md): G2
+  repo-cli coverage split into four Vitest shards, with before/after timings and
+  the merged-coverage equality proof.
 - `standards/architecture/DECISIONS.md`, entry 2026-10-28 "One beep App
   Composes beep-Prefixed Command Tools".
 

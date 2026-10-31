@@ -20,16 +20,10 @@ const configWithPlugins = (plugins: ReadonlyArray<unknown>) => ({
   compilerOptions: { plugins },
 });
 
-const EffectDrizzlePlugin = {
-  ...BasePlugin,
-  diagnosticSeverity: {
-    ...BaseDiagnosticSeverity,
-    missedPipeableOpportunity: "off",
-  },
-};
+const EffectDrizzlePlugin = BasePlugin;
 
 describe("quality tsgo plugin profiles", () => {
-  it("accepts the sole Effect Drizzle severity exception", () => {
+  it("accepts an Effect Drizzle profile that matches the root map exactly", () => {
     expect(
       collectTsgoPluginProfileDiagnosticsForTesting({
         basePlugin: BasePlugin,
@@ -61,6 +55,27 @@ describe("quality tsgo plugin profiles", () => {
       })
     ).toEqual([
       "Effect Drizzle tsconfig packages/ecosystem/effect-drizzle/tsconfig.json is missing its explicit @effect/language-service profile",
+    ]);
+  });
+
+  it("rejects the retired Effect Drizzle missedPipeableOpportunity exception", () => {
+    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting({
+      basePlugin: BasePlugin,
+      configs: [
+        [
+          "packages/ecosystem/effect-drizzle/tsconfig.json",
+          configWithPlugins([
+            {
+              ...EffectDrizzlePlugin,
+              diagnosticSeverity: { ...EffectDrizzlePlugin.diagnosticSeverity, missedPipeableOpportunity: "off" },
+            },
+          ]),
+        ],
+      ],
+    });
+
+    expect(diagnostics).toEqual([
+      "packages/ecosystem/effect-drizzle/tsconfig.json: Effect Drizzle diagnosticSeverity.missedPipeableOpportunity must be error; found off",
     ]);
   });
 

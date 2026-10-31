@@ -83,6 +83,10 @@
       "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
     },
     {
+      "path": "ops/glob-adoption-parity.ts",
+      "purpose": "R2b parity: the pre-R2b repo-cli glob compiler frozen and compared with @beep/glob GlobPattern over every live caller pattern and candidate, plus fingerprints of the three EffectImports discovery sets before and after the @beep/walker switch."
+    },
+    {
       "path": "ops/jsonc-owner-switch-differential.ts",
       "purpose": "R3a parity (W4-o): every tracked *.jsonc and facade-consumed JSON document decoded by the frozen @beep/schema/Jsonc facade and by @beep/jsonc with 0 unclassified differences, plus byte parity of every JSONC-reading repo-cli generator's check or dry mode against one fixed input tree before and after the owner switch."
     },

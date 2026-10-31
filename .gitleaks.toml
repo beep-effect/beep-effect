@@ -340,7 +340,7 @@ description = "Verified observation receipt source SHA-256 values; exact file, s
 targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
-paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/delivery\-policy\-verification\.json$''']
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/(?:history/)?delivery\-policy\-verification\.json$''']
 regexes = [
   '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
 ]
@@ -360,7 +360,7 @@ description = "Verified observation receipt source SHA-256 values; exact file, s
 targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
-paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/query\-backoff\-package\-verification\.json$''']
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/(?:history/)?query\-backoff\-package\-verification\.json$''']
 regexes = [
   '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
 ]
@@ -380,7 +380,7 @@ description = "Verified observation receipt source SHA-256 values; exact file, s
 targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
-paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/retirement\-package\-verification\.json$''']
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/(?:history/)?retirement\-package\-verification\.json$''']
 regexes = [
   '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
 ]
