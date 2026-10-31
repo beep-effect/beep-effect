@@ -67,6 +67,7 @@ describe("confirmHoldVerdict", () => {
     expect(confirmHoldVerdict(["probe-broken", "candidate-passed"])).toBe("ProbeBroken");
     expect(confirmHoldVerdict(["still-holds", "candidate-passed"])).toBe("StillHolds");
     expect(confirmHoldVerdict([])).toBe("Inconclusive");
+    expect(confirmHoldVerdict(["inconclusive", "candidate-passed"])).toBe("Inconclusive");
   });
 });
 

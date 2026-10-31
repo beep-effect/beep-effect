@@ -25,6 +25,13 @@ export * from "./Holds.command.ts";
  * @since 0.0.0
  */
 export * from "./Holds.errors.ts";
+/**
+ * Public hold ledger list and probe programs.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./Holds.program.ts";
 export * from "./Holds.schemas.ts";
 /**
  * Public hold ledger services.
