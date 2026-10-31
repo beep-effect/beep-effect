@@ -1505,7 +1505,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 15,
+      "line": 13,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Deterministic regressions serialize fixed policy/submission fixtures across real child processes, kill producers at four exact durability/operation boundaries, and race independent producers for one private file-backed claim. Schema-generated round trips do not establish crash ordering or exclusive claims. Exit: reusable schema laws or an independently modeled claim-state property move here; preserve exact SIGKILL boundaries and the process race. Independently reviewed by Astra; no property coverage elsewhere is claimed."
     },
@@ -1535,7 +1535,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 61,
+      "line": 62,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Composed-worker regressions exercise native SQLite, actual listeners, pause/drain ownership, scheduler delivery and private maintenance/backup/retirement. Codecs support exact requests and receipts at controlled lifecycle boundaries. Exit: reusable schema laws move here or a meaningful independent worker reference model is designed; preserve refusal and resource-ordering cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
@@ -2295,7 +2295,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 53,
+      "line": 54,
       "owner": "@beep/repo-cli",
       "reason": "Deterministic command/rendering regressions verify expected unit/proxy configuration, journal-derived limits, interpolation/path-overlap refusal, malformed inputs and absence of installation side effects. Deliberate adversarial literals and boundaries are the subject. Exit: a changed escaping/path contract motivates an independently designed rendering property, or reusable schema laws move here. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
