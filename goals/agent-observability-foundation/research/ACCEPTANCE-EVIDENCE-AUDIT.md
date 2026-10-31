@@ -1,4 +1,37 @@
-# Acceptance evidence audit — October 29
+# Acceptance evidence audit
+
+## Current source refresh — October 31
+
+The October 29 assessments below retain their historical execution scope. The
+latest completed route qualification is now
+`../ops/history/declared-current-stages-20261031.json`, following runtime repair
+`4dff0193ea` and main integration `de5abb703c`. A new positively probed synthetic
+root was prepared; the previous roots and receipts remain unchanged.
+
+Independent Astra accepted all 88 disposable and 87 live input hashes, exact
+pre-send root/configuration/input bindings, independently derived event IDs,
+backend/local/native/delivery sets and two actual visibility receipts per stage.
+Both stages retain exact source nanoseconds and the reviewed backend timestamp
+representation, explicit CLI/desktop fixture annotations and unknown real harness
+populations. Actual worker scraping, stopped-worker alert delivery to a local
+simulated receiver, collector rollback, unit removal and queue preservation passed.
+The retained bundles include the intentional integrity-failure suffix and are
+proof artifacts, not installable deployment bundles.
+
+The first live attempt was interrupted by the host memory reserve and remains
+incomplete despite a wrapper exit zero. No pre-send plan was written; only that
+attempt's owned unit files/container were removed, retaining its queue and cleanup
+receipt. The later attempt passed without a resource stop. No memory limit was
+weakened, production collector configuration changed, historical data reingested
+or recovery hold released.
+
+Current source tests passed under Node22.23.4 and Bun1.4.4: 834 AI-metrics
+tests in74 files, five Phoenix readback tests and55 managed-provider tests.
+See `../ops/history/current-test-proof-20261031.json` for the split execution
+and controlled wrapper-bootstrap stop. Exact-head final-check and hosted/review/
+merge/lifecycle closure remain separate requirements.
+
+## Historical October 29 assessment
 
 Independent Astra reviewed SPEC's thirteen acceptance criteria at source checkpoint
 `d3a33a8bc128b685e644b80f69e801ec82b3110a`. It verified all 86 current installed-proof

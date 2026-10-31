@@ -12,8 +12,8 @@ import stat
 import subprocess
 
 SALT = 'synthetic-launch-proof-salt'
-QUALIFICATION_SHA = '3391a1b8b9fd3cf4470faba9556d48fd8b204269bed900e4fc2be98f90fd496b'
-PROBE_SHA = '641bf34a3635c2cce0b856d449321e05ee90d018edfc002706e2ce25ef0bdb93'
+QUALIFICATION_SHA = '30e49630d28c7b72ed89e17dead852d7eea7fedf7c8c70d357762d7808cec631'
+PROBE_SHA = 'ad227f12771ae17d0298334260d825ee393c1db7346444fa6aa5a6c8d0c0856c'
 
 
 def sha(data):
