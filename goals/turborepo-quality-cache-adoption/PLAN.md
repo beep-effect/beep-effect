@@ -414,3 +414,12 @@ A review caught that the two reproduction drivers still defaulted to the older
 shared pin observation. Their default and help text now name the feature-local
 `errors-only-client-pins.json` used by the retained evidence. Explicit `--pins`
 remains available; historical reports and the broader shared pin file are unchanged.
+
+The corrected drivers were then genuinely replayed on their unchanged frozen
+feature-local clients: all 24 native cases and six refusal controls passed.
+The current report binds the executed driver bytes at `ec979dd5db` and fresh
+private report digests. The prior report is retained byte-identically in
+`research/native-log-controls-before-pin-default-fix.json`; its driver contents
+can be reconstructed at `70145eb55b`, without asserting that was its original
+execution commit. No old execution was relabeled with new source hashes.
+This preserves the same feature decision and grants no task qualification.

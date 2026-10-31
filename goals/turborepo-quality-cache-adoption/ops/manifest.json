@@ -81,7 +81,8 @@
     "research/native-log-presentation-controls.py",
     "research/native-log-cache-controls.py",
     "research/native-log-controls.json",
-    "research/errors-only-feature-review.json"
+    "research/errors-only-feature-review.json",
+    "research/native-log-controls-before-pin-default-fix.json"
   ],
   "agentLaunchers": [
     {

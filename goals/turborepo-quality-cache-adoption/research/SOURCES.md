@@ -452,3 +452,12 @@ child environments and require active Python assertions.
   drivers reuse the existing bounded selection-control invocation function;
   reports bind its exact source digest. Synthetic execution and refusals grant
   no actual computation qualification or production performance claim.
+
+## Quiet-log current-driver replay, 2026-10-31
+
+- [Fresh controls](native-log-controls.json): real replay of current corrected
+  drivers at `ec979dd5db`, with the same frozen feature-local native clients,
+  24 cases, six refusals and fresh private-report hashes.
+- [Prior controls](native-log-controls-before-pin-default-fix.json): byte-identical
+  retained execution with the original driver bindings; matching driver source
+  content is available at `70145eb55b`. This is historical, not current replay.

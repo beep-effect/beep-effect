@@ -1,8 +1,9 @@
 {
   "schemaVersion": "cache-errors-only-native-controls/v1",
-  "authority": "Pinned synthetic semantics only; no actual computation qualification, cache adoption or performance claim.",
-  "sourceBaseRevision": "8a1252423e907b31755b54321a65849a9e17b12b",
-  "recordedAt": "2026-10-31T10:15:54.998037+00:00",
+  "authority": "Fresh current-driver replay on the same frozen feature-local native clients; synthetic log/cache behavior only, no task qualification, adoption or production performance claim.",
+  "sourceBaseRevision": "ec979dd5dbfab4efe72b33f2d82ba07dece92218",
+  "executedDriverSourceRevision": "ec979dd5dbfab4efe72b33f2d82ba07dece92218",
+  "recordedAt": "2026-10-31T16:00:41.714742+00:00",
   "pins": {
     "path": "errors-only-client-pins.json",
     "sha256": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d"
@@ -10,15 +11,17 @@
   "drivers": {
     "presentation": {
       "path": "native-log-presentation-controls.py",
-      "sha256": "0552b95c7b12f5f6650e664284db7f1bf03155b765068d66a32b93858b8555a0",
+      "sha256": "47232a3da72af95f48c7fe42c928b4707f415f642d565cb8eeca6b3f8ebdb63a",
       "reusedInvokeSha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99",
-      "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+      "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+      "rawReportSha256": "d39db16c198f2227f7d5e5e494076d52eedb83ab323177d9b6bde46adb68365a"
     },
     "cache": {
       "path": "native-log-cache-controls.py",
-      "sha256": "8324815f875d07fea20152a6587e993e86d5e3dac46f94ab26b96eb4fd833803",
+      "sha256": "55097ee5b7ab08bf373c61c31fe93821595b5766ff543e226ba3d584032db685",
       "reusedInvokeSha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99",
-      "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+      "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+      "rawReportSha256": "e87bbe1b50d9289f5e0bd9b84526c1b3a9f9df6e60360a3726715fd1917574f1"
     }
   },
   "rows": [
@@ -47,7 +50,7 @@
       "expectedTaskExit": 0,
       "exit": 0,
       "taskExit": 0,
-      "taskHash": "f8ed0b1b80d93398",
+      "taskHash": "073210c4f3494e8a",
       "hashVisible": true,
       "stdoutVisible": false,
       "stderrVisible": false,
@@ -63,7 +66,7 @@
       "expectedTaskExit": 7,
       "exit": 7,
       "taskExit": 7,
-      "taskHash": "5deaa8ee0ccfaa0f",
+      "taskHash": "c19f506221eac8e2",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -79,7 +82,7 @@
       "expectedTaskExit": 7,
       "exit": 7,
       "taskExit": 7,
-      "taskHash": "5b177236b6ddd748",
+      "taskHash": "7131f37167da5dc2",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -95,7 +98,7 @@
       "expectedTaskExit": 0,
       "exit": 0,
       "taskExit": 0,
-      "taskHash": "64a02ac4ba4a5653",
+      "taskHash": "78d970bffa294c52",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -111,7 +114,7 @@
       "expectedTaskExit": 0,
       "exit": 0,
       "taskExit": 0,
-      "taskHash": "c7f05f1f06261f89",
+      "taskHash": "30b5b003ed589989",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -143,7 +146,7 @@
       "expectedTaskExit": 0,
       "exit": 0,
       "taskExit": 0,
-      "taskHash": "c67a71b191051b65",
+      "taskHash": "0fb413d197af424a",
       "hashVisible": true,
       "stdoutVisible": false,
       "stderrVisible": false,
@@ -159,7 +162,7 @@
       "expectedTaskExit": 7,
       "exit": 7,
       "taskExit": 7,
-      "taskHash": "8356f77eb76c9a71",
+      "taskHash": "540dd06b7fd5d271",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -175,7 +178,7 @@
       "expectedTaskExit": 7,
       "exit": 7,
       "taskExit": 7,
-      "taskHash": "cd6140dcedc0071f",
+      "taskHash": "5446b3b24c537117",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -191,7 +194,7 @@
       "expectedTaskExit": 0,
       "exit": 0,
       "taskExit": 0,
-      "taskHash": "baf5ea8090325e1f",
+      "taskHash": "b26e5752f544cda7",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -207,7 +210,7 @@
       "expectedTaskExit": 0,
       "exit": 0,
       "taskExit": 0,
-      "taskHash": "ce912914ef1f4802",
+      "taskHash": "386a91d9e7be0a37",
       "hashVisible": true,
       "stdoutVisible": true,
       "stderrVisible": true,
@@ -547,5 +550,13 @@
       "priorReportUnchanged": true
     }
   ],
-  "cleanup": "Each disposable fixture was removed by its TemporaryDirectory before its success report was written."
+  "cleanup": "Each disposable fixture was removed by its TemporaryDirectory before the current success report was written. Refusal controls preserved both private success reports.",
+  "retainedPrior": {
+    "path": "native-log-controls-before-pin-default-fix.json",
+    "sha256": "758b4317660aed4a04ac8167df1bd6c1433078ebd925c4a1c586b7670c6c3a88",
+    "reconstructableDriverSourceCommit": "70145eb55bf202ea2c6fda4207e17d6b295dadd6",
+    "driverContentsVerifiedAgainstRetainedDigests": true,
+    "historicalExecutionCommitNotAsserted": true,
+    "scope": "The prior report is byte-identical, with its original base revision and pre-default-fix driver hashes. The new driver hashes above come only from the fresh replay."
+  }
 }
