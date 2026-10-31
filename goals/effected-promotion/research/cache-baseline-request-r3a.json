@@ -1,0 +1,20 @@
+{
+  "previous": "d9376177110c2e43f810b16b9658cb546b0205fb2677bd58dc2bf5d425506e9e",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (effected-promotion R3a, effected-r3a)",
+    "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
+      "sha256": "3f86549ea1661ddab74dc000a40f2a48b5b5437c01394de5cae154e80b20aece"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["@beep/repo-cli", "@beep/lint-rules"]
+}

@@ -682,11 +682,11 @@
       }
     },
     "@beep/lint-rules": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion R3a, effected-r3a)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
+        "sha256": "3f86549ea1661ddab74dc000a40f2a48b5b5437c01394de5cae154e80b20aece"
       }
     },
     "@beep/lockfiles": {
@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "codex (docgen-node-launch, source-bound manifest review)",
-      "reason": "Acknowledge the ten repo-cli configuration-drift tasks after removing only the forced Bun interpreter flag from beep:docgen. All other manifest/task settings and qualification state remain unchanged.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion R3a, effected-r3a)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
       "basis": {
-        "path": "goals/turborepo-cache-trust-observability/research/docgen-launch-baseline-review-2026-10-29.md",
-        "sha256": "8f3187c95bdd5b4fb8b17904c5738578211f5f881f1dad8d6655c098a48d1cba"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
+        "sha256": "3f86549ea1661ddab74dc000a40f2a48b5b5437c01394de5cae154e80b20aece"
       }
     },
     "@beep/repo-configs": {
@@ -59933,6 +59933,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#audit",
+          "@beep/jsonc#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
@@ -59999,6 +60000,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -60054,6 +60056,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -60096,6 +60099,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -60223,6 +60227,7 @@
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -60428,6 +60433,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -60473,6 +60479,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -60524,6 +60531,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -97870,6 +97878,7 @@
           "@beep/github-reporting#audit",
           "@beep/glob#audit",
           "@beep/identity#audit",
+          "@beep/jsonc#audit",
           "@beep/libpff#audit",
           "@beep/lockfiles#audit",
           "@beep/m365#audit",
@@ -97990,6 +97999,7 @@
           "@beep/github-reporting#build",
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
@@ -98099,6 +98109,7 @@
           "@beep/github-reporting#build",
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
@@ -98195,6 +98206,7 @@
           "@beep/github-reporting#build",
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
@@ -98340,6 +98352,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -98481,6 +98494,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -98740,6 +98754,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -98839,6 +98854,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -98962,6 +98978,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",

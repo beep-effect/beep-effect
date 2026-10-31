@@ -85,7 +85,7 @@ manifests with 0 full-schema failures.
 | lab `xdg` `XdgConfig` | - | adopted in 3-3; promoted in 4-X | Imports `@beep/config-file` (`ConfigResolver` type); now the `@beep/xdg/XdgConfig` subpath (W4-c). |
 | lab `cli` `ConfigIssueRenderer` | - | adopted in 3-3 | Takes the structural `{ readonly issue }` and no longer imports the package (promotion map row "cli-kit -> config-file"). |
 | `Struct.deepMerge` and jsonl `internal/merge.ts` | - | excluded | Different merge semantics from config-file's `deepMerge`, which stays in the package. |
-| docgen `readTSConfig` and the `@beep/schema/Jsonc` consumers | - | excluded here; `readTSConfig` adopted in 3-A6 | `readTSConfig` moved with the `TsconfigValidator` in 3-A6 (`@beep/repo-tsconfig` section); the `@beep/schema/Jsonc` consumers belong to the jsonc adoption (Exception Ledger "Duplicate JSONC model"). |
+| docgen `readTSConfig` and the `@beep/schema/Jsonc` consumers | - | excluded here; `readTSConfig` adopted in 3-A6 | `readTSConfig` moved with the `TsconfigValidator` in 3-A6 (`@beep/repo-tsconfig` section); the `@beep/schema/Jsonc` consumers were adopted in R3a (`@beep/jsonc` section). |
 ## `@beep/github-reporting` (wave 3-1, W3-b)
 
 | Site | Map id | Status | Notes |
@@ -200,6 +200,26 @@ pick what the kit picks.
 | repo-cli VersionSync `RootCatalog` bun.lock versions | #269 | 3-A1 | The lockfile half rides the lockfiles adoption; its Docker semver half is #43 above. |
 | repo-utils `schemas/PackageJson.ts` version fields | #243 | adopted in 3-A3 | `version` is the kit `SemVer.FromString` and `packageManager` the kit `PackageManagerRange`; no tracked manifest changes verdict. |
 | repo-cli `EffectResolver` `VERSION_SPECIFIER_PATTERN`, `TurboResolver` `STABLE_VERSION_PATTERN` | - | excluded | Shape checks on a specifier or schema URL; neither parses nor orders versions. |
+
+## `@beep/jsonc` (roadmap R3a, SPEC W4-o)
+
+R3a is the owner switch: every `@beep/schema/Jsonc` importer decodes through `Jsonc.bind(schema).decode`,
+the facade is deleted and `@beep/schema` drops `jsonc-parser`. Parity is recorded in
+`research/jsonc-owner-switch-differential-r3a-before.json` (the pre-switch code) and
+`research/jsonc-owner-switch-differential-r3a.json` (`--compare`, `ops/jsonc-owner-switch-differential.ts`):
+1,438 tracked JSONC and facade-consumed JSON documents decode equal under both parsers with 0 unclassified
+differences and 1,438 kit encode round trips, and twelve generator check or dry runs against one fixed input
+tree are byte-identical before and after. The `jsonc-parser` editing facade and its users leave in R3b.
+
+| Site | Map id | Status | Notes |
+| --- | --- | --- | --- |
+| `@beep/schema/Jsonc` (`JsoncTextToUnknown`, `decodeJsoncTextAs`, `JsoncParseDiagnostic`) | #1 | retired (R3a) | Deleted with its test, both export entries, the root barrel line, the generated aliases and the catalog, inventory and span rows. `decodeJsoncTextAs(X)` is `Jsonc.bind(X).decode`; `JsoncTextToUnknown` is `Jsonc.JsoncFromString`; `JsoncParseDiagnostic` is `JsoncParseErrorDetail` (neither had an importer outside the facade). |
+| repo-cli `@beep/schema/Jsonc` importers (20 source files, 3 tests) and the root-barrel import in `KnowledgeDoctor.baseline.ts` | #255 | adopted (R3a) | `Jsonc.bind(schema).decode` at every site; `readArtifact`, `TsconfigSync.plan` `parseJsonc` and `readSealFile` keep their schema-generic signatures. `jsonc-parser` stays for the editing facade until R3b. |
+| repo-cli `internal/cli/Jsonc.ts` `decodeJsoncTextAs` re-export (`ConfigUpdater`, `CreatePackage.command`, `TsconfigSync.plan`, `Quality/Tasks`) | #2 (decode half) | re-export removed (R3a) | The four callers import `@beep/jsonc` directly; the editing facade (`JsoncModification`, `applyJsoncModification`, `jsonText`) is R3b's. |
+| `@beep/lint-rules` `test/registry.test.ts` Biome plugin config decode | - | adopted (R3a) | `Jsonc.bind(BiomePluginConfig).decode`; `@beep/jsonc` is a devDependency. |
+| packet ops scripts `tsconfig-sync-parity.ts`, `lockfiles-adoption-parity.ts`, `package-json-readers-parity.ts` | - | adopted (R3a) | Same owner switch; their recorded reports are unchanged. |
+| `@beep/utils/Schema` `TextDecodeTo` and `Jsonc.bind` `Codec`-view generics | - | kit extended (R3a) | Both are generic over the target schema (`Target extends S.Top`), so an `S.Opaque` class keeps its branded type; pinned in `jsonc/test/Jsonc.test.ts`. |
+| `@beep/repo-configs` `AllowlistJsoncTextToUnknown` | #10 | queued: R3b | A copy of the facade's decode with its own error prefix; goes with the repo-configs `jsonc-parser` drop. |
 
 ## `@beep/commands` drivers (roadmap R9, SPEC W4-l)
 
@@ -336,9 +356,9 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli Laws/EffectImports.ts | #59 | partial | queued: R2b | `tinyglobby` out of `EffectImports.ts` (closes Duplicate glob matching). |
 | repo-cli internal/GlobPattern.ts, internal/quality/TestTypecheckCoverage.ts | #263 | partial | queued: R2b | `internal/GlobPattern.ts` onto `@beep/glob`; TestTypecheckCoverage's tsc matcher stays. |
 | repo-cli internal/GlobPattern.ts | #305 | partial | queued: R2b | `internal/GlobPattern.ts` onto `@beep/glob`; TestTypecheckCoverage's tsc matcher stays. |
-| schema Jsonc.ts | #1 | confirmed | queued: R3a | Importers re-point to `@beep/jsonc`; `schema/src/Jsonc.ts` is deleted (W4-o). |
-| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | queued: R3a; R3b | Owner switch in R3a, `jsonc-parser` drop in R3b. |
-| repo-cli internal/cli/Jsonc.ts | #2 | partial | queued: R3b | `internal/cli/Jsonc.ts` stays a sync facade without the `decodeJsoncTextAs` re-export (W4-o). |
+| schema Jsonc.ts | #1 | confirmed | migrated (R3a, W4-o) | `@beep/schema/Jsonc` deleted; every importer decodes through `Jsonc.bind`. See the `@beep/jsonc` section above. |
+| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | owner switch migrated (R3a, W4-o); `jsonc-parser` drop queued: R3b | The decode owner is `@beep/jsonc` (see the section above); the editing facade's `jsonc-parser` leaves in R3b. |
+| repo-cli internal/cli/Jsonc.ts | #2 | partial | re-export removed (R3a); editing facade queued: R3b | R3a removed the `decodeJsoncTextAs` re-export (W4-o); the sync editing facade moves onto `JsoncModifier`/`JsoncFormatter` in R3b. |
 | repo-cli internal/cli/Json.ts | #3 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
 | repo-cli Skills/Skills.render.ts | #4 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
 | repo-cli Models | #5 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
