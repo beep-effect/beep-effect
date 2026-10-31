@@ -61,8 +61,9 @@ isolation and `--fileParallelism=true --maxWorkers=2` (SPEC D21).
 The default local run went from 1,512 s to 183 to 502 s (3 to 8 times faster;
 206 s, 7.3 times, on the quietest host). With three workers, the shape of a
 4-vCPU hosted runner, the run took 568 s, 2.7 times faster than baseline. The
-hosted halves (14 to 15 minutes each) should fall by roughly the same factor;
-the hosted shard matrix is unchanged (G2).
+hosted shards (two halves of 14 to 15 minutes before G2, four `--shard`
+quarters since #2392) should fall by roughly the same factor; Vitest applies
+`--shard` across both projects, and this lane leaves the shard matrix to G2.
 
 ## Findings
 
