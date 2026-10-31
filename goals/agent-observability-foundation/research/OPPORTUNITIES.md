@@ -331,3 +331,40 @@ so a reserve stop does not discard already completed proof. Descendant command
 names alone cannot identify parent progress because test fixtures invoke the
 same commands. Keep reserve protection and avoid immediate whole-run repeats;
 use bounded focused verification while finishing the implementation.
+
+## Public receipts and formatter provenance — 2026-10-31
+
+The publication review found 117 operator-home references plus real run and
+machine identifiers in historical friction receipts. No credential or prompt
+content was found, but the public minimization rule still applies. Exact private
+originals and separate original/public hash pairs let the public copies retain
+resource facts and uncertainty without publishing those identities. A later
+commit formatter changed one public receipt's whitespace after review; refreshing
+its public hash and independently verifying parsed-value equivalence prevented a
+stale manifest from claiming the wrong bytes. Publish sanitized derivatives from
+the start and verify their hashes after automatic formatting. See the
+[representation manifest](../ops/history/public-receipt-sanitization-20261031.json)
+and [independent review](../ops/history/public-receipt-review-20261031.json).
+
+## Worker base freshness is a proof precondition — 2026-10-31
+
+An isolated worker fetched the feature tip without updating its remote main ref.
+The first head-pinned final-check therefore replayed inherited test changes
+against an older base. That passing receipt was retained with its actual base;
+a second canonical replay used the freshly fetched accepted main ref. A feature
+fast-forward is insufficient evidence of base freshness. Verify both exact refs
+before launching a final gate, preserve a stale-base result honestly, and never
+rewrite its base label. The workstation separately declined the replay before
+launch because its initial headroom was below the configured floor; the existing
+worker completed it inside a bounded scope without lowering that floor.
+
+## Main integration can invalidate test-isolation census — 2026-10-31
+
+The accepted Graft retirement and later parallel-test configuration merged in an
+order that left two stale isolated-suite declarations. The current diagnostic
+reported 85 declared suites versus 83 actual state-leaking suites. Nine Node shim
+cases and the CLI typecheck still passed; that does not make the collected run
+green. The coordinator assigned the shared repair to G1/PR2405. Consume accepted
+main once, rerun the actual census, and preserve the failed diagnostic instead
+of weakening isolation or opening a competing unblocker. See the
+[scoped integration receipt](../ops/history/post-main-runtime-proof-20261031.json).
