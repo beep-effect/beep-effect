@@ -553,6 +553,54 @@ describe("@beep/documents-server VaultSyncEngine", () => {
 
   it.layer(Layer.fresh(SyncEngineTestLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
+      "heals a pending folder stranded without a remote id or queued operation",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const itemRepository = yield* SyncItemRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* makeVaultRoot();
+        yield* fs.makeDirectory(path.join(root, "orphan-dir"), { recursive: true });
+        // A crash left the folder row pending with no remote id and no
+        // operation, so recovery must enqueue a digest-free createFolder.
+        yield* itemRepository.create(
+          SyncItemSeed.make({
+            contentDigest: O.none(),
+            contentSizeBytes: O.none(),
+            itemKind: "folder",
+            localGeneration: S.Natural.make(1),
+            localRelPath: VaultRelPath.make("orphan-dir"),
+            provider: "box",
+            syncState: "pending",
+            workspaceId,
+          })
+        );
+
+        const status = yield* engine.syncOnce(syncInput(root));
+        const counts = yield* handle.counts;
+        const tree = yield* handle.snapshotTree;
+        const succeeded = yield* listOperationsByStatus("succeeded");
+        const tracked = yield* itemRepository.findByPath(
+          FindSyncItemByPathInput.make({ localRelPath: VaultRelPath.make("orphan-dir"), provider: "box", workspaceId })
+        );
+
+        expect(counts.ensureFolder).toBe(1);
+        expect(tree["orphan-dir"]?.itemKind).toBe("folder");
+        assertSome<string>(
+          O.map(tracked, (item) => item.syncState),
+          "current"
+        );
+        expect(A.map(succeeded, (operation) => operation.operationType)).toEqual(["createFolder"]);
+        assertTrue(A.every(succeeded, (operation) => O.isNone(operation.inputContentDigest)));
+        expect(status.pendingItems).toBe(0);
+        expect(status.queuedOperations).toBe(0);
+      })
+    );
+  });
+
+  it.layer(Layer.fresh(SyncEngineTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
       "reports an idle status snapshot before any sync pass",
       Effect.fnUntraced(function* () {
         const engine = yield* VaultSyncEngine;

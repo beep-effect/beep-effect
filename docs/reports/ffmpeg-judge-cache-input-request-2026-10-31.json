@@ -5,7 +5,7 @@
     "reason": "Record only the root judge-rubric policy fingerprint task adding FFmpeg.command.ts to generated inputs after the command-builder extraction, retaining accepted main qualification-v3/profile state; no command/cache/qualification change.",
     "basis": {
       "path": "docs/reports/ffmpeg-judge-cache-input-review-2026-10-31.md",
-      "sha256": "8de175d092f6397e22082d1579535b28bcda8665dc9bdc1ef6c110e1260fd5ef"
+      "sha256": "3c65cad07932991d5ba7f77c92a01542ec4a441fba1092caebb46b6191a709a7"
     }
   },
   "subjects": ["//"],
