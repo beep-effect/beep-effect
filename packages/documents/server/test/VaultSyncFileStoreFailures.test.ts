@@ -59,18 +59,58 @@ const failStatAt =
       ),
     };
   };
-const becomeSymlinkAt =
-  (occurrence: number): FileSystemFault =>
-  (fs) => {
-    let calls = 0;
-    return {
-      readLink: Effect.fn("VaultFileStoreTest.readLink")((candidate: string) =>
-        isTarget(candidate) && ++calls === occurrence ? Effect.succeed("/outside/private.txt") : fs.readLink(candidate)
-      ),
-    };
+const becomeSymlinkAt = (occurrence: number) => {
+  let calls = 0;
+  let opens = 0;
+  let descriptorStats = 0;
+  let pathStats = 0;
+  let injected = false;
+  const fault: FileSystemFault = (fs) => ({
+    readLink: Effect.fn("VaultFileStoreTest.readLink")((candidate: string) => {
+      if (isTarget(candidate) && ++calls === occurrence) {
+        injected = true;
+        return Effect.succeed("/outside/private.txt");
+      }
+      return fs.readLink(candidate);
+    }),
+    open: Effect.fn("VaultFileStoreTest.observeOpen")(function* (...args: Parameters<FileSystem.FileSystem["open"]>) {
+      const file = yield* fs.open(...args);
+      if (!isTarget(args[0])) return file;
+      opens++;
+      return {
+        ...file,
+        stat: Effect.tap(file.stat, () => Effect.sync(() => descriptorStats++)),
+      };
+    }),
+    stat: Effect.fn("VaultFileStoreTest.observeStat")(function* (candidate: string) {
+      const info = yield* fs.stat(candidate);
+      if (isTarget(candidate)) pathStats++;
+      return info;
+    }),
+  });
+  return {
+    fault,
+    verify: () => {
+      // Equal error messages cannot distinguish these stages. Pin the actual
+      // injection and whether descriptor/path validation completed before it.
+      const opened = occurrence === 2 ? 0 : 1;
+      expect({ injected, calls, opens, descriptorStats, pathStats }).toEqual({
+        injected: true,
+        calls: occurrence,
+        opens: opened,
+        descriptorStats: opened,
+        pathStats: opened + 1,
+      });
+    },
   };
+};
 
-const cases: ReadonlyArray<{ readonly name: string; readonly reason: string; readonly fault: FileSystemFault }> = [
+const cases: ReadonlyArray<{
+  readonly name: string;
+  readonly reason: string;
+  readonly fault: FileSystemFault;
+  readonly verify?: () => void;
+}> = [
   {
     name: "directory enumeration failure",
     reason: "vault scan could not read directory",
@@ -126,12 +166,12 @@ const cases: ReadonlyArray<{ readonly name: string; readonly reason: string; rea
   {
     name: "symlink installed before open",
     reason: "vault sync refused symbolic link private.txt",
-    fault: becomeSymlinkAt(2),
+    ...becomeSymlinkAt(2),
   },
   {
     name: "symlink installed after descriptor validation",
     reason: "vault sync refused symbolic link private.txt",
-    fault: becomeSymlinkAt(3),
+    ...becomeSymlinkAt(3),
   },
   {
     name: "scan path escapes root",
@@ -208,6 +248,7 @@ describe("Vault filesystem boundary failures", () => {
           yield* fs.writeFileString(target, "private content");
           const error = yield* Effect.flip(engine.syncOnce(input(root)));
           expect(error).toMatchObject({ _tag: "VaultScanFailed", reason: expect.stringContaining(testCase.reason) });
+          testCase.verify?.();
           expect(yield* fs.readFileString(target)).toBe("private content");
           expect(
             (yield* engine.status(VaultSyncStatusInput.make({ workspaceId: WorkspaceIdentity.WorkspaceId.make(31) })))
