@@ -210,12 +210,15 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 - **upstream-bug** — Lab brace expansion stops at the first excess emitted member and reports actual 1001 for max 1000 while upstream materializes 32,000 sibling members and reports actual 32000 (packages/foundation/modeling/glob/test/braceExpansion.test.ts:297,318; packages/foundation/modeling/glob/test/hostility.test.ts:185).
 - **tsgo-diagnostics** — Lab schema classes and errors gain unique-symbol brands that distinguish instance types nominally while upstream facade declarations omit those brands (packages/foundation/modeling/glob/src/GlobPattern.ts:49,134,331; packages/foundation/modeling/glob/src/GlobSet.ts:89; packages/foundation/modeling/glob/src/internal/limits.ts:29,228).
 
-### Dependency backlog
+### Upstream test oracle and compatibility
 
-The security upgrade to minimatch 11 removes the prior upstream AST and
-regular-expression oracle APIs and changes some empty-path and dot-segment
-semantics. Preserve the existing dialect contract while migrating these test
-oracles; a successful dependency install is not a passing package proof.
+The live minimatch dependency is 11.0.3. Its new matching engine removes the
+older AST and regexp APIs and changes some matching semantics. The
+[recorded reference corpus](test/fixtures/README.md) preserves this package's
+minimatch 10.2.6 contract without retaining the vulnerable executable test
+dependency. It includes the original directed cases, deterministic samples
+from the original generators and fresh bounded-candidate comparisons.
+Current upstream still checks unchanged escape and expansion primitives.
 
 The vendored optimizer applies `braceExpandMax` to generated globstar-parent
 alternatives as well as brace expansion. It rejects the first excess member

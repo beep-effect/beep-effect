@@ -576,3 +576,14 @@ production guard fails the intended case and restores exactly. The canonical
 coverage diagnostic fills the reported gap while retaining every floor. See
 [the checkpoint](research/private-storage-refusal-coverage-checkpoint.json).
 Fresh current-head full final and hosted acceptance remain required.
+
+
+### Dependency security compatibility checkpoint, 2026-10-31 UTC
+
+The [compatibility checkpoint](research/dependency-security-compatibility-checkpoint.json)
+records the patched dependency and vendored optimizer repair that unblocks
+producer verification. Complete local package proof, 270 Node tests and both
+coverage providers pass; independent legacy vectors preserve the old dialect.
+Both deliberate negative controls fail and restore source exactly. The old
+published head passes Security but predates this compatibility wave; fresh
+hosted proof and review remain required. No qualification or rollout is granted.

@@ -947,3 +947,30 @@ normalization. Keep the diagnostic distinct from a new hosted proof.
 - Reuse `serveCacheLoopback`, retain the original 128 MiB body limit, and
   qualify recovery against an actually occupied socket in both runtimes.
   Production trust, credentials and cache activation remain unchanged.
+
+
+### 2026-10-31: secure dependency upgrade preserves its older oracle contract
+
+The initial patched dependency fixed hosted Security but broke the vendored
+engine's test oracle APIs and matching assumptions. Preserve all original
+expected outcomes with published-source-verified reference data, then execute
+the full original-generator samples and fresh bounded fragment candidates.
+The package audit/docgen, 270 Node tests and V8/Istanbul coverage now pass.
+Removing the budget check or corrupting a matching result each fails the
+intended control; source restores byte-for-byte. The
+[checkpoint](dependency-security-compatibility-checkpoint.json) records the
+scope and current hosted-proof requirement. No scanner exception or quality
+floor was changed. Reference JSON is decoded through the existing schemas in
+an owned, disposed FileSystem runtime, avoiding giant inferred JSON unions.
+
+
+### 2026-10-31: publication lint has stricter source imports than the compiler hint
+
+The first compatibility wave created an unpublished commit, then correctly
+stopped at repository lint: NodeNext's `.js` import suggestion conflicts with
+the repo's explicit `.ts` rule. The same gate required the NodeURL namespace
+and a module-scoped JSON codec. Correct all three, run repository lint without
+quiet output, and refresh the full package and both runtime coverage proofs.
+Those checks and the repeated negative controls pass; the initial refusal
+remains retained. No gate or diagnostic was disabled. Prevent recurrence by
+checking existing source-import conventions before applying compiler hints.

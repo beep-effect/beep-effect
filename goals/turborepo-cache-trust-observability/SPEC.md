@@ -210,6 +210,20 @@ fault receipts. Remote fallback must never mean unsigned restore.
 
 ## Decision log
 
+### Dependency security compatibility, 2026-10-31 UTC
+
+- Resolve the inherited glob/minimatch advisories with patched dependencies and
+  the existing expansion budget in the vendored optimizer. Keep scanner
+  exceptions, qualification policy and quality floors unchanged.
+- Preserve the minimatch 10 dialect with independent reference data captured
+  from its verified published implementation and the accepted original test
+  generators. Never derive expected results from the port. Keep fresh
+  fragment candidates bounded while retaining the original round-trip and
+  hostile-input checks. This is compatibility evidence, not qualification.
+- Reverse the repair as a complete Git change in a recovery branch if needed;
+  keep affected protected changes unmerged until a patched compatible option
+  passes. No deployed namespace or credential state changes in this repair.
+
 ### Owned request-tag capture, 2026-10-29
 
 - Retain the complete minimal native summary in each newly executed signed

@@ -5,7 +5,7 @@
     "title": "Turborepo cache trust and observability",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-29",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-trust-observability",
@@ -93,7 +93,8 @@
     "research/signed-runtime-alias-checkpoint.json",
     "research/private-pilot-storage-checkpoint.json",
     "research/private-orchestration-cleanup-checkpoint.json",
-    "research/private-storage-refusal-coverage-checkpoint.json"
+    "research/private-storage-refusal-coverage-checkpoint.json",
+    "research/dependency-security-compatibility-checkpoint.json"
   ],
   "agentLaunchers": [
     {
