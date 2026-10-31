@@ -1518,6 +1518,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "repo-sanity:syncpack",
         "repo-sanity:sherif",
         "repo-sanity:config-typecheck",
+        "repo-sanity:goals-ops-typecheck",
         "repo-sanity:bun-audit",
         "quality:cache-policy",
       ]);
@@ -1525,7 +1526,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(lanes[0]?.step.args).toEqual(["run", "beep", "quality", "changeset-graph"]);
       expect(lanes[2]?.step.args).toEqual(expectedTurboArgs("fallow:boundaries:config-check", ["--summarize"]));
       expect(lanes[6]?.step.args).toEqual(["run", "check:configs"]);
-      expect(lanes[7]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
+      expect(lanes[7]?.step).toMatchObject({
+        command: "bunx",
+        args: ["tsrs", "-p", "goals/tsconfig.ops.json", "--noEmit", "--pretty", "false"],
+      });
+      expect(lanes[8]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
       expect(qualityLaneArgs(lanes, "quality:cache-policy")).toEqual(["run", "beep", "quality", "cache-policy"]);
       for (const mode of ["repo-sanity", "quality", "pre-push"] as const) {
         expect(qualityLaneArgs(githubCheckLanesForModeForTesting("/repo", mode), "quality:cache-policy")).toEqual([

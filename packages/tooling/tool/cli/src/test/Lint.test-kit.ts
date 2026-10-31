@@ -16,13 +16,17 @@ export * from "@beep/repo-cli/commands/Lint";
 export {
   makePolicyGraph,
   moduleSyntax,
-  PolicyCliLayout,
-  PolicyClosure,
-  PolicyCommandNode,
-  PolicyWorkspace,
   renderClosureInputs,
   resolvePackageSubpath,
 } from "../commands/Lint/internal/PolicyFingerprintGraph.ts";
+/**
+ * Policy fingerprint JSON rendering, for focused tests.
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export { renderJsonDocument } from "../commands/Lint/internal/PolicyFingerprintJson.ts";
 /**
  * Schema-first inventory merge, exposed so tests can drive `--write` regeneration on fixture documents.
  *

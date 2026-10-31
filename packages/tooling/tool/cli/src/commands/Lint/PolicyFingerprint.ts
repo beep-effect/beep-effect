@@ -40,7 +40,6 @@ import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
@@ -48,15 +47,18 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { QualityTaskName } from "../Quality/Quality.schemas.ts";
 import { OXLINT_CIRCULAR_CONFIG, OXLINT_DEPRECATED_APIS_CONFIG } from "./internal/LintPackage.ts";
+import { makePolicyGraph, renderClosureInputs } from "./internal/PolicyFingerprintGraph.ts";
+import { insertAfterOwned, modifyJson, renderJsonDocument } from "./internal/PolicyFingerprintJson.ts";
 import {
-  makePolicyGraph,
   PolicyCliLayout,
   PolicyClosure,
+  PolicyCommandNode,
+  PolicyFingerprintEntry,
+  PolicyFingerprintError,
+  PolicyToolsFingerprint,
   PolicyWorkspace,
-  renderClosureInputs,
-} from "./internal/PolicyFingerprintGraph.ts";
-import { PolicyFingerprintEntry, PolicyFingerprintError, PolicyToolsFingerprint } from "./PolicyFingerprint.schemas.ts";
-import type { PolicyCommandNode, PolicySourceTree } from "./internal/PolicyFingerprintGraph.ts";
+} from "./PolicyFingerprint.schemas.ts";
+import type { PolicyGraph, PolicySourceTree } from "./internal/PolicyFingerprintGraph.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PolicyFingerprint");
 
@@ -143,50 +145,47 @@ const isFingerprintEdge = (dependency: string) =>
 const sealTask = (key: string) => `${SEAL_TASK_PREFIX}${key}`;
 const sealScript = (key: string) => `${SEAL_SCRIPT_PREFIX}${key}`;
 
-/** One policy task and the script texts that run it. */
-interface PolicyTaskScripts {
-  readonly scripts: ReadonlyArray<{ readonly manifest: string; readonly script: string }>;
+// One policy task's script in one manifest.
+interface PolicyTaskScript {
+  readonly manifest: string;
+  readonly script: string;
   readonly task: string;
 }
 
-/**
- * Split a script into `beep` argv tokens.
- *
- * **Details**
- *
- * Accepts `beep-cli <argv>`, `bun run beep <argv>`, and
- * `bun run <script> [args]` where the root manifest defines `<script>`
- * (followed recursively). Shell operators are rejected: the task would run
- * more than one command.
- *
- * @param script - The task's script text.
- * @param rootScripts - The root manifest's scripts, used to follow `bun run <script>` aliases.
- * @param depth - Alias hops already followed; resolution gives up past 8.
- * @returns The argv after the `beep` entry point, or none when the script is not a single `beep` command.
- */
+const SHELL_OPERATORS = ["&&", "||", ";", "|"];
+const BEEP_PREFIXES: ReadonlyArray<ReadonlyArray<string>> = [["beep-cli"], ["bun", "run", "beep"]];
+
+const scriptWords = (script: string) => A.filter(Str.split(Str.trim(script), /\s+/), Str.isNonEmpty);
+
+const startsWithWords = (words: ReadonlyArray<string>) => (prefix: ReadonlyArray<string>) =>
+  A.every(prefix, (word, index) => words[index] === word);
+
+// `bun run <root script> [args]`: the root script's text with the remaining args appended.
+const rootScriptCall = (words: ReadonlyArray<string>, rootScripts: Readonly<Record<string, string>>) => {
+  const [first, second, name] = words;
+  return first === "bun" && second === "run" && name !== undefined
+    ? O.map(R.get(rootScripts, name), (text) => `${text} ${A.join(A.drop(words, 3), " ")}`)
+    : O.none<string>();
+};
+
+// Split a script into `beep` argv: `beep-cli <argv>`, `bun run beep <argv>`, or `bun run <root script>`
+// followed recursively. Shell operators are rejected: the task would run more than one command.
 const scriptArgv = (
   script: string,
   rootScripts: Readonly<Record<string, string>>,
   depth = 0
 ): O.Option<ReadonlyArray<string>> => {
-  const words = A.filter(Str.split(Str.trim(script), /\s+/), Str.isNonEmpty);
-  if (depth > 8 || A.some(words, (word) => A.contains(["&&", "||", ";", "|"], word))) return O.none();
-  const [first, second, third] = words;
-  if (first === "beep-cli") return O.some(A.drop(words, 1));
-  if (first === "bun" && second === "run" && third === "beep") return O.some(A.drop(words, 3));
-  if (first === "bun" && second === "run" && third !== undefined && R.has(rootScripts, third))
-    return scriptArgv(`${rootScripts[third]} ${A.join(A.drop(words, 3), " ")}`, rootScripts, depth + 1);
-  return O.none();
+  const words = scriptWords(script);
+  if (depth > 8 || A.some(words, (word) => A.contains(SHELL_OPERATORS, word))) return O.none();
+  return O.match(A.findFirst(BEEP_PREFIXES, startsWithWords(words)), {
+    onSome: (prefix) => O.some(A.drop(words, prefix.length)),
+    onNone: () => O.flatMap(rootScriptCall(words, rootScripts), (text) => scriptArgv(text, rootScripts, depth + 1)),
+  });
 };
 
 const isQualityTask = S.is(QualityTaskName);
 
-/**
- * Whether `bin-main.ts` routes this argv to a fast path the graph does not model.
- *
- * @param argv - The `beep` argv of a policy task.
- * @returns `true` for `ci` and quality tasks other than the lint policy subcommands.
- */
+// Whether `bin-main.ts` routes this argv to a fast path the graph does not model.
 const usesFastPath = (argv: ReadonlyArray<string>): boolean => {
   const [first, second] = argv;
   if (first === "ci") return true;
@@ -200,7 +199,10 @@ interface FingerprintSources {
   readonly rootScripts: Readonly<Record<string, string>>;
   readonly turbo: TurboConfiguration;
   readonly turboText: string;
-  readonly workspaces: ReadonlyArray<PolicyWorkspace & { readonly scripts: Readonly<Record<string, string>> }>;
+  readonly workspaces: ReadonlyArray<{
+    readonly workspace: PolicyWorkspace;
+    readonly scripts: Readonly<Record<string, string>>;
+  }>;
 }
 
 const readSources = Effect.fnUntraced(function* (root: string) {
@@ -230,7 +232,7 @@ const readSources = Effect.fnUntraced(function* (root: string) {
         Effect.mapError(decodeFailure(file))
       );
       return {
-        ...PolicyWorkspace.make({
+        workspace: PolicyWorkspace.make({
           name,
           directory: relative,
           exports: manifest.exports,
@@ -240,7 +242,7 @@ const readSources = Effect.fnUntraced(function* (root: string) {
       };
     })
   );
-  const cli = A.findFirst(workspaces, (workspace) => workspace.name === CLI_WORKSPACE);
+  const cli = A.findFirst(workspaces, (entry) => entry.workspace.name === CLI_WORKSPACE);
   if (O.isNone(cli))
     return yield* PolicyFingerprintError.make({ message: "CLI workspace is missing", cause: CLI_WORKSPACE });
   return {
@@ -249,42 +251,9 @@ const readSources = Effect.fnUntraced(function* (root: string) {
     rootManifestText,
     rootScripts: rootManifest.scripts ?? {},
     workspaces,
-    cliDirectory: cli.value.directory,
+    cliDirectory: cli.value.workspace.directory,
   } satisfies FingerprintSources;
 });
-
-const policyTasks = (sources: FingerprintSources): ReadonlyArray<PolicyTaskScripts> =>
-  A.map(
-    A.sort(
-      A.filter(
-        R.keys(sources.turbo.tasks),
-        (task) =>
-          !Str.startsWith(SEAL_TASK_PREFIX)(task) &&
-          A.some(sources.turbo.tasks[task]?.dependsOn ?? [], isFingerprintEdge)
-      ),
-      Order.String
-    ),
-    (task) =>
-      Str.startsWith("//#")(task)
-        ? {
-            task,
-            scripts: O.match(R.get(sources.rootScripts, Str.slice(3)(task)), {
-              onNone: A.empty<{ readonly manifest: string; readonly script: string }>,
-              onSome: (script) => [{ manifest: "package.json", script }],
-            }),
-          }
-        : {
-            task,
-            scripts: A.getSomes(
-              A.map(sources.workspaces, (workspace) =>
-                O.map(R.get(workspace.scripts, task), (script) => ({
-                  manifest: `${workspace.directory}/package.json`,
-                  script,
-                }))
-              )
-            ),
-          }
-  );
 
 const liveTree = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -361,95 +330,157 @@ export const computePolicyFingerprint = Effect.fn("computePolicyFingerprint")(fu
   return yield* fingerprintFromSources(sources, tree);
 });
 
+const isPolicyTask = (sources: FingerprintSources) => (task: string) =>
+  !Str.startsWith(SEAL_TASK_PREFIX)(task) && A.some(sources.turbo.tasks[task]?.dependsOn ?? [], isFingerprintEdge);
+
+const rootTaskScripts = (sources: FingerprintSources, task: string): Array<PolicyTaskScript> =>
+  O.match(R.get(sources.rootScripts, Str.slice(3)(task)), {
+    onNone: A.empty<PolicyTaskScript>,
+    onSome: (script) => [{ task, manifest: "package.json", script }],
+  });
+
+const packageTaskScripts = (sources: FingerprintSources, task: string): Array<PolicyTaskScript> =>
+  A.getSomes(
+    A.map(sources.workspaces, (entry) =>
+      O.map(R.get(entry.scripts, task), (script) => ({
+        task,
+        manifest: `${entry.workspace.directory}/package.json`,
+        script,
+      }))
+    )
+  );
+
+const taskScripts = (sources: FingerprintSources, task: string) =>
+  Str.startsWith("//#")(task) ? rootTaskScripts(sources, task) : packageTaskScripts(sources, task);
+
+const fingerprintFailure = (message: string, cause: unknown) => PolicyFingerprintError.make({ message, cause });
+
+// Every policy task's scripts; a marker edge without a script is an authoring error.
+const policyTaskScripts = Effect.fnUntraced(function* (sources: FingerprintSources) {
+  const tasks = A.sort(A.filter(R.keys(sources.turbo.tasks), isPolicyTask(sources)), Order.String);
+  const missing = A.findFirst(tasks, (task) => A.isReadonlyArrayEmpty(taskScripts(sources, task)));
+  if (O.isSome(missing))
+    return yield* fingerprintFailure(
+      `Policy task ${missing.value} depends on ${CHECK_TASK} but no manifest defines its script`,
+      missing.value
+    );
+  return A.flatMap(tasks, (task) => taskScripts(sources, task));
+});
+
 /** One command-path prefix: its command node, parent prefix and the policy tasks that end there. */
 interface PrefixSeal {
   readonly command: ReadonlyArray<string>;
   readonly node: PolicyCommandNode;
   readonly parent: O.Option<string>;
-  readonly tasks: Array<string>;
+  readonly tasks: ReadonlyArray<string>;
 }
 
 const prefixKey = (command: ReadonlyArray<string>) => A.join(command, "-");
 
-const fingerprintFromSources = Effect.fnUntraced(function* (sources: FingerprintSources, tree: PolicySourceTree) {
-  const graph = makePolicyGraph(tree, sources.workspaces);
-  const cli = sources.cliDirectory;
-  const layout = PolicyCliLayout.make({
+// The command path one policy script runs, root excluded.
+const scriptPath = Effect.fnUntraced(function* (
+  graph: PolicyGraph,
+  layout: PolicyCliLayout,
+  rootScripts: Readonly<Record<string, string>>,
+  entry: PolicyTaskScript
+) {
+  const where = `Policy task ${entry.task} in ${entry.manifest}`;
+  const argv = scriptArgv(entry.script, rootScripts);
+  if (O.isNone(argv))
+    return yield* fingerprintFailure(`${where} does not run a single beep command: ${entry.script}`, entry.script);
+  if (usesFastPath(argv.value))
+    return yield* fingerprintFailure(
+      `${where} routes through a bin-main fast path the fingerprint does not model: ${entry.script}`,
+      entry.script
+    );
+  const path = A.drop(yield* graph.commandPath(layout, argv.value), 1);
+  if (A.isReadonlyArrayEmpty(path))
+    return yield* fingerprintFailure(`${where} names no beep subcommand: ${entry.script}`, entry.script);
+  return path;
+});
+
+const pathPrefixes = (task: string, path: ReadonlyArray<PolicyCommandNode>): ReadonlyArray<PrefixSeal> =>
+  A.map(path, (node, index) => {
+    const command = A.map(A.take(path, index + 1), (step) => step.name);
+    return {
+      node,
+      command,
+      parent: index === 0 ? O.none() : O.some(prefixKey(A.take(command, index))),
+      tasks: index === A.length(path) - 1 ? [task] : [],
+    };
+  });
+
+const addPrefix = (prefixes: HashMap.HashMap<string, PrefixSeal>, seal: PrefixSeal) => {
+  const key = prefixKey(seal.command);
+  return HashMap.set(
+    prefixes,
+    key,
+    O.match(HashMap.get(prefixes, key), {
+      onNone: () => seal,
+      onSome: (existing) => ({ ...existing, tasks: sortedUnique([...existing.tasks, ...seal.tasks]) }),
+    })
+  );
+};
+
+const cliLayout = (cli: string): PolicyCliLayout =>
+  PolicyCliLayout.make({
     shell: [`${cli}/src/bin.ts`, `${cli}/src/bin-main.ts`],
     rootModule: `${cli}/src/commands/Root.ts`,
     rootBinding: "rootCommand",
     commandsDirectory: `${cli}/src/commands`,
   });
 
-  let prefixes = HashMap.empty<string, PrefixSeal>();
-  let manifests = HashSet.empty<string>();
-  let rootNode = O.none<PolicyCommandNode>();
-  for (const { task, scripts } of policyTasks(sources)) {
-    if (A.isReadonlyArrayEmpty(scripts)) {
-      return yield* PolicyFingerprintError.make({
-        message: `Policy task ${task} depends on ${CHECK_TASK} but no manifest defines its script`,
-        cause: task,
-      });
-    }
-    for (const { manifest, script } of scripts) {
-      manifests = HashSet.add(manifests, manifest);
-      const argv = scriptArgv(script, sources.rootScripts);
-      if (O.isNone(argv)) {
-        return yield* PolicyFingerprintError.make({
-          message: `Policy task ${task} in ${manifest} does not run a single beep command: ${script}`,
-          cause: script,
-        });
-      }
-      if (usesFastPath(argv.value)) {
-        return yield* PolicyFingerprintError.make({
-          message: `Policy task ${task} routes through a bin-main fast path the fingerprint does not model: ${script}`,
-          cause: script,
-        });
-      }
-      const [root, ...path] = yield* graph.commandPath(layout, argv.value);
-      if (root === undefined || !A.isReadonlyArrayNonEmpty(path)) {
-        return yield* PolicyFingerprintError.make({
-          message: `Policy task ${task} in ${manifest} names no beep subcommand: ${script}`,
-          cause: script,
-        });
-      }
-      rootNode = O.some(root);
-      A.forEach(path, (node, index) => {
-        const command = A.map(A.take(path, index + 1), (step) => step.name);
-        const key = prefixKey(command);
-        const existing = HashMap.get(prefixes, key);
-        const seal = O.getOrElse(existing, () => ({
-          node,
-          command,
-          parent: index === 0 ? O.none<string>() : O.some(prefixKey(A.take(command, index))),
-          tasks: A.empty<string>(),
-        }));
-        if (index === A.length(path) - 1 && !A.contains(seal.tasks, task)) seal.tasks.push(task);
-        if (O.isNone(existing)) prefixes = HashMap.set(prefixes, key, seal);
-      });
-    }
-  }
-
-  // The shared seal: the shell, the root command's own module, and root configuration.
+// The shared seal: the shell, the root command's own module, and root configuration.
+const sharedInputs = Effect.fnUntraced(function* (tree: PolicySourceTree, graph: PolicyGraph, layout: PolicyCliLayout) {
   const shell = yield* graph.shellClosure(layout);
-  const rootClosure = O.isSome(rootNode)
-    ? yield* graph.commandClosure([rootNode.value])
-    : PolicyClosure.make({ modules: HashSet.empty<string>(), opaqueWorkspaces: HashSet.empty<string>() });
-  const shared = sortedUnique([
-    ...(yield* renderClosureInputs(
-      tree,
-      graph,
-      PolicyClosure.make({
-        modules: HashSet.union(shell.modules, rootClosure.modules),
-        opaqueWorkspaces: HashSet.union(shell.opaqueWorkspaces, rootClosure.opaqueWorkspaces),
-      }),
-      HashSet.empty()
-    )),
-    ...ROOT_CONFIGS,
+  const root = yield* graph.commandClosure([
+    PolicyCommandNode.make({ module: layout.rootModule, binding: layout.rootBinding, name: "" }),
   ]);
+  const reached = PolicyClosure.make({
+    modules: HashSet.union(shell.modules, root.modules),
+    opaqueWorkspaces: HashSet.union(shell.opaqueWorkspaces, root.opaqueWorkspaces),
+  });
+  return sortedUnique([...(yield* renderClosureInputs(tree, graph, reached, HashSet.empty())), ...ROOT_CONFIGS]);
+});
 
-  // Each prefix seals what its command adds over its ancestors; a prefix that adds
-  // nothing hands its tasks to the nearest ancestor that does (or the shared seal).
+// A rendered prefix: its own inputs, everything its chain declares, and the seal its tasks land on.
+interface RenderedPrefix {
+  readonly covered: HashSet.HashSet<string>;
+  readonly effective: O.Option<string>;
+  readonly inputs: ReadonlyArray<string>;
+  readonly key: string;
+  readonly parentEffective: O.Option<string>;
+  readonly seal: PrefixSeal;
+}
+
+const renderPrefix = Effect.fnUntraced(function* (
+  tree: PolicySourceTree,
+  graph: PolicyGraph,
+  sharedCovered: HashSet.HashSet<string>,
+  rendered: HashMap.HashMap<string, RenderedPrefix>,
+  [key, seal]: readonly [string, PrefixSeal]
+) {
+  const parent = O.flatMap(seal.parent, (parentKey) => HashMap.get(rendered, parentKey));
+  const covered = O.match(parent, { onNone: () => sharedCovered, onSome: (value) => value.covered });
+  const parentEffective = O.flatMap(parent, (value) => value.effective);
+  const inputs = yield* renderClosureInputs(tree, graph, yield* graph.commandClosure([seal.node]), covered);
+  return {
+    key,
+    seal,
+    inputs,
+    parentEffective,
+    covered: HashSet.union(covered, HashSet.fromIterable(inputs)),
+    effective: A.isReadonlyArrayEmpty(inputs) ? parentEffective : O.some(key),
+  } satisfies RenderedPrefix;
+});
+
+// Parents before children, so each prefix subtracts what its chain already declares.
+const renderPrefixes = Effect.fnUntraced(function* (
+  tree: PolicySourceTree,
+  graph: PolicyGraph,
+  shared: ReadonlyArray<string>,
+  prefixes: HashMap.HashMap<string, PrefixSeal>
+) {
   const ordered = A.sort(
     HashMap.toEntries(prefixes),
     Order.combine(
@@ -457,87 +488,83 @@ const fingerprintFromSources = Effect.fnUntraced(function* (sources: Fingerprint
       byEntryKey<PrefixSeal>()
     )
   );
-  let rendered = HashMap.empty<
-    string,
-    { readonly covered: HashSet.HashSet<string>; readonly effective: O.Option<string> }
-  >();
   const sharedCovered = HashSet.fromIterable(shared);
-  const entries: Array<PolicyFingerprintEntry> = [];
-  let sharedTasks = A.empty<string>();
-  for (const [key, seal] of ordered) {
-    const parent = O.flatMap(seal.parent, (parentKey) => HashMap.get(rendered, parentKey));
-    const covered = O.match(parent, { onNone: () => sharedCovered, onSome: (value) => value.covered });
-    const parentEffective = O.flatMap(parent, (value) => value.effective);
-    const closure = yield* graph.commandClosure([seal.node]);
-    const inputs = yield* renderClosureInputs(tree, graph, closure, covered);
-    const effective = A.isReadonlyArrayEmpty(inputs) ? parentEffective : O.some(key);
-    rendered = HashMap.set(rendered, key, {
-      covered: HashSet.union(covered, HashSet.fromIterable(inputs)),
-      effective,
-    });
-    if (A.isReadonlyArrayNonEmpty(inputs)) {
-      entries.push(
-        PolicyFingerprintEntry.make({
-          key,
-          command: seal.command,
-          module: seal.node.module,
-          parent: O.getOrElse(parentEffective, () => SHARED_KEY),
-          tasks: A.sort(seal.tasks, Order.String),
-          inputs,
-        })
-      );
-    } else if (A.isReadonlyArrayNonEmpty(seal.tasks)) {
-      const target = O.flatMap(parentEffective, (parentKey) =>
-        A.findFirstIndex(entries, (entry) => entry.key === parentKey)
-      );
-      if (O.isNone(target)) sharedTasks = sortedUnique([...sharedTasks, ...seal.tasks]);
-      else {
-        const entry = entries[target.value];
-        if (entry !== undefined)
-          entries[target.value] = PolicyFingerprintEntry.make({
-            ...entry,
-            tasks: sortedUnique([...entry.tasks, ...seal.tasks]),
-          });
-      }
-    }
-  }
+  let rendered = HashMap.empty<string, RenderedPrefix>();
+  for (const entry of ordered)
+    rendered = HashMap.set(rendered, entry[0], yield* renderPrefix(tree, graph, sharedCovered, rendered, entry));
+  return A.map(ordered, ([key]) => O.getOrThrow(HashMap.get(rendered, key)));
+});
 
-  // The drift check has no dependents, so its inputs are whole workspaces: any
-  // edit that can change a closure (an import, an export map) is inside one.
-  const workspaceInputs = A.flatMap(
-    sortedUnique(
-      A.getSomes(
-        A.map([...shared, ...A.flatMap(entries, (entry) => entry.inputs)], (input) =>
-          O.map(graph.workspaceOf(input), (workspace) => workspace.directory)
-        )
-      )
+// A prefix that adds nothing hands its tasks to the nearest ancestor that does (or the shared seal).
+const delegatesTo = (target: O.Option<string>) => (prefix: RenderedPrefix) =>
+  A.isReadonlyArrayEmpty(prefix.inputs) && O.getOrUndefined(prefix.parentEffective) === O.getOrUndefined(target);
+
+const delegatedTasks = (rendered: ReadonlyArray<RenderedPrefix>, target: O.Option<string>): ReadonlyArray<string> =>
+  A.flatMap(A.filter(rendered, delegatesTo(target)), (prefix: RenderedPrefix) => prefix.seal.tasks);
+
+const byKeyOrder = Order.mapInput(Order.String, (entry: PolicyFingerprintEntry) => entry.key);
+
+const sealEntries = (rendered: ReadonlyArray<RenderedPrefix>) =>
+  A.sort(
+    A.map(
+      A.filter(rendered, (prefix) => A.isReadonlyArrayNonEmpty(prefix.inputs)),
+      (prefix) =>
+        PolicyFingerprintEntry.make({
+          key: prefix.key,
+          command: prefix.seal.command,
+          module: prefix.seal.node.module,
+          parent: O.getOrElse(prefix.parentEffective, () => SHARED_KEY),
+          tasks: sortedUnique([...prefix.seal.tasks, ...delegatedTasks(rendered, O.some(prefix.key))]),
+          inputs: prefix.inputs,
+        })
     ),
-    (directory) => [`${directory}/package.json`, `${directory}/src/**`]
+    byKeyOrder
   );
-  const check = sortedUnique([
+
+// The drift check has no dependents, so its inputs are whole workspaces: any
+// edit that can change a closure (an import, an export map) is inside one.
+const checkInputs = (
+  graph: PolicyGraph,
+  shared: ReadonlyArray<string>,
+  entries: ReadonlyArray<PolicyFingerprintEntry>,
+  manifests: ReadonlyArray<string>
+) => {
+  const declared = [...shared, ...A.flatMap(entries, (entry) => entry.inputs)];
+  const directories = sortedUnique(
+    A.map(A.getSomes(A.map(declared, graph.workspaceOf)), (workspace) => workspace.directory)
+  );
+  return sortedUnique([
     ...A.filter(shared, (input) => O.isNone(graph.workspaceOf(input))),
-    ...workspaceInputs,
+    ...A.flatMap(directories, (directory) => [`${directory}/package.json`, `${directory}/src/**`]),
     ...manifests,
     "turbo.json",
   ]);
+};
+
+const fingerprintFromSources = Effect.fnUntraced(function* (sources: FingerprintSources, tree: PolicySourceTree) {
+  const graph = makePolicyGraph({
+    tree,
+    workspaces: A.map(sources.workspaces, (entry) => entry.workspace),
+  });
+  const layout = cliLayout(sources.cliDirectory);
+  const scripts = yield* policyTaskScripts(sources);
+  const paths = yield* Effect.forEach(scripts, (entry) =>
+    Effect.map(scriptPath(graph, layout, sources.rootScripts, entry), (path) => pathPrefixes(entry.task, path))
+  );
+  const prefixes = A.reduce(A.flatten(paths), HashMap.empty<string, PrefixSeal>(), addPrefix);
+  const shared = yield* sharedInputs(tree, graph, layout);
+  const rendered = yield* renderPrefixes(tree, graph, shared, prefixes);
+  const entries = sealEntries(rendered);
   return PolicyToolsFingerprint.make({
     schemaVersion: "policy-tools-fingerprint/v2",
     shared,
-    sharedTasks,
-    check,
-    entries: A.sort(
-      entries,
-      Order.mapInput(Order.String, (entry: PolicyFingerprintEntry) => entry.key)
-    ),
+    sharedTasks: sortedUnique(delegatedTasks(rendered, O.none())),
+    check: checkInputs(graph, shared, entries, sortedUnique(A.map(scripts, (entry) => entry.manifest))),
+    entries,
   });
 });
 
-/**
- * The fingerprint edges each policy task should carry, keyed by task id.
- *
- * @param fingerprint - The computed fingerprint whose entries name the tasks they seal.
- * @returns Each task id mapped to the sorted, de-duplicated seal tasks it must depend on.
- */
+// The fingerprint edges each policy task should carry, keyed by task id.
 const expectedEdges = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap<string, ReadonlyArray<string>> =>
   A.reduce(
     [
@@ -556,15 +583,12 @@ const expectedEdges = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap<str
   );
 
 const rewriteEdges = (dependsOn: ReadonlyArray<string>, seals: ReadonlyArray<string>): ReadonlyArray<string> => {
-  const first = A.findFirstIndex(dependsOn, isFingerprintEdge);
   const kept = A.filter(dependsOn, (dependency) => !isFingerprintEdge(dependency));
-  return O.match(first, {
-    onNone: () => [...kept, ...seals],
-    onSome: (index) => {
-      const before = A.length(A.filter(A.take(dependsOn, index), (dependency) => !isFingerprintEdge(dependency)));
-      return [...A.take(kept, before), ...seals, ...A.drop(kept, before)];
-    },
+  const before = O.match(A.findFirstIndex(dependsOn, isFingerprintEdge), {
+    onNone: () => A.length(kept),
+    onSome: (index) => A.length(A.filter(A.take(dependsOn, index), (dependency) => !isFingerprintEdge(dependency))),
   });
+  return [...A.take(kept, before), ...seals, ...A.drop(kept, before)];
 };
 
 /** A generated seal task's `turbo.json` value. */
@@ -580,12 +604,7 @@ const sealTaskValue = (inputs: ReadonlyArray<string>, dependsOn: ReadonlyArray<s
     ? { cache: true, outputs: [], inputs }
     : { cache: true, outputs: [], dependsOn, inputs };
 
-/**
- * Every generated task in `turbo.json`, keyed by task id.
- *
- * @param fingerprint - The computed fingerprint to render as seal tasks.
- * @returns The shared seal plus one seal per entry, each depending on its parent seal.
- */
+// Every generated task in `turbo.json`, keyed by task id.
 const expectedSealTasks = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap<string, SealTaskValue> =>
   HashMap.fromIterable([
     [sealTask(SHARED_KEY), sealTaskValue(fingerprint.shared, [])] as const,
@@ -598,200 +617,128 @@ const expectedSealTasks = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap
 const expectedSealScripts = (fingerprint: PolicyToolsFingerprint) =>
   sortedUnique([sealScript(SHARED_KEY), ...A.map(fingerprint.entries, (entry) => sealScript(entry.key))]);
 
-const FORMATTING = { formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\n" } } as const;
-/** The repository's Biome JSON line width; generated values are laid out the way Biome formats them. */
-const JSON_LINE_WIDTH = 80;
+const isOwnedTask = (property: string) => property === CHECK_TASK || Str.startsWith(SEAL_TASK_PREFIX)(property);
+const isOwnedScript = (property: string) =>
+  property === "lint:policy-fingerprint" || Str.startsWith(SEAL_SCRIPT_PREFIX)(property);
 
-const insertAfterOwned =
-  (owned: (property: string) => boolean, key: string) =>
-  (properties: Array<string>): number => {
-    const index = A.findLastIndex(properties, (property) => owned(property) && property <= key);
-    return O.match(index, { onNone: () => properties.length, onSome: (value) => value + 1 });
-  };
-
-const isScalar = (value: unknown) => !P.isObject(value) || value === null;
-
-/**
- * Render a JSON value the way Biome formats it: objects expanded, an array of
- * scalars on one line when it fits the line width (counting a following
- * comma), otherwise one element per line.
- *
- * @param value - The JSON value to render.
- * @param indent - The indentation of the line the value starts on.
- * @param column - The column the value starts at, for the line-width check.
- * @param trailing - Characters that follow the value on its line (1 for a comma, else 0).
- * @returns The rendered JSON text without a trailing newline.
- */
-const renderJson = (value: unknown, indent: string, column: number, trailing: number): string => {
-  if (A.isArray(value)) {
-    if (A.isReadonlyArrayEmpty(value)) return "[]";
-    const items = A.map(value, (item) => renderJson(item, `${indent}  `, indent.length + 2, 1));
-    const inline = `[${A.join(items, ", ")}]`;
-    if (A.every(value, isScalar) && column + inline.length + trailing <= JSON_LINE_WIDTH) return inline;
-    const lines = A.map(
-      value,
-      (item, index) =>
-        `${indent}  ${renderJson(item, `${indent}  `, indent.length + 2, index === value.length - 1 ? 0 : 1)}`
-    );
-    return `[\n${A.join(lines, ",\n")}\n${indent}]`;
-  }
-  if (P.isObject(value) && value !== null) {
-    const entries = R.toEntries(value as Readonly<Record<string, unknown>>);
-    if (A.isReadonlyArrayEmpty(entries)) return "{}";
-    const lines = A.map(entries, ([key, member], index) => {
-      const prefix = `${indent}  ${JSON.stringify(key)}: `;
-      return `${prefix}${renderJson(member, `${indent}  `, prefix.length, index === entries.length - 1 ? 0 : 1)}`;
-    });
-    return `{\n${A.join(lines, ",\n")}\n${indent}}`;
-  }
-  return JSON.stringify(value);
-};
-
-/**
- * Set a value with jsonc, then re-lay the written node out the way Biome would.
- *
- * @param text - The JSON text to edit.
- * @param path - The location of the value to set.
- * @param value - The new value; `undefined` removes the property.
- * @param insertion - Chooses where a new property goes among its siblings.
- * @returns The edited JSON text.
- */
-const modify = (
-  text: string,
-  path: jsonc.JSONPath,
-  value: unknown,
-  insertion?: (properties: Array<string>) => number
-) => {
-  const next = jsonc.applyEdits(
-    text,
-    jsonc.modify(
-      text,
-      path,
-      value,
-      insertion === undefined ? FORMATTING : { ...FORMATTING, getInsertionIndex: insertion }
-    )
-  );
-  if (value === undefined) return next;
-  const tree = jsonc.parseTree(next);
-  const node = tree === undefined ? undefined : jsonc.findNodeAtLocation(tree, path);
-  if (node === undefined) return next;
-  const lineStart = Str.lastIndexOf("\n")(Str.slice(0, node.offset)(next));
-  const start = O.match(lineStart, { onNone: () => 0, onSome: (index) => index + 1 });
-  const line = Str.slice(start, node.offset)(next);
-  const indent = O.getOrElse(
-    O.map(Str.match(/^ */)(line), (match) => match[0]),
-    () => ""
-  );
-  const following = Str.trimStart(Str.slice(node.offset + node.length)(next));
-  const rendered = renderJson(value, indent, node.offset - start, Str.startsWith(",")(following) ? 1 : 0);
-  return `${Str.slice(0, node.offset)(next)}${rendered}${Str.slice(node.offset + node.length)(next)}`;
-};
-
-/**
- * Apply the generated edits to `turbo.json` text.
- *
- * @param text - The current `turbo.json` text.
- * @param turbo - The decoded `turbo.json`, used to find stale seal tasks and current edges.
- * @param fingerprint - The fingerprint to materialize.
- * @returns The `turbo.json` text with check inputs, seal tasks and seal edges rewritten.
- */
+// Apply the generated edits to `turbo.json` text.
 const materializeTurbo = (text: string, turbo: TurboConfiguration, fingerprint: PolicyToolsFingerprint): string => {
   const seals = expectedSealTasks(fingerprint);
-  const edges = expectedEdges(fingerprint);
-  let next = modify(text, ["tasks", CHECK_TASK, "inputs"], fingerprint.check);
-  for (const task of R.keys(turbo.tasks))
-    if (Str.startsWith(SEAL_TASK_PREFIX)(task) && !HashMap.has(seals, task))
-      next = modify(next, ["tasks", task], undefined);
-  for (const [task, value] of A.sort(HashMap.toEntries(seals), byEntryKey<SealTaskValue>())) {
-    next = modify(
-      next,
-      ["tasks", task],
-      value,
-      insertAfterOwned((property) => property === CHECK_TASK || Str.startsWith(SEAL_TASK_PREFIX)(property), task)
-    );
-  }
-  for (const [task, seals] of HashMap.toEntries(edges)) {
-    const current = turbo.tasks[task]?.dependsOn ?? [];
-    next = modify(next, ["tasks", task, "dependsOn"], rewriteEdges(current, seals));
-  }
-  return next;
+  const stale = A.filter(
+    R.keys(turbo.tasks),
+    (task) => Str.startsWith(SEAL_TASK_PREFIX)(task) && !HashMap.has(seals, task)
+  );
+  const withCheck = modifyJson({ text: text, path: ["tasks", CHECK_TASK, "inputs"], value: fingerprint.check });
+  const pruned = A.reduce(stale, withCheck, (next, task) =>
+    modifyJson({ text: next, path: ["tasks", task], value: undefined })
+  );
+  const sealed = A.reduce(
+    A.sort(HashMap.toEntries(seals), byEntryKey<SealTaskValue>()),
+    pruned,
+    (next, [task, value]) =>
+      modifyJson({ text: next, path: ["tasks", task], value, insertion: insertAfterOwned(isOwnedTask)(task) })
+  );
+  return A.reduce(HashMap.toEntries(expectedEdges(fingerprint)), sealed, (next, [task, edges]) =>
+    modifyJson({
+      text: next,
+      path: ["tasks", task, "dependsOn"],
+      value: rewriteEdges(turbo.tasks[task]?.dependsOn ?? [], edges),
+    })
+  );
 };
 
-/**
- * Apply the generated seal scripts to the root manifest text.
- *
- * @param text - The current root `package.json` text.
- * @param scripts - The root manifest's decoded scripts, used to find stale seal scripts.
- * @param fingerprint - The fingerprint whose seal scripts the manifest must define.
- * @returns The manifest text with stale seal scripts removed and expected ones set.
- */
+// Apply the generated seal scripts to the root manifest text.
 const materializeRootManifest = (
   text: string,
   scripts: Readonly<Record<string, string>>,
   fingerprint: PolicyToolsFingerprint
 ): string => {
   const expected = expectedSealScripts(fingerprint);
-  let next = text;
-  for (const name of R.keys(scripts))
-    if (Str.startsWith(SEAL_SCRIPT_PREFIX)(name) && !A.contains(expected, name))
-      next = modify(next, ["scripts", name], undefined);
-  for (const name of expected) {
-    next = modify(
-      next,
-      ["scripts", name],
-      SEAL_SCRIPT,
-      insertAfterOwned(
-        (property) => property === "lint:policy-fingerprint" || Str.startsWith(SEAL_SCRIPT_PREFIX)(property),
-        name
-      )
-    );
-  }
-  return next;
+  const stale = A.filter(
+    R.keys(scripts),
+    (name) => Str.startsWith(SEAL_SCRIPT_PREFIX)(name) && !A.contains(expected, name)
+  );
+  const pruned = A.reduce(stale, text, (next, name) =>
+    modifyJson({ text: next, path: ["scripts", name], value: undefined })
+  );
+  return A.reduce(expected, pruned, (next, name) =>
+    modifyJson({
+      text: next,
+      path: ["scripts", name],
+      value: SEAL_SCRIPT,
+      insertion: insertAfterOwned(isOwnedScript)(name),
+    })
+  );
 };
 
-/** The drift between a repository's generated files and a fingerprint. */
+const declarationDrift = Effect.fnUntraced(function* (
+  declarationText: O.Option<string>,
+  fingerprint: PolicyToolsFingerprint
+) {
+  if (O.isNone(declarationText)) return [FINGERPRINT_PATH];
+  const declared = yield* Effect.option(decodeDeclaration(declarationText.value));
+  return O.exists(declared, (value) => declarationEquivalent(value, fingerprint)) ? [] : [FINGERPRINT_PATH];
+});
+
+const sealMatches = (actual: TurboTask | undefined, expected: SealTaskValue) =>
+  actual !== undefined &&
+  actual.cache === true &&
+  stringsEquivalent(actual.outputs ?? [], []) &&
+  stringsEquivalent(actual.inputs ?? [], expected.inputs) &&
+  stringsEquivalent(actual.dependsOn ?? [], expected.dependsOn ?? []);
+
+const turboDrift = (tasks: Readonly<Record<string, TurboTask>>, fingerprint: PolicyToolsFingerprint) => {
+  const seals = expectedSealTasks(fingerprint);
+  const check = stringsEquivalent(tasks[CHECK_TASK]?.inputs ?? [], fingerprint.check)
+    ? []
+    : [`turbo.json tasks["${CHECK_TASK}"].inputs`];
+  const sealed = A.map(
+    A.filter(
+      A.sort(HashMap.toEntries(seals), byEntryKey<SealTaskValue>()),
+      ([task, value]) => !sealMatches(tasks[task], value)
+    ),
+    ([task]) => `turbo.json tasks["${task}"]`
+  );
+  const stale = A.map(
+    A.filter(R.keys(tasks), (task) => Str.startsWith(SEAL_TASK_PREFIX)(task) && !HashMap.has(seals, task)),
+    (task) => `turbo.json tasks["${task}"] (stale)`
+  );
+  const edges = A.map(
+    A.filter(
+      A.sort(HashMap.toEntries(expectedEdges(fingerprint)), byEntryKey<ReadonlyArray<string>>()),
+      ([task, expected]) =>
+        !stringsEquivalent(sortedUnique(A.filter(tasks[task]?.dependsOn ?? [], isFingerprintEdge)), expected)
+    ),
+    ([task]) => `turbo.json tasks["${task}"].dependsOn`
+  );
+  return [...check, ...sealed, ...stale, ...edges];
+};
+
+const scriptDrift = (rootScripts: Readonly<Record<string, string>>, fingerprint: PolicyToolsFingerprint) => {
+  const expected = expectedSealScripts(fingerprint);
+  return [
+    ...A.map(
+      A.filter(expected, (name) => rootScripts[name] !== SEAL_SCRIPT),
+      (name) => `package.json scripts["${name}"]`
+    ),
+    ...A.map(
+      A.filter(R.keys(rootScripts), (name) => Str.startsWith(SEAL_SCRIPT_PREFIX)(name) && !A.contains(expected, name)),
+      (name) => `package.json scripts["${name}"] (stale)`
+    ),
+  ];
+};
+
+// The drift between a repository's generated files and a fingerprint.
 const driftOf = Effect.fnUntraced(function* (
   sources: FingerprintSources,
   declarationText: O.Option<string>,
   fingerprint: PolicyToolsFingerprint
 ) {
-  const drift: Array<string> = [];
-  const declared = O.isNone(declarationText)
-    ? O.none<PolicyToolsFingerprint>()
-    : yield* decodeDeclaration(declarationText.value).pipe(Effect.option);
-  if (O.isNone(declared) || !declarationEquivalent(declared.value, fingerprint)) drift.push(FINGERPRINT_PATH);
-  const tasks = sources.turbo.tasks;
-  if (!stringsEquivalent(tasks[CHECK_TASK]?.inputs ?? [], fingerprint.check))
-    drift.push(`turbo.json tasks["${CHECK_TASK}"].inputs`);
-  const seals = expectedSealTasks(fingerprint);
-  for (const [task, value] of A.sort(HashMap.toEntries(seals), byEntryKey<SealTaskValue>())) {
-    const actual = tasks[task];
-    if (
-      actual === undefined ||
-      actual.cache !== true ||
-      !stringsEquivalent(actual.outputs ?? [], []) ||
-      !stringsEquivalent(actual.inputs ?? [], value.inputs) ||
-      !stringsEquivalent(actual.dependsOn ?? [], value.dependsOn ?? [])
-    )
-      drift.push(`turbo.json tasks["${task}"]`);
-  }
-  for (const task of R.keys(tasks))
-    if (Str.startsWith(SEAL_TASK_PREFIX)(task) && !HashMap.has(seals, task))
-      drift.push(`turbo.json tasks["${task}"] (stale)`);
-  for (const [task, expected] of A.sort(
-    HashMap.toEntries(expectedEdges(fingerprint)),
-    byEntryKey<ReadonlyArray<string>>()
-  )) {
-    const actual = A.filter(tasks[task]?.dependsOn ?? [], isFingerprintEdge);
-    if (!stringsEquivalent(sortedUnique(actual), expected)) drift.push(`turbo.json tasks["${task}"].dependsOn`);
-  }
-  const scripts = expectedSealScripts(fingerprint);
-  for (const name of scripts)
-    if (sources.rootScripts[name] !== SEAL_SCRIPT) drift.push(`package.json scripts["${name}"]`);
-  for (const name of R.keys(sources.rootScripts))
-    if (Str.startsWith(SEAL_SCRIPT_PREFIX)(name) && !A.contains(scripts, name))
-      drift.push(`package.json scripts["${name}"] (stale)`);
-  return drift;
+  return [
+    ...(yield* declarationDrift(declarationText, fingerprint)),
+    ...turboDrift(sources.turbo.tasks, fingerprint),
+    ...scriptDrift(sources.rootScripts, fingerprint),
+  ];
 });
 
 interface PolicyToolsFingerprintPolicyShape {
@@ -853,13 +800,10 @@ export class PolicyToolsFingerprintPolicy extends Context.Service<
     }).pipe(Effect.withSpan("PolicyToolsFingerprintPolicy.check"));
     const write = Effect.gen(function* () {
       const { sources, fingerprint } = yield* compute;
-      const declaration = renderJson(
+      const declaration = renderJsonDocument(
         yield* encodeDeclaration(fingerprint).pipe(
           Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot encode the declaration", cause }))
-        ),
-        "",
-        0,
-        0
+        )
       );
       const turbo = materializeTurbo(sources.turboText, sources.turbo, fingerprint);
       const manifest = materializeRootManifest(sources.rootManifestText, sources.rootScripts, fingerprint);

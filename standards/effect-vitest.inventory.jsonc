@@ -6025,174 +6025,6 @@
       "reason": "The failure-variant assertion is followed by typed driver, phase and cause assertions; the complete Cause of a native provision failure is deliberately unspecified, and assertExitFailure would need a fabricated or self-extracted Cause. Owner: @beep/test-utils. Exit: retire when the harness exposes its exact failure Cause, or EV006 accepts an Exit predicate followed by typed failure assertions (#1855 wave 8 register)."
     },
     {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:62:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 62,
-      "endLine": 62,
-      "symbol": "expect",
-      "occurrence": "v2:c8115802131c68c8d3c7e6bcd7c5df5e858b756252cd4e4522df48442b64a35e",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(syntax.edges[0]?.bindings).toEqual(O.some([\"lawsCommand\"]))",
-      "replacement": {
-        "primitive": "utils.assertSome",
-        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:65:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 65,
-      "endLine": 65,
-      "symbol": "expect",
-      "occurrence": "v2:efaaaf02c304cf296c17335b4147b365f0f598f9f7ec9d42081a5a3fb63b533f",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(lint.name).toEqual(O.some(\"lint\"))",
-      "replacement": {
-        "primitive": "utils.assertSome",
-        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:66:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 66,
-      "endLine": 66,
-      "symbol": "expect",
-      "occurrence": "v2:4285dc208caff2b4555bbe69ff69eba5fd419922f9d9655efc810049d29824d1",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(lint.subcommands).toEqual([O.some(\"lawsCommand\"), O.none()])",
-      "replacement": {
-        "primitive": "utils.deepStrictEqual",
-        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:71:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 71,
-      "endLine": 71,
-      "symbol": "expect",
-      "occurrence": "v2:a4437eb48c7c3877b99ef39f4201b2439c2dd7a35e69b107a52db1a7ae2ec135",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(resolvePackageSubpath({ \".\": \"./src/index.ts\" }, \".\")).toEqual(O.some(\"./src/index.ts\"))",
-      "replacement": {
-        "primitive": "utils.assertSome",
-        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:72:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 72,
-      "endLine": 72,
-      "symbol": "expect",
-      "occurrence": "v2:89452b72237249021a957129861913b77f450f9c66c2198de6faae4f19eb96d7",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(resolvePackageSubpath({ \"./*\": \"./src/*.ts\" }, \"./A/B\")).toEqual(O.some(\"./src/A/B.ts\"))",
-      "replacement": {
-        "primitive": "utils.assertSome",
-        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:73:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 73,
-      "endLine": 75,
-      "symbol": "expect",
-      "occurrence": "v2:66b6cbd50e98f6a50bf38760398942778bab9ed3b25b3b0a40da8410c47311af",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect( resolvePackageSubpath({ \"./*\": \"./src/*.ts\", \"./internal/*\": \"./src/internal/*.ts\" }, \"./internal/x\") ).toEqual(O.some(\"./src/internal/x.ts\"))",
-      "replacement": {
-        "primitive": "utils.assertSome",
-        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:76:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 76,
-      "endLine": 78,
-      "symbol": "expect",
-      "occurrence": "v2:244e0090dbfa212240229ff82afffc2c6c098449bb00a49c00fd6563df774cbb",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(resolvePackageSubpath({ \".\": { types: \"./a.d.ts\", import: \"./src/a.ts\" } }, \".\")).toEqual( O.some(\"./src/a.ts\") )",
-      "replacement": {
-        "primitive": "utils.assertSome",
-        "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts:79:expect@4#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts",
-      "line": 79,
-      "endLine": 79,
-      "symbol": "expect",
-      "occurrence": "v2:935aebd1b38d9e762542a6bcca83e9f070edf66ec3d1730a525dc0e874ddd9a6",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(resolvePackageSubpath({ \"./hidden\": null }, \"./hidden\")).toEqual(O.none())",
-      "replacement": {
-        "primitive": "utils.assertNone",
-        "sketch": "Review structural equality against the supplied Option.none constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV006:packages/workspace/use-cases/test/ThreadTimeline.test.ts:86:expect@6#1",
       "lens": "resource",
       "ruleId": "EV006",
@@ -9269,8 +9101,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Private file permissions, file-backed SQLite grants and dispatch, hashed correlation checkpoints, canonical workspace realPath checks and cleanup are the subjects in both Node and Bun runners. Owner: @beep/repo-cli. Exit: retire when the attached cases run over an in-memory SQLite store and a memory volume that models modes and realPath."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:20:@effect/platform-node@0#1",
@@ -9379,8 +9210,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The plan is checked against the committed accepted-work-item manifest under the real checkout root (new URL(\"../../../../..\", import.meta.url)), and Bun.spawnSync probes real paths. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the manifest is read from a seeded volume and the path probes go through FileSystem."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/basic-ftp-compatibility.test.ts:2:@effect/platform-node@0#1",
@@ -9423,8 +9253,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Child processes run the real Node and Bun binaries against the root compatibility shim; memory cannot represent OS child environments or executable identity (research/spawn-env-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the spawn environment parity check moves out of the unit suite."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:15:@effect/platform-node@0#1",
@@ -9511,8 +9340,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The lab builds its corpus from the real checkout (buildCacheConformanceCorpus(repoRoot)) and serves it from the loopback cache-conformance-server. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus is seeded into memory and the lab server reads it through FileSystem."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-conformance.test.ts:14:@effect/platform-node@0#1",
@@ -9533,8 +9361,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "buildCacheConformanceCorpus(repoRoot) walks the real checkout to build the corpus under test. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus builder takes a seeded root instead of the checkout."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-dependencies.test.ts:6:@effect/platform-node@0#1",
@@ -9753,8 +9580,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The release-path tests run real git against scoped temporary repository files, and TestConsole captures the real command error. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/check-census.test.ts:8:@effect/platform-node@0#1",
@@ -9775,8 +9601,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The census runs the checkout's installed tsgo (found from findRepoRoot) over a fixture tree, and the shim resolves the compiler from the spawn cwd. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the census accepts a stub compiler service instead of the installed binary."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-command.test.ts:6:@effect/platform-node@0#1",
@@ -9797,8 +9622,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "A native git exit-128 is the subject, through the real filesystem and process services, with a scoped layer and TestConsole per scenario. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:22:@effect/platform-node@0#1",
@@ -9819,8 +9643,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The ci admission command path resolves the checkout with findRepoRoot() before reading the event payload. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the admission command takes an injected root."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-lane.test.ts:35:@effect/platform-node@0#1",
@@ -9841,8 +9664,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The lane runner calls process.chdir(directory) and restores it, and reads the committed branch-protection contexts through import.meta.url. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the lane runner takes its working directory as a parameter."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-rerun-runner-loss.test.ts:30:@effect/platform-node@0#1",
@@ -9863,8 +9685,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test reads committed sources at path.join(findRepoRoot(), relative) to pin the rerun contract. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the pinned sources are passed as fixture text instead of read from the checkout."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:35:@effect/platform-node@0#1",
@@ -9929,8 +9750,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native inode, hash, archive, process and DuckDB fixture boundaries are the subjects (research/cli-nine-applied-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the corpus command cases run over in-memory engines and a scripted spawner, with the inode cases in a dedicated native block."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/corpus-preservation.test.ts:42:@effect/platform-node@0#1",
@@ -9951,8 +9771,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "CapacityPreflightServiceLive probes free space with a child process over the real archive root, and the manifest rows carry native mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when every block provides a scripted capacity spawner and reads seeded timestamps."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:27:@effect/platform-bun@0#1",
@@ -10081,8 +9900,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native ChildProcessSpawner and process-tree ps/procfs diagnostics are the subject, alongside real repository-root discovery. Owner: @beep/repo-cli. Exit: retire when the watchdog's process-tree probes become an injected service."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/drawings-command.test.ts:47:@effect/platform-node@0#1",
@@ -10103,8 +9921,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "PdfBackendToolsLive renders and rasterizes real PDFs through poppler binaries. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the PDF backend is replaced by a recording double."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-fn.test.ts:5:@effect/platform-node@0#1",
@@ -10125,8 +9942,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test chdirs into a temp directory before running the CLI entry point through Bun.spawnSync. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the effect-fn command takes its root as an argument instead of process.cwd()."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-schema-inventory-fixture.test.ts:16:@effect/platform-node@0#1",
@@ -10147,8 +9963,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The committed effect-schema inventory fixture and the root package.json are read under the checkout root from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the fixture tree is seeded into a MemoryFileSystem volume."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:32:@effect/platform-node@0#1",
@@ -10169,8 +9984,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The contract scans the committed standards/effect-vitest.inventory.jsonc and test files under the checkout root from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the scan accepts a seeded repository volume."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts:17:@effect/platform-node@0#1",
@@ -10191,8 +10005,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test reads the committed fixtures/effect-vitest-406 tree and the package and repository roots resolved from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the fixtures are seeded into memory and the roots are injected."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/explore-check.test.ts:14:@effect/platform-node@0#1",
@@ -10213,8 +10026,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The command scans temporary goal and exploration directories and writes packet event files. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/explore-graduate-plan.test.ts:13:@effect/platform-node@0#1",
@@ -10235,30 +10047,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The command reads a temporary exploration manifest and goal packets, the same boundary the snapshot reader crosses in production. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js:5:node:fs@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/fixtures/graft/crux-batches.test.js",
-      "line": 5,
-      "endLine": 5,
-      "symbol": "node:fs",
-      "occurrence": "v2:6b7cf8f9617e80e9006de4a200f56c479525ec92fe10fbf507d65367a3673ea8",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFS from \"node:fs\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "A node:test fixture that runs the installed graft binary through node:child_process execFileSync. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the fixture stops resolving graft from PATH."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/gate-order-handoff.test.ts:32:@effect/platform-node@0#1",
@@ -10269,9 +10058,9 @@
       "line": 32,
       "endLine": 32,
       "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -10301,8 +10090,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "temporaryWorkingDirectory from support/CommandTest.ts chdirs into a temp project before goals doctor runs. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals doctor resolves its root from an injected path instead of process.cwd()."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-graph.test.ts:26:@effect/platform-node@0#1",
@@ -10323,8 +10111,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The graph command runs in a temp working directory and git status --porcelain spawns in the checkout. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the graph takes an injected root and the git probe runs behind a scripted spawner."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts:11:@effect/platform-node@0#1",
@@ -10345,8 +10132,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test runs git ls-files at findRepoRoot() and the command resolves its root from the working directory. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the manifest list is read from a seeded volume and the root is injected."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts:33:@effect/platform-node@0#1",
@@ -10367,8 +10153,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test copies committed fixtures resolved through import.meta.url (FORKED_PATH) and the subject runs with process.chdir into the scratch directory. #1875 wave 7 memory trial (H3): fails with ENOENT on chdir into the temp directory. Owner: @beep/repo-cli. Exit: retire when the migration command takes its working directory from an injected service and its fixtures are copied into the memory volume (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts:13:@effect/platform-node@0#1",
@@ -10389,30 +10174,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "withTempWorkingDirectory from support/CommandTest.ts chdirs into each temp project. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals set-risk-tier resolves its root from an injected path."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/graft-deep-refresh.test.ts:28:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/graft-deep-refresh.test.ts",
-      "line": 28,
-      "endLine": 28,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The refresh captures real subprocess output and probes process liveness through runCommand. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the refresh runner takes a scripted spawner for every case."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/identity-registration-removal.test.ts:14:@effect/platform-node@0#1",
@@ -10433,8 +10195,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The subject changes the process-global working directory with process.chdir, which needs the directory on the real filesystem. #1875 wave 7 memory trial (H3): fails with ENOENT on chdir into the temp directory. Owner: @beep/repo-cli. Exit: retire when the command takes its working directory from an injected service instead of process.chdir (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:10:@effect/platform-node/NodeFileSystem@0#1",
@@ -10653,8 +10414,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Physical source and config reads and TSMorph project loading, preload and cache behavior are the integration subjects (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the laws package loads its compiler projects through the Effect FileSystem."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:17:@effect/platform-node/NodeFileSystem@0#1",
@@ -10697,8 +10457,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The allowlist is checked against the real packages/tooling/tool/cli/src tree at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the allowlist check reads a seeded source tree."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-workers.test.ts:7:@effect/platform-node@0#1",
@@ -10719,8 +10478,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Real Bun CLI child processes read representative on-disk compiler projects, which memory cannot supply to a child (goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json). Owner: @beep/repo-cli. Exit: retire when the lint workers run in process."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/match-person-model-store.test.ts:5:@effect/platform-node@0#1",
@@ -10785,8 +10543,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The prefix check reads the real checkout at findRepoRoot() through FsUtilsLive. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the check runs over a seeded workspace volume."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:11:@effect/platform-node@0#1",
@@ -10829,8 +10586,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The live parcel command needs ChildProcessSpawner at runtime and writes collector state under a temp HOME. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the command's process probes take a scripted spawner."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/process-attachment.test.ts:21:@effect/platform-node@0#1",
@@ -10895,8 +10651,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test writes systemd-run, systemctl and busctl shims on PATH and spawns them. #1875 wave 7 memory trial (H4): fails on the spawned shims. Owner: @beep/repo-cli. Exit: retire when the proof job resolves systemd-run, systemctl and busctl through Config or an injected executable path (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/proof-ledger.test.ts:18:@effect/platform-node/NodeFileSystem@0#1",
@@ -11005,8 +10760,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The subject opens DuckDB on a path in the temp root, natively and not through FileSystem. #1875 wave 7 memory trial (H5): fails with \"Failed to open DuckDB connection\". Owner: @beep/repo-cli. Exit: retire when DuckDB accepts an in-memory database for the sift, or EV010 recognises DuckDB-file suites as a native-engine subject (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/research-library-acquisition.test.ts:34:@effect/platform-node@0#1",
@@ -11071,8 +10825,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Real filesystem hashing, symlink containment, immutable and atomic artifact publication and scoped cleanup are the subjects of the views fixture. Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models symlink containment and the views cases move to it."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/residue-reap.test.ts:19:@effect/platform-node@0#1",
@@ -11093,8 +10846,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native descriptor and inode containment, procfs, symlinks, chmod, git and GNU touch/find are the subjects (research/residue-reap-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the reaper's OS probes become injected services."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:12:@effect/platform-node@0#1",
@@ -11115,8 +10867,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The subject verifies writer boot identity from /proc/sys/kernel/random/boot_id, fsyncs archive directories, probes destination capacity and uses real hard links, symlinks and spawned children. Memory trial (#1855 wave 8): 6 of 14 fail (boot_id NotFound, directory sync BadResource EISDIR, capacity probe failure). Owner: @beep/repo-cli. Exit: retire when the corpus writer reads boot identity, directory sync and capacity through an injected platform service (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/runners-bake.test.ts:28:@effect/platform-node/NodeFileSystem@0#1",
@@ -11159,8 +10910,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The lint command runs in a temp working directory whose root marker findRepoRoot resolves. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the schema-catalog lint takes an injected root."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/schema-first-parity.test.ts:17:@effect/platform-node@0#1",
@@ -11181,8 +10931,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The parity test calls process.chdir(directory) inside an acquireRelease. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the parity check takes its root as a parameter."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/schema-topology.test.ts:4:@effect/platform-node@0#1",
@@ -11225,8 +10974,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native git subprocesses, linked worktrees, chmod/stat and real path semantics are the subjects. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner over a memory volume."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/single-project-emit.test.ts:4:@effect/platform-node@0#1",
@@ -11357,8 +11105,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The live blocks spawn real echo, sh and nested bun -e children and read /proc/<pid>/stat process groups. Memory trial (#1855 wave 8): 4 of 22 fail (Service not found: ChildProcessSpawner); with NodeChildProcessSpawner over memory, the cross-process nested process-group test still fails, hanging past its 14.75 s watchdog in three of three runs. Owner: @beep/repo-cli. Exit: retire when EV010 recognises excludeTestServices blocks whose subject is a real child process (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:16:@effect/platform-node/NodeFileSystem@0#1",
@@ -11401,8 +11148,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test runs real git over scratch repositories. #1875 wave 7 memory trial (H4): fails with posix_spawn 'git' against a directory that exists only in memory. Owner: @beep/repo-cli. Exit: retire when EV010 recognises real-git suites as a native-process subject (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/stream-console.test.ts:16:@effect/platform-node@0#1",
@@ -11423,8 +11169,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "One test of 28 runs src/internal/cli/Stdout.ts in a bun child to observe real stdout. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when that case moves to its own block and the import no longer serves the in-process cases."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:36:@effect/platform-node@0#1",
@@ -11489,8 +11234,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The reaper spawns lsof and git through runCommand, reads /proc/locks, and walks real symlinks and directory mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the reaper's process and procfs probes become injected services."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
@@ -11533,8 +11277,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native modification times choose the newest turbo summary: the test sets utimes on stale and fresh files, and the #1875 wave 7 memory trial failed its newest-per-task assertions. Owner: @beep/repo-cli. Exit: retire when the digest reads timestamps from the summaries instead of file mtimes."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/worktree-command.test.ts:50:@effect/platform-node@0#1",
@@ -11577,8 +11320,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The fence runs real git and holders, reads /proc/<pid>/cwd and changes the working directory with process.chdir. #1875 wave 7 memory trial (H4): fails on the spawned git and holders. Owner: @beep/repo-cli. Exit: retire when the fence takes the invoking process's working directory as an injected input and EV010 recognises real-git suites (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:34:@effect/platform-node@0#1",
@@ -11599,8 +11341,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Physical verdict, status and closeout artifacts and exactly-once terminal journal persistence are read back through production codecs; this is a disk-integration boundary, not a claim that memory cannot implement the writer (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-base-conflict.test.ts:58:@effect/platform-node/NodeFileSystem@0#1",
@@ -11665,8 +11406,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The wiring tests chdir into a temp checkout, run git through ChildProcess, and read the committed fixtures/yeet-publish-plan plans. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the publish wiring takes an injected root, a scripted git spawner and seeded plans."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-comment-actor.test.ts:14:@effect/platform-node/NodeFileSystem@0#1",
@@ -11731,8 +11471,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The subject is the real Git commit graph across a main merge, with receipt files read by the same checkout. Native Git subprocesses cannot observe an in-memory filesystem. Each test owns a scoped temporary repository; only NodeServices is shared. Owner: @beep/repo-cli. Exit: retire when native Git repository behavior is no longer the subject."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts:11:@effect/platform-node@0#1",
@@ -11819,8 +11558,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The gate decodes committed fixtures/yeet-merge-gate JSON and runs bunx commitlint through the spawner. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when commitlint runs behind a scripted spawner and the fixtures are seeded."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:16:@effect/platform-node/NodeFileSystem@0#1",
@@ -11951,8 +11689,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The gate runs git through ChildProcess.make against real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-remediation.test.ts:29:@effect/platform-node/NodeFileSystem@0#1",
@@ -12017,8 +11754,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The resume tests create real git repositories with Bun.spawnSync(git init, git remote add). A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the resume reads git state through a scripted spawner."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-review-body-signal.test.ts:8:@effect/platform-node@0#1",
@@ -12127,8 +11863,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test builds real bare remotes, clones and worktrees with git and retires them. Memory trial (#1855 wave 8): 37 of 45 fail without a spawner (Service not found: ChildProcessSpawner), and with NodeChildProcessSpawner over memory the same 37 fail with posix_spawn 'git' ENOENT (git init --bare). Owner: @beep/repo-cli. Exit: retire when EV010 recognises real-git suites as a native-process subject (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-watch-mode.test.ts:30:@effect/platform-node/NodeFileSystem@0#1",

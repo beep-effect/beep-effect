@@ -163,7 +163,7 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
 });
 
 // Every module bin-main.ts imports eagerly is paid on every `beep` invocation
-// before the fast paths run, so each one is held to the same zero-import
+// before dispatch picks a route, so each one is held to the same zero-import
 // contract as LintRouting.ts and enumerated in the allowlist below.
 // FailureRendering.ts left this list in 4-C-A: it now holds the
 // `CliRuntime.main` render hook and loads lazily beside `@beep/cli-kit`.
@@ -190,6 +190,7 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
           Effect.map(fs.readFileString(path.join(sourceDir, module)), (source) => ({ module, source }))
         );
         const binMainSource = yield* fs.readFileString(path.join(sourceDir, "bin-main.ts"));
+        const manifestSource = yield* fs.readFileString(path.join(sourceDir, "internal/dispatch/Dispatch.manifest.ts"));
         const request = yield* decodeProjectInspectionRequest({
           entrypoint: {
             _tag: "tsconfig",
@@ -222,14 +223,13 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
 
           expect(inspectModuleLoads(project, binMainSource, true)).toEqual([
             "import:effect/Result",
-            "import:./internal/cli/LintRouting.ts",
             "import():@beep/utils",
           ]);
 
           const beforeFastPath = (mutation: string): string =>
             Str.replace(
-              "const LINT_POLICY_SUBCOMMAND_NAMES",
-              `${mutation}\nconst LINT_POLICY_SUBCOMMAND_NAMES`
+              "const { A, Str } = await import",
+              `${mutation}\nconst { A, Str } = await import`
             )(binMainSource);
           expect(
             inspectModuleLoads(
@@ -241,6 +241,14 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
           expect(inspectModuleLoads(project, beforeFastPath('require("heavy");'), true)).not.toEqual(
             inspectModuleLoads(project, binMainSource, true)
           );
+
+          // The dispatch manifest is read on every invocation to pick the one group to import, so at
+          // load time it may reach only its schemas; every group facade stays behind a dynamic import.
+          const manifestLoads = inspectModuleLoads(project, manifestSource, false);
+          expect(A.filter(manifestLoads, (load) => !Str.startsWith("import():../../commands/")(load))).toEqual([
+            "import:./Dispatch.schemas.ts",
+          ]);
+          expect(A.length(manifestLoads)).toBeGreaterThan(40);
         });
       })
     );

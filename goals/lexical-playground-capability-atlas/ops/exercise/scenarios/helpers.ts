@@ -202,7 +202,7 @@ export const nodeLifecycle = (
     afterActivation?: ReadonlyArray<Step>;
     beforeActivation?: ReadonlyArray<Step>;
     clipboardRoundTrip?: ReadonlyArray<Step>;
-    query?: Query;
+    query?: Query | undefined;
     seed?: string;
   }> = {}
 ): ReadonlyArray<Step> => [

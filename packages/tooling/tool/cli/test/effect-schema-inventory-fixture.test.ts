@@ -24,7 +24,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 
 // Hosted verification of the committed schema inventory: reads only committed files, never
-// `.repos/effect`, graft, or the network.
+// `.repos/effect` or the network.
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 
 const loadFixture = Effect.fnUntraced(function* () {
