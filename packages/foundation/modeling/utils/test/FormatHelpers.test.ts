@@ -2,7 +2,7 @@ import { it } from "@beep/test-runner";
 import { makeCapAssertion } from "@beep/utils/Number";
 import { setOwnProperty } from "@beep/utils/Record";
 import { makeTextDecodeTo } from "@beep/utils/Schema";
-import { lineCharacterAt } from "@beep/utils/Text";
+import { lineCharacterAt, lineCharacterIndex } from "@beep/utils/Text";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -34,6 +34,38 @@ describe("Text.lineCharacterAt", () => {
 
   it("clamps the scan to the text length", () => {
     expect(lineCharacterAt("a\nb", 10)).toEqual({ line: 1, character: 8 });
+  });
+});
+
+describe("Text.lineCharacterIndex", () => {
+  it("preserves both CRLF rules and Unicode separator grammars for arbitrary lookup order", () => {
+    for (const unicodeSeparators of [false, true]) {
+      for (const crlfLookahead of ["text", "prefix"] as const) {
+        const grammar = { unicodeSeparators, crlfLookahead };
+        for (const text of ["", sample, "\r\n\r\n", "\r\r\n\n", "\u2028\u2029", "😀\r\n𐀀\n"]) {
+          const position = lineCharacterIndex(text, grammar);
+          for (let offset = text.length + 2; offset >= -2; offset -= 0.5) {
+            expect(position(offset)).toEqual(lineCharacterAt(text, offset, grammar));
+          }
+          for (const offset of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+            expect(position(offset)).toEqual(lineCharacterAt(text, offset, grammar));
+          }
+        }
+      }
+    }
+  });
+
+  it("keeps independent source indexes and snapshots the selected grammar", () => {
+    const grammar = { unicodeSeparators: true };
+    const first = lineCharacterIndex("a\u2028b", grammar);
+    const second = lineCharacterIndex("a\r\nb");
+    grammar.unicodeSeparators = false;
+    expect(first(2)).toEqual({ line: 1, character: 0 });
+    expect(second(2)).toEqual({ line: 1, character: -1 });
+    expect(first(0)).toEqual({ line: 0, character: 0 });
+    expect(second(3)).toEqual({ line: 1, character: 0 });
+    expect(lineCharacterIndex()("a\r\nb")(2)).toEqual({ line: 1, character: -1 });
+    expect(lineCharacterIndex({ crlfLookahead: "prefix" })("a\r\nb")(2)).toEqual({ line: 1, character: 0 });
   });
 });
 

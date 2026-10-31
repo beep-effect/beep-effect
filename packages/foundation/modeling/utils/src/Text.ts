@@ -175,3 +175,63 @@ export const lineCharacterAt: {
     return { line, character: offset - lineStart };
   }
 );
+
+/**
+ * Indexes one source for repeated code-unit offset lookups.
+ *
+ * **Details**
+ *
+ * Preserves {@link lineCharacterAt} positions, including fractional offsets,
+ * offsets outside the text and either CRLF lookahead rule. Construction scans
+ * the text once; each lookup searches the recorded line breaks in logarithmic
+ * time. The returned function owns its index and does not rescan the source.
+ *
+ * **Example** (Locate several diagnostics in one source)
+ *
+ * ```ts
+ * import { lineCharacterIndex } from "@beep/utils/Text"
+ *
+ * const position = lineCharacterIndex("ab\r\ncd", { crlfLookahead: "prefix" })
+ * console.log(position(3)) // { line: 1, character: 0 }
+ * console.log(position(5)) // { line: 1, character: 1 }
+ * ```
+ *
+ * @param text - The source shared by the offset lookups.
+ * @param grammar - The newline and CRLF lookahead rules to preserve.
+ * @returns An independent lookup using the same positions as `lineCharacterAt`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const lineCharacterIndex: {
+  (text: string, grammar?: LineBreakGrammar): (offset: number) => { readonly line: number; readonly character: number };
+  (
+    grammar?: LineBreakGrammar
+  ): (text: string) => (offset: number) => { readonly line: number; readonly character: number };
+} = dual(
+  (args) => P.isString(args[0]),
+  (text: string, grammar?: LineBreakGrammar) => {
+    const breaks: Array<number> = [];
+    const starts: Array<number> = [0];
+    const lineBreak = grammar?.unicodeSeparators === true ? /\r\n|[\n\r\u2028\u2029]/g : /\r\n|[\n\r]/g;
+    const prefixLookahead = grammar?.crlfLookahead === "prefix";
+    const textLength = text.length;
+    for (let match = lineBreak.exec(text); match !== null; match = lineBreak.exec(text)) {
+      breaks.push(match.index + 1);
+      starts.push(match.index + match[0].length);
+    }
+    return (offset: number) => {
+      const limit = Math.min(offset, textLength);
+      let low = 0;
+      let high = breaks.length;
+      while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+        if (A.getUnsafe(breaks, middle) <= Math.ceil(limit)) low = middle + 1;
+        else high = middle;
+      }
+      const start = A.getUnsafe(starts, low);
+      const lineStart =
+        prefixLookahead && low > 0 && breaks[low - 1] === start - 1 && limit <= start - 1 ? start - 1 : start;
+      return { line: low, character: offset - lineStart };
+    };
+  }
+);
