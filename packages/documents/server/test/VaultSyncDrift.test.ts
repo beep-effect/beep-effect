@@ -670,3 +670,61 @@ for (const laterReview of [false, true]) {
     }
   }
 }
+
+for (const pathChange of ["rename", "move"] as const) {
+  it.layer(Layer.fresh(FailedReviewCloseEngineLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      `retains two queued review identities when the local file is ${pathChange}d before pushing`,
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const mirror = yield* DmsMirror;
+        const operations = yield* SyncOperationRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* makeVaultRoot();
+        yield* writeVaultFile(root, "original.txt", "unchanged bytes");
+        yield* writeVaultFile(root, "other/keep.txt", "other bytes");
+        yield* engine.syncOnce(syncInput(root));
+        const item = yield* findTrackedItem("original.txt");
+        const remoteId = yield* Effect.fromOption(item.remoteId);
+        for (const newName of ["first-drift.txt", "second-drift.txt"]) {
+          yield* mirror.renameItem(RenameItemInput.make({ itemKind: "file", remoteId, newName }));
+        }
+        yield* engine.syncOnce(syncInput(root));
+        const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
+        expect(A.length(conflicts)).toBe(2);
+        const first = yield* Effect.fromOption(A.head(conflicts));
+        yield* Effect.flip(
+          engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: first.id, workspaceId }))
+        );
+        const second = yield* Effect.fromOption(A.last(conflicts));
+        yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: second.id, workspaceId }));
+        const queuedInput = ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status: "queued" });
+        const queued = yield* operations.listByStatus(queuedInput);
+        expect(A.length(queued)).toBe(2);
+        const destination = pathChange === "rename" ? "renamed.txt" : "other/original.txt";
+        yield* fs.rename(path.join(root, "original.txt"), path.join(root, ...Str.split(destination, "/")));
+        const status = yield* engine.syncOnce(syncInput(root));
+        const succeeded = yield* operations.listByStatus(
+          ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status: "succeeded" })
+        );
+        for (const original of queued) {
+          const stored = yield* Effect.fromOption(A.findFirst(succeeded, (operation) => operation.id === original.id));
+          expect(stored.idempotencyKey).toBe(original.idempotencyKey);
+          expect(stored.targetRelPath).toBe(destination);
+        }
+        expect(status.pendingItems).toBe(0);
+        expect(status.queuedOperations).toBe(0);
+        const current = yield* findTrackedItem(destination);
+        expect(current.id).toBe(item.id);
+        expect(current.remoteId).toEqual(item.remoteId);
+        expect(current.syncState).toBe("current");
+        // A retry after the path/generation changed still addresses A's
+        // original recorded identity instead of creating a third correction.
+        yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: first.id, workspaceId }));
+        expect(yield* operations.listByStatus(queuedInput)).toEqual([]);
+        expect(yield* findTrackedItem(destination)).toEqual(current);
+      })
+    );
+  });
+}

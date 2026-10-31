@@ -72,6 +72,13 @@ const idempotencyKeyFor = (
 ): string =>
   `${item.provider}:${item.workspaceId}:${item.id}:${operationType}:${item.localRelPath}:${item.localGeneration}`;
 
+// Review identity survives retargeting; only ordinary scan intent derives its
+// key from the latest local path and generation.
+const retargetedOperationKey = (item: DomainSyncItem.SyncItem, operation: DomainSyncOperation.SyncOperation): string =>
+  Str.includes(":review:")(operation.idempotencyKey)
+    ? operation.idempotencyKey
+    : idempotencyKeyFor(item, operation.operationType);
+
 const folderDepthOrder: Order.Order<ObservedFolder> = Order.combine(
   Order.mapInput(Order.Number, (folder: ObservedFolder) => depthOf(folder.relPath)),
   Order.mapInput(Order.String, (folder: ObservedFolder) => folder.relPath)
@@ -212,7 +219,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
           .update(
             DomainSyncOperation.SyncOperation.make({
               ...operation,
-              idempotencyKey,
+              idempotencyKey: retargetedOperationKey(item, operation),
               inputContentDigest,
               inputGeneration: item.localGeneration,
               targetName: baseNameOf(item.localRelPath),
@@ -255,7 +262,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
       operationRepository.update(
         DomainSyncOperation.SyncOperation.make({
           ...operation,
-          idempotencyKey: idempotencyKeyFor(item, operation.operationType),
+          idempotencyKey: retargetedOperationKey(item, operation),
           inputGeneration: item.localGeneration,
           targetName: baseNameOf(item.localRelPath),
           targetParentRelPath: parentRelPathOf(item.localRelPath),
@@ -670,7 +677,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
           item,
           actionable.value,
           item.contentDigest,
-          O.some(`${idempotencyKeyFor(item, actionable.value)}:review:${conflict.id}`)
+          O.some(`${item.provider}:${item.workspaceId}:${item.id}:${actionable.value}:review:${conflict.id}`)
         )
       : false;
     if (queued || SyncItemState.is.conflict(item.syncState)) {
