@@ -1,0 +1,2226 @@
+{
+  "tool": "goals/effected-promotion/ops/fence-extractor-parity.ts",
+  "commit": "d247e0e12ab4a0a360a92719f5a76c70724a1522",
+  "dirty": false,
+  "corpora": {
+    "markdown": {
+      "files": 8835
+    },
+    "jsdoc": {
+      "sourceFiles": 8696,
+      "blocks": 55112,
+      "blocksWithMarkers": 30979
+    }
+  },
+  "tallies": {
+    "jsdoc/docgen": {
+      "identical": 31042,
+      "closing-line-indent": 0,
+      "value-normalized": 0,
+      "marker-mid-line": 0,
+      "marker-indented-code": 0,
+      "inside-other-fence": 0,
+      "inside-container": 0,
+      "closer-differs": 8,
+      "long-marker-run": 0,
+      "unclassified": 0,
+      "units": 30979,
+      "fences": 31050,
+      "oldWarnings": 0,
+      "newWarnings": 0
+    },
+    "jsdoc/effect-imports-markdown": {
+      "identical": 31050,
+      "closing-line-indent": 0,
+      "value-normalized": 0,
+      "marker-mid-line": 0,
+      "marker-indented-code": 0,
+      "inside-other-fence": 0,
+      "inside-container": 0,
+      "closer-differs": 0,
+      "long-marker-run": 0,
+      "unclassified": 0,
+      "units": 30979,
+      "fences": 31050,
+      "oldWarnings": 0,
+      "newWarnings": 0
+    },
+    "jsdoc/typescript-fences": {
+      "identical": 31050,
+      "closing-line-indent": 0,
+      "value-normalized": 0,
+      "marker-mid-line": 0,
+      "marker-indented-code": 0,
+      "inside-other-fence": 0,
+      "inside-container": 0,
+      "closer-differs": 0,
+      "long-marker-run": 0,
+      "unclassified": 0,
+      "units": 30979,
+      "fences": 31050,
+      "oldWarnings": 0,
+      "newWarnings": 0
+    },
+    "markdown/docgen": {
+      "identical": 2363,
+      "closing-line-indent": 31,
+      "value-normalized": 0,
+      "marker-mid-line": 8,
+      "marker-indented-code": 0,
+      "inside-other-fence": 9,
+      "inside-container": 5,
+      "closer-differs": 24,
+      "long-marker-run": 53,
+      "unclassified": 0,
+      "units": 8835,
+      "fences": 2428,
+      "oldWarnings": 27,
+      "newWarnings": 9
+    },
+    "markdown/effect-imports-markdown": {
+      "identical": 2504,
+      "closing-line-indent": 0,
+      "value-normalized": 0,
+      "marker-mid-line": 0,
+      "marker-indented-code": 0,
+      "inside-other-fence": 15,
+      "inside-container": 5,
+      "closer-differs": 1,
+      "long-marker-run": 0,
+      "unclassified": 0,
+      "units": 8835,
+      "fences": 2519,
+      "oldWarnings": 0,
+      "newWarnings": 0
+    },
+    "markdown/typescript-fences": {
+      "identical": 2443,
+      "closing-line-indent": 0,
+      "value-normalized": 32,
+      "marker-mid-line": 0,
+      "marker-indented-code": 0,
+      "inside-other-fence": 15,
+      "inside-container": 5,
+      "closer-differs": 0,
+      "long-marker-run": 0,
+      "unclassified": 0,
+      "units": 8835,
+      "fences": 2490,
+      "oldWarnings": 0,
+      "newWarnings": 0
+    }
+  },
+  "unclassified": 0,
+  "differences": [
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".claude/skills/jsdoc-annotation-specialist/references/conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 1335,
+      "old": null,
+      "next": "[\"/**\\n * Decodes a user name.\\n *\\n * @remarks Returns `None` instead of throwing.\\n *\\n * @example\\n * ```ts\\n * const value = decodeUserName(\\\"Ada\\\")\\n * ```\\n *\\n * @category decoding\\n * @since 0.0.0\\n */\",\"ts\",1335,1540,1342,1536]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".claude/skills/jsdoc-annotation-specialist/references/conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 1550,
+      "old": null,
+      "next": "[\"/**\\n * Decodes an unknown value as a non-empty user name without throwing.\\n *\\n * **When to use**\\n *\\n * Use when invalid boundary input should become `O.none()`.\\n *\\n * **Details**\\n *\\n * Successful decoding returns the normalized s…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".patterns/effect-library-development.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 14610,
+      "old": null,
+      "next": "[\"import * as Effect from \\\"effect/Effect\\\"\\n\\n/**\\n * A configured instance.\\n *\\n * @category models\\n * @since 0.0.0\\n */\\nexport interface Instance<A> {\\n  readonly config: A\\n}\\n\\n/**\\n * Creates a new instance with the given configura…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".patterns/jsdoc-documentation.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 4015,
+      "old": null,
+      "next": "[\"import * as S from \\\"effect/Schema\\\"\\n\\n/**\\n * Decodes an unknown value as a non-empty user name without throwing.\\n *\\n * **When to use**\\n *\\n * Use when invalid input should be represented by `O.none()` at a boundary.\\n *\\n * **Detail…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".patterns/jsdoc-documentation.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 4852,
+      "old": null,
+      "next": "[\"import * as S from \\\"effect/Schema\\\"\\n\\nconst UserName = S.Trimmed.check(S.isNonEmpty())\\n\\n/**\\n * Encoded input accepted by {@link UserName} before schema decoding.\\n *\\n * @see {@link UserName} for the runtime schema and decoded type.\\…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".patterns/jsdoc-documentation.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 5308,
+      "old": null,
+      "next": "[\"/**\\n * Decodes a user name.\\n *\\n * @remarks Returns `None` rather than throwing for invalid input.\\n *\\n * @example\\n * ```ts\\n * const result = decodeUserName(\\\"Ada\\\")\\n * ```\\n *\\n * @category decoding\\n * @since 0.0.0\\n */\",\"ts\",5308…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".patterns/jsdoc-documentation.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 5642,
+      "old": null,
+      "next": "[\"/**\\n * Decodes an unknown value as a non-empty user name without throwing.\\n *\\n * **Details**\\n *\\n * Invalid input becomes `O.none()`.\\n *\\n * **Example** (Inspect success and failure)\\n *\\n * ```ts\\n * import * as O from \\\"effect/Opti…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".patterns/module-organization.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 9656,
+      "old": null,
+      "next": "[\"import * as A from \\\"effect/Array\\\"\\nimport { dual } from \\\"effect/Function\\\"\\n\\n/**\\n * Maps over a structure using the provided function.\\n *\\n * **Example** (Map data-first and data-last)\\n *\\n * ```ts\\n * import * as A from \\\"effect/A…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": ".patterns/module-organization.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 12834,
+      "old": null,
+      "next": "[\"import * as Predicate from \\\"effect/Predicate\\\"\\n\\nconst TypeId = \\\"~effect/ModuleName\\\"\\n\\n/**\\n * @category DomainModel\\n * @since 2.0.0\\n */\\nexport interface ModuleName<out A, out E> {\\n  readonly [TypeId]: typeof TypeId\\n  readonly _…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/agent-memory-tiers-bitemporal-edges/research/bitemporal-versioned-edge-modeling.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 4990,
+      "old": "[\"export interface GraphEdge {\\n    id: string;\\n    type: GraphEdgeType;\\n    sourceNodeId: string;\\n    targetNodeId: string;\\n    weight: number;\\n    sourceObservationIds: string[];\\n    createdAt: string;\\n    tcommit?: string;     // …",
+      "next": "[\"export interface GraphEdge {\\n    id: string;\\n    type: GraphEdgeType;\\n    sourceNodeId: string;\\n    targetNodeId: string;\\n    weight: number;\\n    sourceObservationIds: string[];\\n    createdAt: string;\\n    tcommit?: string;     // …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/agent-memory-tiers-bitemporal-edges/research/bitemporal-versioned-edge-modeling.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 25,
+      "old": "[\"  export interface GraphEdge {\\n    id: string;\\n    type: GraphEdgeType;\\n    sourceNodeId: string;\\n    targetNodeId: string;\\n    weight: number;\\n    sourceObservationIds: string[];\\n    createdAt: string;\\n    tcommit?: string;     /…",
+      "next": "[\"export interface GraphEdge {\\n  id: string;\\n  type: GraphEdgeType;\\n  sourceNodeId: string;\\n  targetNodeId: string;\\n  weight: number;\\n  sourceObservationIds: string[];\\n  createdAt: string;\\n  tcommit?: string;     // transaction time…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 1757,
+      "old": "[\"export interface SemanticMemory {\\n    id: string; fact: string; confidence: number;\\n    sourceSessionIds: string[]; sourceMemoryIds: string[];\\n    accessCount: number; lastAccessedAt: string; strength: number;\\n    createdAt: string; u…",
+      "next": "[\"export interface SemanticMemory {\\n    id: string; fact: string; confidence: number;\\n    sourceSessionIds: string[]; sourceMemoryIds: string[];\\n    accessCount: number; lastAccessedAt: string; strength: number;\\n    createdAt: string; u…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 2366,
+      "old": "[\"function computeRetention(salience, createdAt, accessTimestamps, config): number {\\n    const deltaT = (Date.now() - new Date(createdAt).getTime()) / (1000*60*60*24); // days\\n    const temporalDecay = Math.exp(-config.lambda * deltaT);\\n…",
+      "next": "[\"function computeRetention(salience, createdAt, accessTimestamps, config): number {\\n    const deltaT = (Date.now() - new Date(createdAt).getTime()) / (1000*60*60*24); // days\\n    const temporalDecay = Math.exp(-config.lambda * deltaT);\\n…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 13,
+      "old": "[\"  export interface SemanticMemory {\\n    id: string; fact: string; confidence: number;\\n    sourceSessionIds: string[]; sourceMemoryIds: string[];\\n    accessCount: number; lastAccessedAt: string; strength: number;\\n    createdAt: string;…",
+      "next": "[\"export interface SemanticMemory {\\n  id: string; fact: string; confidence: number;\\n  sourceSessionIds: string[]; sourceMemoryIds: string[];\\n  accessCount: number; lastAccessedAt: string; strength: number;\\n  createdAt: string; updatedAt…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 24,
+      "old": "[\"  function computeRetention(salience, createdAt, accessTimestamps, config): number {\\n    const deltaT = (Date.now() - new Date(createdAt).getTime()) / (1000*60*60*24); // days\\n    const temporalDecay = Math.exp(-config.lambda * deltaT);…",
+      "next": "[\"function computeRetention(salience, createdAt, accessTimestamps, config): number {\\n  const deltaT = (Date.now() - new Date(createdAt).getTime()) / (1000*60*60*24); // days\\n  const temporalDecay = Math.exp(-config.lambda * deltaT);\\n  co…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/court-vocabulary-resolver/RESEARCH.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 14897,
+      "old": "[\"const StatusKeys = LiteralKit(\\n    [\\\"one\\\", \\\"two\\\"],\\n    [[\\\"one\\\", \\\"ONE\\\"], [\\\"two\\\", \\\"TWO\\\"]]\\n  );\\n  StatusKeys.Enum.ONE; // \\\"one\\\"\",\"ts\",14897,15035,14903,15032]",
+      "next": "[\"const StatusKeys = LiteralKit(\\n    [\\\"one\\\", \\\"two\\\"],\\n    [[\\\"one\\\", \\\"ONE\\\"], [\\\"two\\\", \\\"TWO\\\"]]\\n  );\\n  StatusKeys.Enum.ONE; // \\\"one\\\"\",\"ts\",14897,15035,14903,15030]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/court-vocabulary-resolver/RESEARCH.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 222,
+      "old": "[\"  const StatusKeys = LiteralKit(\\n    [\\\"one\\\", \\\"two\\\"],\\n    [[\\\"one\\\", \\\"ONE\\\"], [\\\"two\\\", \\\"TWO\\\"]]\\n  );\\n  StatusKeys.Enum.ONE; // \\\"one\\\"\\n\",\"ts\",\"ts\",223]",
+      "next": "[\"const StatusKeys = LiteralKit(\\n  [\\\"one\\\", \\\"two\\\"],\\n  [[\\\"one\\\", \\\"ONE\\\"], [\\\"two\\\", \\\"TWO\\\"]]\\n);\\nStatusKeys.Enum.ONE; // \\\"one\\\"\\n\",\"ts\",\"ts\",223]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/court-vocabulary-resolver/research/official-data-sync-ingestion-contract.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 1090,
+      "old": "[\"interface SyncDataTarget {\\n    readonly acquire: Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices>;\\n    readonly description: string;\\n    readonly id: string;\\n    readonly sourceUrls: ReadonlyArray<str…",
+      "next": "[\"interface SyncDataTarget {\\n    readonly acquire: Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices>;\\n    readonly description: string;\\n    readonly id: string;\\n    readonly sourceUrls: ReadonlyArray<str…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/court-vocabulary-resolver/research/official-data-sync-ingestion-contract.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 10,
+      "old": "[\"  interface SyncDataTarget {\\n    readonly acquire: Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices>;\\n    readonly description: string;\\n    readonly id: string;\\n    readonly sourceUrls: ReadonlyArray<s…",
+      "next": "[\"interface SyncDataTarget {\\n  readonly acquire: Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices>;\\n  readonly description: string;\\n  readonly id: string;\\n  readonly sourceUrls: ReadonlyArray<string>;\\n}…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/effect-jsdoc-quality/DECISIONS.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 750,
+      "old": "[\"onto the tag row; custom tags `@effects`/`@precondition` DO render as\\n\\\"tag — text\\\" rows; described `@see` and inline `{@link}` render fully.\\n\\n## 2026-07-30 — overall approach\\n\\n**Question:** Convention-only (A), grammar port + ratch…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/effect-jsdoc-quality/research/diff-effect-vs-beep.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 2702,
+      "old": "[\"## 3. Example carrier & validation\\n\\n| | Effect v4 | beep |\\n| --- | --- | --- |\\n| Carrier | `**Example** (Title)` markdown sections | `@example` tag |\\n| Typechecked? | **No — nothing compiles the fences** (docgen's `examplesCompilerOp…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/effect-jsdoc-quality/research/effect-doc-pipeline.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 2582,
+      "old": "[\"(case-insensitive); a ts fence outside an Example section is a diagnostic\\n   (`loose-ts-fence`). Examples must use **named imports**\\n   (`import { Option } from \\\"<legacy-effect-barrel>\\\"`).\\n4. **Tags last**, separated by one blank lin…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/effect-mcp-2026-07-28/research/20-r1-mcp-kit.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 30113,
+      "old": "[\"| `docgen.json` | Standard package docgen; `enforceVersion: true` via inventory, examples/descriptions not enforced (`repo:packages/foundation/capability/mcp-kit/docgen.json`; inventory `repo:standards/jsdoc-documentation.inventory.jsonc:…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/effect-orchestration-patterns/research/bounded-fanout-graceful-degradation.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 5271,
+      "old": "[\"Effect.forEach(\\n    items,\\n    (item, i) =>\\n      extractOne(item).pipe(\\n        Effect.map((value) => ({ _tag: \\\"ok\\\" as const, index: i, value })),\\n        Effect.catchAll((error) => Effect.succeed({ _tag: \\\"failed\\\" as const, inde…",
+      "next": "[\"Effect.forEach(\\n    items,\\n    (item, i) =>\\n      extractOne(item).pipe(\\n        Effect.map((value) => ({ _tag: \\\"ok\\\" as const, index: i, value })),\\n        Effect.catchAll((error) => Effect.succeed({ _tag: \\\"failed\\\" as const, inde…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/effect-orchestration-patterns/research/bounded-fanout-graceful-degradation.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 32,
+      "old": "[\"  Effect.forEach(\\n    items,\\n    (item, i) =>\\n      extractOne(item).pipe(\\n        Effect.map((value) => ({ _tag: \\\"ok\\\" as const, index: i, value })),\\n        Effect.catchAll((error) => Effect.succeed({ _tag: \\\"failed\\\" as const, in…",
+      "next": "[\"Effect.forEach(\\n  items,\\n  (item, i) =>\\n    extractOne(item).pipe(\\n      Effect.map((value) => ({ _tag: \\\"ok\\\" as const, index: i, value })),\\n      Effect.catchAll((error) => Effect.succeed({ _tag: \\\"failed\\\" as const, index: i, erro…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 4282,
+      "old": "[\"const ranked = pipe(\\n     scored,\\n     A.sortBy(\\n       descendingNumber((entry) => entry.score),\\n       ascendingNumber((entry) => entry.index)     // <-- position in the compiled corpus\\n     ),\\n     A.take(sanitizeLimit(params.top…",
+      "next": "[\"const ranked = pipe(\\n     scored,\\n     A.sortBy(\\n       descendingNumber((entry) => entry.score),\\n       ascendingNumber((entry) => entry.index)     // <-- position in the compiled corpus\\n     ),\\n     A.take(sanitizeLimit(params.top…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 29253,
+      "old": "[\"export const TextNodeType = LiteralKit([\\\"sentence\\\", \\\"token\\\", \\\"paragraph\\\", \\\"document\\\"])\",\"ts\",29253,29355,29259,29352]",
+      "next": "[\"export const TextNodeType = LiteralKit([\\\"sentence\\\", \\\"token\\\", \\\"paragraph\\\", \\\"document\\\"])\",\"ts\",29253,29355,29259,29349]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 29728,
+      "old": "[\"export const KgNodeKind = LiteralKit([\\n     \\\"client\\\", \\\"docket_family\\\", \\\"docket\\\", \\\"application\\\", \\\"patent\\\", \\\"document\\\", \\\"email_archive\\\",\\n   ])\",\"ts\",29728,29884,29734,29881]",
+      "next": "[\"export const KgNodeKind = LiteralKit([\\n     \\\"client\\\", \\\"docket_family\\\", \\\"docket\\\", \\\"application\\\", \\\"patent\\\", \\\"document\\\", \\\"email_archive\\\",\\n   ])\",\"ts\",29728,29884,29734,29878]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 33641,
+      "old": "[\"LiteralKit([\\\"derived-from-official-records\\\", \\\"candidate-unreviewed\\\"])\",\"ts\",33641,33726,33647,33723]",
+      "next": "[\"LiteralKit([\\\"derived-from-official-records\\\", \\\"candidate-unreviewed\\\"])\",\"ts\",33641,33726,33647,33720]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 77,
+      "old": "[\"   const ranked = pipe(\\n     scored,\\n     A.sortBy(\\n       descendingNumber((entry) => entry.score),\\n       ascendingNumber((entry) => entry.index)     // <-- position in the compiled corpus\\n     ),\\n     A.take(sanitizeLimit(params.…",
+      "next": "[\"const ranked = pipe(\\n  scored,\\n  A.sortBy(\\n    descendingNumber((entry) => entry.score),\\n    ascendingNumber((entry) => entry.index)     // <-- position in the compiled corpus\\n  ),\\n  A.take(sanitizeLimit(params.topN, A.length(scored…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 108,
+      "old": "[\"const edgeKey = (edge: PracticeKgEdgeRow): string =>\\n  `${edge.subjectIri}\\u0000${edge.predicate}\\u0000${edge.objectIri}`;\\n\",\"ts\",\"ts\",109]",
+      "next": "[\"const edgeKey = (edge: PracticeKgEdgeRow): string =>\\n  `${edge.subjectIri}�${edge.predicate}�${edge.objectIri}`;\\n\",\"ts\",\"ts\",109]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 573,
+      "old": "[\"   export const TextNodeType = LiteralKit([\\\"sentence\\\", \\\"token\\\", \\\"paragraph\\\", \\\"document\\\"])\\n\",\"ts\",\"ts\",574]",
+      "next": "[\"export const TextNodeType = LiteralKit([\\\"sentence\\\", \\\"token\\\", \\\"paragraph\\\", \\\"document\\\"])\\n\",\"ts\",\"ts\",574]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 582,
+      "old": "[\"   export const KgNodeKind = LiteralKit([\\n     \\\"client\\\", \\\"docket_family\\\", \\\"docket\\\", \\\"application\\\", \\\"patent\\\", \\\"document\\\", \\\"email_archive\\\",\\n   ])\\n\",\"ts\",\"ts\",583]",
+      "next": "[\"export const KgNodeKind = LiteralKit([\\n  \\\"client\\\", \\\"docket_family\\\", \\\"docket\\\", \\\"application\\\", \\\"patent\\\", \\\"document\\\", \\\"email_archive\\\",\\n])\\n\",\"ts\",\"ts\",583]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/graphnosis-prior-art/research/mining/map-retrieval.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 660,
+      "old": "[\"   LiteralKit([\\\"derived-from-official-records\\\", \\\"candidate-unreviewed\\\"])\\n\",\"ts\",\"ts\",661]",
+      "next": "[\"LiteralKit([\\\"derived-from-official-records\\\", \\\"candidate-unreviewed\\\"])\\n\",\"ts\",\"ts\",661]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/survey-ingestion.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 46254,
+      "old": null,
+      "next": "[\"fetchAll<X>(onProgress?: (current: number, total: number, title: string) => void)\\n  : Promise<ParsedDocument[]>\",\"ts\",46254,46375,46260,46372]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/survey-ingestion.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 50008,
+      "old": null,
+      "next": "[\"/**\\n * Source-chunk write policy introduced by M2. Source nodes written under this\\n * policy keep exact-content observations distinct across source files and carry\\n * the same id in `node.metadata.ingestPolicyId`.\\n */\\nexport const CU…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/survey-ingestion.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 50564,
+      "old": null,
+      "next": "[\"graph.metadata.ingestPolicyId =\\n  startNodeCount === 0 || graph.metadata.ingestPolicyId === CURRENT_INGEST_POLICY_ID\\n    ? CURRENT_INGEST_POLICY_ID\\n    : 'mixed';\",\"ts\",50564,50736,50570,50733]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/survey-ingestion.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 55426,
+      "old": null,
+      "next": "[\"for (const [name, mentions] of entityMentions) {\\n  if (mentions.count < 1) continue;   // :75-76 — count is >= 1 by construction\",\"ts\",55426,55564,55432,55561]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/survey-ingestion.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 57793,
+      "old": null,
+      "next": "[\"title: `${msg.role === 'user' ? 'User' : 'Assistant'} (turn ${Math.floor(i / 2) + 1})`,\",\"ts\",57793,57890,57799,57887]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/survey-ingestion.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 59624,
+      "old": null,
+      "next": "[\"const messages = paragraphs.map((p, i) => ({\\n  role: (i % 2 === 0 ? 'user' : 'assistant') as 'user' | 'assistant',\\n  content: p.trim(),\\n}));\",\"ts\",59624,59774,59630,59771]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/graphnosis-prior-art/research/mining/survey-ingestion.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 62100,
+      "old": null,
+      "next": "[\"if (options.enableTranscription && process.env.OPENAI_API_KEY) {\\n  sections.push({\\n    title: 'Transcription',\\n    content: 'Audio transcription via Whisper API is a planned feature. Currently, the ' +\\n      'framework is in place but…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "explorations/multi-provider-llm-dispatch-fallback/research/per-provider-default-model-resolution.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 1258,
+      "old": "[\"function defaultModelFor(providerType: ProviderConfig[\\\"provider\\\"]): string {\\n    switch (providerType) {\\n      case \\\"openai\\\":     return getEnvVar(\\\"OPENAI_MODEL\\\")     || \\\"gpt-4o-mini\\\";\\n      case \\\"anthropic\\\":  return getEnvVa…",
+      "next": "[\"function defaultModelFor(providerType: ProviderConfig[\\\"provider\\\"]): string {\\n    switch (providerType) {\\n      case \\\"openai\\\":     return getEnvVar(\\\"OPENAI_MODEL\\\")     || \\\"gpt-4o-mini\\\";\\n      case \\\"anthropic\\\":  return getEnvVa…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "explorations/multi-provider-llm-dispatch-fallback/research/per-provider-default-model-resolution.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 10,
+      "old": "[\"  function defaultModelFor(providerType: ProviderConfig[\\\"provider\\\"]): string {\\n    switch (providerType) {\\n      case \\\"openai\\\":     return getEnvVar(\\\"OPENAI_MODEL\\\")     || \\\"gpt-4o-mini\\\";\\n      case \\\"anthropic\\\":  return getEnv…",
+      "next": "[\"function defaultModelFor(providerType: ProviderConfig[\\\"provider\\\"]): string {\\n  switch (providerType) {\\n    case \\\"openai\\\":     return getEnvVar(\\\"OPENAI_MODEL\\\")     || \\\"gpt-4o-mini\\\";\\n    case \\\"anthropic\\\":  return getEnvVar(\\\"AN…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/r7-beep-desktop-surface.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 11640,
+      "old": "[\"{\\n    cluster: \\\"shell\\\", // NOT a new cluster unless you also rewrite ONTOLOGY_PANELS\\n    description: \\\"Inspect a 3D part and produce figure views.\\\",\\n    key: \\\"cad-viewer\\\",\\n    label: \\\"Figures\\\",\\n    title: \\\"CAD / Figures\\\",\\n…",
+      "next": "[\"{\\n    cluster: \\\"shell\\\", // NOT a new cluster unless you also rewrite ONTOLOGY_PANELS\\n    description: \\\"Inspect a 3D part and produce figure views.\\\",\\n    key: \\\"cad-viewer\\\",\\n    label: \\\"Figures\\\",\\n    title: \\\"CAD / Figures\\\",\\n…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/r7-beep-desktop-surface.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 158,
+      "old": "[\"  {\\n    cluster: \\\"shell\\\", // NOT a new cluster unless you also rewrite ONTOLOGY_PANELS\\n    description: \\\"Inspect a 3D part and produce figure views.\\\",\\n    key: \\\"cad-viewer\\\",\\n    label: \\\"Figures\\\",\\n    title: \\\"CAD / Figures\\\",…",
+      "next": "[\"{\\n  cluster: \\\"shell\\\", // NOT a new cluster unless you also rewrite ONTOLOGY_PANELS\\n  description: \\\"Inspect a 3D part and produce figure views.\\\",\\n  key: \\\"cad-viewer\\\",\\n  label: \\\"Figures\\\",\\n  title: \\\"CAD / Figures\\\",\\n}\\n\",\"ts\",…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/agentic-governance-laws/SPEC.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 7311,
+      "old": "[\"export const StopReason = LiteralKit([\\\"completed\\\", \\\"cap-reached\\\", \\\"blocked\\\"]).pipe(\\n    $I.annoteSchema(\\\"StopReason\\\", {\\n      description: \\\"Why a capped walk stopped. cap-reached is a normal outcome, not an error.\\\",\\n    })\\n …",
+      "next": "[\"export const StopReason = LiteralKit([\\\"completed\\\", \\\"cap-reached\\\", \\\"blocked\\\"]).pipe(\\n    $I.annoteSchema(\\\"StopReason\\\", {\\n      description: \\\"Why a capped walk stopped. cap-reached is a normal outcome, not an error.\\\",\\n    })\\n …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/agentic-governance-laws/SPEC.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 133,
+      "old": "[\"  export const StopReason = LiteralKit([\\\"completed\\\", \\\"cap-reached\\\", \\\"blocked\\\"]).pipe(\\n    $I.annoteSchema(\\\"StopReason\\\", {\\n      description: \\\"Why a capped walk stopped. cap-reached is a normal outcome, not an error.\\\",\\n    })\\…",
+      "next": "[\"export const StopReason = LiteralKit([\\\"completed\\\", \\\"cap-reached\\\", \\\"blocked\\\"]).pipe(\\n  $I.annoteSchema(\\\"StopReason\\\", {\\n    description: \\\"Why a capped walk stopped. cap-reached is a normal outcome, not an error.\\\",\\n  })\\n);\\n\",\"…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 19745,
+      "old": "[\"*\\n\\nimport * as Data from \\\"effect/Data\\\";\\n *\\n * type HttpError = Data.TaggedEnum<{\\n *   BadRequest: { readonly status: 400; readonly message: string }\\n *   NotFound: { readonly status: 404 }\\n * }>\\n *\\n * // Equivalent to:\\n * // |…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 21656,
+      "old": "[\"*\\n\\nimport * as Data from \\\"effect/Data\\\";\\n *\\n * type HttpError = Data.TaggedEnum<{\\n *   BadRequest: { readonly message: string }\\n *   NotFound: { readonly url: string }\\n * }>\\n *\\n * const { BadRequest, NotFound, $is, $match } = Da…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 22828,
+      "old": "[\"*\\n\\nimport * as Option from \\\"effect/Option\\\";\\n *\\n * Option.map(Option.some(2), (n) => n * 2) // => Option.some(4)\\n * Option.map(Option.none(), (n: number) => n * 2) // => Option.none()\\n *\",\"ts import.meta.vitest\",22828,23042,22853,2…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 23876,
+      "old": "[\"*\\n\\nimport type * as Types from \\\"effect/Types\\\";\\n *\\n * type Yes = Types.Equals<{ a: number }, { a: number }> // true\\n * type No = Types.Equals<{ a: number }, { a: string }> // false\\n * type AnyCheck = Types.Equals<any, string> // fa…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 24863,
+      "old": "[\"*\\n\\nimport * as Predicate from \\\"effect/Predicate\\\";\\n *\\n * const isPair = Predicate.isTupleOf(2)\\n *\\n * isPair([1, 2]) // => true\\n *\",\"ts import.meta.vitest\",24863,25020,24888,25017]",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 25962,
+      "old": "[\"*\\n\\nimport * as Schema from \\\"effect/Schema\\\";\\n *\\n * try {\\n *   Schema.decodeUnknownSync(Schema.Number)(\\\"not a number\\\")\\n * } catch (err) {\\n *   if (Schema.isSchemaError(err)) {\\n *     err.message // => \\\"Expected number\\\"\\n *   }…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 26831,
+      "old": "[\"*\\n\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Schema from \\\"effect/Schema\\\";\\n *\\n * class NotFound extends Schema.TaggedError<NotFound>()(\\\"NotFound\\\", {\\n *   id: Schema.Number\\n * }) {}\\n *\\n * const program = Effect.gen…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 16886,
+      "old": null,
+      "next": "[\"Option.map(Option.some(2), (n) => n * 2) // => Option.some(4)\",\"ts\",16886,16957,16892,16954]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 18606,
+      "old": null,
+      "next": "[\"/**\\n * Defines helpers for small immutable data models.\\n *\\n * This module helps create plain classes, tagged classes, tagged unions, and\\n * typed errors with readonly fields. Tagged values carry a `_tag` field, which\\n * makes them ea…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 19222,
+      "old": null,
+      "next": "[\"/**\\n * Transforms a record of variant definitions into a discriminated union type.\\n *\\n * **When to use**\\n *\\n * Use when you have two or more variants that share a common `_tag` discriminator.\\n *\\n * **Details**\\n *\\n * Each key in t…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 20766,
+      "old": null,
+      "next": "[\"/**\\n * Creates constructors and matchers for a `TaggedEnum` type.\\n *\\n * **When to use**\\n *\\n * Use when you model a closed union with plain data objects and want\\n * construction, tag checks, and exhaustive matching from the same defi…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 22393,
+      "old": null,
+      "next": "[\"/**\\n * Transforms the value inside a `Some` using the provided function, leaving\\n * `None` unchanged.\\n *\\n * **When to use**\\n *\\n * Use to apply a pure transformation to an `Option`'s present value, especially\\n * when chaining transf…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 23417,
+      "old": null,
+      "next": "[\"/**\\n * Determines if two types are exactly equal at the type level.\\n *\\n * **When to use**\\n *\\n * Use to assert type equality in conditional types or type-level tests.\\n *\\n * **Details**\\n *\\n * - Uses the `<T>() => T extends X ? 1 : …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 24484,
+      "old": null,
+      "next": "[\"/**\\n * Checks whether a readonly array has exactly `n` elements.\\n *\\n * **When to use**\\n *\\n * Use when you need a `Predicate` guard for exact tuple length that narrows\\n * `ReadonlyArray<T>` to `TupleOf<N, T>`.\\n *\\n * **Details**\\n *…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 25280,
+      "old": null,
+      "next": "[\"/**\\n * Error thrown (or returned as the error channel value) when schema decoding\\n * or encoding fails.\\n *\\n * **Details**\\n *\\n * The `issue` field contains a structured {@link SchemaIssue.Issue} tree describing\\n * every validation f…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-drizzle-graduation/research/bsl/effect-jsdoc-conventions.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 26519,
+      "old": null,
+      "next": "[\"/**\\n * Defines a schema-backed yieldable error class with an automatically populated\\n * `_tag` field.\\n *\\n * **When to use**\\n *\\n * Use to define typed errors that are schema validated, yielded in `Effect.gen`,\\n * and matched as tagg…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 1611,
+      "old": null,
+      "next": "[\"/**\\n * Returns `true` if the given value is an {@link Issue}.\\n *\\n * **When to use**\\n *\\n * Use when you need to narrow an `unknown` value to `Issue` in error-handling\\n * code, such as distinguishing an `Issue` from other error types …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 2618,
+      "old": null,
+      "next": "[\"/**\\n * Returns `true` when an issue contains an input reported by the schema parser.\\n *\\n * **When to use**\\n *\\n * Use when reading `Issue.input`, especially when `undefined` is a valid input\\n * value.\\n *\\n * **Details**\\n *\\n * Repo…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 6283,
+      "old": null,
+      "next": "[\"/**\\n * Represents a schema issue produced when a schema filter (refinement check) fails.\\n *\\n * **When to use**\\n *\\n * Use when you need to inspect a schema issue that records which refinement\\n * check rejected the value.\\n *\\n * **De…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 20432,
+      "old": null,
+      "next": "[\"/**\\n * Represents a schema issue produced when the runtime type of the input does not match the type\\n * expected by the schema.\\n *\\n * **When to use**\\n *\\n * Use when you need to detect basic type mismatches, such as a wrong primitive…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 22892,
+      "old": null,
+      "next": "[\"/**\\n * Represents a schema issue produced when the input has the correct type but its value violates a\\n * constraint (e.g. a string that is too short, a number out of range).\\n *\\n * **When to use**\\n *\\n * Use when you need to detect c…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 26404,
+      "old": null,
+      "next": "[\"/**\\n * Represents a schema issue produced when a forbidden operation is encountered during parsing,\\n * such as an asynchronous Effect running inside `Schema.decodeUnknownSync`.\\n *\\n * **When to use**\\n *\\n * Use when you need to detect…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 36701,
+      "old": null,
+      "next": "[\"/**\\n * Returns the built-in {@link LeafHook} used by default formatters.\\n *\\n * **When to use**\\n *\\n * Use as the default leaf renderer when customizing only the {@link CheckHook}.\\n *\\n * **Details**\\n *\\n * - Checks for a `message` a…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 41277,
+      "old": null,
+      "next": "[\"/**\\n * Creates a {@link Formatter} that produces a `StandardSchemaV1.FailureResult`.\\n *\\n * **When to use**\\n *\\n * Use when you need schema parse errors in\\n * [Standard Schema V1](https://github.com/standard-schema/standard-schema)\\n …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 43357,
+      "old": null,
+      "next": "[\"/**\\n * Creates a {@link Formatter} that converts an {@link Issue} into a\\n * human-readable multi-line string.\\n *\\n * **When to use**\\n *\\n * Use when you need to format a `SchemaIssue.Issue` as error messages for\\n * logging, CLI outpu…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effected-promotion/history/port-reviews/env/round-2/fable.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 910,
+      "old": "[\"- failure: The published StreamEnv Example shows three unused imports (`P`, `SchemaGetter`, `identity`) and un-prefixed lines in the source comment; the docs teach the wrong usage and the comment block is visibly corrupted in hovers.\\n- f…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effected-promotion/history/port-reviews/spdx/round-2/sol.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 919,
+      "old": "[\"const leaf = { _tag: \\\"License\\\", id: \\\"MIT\\\", plus: false } as const;\\n  const wire: typeof AndNode.Encoded = {\\n    _tag: \\\"And\\\",\\n    left: {\\n      _tag: \\\"WithException\\\",\\n      license: { _tag: \\\"And\\\", left: leaf, right: leaf },\\…",
+      "next": "[\"const leaf = { _tag: \\\"License\\\", id: \\\"MIT\\\", plus: false } as const;\\n  const wire: typeof AndNode.Encoded = {\\n    _tag: \\\"And\\\",\\n    left: {\\n      _tag: \\\"WithException\\\",\\n      license: { _tag: \\\"And\\\", left: leaf, right: leaf },\\…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/effected-promotion/history/port-reviews/spdx/round-2/sol.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 4,
+      "old": "[\"  const leaf = { _tag: \\\"License\\\", id: \\\"MIT\\\", plus: false } as const;\\n  const wire: typeof AndNode.Encoded = {\\n    _tag: \\\"And\\\",\\n    left: {\\n      _tag: \\\"WithException\\\",\\n      license: { _tag: \\\"And\\\", left: leaf, right: leaf }…",
+      "next": "[\"const leaf = { _tag: \\\"License\\\", id: \\\"MIT\\\", plus: false } as const;\\nconst wire: typeof AndNode.Encoded = {\\n  _tag: \\\"And\\\",\\n  left: {\\n    _tag: \\\"WithException\\\",\\n    license: { _tag: \\\"And\\\", left: leaf, right: leaf },\\n    excep…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effected-promotion/research/wave-2d-plan-2026-10-22.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 40663,
+      "old": "[\"export class MdFromSyntax extends S.Opaque<MdFromSyntax, { readonly brand: unique symbol }>()(S.Struct({\\n  document: Document, losses: S.Array(MdLoss), sourceMap: MdSourceMap })) {}\\n\\nexport class MdSyntaxOptions extends S.Opaque<…>()(S…",
+      "next": "[\"export class MdFromSyntax extends S.Opaque<MdFromSyntax, { readonly brand: unique symbol }>()(S.Struct({\\n  document: Document, losses: S.Array(MdLoss), sourceMap: MdSourceMap })) {}\\n\\nexport class MdSyntaxOptions extends S.Opaque<…>()(S…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/effected-promotion/research/wave-2d-plan-2026-10-22.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 42482,
+      "old": null,
+      "next": "[\"// @beep/md/Md.syntax\\nexport const fromMarkdownDocument: {\\n  (options?: MdSyntaxOptions.Encoded): (document: MarkdownDocument) => Result.Result<MdFromSyntax, MdFrontmatterError>\\n  (document: MarkdownDocument, options?: MdSyntaxOptions.…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/knowledge-surface-automation/research/p4-knowledge-doctor-design.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 10022,
+      "old": null,
+      "next": "[\"export const KnowledgeSpanClass = LiteralKit([\\\"verified\\\", \\\"generated-example\\\", \\\"historical-with-commit\\\", \\\"unclassified\\\"])\\nexport const KnowledgeEvaluatorId = LiteralKit([\\\"paths\\\", \\\"commands\\\", \\\"symbols\\\", \\\"packet-status\\\", \\\"…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/knowledge-surface-automation/research/p4-knowledge-doctor-design.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 14436,
+      "old": null,
+      "next": "[\"export interface KnowledgeEvaluator {\\n  readonly id: KnowledgeEvaluatorId\\n  readonly kinds: ReadonlyArray<KnowledgeFindingKind>\\n  readonly evaluate: (span: KnowledgeSpan, tree: KnowledgeDoctorTree) =>\\n    Effect.Effect<EvaluationResol…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/legal-position-relator-runtime/research/01-surface-reverification.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 5494,
+      "old": "[\"/**\\n * Candor disposition entity identifier.\\n *\\n * **Details**\\n *\\n * A candor disposition records one dated attorney judgment about one exact\\n * patent citation event. Dispositions are append-only, so revision and\\n * withdrawal app…",
+      "next": "[\"/**\\n * Candor disposition entity identifier.\\n *\\n * **Details**\\n *\\n * A candor disposition records one dated attorney judgment about one exact\\n * patent citation event. Dispositions are append-only, so revision and\\n * withdrawal app…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/legal-position-relator-runtime/research/01-surface-reverification.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 32180,
+      "old": "[\"/**\\n * Annotation-citation value-object exports.\\n *\\n * **Example** (Import the annotation-citation value objects)\\n *\\n *\",\"ts\",32180,32309,32186,32306]",
+      "next": "[\"/**\\n * Annotation-citation value-object exports.\\n *\\n * **Example** (Import the annotation-citation value objects)\\n *\\n * ```ts\\n * import { AnnotationCitation } from \\\"@beep/law-practice-domain/values\\\";\\n * ```\\n *\\n * @category valu…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/literal-kit-subset-algebra/research/upstream/9821-literals-omit.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 1397,
+      "old": "[\"type Without<L extends ReadonlyArray<unknown>, E> = L extends readonly [infer H, ...infer T]\\n    ? H extends E ? Without<T, E> : readonly [H, ...Without<T, E>]\\n    : L extends readonly [] ? readonly [] : ReadonlyArray<Exclude<L[number],…",
+      "next": "[\"type Without<L extends ReadonlyArray<unknown>, E> = L extends readonly [infer H, ...infer T]\\n    ? H extends E ? Without<T, E> : readonly [H, ...Without<T, E>]\\n    : L extends readonly [] ? readonly [] : ReadonlyArray<Exclude<L[number],…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/literal-kit-subset-algebra/research/upstream/9821-literals-omit.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 26,
+      "old": "[\"  type Without<L extends ReadonlyArray<unknown>, E> = L extends readonly [infer H, ...infer T]\\n    ? H extends E ? Without<T, E> : readonly [H, ...Without<T, E>]\\n    : L extends readonly [] ? readonly [] : ReadonlyArray<Exclude<L[number…",
+      "next": "[\"type Without<L extends ReadonlyArray<unknown>, E> = L extends readonly [infer H, ...infer T]\\n  ? H extends E ? Without<T, E> : readonly [H, ...Without<T, E>]\\n  : L extends readonly [] ? readonly [] : ReadonlyArray<Exclude<L[number], E>>…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/patent-citation-candor-gate/research/03-durability-lane.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 6371,
+      "old": "[\"/**\\n * Disposable practice knowledge-graph node read-model table.\\n *\\n * @packageDocumentation\\n * @since 0.0.0\\n */\\n\\nimport { jsonb, pgTable, text } from \\\"drizzle-orm/pg-core\\\";\\nimport type { KgNodeKind } from \\\"@beep/law-practice-…",
+      "next": "[\"/**\\n * Disposable practice knowledge-graph node read-model table.\\n *\\n * @packageDocumentation\\n * @since 0.0.0\\n */\\n\\nimport { jsonb, pgTable, text } from \\\"drizzle-orm/pg-core\\\";\\nimport type { KgNodeKind } from \\\"@beep/law-practice-…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/patent-citation-candor-gate/research/03-durability-lane.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 11815,
+      "old": "[\"/**\\n * Epistemic EvidenceVerification table metadata.\\n *\\n * @packageDocumentation\\n * @since 0.0.0\\n */\\nimport { EntityTable } from \\\"@beep/drizzle\\\";\\nimport { EvidenceVerification } from \\\"@beep/epistemic-domain/entities/EvidenceVer…",
+      "next": "[\"/**\\n * Epistemic EvidenceVerification table metadata.\\n *\\n * @packageDocumentation\\n * @since 0.0.0\\n */\\nimport { EntityTable } from \\\"@beep/drizzle\\\";\\nimport { EvidenceVerification } from \\\"@beep/epistemic-domain/entities/EvidenceVer…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/patent-citation-candor-gate/research/03-durability-lane.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 62098,
+      "old": "[\"/**\\n * Epistemic evidence-verification table (drizzle-kit generate surface).\\n *\\n * @example\\n *\",\"ts\",62098,62202,62104,62199]",
+      "next": "[\"/**\\n * Epistemic evidence-verification table (drizzle-kit generate surface).\\n *\\n * @example\\n * ```ts\\n * import { epistemicEvidenceVerificationTable } from \\\"@beep/db-admin/schema\\\"\\n *\\n * console.log(epistemicEvidenceVerificationTab…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/patent-citation-candor-gate/research/03-durability-lane.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 63278,
+      "old": "[\"/**\\n * Epistemic contradiction-triage db-admin migration target.\\n *\\n * @packageDocumentation\\n * @category configuration\\n * @since 0.0.0\\n */\\n\\nimport { DbSchema as EpistemicDbSchema } from \\\"@beep/epistemic-tables\\\";\\nimport { DbAdm…",
+      "next": "[\"/**\\n * Epistemic contradiction-triage db-admin migration target.\\n *\\n * @packageDocumentation\\n * @category configuration\\n * @since 0.0.0\\n */\\n\\nimport { DbSchema as EpistemicDbSchema } from \\\"@beep/epistemic-tables\\\";\\nimport { DbAdm…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-codegraph-jsdoc/history/outputs/context-for-more-comprehensive-reasoning-integration-points/high-level-overview-of-v3-knowledge-slice.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 3643,
+      "old": "[\"import { ExtractionWorkflow, ExtractionWorkflowLive } from \\\"@effect-ontology/core-v2\\\"\\nimport type { RunConfig } from \\\"@effect-ontology/core-v2/Domain/Model/ExtractionRun\\\"\\nimport * as Effect from \\\"effect/Effect\\\";\\nconst text = \\\"Al…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-codegraph-jsdoc/history/outputs/context-for-more-comprehensive-reasoning-integration-points/high-level-overview-of-v3-knowledge-slice.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 72,
+      "old": "[\"import { ExtractionWorkflow, ExtractionWorkflowLive } from \\\"@effect-ontology/core-v2\\\"\\nimport type { RunConfig } from \\\"@effect-ontology/core-v2/Domain/Model/ExtractionRun\\\"\\nimport * as Effect from \\\"effect/Effect\\\";\\nconst text = \\\"Al…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "goals/repo-codegraph-jsdoc/history/outputs/context-for-more-comprehensive-reasoning-integration-points/high-level-overview-of-v3-knowledge-slice.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 72,
+      "old": "[\"import { ExtractionWorkflow, ExtractionWorkflowLive } from \\\"@effect-ontology/core-v2\\\"\\nimport type { RunConfig } from \\\"@effect-ontology/core-v2/Domain/Model/ExtractionRun\\\"\\nimport * as Effect from \\\"effect/Effect\\\";\\nconst text = \\\"Al…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S1-schema-as-truth.discovery.md",
+      "side": "changed",
+      "category": "inside-container",
+      "key": 3786,
+      "old": "[\">   import { Fn } from \\\"@beep/schema\\\";\\n>   export const Formatter = Fn({ input: FormatterInput, output: S.String })\\n>     .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\n>   expor…",
+      "next": "[\">   import { Fn } from \\\"@beep/schema\\\";\\n>   export const Formatter = Fn({ input: FormatterInput, output: S.String })\\n>     .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\n>   expor…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S1-schema-as-truth.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 76,
+      "old": null,
+      "next": "[\"import { Fn } from \\\"@beep/schema\\\";\\nexport const Formatter = Fn({ input: FormatterInput, output: S.String })\\n  .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\nexport type Formatter…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S1-schema-as-truth.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 76,
+      "old": null,
+      "next": "[\">   import { Fn } from \\\"@beep/schema\\\";\\n>   export const Formatter = Fn({ input: FormatterInput, output: S.String })\\n>     .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\n>   expor…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S2-defaults-normalization-option.discovery.md",
+      "side": "changed",
+      "category": "inside-container",
+      "key": 3743,
+      "old": "[\">   version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\n>   format:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\n>   checked:  SchemaUtils.BoolKeyDefaultF…",
+      "next": "[\">   version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\n>   format:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\n>   checked:  SchemaUtils.BoolKeyDefaultF…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S2-defaults-normalization-option.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 75,
+      "old": null,
+      "next": "[\"version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\nformat:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\nchecked:  SchemaUtils.BoolKeyDefaultFalse.annotat…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S2-defaults-normalization-option.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 75,
+      "old": null,
+      "next": "[\">   version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\n>   format:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\n>   checked:  SchemaUtils.BoolKeyDefaultF…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S3-discrimination-exhaustiveness.discovery.md",
+      "side": "changed",
+      "category": "inside-container",
+      "key": 3958,
+      "old": "[\">   const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\n>   const area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n>   // LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (Ent…",
+      "next": "[\">   const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\n>   const area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n>   // LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (Ent…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S3-discrimination-exhaustiveness.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 79,
+      "old": null,
+      "next": "[\"const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\nconst area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n// LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (EntitySchema.pe…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S3-discrimination-exhaustiveness.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 79,
+      "old": null,
+      "next": "[\">   const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\n>   const area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n>   // LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (Ent…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S4-colocation-pipeability.discovery.md",
+      "side": "changed",
+      "category": "inside-container",
+      "key": 3475,
+      "old": "[\">   export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\n>   Block.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\\n>\",\"ts\",3475,3699,3481,36…",
+      "next": "[\">   export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\n>   Block.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\",\"ts\",3475,3699,3481,3692]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S4-colocation-pipeability.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 70,
+      "old": null,
+      "next": "[\"export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\nBlock.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\\n\",\"ts\",\"ts\",71]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S4-colocation-pipeability.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 70,
+      "old": null,
+      "next": "[\">   export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\n>   Block.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\\n\",3481,3692,\".ts\"]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S5-precision-testing-annotations.discovery.md",
+      "side": "changed",
+      "category": "inside-container",
+      "key": 3711,
+      "old": "[\">   const DocumentArbitrary = S.toArbitrary(Document);\\n>   fc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\\n>\",\"ts\",3711,3875,3717,3872]",
+      "next": "[\">   const DocumentArbitrary = S.toArbitrary(Document);\\n>   fc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\",\"ts\",3711,3875,3717,3868]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S5-precision-testing-annotations.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 75,
+      "old": null,
+      "next": "[\"const DocumentArbitrary = S.toArbitrary(Document);\\nfc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\\n\",\"ts\",\"ts\",76]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "goals/repo-crispening-orchestration/ops/prompts/S5-precision-testing-annotations.discovery.md",
+      "side": "new-only",
+      "category": "inside-container",
+      "key": 75,
+      "old": null,
+      "next": "[\">   const DocumentArbitrary = S.toArbitrary(Document);\\n>   fc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\\n\",3717,3868,\".ts\"]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 13093,
+      "old": "[\"import { Fn } from \\\"@beep/schema\\\";\\n  export const Formatter = Fn({ input: FormatterInput, output: S.String })\\n    .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\n  export type For…",
+      "next": "[\"import { Fn } from \\\"@beep/schema\\\";\\n  export const Formatter = Fn({ input: FormatterInput, output: S.String })\\n    .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\n  export type For…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 15239,
+      "old": "[\"version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\n  format:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\n  checked:  SchemaUtils.BoolKeyDefaultFalse.ann…",
+      "next": "[\"version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\n  format:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\n  checked:  SchemaUtils.BoolKeyDefaultFalse.ann…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 17793,
+      "old": "[\"const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\n  const area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n  // LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (EntitySchem…",
+      "next": "[\"const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\n  const area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n  // LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (EntitySchem…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 19922,
+      "old": "[\"export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\n  Block.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\",\"ts\",19922,20140,19928,20137]",
+      "next": "[\"export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\n  Block.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\",\"ts\",19922,20140,19928,20135]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 21622,
+      "old": "[\"const DocumentArbitrary = S.toArbitrary(Document);\\n  fc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\",\"ts\",21622,21780,21628,21777]",
+      "next": "[\"const DocumentArbitrary = S.toArbitrary(Document);\\n  fc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\",\"ts\",21622,21780,21628,21775]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 170,
+      "old": "[\"  import { Fn } from \\\"@beep/schema\\\";\\n  export const Formatter = Fn({ input: FormatterInput, output: S.String })\\n    .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\n  export type F…",
+      "next": "[\"import { Fn } from \\\"@beep/schema\\\";\\nexport const Formatter = Fn({ input: FormatterInput, output: S.String })\\n  .pipe($I.annoteSchema(\\\"Formatter\\\", { description: \\\"Colorizes a formatter input to a string.\\\" }));\\nexport type Formatter…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 202,
+      "old": "[\"  version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\n  format:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\n  checked:  SchemaUtils.BoolKeyDefaultFalse.a…",
+      "next": "[\"version:  LexicalNodeVersion.pipe(SchemaUtils.withConstantDefault(1)),\\nformat:   ElementFormat.pipe(SchemaUtils.withConstantDefault<ElementFormat>(\\\"\\\")),  // branded → explicit type arg\\nchecked:  SchemaUtils.BoolKeyDefaultFalse.annotat…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 240,
+      "old": "[\"  const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\n  const area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n  // LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (EntitySch…",
+      "next": "[\"const Shape = S.Union([Circle, Rectangle]).pipe(S.toTaggedUnion(\\\"kind\\\"));\\nconst area  = Shape.match(shape, { Circle: (c) => …, Rectangle: (r) => … });\\n// LiteralKit form: IndexHintKind.toTaggedUnion(\\\"kind\\\")({ … })   (EntitySchema.pe…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 273,
+      "old": "[\"  export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\n  Block.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\\n\",\"ts\",\"ts\",274]",
+      "next": "[\"export const Block = S.Union([Heading, P, BlockQuote]).pipe(SchemaUtils.withCodecStatics);\\nBlock.is(x); Block.decodeOption(raw); Block.fromUnknown(trusted);   // fromUnknown throws; decodeOption is soft\\n\",\"ts\",\"ts\",274]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 300,
+      "old": "[\"  const DocumentArbitrary = S.toArbitrary(Document);\\n  fc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\\n\",\"ts\",\"ts\",301]",
+      "next": "[\"const DocumentArbitrary = S.toArbitrary(Document);\\nfc.assert(fc.property(DocumentArbitrary, (doc) => Equal.equals(decode(encode(doc)), doc)));\\n\",\"ts\",\"ts\",301]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/repository-simplification-confidence/history/receipts/rsc-v-noncli-source-review.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 4115,
+      "old": "[\"const failureTags = <A, E extends { readonly _tag: string }>(exit: Exit.Exit<A, E>) =>\\n    Exit.match(exit, {\\n      onSuccess: Exit.succeed,\\n      onFailure: (cause) =>\\n        Exit.failCause(\\n          Cause.fromReasons(\\n          …",
+      "next": "[\"const failureTags = <A, E extends { readonly _tag: string }>(exit: Exit.Exit<A, E>) =>\\n    Exit.match(exit, {\\n      onSuccess: Exit.succeed,\\n      onFailure: (cause) =>\\n        Exit.failCause(\\n          Cause.fromReasons(\\n          …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/repository-simplification-confidence/history/receipts/rsc-v-noncli-source-review.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 34,
+      "old": "[\"  const failureTags = <A, E extends { readonly _tag: string }>(exit: Exit.Exit<A, E>) =>\\n    Exit.match(exit, {\\n      onSuccess: Exit.succeed,\\n      onFailure: (cause) =>\\n        Exit.failCause(\\n          Cause.fromReasons(\\n        …",
+      "next": "[\"const failureTags = <A, E extends { readonly _tag: string }>(exit: Exit.Exit<A, E>) =>\\n  Exit.match(exit, {\\n    onSuccess: Exit.succeed,\\n    onFailure: (cause) =>\\n      Exit.failCause(\\n        Cause.fromReasons(\\n          A.map(caus…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/speed-loop/research/upstream-tsgo-effectfn-issue.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 992,
+      "old": "[\"class UserService {\\n     // no effectFnOpportunity reported here\\n     findById(id: UserId) {\\n       return Effect.gen(function* () {\\n         const repo = yield* UserRepo\\n         return yield* repo.findById(id)\\n       })\\n     }\\n …",
+      "next": "[\"class UserService {\\n     // no effectFnOpportunity reported here\\n     findById(id: UserId) {\\n       return Effect.gen(function* () {\\n         const repo = yield* UserRepo\\n         return yield* repo.findById(id)\\n       })\\n     }\\n …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/speed-loop/research/upstream-tsgo-effectfn-issue.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 1455,
+      "old": "[\"route.handle(\\\"get\\\", function (req) {\\n     // no effectFnOpportunity reported here\\n     return Effect.gen(function* () {\\n       return yield* handleGet(req)\\n     })\\n   })\",\"ts\",1455,1640,1461,1637]",
+      "next": "[\"route.handle(\\\"get\\\", function (req) {\\n     // no effectFnOpportunity reported here\\n     return Effect.gen(function* () {\\n       return yield* handleGet(req)\\n     })\\n   })\",\"ts\",1455,1640,1461,1634]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/speed-loop/research/upstream-tsgo-effectfn-issue.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 24,
+      "old": "[\"   class UserService {\\n     // no effectFnOpportunity reported here\\n     findById(id: UserId) {\\n       return Effect.gen(function* () {\\n         const repo = yield* UserRepo\\n         return yield* repo.findById(id)\\n       })\\n     }…",
+      "next": "[\"class UserService {\\n  // no effectFnOpportunity reported here\\n  findById(id: UserId) {\\n    return Effect.gen(function* () {\\n      const repo = yield* UserRepo\\n      return yield* repo.findById(id)\\n    })\\n  }\\n}\\n\",\"ts\",\"ts\",25]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/speed-loop/research/upstream-tsgo-effectfn-issue.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 40,
+      "old": "[\"   route.handle(\\\"get\\\", function (req) {\\n     // no effectFnOpportunity reported here\\n     return Effect.gen(function* () {\\n       return yield* handleGet(req)\\n     })\\n   })\\n\",\"ts\",\"ts\",41]",
+      "next": "[\"route.handle(\\\"get\\\", function (req) {\\n  // no effectFnOpportunity reported here\\n  return Effect.gen(function* () {\\n    return yield* handleGet(req)\\n  })\\n})\\n\",\"ts\",\"ts\",41]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/standards-remediation/ops/reports/P2-audits/p2-j5-html.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 4255,
+      "old": "[\"/**\\n * The <div> element.\\n *\\n * @example\\n *\",\"ts\",4255,4308,4261,4305]",
+      "next": "[\"/**\\n * The <div> element.\\n *\\n * @example\\n * ```ts\\n * import { Div } from \\\"@beep/html/Html.model\\\"\\n *\\n * const node = Div.make({ children: [] })\\n * console.log(node._tag) // \\\"div\\\"\\n * ```\\n *\\n * @category elements\\n * @since 0.…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/standards-remediation/ops/reports/P2-audits/p2-j5-html.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 5513,
+      "old": "[\"/**\\n * Companion namespace for {@link Div}.\\n *\\n * @example\\n *\",\"ts\",5513,5584,5519,5581]",
+      "next": "[\"/**\\n * Companion namespace for {@link Div}.\\n *\\n * @example\\n * ```ts\\n * import { Div } from \\\"@beep/html/Html.model\\\"\\n *\\n * const encoded: Div.Encoded = { _tag: \\\"div\\\", children: [] }\\n * console.log(encoded._tag) // \\\"div\\\"\\n * ``…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/standards-remediation/ops/reports/P2-audits/p2-j5-html.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 6841,
+      "old": "[\"/**\\n * @example\\n *\",\"ts\",6841,6869,6847,6866]",
+      "next": "[\"/**\\n * @example\\n * ```ts\\n * import { A, Flow } from \\\"@beep/html/Html.model\\\"\\n * import * as S from \\\"effect/Schema\\\"\\n *\\n * console.log(S.is(Flow)(A.make({ children: [] }))) // true\\n * ```\\n */\",\"ts\",6841,7039,6847,7036]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/standards-remediation/ops/reports/P2-audits/p2-j5-html.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 7275,
+      "old": "[\"/**\\n * @example\\n *\",\"ts\",7275,7303,7281,7300]",
+      "next": "[\"/**\\n * @example\\n * ```ts\\n * import { ELEMENT_META } from \\\"@beep/html/Html.meta\\\"\\n *\\n * console.log(ELEMENT_META.div.interface) // \\\"HTMLDivElement\\\"\\n * ```\\n */\",\"ts\",7275,7441,7281,7438]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/standards-remediation/ops/reports/SF-1/sf-1-nlpmcp.md",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 9582,
+      "old": "[\"/**\\n * @example\\n *\",\"ts\",9582,9610,9588,9607]",
+      "next": "[\"/**\\n * @example\\n * ```ts\\n * import type { ReadLinesOptions } from \\\"@beep/nlp-mcp/StreamingTools\\\"\\n *\\n * const windowed: ReadLinesOptions = { maxLines: 10, trim: true }\\n * console.log(windowed.maxLines)\\n * ```\\n */\\nexport type Rea…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "goals/time-to-certainty/SPEC.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 7965,
+      "old": "[\"export const ProofTier = LiteralKit([\\\"repair-loop\\\", \\\"pre-push\\\", \\\"merged-preview\\\", \\\"hosted\\\"]);\\n  export const ProofOutcome = LiteralKit([\\\"passed\\\", \\\"failed\\\"]);\\n\\n  export class ProofInputDigest extends S.Class<ProofInputDigest…",
+      "next": "[\"export const ProofTier = LiteralKit([\\\"repair-loop\\\", \\\"pre-push\\\", \\\"merged-preview\\\", \\\"hosted\\\"]);\\n  export const ProofOutcome = LiteralKit([\\\"passed\\\", \\\"failed\\\"]);\\n\\n  export class ProofInputDigest extends S.Class<ProofInputDigest…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/time-to-certainty/SPEC.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 109,
+      "old": "[\"  export const ProofTier = LiteralKit([\\\"repair-loop\\\", \\\"pre-push\\\", \\\"merged-preview\\\", \\\"hosted\\\"]);\\n  export const ProofOutcome = LiteralKit([\\\"passed\\\", \\\"failed\\\"]);\\n\\n  export class ProofInputDigest extends S.Class<ProofInputDige…",
+      "next": "[\"export const ProofTier = LiteralKit([\\\"repair-loop\\\", \\\"pre-push\\\", \\\"merged-preview\\\", \\\"hosted\\\"]);\\nexport const ProofOutcome = LiteralKit([\\\"passed\\\", \\\"failed\\\"]);\\n\\nexport class ProofInputDigest extends S.Class<ProofInputDigest>($I…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "goals/tsgo-045-effect-idiom-sweep/research/origin-prompt-2026-09-12.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 37,
+      "old": "[\"// the hook receives the derived equivalences of the type parameters;\\n// for TaggedError, tps[0] IS the declared TaggedStruct:\\n{ toEquivalence: (tps) => tps[0] }\\n\",\"ts\",\"ts\",38]",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "goals/tsgo-045-effect-idiom-sweep/research/origin-prompt-2026-09-12.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 37,
+      "old": "[\"// the hook receives the derived equivalences of the type parameters;\\n// for TaggedError, tps[0] IS the declared TaggedStruct:\\n{ toEquivalence: (tps) => tps[0] }\\n\",3286,3448,\".ts\"]",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "packages/foundation/modeling/markdown/data/conformance/mdast/list.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 7,
+      "old": null,
+      "next": "[\"\\n\",37,38,\".ts\"]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "packages/foundation/modeling/md/README.md",
+      "side": "new-only",
+      "category": "closer-differs",
+      "key": 7412,
+      "old": null,
+      "next": "[\"import { parseSafeResult } from \\\"@beep/md/Md.parse\\\"\\nimport * as Result from \\\"effect/Result\\\"\\n\\nconsole.log(Result.isSuccess(parseSafeResult(\\\"<b>x</b>\\\"))) // true\\nconsole.log(Result.isFailure(parseSafeResult(\\\"<b>x</b>\\\", { html: \\…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/cli/test/fixtures/effect-vitest-406/packages/vitest/README.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 2248,
+      "old": "[\"import { test } from \\\"@effect/vitest\\\"\\n\\n  test(\\\"sort\\\", async ({ bench }) => {\\n    await bench(\\\"sort\\\", () => [3, 1, 2].sort()).run()\\n  })\",\"ts\",2248,2397,2254,2394]",
+      "next": "[\"import { test } from \\\"@effect/vitest\\\"\\n\\n  test(\\\"sort\\\", async ({ bench }) => {\\n    await bench(\\\"sort\\\", () => [3, 1, 2].sort()).run()\\n  })\",\"ts\",2248,2397,2254,2392]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "packages/tooling/tool/cli/test/fixtures/effect-vitest-406/packages/vitest/README.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 37,
+      "old": "[\"  import { test } from \\\"@effect/vitest\\\"\\n\\n  test(\\\"sort\\\", async ({ bench }) => {\\n    await bench(\\\"sort\\\", () => [3, 1, 2].sort()).run()\\n  })\\n\",\"ts\",\"ts\",38]",
+      "next": "[\"import { test } from \\\"@effect/vitest\\\"\\n\\ntest(\\\"sort\\\", async ({ bench }) => {\\n  await bench(\\\"sort\\\", () => [3, 1, 2].sort()).run()\\n})\\n\",\"ts\",\"ts\",38]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/.jsdoc-loop/inventory/round-1/fixed-jsonl.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 7037,
+      "old": "[\"- Census rule inspection against `scratchpad/.jsdoc-loop/census.ts`\\n- Official `bun scratchpad/.jsdoc-loop/census.ts` and `bun run docgen:local` were not executed (no shell tool in this subagent)\",\"ts `\",7037,7241,7045,7241]",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/.jsdoc-loop/inventory/round-1/jsonl.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 22448,
+      "old": "[\"- `impact`: Docgen Examples must compile under beep namespace-import law; `@effected/*` will not resolve in this workspace.\\n- `suggestedFix`: Titled `**Example** (Define a journal service and bind its layer)`. Use `import * as S from \\\"e…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/.jsdoc-loop/inventory/round-2/yaml.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 3914,
+      "old": "[\"const parsed = Yaml.parseResult(\\\"a: &x 1\\\\nb: *x\\\\n\\\")\\n  console.log(Result.isSuccess(parsed)) // true\",\"ts\",3914,4027,3920,4024]",
+      "next": "[\"const parsed = Yaml.parseResult(\\\"a: &x 1\\\\nb: *x\\\\n\\\")\\n  console.log(Result.isSuccess(parsed)) // true\",\"ts\",3914,4027,3920,4022]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/.jsdoc-loop/inventory/round-2/yaml.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 12916,
+      "old": "[\"const edits = YamlFormat.format(\\\"a: 1\\\\nb: 2\\\\n\\\")\\n  console.log(edits.length === 0 || edits.every((e) => e.length >= 0)) // true\\n  console.log(YamlFormat.formatToString(\\\"a: 1\\\\n\\\").includes(\\\"a:\\\")) // true\",\"ts\",12916,13130,12922,13…",
+      "next": "[\"const edits = YamlFormat.format(\\\"a: 1\\\\nb: 2\\\\n\\\")\\n  console.log(edits.length === 0 || edits.every((e) => e.length >= 0)) // true\\n  console.log(YamlFormat.formatToString(\\\"a: 1\\\\n\\\").includes(\\\"a:\\\")) // true\",\"ts\",12916,13130,12922,13…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "scratchpad/.jsdoc-loop/inventory/round-2/yaml.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 57,
+      "old": "[\"  const parsed = Yaml.parseResult(\\\"a: &x 1\\\\nb: *x\\\\n\\\")\\n  console.log(Result.isSuccess(parsed)) // true\\n\",\"ts\",\"ts\",58]",
+      "next": "[\"const parsed = Yaml.parseResult(\\\"a: &x 1\\\\nb: *x\\\\n\\\")\\nconsole.log(Result.isSuccess(parsed)) // true\\n\",\"ts\",\"ts\",58]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "scratchpad/.jsdoc-loop/inventory/round-2/yaml.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 202,
+      "old": "[\"  const edits = YamlFormat.format(\\\"a: 1\\\\nb: 2\\\\n\\\")\\n  console.log(edits.length === 0 || edits.every((e) => e.length >= 0)) // true\\n  console.log(YamlFormat.formatToString(\\\"a: 1\\\\n\\\").includes(\\\"a:\\\")) // true\\n\",\"ts\",\"ts\",203]",
+      "next": "[\"const edits = YamlFormat.format(\\\"a: 1\\\\nb: 2\\\\n\\\")\\nconsole.log(edits.length === 0 || edits.every((e) => e.length >= 0)) // true\\nconsole.log(YamlFormat.formatToString(\\\"a: 1\\\\n\\\").includes(\\\"a:\\\")) // true\\n\",\"ts\",\"ts\",203]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/.jsdoc-loop/inventory/round-3/codemode-remainder.md",
+      "side": "old-only",
+      "category": "marker-mid-line",
+      "key": 1628,
+      "old": "[\"| Round-2 LiteralKit Enum logs | **Closed.** `CodeSnippetLanguage`, `DeclarationKind`, and `SearchContentSource` now `S.is` a member and a reject token. |\\n| Round-2 OfficeParser placeholders | **Closed.** Nested `T[\\\"k\\\"] = literal; cons…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 17670,
+      "old": "[\"SchemaUtils.makeSchemaStatics(schema, keys);\",\"ts\",17670,17730,17676,17727]",
+      "next": "[\"SchemaUtils.makeSchemaStatics(schema, keys);\",\"ts\",17670,17730,17676,17724]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 17877,
+      "old": "[\"schema.pipe(SchemaUtils.withSchemaStatics(keys));\\n   SchemaUtils.withSchemaStatics(schema, keys);\",\"ts\",17877,17990,17883,17987]",
+      "next": "[\"schema.pipe(SchemaUtils.withSchemaStatics(keys));\\n   SchemaUtils.withSchemaStatics(schema, keys);\",\"ts\",17877,17990,17883,17984]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 18037,
+      "old": "[\"static readonly utils =\\n     SchemaUtils.makeSchemaStatics(this, keys);\",\"ts\",18037,18124,18043,18121]",
+      "next": "[\"static readonly utils =\\n     SchemaUtils.makeSchemaStatics(this, keys);\",\"ts\",18037,18124,18043,18118]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "closing-line-indent",
+      "key": 18197,
+      "old": "[\"class MyClass extends SchemaUtils.withClassSchemaStatics(\\n     S.Class<MyClass>(identifier)(fields),\\n     keys\\n   ) {}\",\"ts\",18197,18331,18203,18328]",
+      "next": "[\"class MyClass extends SchemaUtils.withClassSchemaStatics(\\n     S.Class<MyClass>(identifier)(fields),\\n     keys\\n   ) {}\",\"ts\",18197,18331,18203,18325]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 620,
+      "old": "[\"   SchemaUtils.makeSchemaStatics(schema, keys);\\n\",\"ts\",\"ts\",621]",
+      "next": "[\"SchemaUtils.makeSchemaStatics(schema, keys);\\n\",\"ts\",\"ts\",621]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 628,
+      "old": "[\"   schema.pipe(SchemaUtils.withSchemaStatics(keys));\\n   SchemaUtils.withSchemaStatics(schema, keys);\\n\",\"ts\",\"ts\",629]",
+      "next": "[\"schema.pipe(SchemaUtils.withSchemaStatics(keys));\\nSchemaUtils.withSchemaStatics(schema, keys);\\n\",\"ts\",\"ts\",629]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 635,
+      "old": "[\"   static readonly utils =\\n     SchemaUtils.makeSchemaStatics(this, keys);\\n\",\"ts\",\"ts\",636]",
+      "next": "[\"static readonly utils =\\n  SchemaUtils.makeSchemaStatics(this, keys);\\n\",\"ts\",\"ts\",636]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "scratchpad/schema-utils-codec-statics-design.md",
+      "side": "changed",
+      "category": "value-normalized",
+      "key": 642,
+      "old": "[\"   class MyClass extends SchemaUtils.withClassSchemaStatics(\\n     S.Class<MyClass>(identifier)(fields),\\n     keys\\n   ) {}\\n\",\"ts\",\"ts\",643]",
+      "next": "[\"class MyClass extends SchemaUtils.withClassSchemaStatics(\\n  S.Class<MyClass>(identifier)(fields),\\n  keys\\n) {}\\n\",\"ts\",\"ts\",643]"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 61408,
+      "old": null,
+      "next": "[\"import { $DrizzleId } from \\\"@beep/identity\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport type * as Effect from \\\"effect/Effect\\\";\\nimport * as Layer from \\\"effect/Layer\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst $I = $…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 63907,
+      "old": null,
+      "next": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport type * as…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 65486,
+      "old": null,
+      "next": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Layer from \\\"effect/Layer\\\";\\nimport * as A from \\\"effect/Array\\\";\\nimport * as O from \\\"e…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 74922,
+      "old": null,
+      "next": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace package is assumed.\\nconst { $IamDomainId } = Identity.make(\\\"iam-domain\\\");\\n\\nconst $I = $…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 75671,
+      "old": null,
+      "next": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Small local stand-ins for the illustrative slice imports.…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 78963,
+      "old": null,
+      "next": "[\"import * as S from \\\"effect/Schema\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\n\\nclass MembershipRevocationDenied extends S.TaggedError<Membe…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 80792,
+      "old": null,
+      "next": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Layer from \\\"effect/Layer\\\";\\nimport * as O from \\\"…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/ARCHITECTURE.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 85110,
+      "old": null,
+      "next": "[\"import * as Context from \\\"effect/Context\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\n\\nclass MembershipRevocationDenied extends S.TaggedError<MembershipRevocationDenied, { readonly brand: unique…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/04-rich-domain-model.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 6726,
+      "old": null,
+      "next": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport { LiteralKit } from \\\"@beep/schema\\\"\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as S from \\\"effect/Schema\\\"\\n\\n// Small local stand-ins for the illustrative slice imports.\\n…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/04-rich-domain-model.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 10801,
+      "old": null,
+      "next": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as O from \\\"effect/Option\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst MembershipId = S.String.pipe(S.brand(\\\"MembershipId\\\"));\\ntype…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/04-rich-domain-model.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 11948,
+      "old": null,
+      "next": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as O from \\\"effect/Option\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\n\\n// Small local stand-ins for the illustrative slice imports.\\nclass …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/05-layer-composition.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 1894,
+      "old": null,
+      "next": "[\"import * as S from \\\"effect/Schema\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\n\\nclass MembershipRevocationDenied extends S.TaggedError<Membe…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/05-layer-composition.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 3763,
+      "old": null,
+      "next": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Layer from \\\"effect/Layer\\\";\\nimport * as O from \\\"…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/08-testing.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 6639,
+      "old": null,
+      "next": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport { expect, layer } from \\\"@effect/vitest\\\";\\nimport { assertExitFailure } from \\\"@effect/vitest/utils…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/08-testing.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 13114,
+      "old": null,
+      "next": "[\"// packages/iam/use-cases/test/MembershipRepository.contract.ts\\nimport { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Context from \\\"effect/Context\\\";\\nimport * as O from \\\"effect/Option\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimp…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/08-testing.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 16291,
+      "old": null,
+      "next": "[\"// packages/iam/server/test/MembershipRepositoryLive.contract.test.ts\\nimport * as Layer from \\\"effect/Layer\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Context from \\\"effect/Context\\…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/08-testing.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 18337,
+      "old": null,
+      "next": "[\"// packages/iam/use-cases/test/MembershipRepositoryInMemory.contract.test.ts\\nimport * as Layer from \\\"effect/Layer\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Context from \\\"effect/C…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/09-errors-across-boundaries.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 7703,
+      "old": null,
+      "next": "[\"// packages/drivers/postgres/src/Postgres.errors.ts (excerpt)\\nimport { $PostgresId } from \\\"@beep/identity\\\";\\nimport { SchemaUtils } from \\\"@beep/schema\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst $I = $PostgresId.create(\\\"Postgr…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/09-errors-across-boundaries.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 8738,
+      "old": null,
+      "next": "[\"// packages/iam/use-cases/src/Membership/Membership.errors.ts\\nimport * as Identity from \\\"@beep/identity\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Small local stand-ins for the illustrative slice imports.\\nconst MembershipId = S.St…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/09-errors-across-boundaries.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 10599,
+      "old": null,
+      "next": "[\"// packages/iam/server/src/Membership/Membership.repo.ts\\nimport { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as S from \\\"effect/Schema\\\";\\nimport { pipe } from \\\"effect/Function\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport *…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/09-errors-across-boundaries.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 13582,
+      "old": null,
+      "next": "[\"// packages/iam/use-cases/src/Membership/Membership.service.ts\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Match from \\\"effect/Match\\\";\\n\\nconst MembershipId = S.String.pipe(S.brand(\\\"Me…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/09-errors-across-boundaries.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 15938,
+      "old": null,
+      "next": "[\"// packages/iam/server/src/Membership/Membership.http-handlers.ts\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\n\\nclass MembershipRevocationDenied extends S.TaggedError<MembershipRevocationDenied, { r…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/10-cross-slice-coordination.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 8119,
+      "old": null,
+      "next": "[\"import { $SharedUseCasesId } from \\\"@beep/identity\\\"\\nimport * as Event from \\\"effect/eventlog/Event\\\"\\nimport * as S from \\\"effect/Schema\\\"\\n\\nconst $I = $SharedUseCasesId.create(\\\"iam.events.MembershipRevoked\\\")\\n\\n/**\\n * Cross-slice e…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/12-observability.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 7637,
+      "old": null,
+      "next": "[\"// packages/iam/server/src/Membership/Membership.http-handlers.ts\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\n\\n// Minimal schemas and typed dependenci…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/12-observability.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 9889,
+      "old": null,
+      "next": "[\"// packages/iam/use-cases/src/Membership/Membership.service.ts\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\n\\n// Minimal schemas and typed dependencies …"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/12-observability.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 11917,
+      "old": null,
+      "next": "[\"// packages/iam/server/src/Membership/Membership.repo.ts\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\n\\n// Minimal schemas and typed dependencies for th…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/architecture/12-observability.md",
+      "side": "new-only",
+      "category": "long-marker-run",
+      "key": 13620,
+      "old": null,
+      "next": "[\"// packages/iam/server/src/Membership/Membership.repo.ts (continued)\\nimport * as S from \\\"effect/Schema\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\n\\n// Minimal schemas and typed depende…"
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "docgen",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 14861,
+      "old": "[\"* const input = TaskInput.make({ id: \\\"task-1\\\", title: \\\"Review evidence\\\" })\\n * console.log(TaskInput.is(input)) // true\\n *\",\"ts\",14861,14993,14867,14990]",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 309,
+      "old": "[\"export interface TaskInput {\\n  readonly id: string;\\n  readonly title: string;\\n}\\n\\nexport const isTaskInput = (input: unknown): input is TaskInput => {\\n  // parallel validation logic\\n  return typeof input === \\\"object\\\" && input !== …",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 325,
+      "old": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace package is assumed.\\nconst { $PackageNameId } = Identity.make(\\\"package-name\\\");\\n\\nconst $I…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 377,
+      "old": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace package is assumed.\\nconst { $PackageNameId } = Identity.make(\\\"package-name\\\");\\n\\nconst $I…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 421,
+      "old": "[\"import * as O from \\\"effect/Option\\\";\\n\\nconst makeImportOptions = (input: {\\n  readonly strict?: boolean;\\n  readonly note?: string | null;\\n}) => ({\\n  strict: input.strict ?? true,\\n  note: input.note == null ? O.none() : O.some(input.…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 435,
+      "old": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace package is assumed.\\nconst { $PackageNameId } = …",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 474,
+      "old": "[\"interface Job {\\n  readonly kind: \\\"queued\\\" | \\\"completed\\\";\\n  readonly queuedAt?: string;\\n  readonly completedAt?: string;\\n  readonly result?: string;\\n}\\n\",\"ts\",\"ts\",475]",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 485,
+      "old": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\nimport * as Tuple from \\\"effect/Tuple\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace pack…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 561,
+      "old": "[\"import { SchemaUtils } from \\\"@beep/schema\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst EntityIdBase = S.String.pipe(S.brand(\\\"EntityId\\\"));\\nexport const EntityId = EntityIdBase.pipe(\\n  SchemaUtils.withStatics((schema) => ({\\n    …",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 576,
+      "old": "[\"import * as S from \\\"effect/Schema\\\";\\n\\nconst EntityIdBase = S.String.pipe(S.brand(\\\"EntityId\\\"));\\nexport const EntityId = EntityIdBase;\\n\\n// at the call site, or hoisted once when a module calls it repeatedly\\nconst decodeEntityId = S…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 606,
+      "old": "[\"import * as S from \\\"effect/Schema\\\";\\n\\nconst TaskInput = S.Struct({ id: S.String, title: S.String });\\ntype TaskInput = typeof TaskInput.Type;\\ndeclare const text: string;\\nconst payload = JSON.parse(text) as TaskInput;\\n\",\"ts\",\"ts\",607…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 617,
+      "old": "[\"import * as S from \\\"effect/Schema\\\";\\n\\nconst TaskInput = S.Struct({ id: S.String, title: S.String });\\ntype TaskInput = typeof TaskInput.Type;\\nconst TaskInputFromJson = S.fromJsonString(TaskInput);\\nconst decodeTaskInput = S.decodeUnkn…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 644,
+      "old": "[\"import { expect, it } from \\\"@effect/vitest\\\";\\nimport * as Arbitrary from \\\"effect/Arbitrary\\\";\\nimport * as Result from \\\"effect/Result\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst MySchema = S.Struct({ id: S.String });\\n\\nit.prop…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "typescript-fences",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 662,
+      "old": "[\"import { expect, it } from \\\"@effect/vitest\\\";\\nimport * as Arbitrary from \\\"effect/Arbitrary\\\";\\nimport * as Result from \\\"effect/Result\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst MySchema = S.Struct({ id: S.String });\\nconst enc…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 309,
+      "old": "[\"export interface TaskInput {\\n  readonly id: string;\\n  readonly title: string;\\n}\\n\\nexport const isTaskInput = (input: unknown): input is TaskInput => {\\n  // parallel validation logic\\n  return typeof input === \\\"object\\\" && input !== …",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 325,
+      "old": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace package is assumed.\\nconst { $PackageNameId } = Identity.make(\\\"package-name\\\");\\n\\nconst $I…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 377,
+      "old": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace package is assumed.\\nconst { $PackageNameId } = Identity.make(\\\"package-name\\\");\\n\\nconst $I…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 421,
+      "old": "[\"import * as O from \\\"effect/Option\\\";\\n\\nconst makeImportOptions = (input: {\\n  readonly strict?: boolean;\\n  readonly note?: string | null;\\n}) => ({\\n  strict: input.strict ?? true,\\n  note: input.note == null ? O.none() : O.some(input.…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 435,
+      "old": "[\"import * as Identity from \\\"@beep/identity\\\";\\nimport * as Effect from \\\"effect/Effect\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace package is assumed.\\nconst { $PackageNameId } = …",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 474,
+      "old": "[\"interface Job {\\n  readonly kind: \\\"queued\\\" | \\\"completed\\\";\\n  readonly queuedAt?: string;\\n  readonly completedAt?: string;\\n  readonly result?: string;\\n}\\n\",19102,19252,\".ts\"]",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 485,
+      "old": "[\"import { LiteralKit } from \\\"@beep/schema\\\";\\nimport * as Identity from \\\"@beep/identity\\\";\\nimport * as Tuple from \\\"effect/Tuple\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\n// Illustrative package composer; no registered workspace pack…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 561,
+      "old": "[\"import { SchemaUtils } from \\\"@beep/schema\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst EntityIdBase = S.String.pipe(S.brand(\\\"EntityId\\\"));\\nexport const EntityId = EntityIdBase.pipe(\\n  SchemaUtils.withStatics((schema) => ({\\n    …",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 576,
+      "old": "[\"import * as S from \\\"effect/Schema\\\";\\n\\nconst EntityIdBase = S.String.pipe(S.brand(\\\"EntityId\\\"));\\nexport const EntityId = EntityIdBase;\\n\\n// at the call site, or hoisted once when a module calls it repeatedly\\nconst decodeEntityId = S…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 606,
+      "old": "[\"import * as S from \\\"effect/Schema\\\";\\n\\nconst TaskInput = S.Struct({ id: S.String, title: S.String });\\ntype TaskInput = typeof TaskInput.Type;\\ndeclare const text: string;\\nconst payload = JSON.parse(text) as TaskInput;\\n\",23196,23411,\"…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 617,
+      "old": "[\"import * as S from \\\"effect/Schema\\\";\\n\\nconst TaskInput = S.Struct({ id: S.String, title: S.String });\\ntype TaskInput = typeof TaskInput.Type;\\nconst TaskInputFromJson = S.fromJsonString(TaskInput);\\nconst decodeTaskInput = S.decodeUnkn…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 644,
+      "old": "[\"import { expect, it } from \\\"@effect/vitest\\\";\\nimport * as Arbitrary from \\\"effect/Arbitrary\\\";\\nimport * as Result from \\\"effect/Result\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst MySchema = S.Struct({ id: S.String });\\n\\nit.prop…",
+      "next": null
+    },
+    {
+      "corpus": "markdown",
+      "extractor": "effect-imports-markdown",
+      "file": "standards/schema-first-development-prompt.md",
+      "side": "old-only",
+      "category": "inside-other-fence",
+      "key": 662,
+      "old": "[\"import { expect, it } from \\\"@effect/vitest\\\";\\nimport * as Arbitrary from \\\"effect/Arbitrary\\\";\\nimport * as Result from \\\"effect/Result\\\";\\nimport * as S from \\\"effect/Schema\\\";\\n\\nconst MySchema = S.Struct({ id: S.String });\\nconst enc…",
+      "next": null
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.rubric.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 117,
+      "old": "[\"import { scoreSubject } from \\\"@beep/repo-cli/commands/Docgen/internal/quality/Quality.rubric\\\"\\nimport { DocgenQualitySubject } from \\\"@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas\\\"\\n\\nconst subject = DocgenQualitySubj…",
+      "next": "[\"import { scoreSubject } from \\\"@beep/repo-cli/commands/Docgen/internal/quality/Quality.rubric\\\"\\nimport { DocgenQualitySubject } from \\\"@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas\\\"\\n\\nconst subject = DocgenQualitySubj…"
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 513,
+      "old": "[\"import { jsdocMigrateConservationFindings } from \\\"@beep/repo-cli/test/Quality\\\"\\n\\nconst original = \\\"/**\\\\n * Lead.\\\\n *\\\\n *\",\"ts\",513,642,519,639]",
+      "next": "[\"import { jsdocMigrateConservationFindings } from \\\"@beep/repo-cli/test/Quality\\\"\\n\\nconst original = \\\"/**\\\\n * Lead.\\\\n *\\\\n * ```ts\\\\n * const a = 1\\\\n * ```\\\\n *\\\" + \\\"/\\\"\\nconst mutated = \\\"/**\\\\n * Lead.\\\\n *\\\\n * ```ts\\\\n * const a …"
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 406,
+      "old": "[\"import { jsdocMigrateBlockStats } from \\\"@beep/repo-cli/test/Quality\\\"\\n\\nconst block = \\\"/**\\\\n * Lead.\\\\n *\\\\n * @example\\\\n *\",\"ts\",406,535,412,532]",
+      "next": "[\"import { jsdocMigrateBlockStats } from \\\"@beep/repo-cli/test/Quality\\\"\\n\\nconst block = \\\"/**\\\\n * Lead.\\\\n *\\\\n * @example\\\\n * ```ts\\\\n * const a = 1\\\\n * ```\\\\n *\\\" + \\\"/\\\"\\nconst stats = jsdocMigrateBlockStats(block)\\nconsole.log(stat…"
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 530,
+      "old": "[\"import { rewriteJSDocMigrateBlock } from \\\"@beep/repo-cli/test/Quality\\\"\\n\\nconst block = \\\"/**\\\\n * Lead.\\\\n *\\\\n * @example\\\\n *\",\"ts\",530,661,536,658]",
+      "next": "[\"import { rewriteJSDocMigrateBlock } from \\\"@beep/repo-cli/test/Quality\\\"\\n\\nconst block = \\\"/**\\\\n * Lead.\\\\n *\\\\n * @example\\\\n * ```ts\\\\n * const a = 1\\\\n * ```\\\\n *\\\\n * @category models\\\\n *\\\" + \\\"/\\\"\\nconst result = rewriteJSDocMigra…"
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 263,
+      "old": "[\"import { PrNumber, renderResumeFence } from \\\"@beep/repo-cli/test/Yeet\\\"\\nimport * as S from \\\"effect/Schema\\\"\\n\\nconst pr = S.decodeSync(PrNumber)(42)\\nconsole.log(renderResumeFence(pr))\\n//\",\"ts\",263,455,269,452]",
+      "next": "[\"import { PrNumber, renderResumeFence } from \\\"@beep/repo-cli/test/Yeet\\\"\\nimport * as S from \\\"effect/Schema\\\"\\n\\nconst pr = S.decodeSync(PrNumber)(42)\\nconsole.log(renderResumeFence(pr))\\n// ```sh\\n// bun run beep yeet resume 42\\n// ```\"…"
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/cli/src/internal/jsdoc/JSDocSections.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 120,
+      "old": "[\"import { fencedLineState } from \\\"@beep/repo-cli/test/Docgen\\\"\\n\\nconst [open] = fencedLineState(\\\"\",\"ts\",120,223,126,220]",
+      "next": "[\"import { fencedLineState } from \\\"@beep/repo-cli/test/Docgen\\\"\\n\\nconst [open] = fencedLineState(\\\"```ts\\\", undefined)\\nconsole.log(fencedLineState(\\\"```\\\", open)[0]) // undefined\",\"ts\",120,300,126,297]"
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/docgen/src/Core.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 544,
+      "old": "[\"import { extractFencedCode } from \\\"@beep/repo-docgen/Core\\\"\\nconst [examples] = extractFencedCode(\\\"\",\"ts\",544,650,550,647]",
+      "next": "[\"import { extractFencedCode } from \\\"@beep/repo-docgen/Core\\\"\\nconst [examples] = extractFencedCode(\\\"~~~ts\\\\nconst value = 1\\\\n~~~\\\")\\nconsole.log(examples[0])\",\"ts\",544,705,550,702]"
+    },
+    {
+      "corpus": "jsdoc",
+      "extractor": "docgen",
+      "file": "packages/tooling/tool/docgen/src/Core.ts",
+      "side": "changed",
+      "category": "closer-differs",
+      "key": 551,
+      "old": "[\"import { extractFencedCodeBlocks } from \\\"@beep/repo-docgen/Core\\\"\\nconst [examples] = extractFencedCodeBlocks(\\\"\",\"ts\",551,669,557,666]",
+      "next": "[\"import { extractFencedCodeBlocks } from \\\"@beep/repo-docgen/Core\\\"\\nconst [examples] = extractFencedCodeBlocks(\\\"~~~tsx\\\\nconst view = <div />\\\\n~~~\\\")\\nconsole.log(examples[0]?.extension)\",\"ts\",551,741,557,738]"
+    }
+  ]
+}

@@ -111,7 +111,7 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | 4-A3 | repo-utils Workspaces/Dependencies/DependencyIndex onto the kit; `beep topo-sort` onto `DependencyGraph.sort()` with the jsdoc-inventory reorder in the same PR | 3-A3, 4-W-a, 4-A1 |
 | 4-A4 (in review, this PR) | `Lint/EcosystemPolarity.ts` onto `SourceBoundary.scan` | 4-W-b |
 | R4 | `yaml` out of repo-cli and ai-metrics runtime deps (Runners to `effect/encoding/Yaml`; Models.locator kept with a reason if the kit lacks a visitor) | 3-3, 3-A4, 4-A2 |
-| R6 | one fence extractor (docgen `Core.ts`, `EffectImports.ts`, `TypeScriptFences.ts`, `Doctest.ts`) or deferred per W4-q | R2b, R5b, #2144 |
+| R6 (in review, this PR) | one fence extractor: `@beep/markdown` `MarkdownFence` (W4-q passed at 344 lines); docgen `Core.ts`, `EffectImports.ts`, `TypeScriptFences.ts`, `Doctest.ts`, `JSDocSections.ts` onto it | R2b (merged), R5b (merged), #2144 |
 | W5 (merged, #2245) | `@beep/github-actions` (drivers); runner-file adopters (`CiOperational`, `Ci.command`, `CiAdmission`, `CiRerunRunnerLoss`, github-commands #87); `@azure/storage-blob` exact pin; `ActionCache.resolvePaths` split first | 4-S, 3-A8, W4-j resolved |
 | R3a | `@beep/schema/Jsonc` owner switch and deletion | 3-A6, R5a |
 | R3b | `jsonc-parser` out of repo-cli, repo-configs, root; Skills formatter collapse | R3a, R4, R5a |
