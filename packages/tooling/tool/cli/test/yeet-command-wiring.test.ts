@@ -208,27 +208,6 @@ describe("yeet merge-loop command wiring", () => {
       );
 
     it.effect(
-      "routes plan-contract-check and fallow-fixture-check to their handlers, which refuse unusable input",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-fixture-commands-" });
-        expect(
-          yield* commandFailure(["plan-contract-check", "--expect-step-id", "publish:02-pr-create"])
-        ).toMatchObject({ _tag: "YeetCommandError", message: "yeet plan-contract-check requires --from-stdin." });
-        expect(
-          yield* commandFailure([
-            "fallow-fixture-check",
-            path.join(root, "missing-fixture.jsonc"),
-            "--emit",
-            path.join(root, "fixture-issues.json"),
-          ])
-        ).toMatchObject({ _tag: "YeetCommandError" });
-        expect(yield* fs.exists(path.join(root, "fixture-issues.json"))).toBe(false);
-      })
-    );
-
-    it.effect(
       "routes fallow-feedback to its handler, which refuses an envelope directory outside the repository",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -334,7 +313,6 @@ describe("yeet merge-loop command wiring", () => {
             ["repair", "--plan"],
             ["status", "--plan"],
             ["sweep", "--plan"],
-            ["pre-push-hook", "--plan"],
           ],
           Effect.fnUntraced(function* (args) {
             const logged = A.length(yield* TestConsole.logLines);
@@ -903,7 +881,15 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job comman
       )
     )
   );
-  for (const name of ["status", "pre-push-hook"]) {
+  for (const name of ["pre-push-hook", "plan-contract-check", "fallow-fixture-check"]) {
+    it.effect(`rejects the retired ${name} subcommand`, () =>
+      runYeetCommand([name]).pipe(
+        Effect.flip,
+        Effect.tap((error) => Effect.sync(() => expect(error._tag).not.toBe("YeetCommandError")))
+      )
+    );
+  }
+  for (const name of ["status"]) {
     it.effect(`does not accept --detach on ${name}`, () =>
       runYeetCommand([name, "--detach"]).pipe(
         Effect.flip,

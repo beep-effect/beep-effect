@@ -1163,6 +1163,10 @@ const knownNonzeroRawAcceptanceCommands = [
   "bun run fallow:dead-code:json -- --summary",
   "bun run knip --reporter json",
 ];
+// Frozen (beep-cli-composition W0, 2026-10-31): `yeet plan-contract-check` and
+// `yeet fallow-fixture-check` were retired (SPEC D11). The strings below are the
+// historical acceptance records of this completed-retained packet. This
+// validator only matches them against tasks.jsonc text and never runs them.
 const yeetPlanContractCommand =
   'bun run beep yeet verify --plan --json | bun run beep yeet plan-contract-check --from-stdin --expect-step-id advisory:01-fallow-feedback --expect-step-label fallow-advisory-feedback --expect-command bun --expect-args "run beep yeet fallow-feedback --from .beep/fallow --emit .beep/yeet/fallow-quality-issues.json --advisory"';
 const yeetPublishAdvisoryPlanContractCommand =

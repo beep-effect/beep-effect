@@ -355,7 +355,7 @@ and the Claude tool allowlist includes Edit/Write (the harness default is Read,B
 | --- | --- | --- |
 | Packet launcher size | `test "$(wc -m < goals/harness-evidence-ledger/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/harness-evidence-ledger/ops/manifest.json` | Passes |
-| Packet lint | `bun run beep lint goal-packets` | Passes |
+| Packet lint | `lint goal-packets`, retired in beep-cli-composition W0 ([`LintGoalPackets.command.ts` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Lint/LintGoalPackets.command.ts)) | Passed |
 | Goals doctor | `bun run beep goals doctor` | No finding for this packet |
 | Reflections | `bun run beep lint reflection-artifacts` | Passes |
 | Package handoff | `bun run beep quality package-verify @beep/ai-metrics` | Passes |

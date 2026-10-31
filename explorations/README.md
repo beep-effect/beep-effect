@@ -145,8 +145,8 @@ copy is rewritten from the projection by the check itself (decision log
 2026-09-12) and the rewrite never appears in `git diff`. `bun run beep yeet
 repair` still regenerates the ignored Atlas and the README status regions
 before the cheap tier proves them. The remaining v1 shape (`openQuestions`, links,
-and sources) is still conversational and checked by the skill; the fleet
-convention migration owns full-schema lint.
+and sources) is still conversational and checked by the skill; the fleet lint
+in `bun run beep explore --check` owns full-schema lint.
 
 ## Graduation Contract
 

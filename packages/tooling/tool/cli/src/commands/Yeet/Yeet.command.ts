@@ -33,11 +33,7 @@ import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
 import { yeetGhCommand } from "./Gh.command.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
 import { runYeetEconomicsCommand } from "./internal/Economics.ts";
-import {
-  runYeetFallowFeedback,
-  runYeetFallowFixtureCheck,
-  runYeetPlanContractCheck,
-} from "./internal/FallowFeedback.ts";
+import { runYeetFallowFeedback } from "./internal/FallowFeedback.ts";
 import { YeetFinalCheckOptions } from "./internal/FinalCheck.schemas.ts";
 import { runYeetFinalCheck } from "./internal/FinalCheck.ts";
 import { validateProofJobDetach } from "./internal/Guards.ts";
@@ -334,36 +330,6 @@ const fallowAdvisoryFlag = Flag.Boolean("advisory").pipe(
 
 const fallowRunStartedAtFlag = Flag.String("run-started-at").pipe(
   Flag.withDescription("Reject advisory envelopes generated before this Yeet run timestamp"),
-  Flag.withDefault("")
-);
-
-const fallowAssertFlag = Flag.String("assert").pipe(
-  Flag.withDescription("Comma-separated fixture assertions to enforce"),
-  Flag.withDefault("")
-);
-
-const fromStdinFlag = Flag.Boolean("from-stdin").pipe(
-  Flag.withDefault(false),
-  Flag.withDescription("Read a Yeet plan JSON document from stdin")
-);
-
-const expectStepIdFlag = Flag.String("expect-step-id").pipe(
-  Flag.withDescription("Required plan step id"),
-  Flag.withDefault("")
-);
-
-const expectStepLabelFlag = Flag.String("expect-step-label").pipe(
-  Flag.withDescription("Required plan step label"),
-  Flag.withDefault("")
-);
-
-const expectCommandFlag = Flag.String("expect-command").pipe(
-  Flag.withDescription("Required plan step command"),
-  Flag.withDefault("")
-);
-
-const expectArgsFlag = Flag.String("expect-args").pipe(
-  Flag.withDescription("Required plan step args rendered as a space-separated string"),
   Flag.withDefault("")
 );
 
@@ -1306,10 +1272,6 @@ const yeetResumeCommand = Command.make(
     )
 ).pipe(Command.withDescription("Resume an agent session recorded for a pull request"));
 
-const yeetPrePushHookCommand = Command.make("pre-push-hook", sharedFlags, (options) =>
-  runYeetMode("pre-push-hook", options)
-).pipe(Command.withDescription("Reuse exact Yeet full-proof state for git pre-push hooks when safe"));
-
 const yeetFallowFeedbackCommand = Command.make(
   "fallow-feedback",
   {
@@ -1320,18 +1282,6 @@ const yeetFallowFeedbackCommand = Command.make(
   },
   ({ advisory, emit, from, runStartedAt }) => runYeetFallowFeedback({ advisory, emit, from, runStartedAt })
 ).pipe(Command.withDescription("Convert Fallow advisory envelopes into a Yeet QualityIssueIndex"));
-
-const yeetFallowFixtureCheckCommand = Command.make(
-  "fallow-fixture-check",
-  {
-    assert: fallowAssertFlag,
-    emit: fallowEmitFlag,
-    fixturePath: Argument.String("fixture-path").pipe(
-      Argument.withDescription("Fallow report-envelope fixture document")
-    ),
-  },
-  ({ assert, emit, fixturePath }) => runYeetFallowFixtureCheck({ assertions: assert, emit, fixturePath })
-).pipe(Command.withDescription("Verify Fallow envelope fixtures map into Yeet quality issues"));
 
 const yeetInboxListCommand = Command.make("list", inboxListFlags, runYeetInboxList).pipe(
   Command.withDescription("List the checkout's failure inbox rows joined with ack state and wave liveness")
@@ -1417,19 +1367,6 @@ const yeetEconomicsCommand = Command.make(
   )
 );
 
-const yeetPlanContractCheckCommand = Command.make(
-  "plan-contract-check",
-  {
-    expectArgs: expectArgsFlag,
-    expectCommand: expectCommandFlag,
-    expectStepId: expectStepIdFlag,
-    expectStepLabel: expectStepLabelFlag,
-    fromStdin: fromStdinFlag,
-  },
-  ({ expectArgs, expectCommand, expectStepId, expectStepLabel, fromStdin }) =>
-    runYeetPlanContractCheck({ expectArgs, expectCommand, expectStepId, expectStepLabel, fromStdin })
-).pipe(Command.withDescription("Assert a Yeet plan contains an exact named step"));
-
 /**
  * Command that repairs, verifies, or publishes repository work through Yeet.
  *
@@ -1469,10 +1406,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetJobCommand,
     yeetProofReportCommand,
     yeetEconomicsCommand,
-    yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
-    yeetFallowFixtureCheckCommand,
-    yeetPlanContractCheckCommand,
     yeetGhCommand,
   ])
 );

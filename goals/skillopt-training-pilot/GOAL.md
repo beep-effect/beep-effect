@@ -26,7 +26,8 @@ Scope:
   always-loaded-context growth.
 
 Composition (reuse, don't rebuild): runner generalizes
-`packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts`
+[`QualityWorkerEval.ts` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts)
+(retired in beep-cli-composition W0)
 (codex-sdk, structured JSON, temp isolation) at sandboxMode workspace-write;
 storage = ai-metrics BenchmarkCase/BenchmarkRun + DuckDB; scorer wraps
 `bun run beep lint schema-first` + tsgo Effect diagnostics + biome (node

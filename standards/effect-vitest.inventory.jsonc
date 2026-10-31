@@ -1989,13 +1989,13 @@
       "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:164:provideScopedLayer@10#1",
+      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:165:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/models-manifest-errors.test.ts",
-      "line": 164,
-      "endLine": 168,
+      "line": 165,
+      "endLine": 169,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5d5f83e0d96b9a26d6c135ea063cb127753c7393a4f8bbcf6610ce0e1847e923",
       "class": "unresolved-layer-provide",
@@ -2539,13 +2539,13 @@
       "reason": "Changes the OS-level working directory: the archive fence reads /proc/<pid>/cwd, so only process.chdir exercises it. A cwd override is process state, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: the fence takes the invoking process's working directory as an injected input instead of reading its own /proc entry. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/yeet.test.ts:300:withEnvVarEffect@25#1",
+      "id": "EV003:packages/tooling/tool/cli/test/yeet.test.ts:298:withEnvVarEffect@25#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet.test.ts",
-      "line": 300,
-      "endLine": 318,
+      "line": 298,
+      "endLine": 316,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:9de6cbb26ee2cc4269eebbc213519cc12670f526f85838a1fd4843bf89bed741",
       "class": "resource-wrapper",
@@ -4827,13 +4827,13 @@
       "reason": "The filing-decision cases share the documents-server native fixture: materialized bytes and atomic updates in scoped temporary directories. Owner: @beep/documents-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
-      "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:33:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
-      "line": 19,
-      "endLine": 19,
+      "line": 33,
+      "endLine": 33,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -4893,13 +4893,13 @@
       "reason": "Native filesystem identity, path containment, descriptor failures and real file preservation are the tested contract. Tests use it.layer with explicit acquisition budgets. Owner: @beep/documents-server. Exit: retire when an in-memory filesystem faithfully models inode/device identity and descriptor-to-path races."
     },
     {
-      "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:22:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:34:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
-      "line": 22,
-      "endLine": 22,
+      "line": 34,
+      "endLine": 34,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -7531,28 +7531,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The test runs git ls-files at findRepoRoot() and the command resolves its root from the working directory. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the manifest list is read from a seeded volume and the root is injected."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts:33:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
-      "line": 33,
-      "endLine": 33,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test copies committed fixtures resolved through import.meta.url (FORKED_PATH) and the subject runs with process.chdir into the scratch directory. #1875 wave 7 memory trial (H3): fails with ENOENT on chdir into the temp directory. Owner: @beep/repo-cli. Exit: retire when the migration command takes its working directory from an injected service and its fixtures are copied into the memory volume (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts:13:@effect/platform-node@0#1",
