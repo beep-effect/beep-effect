@@ -3,6 +3,7 @@ import {
   ChangeClassifier,
   ChangeSet,
   CI_LANE_ID_VALUES,
+  HostedJob,
   HostedRun,
   RouteCensusReader,
   RouteCorpusLoaded,
@@ -412,6 +413,37 @@ it.layer(NodeCrypto.layer)("route census", (it) => {
 });
 
 describe("route replay", () => {
+  for (const missing of [true, false]) {
+    it.effect(`counts skipped failures against ${missing ? "missing" : "cancelled"} base lane results`, () =>
+      Effect.gen(function* () {
+        const original = yield* decodeRuns(replayRunsJson);
+        const runs = A.map(original, (run) =>
+          run.headSha === "m1"
+            ? HostedRun.make({
+                ...run,
+                jobs: missing
+                  ? A.filter(run.jobs, (job) => job.name !== "Heavy / Check")
+                  : A.map(run.jobs, (job) =>
+                      job.name === "Heavy / Check" ? HostedJob.make({ ...job, conclusion: O.some("cancelled") }) : job
+                    ),
+              })
+            : run
+        );
+        const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const replay = yield* runReplay(
+          runs,
+          classifierLayer(noAtoms),
+          gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+        );
+        const head = yield* Effect.fromOption(A.findFirst(replay.perHead, (row) => row.headSha === "a1"));
+        expect(head.skippedReds).toEqual(["check"]);
+        expect(head.baseUnknown).toBe(true);
+        expect(replay.baseUnknownHeads).toBe(2);
+        expect(replay.skippedReds).toBe(3);
+      })
+    );
+  }
+
   it.effect("has recall 1 at all-unknown", () =>
     Effect.gen(function* () {
       const runs = yield* decodeRuns(replayRunsJson);

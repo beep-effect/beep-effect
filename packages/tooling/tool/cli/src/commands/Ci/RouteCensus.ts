@@ -1016,22 +1016,22 @@ export const makeRouteCensusReader: Effect.Effect<
         const base = head.resolved ? yield* baseRuns(head.mergeBase) : O.none<ReadonlyArray<HostedRun>>();
         const red = lanesConcluded(head.jobs, "failure");
         const baseGreen = O.map(base, (runs) => lanesConcluded(hostedLaneJobs(runs), "success"));
+        const baseRed = O.map(base, (runs) => lanesConcluded(hostedLaneJobs(runs), "failure"));
         return RouteReplayHead.make({
           headSha: head.headSha,
           mergeBase: head.mergeBase,
           selected: A.filter(CI_LANE_ID_VALUES, (lane) => HashMap.has(required, lane)),
           skipped,
-          skippedReds: A.filter(
-            skipped,
-            (lane) =>
-              HashSet.has(red, lane) &&
-              pipe(
-                baseGreen,
-                O.map(HashSet.has(lane)),
-                O.getOrElse(() => true)
-              )
-          ),
-          baseUnknown: O.isNone(base),
+          skippedReds: A.filter(skipped, (lane) => HashSet.has(red, lane) && !O.exists(baseRed, HashSet.has(lane))),
+          baseUnknown:
+            O.isNone(base) ||
+            A.some(
+              skipped,
+              (lane) =>
+                HashSet.has(red, lane) &&
+                !O.exists(baseGreen, HashSet.has(lane)) &&
+                !O.exists(baseRed, HashSet.has(lane))
+            ),
         });
       }),
       { concurrency: ROUTE_HEAD_CONCURRENCY }

@@ -173,6 +173,13 @@ const gunzip = (bytes: Uint8Array): string => new TextDecoder().decode(NodeZlib.
 const ndjsonRuns = (bytes: Uint8Array) =>
   Effect.forEach(A.filter(Str.split(gunzip(bytes), "\n"), Str.isNonEmpty), (line) => decodeRun(line));
 
+const pinnedCorpusPath = Effect.fn("RouteCorpusTest.pinnedCorpusPath")(function* (outDir: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const receipt = yield* decodeReceipt(yield* fs.readFileString(path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE)));
+  return path.join(outDir, path.basename(receipt.path));
+});
+
 // Rewrites the corpus to `text` and pins the receipt to the new bytes, so only
 // the content (not the digest) is wrong.
 const repin = Effect.fn("RouteCorpusTest.repin")(function* (
@@ -183,7 +190,7 @@ const repin = Effect.fn("RouteCorpusTest.repin")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const bytes = NodeZlib.gzipSync(new TextEncoder().encode(text));
-  yield* fs.writeFile(path.join(outDir, ROUTE_CORPUS_FILE), bytes);
+  yield* fs.writeFile(yield* pinnedCorpusPath(outDir), bytes);
   const receiptPath = path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE);
   const receipt = yield* decodeReceipt(yield* fs.readFileString(receiptPath));
   const repinned = RouteCorpusReceipt.make({ ...receipt, runs: runs(receipt), sha256: yield* sha256Hex(bytes) });
@@ -261,6 +268,91 @@ it.effect.prop(
 );
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture and load", (it) => {
+  it.effect("loads and resumes a legacy fixed-filename checkpoint without losing its corpus", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
+      const corpus = yield* makeRouteCorpus(
+        yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
+      );
+      const receipt = yield* corpus.capture(captureOptions(root));
+      const outDir = path.join(root, "corpus");
+      const pinned = yield* pinnedCorpusPath(outDir);
+      const legacyPath = path.join(outDir, ROUTE_CORPUS_FILE);
+      yield* fs.copyFile(pinned, legacyPath);
+      yield* fs.remove(pinned);
+      const legacy = RouteCorpusReceipt.make({ ...receipt, path: `corpus/${ROUTE_CORPUS_FILE}` });
+      const receiptPath = path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE);
+      yield* fs.writeFileString(receiptPath, yield* encodeReceipt(legacy));
+      expect((yield* corpus.load(receiptPath)).runs).toHaveLength(4);
+
+      const resumed = yield* corpus.capture(captureOptions(root));
+      expect(resumed.path).toBe(`corpus/hosted-runs.${resumed.sha256}.ndjson.gz`);
+      expect((yield* corpus.load(receiptPath)).runs).toHaveLength(4);
+      expect(yield* fs.exists(legacyPath)).toBe(true);
+    })
+  );
+
+  it.effect("keeps the prior checkpoint loadable when switching the receipt fails", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const runner = yield* fixtureRunner(calls);
+      const corpus = yield* makeRouteCorpus(runner);
+      const original = yield* corpus.capture(captureOptions(root, { since: "2026-10-28" }));
+      const receiptPath = path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE);
+      const receiptText = yield* fs.readFileString(receiptPath);
+      const extended = extendedRunner(calls, runner, false, "2026-10-31T14:00:00Z");
+      const interrupted = yield* makeRouteCorpus(extended).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: (from, to) => fs.rename(to === receiptPath ? path.join(root, "absent-source") : from, to),
+        })
+      );
+      const options = captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-29") });
+      const failure = yield* Effect.flip(interrupted.capture(options));
+      expect(failure.reason).toBe("corpus-pin");
+      expect(yield* fs.readFileString(receiptPath)).toBe(receiptText);
+      const prior = yield* corpus.load(receiptPath);
+      expect(prior.receipt).toEqual(original);
+      expect(A.map(prior.runs, (run) => run.runId)).toEqual([RERUN]);
+
+      const resumed = yield* (yield* makeRouteCorpus(extended)).capture(options);
+      expect([resumed.until, resumed.runs]).toEqual(["2026-10-29", 2]);
+      expect((yield* corpus.load(receiptPath)).receipt).toEqual(resumed);
+      const narrowed = yield* corpus.capture(captureOptions(root, { since: "2026-10-28" }));
+      expect([narrowed.until, narrowed.runs]).toEqual(["2026-10-28", 1]);
+    })
+  );
+
+  it.effect("drops older runs when workflow changes start a later date window", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
+      const corpus = yield* makeRouteCorpus(
+        yield* fixtureRunner(yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]))
+      );
+      yield* corpus.capture(captureOptions(root));
+      const receipt = yield* corpus.capture(
+        RouteCorpusCaptureOptions.make({
+          ...captureOptions(root),
+          since: "2026-10-28",
+          workflows: ["Check"],
+        })
+      );
+      expect([receipt.since, receipt.runs]).toEqual(["2026-10-28", 1]);
+      const loaded = yield* corpus.load(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE));
+      expect(A.map(loaded.runs, (run) => run.runId)).toEqual([RERUN]);
+    })
+  );
+
   it.effect("keeps today and future days open and collects runs created later today", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -291,7 +383,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const corpus = yield* makeRouteCorpus(yield* fixtureRunner(calls));
       yield* corpus.capture(captureOptions(root));
       const receiptPath = path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE);
-      const corpusPath = path.join(root, "corpus", ROUTE_CORPUS_FILE);
+      const corpusPath = yield* pinnedCorpusPath(path.join(root, "corpus"));
       const receipt = yield* fs.readFileString(receiptPath);
       const bytes = yield* fs.readFile(corpusPath);
       const text = gunzip(bytes);
@@ -346,7 +438,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
 
       const receipt = yield* corpus.capture(captureOptions(root));
 
-      const bytes = yield* fs.readFile(path.join(root, "corpus", ROUTE_CORPUS_FILE));
+      const bytes = yield* fs.readFile(yield* pinnedCorpusPath(path.join(root, "corpus")));
       expect(receipt).toEqual(
         RouteCorpusReceipt.make({
           schemaVersion: "route-corpus/v1",
@@ -357,7 +449,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
           workflows: ["Check", "Heavy"],
           runs: 4,
           heads: 3,
-          path: `corpus/${ROUTE_CORPUS_FILE}`,
+          path: `corpus/hosted-runs.${receipt.sha256}.ndjson.gz`,
           sha256: yield* sha256Hex(bytes),
         })
       );
@@ -517,7 +609,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       expect(loaded.receipt).toEqual(receipt);
       expect(A.map(loaded.runs, (run) => run.runId)).toEqual([PR_RUN, HEAVY_RUN, MAIN_RUN, RERUN]);
 
-      const corpusPath = path.join(root, "corpus", ROUTE_CORPUS_FILE);
+      const corpusPath = yield* pinnedCorpusPath(path.join(root, "corpus"));
       const bytes = yield* fs.readFile(corpusPath);
       yield* fs.writeFile(
         corpusPath,
@@ -541,7 +633,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       yield* corpus.capture(captureOptions(root));
       const outDir = path.join(root, "corpus");
       const receiptPath = path.join(outDir, ROUTE_CORPUS_RECEIPT_FILE);
-      const text = gunzip(yield* fs.readFile(path.join(outDir, ROUTE_CORPUS_FILE)));
+      const text = gunzip(yield* fs.readFile(yield* pinnedCorpusPath(outDir)));
 
       yield* repin(outDir, `${text}{"runId":"not-a-number"}\n`, (receipt) => receipt.runs + 1);
       const malformed = yield* Effect.flip(corpus.load(receiptPath));

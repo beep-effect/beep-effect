@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T18:04:06.393Z",
+  "generatedAt": "2026-10-31T18:22:54.479Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -489021,8 +489021,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCorpus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCorpus.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-90-route-corpus-file",
+          "line": 95,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-95-route-corpus-file",
           "currentTags": [
             "@category",
             "@since"
@@ -489043,8 +489043,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCorpus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCorpus.ts",
-          "line": 106,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-106-route-corpus-receipt-file",
+          "line": 111,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-111-route-corpus-receipt-file",
           "currentTags": [
             "@category",
             "@since"
@@ -489065,8 +489065,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/RouteCorpus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCorpus.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-140-routeghrunner",
+          "line": 145,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-145-routeghrunner",
           "currentTags": [
             "@category",
             "@since"
@@ -489087,8 +489087,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/RouteCorpus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCorpus.ts",
-          "line": 171,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-171-routeghratelimited",
+          "line": 176,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-176-routeghratelimited",
           "currentTags": [
             "@category",
             "@since"
@@ -489109,8 +489109,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCorpus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCorpus.ts",
-          "line": 459,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-459-makeroutecorpus",
+          "line": 464,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-464-makeroutecorpus",
           "currentTags": [
             "@param",
             "@returns",
@@ -489133,8 +489133,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/RouteCorpus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RouteCorpus.ts",
-          "line": 813,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-813-routecorpuslive",
+          "line": 843,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-routecorpus-ts-843-routecorpuslive",
           "currentTags": [
             "@category",
             "@since"

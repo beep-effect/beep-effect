@@ -1,6 +1,6 @@
 /**
  * The hosted corpus of the verification route: capture GitHub Actions runs
- * into a digest-pinned, gzipped NDJSON file and load it back only when its
+ * into a digest-named, gzipped NDJSON file and load it back only when its
  * bytes match the receipt (`goals/verification-route`, slice 1).
  *
  * **Details**
@@ -74,9 +74,14 @@ const $I = $RepoCliId.create("commands/Ci/RouteCorpus");
 export const ROUTE_CORPUS_LIST_CAP = 1000;
 
 /**
- * File name of the gzipped NDJSON corpus inside the capture's output directory.
+ * Legacy corpus filename, read when adopting an unreceipted capture.
  *
- * **Example** (Locate the corpus file)
+ * **Details**
+ * New checkpoints use `hosted-runs.<sha256>.ndjson.gz` and switch the receipt
+ * last. An interrupted write therefore leaves the prior receipt and its
+ * immutable corpus loadable. Read the current filename from the receipt.
+ *
+ * **Example** (Locate a legacy corpus file)
  *
  * ```ts
  * import { ROUTE_CORPUS_FILE } from "@beep/repo-cli/commands/Ci/RouteCorpus"
@@ -420,9 +425,9 @@ type CapturePlan = {
  * `since` to `until` (today in UTC when absent), oldest first. For each day
  * it lists every workflow, fetches the finished eligible runs the corpus
  * lacks (eight at a time), and then pins the corpus: it writes
- * `hosted-runs.ndjson.gz`, sorted by `createdAt` then run id, and
- * `RECEIPTS.json` beside it, each through a temporary file and a rename. A
- * day that fails part-way writes nothing.
+ * `hosted-runs.<sha256>.ndjson.gz`, sorted by `createdAt` then run id, and
+ * switches `RECEIPTS.json` last through a temporary file and a rename. An
+ * interrupted switch leaves the previous receipt and its corpus intact.
  *
  * The receipt's `until` is the last fully captured day. A day with an
  * eligible run that has not finished stays open: its finished runs are
@@ -613,14 +618,19 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     previous: O.Option<RouteCorpusReceipt>,
     since: string,
     sinceDay: DateTime.Utc,
-    workflows: ReadonlyArray<string>
+    workflows: ReadonlyArray<string>,
+    until: string
   ): Effect.fn.Return<CapturePlan, RouteError> {
     const fresh: CapturePlan = { since, start: sinceDay, covered: dayBefore(sinceDay), workflows };
     if (O.isNone(previous)) {
       return fresh;
     }
     const receipt = previous.value;
-    if (!sameWorkflows(receipt.workflows, workflows) || isLaterDay(receipt.since, since)) {
+    if (
+      !sameWorkflows(receipt.workflows, workflows) ||
+      isLaterDay(receipt.since, since) ||
+      isLaterDay(receipt.until, until)
+    ) {
       return fresh;
     }
     const previousUntil = yield* parseDay("corpus-pin", "the receipt's until", receipt.until);
@@ -659,18 +669,27 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     }
     const loaded = (yield* exists(receiptPath)) ? O.some(yield* load(receiptPath)) : O.none();
     const previous = O.map(loaded, (value) => value.receipt);
-    const plan = yield* capturePlan(previous, options.since, since, options.workflows);
+    const plan = yield* capturePlan(
+      previous,
+      options.since,
+      since,
+      options.workflows,
+      DateTime.formatIsoDateUtc(until)
+    );
+    const inWindow = (run: HostedRun) => {
+      const day = Str.takeLeft(run.createdAt, 10);
+      return (
+        A.contains(options.workflows, run.workflow) &&
+        !isLaterDay(plan.since, day) &&
+        !isLaterDay(day, DateTime.formatIsoDateUtc(until))
+      );
+    };
     const existing: CaptureState = O.isSome(loaded)
       ? {
           runs: HashMap.fromIterable(
-            A.map(
-              A.filter(loaded.value.runs, (run) => A.contains(options.workflows, run.workflow)),
-              (run): readonly [number, HostedRun] => [run.runId, run]
-            )
+            A.map(A.filter(loaded.value.runs, inWindow), (run): readonly [number, HostedRun] => [run.runId, run])
           ),
-          pinned: A.every(loaded.value.runs, (run) => A.contains(options.workflows, run.workflow))
-            ? O.some(loaded.value.receipt.sha256)
-            : O.none(),
+          pinned: A.every(loaded.value.runs, inWindow) ? O.some(loaded.value.receipt.sha256) : O.none(),
           covered: "",
           open: true,
         }
@@ -681,18 +700,29 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       .makeDirectory(outDir, { recursive: true })
       .pipe(Effect.mapError(RouteError.mapError("corpus-pin", `Failed to create ${outDir}.`)));
 
-    // Write the corpus when its runs changed, then the receipt for what is covered.
+    const pinnedPath = (sha256: string) => path.join(outDir, `hosted-runs.${sha256}.ndjson.gz`);
+    const pinRuns = Effect.fnUntraced(function* (runs: ReadonlyArray<HostedRun>) {
+      const bytes = yield* encodeCorpus(runs, corpusPath);
+      const sha256 = yield* digest(bytes, corpusPath);
+      const target = pinnedPath(sha256);
+      if (!(yield* exists(target))) {
+        yield* writeAtomic(target, bytes);
+      }
+      return sha256;
+    });
+
+    // Commit immutable corpus bytes first, then atomically switch the receipt.
+    // Prior versions remain available if that final switch is interrupted.
     const checkpoint = Effect.fnUntraced(function* (
       state: CaptureState
     ): Effect.fn.Return<readonly [RouteCorpusReceipt, CaptureState], RouteError> {
       const runs = A.sort(HashMap.toValues(state.runs), byCreatedAtThenRunId);
       const sha256 = yield* O.match(state.pinned, {
-        onSome: Effect.succeed,
-        onNone: () =>
-          encodeCorpus(runs, corpusPath).pipe(
-            Effect.tap((bytes) => writeAtomic(corpusPath, bytes)),
-            Effect.flatMap((bytes) => digest(bytes, corpusPath))
+        onSome: (sha256) =>
+          exists(pinnedPath(sha256)).pipe(
+            Effect.flatMap((present) => (present ? Effect.succeed(sha256) : pinRuns(runs)))
           ),
+        onNone: () => pinRuns(runs),
       });
       const receipt = RouteCorpusReceipt.make({
         schemaVersion: "route-corpus/v1",
@@ -702,7 +732,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         workflows: plan.workflows,
         runs: A.length(runs),
         heads: HashSet.size(HashSet.fromIterable(A.map(runs, (run) => run.headSha))),
-        path: path.relative(path.resolve(options.repoRoot), corpusPath),
+        path: path.relative(path.resolve(options.repoRoot), pinnedPath(sha256)),
         sha256,
       });
       const receiptText = yield* encodeReceipt(receipt).pipe(
