@@ -129,6 +129,14 @@ timers still need complete engine composition across cleaner stages. See
 history/evidence/2026-10-31-owned-html-worker.md. Source maps, Layer and exhaustive
 engine parity remain open; no canonical completion row advances.
 
+Latest worker qualification (2026-10-31): the real child boundary replays all
+1,097 frozen outcomes. Boundary tests preserve one million input units in both
+ASCII and wide representations, accept exact complete message/output ceilings,
+reject one byte/unit less and recover after failure. The qualification test
+also checks child launch/acknowledgement counts. Original source and intermediate
+produced-text bounds must remain distinct during composition. See
+history/evidence/2026-10-31-html-worker-qualification.md. No canonical row advances.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

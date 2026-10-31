@@ -19,6 +19,9 @@ builds are identical. The [owned worker](./history/evidence/2026-10-31-owned-htm
 now bounds complete transport frames, queueing and execution, confirms child
 retirement and quarantines unacknowledged cleanup. Global engine admission,
 composed stage budgets, source maps and the live Layer remain open.
+The [worker corpus qualification](./history/evidence/2026-10-31-html-worker-qualification.md)
+now checks all 1,097 frozen outcomes through actual children, plus the absolute
+source ceiling and exact request/reply boundaries.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

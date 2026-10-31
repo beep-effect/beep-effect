@@ -1141,6 +1141,16 @@ instead of silently splitting delivery or weakening scope.
   engine admission, composed stage budgets, source maps, Layer wiring and
   exhaustive engine qualification remain open. No canonical row advances.
 
+- **2026-10-31 HTML worker qualification:** all 1,097 frozen source outcomes
+  now pass through the actual owned process boundary. All 859 launched children
+  have independent exit probes; 238 declaration rejections launch no child.
+  ASCII and wide one-million-unit inputs, exact request/reply/output ceilings,
+  explicit failures and subsequent recovery pass. Both affected package gates
+  pass. Global composition must preserve the distinction between original
+  source limits and intermediate produced text. Cleaner composition, source
+  maps, public translation and Layer integration remain open. No canonical
+  completion or normalization law follows.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

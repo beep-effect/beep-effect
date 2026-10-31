@@ -144,7 +144,9 @@
         "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
         "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
         "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md"
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md",
+        "packages/law-practice/server/test/CitationHtmlWorkerCorpus.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-html-worker-qualification.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
