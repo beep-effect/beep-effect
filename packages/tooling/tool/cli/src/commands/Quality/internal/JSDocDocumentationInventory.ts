@@ -12,6 +12,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
@@ -29,7 +30,6 @@ import {
   declarationKind,
   defaultRepoRoot,
   discoverWorkspacePackages,
-  escapeRegExp,
   getDocNode,
   getJsDocText,
   JsonRecord,
@@ -564,7 +564,7 @@ const requiredNamespaceImportViolations = (
   exampleNumber: number,
   required: (typeof requiredNamespaceImports)[number]
 ): ReadonlyArray<DocumentationIssue> => {
-  const escapedModule = escapeRegExp(required.module);
+  const escapedModule = Regex.escape(required.module);
   const namedImportPattern = new RegExp(`import\\s*\\{[^}]+\\}\\s*from\\s*["']${escapedModule}["']`);
   const namespaceImportPattern = new RegExp(
     `import\\s*\\*\\s*as\\s+${required.alias}\\s*from\\s*["']${escapedModule}["']`

@@ -10,6 +10,8 @@ import * as DuckDbMessageStorage from "@beep/duckdb/DuckDbMessageStorage";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, describe, expect } from "@effect/vitest";
+// beep: Assert the held reply's successful Exit without accepting a defect reply.
+import { assertExitSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Entity from "effect/cluster/Entity";
@@ -17,6 +19,8 @@ import * as EntityAddress from "effect/cluster/EntityAddress";
 import * as EntityId from "effect/cluster/EntityId";
 import * as EntityType from "effect/cluster/EntityType";
 import * as Envelope from "effect/cluster/Envelope";
+// beep: Construct the outgoing request for the held reply's storage callback.
+import * as Message from "effect/cluster/Message";
 import * as MessageStorage from "effect/cluster/MessageStorage";
 import * as RunnerHealth from "effect/cluster/RunnerHealth";
 import * as RunnerStorage from "effect/cluster/RunnerStorage";
@@ -27,6 +31,8 @@ import * as ShardingConfig from "effect/cluster/ShardingConfig";
 import * as Snowflake from "effect/cluster/Snowflake";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+// beep: Synchronize delayed layer startup and native reply completion.
+import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -42,7 +48,6 @@ import {
   PrimaryKeyTest,
   StreamRpc,
 } from "./MessageStorageTest.ts";
-import type * as Message from "effect/cluster/Message";
 import type * as Rpc from "effect/rpc/Rpc";
 
 const TestEntity = Entity.make("test", [GetUserRpc]);
@@ -83,7 +88,7 @@ const saveRequestsFor = Effect.fnUntraced(function* (ids: ReadonlyArray<number>)
   return storage;
 });
 // beep: Narrow to requests instead of upstream's `(m: any) => m.envelope.payload.id`.
-const payloadIds = A.map((message: Message.Incoming<any>) =>
+const payloadIds = A.map((message: Message.Incoming<Rpc.Any>) =>
   message._tag === "IncomingRequest" ? message.envelope.payload.id : undefined
 );
 const expectDuplicateReply = Effect.fnUntraced(function* (tag: "Chunk" | "WithExit") {
@@ -569,14 +574,18 @@ describe("SqlMessageStorage", () => {
       "keeps held messages readable while entity layers build",
       () =>
         Effect.gen(function* () {
+          // beep: Observe layer startup and committed replies independently of virtual time.
+          const building = yield* Latch.make();
+          const replied = yield* Latch.make();
           const config = ShardingConfig.layer({
             entityRegistrationTimeout: 6000,
             entityTerminationTimeout: 0,
             entityMessagePollInterval: 100,
             refreshAssignmentsInterval: 0,
           });
+          // beep: Signal the layer's actual start before its ten-second virtual delay.
           const delayedEnv = TestEntityLayer.pipe(
-            Layer.provide(Layer.effectDiscard(Effect.sleep(10_000))),
+            Layer.provide(Layer.effectDiscard(building.open.pipe(Effect.andThen(Effect.sleep(10_000))))),
             Layer.provideMerge(Sharding.layer),
             Layer.provide(RunnerStorage.layerMemory),
             Layer.provide(RunnerHealth.layerNoop),
@@ -587,6 +596,11 @@ describe("SqlMessageStorage", () => {
           const request = yield* makeRequest();
           yield* storage.saveRequest(request);
 
+          // beep: The existing reply callback runs after native storage commits the reply.
+          const replyReader = yield* storage
+            .registerReplyHandler(new Message.OutgoingRequest({ ...request, respond: () => replied.open }))
+            .pipe(Effect.forkChild({ startImmediately: true }));
+
           // beep: Layer.build inside the forked scope replaces upstream's Effect.provide(delayedEnv).
           const fiber = yield* Layer.build(delayedEnv).pipe(
             Effect.andThen(Effect.never),
@@ -594,12 +608,23 @@ describe("SqlMessageStorage", () => {
             Effect.forkChild({ startImmediately: true })
           );
 
+          // beep: Anchor the virtual timeline to the delayed entity layer's actual start.
+          yield* building.await;
           yield* TestClock.adjust(7500);
           expect(yield* storage.repliesFor([request])).toHaveLength(0);
 
           yield* TestClock.adjust(2500);
           yield* TestClock.adjust(100);
-          expect(yield* storage.repliesFor([request])).toHaveLength(1);
+          // beep: Virtual time does not flush DuckDB's native asynchronous work.
+          yield* replied.await;
+          const replies = yield* storage.repliesFor([request]);
+          expect(replies).toHaveLength(1);
+          const reply = A.head(replies);
+          // beep: A stored reply must be WithExit with a successful undefined result.
+          assert(Option.isSome(reply) && reply.value._tag === "WithExit");
+          assertExitSuccess(reply.value.exit, undefined);
+          // beep: Propagate reply-reader failures instead of discarding its Exit.
+          yield* Fiber.join(replyReader);
           yield* Fiber.interrupt(fiber);
         }),
       { timeout: 15_000 }
