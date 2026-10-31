@@ -41,7 +41,6 @@ import {
   readQualityTaskManifest,
   readRootCatalogs,
   readWorkspacePackageText,
-  workspacePatternsFrom,
 } from "@beep/repo-cli/test/Quality";
 import { applyJsoncModification, JsoncModification } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -335,20 +334,17 @@ const SITES: ReadonlyArray<Site> = [
     adopted: ({ text, path }) => verdictOf(readPackageVerifyWorkspace(text, path, "name", "dir"), (w) => w.scripts),
   },
   {
-    site: "repo-cli Quality/internal/QualityArtifactSupport.ts (name, scripts, dependencies, patterns)",
+    // The pattern quarter of this site left with QAS `workspacePatternsFrom`
+    // in 4-A1 (#2380: members come from `@beep/repo-workspaces`
+    // `WorkspaceDiscovery`); the 3-A4 run recorded all four.
+    site: "repo-cli Quality/internal/QualityArtifactSupport.ts (name, scripts, dependencies)",
     oracle: ({ text }) =>
-      verdictOf(decodeQualityArtifactOracle(text), (d) => [
-        d.name,
-        d.scripts ?? null,
-        dependencies(d),
-        workspacePatternsFrom(d.workspaces),
-      ]),
+      verdictOf(decodeQualityArtifactOracle(text), (d) => [d.name, d.scripts ?? null, dependencies(d)]),
     adopted: ({ text, path }) =>
       verdictOf(readWorkspacePackageText(text, path, "/dir", "dir"), (info) => [
         info.name,
         info.packageJson.scripts ?? null,
         dependencies(info.packageJson),
-        workspacePatternsFrom(info.packageJson.workspaces),
       ]),
   },
   {
