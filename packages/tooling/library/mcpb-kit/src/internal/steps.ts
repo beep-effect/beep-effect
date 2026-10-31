@@ -24,15 +24,15 @@ import { McpbPackageFailure } from "../McpbKit.errors.ts";
 
 const $I = $McpbKitId.create("internal/steps");
 
-const DuckDbVersion = "1.5.6-r.2";
+const DuckDbVersion = "2.0.0-r.1";
 /*
  * sha512 integrity published by the npm registry for
- * @duckdb/node-bindings-win32-x64@1.5.6-r.2, checked against the downloaded tarball.
+ * @duckdb/node-bindings-win32-x64@2.0.0-r.1, checked against the downloaded tarball.
  * Packaging verifies this pin before extracting a user-installed artifact;
  * a DuckDB catalog bump must update both constants.
  */
 const WindowsBindingsSha512 =
-  "iFPP94+k8ODB0k0FnELFO5vFB3IkI203RiaPa/9gfymE3AaugLFiN/2oOLhKqvowXWzRLuDBF4dJXRAWJDJ0KA==";
+  "8moS6xWPmM4UahiUhkfNSPFQG+7kpN2zu8w39C+K9Xgn8Z4Ctu5jOSTdXlybYrLofLH8jwgoNFiUOLMXLD4giw==";
 const WindowsBindingsUrl = `https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-${DuckDbVersion}.tgz`;
 
 class BindingsManifest extends S.Opaque<BindingsManifest, { readonly brand: unique symbol }>()(
@@ -139,11 +139,12 @@ export const ensureWindowsBindings = Effect.fn("McpbPackage.ensureWindowsBinding
       message: `Installed DuckDB bindings ${installedManifest.version} differ from pinned ${DuckDbVersion}; update DuckDbVersion and WindowsBindingsSha512 together.`,
     });
   }
-  const packageDir = path.join(cacheDir, "node-bindings-win32-x64");
+  // Keyed by the pinned version, so an unpack left by an older pin is never reused.
+  const packageDir = path.join(cacheDir, `node-bindings-win32-x64-${DuckDbVersion}`);
   if (yield* fs.exists(path.join(packageDir, "duckdb.node"))) {
     return packageDir;
   }
-  const tarball = path.join(cacheDir, "node-bindings-win32-x64.tgz");
+  const tarball = path.join(cacheDir, `node-bindings-win32-x64-${DuckDbVersion}.tgz`);
   yield* fs.makeDirectory(packageDir, { recursive: true });
   yield* run(["curl", "--fail", "--location", "--silent", "--show-error", WindowsBindingsUrl, "--output", tarball]);
   const tarballBytes = yield* fs

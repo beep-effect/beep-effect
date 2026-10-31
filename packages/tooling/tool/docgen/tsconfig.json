@@ -27,10 +27,19 @@
       "path": "../../../foundation/modeling/schema/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/tsconfig/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/utils/tsconfig.json"
     },
     {
+      "path": "../../library/repo-tsconfig/tsconfig.json"
+    },
+    {
       "path": "../../library/repo-utils/tsconfig.json"
+    },
+    {
+      "path": "../../test-kit/memfs/tsconfig.json"
     },
     {
       "path": "../../test-kit/test-runner/tsconfig.json"

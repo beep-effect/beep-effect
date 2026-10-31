@@ -135,6 +135,8 @@ import {
   yeetRedSetKey,
   yeetWaveRedSetKey,
 } from "./Remediation.ts";
+import { ReviewLaneHeadRow, ReviewLaneMergeReadyRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
+import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { renderYeetReviewWindowHold } from "./ReviewWindow.ts";
 import {
   deriveSettleVerdict,
@@ -1512,6 +1514,20 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
     families: O.match(expected, { onNone: A.empty<YeetGatedContextFamily>, onSome: yeetGatedFamiliesFor }),
     changedPaths: yield* readYeetChangedPaths(context, options.capture ?? runRepoCommandCaptureRaw),
   });
+  // A new head is a push the review lane counts (ruling 81); best effort.
+  if (snapshot.remote.number !== undefined) {
+    yield* recordYeetReviewLaneRows(context.repoRoot, [
+      ReviewLaneHeadRow.make({
+        schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+        prNumber: snapshot.remote.number,
+        branch: context.branch,
+        recordedAt: at,
+        headSha: headSha.value,
+        pushedAt: head.timeline.pushedAt,
+        observedAt: at,
+      }),
+    ]);
+  }
   return MonitorObservation.make({ ...observation, poll: MonitorPoll.make({ ...poll, head: O.some(head) }) });
 });
 
@@ -2096,6 +2112,17 @@ const announceMonitorReadiness = Effect.fn("YeetMonitorLoop.announceReadiness")(
       ts: at,
     })
   );
+  // The announcement closes the rounds-to-ready window (ruling 81); best effort.
+  yield* recordYeetReviewLaneRows(context.repoRoot, [
+    ReviewLaneMergeReadyRow.make({
+      schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+      prNumber: snapshot.remote.number,
+      branch: context.branch,
+      recordedAt: at,
+      headSha: current.timeline.headSha,
+      at,
+    }),
+  ]);
   yield* Console.log(`${renderMergeReadyGate(snapshot)}; ${renderYeetHeadTimeline(current.timeline)}`);
   yield* reportMonitorPushToAck(context, current.timeline, snapshot);
   const terminals = yeetMonitorPolicyTerminals(options.policy ?? YeetUntilMergedPolicy.make({}));

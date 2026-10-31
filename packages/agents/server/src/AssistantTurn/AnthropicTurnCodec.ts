@@ -1,6 +1,8 @@
 /**
  * Anthropic provider adaptation for the assistant-turn structured output.
  *
+ * **Details**
+ *
  * `toCodecAnthropic` compiles a stratified schema into an Anthropic-compatible
  * JSON Schema plus a codec that decodes model output back into the domain type.
  * It THROWS at module load if the schema ever grows a construct the provider

@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-docgen": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion 3-A6, effected-3a6)",
+      "reason": "Record the dependency-only drift of @beep/repo-docgen from its new @beep/repo-tsconfig and @beep/tsconfig edges and the @beep/memfs devDependency (docgen readTSConfig through TsconfigValidator, map sites #160, #161, #242, #266); no other workspace gains a closure member, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a6.md",
+        "sha256": "c46f603fa15141acc23197ab84c8169013e29896a60c4919b40a728c09a6d835"
       }
     },
     "@beep/repo-tsconfig": {
@@ -97850,7 +97850,7 @@
       {
         "computation": "@beep/repo-cli#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#audit",
           "@beep/ai-sync#audit",
@@ -97905,10 +97905,12 @@
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
           "@beep/tika#audit",
+          "@beep/tsconfig#audit",
           "@beep/uspto#audit",
           "@beep/utils#audit",
           "@beep/walker#audit",
-          "@beep/xdg#audit"
+          "@beep/xdg#audit",
+          "@beep/yaml#audit"
         ],
         "configuration": {
           "cache": false,
@@ -97968,7 +97970,7 @@
       {
         "computation": "@beep/repo-cli#build",
         "command": "bun run beep:build",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#build",
           "@beep/ai-sync#build",
@@ -98023,10 +98025,12 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98075,7 +98079,7 @@
       {
         "computation": "@beep/repo-cli#check",
         "command": "bun run beep:check",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#build",
           "@beep/ai-sync#build",
@@ -98130,10 +98134,12 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -98169,7 +98175,7 @@
       {
         "computation": "@beep/repo-cli#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#build",
           "@beep/ai-sync#build",
@@ -98224,10 +98230,12 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/tika#build",
+          "@beep/tsconfig#build",
           "@beep/uspto#build",
           "@beep/utils#build",
           "@beep/walker#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": false,
@@ -98273,7 +98281,7 @@
       {
         "computation": "@beep/repo-cli#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/repo-cli#transit",
           "@beep/repo-docgen#transit"
@@ -98312,7 +98320,7 @@
       {
         "computation": "@beep/repo-cli#doctest",
         "command": "bun run beep:doctest",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98367,11 +98375,13 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98415,7 +98425,7 @@
       {
         "computation": "@beep/repo-cli#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -98450,7 +98460,7 @@
       {
         "computation": "@beep/repo-cli#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/ai-provider-cli#transit",
@@ -98506,10 +98516,12 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98570,7 +98582,7 @@
       {
         "computation": "@beep/repo-cli#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -98599,7 +98611,7 @@
       {
         "computation": "@beep/repo-cli#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -98654,7 +98666,7 @@
       {
         "computation": "@beep/repo-cli#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -98708,7 +98720,7 @@
       {
         "computation": "@beep/repo-cli#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98763,10 +98775,12 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": false,
@@ -98805,7 +98819,7 @@
       {
         "computation": "@beep/repo-cli#test",
         "command": "bun run beep:test",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98860,11 +98874,13 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -98926,7 +98942,7 @@
       {
         "computation": "@beep/repo-cli#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98981,11 +98997,13 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/tika#transit",
+          "@beep/tsconfig#transit",
           "@beep/uspto#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
           "@beep/walker#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -99715,11 +99733,14 @@
           "@beep/config-file#audit",
           "@beep/identity#audit",
           "@beep/md#audit",
+          "@beep/memfs#audit",
           "@beep/package-json#audit",
+          "@beep/repo-tsconfig#audit",
           "@beep/repo-utils#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
+          "@beep/tsconfig#audit",
           "@beep/utils#audit"
         ],
         "configuration": {
@@ -99786,11 +99807,14 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -99846,11 +99870,14 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -99893,11 +99920,14 @@
           "@beep/config-file#build",
           "@beep/identity#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -100025,11 +100055,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit"
         ],
         "configuration": {
@@ -100235,11 +100268,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit"
         ],
         "configuration": {
@@ -100285,11 +100321,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
         ],
@@ -100341,11 +100380,14 @@
           "@beep/config-file#transit",
           "@beep/identity#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
         ],

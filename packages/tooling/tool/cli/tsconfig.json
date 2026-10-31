@@ -138,7 +138,13 @@
       "path": "../../../foundation/modeling/spdx/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/tsconfig/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/yaml/tsconfig.json"
     },
     {
       "path": "../../library/ai-metrics/tsconfig.json"

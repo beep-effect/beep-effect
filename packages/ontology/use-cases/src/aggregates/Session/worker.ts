@@ -1,6 +1,8 @@
 /**
  * Worker-safe Session visualizer exports.
  *
+ * **Details**
+ *
  * Keep this entrypoint free of server ports, RPC wiring, editor adapters, and
  * root package barrels that may pull DOM-only dependencies into module workers.
  *

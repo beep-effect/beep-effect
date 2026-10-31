@@ -94,6 +94,59 @@ export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_
  */
 export type TurboCacheEnvName = typeof TurboCacheEnvName.Type;
 
+const hostCacheReferenceFields = {
+  TURBO_API: S.String.check(S.isPattern(/^http:\/\/127\.0\.0\.1:\d{4,5}$/u)),
+  TURBO_TOKEN: S.String.check(S.isStartingWith("op://")),
+  TURBO_REMOTE_CACHE_SIGNATURE_KEY: S.optionalKey(S.String.check(S.isStartingWith("op://"))),
+  TURBO_TEAM: S.String.check(S.isTrimmed(), S.isNonEmpty()),
+};
+
+/**
+ * Reference-only cache configuration installed on an enrolled trusted host.
+ *
+ * **Example** (Validate an enrolled writer)
+ *
+ * ```ts
+ * import { HostTurboCacheReferences } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HostTurboCacheReferences)({
+ *   TURBO_API: "http://127.0.0.1:9427",
+ *   TURBO_TOKEN: "op://fixture/cache/bearer",
+ *   TURBO_TEAM: "beep-effect",
+ *   TURBO_CACHE: "local:rw,remote:rw",
+ *   BEEP_TURBO_TRUSTED_WRITER: "true",
+ * })) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HostTurboCacheReferences = S.Union([
+  S.Struct({
+    ...hostCacheReferenceFields,
+    TURBO_CACHE: S.tag("local:rw,remote:r"),
+    BEEP_TURBO_TRUSTED_WRITER: S.optionalKey(S.tag("false")),
+  }),
+  S.Struct({
+    ...hostCacheReferenceFields,
+    TURBO_CACHE: S.tag("local:rw,remote:rw"),
+    BEEP_TURBO_TRUSTED_WRITER: S.tag("true"),
+  }),
+]).pipe(
+  $I.annoteSchema("HostTurboCacheReferences", {
+    description: "Loopback-only remote cache configuration containing secret references and an explicit write posture.",
+  })
+);
+
+/**
+ * Reference-only cache configuration installed on an enrolled trusted host.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HostTurboCacheReferences = typeof HostTurboCacheReferences.Type;
+
 const TurboEnvironmentVariableName = S.String.check(
   S.isPattern(
     /^[A-Za-z_][A-Za-z0-9_]*$/u,
@@ -176,8 +229,9 @@ export const turboCachePullRequestPosture = {
   TURBO_API: undefined,
   TURBO_TOKEN: undefined,
   TURBO_TEAM: undefined,
+  TURBO_REMOTE_CACHE_SIGNATURE_KEY: undefined,
   TURBO_CACHE: TurboCacheMode.Enum["local:rw"],
-} satisfies Readonly<Record<TurboCacheEnvName, string | undefined>>;
+} satisfies Readonly<Record<TurboCacheEnvName | TurboCacheSecretEnvName, string | undefined>>;
 
 /**
  * Turbo credential environment variables whose `op://` references a secret session may resolve.
@@ -198,7 +252,12 @@ export const turboCachePullRequestPosture = {
  * @category models
  * @since 0.0.0
  */
-export const TurboCacheSecretEnvName = TurboCacheEnvName.pick(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"]).pipe(
+export const TurboCacheSecretEnvName = LiteralKit([
+  "TURBO_API",
+  "TURBO_TOKEN",
+  "TURBO_TEAM",
+  "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+]).pipe(
   $I.annoteSchema("TurboCacheSecretEnvName", {
     description: "Turbo credential environment variables whose references a secret session may resolve.",
   })
@@ -330,6 +389,7 @@ export class TurboCacheEnvironment extends S.Opaque<TurboCacheEnvironment, { rea
   S.Struct({
     api: S.optionalKey(TurboCacheValueSource),
     token: S.optionalKey(TurboCacheValueSource),
+    signatureKey: S.optionalKey(TurboCacheValueSource),
     team: S.optionalKey(TurboCacheValueSource),
     cache: S.optionalKey(S.String),
     trustedWriter: S.optionalKey(S.Boolean),
@@ -719,7 +779,10 @@ export const turboCacheValueSourceFor = (unresolvedSecretReference: boolean): Tu
  * @since 0.0.0
  */
 export const turboCacheEnvironmentNeedsSecretSession = (environment: TurboCacheEnvironment): boolean =>
-  isSecretReference(environment.api) || isSecretReference(environment.token) || isSecretReference(environment.team);
+  isSecretReference(environment.api) ||
+  isSecretReference(environment.token) ||
+  isSecretReference(environment.team) ||
+  isSecretReference(environment.signatureKey);
 
 const missingTurboCacheEnvNames = (environment: TurboCacheEnvironment): ReadonlyArray<TurboCacheEnvName> => {
   const configured = {
@@ -894,6 +957,53 @@ const cacheDirArgs = (cacheDir: string | undefined): ReadonlyArray<string> =>
  */
 export const turboCachePlanNeedsSecretSession = (plan: TurboCachePlan): boolean =>
   (plan._tag === "remote-read" || plan._tag === "remote-write") && plan.requiresSecretSession;
+
+const CacheModeOption = LiteralKit(["--cache", "--remote-only", "--remote-cache-read-only"]).pipe(
+  $I.annoteSchema("CacheModeOption", {
+    description: "Native cache mode options that a strict local-only fallback replaces.",
+  })
+);
+const isCacheModeOption = S.is(CacheModeOption);
+const CacheModeBoolean = LiteralKit(["true", "false"]).pipe(
+  $I.annoteSchema("CacheModeBoolean", { description: "Explicit boolean values accepted by legacy native cache flags." })
+);
+const isCacheModeBoolean = S.is(CacheModeBoolean);
+
+/**
+ * Force native cache access to local-only while preserving task arguments.
+ *
+ * **Details**
+ * Replaces equals-form, split-value and legacy mode flags before `--`; forwarded
+ * task arguments and independent force/cache-directory settings are retained.
+ *
+ * **Example** (Replace a split remote mode)
+ * ```ts
+ * import { forceLocalTurboCacheArgs } from "@beep/repo-cli/test/SharedInternals"
+ * console.log(forceLocalTurboCacheArgs(["run", "build", "--cache", "remote:rw"]))
+ * ```
+ *
+ * @param args - Native Turbo arguments including any task separator.
+ * @returns Arguments with exactly one local-only mode before the task separator.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const forceLocalTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const split = A.findFirstIndex(args, (arg) => arg === "--").pipe(O.getOrElse(() => A.length(args)));
+  const [selection, forwarded] = A.splitAt(args, split);
+  const retained = A.filter(selection, (arg, index) => {
+    const previous = A.get(selection, index - 1);
+    return !A.some(
+      [
+        isCacheModeOption(arg),
+        A.some(CacheModeOption.literals, (name) => Str.startsWith(`${name}=`)(arg)),
+        O.contains(previous, "--cache"),
+        isCacheModeBoolean(arg) && O.exists(previous, (name) => name !== "--cache" && isCacheModeOption(name)),
+      ],
+      (removed) => removed
+    );
+  });
+  return [...retained, "--cache=local:rw", ...forwarded];
+};
 
 /**
  * Downgrade already-built Turbo arguments to the local-only cache posture.

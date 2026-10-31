@@ -6,7 +6,7 @@
     "title": "Exact optional schema keys",
     "status": "active",
     "created": "2026-10-23",
-    "updated": "2026-10-23",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/exact-optional-keys",
@@ -24,7 +24,21 @@
       {
         "gating": true,
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/refactor_exact-optional-keys-512845b98164/verdict.json"
+        "ref": ".beep/yeet/runs/codex_exact-optional-keys-receipt-66fce74eb636/verdict.json"
+      }
+    ],
+    "pullRequests": [
+      {
+        "number": 2145,
+        "role": "supporting"
+      },
+      {
+        "number": 2316,
+        "role": "supporting"
+      },
+      {
+        "number": 2326,
+        "role": "final"
       }
     ]
   },
@@ -44,7 +58,10 @@
     "research/codemod-dry-run.jsonc",
     "research/codemod-write.jsonc",
     "research/optional-vs-optional-key.md",
-    "research/verification.md"
+    "research/verification.md",
+    "research/completion-audit-2026-10-28.md",
+    "research/package-verification-2026-10-28.md",
+    "research/detection-reconciliation-2026-10-28.jsonc"
   ],
   "agentLaunchers": [
     {
@@ -98,6 +115,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2145
+    "finalPullRequest": 2326
   }
 }

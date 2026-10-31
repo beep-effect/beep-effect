@@ -2,6 +2,8 @@
  * Execution ledger record schemas: the write-ahead decision and the
  * post-settlement outcome, hash-chained per run.
  *
+ * **Details**
+ *
  * The ledger stores exactly one class of data (exploration decision 4):
  * hashes, opaque identifiers, bounded literals, and typed outcomes. Every
  * field on these schemas is a `Sha256Hex`-derived brand, a `LiteralKit`

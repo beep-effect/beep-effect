@@ -1,6 +1,8 @@
 /**
  * Line-transform pipeline helper backing the streaming process tool.
  *
+ * **Details**
+ *
  * Applies an ordered list of pure line transforms over a file's lines, tracking
  * processed/failed/skipped counts, wall-clock duration (via {@link Clock}), and
  * per-item failures as `{ item, error, stage }`. The built-in transforms are

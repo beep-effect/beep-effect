@@ -14,7 +14,11 @@
  * lanes do not hold it. The flip also requires a complete, passing
  * `yeet final-check` receipt for that exact head (`FinalCheck.ts`): the local
  * replay of every hosted gate the push-first cheap tier skips, so a lane
- * cannot call a pull request final while it still reds hosted CI. Anything else refuses with the first blocker named.
+ * cannot call a pull request final while it still reds hosted CI. A head with
+ * no receipt of its own may carry the receipt of a passing ancestor under the
+ * refresh rule (operator ruling 2026-10-28, `FinalCheckRefresh.ts`) when the
+ * lane's own changes since that receipt touch only regenerated standards
+ * inventories and goal-packet files. Anything else refuses with the first blocker named.
  * There is no `--force`. The merge gate, not this flip, waits for green checks
  * and for the review window.
  *
@@ -31,9 +35,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
@@ -42,8 +47,11 @@ import * as P from "effect/Predicate";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ghOutput } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { finalCheckRefusal, readFinalCheckReceipt } from "./FinalCheck.ts";
+import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
+import { checkFinalCheckRefresh } from "./FinalCheckRefresh.ts";
 import { flipPullRequestReady, recordInheritedRedsInPullRequestBody, withYeetGh } from "./GhOps.ts";
 import { runGitOutput } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
@@ -51,6 +59,8 @@ import { decodeAttributedCheckFlags, parseAttributedCheck } from "./MergeGate.ts
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
+import { ReviewLaneFlipRow, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
+import { recordYeetReviewLaneRows } from "./ReviewLane.ts";
 import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { readSquashCommitlintForPullRequest, renderSquashCommitlintVerdict } from "./SquashCommitlint.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
@@ -62,6 +72,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetReadyOptions } from "../Yeet.schemas.ts";
 import type { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
+import type { FinalCheckRefreshOwnChange } from "./FinalCheckRefresh.schemas.ts";
 import type { ProofJobRecord } from "./ProofJob.ts";
 import type { SquashCommitlintReport } from "./SquashCommitlint.ts";
 
@@ -550,6 +561,22 @@ const recordInheritedThroughRest = (prNumber: number, entries: ReadonlyArray<Yee
     )
   );
 
+// The pull request author at flip time, so the fold can count the author's
+// own review submissions (thread replies) beside the rounds, never inside
+// them (ruling 81). A failed read leaves the flip row without one, which
+// excludes nothing.
+const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(function* (
+  context: RepoRunContext,
+  prNumber: number
+): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* ghOutput({
+    args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
+    cwd: context.repoRoot,
+    label: "gh pr view author",
+    onFailure: (failure) => failure,
+  }).pipe(Effect.map(flow(Str.trim, O.liftPredicate(Str.isNonEmpty))), Effect.orElseSucceed(O.none<string>));
+});
+
 interface YeetReadyGateDependencies {
   readonly finalCheck?: (
     context: RepoRunContext,
@@ -567,11 +594,23 @@ interface YeetReadyGateDependencies {
     YeetCommandError,
     Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
+  readonly readAuthor?: (
+    context: RepoRunContext,
+    prNumber: number
+  ) => Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
   readonly recordInherited?: (
     prNumber: number,
     entries: ReadonlyArray<YeetReadyInheritedRed>,
     headSha: string
   ) => Effect.Effect<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  readonly refresh?: (
+    context: RepoRunContext,
+    headSha: string
+  ) => Effect.Effect<
+    O.Option<FinalCheckRefreshVerdict>,
+    YeetCommandError,
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  >;
   readonly requestReview?: (
     context: RepoRunContext,
     prNumber: number,
@@ -702,34 +741,74 @@ const adviseSquashCommitlint = Effect.fn("Yeet.adviseSquashCommitlint")(function
 const readFinalCheckForReady = (context: RepoRunContext, headSha: string) =>
   readFinalCheckReceipt(context.repoRoot, headSha);
 
-// The flip is the content-final claim, so it requires the head-pinned
-// final-check receipt: every hosted gate the cheap tier skips, replayed on
-// this exact head. Skipped gates are named so the owner states them in the PR.
-const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
-  context: RepoRunContext,
-  dependencies: YeetReadyGateDependencies,
-  headSha: string
-) {
-  const receipt = yield* (dependencies.finalCheck ?? readFinalCheckForReady)(context, headSha);
-  const refusal = finalCheckRefusal(receipt, headSha);
-  if (O.isSome(refusal)) {
-    return yield* YeetReadyGateRefused.make({
-      blocker: "final-check",
-      message: `yeet ready refused: blocked on final-check: ${refusal.value}. Re-run \`${YEET_READY_COMMAND}\` once it passes.`,
-    });
-  }
-  const skipped = A.filter(
-    A.flatMap(O.toArray(receipt), (found) => found.steps),
-    (step) => step.status === "skipped"
-  );
-  yield* Console.log(
+const refreshForReady = (context: RepoRunContext, headSha: string) =>
+  checkFinalCheckRefresh(context.repoRoot, context.base, headSha);
+
+const refuseFinalCheck = (detail: string) =>
+  YeetReadyGateRefused.make({
+    blocker: "final-check",
+    message: `yeet ready refused: blocked on final-check: ${detail}. Re-run \`${YEET_READY_COMMAND}\` once it passes.`,
+  });
+
+const logReceiptSkips = (receipt: FinalCheckReceipt, label: string) => {
+  const skipped = A.filter(receipt.steps, (step) => step.status === "skipped");
+  return Console.log(
     A.isReadonlyArrayEmpty(skipped)
-      ? `[yeet] final-check receipt for ${Str.slice(0, 12)(headSha)}: pass, every gate ran`
-      : `[yeet] final-check receipt for ${Str.slice(0, 12)(headSha)}: pass with ${A.length(skipped)} skipped gate(s): ${A.join(
+      ? `[yeet] final-check receipt for ${label}: pass, every gate ran`
+      : `[yeet] final-check receipt for ${label}: pass with ${A.length(skipped)} skipped gate(s): ${A.join(
           A.map(skipped, (step) => `${step.gate} (${step.reason ?? "no reason"})`),
           "; "
         )}; name them in the PR body as checks hosted CI proves`
   );
+};
+
+const renderOwnChange = (change: FinalCheckRefreshOwnChange): string =>
+  `${change.path} (${O.getOrElse(change.allowance, () => "not allowed")})`;
+
+// The flip is the content-final claim, so it requires the head-pinned
+// final-check receipt: every hosted gate the cheap tier skips, replayed on
+// this exact head. Skipped gates are named so the owner states them in the PR.
+// A head with no receipt of its own may carry an ancestor's passing receipt
+// under the refresh rule (`FinalCheckRefresh.ts`); a failing or partial
+// receipt on this head always stands.
+const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  prNumber: number,
+  headSha: string
+) {
+  const receipt = yield* (dependencies.finalCheck ?? readFinalCheckForReady)(context, headSha);
+  const refusal = finalCheckRefusal(receipt, headSha);
+  if (O.isNone(refusal)) {
+    // A passing finalCheckRefusal requires a present receipt; an empty receipt
+    // always has a refusal. Do not keep an unreachable success branch here.
+    return yield* logReceiptSkips(O.getOrThrow(receipt), Str.slice(0, 12)(headSha));
+  }
+  if (O.isSome(receipt)) return yield* refuseFinalCheck(refusal.value);
+  const refresh = yield* (dependencies.refresh ?? refreshForReady)(context, headSha);
+  if (O.isNone(refresh)) return yield* refuseFinalCheck(refusal.value);
+  yield* FinalCheckRefreshVerdict.match(refresh.value, {
+    refused: (refused) =>
+      Effect.fail(
+        refuseFinalCheck(
+          refused.reason === "malformed-receipt"
+            ? refused.detail
+            : `${refusal.value}; the nearest ancestor receipt, on ${Str.slice(0, 12)(refused.receiptHead)}, does not carry to this head: ${refused.detail}`
+        )
+      ),
+    pass: Effect.fnUntraced(function* (passed) {
+      const receiptHead = passed.receipt.headSha;
+      yield* Console.log(
+        `[yeet] final-check refresh: pass; head ${Str.slice(0, 12)(headSha)} carries the receipt of ancestor ${receiptHead}; own changes since the receipt: ${
+          A.isReadonlyArrayEmpty(passed.ownChanges) ? "none" : A.join(A.map(passed.ownChanges, renderOwnChange), ", ")
+        }`
+      );
+      yield* logReceiptSkips(passed.receipt, `ancestor ${Str.slice(0, 12)(receiptHead)}`);
+      yield* Console.log(
+        `[yeet] report this final as: final <sha40> #${prNumber} receipt ${receiptHead} (the sha is the head after the flip)`
+      );
+    }),
+  });
 });
 
 const recordAndConfirmInherited = Effect.fn("Yeet.recordAndConfirmInherited")(function* (
@@ -839,6 +918,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       yield* requireFinalCheck(
         context,
         dependencies,
+        prNumber,
         O.getOrElse(headSha, () => "unknown")
       );
       yield* adviseSquashCommitlint(context, dependencies, prNumber);
@@ -872,6 +952,21 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       // shared budget is spent instead of failing the way `gh pr ready` did.
       yield* (dependencies.markReady ?? markReadyThroughBudget)(prNumber, sameHead);
       yield* Console.log(`[yeet] pull request #${prNumber} flipped from draft to ready for review`);
+      // The flip opens the rounds-to-ready window (ruling 81); a failed
+      // record is one warning and never touches the flip.
+      const flippedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+      const author = yield* (dependencies.readAuthor ?? readPullRequestAuthor)(context, prNumber);
+      yield* recordYeetReviewLaneRows(context.repoRoot, [
+        ReviewLaneFlipRow.make({
+          schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+          prNumber,
+          branch: context.branch,
+          recordedAt: flippedAt,
+          headSha: sameHead,
+          at: flippedAt,
+          author,
+        }),
+      ]);
       // The head was pushed while the pull request was a draft, which
       // beep-reviewer ignores; a failed re-request only warns, the flip stands.
       yield* Console.log(

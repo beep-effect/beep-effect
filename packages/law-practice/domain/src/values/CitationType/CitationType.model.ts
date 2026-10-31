@@ -2,6 +2,8 @@
  * Citation-type value object: the discriminant literal identifying which kind
  * of legal authority a parsed citation refers to.
  *
+ * **Details**
+ *
  * The literal domain (`case`, `statute`, `constitutional`, ...) selects which
  * component-span schema applies to a given citation and how downstream
  * formatters render it.

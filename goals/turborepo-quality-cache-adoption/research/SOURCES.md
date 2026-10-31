@@ -204,3 +204,192 @@ records each important reconciliation.
 
 These are graduated-goal deliverables, not omissions to conceal with static
 confidence.
+
+## 2026-10-28 implementation refresh
+
+The current source baseline is `2c59e073c8`; the native checkpoint separately
+binds changed runner source bytes. Historical claims above keep their dates.
+
+- [Current client pins](../../turborepo-quality-cache-adoption/research/current-client-pins.json):
+  installed stable 2.11.10 and published canary 2.11.9-canary.1, executable
+  hashes, registry package integrity and native delegation controls.
+- [Current population](../../turborepo-quality-cache-adoption/research/current-population.json):
+  Cache census source hashes and the retained qualification owner's handoff;
+  inventory only, with current semantic review and disposition still pending.
+- [Current feature inventory](../../turborepo-quality-cache-adoption/research/current-feature-matrix.json):
+  exact bundled-document hashes and installed-schema flags; applicability and
+  runtime correctness remain separate proof obligations.
+- [Current native protocol checkpoint](../../turborepo-cache-trust-observability/research/current-native-checkpoint.json):
+  real stable/canary synthetic runs with signing and transport controls; no
+  deployed role, tenant or observation-window authority.
+- [Retained qualification](../../turborepo-task-qualification/research/current-signed-qualification.json):
+  applies to its original identity-lint computation, reuse layer, profile and
+  epoch; it cannot promote the refreshed population.
+
+
+### Native feature controls, 2026-10-29
+
+- [Bounded observations](native-input-controls.json) and
+  [retained driver](native-input-controls.py): eighteen actual native local-cache
+  executions, exact client and Bun digests, output agreement and fixture cleanup.
+  Reproduce with `python3 goals/turborepo-quality-cache-adoption/research/native-input-controls.py`.
+  Uses installed/cached pinned clients, no credentials or remote cache. The
+  report is synthetic feature evidence, not a real Beep computation's qualified
+  tuple or a representative production window. Description-only edits caused
+  invalidation on both pins; the earlier private reuse hypothesis remains
+  separately retained and was not promoted into an assertion.
+
+
+### Current pinned runtime control
+
+- [Runtime checkpoint](current-runtime-profile-checkpoint.json),
+  [physical observation](current-runtime-profile-observation.json), and
+  [retained admitted control](current-runtime-profile-control.ts): current
+  binaries/dependencies/linkage, actual wrong-pin refusal, cleanup, cross-runtime
+  regressions and source-restored support-removal control. No qualification.
+- The current population was regenerated with Cache's canonical census and the
+  retained recipe. All430source digests agree; counts and ledger are unchanged.
+  The prior upload-join inventory and complete checkpoint are retained in the
+  private completion evidence bundle before metadata refresh.
+
+- [Actual ignored-input dry observation](actual-ignored-input-observation.json)
+  and [retained control](actual-ignored-input-control.py): both pinned clients,
+  one real computation, no task execution/remote use, and exact baseline
+  restoration after the scoped ignored fixture is removed.
+
+- The current-runtime checkpoint now retains the passing whole CLI package
+  replay at frozen head2b295197c1: audit1118.9seconds/docgen36.4seconds. Exact
+  source bytes and both goal manifests remained unchanged through execution.
+  Historical failed runs and their repairs remain in their original checkpoints.
+
+- [Current runtime baseline review](current-runtime-baseline-review.md) and
+  [checkpoint](current-runtime-baseline-checkpoint.json): explicit canonical
+  compare-and-swap recording, unchanged task projection/ledger, actual public
+  fingerprint, stale-update rejection and passing cache audit. No qualification
+  or signed activation is inferred.
+
+- [Producer publication gate repair](../../turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json):
+  current properties/catalog and 361-test integrations. Inventory refresh
+  preserves all computation dispositions and configuration records.
+
+
+- [Current mutating-fixer source review](mutating-fixer-disposition-review.json):
+  exact current manifest/script/configuration bindings for 136 keep-fresh
+  whole-command fixers and 136 separate unfinished read-only counterparts.
+- [Actual native fixer replay control](mutating-fixer-replay-control.json):
+  stable/canary fresh, logs-only hit and cache-disabled runs in disposable
+  fixtures. A hit skipped the required write; no source or remote cache changed.
+
+
+- [Persistent service source review](persistent-service-disposition-review.json):
+  two exact Portless Next development commands remain fresh, with independently
+  bound script maps/configuration and existing unfinished build counterparts.
+  This is source review only; no service or runtime experiment was launched.
+
+
+- [Remaining mutating-fixer source review](remaining-mutating-fixer-disposition-review.json):
+  exact current script maps, manifests and effective configuration for 50
+  additional whole-command keep-fresh dispositions. This completes source
+  classification of all 186 `lint:fix` rows; their read-only counterparts and
+  every other unfinished computation retain qualification obligations.
+
+
+- [Remaining persistent-service source review](remaining-persistent-service-disposition-review.json):
+  ten additional exact Portless watcher/server commands, completing source
+  classification of all twelve configured persistent executable computations.
+  Their finite build counterparts retain independent qualification duties.
+
+- `external-verdict-source-review.json`: current advisory and expiring-exception source review; one whole-command keep-fresh disposition, no fresh advisory verdict or reuse grant.
+- `generator-boundary-source-review.json`: all nine configured generator write boundaries, 23 exact source bindings and explicit offline/pure decomposition leads; no execution, final exclusion or qualification.
+
+### Retained native future-flag availability, 2026-10-30
+
+- [Native availability report](native-future-flag-availability.json) and
+  [retained driver](native-future-flag-availability.py): sixty bounded, isolated
+  dry runs using the exact installed/cached stable and canary binary digests.
+  Reproduce with `python3 goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py`.
+  Run from any directory after provisioning those pinned clients. No download,
+  credential or remote-cache access is used. The driver writes its report, raw
+  observation and bounded native logs under ignored
+  `.beep/native-future-flag-availability/`; its `driver.sha256` identifies the
+  actual executed file, and `rawObservationSha256` binds the retained raw report.
+  Both baselines and all 56 flag configurations parse; the two unknown-key
+  controls refuse, no marker command runs and owned fixture directories are
+  removed. These are configuration observations, with no feature semantic or
+  computation qualification. The earlier private-driver report remains in Git
+  history; the current report is a fresh replay from the retained driver.
+
+
+### Current retained-driver replays, 2026-10-30
+
+- [Native input observations](native-input-controls.json) were rerun from the
+  [retained driver](native-input-controls.py): all eighteen case classifications
+  agree with the earlier observation under the same Bun and native pins. The
+  report now binds the exact current driver through both its path and digest.
+- [Real ignored-input observations](actual-ignored-input-observation.json) were
+  rerun from [their retained driver](actual-ignored-input-control.py), from the
+  checkout root: `python3 goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py`.
+  Both clients include the owned ignored manifest, change the task hash, then
+  restore the exact baseline hash after cleanup. Neither executes a task or
+  accesses remote cache. The report names the observed source revision and
+  configuration bytes; earlier counts/hashes remain historical in Git.
+  These fresh replays repair driver provenance and establish no qualification,
+  production activation or representative observation window.
+
+### Replay-generated driver bindings, 2026-10-30
+
+The native input and actual ignored-input drivers now emit their own repository
+relative path and exact source digest before writing each report. The ignored
+input driver also records the observed commit, configuration digests and the
+unchanged source status around its dry-only observation. The tracked reports
+are byte-for-byte copies of generated output; no binding is added afterward.
+Eighteen synthetic executions and six real dry plans were replayed. The latter
+also ran from outside the checkout, restored each owned fixture and recovered
+each baseline hash. These remain bounded observations, without qualification
+or deployment authority.
+
+### Distinct publication identity, 2026-10-30
+
+- [Published-head checkpoint](published-head-identity-checkpoint.json) binds the
+  existing Yeet verdict/handler repair and real disposable-Git tests. The attempt
+  retains its starting head and proof facts; the append-optional publication
+  identity is emitted only for an owned successful Git push with stable head
+  from post-commit preparation through proof and publication. Failed pushes and
+  head changes produce no verified publication identity. Older records decode
+  without the new field. Local focused evidence grants no cache qualification,
+  hosted status, deployment or full-goal acceptance.
+
+
+### Task descriptions and restored configuration inputs, 2026-10-30
+
+- [Current-tree decision](task-descriptions-feature-review.json) retains absent
+  optional description metadata. Cache's refreshed census finds zero declarations
+  in 101 explicit definitions across 22 config files and 190 workspaces.
+- The [retained driver](native-input-controls.py) emits the current 22-case
+  [native report](native-input-controls.json), including six asserted description
+  controls. Raw configuration inputs change on addition/edit; resolved task and
+  global digests remain stable. Removal restores the earlier hash and HIT.
+- A no-op edit fails the cache assertion, disabled Python assertions are refused,
+  and the source is restored exactly before the final positive run. This is
+  optional-feature evidence, not remote or real-computation qualification.
+- Two feature decisions are final; 33 reviews and all full-goal acceptance remain.
+
+- 2026-10-30: `selection-semantics-checkpoint.json` binds the retained native driver, 44 asserted cases/88 dry-and-execution calls, actual native summaries and two intended negative driver controls. The existing input driver covers single-package hash perturbations; the availability driver covers syntax; neither establishes this multi-workspace selection behavior. All real repository feature and task qualifications remain open.
+
+- 2026-10-30: [Python workspace review](python-workspace-feature-review.json) binds the exact tracked path/script inventories, nested uv project, existing generated lint/test ownership and source hashes. Preserve absent root discovery without excluding real Python quality computations. Four retained native availability cases prove syntax only. Three feature dispositions are final; 32 and all full-goal acceptance remain open.
+
+- 2026-10-30: [External-security boundary](external-security-disposition-review.json) binds the root command/configuration, live clock-sensitive OSV selection and shared explicit proof-reuse exclusion. One final whole-task keep-fresh decision brings the total to 199, with 2372 remaining disposition gaps. This is source review, not an executed audit, a cache qualification or fresh hosted proof.
+### Markdown coverage isolation, 2026-10-30
+
+- [Source-bound component receipt](markdown-coverage-isolation-checkpoint.json):
+  a root run missed two default-field branches despite passing tests. Existing
+  focused and standalone tests cover them, so no parser bug is claimed.
+- Shared harness policy requires module-mocking packages to opt into isolation.
+  The registry-spy package now does so; both runtimes pass all 4,501 existing
+  cases and full parser coverage. The extra local runtime is recorded explicitly.
+- Default package verification passes; current final/hosted/review acceptance
+  and all full-goal obligations remain separately unproven.
+
+- [Accepted feature join](accepted-feature-merge-checkpoint.json):
+  [PR #2369](https://github.com/beep-effect/beep-effect/pull/2369), exact accepted
+  commit, preserved branch evidence and unique computation counts.

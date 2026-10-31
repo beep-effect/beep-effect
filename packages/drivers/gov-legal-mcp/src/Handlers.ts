@@ -1,6 +1,8 @@
 /**
  * Thin GovInfo and eCFR MCP handler layers.
  *
+ * **Details**
+ *
  * Each handler delegates directly to the corresponding public driver service
  * method. Transport, authentication, retry, cache, and rate limiting remain
  * owned by the drivers.

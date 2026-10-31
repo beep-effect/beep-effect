@@ -1922,6 +1922,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeepi
             baseFreshness: O.none(),
             mergeReady: O.none(),
             stash: O.none(),
+            publishedHeadSha: O.none(),
           });
           yield* Job.writeRunVerdictForTesting(
             plan,

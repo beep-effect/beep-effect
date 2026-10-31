@@ -27,20 +27,33 @@ install_binary() {
 }
 
 serve() {
+  local mode="${1:-ordinary}"
   : "${R2_ENDPOINT:?R2_ENDPOINT is required}" "${R2_BUCKET:?R2_BUCKET is required}"
   : "${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID is required}" "${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY is required}"
   : "${TURBO_TOKEN:?TURBO_TOKEN is required}"
   local port="${R2_ADAPTER_PORT:-9427}"
   [[ "$port" =~ ^[0-9]{4,5}$ ]] && (( port >= 1024 && port <= 65535 )) || return 1
   [[ "$R2_ENDPOINT" =~ ^https://[a-f0-9]{32}\.r2\.cloudflarestorage\.com$ ]] || return 1
-  install_binary
+  if [[ "$mode" == signed ]]; then
+    : "${R2_SIGNED_ADAPTER:?R2_SIGNED_ADAPTER is required}" "${R2_SIGNED_ADAPTER_SHA256:?R2_SIGNED_ADAPTER_SHA256 is required}"
+    : "${BEEP_CACHE_NAMESPACE:?BEEP_CACHE_NAMESPACE is required}" "${BEEP_CACHE_ACCESS_ROLE:?BEEP_CACHE_ACCESS_ROLE is required}"
+    case "$BEEP_CACHE_ACCESS_ROLE" in reader|writer) ;; *) echo 'Signed adapter role must be reader or writer.' >&2; return 1 ;; esac
+    [[ "$R2_SIGNED_ADAPTER" == /* && "$R2_SIGNED_ADAPTER_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo 'Signed adapter requires an absolute executable and SHA256 pin.' >&2; return 1; }
+    binary="$(realpath -- "$R2_SIGNED_ADAPTER" 2>/dev/null)" || { echo 'Signed adapter executable is unavailable.' >&2; return 1; }
+    [[ -f "$binary" && -x "$binary" ]] || { echo 'Signed adapter executable is unavailable.' >&2; return 1; }
+    printf '%s  %s\n' "$R2_SIGNED_ADAPTER_SHA256" "$binary" | sha256sum --check --status || { echo 'Signed adapter checksum mismatch.' >&2; return 1; }
+    export BEEP_CACHE_POLICY=signed-v1 BEEP_CACHE_NAMESPACE BEEP_CACHE_ACCESS_ROLE
+  else
+    install_binary
+  fi
   export HOST=127.0.0.1 PORT="$port" S3_ENDPOINT="$R2_ENDPOINT" S3_REGION=auto
   export S3_BUCKET_NAME="$R2_BUCKET" S3_ACCESS_KEY="$R2_ACCESS_KEY_ID" S3_SECRET_KEY="$R2_SECRET_ACCESS_KEY"
   export S3_USE_PATH_STYLE=true TOKIO_WORKER_THREADS=2 OTEL_SDK_DISABLED=true
   # Exec with an explicit environment; secret values never enter argv.
-  exec python3 -I - "$binary" <<'PYENV'
+  exec python3 -I - "$binary" "$mode" <<'PYENV'
 import os,sys
 allowed=("PATH","HOME","LANG","RUNNER_TRACKING_ID","SSL_CERT_FILE","SSL_CERT_DIR","HOST","PORT","S3_ENDPOINT","S3_REGION","S3_BUCKET_NAME","S3_ACCESS_KEY","S3_SECRET_KEY","S3_USE_PATH_STYLE","TOKIO_WORKER_THREADS","OTEL_SDK_DISABLED","TURBO_TOKEN")
+if sys.argv[2]=="signed":allowed+=("BEEP_CACHE_POLICY","BEEP_CACHE_NAMESPACE","BEEP_CACHE_ACCESS_ROLE")
 os.execve(sys.argv[1],[sys.argv[1]],{name:os.environ[name] for name in allowed if name in os.environ})
 PYENV
 }
@@ -90,7 +103,7 @@ start_ci() {
   printf '::add-mask::%s\n' "$TURBO_TOKEN"
   {
     printf 'TURBO_API=http://127.0.0.1:%s\n' "$R2_ADAPTER_PORT"
-    printf 'TURBO_TOKEN=%s\nTURBO_CACHE=%s\n' "$TURBO_TOKEN" "$mode"
+    printf 'TURBO_TOKEN=%s\nTURBO_CACHE=%s\nTURBO_TEAM=%s\n' "$TURBO_TOKEN" "$mode" "$TURBO_TEAM"
     printf 'BEEP_CI_TURBO_R2_ACTIVE=true\n'
   } >> "$GITHUB_ENV"
   echo "R2 loopback adapter ready; cache posture $mode."
@@ -109,7 +122,8 @@ stop_ci() {
 case "${1:-}" in
   install) install_binary ;;
   serve) serve ;;
+  serve-signed) serve signed ;;
   start-ci) start_ci ;;
   stop-ci) stop_ci ;;
-  *) echo 'Usage: adapter.sh install|serve|start-ci|stop-ci' >&2; exit 2 ;;
+  *) echo 'Usage: adapter.sh install|serve|serve-signed|start-ci|stop-ci' >&2; exit 2 ;;
 esac

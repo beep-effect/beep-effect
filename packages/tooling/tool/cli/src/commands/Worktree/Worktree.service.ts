@@ -2103,7 +2103,11 @@ const assertQuiescentFence = Effect.fnUntraced(function* (
   earlier: O.Option<QuietShells>
 ): Effect.fn.Return<FenceQuiescence, WorktreeCommandError, FileSystem.FileSystem> {
   const policy = yield* WorktreeFenceSettle;
-  const scan = yield* settleFence(request, fencedPath, earlier, policy, policy.attempts);
+  // Once capture has finished, any observed walker may have written uncaptured
+  // bytes. Preserve that observation instead of waiting for its handles to close.
+  const scan = yield* O.isSome(earlier)
+    ? scanFence(request, fencedPath, earlier)
+    : settleFence(request, fencedPath, earlier, policy, policy.attempts);
   if (A.isReadonlyArrayNonEmpty(scan.walking)) {
     const described = yield* describeAttachedProcesses(scan.walking, WALKING_WATCHER_NOTE);
     return yield* WorktreeCommandError.make({

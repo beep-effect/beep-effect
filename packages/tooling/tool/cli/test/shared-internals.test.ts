@@ -27,6 +27,7 @@ import * as Stream from "effect/Stream";
 Bun.env.BEEP_SI_BOOL_YES = "YES";
 Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 
+import { QualityTaskStep } from "@beep/repo-cli/test/Process";
 import {
   applyJsoncModification,
   booleanEnvValue,
@@ -59,6 +60,7 @@ import {
   renderSchemaFirstPolicyFindingLine,
   renderTurboEnvironmentHealthWarning,
   resolveTurboCachePlan,
+  resolveTurboCacheStep,
   SchemaFirstPolicyFinding,
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
@@ -392,6 +394,23 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     const overridesFor = (env: Record<string, string>, command: string, args: ReadonlyArray<string>) =>
       turboEnvOverrides(command, args, env).pipe(withTurboEnv(env));
 
+    it.effect("sanitizes native Turbo binaries and their cache-only secret-session wrappers", () =>
+      Effect.gen(function* () {
+        const environment = { TURBO_TOKEN: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
+        for (const command of ["turbo", "/repo/node_modules/.bin/turbo"]) {
+          const direct = yield* overridesFor(environment, command, ["run", "docgen"]);
+          expect(direct).toHaveProperty("TURBO_TOKEN", undefined);
+          expect(direct).toHaveProperty("APPLICATION_TOKEN", undefined);
+          expect(direct).toHaveProperty("TURBO_CACHE", "local:rw");
+          const args = ["run", "--", command, "run", "docgen"];
+          const wrapped = yield* overridesFor(environment, "op", args);
+          expect(wrapped).toHaveProperty("TURBO_TOKEN", OP_REFERENCE);
+          expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
+          expect(turboEnvExtendsAmbient("op", args)).toBe(false);
+        }
+      })
+    );
+
     const opRunArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => [
       "run",
       "--",
@@ -406,6 +425,17 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(yield* overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
         expect(yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("resolves signing references only through the cache secret session", () =>
+      Effect.gen(function* () {
+        const environment = { TURBO_REMOTE_CACHE_SIGNATURE_KEY: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
+        const direct = yield* overridesFor(environment, "bunx", ["turbo", "run", "check"]);
+        expect(direct).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+        const wrapped = yield* overridesFor(environment, "op", ["run", "--", "bunx", "turbo", "run", "check"]);
+        expect(wrapped).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", OP_REFERENCE);
+        expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
+      })
     );
 
     it.effect("guards the TUI on a direct turbo spawn with resolved credentials", () =>
@@ -586,6 +616,81 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       );
       return { usable, spawned: yield* Ref.get(spawned) };
     });
+
+    it.effect("resolves native Turbo references once and fails closed without changing step metadata", () =>
+      Effect.gen(function* () {
+        const environment = {
+          TURBO_API: "http://127.0.0.1:9427",
+          TURBO_TOKEN: "op://fixture/cache/bearer",
+          TURBO_TEAM: "fixture",
+          TURBO_CACHE: "local:rw,remote:rw",
+          BEEP_TURBO_TRUSTED_WRITER: "true",
+          APPLICATION_REFERENCE: "op://fixture/application/secret",
+        };
+        const step = QualityTaskStep.make({
+          label: "native docgen",
+          command: "/repo/node_modules/.bin/turbo",
+          args: ["run", "docgen", "--cache=local:rw,remote:rw"],
+          cwd: "/repo",
+          captureTimeoutMillis: 1234,
+          env: { SAFE_LITERAL: "fixture" },
+        });
+        for (const exitCode of [0, 78]) {
+          clearTurboCacheSecretSessionVerdictsForTesting();
+          const spawned = yield* Ref.make(0);
+          const spawner = ChildProcessSpawner.make(() =>
+            Ref.update(spawned, (count) => count + 1).pipe(Effect.as(stubHandle(exitCode)))
+          );
+          const result = yield* resolveTurboCacheStep(step, environment).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ CI: "false" })),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          );
+          expect(yield* Ref.get(spawned)).toBe(1);
+          expect(result.cwd).toBe(step.cwd);
+          expect(result.captureTimeoutMillis).toBe(1234);
+          expect(result.env?.SAFE_LITERAL).toBe("fixture");
+          if (exitCode === 0) {
+            expect(result.command).toBe("op");
+            expect(result.args).toEqual(["run", "--", step.command, ...step.args]);
+            expect(result.env?.TURBO_TOKEN).toBe(environment.TURBO_TOKEN);
+            expect(result.env?.APPLICATION_REFERENCE).toBeUndefined();
+          } else {
+            expect(result.command).toBe(step.command);
+            expect(result.args).toEqual(["run", "docgen", "--cache=local:rw"]);
+          }
+        }
+      })
+    );
+
+    it.effect("does not open a secret session for literal credentials, local-only Turbo or other commands", () =>
+      Effect.gen(function* () {
+        const spawner = ChildProcessSpawner.make(() => Effect.die("an unnecessary secret session was opened"));
+        for (const step of [
+          QualityTaskStep.make({ label: "git", command: "git", args: ["status"], cwd: "/repo" }),
+          QualityTaskStep.make({
+            label: "local",
+            command: "turbo",
+            args: ["run", "build", "--cache=local:rw"],
+            cwd: "/repo",
+          }),
+          QualityTaskStep.make({
+            label: "literal",
+            command: "turbo",
+            args: ["run", "build", "--cache=local:rw,remote:r"],
+            cwd: "/repo",
+          }),
+        ]) {
+          expect(
+            yield* resolveTurboCacheStep(step, {
+              TURBO_API: "https://cache.example.test",
+              TURBO_TOKEN: "fixture-literal",
+              TURBO_TEAM: "fixture",
+              TURBO_CACHE: "local:rw,remote:r",
+            }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
+          ).toBe(step);
+        }
+      })
+    );
 
     it.effect("caches the resolvability verdict once per CLI run", () =>
       Effect.gen(function* () {

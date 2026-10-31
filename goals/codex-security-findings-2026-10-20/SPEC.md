@@ -260,3 +260,25 @@ test "$(git ls-files -- goals/codex-security-findings-2026-10-20/raw/)" = \
   receipt. The command checks merge/readiness, while exact dashboard closure
   remains a separately verified acceptance requirement. This supersedes the
   earlier wording about a tracked post-merge status flip and preserves one PR.
+
+## Resumed scope — 2026-10-28
+
+The user requires current Security Cloud findings in addition to historical
+closeout. The supplemental packet `../codex-security-findings-2026-10-28/`
+is part of this goal. Its seven exact identities require full-detail validation,
+remediation, focused regression and package proof, a merged Yeet PR, and observed
+post-merge closure. The original eight Cloud and 123 Dependabot requirements
+remain intact. The original single remediation PR already merged as #1930.
+
+Decision: use the canonical importer's separate capture and link its exact-ID
+inventory here. The current export is not a historical full-snapshot superset,
+so refresh cannot preserve provenance; forcing it would discard prior triage.
+The change is reversible through this branch's documentation diff. No Cloud
+status, credential, deployment or external permission changes during capture.
+
+Decision — 2026-10-28: PR #2333 is the final PR for the expanded goal.
+Preserve #1930's verified historical receipt and bind prospective completion to
+#2333's genuine final-head verdict. The new final PR must carry the linked
+seven-finding remediation, reflection, and hosted proof; Cloud closure remains
+an independently verified post-merge requirement. Reverse through this
+manifest/documentation diff; do not alter historical verdict bytes.

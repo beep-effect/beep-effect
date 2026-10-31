@@ -34,13 +34,17 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { runToExit } from "../process/StepExec.ts";
+import { QualityTaskStep, runToExit } from "../process/StepExec.ts";
 import {
+  HostTurboCacheReferences,
+  hasRemoteTurboCacheArgs,
+  localOnlyTurboCacheArgs,
   TurboCacheEnvironment,
   TurboCacheEnvName,
   TurboCacheMode,
   TurboCacheSecretEnvName,
   TurboEnvironmentHealthWarning,
+  turboCacheEnvironmentNeedsSecretSession,
   turboCacheValueSourceFor,
 } from "./TurboCache.ts";
 import type * as Crypto from "effect/Crypto";
@@ -359,6 +363,9 @@ const isBunxTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
     O.exists((arg) => arg === "turbo")
   );
 
+const isDirectTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
+  command === "turbo" || Str.endsWith("/turbo")(command) || isBunxTurbo(command, args);
+
 // `op run -- bunx turbo ...` is still a turbo spawn: the
 // overrides below must reach it, or an op-wrapped lane silently loses the
 // mouse-capture guard and the fail-closed cache posture.
@@ -370,7 +377,7 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
     O.exists((childArgs) =>
       pipe(
         A.head(childArgs),
-        O.exists((childCommand) => isBunxTurbo(childCommand, A.drop(childArgs, 1)))
+        O.exists((childCommand) => isDirectTurbo(childCommand, A.drop(childArgs, 1)))
       )
     )
   );
@@ -387,7 +394,7 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
  * ```
  *
  * **Details**
- * Recognizes `bunx turbo` and its `op run --` wrapper. This is not a shell parser.
+ * Recognizes native Turbo binaries, `bunx turbo` and their `op run --` wrappers. This is not a shell parser.
  *
  * @category configuration
  * @since 0.0.0
@@ -397,7 +404,7 @@ export const isPlannedTurboCommand: {
   (command: string, args: ReadonlyArray<string>): boolean;
 } = dual(
   2,
-  (command: string, args: ReadonlyArray<string>): boolean => isBunxTurbo(command, args) || isOpRunTurbo(command, args)
+  (command: string, args: ReadonlyArray<string>): boolean => isDirectTurbo(command, args) || isOpRunTurbo(command, args)
 );
 
 const isTurboCacheSecretEnvName = S.is(TurboCacheSecretEnvName);
@@ -471,14 +478,50 @@ export const turboCacheSecretSessionEnvironment = (
       value !== undefined && (!isUnresolvedSecretReference(value) || isTurboCacheSecretEnvName(name))
   );
 
-const isUnrelatedSecretReference = (value: string | undefined, name: string): boolean =>
-  isUnresolvedSecretReference(value) && !isTurboCacheSecretEnvName(name);
+/**
+ * Wrap a Turbo process in a cache-only 1Password reference session.
+ *
+ * **Details**
+ *
+ * The child environment retains only cache references and ordinary ambient values.
+ * Pair this step with `turboEnvExtendsAmbient` so removed application references
+ * cannot return through environment inheritance. Native Turbo binaries stay native.
+ *
+ * **Example** (Wrap a native Turbo process)
+ *
+ * ```ts
+ * import { turboSecretSessionStep } from "@beep/repo-cli/test/SharedInternals"
+ * import { QualityTaskStep } from "@beep/repo-cli/test/Process"
+ *
+ * const step = QualityTaskStep.make({ label: "docgen", command: "/repo/node_modules/.bin/turbo", args: ["run", "docgen"], cwd: "/repo" })
+ * console.log(turboSecretSessionStep(step, { PATH: "/usr/bin" }).command) // "op"
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const turboSecretSessionStep: {
+  (environment: Readonly<Record<string, string | undefined>>): (step: QualityTaskStep) => QualityTaskStep;
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep;
+} = dual(
+  2,
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep =>
+    QualityTaskStep.make({
+      label: `${step.label} (op run)`,
+      command: "op",
+      args: ["run", "--", step.command, ...step.args],
+      cwd: step.cwd,
+      ...O.getSomesStruct({
+        flakeQuarantine: O.fromUndefinedOr(step.flakeQuarantine),
+        captureTimeoutMillis: O.fromUndefinedOr(step.captureTimeoutMillis),
+      }),
+      env: turboCacheSecretSessionEnvironment({ ...environment, ...(step.env ?? {}) }),
+    })
+);
 
-// Unset markers for a direct spawn, which extends the ambient environment; the
-// Turbo credential references are handled by their own fail-closed scrub.
-const unrelatedSecretReferenceScrub = (
+const unresolvedSecretReferenceScrub = (
   environment: Readonly<Record<string, string | undefined>>
-): Record<string, undefined> => R.map(R.filter(environment, isUnrelatedSecretReference), () => undefined);
+): Record<string, undefined> => R.map(R.filter(environment, isUnresolvedSecretReference), () => undefined);
 
 const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(function* (
   repoRoot: string,
@@ -693,13 +736,13 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   args: ReadonlyArray<string>,
   environment: Readonly<Record<string, string | undefined>>
 ) {
-  const directTurbo = isBunxTurbo(command, args);
+  const directTurbo = isDirectTurbo(command, args);
   if (!directTurbo && !isOpRunTurbo(command, args)) {
     return {};
   }
 
   // A wrapped spawn hands this complete environment to `op run` with ambient
-  // extension disabled. The three Turbo references survive for resolution;
+  // extension disabled. Only Turbo credential references survive for resolution;
   // every unrelated reference is absent from both `op` and its task child.
   if (!directTurbo) {
     return { ...turboCacheSecretSessionEnvironment(environment), TURBO_UI: "false" };
@@ -715,26 +758,106 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
     // Unresolved references are inert strings to a task, but Turbo still hashes
     // any it declares in `env`, so per-checkout `.env` drift would split the
     // shared cache. They leave a direct spawn just as they leave a wrapped one.
-    ...unrelatedSecretReferenceScrub(environment),
+    ...unresolvedSecretReferenceScrub(environment),
     // Spawned turbo inherits the parent TTY; its interactive TUI enables
     // crossterm mouse capture (DECSET ?1000/?1002/?1003/?1006) and, when a
     // failed task tears the run down, the child is killed before it can restore
     // the terminal — leaving it emitting mouse-motion reports and swallowing
     // Ctrl-C. Force turbo's stream renderer so it never enables mouse capture.
     TURBO_UI: "false",
-    ...(unresolvedApi ? { TURBO_API: undefined } : {}),
-    ...(unresolvedToken ? { TURBO_TOKEN: undefined } : {}),
-    ...(unresolvedTeam ? { TURBO_TEAM: undefined } : {}),
     ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum["local:rw"] } : {}),
   };
 });
 
-// Optional cache-directory inputs and the explicit trusted-writer enrollment flag;
-// they sit outside the four required remote-cache values.
-const TURBO_CACHE_OPTION_ENV_NAMES: ReadonlyArray<string> = ["TURBO_CACHE_DIR", "HOME", "BEEP_TURBO_TRUSTED_WRITER"];
+// Optional client inputs, including the artifact key, sit outside the required cache quad.
+const TURBO_CACHE_OPTION_ENV_NAMES: ReadonlyArray<string> = [
+  "TURBO_CACHE_DIR",
+  "HOME",
+  "BEEP_TURBO_TRUSTED_WRITER",
+  "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+];
 
 const configuredValue = (value: string | undefined): O.Option<string> =>
   pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.filter(Str.isNonEmpty));
+
+const managedHostCacheReferencesMatch = (
+  environment: Readonly<Record<string, string | undefined>>,
+  defaults: Readonly<Record<string, string>>
+): boolean =>
+  A.every(["TURBO_API", "TURBO_TOKEN", "TURBO_TEAM"], (name) => environment[name] === defaults[name]) &&
+  (pipe(environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY, configuredValue, O.isNone) ||
+    environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY === defaults.TURBO_REMOTE_CACHE_SIGNATURE_KEY);
+
+/**
+ * Load the enrolled host's cache references for a fresh checkout without cache settings.
+ *
+ * **Details**
+ *
+ * Explicit checkout settings and CI always win. A managed legacy reader may adopt
+ * the matching enrolled host's writer posture. The host file contains only a loopback
+ * endpoint and secret references; malformed or missing configuration leaves execution local.
+ * It never resolves a secret or reads application configuration.
+ *
+ * **Example** (Skip host defaults in CI)
+ *
+ * ```ts
+ * import { loadHostTurboCacheDefaults } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(loadHostTurboCacheDefaults({ HOME: "/home/dev" }, true)))
+ * ```
+ *
+ * @param environment - The caller's environment before host defaults.
+ * @param ci - Whether the caller is running in CI.
+ * @param origin - The checkout's Git origin; only the canonical public upstream is eligible.
+ * @returns Reference-only cache defaults, or an empty record when not applicable.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCacheDefaults")(function* (
+  environment: Readonly<Record<string, string | undefined>>,
+  ci: boolean,
+  origin = ""
+) {
+  const names = [...TurboCacheEnvName.literals, "TURBO_REMOTE_CACHE_SIGNATURE_KEY", "BEEP_TURBO_TRUSTED_WRITER"];
+  const managedReader =
+    environment.BEEP_TURBO_HOST_CACHE_MANAGED === "true" &&
+    environment.TURBO_CACHE === "local:rw,remote:r" &&
+    environment.BEEP_TURBO_TRUSTED_WRITER === "false";
+  if (
+    ci ||
+    O.isNone(Str.match(/^(?:https:\/\/github\.com\/|git@github\.com:)beep-effect\/beep-effect(?:\.git)?$/u)(origin)) ||
+    environment.BEEP_TURBO_HOST_CACHE_DISABLED === "true" ||
+    (!managedReader &&
+      A.some([...TurboCacheEnvName.literals, "TURBO_REMOTE_CACHE_SIGNATURE_KEY"], (name) =>
+        O.isSome(configuredValue(environment[name]))
+      ))
+  ) {
+    return R.empty<string, string>();
+  }
+  const home = configuredValue(environment.HOME);
+  if (O.isNone(home)) return R.empty<string, string>();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const configRoot = pipe(
+    configuredValue(environment.XDG_CONFIG_HOME),
+    O.getOrElse(() => path.join(home.value, ".config"))
+  );
+  const contents = yield* fs.readFileString(path.join(configRoot, "beep/r2-cache/client.env")).pipe(Effect.option);
+  if (O.isNone(contents)) return R.empty<string, string>();
+  const provider = ConfigProvider.fromDotEnvContents(contents.value);
+  const entries = yield* Effect.forEach(names, (name) =>
+    Config.option(Config.String(name))
+      .parse(provider)
+      .pipe(Effect.option, Effect.map(O.flatten), Effect.map(O.map((value) => Tuple.make(name, value))))
+  );
+  const defaults = R.fromEntries(A.getSomes(entries));
+  if (managedReader && !managedHostCacheReferencesMatch(environment, defaults)) return R.empty<string, string>();
+  return yield* S.decodeUnknownEffect(HostTurboCacheReferences)(defaults).pipe(
+    Effect.as(defaults),
+    Effect.orElseSucceed(R.empty<string, string>)
+  );
+});
 
 const turboCacheValueSource = (value: string | undefined): O.Option<TurboCacheValueSource> =>
   pipe(configuredValue(value), O.map(flow(isUnresolvedSecretReference, turboCacheValueSourceFor)));
@@ -780,6 +903,7 @@ export const readTurboCacheEnvironment = (
     O.getSomesStruct({
       api: turboCacheValueSource(environment.TURBO_API),
       token: turboCacheValueSource(environment.TURBO_TOKEN),
+      signatureKey: turboCacheValueSource(environment.TURBO_REMOTE_CACHE_SIGNATURE_KEY),
       team: turboCacheValueSource(environment.TURBO_TEAM),
       cache: configuredValue(environment.TURBO_CACHE),
       trustedWriter: configuredValue(environment.BEEP_TURBO_TRUSTED_WRITER).pipe(O.map((value) => value === "true")),
@@ -864,4 +988,34 @@ export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCac
   const usable = yield* secretReferenceProbe(repoRoot, turboCacheSecretSessionEnvironment(environment));
   MutableHashMap.set(turboSecretSessionVerdicts, repoRoot, usable);
   return usable;
+});
+
+/**
+ * Resolve the cache-only session for a planned local Turbo command.
+ *
+ * **Example** (Prepare a native cache consumer)
+ *
+ * ```ts
+ * import { resolveTurboCacheStep } from "@beep/repo-cli/test/SharedInternals"
+ * import { QualityTaskStep } from "@beep/repo-cli/test/Process"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(resolveTurboCacheStep(QualityTaskStep.make({ label: "docgen", command: "turbo", args: ["run", "docgen"], cwd: "/repo" }))))
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const resolveTurboCacheStep = Effect.fn("EnvConfig.resolveTurboCacheStep")(function* (
+  step: QualityTaskStep,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env
+) {
+  if (
+    !isPlannedTurboCommand(step.command, step.args) ||
+    !hasRemoteTurboCacheArgs(step.args) ||
+    !turboCacheEnvironmentNeedsSecretSession(readTurboCacheEnvironment(environment))
+  )
+    return step;
+  return (yield* canUseTurboCacheSecretSession(step.cwd, environment))
+    ? turboSecretSessionStep(step, environment)
+    : QualityTaskStep.make({ ...step, args: localOnlyTurboCacheArgs(step.args) });
 });

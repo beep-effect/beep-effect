@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-27",
+  "generatedOn": "2026-10-31",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -133,7 +133,7 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/acp",
-      "reason": "Mixed client configuration: logIncoming/logOutgoing are inherited from schema-backed AcpProtocolLoggingOptions, while logger is an Effectful runtime callback."
+      "reason": "Mixed client configuration: logIncoming/logOutgoing are inherited from schema-backed AcpProtocolLoggingOptions, while logger, the onIncomingRequest/onOutgoingResponse/onOutgoingResponseFailure/onTermination lifecycle hooks, and the transformSessionUpdate/transformStdout callbacks are Effectful or functional runtime handles."
     },
     {
       "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
@@ -158,6 +158,96 @@
       "status": "exception",
       "owner": "@beep/box",
       "reason": "Keep-as-class allowlist (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Kept as a class: as S.Opaque its struct type is expanded inside BoxError, whose type then exceeds tsgo 0.51.1 declaration-mode instantiation depth (location-less TS2589 plus unknown BoxError fields in Box.errors.ts during box#build); as a class its instance type stays a named reference. Measured: 9 errors as Opaque, 0 as class (4 runs)."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "layerMigrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 821,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "layerStorage",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 856,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "layerWith",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 887,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbMessageStorage.service.ts",
+      "symbol": "migrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 709,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "layerMigrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 320,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "layerStorage",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 353,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "layerWith",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 379,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "make",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 237,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
+    },
+    {
+      "file": "packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts",
+      "symbol": "migrations",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 258,
+      "owner": "@beep/duckdb",
+      "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
     {
       "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
@@ -303,7 +393,7 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/xstate",
-      "reason": "Effect service contract: attach and ready are runtime handles (Effect, Scope) and inspectorUrl is the relay address the Stately SDK derives at connect time; the data half (StatelyInspectorConfig) is already an annotated S.Class."
+      "reason": "Effect service contract: attach and ready are runtime handles (Effect, Scope) and inspectorUrl is the relay address the Stately SDK derives at connect time; the data half (StatelyInspectorConfig) is already an annotated S.Opaque schema."
     },
     {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
@@ -1412,14 +1502,6 @@
       "status": "exception",
       "owner": "@beep/repo-utils",
       "reason": "Plain data with a non-literal _tag field (_tag: TSCategoryTagBase) that the schema-opaque-default codemod cannot promote to S.TaggedStruct (keep reason tag-field), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over S.Struct/S.TaggedStruct."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfig",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "Keep-as-class allowlist (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Class semantics: tests assert toBeInstanceOf(TSConfig) and the class decode's excess-property failure message."
     },
     {
       "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",

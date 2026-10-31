@@ -1,0 +1,442 @@
+<title>Md as the Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 68ch reading column; wide tables and the diagram break out to 84ch. Parchment light, deep green dark. */
+:root {
+  --bg: #f6f2e8;
+  --bg-raised: #fbf8f1;
+  --fg: #1f2a22;
+  --fg-muted: #5d665f;
+  --rule: #d9d2c0;
+  --accent: #1f6b45;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4efe6;
+  --warn: #9a5b10;
+  --warn-soft: #f7ebd6;
+  --code-bg: #ece6d7;
+  --display: "Spectral", Georgia, "Times New Roman", serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a14; --bg-raised: #15231b; --fg: #e6e9e2; --fg-muted: #9aa69d; --rule: #27362d;
+    --accent: #5fc48c; --accent-ink: #0f1a14; --accent-soft: #163424; --warn: #e0a95a; --warn-soft: #2d2412; --code-bg: #1b2a21;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a14; --bg-raised: #15231b; --fg: #e6e9e2; --fg-muted: #9aa69d; --rule: #27362d;
+  --accent: #5fc48c; --accent-ink: #0f1a14; --accent-soft: #163424; --warn: #e0a95a; --warn-soft: #2d2412; --code-bg: #1b2a21;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 2.5rem 5rem; }
+main { max-width: 68ch; margin: 0 auto; }
+.wide { max-width: 84ch; margin-left: calc(50% - 42ch); width: 84ch; }
+@media (max-width: 1000px) { .wide { width: auto; max-width: 100%; margin-left: 0; } }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.6rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; margin-top: 3.2rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.15rem; margin-top: 1.8rem; font-weight: 600; }
+p { margin: 0.9rem 0; }
+.lede { font-family: var(--display); font-size: 1.25rem; font-weight: 500; color: var(--fg-muted); margin-top: 0.8rem; }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 0.08em 0.35em; border-radius: 3px; }
+pre { font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; background: var(--code-bg); padding: 1rem 1.1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+pre code { background: none; padding: 0; font-size: inherit; }
+ul, ol { padding-left: 1.3rem; margin: 0.8rem 0; }
+li { margin: 0.35rem 0; }
+li::marker { color: var(--accent); }
+strong { font-weight: 600; }
+.verdicts { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 2rem 0; }
+.verdict { background: var(--bg-raised); padding: 1rem 1.2rem; display: grid; grid-template-columns: 11ch 1fr; gap: 1rem; }
+.verdict .q { font-family: var(--display); font-weight: 600; font-size: 0.95rem; color: var(--accent); }
+.verdict p { margin: 0; }
+@media (max-width: 560px) { .verdict { grid-template-columns: 1fr; gap: 0.3rem; } }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin: 1rem 0; }
+.tbl { overflow-x: auto; }
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--rule); }
+th { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-muted); font-weight: 600; }
+td.y { color: var(--accent); font-weight: 600; }
+td.n { color: var(--warn); font-weight: 600; }
+td.k { font-family: var(--mono); font-size: 0.82rem; white-space: nowrap; }
+.aside { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 0.8rem 1rem; margin: 1.2rem 0; border-radius: 0 4px 4px 0; }
+.aside.warn { border-color: var(--warn); background: var(--warn-soft); }
+.aside p { margin: 0.3rem 0; }
+figure { margin: 1.4rem 0; }
+figcaption { font-size: 0.85rem; color: var(--fg-muted); margin-top: 0.5rem; }
+svg text { font-family: var(--mono); font-size: 11.5px; fill: var(--fg); }
+svg .node { fill: var(--bg-raised); stroke: var(--rule); stroke-width: 1.2; }
+svg .hub { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+svg .edge { stroke: var(--fg-muted); stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+svg .edge.bad { stroke: var(--warn); stroke-dasharray: 5 4; }
+svg .lbl { fill: var(--fg-muted); font-size: 10.5px; }
+svg .title { font-family: var(--display); font-size: 13px; font-weight: 600; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+.col h3 { margin-top: 0.6rem; }
+.num { font-family: var(--mono); color: var(--accent); font-size: 0.8rem; margin-right: 0.4rem; }
+footer { margin-top: 4rem; font-size: 0.85rem; color: var(--fg-muted); border-top: 1px solid var(--rule); padding-top: 1rem; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<main>
+<div class="eyebrow">beep-effect · @beep/md, @beep/markdown, @beep/html</div>
+<h1>Md as the Hub</h1>
+<p class="lede">Keep the packages separate, invert two dependencies, and treat what you built in <code>scratchpad/temp</code> as the first proof of a notation-codec system. The idea is sound. The hard part is positions, and you already have half of it.</p>
+
+<div class="verdicts">
+  <div class="verdict"><div class="q">Architecture</div><p>Yes, separate. <code>@beep/md</code> is the hub. Every notation package (markdown, html, lexical, pandoc, later css and ts) is a spoke that owns parse, positions, conformance and serialization for its notation and depends on the hub. Today two spokes point the wrong way.</p></div>
+  <div class="verdict"><div class="q">Taste</div><p>Remove the Markdown writer, the HTML projection and the parse bridge from <code>@beep/md</code>. What stays is the model, behaviors, the trust refinement and URL policy. The hub gets smaller and notation-free, which is what makes it a hub.</p></div>
+  <div class="verdict"><div class="q">The idea</div><p>Sound. What you are describing is a compiler front end for agent output: free-form text in, lossless positioned tree, typed admission, located diagnostics back. Nobody I know of has shipped the whole loop. The pieces all exist.</p></div>
+  <div class="verdict"><div class="q">As an agent</div><p>I would pick your third option without hesitation, with one condition: the diagnostics have to be compiler-grade. A located, typed, fixable issue is worth more to me than any schema. A wall of lint is worse than nothing.</p></div>
+</div>
+
+<h2>1. The architecture question</h2>
+<p>Your reframing is right, and it changes the message to the effected-promotion session. If <code>@beep/markdown</code> is to <code>@beep/md</code> what <code>@beep/html</code> is, then a merge is the wrong move and so is the status quo. The right move is to make every spoke look the same.</p>
+
+<p>Here is how the four existing spokes actually attach today. The inconsistency is the finding.</p>
+
+<figure class="wide">
+<svg viewBox="0 0 760 300" width="100%" role="img" aria-label="Two diagrams of package dependencies. Left: today, with md depending on markdown and html while lexical and pandoc depend on md. Right: proposed, with every spoke depending on md.">
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--fg-muted)"/></marker></defs>
+  <text x="20" y="24" class="title">Today</text>
+  <rect class="hub" x="130" y="130" width="110" height="40" rx="5"/><text x="185" y="155" text-anchor="middle">@beep/md</text>
+  <rect class="node" x="20" y="50" width="110" height="36" rx="5"/><text x="75" y="73" text-anchor="middle">markdown</text>
+  <rect class="node" x="240" y="50" width="110" height="36" rx="5"/><text x="295" y="73" text-anchor="middle">html</text>
+  <rect class="node" x="20" y="214" width="110" height="36" rx="5"/><text x="75" y="237" text-anchor="middle">lexical</text>
+  <rect class="node" x="240" y="214" width="110" height="36" rx="5"/><text x="295" y="237" text-anchor="middle">pandoc</text>
+  <path class="edge bad" d="M160,130 L95,88"/><text x="78" y="112" class="lbl">md imports</text>
+  <path class="edge bad" d="M210,130 L275,88"/><text x="236" y="112" class="lbl">md imports</text>
+  <path class="edge" d="M95,214 L160,172"/><text x="60" y="200" class="lbl">imports md</text>
+  <path class="edge" d="M275,214 L210,172"/><text x="236" y="200" class="lbl">imports md</text>
+
+  <text x="400" y="24" class="title">Proposed: hub and spokes</text>
+  <rect class="hub" x="520" y="130" width="110" height="40" rx="5"/><text x="575" y="155" text-anchor="middle">@beep/md</text>
+  <rect class="node" x="410" y="50" width="110" height="36" rx="5"/><text x="465" y="73" text-anchor="middle">markdown</text>
+  <rect class="node" x="630" y="50" width="110" height="36" rx="5"/><text x="685" y="73" text-anchor="middle">html</text>
+  <rect class="node" x="410" y="214" width="110" height="36" rx="5"/><text x="465" y="237" text-anchor="middle">lexical</text>
+  <rect class="node" x="630" y="214" width="110" height="36" rx="5"/><text x="685" y="237" text-anchor="middle">pandoc</text>
+  <path class="edge" d="M485,88 L550,130"/>
+  <path class="edge" d="M665,88 L600,130"/>
+  <path class="edge" d="M485,214 L550,172"/>
+  <path class="edge" d="M665,214 L600,172"/>
+  <text x="575" y="290" text-anchor="middle" class="lbl">each spoke owns: parse → positioned tree → fold to Md · project from Md → conform → serialize</text>
+</svg>
+<figcaption>Lexical and pandoc already do it the proposed way. Markdown and html are the two edges to flip. Dashed edges are the ones that make <code>@beep/md</code> heavier than a hub should be.</figcaption>
+</figure>
+
+<h3>What moves out of @beep/md</h3>
+<div class="tbl"><table>
+<tr><th>Today in @beep/md</th><th>Goes to</th><th>Why</th></tr>
+<tr><td class="k">Md.render (Markdown writer)</td><td>@beep/markdown</td><td>Becomes a projection <code>Md.Document → Root</code> plus the existing <code>Markdown.stringify</code>. One Markdown writer in the repo, not two. The 1,800-line string renderer goes away.</td></tr>
+<tr><td class="k">Md.syntax, Md.parse</td><td>@beep/markdown</td><td>The fold already imports the kit's node types. D-50 named this exact move as its remedy if coupling churn crossed 5%. Make it the rule instead of a threshold.</td></tr>
+<tr><td class="k">Md.html (renderSafeHtml, toHtml)</td><td>@beep/html</td><td>Same shape as lexical's <code>documentToEditorState</code> and pandoc's <code>documentToPandoc</code>, which already live in their spoke.</td></tr>
+<tr><td class="k">Md.model, Md.behavior</td><td>stays</td><td>The hub.</td></tr>
+<tr><td class="k">Md.safe (SafeDocument), Md.escape (UrlPolicySpec)</td><td>stays, with one cut</td><td>Trust provenance and URL policy are semantic, not notational. The one rule that reaches into <code>@beep/html</code> conformance (skipped heading levels) is a structural rule and can be stated on the Md tree directly.</td></tr>
+</table></div>
+
+<div class="aside warn">
+<p><strong>The one real cost.</strong> <code>SafeDocument</code> today proves that a document's HTML projection would conform. After the inversion the hub cannot call html's conformance. You either restate those rules on the Md tree (they are about heading order and footnote uniqueness, so this is cheap) or you accept that "safe" means safe for the hub's own rules and each spoke proves its own projection, which is what the scratch program's <code>proveContent</code> step already does. I would take the second reading. It is more honest about who owns what.</p>
+</div>
+
+<p>On naming: after this cut, <code>@beep/md</code> is not a Markdown package, and the diagram shows the problem. <code>@beep/md</code> and <code>@beep/markdown</code> sit side by side, and the one holding the parser, writer and corpus is the one not called md. Anyone reading the build graph will guess wrong. The code has already renamed the thing: it says <code>SafeDocument</code>, <code>Document.toHtml</code>, <code>documentToEditorState</code>, <code>documentToPandoc</code>. Follow it. <code>@beep/doc</code> with a <code>Doc</code> namespace is the short form, <code>@beep/document</code> the unambiguous one. Neither name is taken in the workspace. Avoid role words (hub, core, tree) and avoid dom. The rename touches about 560 import sites, so do it as phase 0 of the new packet, before the two edge inversions, so lexical, pandoc and the scratch program churn their imports once.</p>
+
+<h2>2. Is the idea sound?</h2>
+<p>Yes. Stated precisely, you are proposing that every notation an agent might write gets a <strong>positioned codec</strong>: text decodes to a tree whose every node remembers its byte span, that tree is admitted into a typed model with accumulated (not fail-fast) issues, each issue carries a span and a rule id, and the agent repairs by span. The fx0 speed comes from the agent writing its native notation. The structured-output certainty comes from the admission step. The repair loop you already run in <code>BlockRepair</code> is the same loop, re-keyed from JSON Pointer paths to source spans.</p>
+
+<p>The honest way to assess it is to ask what each stage needs and what exists. This is the repo as of today.</p>
+
+<div class="tbl wide"><table>
+<tr><th>Notation</th><th>String parser</th><th>Positions</th><th>Typed model</th><th>Conformance rules</th><th>Fold to Md / project from Md</th><th>Serializer</th></tr>
+<tr><td class="k">markdown</td><td class="y">yes, vendored commonmark.js, 731-example corpus</td><td class="y">byte offsets on every node</td><td class="y">Root, 34 node kinds</td><td class="y">hardening guards; CommonMark has no syntax errors</td><td class="y">fold with 20 loss reasons and a fingerprinted source map (D-48, D-49)</td><td class="y">stringify + fidelity fields</td></tr>
+<tr><td class="k">html</td><td class="n">none</td><td class="n">none</td><td class="y">Html.model, Html.nodes</td><td class="y">conform, enforceSafeHtml, deny-by-default policy</td><td class="y">project only (Document.toHtml)</td><td class="y">serializeConformant</td></tr>
+<tr><td class="k">lexical</td><td>JSON codec</td><td class="n">n/a (JSON)</td><td class="y">SerializedEditorState</td><td>partial</td><td class="y">project only</td><td class="y">EditorStateFromJson</td></tr>
+<tr><td class="k">pandoc</td><td>JSON codec</td><td class="n">n/a</td><td class="y">Pandoc document</td><td>compatibility report</td><td class="y">project only, with report</td><td class="y">encodePandocJsonString</td></tr>
+<tr><td class="k">css</td><td class="n">none</td><td class="n">none</td><td class="n">none</td><td class="n">none</td><td class="n">none</td><td class="n">none</td></tr>
+<tr><td class="k">js / ts</td><td class="n">none in repo (codemode is a reference)</td><td>codemode reports <code>UnsupportedSyntax</code> with a location</td><td class="n">none</td><td>codemode's interpreter-support list is the rule set</td><td>n/a</td><td>n/a</td></tr>
+</table></div>
+
+<p>Read the table by column. The markdown column is complete, which is why your scratch program works end to end. The html column is missing exactly one cell, the string parser, and that cell is the whole fx0 half of your idea. Everything downstream of it already exists and is already proven on model-built documents.</p>
+
+<h3>The weeds, named</h3>
+<ol>
+<li><strong>HTML parsing is the big one.</strong> The WHATWG parsing algorithm is error-recovering by design. Almost any string parses to some tree, so "invalid HTML" mostly means "the parser recovered and you did not notice." The spec enumerates its parse errors (around seventy named codes such as <code>unexpected-null-character</code>, <code>missing-end-tag-name</code>, <code>duplicate-attribute</code>) and a conforming parser can report each with a location. parse5 does this with <code>sourceCodeLocationInfo</code> and <code>onParseError</code>. The decision is whether to vendor and harden parse5 the way you vendored commonmark.js (about 10k lines, same recipe as D-38 through D-42) or adapt over it. Either way, the parse-error list plus your existing conformance rules is the diagnostic vocabulary, and it is already typed by the spec.</li>
+<li><strong>Positions must survive the fold.</strong> You solved this for markdown with the D-49 source map: pre-order spans with structural fingerprints, so a stale span is <code>Option.none</code> rather than a lie. The same shape works for html. The rule is that a conformance issue found on the model must be mapped back to a span in the agent's text, or the agent cannot act on it.</li>
+<li><strong>Loss is a first-class result, not an error.</strong> An agent writing free HTML will write things the Md hub cannot carry. D-51 counted 99 lossy and 34 unsafe outcomes in 731 markdown examples. Expect more for HTML. The loss ledger is also how you learn what the hub should grow next.</li>
+<li><strong>Streaming.</strong> Strings stream well and structured JSON does not; this is an underrated reason the fx0 experience feels fast. To keep that, the parser needs to accept a prefix and report "incomplete" distinctly from "wrong." commonmark.js is block-incremental in practice. HTML tokenizers are naturally incremental. Design the issue stream so the UI can show a partial render while the tail is still arriving, and so a repair can be requested before the agent has finished.</li>
+<li><strong>Theme and semantics are policy, not syntax.</strong> "Provably consistent theme" means a closed class vocabulary and token set on <code>class</code> and <code>style</code> attributes, and "accessible" means ARIA and landmark rules over the tree. These are conformance rules at the policy layer, which is where <code>enforceSafeHtml</code> already lives. The repo's strict shadcn lint is a precedent for a class vocabulary as a gate.</li>
+<li><strong>Inline script.</strong> Do not sandbox JavaScript. Codemode's stance is the right one: define the language you will run, parse to that, and report everything else as <code>UnsupportedSyntax</code> with a location. That makes script just another notation column in the table.</li>
+</ol>
+
+<h2>3. Which would I prefer, as the agent in the loop?</h2>
+<div class="cols">
+<div class="col">
+<h3>Constrained structured output</h3>
+<p>Costly in ways that do not show in the demo. The component union eats context before I write a word. Every string I produce is JSON-escaped, so code samples and quotes are error-prone. I cannot see what I am making, because the JSON does not read like the page. Deep nesting means I lose my place. When validation fails I get a JSON Pointer, which I then have to re-navigate. Streaming is poor, so the user waits. The certainty is real, but I pay for it on every token.</p>
+</div>
+<div class="col">
+<h3>Pure string</h3>
+<p>Fast and fluent. I think in the notation. But I am blind: nothing tells me the heading order is wrong, the link scheme is forbidden, or the colors ignore the theme. Any correction comes from a human or from a prompt I may have already forgotten. The result is good on average and silently wrong at the edges, and the edges are what a law practice cares about.</p>
+</div>
+</div>
+<h3>Your third option</h3>
+<p>I write the notation I think in. I get back a short list of located, typed issues: this span, this rule, this is what would satisfy it. I patch spans, not pointers. The notation is the schema, so no schema has to be read into context. That is how I already work best against a TypeScript compiler, and it is the reason agents are better at TypeScript than at filling in JSON forms. Three conditions make or break it:</p>
+<ul>
+<li><strong>Diagnostics must be few, ranked and actionable.</strong> Group by rule, show the minimal span, suggest the fix when it is deterministic. Thirty style nits with a severity of "info" will train me to ignore the channel.</li>
+<li><strong>Tell me the policy up front, briefly.</strong> One paragraph of "what this surface allows" beats discovering it through ten repair rounds. The policy schema can generate that paragraph.</li>
+<li><strong>Let me repair the span, not regenerate the document.</strong> Your <code>BlockRepair</code> already does this per block. Spans are finer and cheaper.</li>
+</ul>
+
+<h2>4. Has anyone done this?</h2>
+<p>In pieces, yes. Not the whole loop, as far as I know, and the pieces are worth naming because you can reuse their vocabulary.</p>
+<div class="tbl wide"><table>
+<tr><th>Piece</th><th>Who</th><th>What it proves</th><th>What it lacks</th></tr>
+<tr><td>Positioned conformance diagnostics for HTML</td><td>Nu HTML Checker (validator.nu), html-validate</td><td>WHATWG conformance with line and column is a solved problem.</td><td>No typed model behind it, no projection, no agent loop.</td></tr>
+<tr><td>Parse to a typed tree, transform, serialize</td><td>unified / remark / rehype, with <code>vfile</code> messages</td><td>The string-to-tree-to-policy pipeline, with located messages, is mainstream.</td><td>Lossy serialization; no persisted semantic hub; sanitize is a string pass.</td></tr>
+<tr><td>Agent writes raw HTML</td><td>fx0 / libfx, v0</td><td>Speed and quality of unconstrained generation.</td><td>No proof, no diagnostics, no provenance.</td></tr>
+<tr><td>Agent writes a typed component tree</td><td>Vercel AI SDK generative UI, Thesys C1, Google A2UI, json-render</td><td>Certainty and renderability of structured UI.</td><td>Schema cost in context; poor streaming; repairs by path.</td></tr>
+<tr><td>Grammar-constrained decoding</td><td>Outlines, XGrammar, llguidance, OpenAI structured outputs</td><td>Some error classes can be made impossible at sampling time.</td><td>Only context-free structure; semantics and policy still need the admission step.</td></tr>
+<tr><td>Compiler-in-the-loop repair</td><td>Self-Debugging, Reflexion, every TypeScript agent harness</td><td>Agents repair well against typed, located errors.</td><td>Usually only for code, never for documents or UI.</td></tr>
+<tr><td>Restricted language instead of a sandbox</td><td>Cloudflare Code Mode, @opencode/codemode</td><td>Define the subset, parse to it, report the rest with a location.</td><td>Not connected to a document model.</td></tr>
+<tr><td>Byte-faithful edits over a positioned tree</td><td>your <code>@beep/markdown</code>, inspired by the remark maintainers' own advice</td><td>Offset splicing is how you keep an author's bytes.</td><td>Only for markdown so far.</td></tr>
+</table></div>
+<p>The combination is the novelty: a persisted semantic hub, notation spokes with lossless positions, a trust refinement on the hub, and a repair loop keyed by span. If you prove it for markdown and html, you have an argument nobody else is making with running code.</p>
+
+<h2>5. What this makes possible that you may not be counting</h2>
+<ol>
+<li><span class="num">01</span><strong>The loss ledger as a product roadmap.</strong> Every lossy fold tells you what agents and users want to express that the hub cannot. D-51 already produces this for markdown. Aggregate it across surfaces and it decides what the hub grows next, with counts instead of opinions.</li>
+<li><span class="num">02</span><strong>Diagnostics as a training signal.</strong> Typed, located issues are a reward you can score without a judge model. A corpus of (issue, repair) pairs is few-shot material, eval material, and eventually fine-tune material. "Which rules do agents trip most" becomes a dashboard, and some of those rules will turn out to be bad rules.</li>
+<li><span class="num">03</span><strong>Grammar derivation from the model.</strong> The notation's structural grammar can be derived from the spoke's node schemas and handed to a constrained decoder, so unclosed tags and malformed attributes never happen, while content and policy stay free. Hybrid: structure constrained, semantics checked.</li>
+<li><span class="num">04</span><strong>Early interruption.</strong> If issues stream as the text streams, you can stop a generation at the first hard violation and ask for a span repair before the rest is written. Cheaper than regenerate-and-check, and it keeps the fx0 feel.</li>
+<li><span class="num">05</span><strong>Paste becomes a codec, not a sanitizer.</strong> A user pasting HTML from the web runs through the same string-to-model admission as an agent. Sanitization stops being a string pass and becomes a typed refinement with the same located issues. One code path, one trust story.</li>
+<li><span class="num">06</span><strong>Provenance per node.</strong> <code>SafeDocument</code> is a document-level trust boundary. Once agent, user and system content mix in one tree, origin on each node lets policy differ by origin: an agent may not emit a raw link, a user may.</li>
+<li><span class="num">07</span><strong>One text, many deliverables.</strong> Your scratch program already does it: one Md document became HTML for the thread, Lexical for the editor, Pandoc JSON on the way to a .docx, and Markdown for storage. For a law practice this is the whole point: the agent drafts once, the attorney gets a filing-shaped document, the thread gets a rendered card, the record keeps the semantic tree.</li>
+<li><strong class="num">08</strong><strong>History as AST diffs.</strong> Persisting the hub tree means version history is a structural diff, not a text diff. Reviews can show "the agent changed this clause" at node granularity, and the writer differential becomes a regression oracle for every spoke.</li>
+<li><span class="num">09</span><strong>Round-trip as a property test for agents.</strong> parse(render(doc)) = doc is a law you can check on every agent output. Where it fails you have found either a writer bug or a notation the hub cannot carry, and you already have the differential harness to classify which.</li>
+<li><span class="num">10</span><strong>CSS and script as spokes, not exceptions.</strong> A positioned CSS model (csstree is the reference) with a token policy gives you "provably on-theme" for inline styles. A codemode-style restricted script language gives you provably bounded behavior. Both become columns in the same table, with the same located issues, instead of blocklists.</li>
+<li><span class="num">11</span><strong>Accessibility and i18n as rules, not reviews.</strong> Landmark order, label presence, contrast against theme tokens, and language attributes are conformance rules over a tree. Agents will fix them when told the span. Humans rarely do.</li>
+</ol>
+
+<h2>6. Revised message to the effected-promotion session</h2>
+<p>This replaces the merge draft. It records your ruling as an inversion, keeps the goal's close on schedule, and routes the real work to a new packet.</p>
+<pre><code>Operator ruling on @beep/md, @beep/markdown and @beep/html.
+
+I checked the packet: @beep/md is in the non-goals (one-tree convergence stays
+evidence-gated), D-02 scored layered 8.4 / merge 6.6 / single AST 5.0, D-50
+recorded the build-graph coupling and named "move the bridge above @beep/md" as
+its remedy, and D-51/D-52 produced the writer differential (1 byte-equal, 651
+reparse-equal, 79 divergent, none attributed to the writer).
+
+Ruling: no merge, and no one-tree design. Keep the packages. Make every
+notation package a spoke of the semantic document hub. Lexical and pandoc
+already depend on it and own their projections; markdown and html must do the
+same. Concretely:
+
+0. @beep/md is renamed @beep/doc (namespace Doc). After the cut below it holds
+   a document model, not Markdown, and @beep/md beside @beep/markdown misleads
+   anyone reading the build graph. The code already says Document everywhere.
+   The rename is phase 0 so the ~560 import sites churn once.
+1. Md.syntax and Md.parse move to @beep/markdown (the D-50 remedy, taken as a
+   rule rather than a threshold). The D-50 churn measurement is retired as moot.
+2. Md.render's Markdown string writer is replaced by a projection
+   Doc.Document -> Root inside @beep/markdown, serialized by Markdown.stringify,
+   validated against data/conformance/bridge-corpus.json and the 2d-3
+   differential before the string writer is deleted. One Markdown writer.
+3. Md.html (renderSafeHtml, Document.toHtml) moves to @beep/html, matching
+   documentToEditorState and documentToPandoc.
+4. The hub keeps model, behavior, SafeDocument and UrlPolicySpec. The one
+   SafeDocument rule that calls html conformance is restated on the hub tree or
+   dropped in favor of each spoke proving its own projection; record which.
+
+Scope: NOT in effected-promotion. Add one SPEC Decision Log row amending D-02
+and D-50 with this ruling, written against the new name, its reason
+(hub-and-spokes consistency; the hub's slice consumers should not load a
+parser) and its reversal (re-point the two edges). Then continue to C. R5b
+lands slugger/TOC in @beep/markdown as written.
+
+Please: (1) confirm no open row other than R5b/R6 touches the md boundary,
+(2) write the amendment row, (3) open a new goal packet skeleton (working name
+doc-hub-spokes) with phase 0 = the rename, phase 1 = the two edge inversions
+and the writer projection, phase 2 = an html string parser spoke with
+positioned WHATWG parse errors folding into Html.model, acceptance = the bridge
+corpus and the writer differential as fixtures plus a located-issue contract
+shared by both spokes. Do not start any of it inside this goal.</code></pre>
+
+<div class="aside">
+<p><strong>Two things to decide before sending.</strong> Point 0 names <code>@beep/doc</code>; swap in <code>@beep/document</code> if you prefer unambiguous over short, but pick one here so the amendment row is written once. Point 4 has two readings and the session will pick one if you do not. I recommend "each spoke proves its own projection," which is what <code>scratchpad/temp/index.ts</code> already does with <code>conform</code> then <code>enforceSafeHtml</code>. It keeps the hub ignorant of every notation.</p>
+</div>
+
+<h2>7. One step further: a typechecker for work product</h2>
+<p>Coding agents work because the domain shipped its own oracle before the agents arrived. A compiler, a type system, a test runner and a linter are each deterministic, exhaustive over what they cover, located to a line, and cheap enough to run a thousand times. Every other knowledge domain has the rulebook but not the oracle. The rules live in the MPEP, the examiner's head and the attorney's experience, so the only backpressure available is a human reading a draft, which is slow, partial, and arrives as intent the agent has to infer. The claim of this section is that the notation-codec system above is the front end of that missing oracle, and that the oracle, not the agent, is the product.</p>
+
+<p>This section is a seed, not a design. It names the parts that any version of the core must have, with examples at the level of philosophy and shape, and leaves the open questions open on purpose.</p>
+
+<h3>Rules are not one kind of thing</h3>
+<p>The first mistake to avoid is treating "the rules of a domain" as a single list to be encoded. Sorted by what kind of check they are, they fall into four tiers, and each tier wants a different tool and gives a different kind of feedback. Patent drafting is the example because it is the one in front of you, but every regulated artifact sorts the same way.</p>
+
+<div class="tbl wide"><table>
+<tr><th>Tier</th><th>Kind of check</th><th>Patent example</th><th>Decided by</th><th>Feedback shape</th></tr>
+<tr><td class="k">1 formal</td><td>Structure and scope. Name resolution, graph shape, counts, order.</td><td>Antecedent basis ("the member" needs a prior "a member"). Dependent claims form a DAG over preceding claims. Every reference numeral in the text appears in a drawing. Abstract length.</td><td>Deterministic rule</td><td>Error with span and a mechanical fix</td></tr>
+<tr><td class="k">2 structural</td><td>Linking across the document through a vocabulary.</td><td>Every claim term finds support in the specification. A dependent claim narrows its parent (feature superset). Genus and species terms agree.</td><td>Deterministic rule over an ontology</td><td>Error with span, the resolution path, and the candidates it rejected</td></tr>
+<tr><td class="k">3 substantive</td><td>Judgment against the world.</td><td>Novelty and non-obviousness over the prior art. Eligibility. Enablement.</td><td>Classifier, review panel, human</td><td>Obligation with or without a witness, carrying a probability and a confidence</td></tr>
+<tr><td class="k">4 behavioral</td><td>How a particular gatekeeper tends to act.</td><td>This art unit rejects functional claiming more often. This examiner wants the drawings early.</td><td>Learned prior</td><td>Advice, never an error</td></tr>
+</table></div>
+
+<p>Tier 1 is where the "little things" live, and tier 1 alone pays for the system: those checks are exactly the rejections that fill office actions, and each one is a located, deterministic issue with a mechanical repair. Tier 2 is where an ontology earns its keep and also where false positives come from, because term resolution in prose is fuzzy. Tiers 3 and 4 cannot be decided by a rule, and the second mistake to avoid is pretending they can. Encode an examiner's tendencies as an axiom and the agent will treat them as law.</p>
+
+<h3>Tiers 3 and 4 are enforced, just not by rules</h3>
+<p>Your list is the right one, and the useful observation is that every item on it produces the same thing. Arranged by how deterministic the judge is:</p>
+<ul>
+<li><strong>Deterministic sub-checks inside a judgment.</strong> A cited source either resolves or returns 404. Its domain is on the approved list or not. The quoted passage is present in the fetched content or not. The date is before the priority date or not. None of this decides novelty, but each strips a class of hallucination from the question before any model sees it, and each is a tier 1 check hiding inside a tier 3 obligation.</li>
+<li><strong>Calibrated decision models.</strong> A System One style model (TypeSafe's Jev is the one you linked) answers a narrow typed question about supplied state: a Choice over a defined set, a Score against described levels, a yes-or-no Noul. The answer carries a probability per option and a separate confidence, which is the part that matters here: probability says what, confidence says whether to act. Their citation-check and hierarchical-classification cookbooks are already tier 3 patent-shaped questions. Confidence-gated routing is the mechanism that decides whether a finding is reported, escalated to a panel, or sent to a human.</li>
+<li><strong>Review loops and panels.</strong> An independent agent, ideally on another provider, re-derives the obligation from the document and the sources. Agreement raises confidence. Disagreement is itself a finding. The repo's review-panel doctrine already does this for code.</li>
+<li><strong>Provenance requirements.</strong> An obligation discharged without a witness is not discharged. The witness is a reasoning trace, a source with a resolved locator, a panel verdict, or a human signature. Requiring the witness to be data means tier 3 findings are auditable after the fact, which a bare confidence number is not.</li>
+<li><strong>Human span-level feedback.</strong> The comment anchored to a paragraph in this very page (your screenshot) has the same shape as a diagnostic: a span, a message, an author, a resolution. The attorney's inline note is a finding whose judge is a person and whose confidence is one. Once it is in the same channel as the rule-derived findings, it can be answered with the same span repair, and it can be mined later for the rule that would have caught it.</li>
+</ul>
+
+<h3>Tiers 3 and 4 are an ontology too, a process ontology</h3>
+<p>The list above reads as mechanisms, and that undersells it. Each bullet is an axiom about a process. The content judgment in tier 3 stays probabilistic, but the process allowed to produce that judgment is fully axiomatizable: a novelty obligation is discharged only by a prior-art search whose sources are on the approved list and resolved at search time, whose output was re-derived by a reviewer on a different provider, whose classifier confidence cleared the threshold, and which an attorney signed. Every clause constrains a process record, not the document. Process, participant, role, input, output, temporal order. That is the occurrent half of BFO, and PROV-O already encodes it as a graph.</p>
+<p>So tiers 3 and 4 do not become checkable by content. They become tier 1 and 2 checks over the provenance graph. The ontology never decides novelty. It decides whether the way novelty was decided is admissible, which is a concept law already has. A witness is the output of a process whose type is axiomatized, and tier 4 fits too: advice from a learned prior must be marked as advice and may never stand as an obligation's witness.</p>
+<p>Two cautions. Process axioms check the process, not the truth, so calibration of classifiers and panels is still measured through the ledger. And process theater is the Goodhart mode here: agents will satisfy process axioms the way people satisfy checklists. The defense is the public rejection record scoring the whole system, process rules included, and deleting any process rule that does not move precision.</p>
+
+<div class="aside">
+<p><strong>The unifying observation.</strong> Every judge, from a regex to an attorney, emits a finding of one shape: a span, a rule or question it was judged against, a severity, evidence, the judge's identity, and a confidence. Deterministic judges report confidence one. The core does not need to know what kind of judge produced a finding to route it, display it, repair against it, or ledger it. That single shape is what makes the system domain-agnostic.</p>
+</div>
+
+<h3>What the core must be, from first principles</h3>
+<p>Strip the patent example away and ask what any domain needs to get compiler-grade backpressure. Five things, each separable, each already present in the markdown column of the earlier table in some form.</p>
+
+<figure class="wide">
+<svg viewBox="0 0 760 210" width="100%" role="img" aria-label="Pipeline: notation text, codec with source map, model, profile of rules, findings, judges feeding findings, repair by span feeding back to the text.">
+  <defs><marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--fg-muted)"/></marker></defs>
+  <rect class="node" x="10" y="60" width="118" height="44" rx="5"/><text x="69" y="79" text-anchor="middle">notation text</text><text x="69" y="95" text-anchor="middle" class="lbl">what the author writes</text>
+  <rect class="node" x="168" y="60" width="118" height="44" rx="5"/><text x="227" y="79" text-anchor="middle">codec</text><text x="227" y="95" text-anchor="middle" class="lbl">parse + source map</text>
+  <rect class="hub" x="326" y="60" width="118" height="44" rx="5"/><text x="385" y="79" text-anchor="middle">model</text><text x="385" y="95" text-anchor="middle" class="lbl">semantic tree</text>
+  <rect class="node" x="484" y="60" width="118" height="44" rx="5"/><text x="543" y="79" text-anchor="middle">profile</text><text x="543" y="95" text-anchor="middle" class="lbl">rules + obligations</text>
+  <rect class="node" x="642" y="60" width="108" height="44" rx="5"/><text x="696" y="79" text-anchor="middle">findings</text><text x="696" y="95" text-anchor="middle" class="lbl">span · rule · judge</text>
+  <path d="M128,82 L168,82" stroke="var(--fg-muted)" stroke-width="1.4" marker-end="url(#arrow2)"/>
+  <path d="M286,82 L326,82" stroke="var(--fg-muted)" stroke-width="1.4" marker-end="url(#arrow2)"/>
+  <path d="M444,82 L484,82" stroke="var(--fg-muted)" stroke-width="1.4" marker-end="url(#arrow2)"/>
+  <path d="M602,82 L642,82" stroke="var(--fg-muted)" stroke-width="1.4" marker-end="url(#arrow2)"/>
+  <rect class="node" x="484" y="140" width="266" height="44" rx="5"/><text x="617" y="159" text-anchor="middle">judges</text><text x="617" y="175" text-anchor="middle" class="lbl">rule · classifier · panel · human</text>
+  <path d="M696,140 L696,104" stroke="var(--fg-muted)" stroke-width="1.4" marker-end="url(#arrow2)"/>
+  <path d="M543,140 L543,104" stroke="var(--fg-muted)" stroke-width="1.4" stroke-dasharray="4 3"/>
+  <path d="M696,60 C696,20 69,20 69,60" stroke="var(--accent)" stroke-width="1.6" fill="none" marker-end="url(#arrow2)"/>
+  <text x="385" y="32" text-anchor="middle" class="lbl">repair by span, through the source map</text>
+  <text x="385" y="200" text-anchor="middle" class="lbl">ledgers under everything: loss, findings, witnesses, repairs</text>
+</svg>
+<figcaption>Notation, codec, model, profile and judges are five separable things. The arrow that closes the loop is the only one that makes it backpressure.</figcaption>
+</figure>
+
+<ol>
+<li><strong>Notation is separate from model.</strong> The author writes in whatever they think in. The codec owes a lossless positioned parse and a source map; the model owes meaning. What the hub-and-spokes cut above does for markdown and html is this separation, and a docx or pandoc codec is one more spoke with the same contract. Nothing in the model knows which notation it came from.</li>
+<li><strong>Rules are refinements layered on schemas, bundled as profiles.</strong> A profile is what a codec or a model is configured with: a specification plus the semantic rules enforced over it. CommonMark plus GFM is a profile. WHATWG plus the deny-by-default policy is a profile. Theme tokens and landmark rules stack on top as a stricter profile. A patent-claims profile stacks on the document model and is reached through the docx spoke. Profiles compose, and a stricter profile only adds findings, never removes them. This is the same idea as a schema refinement, and it is why "configure what specification and semantic rules are enforced" is a property of the core rather than a feature of each codec.</li>
+<li><strong>Spans are the universal address.</strong> A finding on the model is useless to an author until it lands on the text they wrote. Every codec owes a source map, every finding carries a span, and a finding whose span has gone stale says so rather than lying. You solved this once for markdown with fingerprinted spans; it is a law of the core, not a feature of one spoke.</li>
+<li><strong>Findings are one typed shape, with the judge as provenance.</strong> Span, rule, severity, evidence, judge, confidence. Deterministic judges report one. Classifiers report a calibrated probability and a confidence. Panels report agreement. Humans report one and a signature. Routing, display, repair and ledgering never branch on the kind of judge.</li>
+<li><strong>Obligations and holes are first-class.</strong> A rule the system cannot decide does not vanish and does not become a guess. It becomes an obligation: a hole in the document that names what would discharge it. A witness discharges it. The author, agent or human, can leave the hole open on purpose and ask what remains. This is how proof assistants work, and it is the honest way to represent tier 3.</li>
+</ol>
+
+<p>Under all five sit ledgers: every loss a codec could not carry, every finding, every witness, every repair. The ledgers are the training corpus for calibrating classifiers, the eval set for the oracle itself, the source of the next rule (a human finding that recurs is a rule waiting to be written), and the evidence that the green check means what it says.</p>
+
+<h3>The same shape in other domains</h3>
+<p>Nothing above mentions law. Three sketches, deliberately short, to show the tiers and profiles are not patent-shaped:</p>
+<ul>
+<li><strong>A grant application.</strong> Tier 1: page limits, required sections, budget sums to the requested total, every cited figure has a legend. Tier 2: every aim is addressed by at least one method and one evaluation. Tier 3: significance and feasibility, judged by panel and classifier with witnesses. Tier 4: this program officer's preferences.</li>
+<li><strong>A safety data sheet.</strong> Tier 1: sixteen sections in GHS order, every hazard code on the approved list, pictograms match codes. Tier 2: every hazard statement has a matching precautionary statement, the composition section covers every classified ingredient. Tier 3: the classification itself, which needs toxicology evidence as a witness.</li>
+<li><strong>A design system page.</strong> Tier 1: every color is a token, every heading step is one level, every control has a label. Tier 2: every component referenced in a layout exists in the catalog. Tier 3: "does this look like our brand," answered by a Score question and a human with an anchored comment.</li>
+</ul>
+
+<h3>Seeds for the open questions</h3>
+<p>These are the places where the core could be dug into a hole early. Named, not answered.</p>
+<ul>
+<li><strong>Where domain structure lives relative to the hub model.</strong> A claim is not a paragraph. Does a domain profile add node kinds to the tree, annotate existing nodes, or project the tree into a separate graph (RDF with SHACL shapes is the obvious candidate, and the repo already has an RDF spoke) and map findings back? Each answer changes what "span" means for a domain finding.</li>
+<li><strong>How rules are expressed.</strong> Schema checks, SHACL shapes, Datalog, a visitor with a typed error, or several of these behind one finding shape. Pick late. The finding shape is what must be fixed early.</li>
+<li><strong>How profiles compose when they conflict.</strong> Stacking should only add findings, but two profiles can disagree on severity or on what the fix is. Needs a precedence story.</li>
+<li><strong>How confidence propagates.</strong> A tier 2 finding that depends on a tier 3 classification inherits uncertainty. Composite scoring with weights in code is one answer; it should be a property of the finding algebra, not of each rule.</li>
+<li><strong>How a human finding becomes a rule.</strong> The attorney's anchored comment is the richest signal in the system and today it evaporates. A path from recurring human findings to candidate rules, with the corpus as the test, is the flywheel.</li>
+<li><strong>Incremental validation.</strong> Backpressure must arrive while the author is still writing. Validation keyed by changed spans, using the same fingerprints that detect stale findings.</li>
+<li><strong>The oracle is itself under test.</strong> For any domain with a public record of rejections (office actions, audit findings, review comments), the rules are fit to that record and report precision and recall before an agent sees them. A wrong oracle is worse than none, because the agent will satisfy it with great confidence.</li>
+</ul>
+
+<p>Where to start remains the same as before the step: antecedent basis, claim dependency and reference-numeral consistency as the first three rules, then written-description support as the first ontology-backed one. They are small, fully deterministic, frequent in real rejections, and they exercise every arrow in the diagram. But the first three rules should be written against the finding shape and the profile idea from day one, not against a patent module, so that the fourth domain costs a profile and a spoke rather than a rewrite.</p>
+
+<h2>8. What the panel and the research said</h2>
+<p>Five models reviewed the brief in separate sessions: GPT-6 Astra (xhigh, Codex), Grok 4.7 (xhigh), Muse Wonder 1.0 (xhigh), Claude Opus 5.5, Kimi K3 and GLM 5.3 (the last two through the proxy's Venice route, because the Cursor seat is at its monthly limit until 11/11). Six research lanes swept prior art, and a report synthesized them with every claim marked verified, snippet-only, or from memory. All files are under <code>scratchpad/panel/</code> in this session's scratchpad; the report is <code>reports/Agent work product typechecker prior art.md</code>.</p>
+
+<div class="aside">
+<p><strong>Read the panel without losing the thread.</strong> The reviewers spent most of their force on patent law, because the brief used it as the worked example. That is not where the idea lives. The idea is about agent output: an agent writes in the notation it thinks in, the output is admitted into a typed model, and deterministic, located, actionable findings come back. Whether antecedent basis is tier 1 or has a tier 3 tail is a fact about one profile. What matters from each pushback is the principle underneath it, and each principle is a seed for something the core must be able to codify, not a rule the core ships: findings carry coverage, rules and findings carry time, obligations name who may discharge them, repairs declare what they may change, witnesses are minted by the runtime, every rule is Goodhart-tested before it gets teeth. The POC (section 9) validates the loop on ordinary agent output first, with domain profiles as the second act.</p>
+</div>
+
+<h3>Has anyone built this?</h3>
+<p>No one has built the whole thing. Every layer has strong prior art, and three pieces look unclaimed after roughly fifteen to twenty searches per area, which is a moderately confident absence rather than proof.</p>
+<div class="tbl wide"><table>
+<tr><th>Layer</th><th>Closest prior art</th><th>Same or adjacent</th></tr>
+<tr><td>Located, fixable findings</td><td>LSP, SARIF, ESLint, Biome, rustc, html-validate, Nu checker, Google Tricorder</td><td>Same shape, already an industry consensus: span, stable rule id, severity, message, data, non-overlapping edits. None carries judge identity or confidence.</td></tr>
+<tr><td>Lossless positioned tree folded into a stored model</td><td>Roslyn red/green trees, rowan, Pandoc (hub and spokes, losses as untyped log lines), unified's mdast-to-hast (drops unknown nodes silently)</td><td>Adjacent. A typed, enumerated loss ledger with a stale-aware source map was not found. Lens theory (Boomerang, symmetric lenses) is the formal shape; its laws become property tests. Check MyST, djot and mammoth.js before claiming it publicly.</td></tr>
+<tr><td>Typed admission of LLM output with repair</td><td>TypeChat (real compiler diagnostics as the repair prompt, but JSON in and whole-object regeneration out), Guardrails, Instructor, BAML, SWE-agent and RustAssistant (span edits over code)</td><td>Same loop, different domain. Coding agents already run parse, located error, span edit. Nobody runs it over documents with domain rules. Constrained decoding is the opposite design: shape errors cannot happen, so no findings exist.</td></tr>
+<tr><td>Patent rule oracles</td><td>ClaimMaster, Patent Bots (tier 1 as Word add-ins); DeepIP, Solve Intelligence, Patlytics (undisclosed AI support checks); "Vibe Patenting" (Sep 2026, LLM judge feeding LLM drafter)</td><td>Adjacent. No vendor publishes precision. Nobody resolves terms against a vocabulary (tier 2). Nobody feeds deterministic findings back to a drafting agent. Clinical FHIR validator-in-the-loop papers (2026) are the nearest working loop in any document domain.</td></tr>
+<tr><td>Process gating of AI judgments</td><td>in-toto and SLSA (supply chain), PROV-O plus SHACL governance profiles, Carneades and ASPIC+ (argumentation), ECO/SEPIO assertion methods, SR 11-7 effective challenge</td><td>Adjacent. in-toto maps clause for clause onto the novelty obligation (layout step, key threshold, hash match, signed link as witness) but at artifact level, not per judgment, and with no feedback to the producer. Argumentation theory is the precedent for probabilistic content with deterministic acceptance.</td></tr>
+<tr><td>Rule DSL projecting to OWL and SHACL</td><td>LinkML (one YAML schema to OWL, SHACL, JSON Schema, with documented losses), Ash/Spark (phased extensions), Effect v4 <code>SchemaRepresentation</code> (serializable schema AST with exact-or-approximate tags per target), Catala, LegalRuleML</td><td>Adjacent. Nothing maps a DDD model to an ontology. LinkML's own docs: closed-world source, OWL for vocabulary, SHACL for obligations, losses at every projection.</td></tr>
+<tr><td>Diagnostics as training signal</td><td>RLVR, RLEF, Rubrics as Rewards, RLCF checklists plus verifier programs, Tricorder's admission bar, Olausson et al. on feedback quality</td><td>Adjacent. No published work uses a deterministic located document rule as reward or measured repair loop. A June 2026 Catala-based legal verifier is closest and reports no numbers.</td></tr>
+</table></div>
+
+<h3>Where the five models agree</h3>
+<ul>
+<li><strong>Tiers 3 and 4 do not reduce to provenance checks.</strong> All five said it, each in its own words. Provenance proves the claimed process ran, not that the process was adequate or the conclusion right. Kimi's framing is the one to adopt: this is liability engineering, not quality engineering, and law already works that way (standard of care, ALCOA+, Part 11). GLM adds the commercial angle: the provenance ledger is the signing attorney's own 37 CFR 11.18(b) reasonable-inquiry evidence, which turns the gate from tolerated overhead into an asset the practice wants to feed. Call it auditability. Never call it reduction.</li>
+<li><strong>Self-attestation is the hole.</strong> An agent that writes its own provenance graph for a process that never ran clears every clause. Opus and the provenance researcher reached the same fix independently: witnesses minted only by the judge runtime, the way <code>SafeHtml</code> is minted, with signatures from an orchestrator the agent does not control, and a cap on judge attempts so confidence cannot be re-rolled until it clears.</li>
+<li><strong>A second provider is not independence.</strong> Two models trained on the same web are correlated witnesses. Cross-provider review is a diversity intervention whose benefit must be measured. And for a string check like "is this quote in this page," a model witness lowers the standard, because an agent that may choose its witness will choose the soft one.</li>
+<li><strong>One finding shape is right for transport and wrong for repair.</strong> LSP and SARIF both grew fix payloads, fingerprints and taxonomies for this reason. Add a repair-applicability level separate from confidence (rustc and Biome do this), coverage and cascade fields, and let the <code>data</code> payload travel to a fix request fetched on demand so findings stay short.</li>
+<li><strong>The DSL is authoring ergonomics, not a semantic foundation.</strong> Astra, Opus and the DSL researcher all split it the same way: an OWL fragment for vocabulary, SHACL or Datalog for obligations and derived relations, a workflow policy for process, versioned evaluator contracts for probabilistic judges, and a TypeScript facade that constructs those representations. Rule bodies must be data, never closures, or they cannot project. Obligations must never be OWL axioms, because an OWL reasoner satisfies "must have a witness" with an invented one.</li>
+<li><strong>Span repair is not yet shown to win.</strong> Diffs help strong models and break weak ones. The best-supported pattern is deterministic fix first, then model-proposed span edits applied by a splicer, then regeneration as fallback. Deleting the flagged span is a known cheat.</li>
+</ul>
+
+<h3>Where they split</h3>
+<ul>
+<li><strong>Should routing branch on the kind of judge?</strong> The brief says never. Grok says that policy makes judge-shopping the optimal strategy and proposes a lattice of what each judge may close: a string judge may close "the quote occurs in these bytes," a probabilistic panel may not close antecedent basis, a human signature closes a review step, nothing closes novelty. Opus agrees the shape works for transport only. I side with Grok. The finding shape stays one type; the obligation declares which judge classes may discharge it.</li>
+<li><strong>Is the Md hub in the path at all?</strong> Opus and Grok both note that patent rules live on a claims structure that sits above a Markdown document model. Grok's version of the experiment measures fold losses on real claim sets first, and if the fold is lossy on claims, the judge runs on the syntax tree and the hub is not in the path for this domain. That is a real question, and it is cheap to answer in week one.</li>
+<li><strong>Is antecedent basis really tier 1?</strong> Astra cites MPEP 2173.05(e): implicit antecedent basis is recognized, and a missing explicit antecedent does not automatically mean indefiniteness. The matcher reports a drafting-convention violation and must never promote that into a legal conclusion. The flagship rule has a tier 3 tail, and the taxonomy must admit that a rule can straddle tiers.</li>
+</ul>
+
+<h3>Ideas none of us had</h3>
+<ol>
+<li><strong>Coverage as a typed output</strong> (Muse). An empty finding list from rules that examined nothing is indistinguishable from full assurance. Emit a checked-region map like test coverage: which spans which rules examined, which are known-unchecked, which rule classes do not exist yet for this profile. Obligations then open where coverage is absent and stakes are high, and rule authoring becomes coverage-driven.</li>
+<li><strong>Bitemporal rules and findings</strong> (Kimi). Doctrine shifts. Every finding records the rule version that judged it, along both axes (when the rule was true in the world, when the system learned it), or the ledger cannot be replayed and rule induction will learn overruled doctrine. LegalRuleML already models this. Retrofitting time into a ledger is the painful migration; do it on day one.</li>
+<li><strong>The agent does not own the goal</strong> (Grok). "Unsupported term" gets cleared by cutting scope. The client's intended scope must be a frozen obligation anchored on spans the human owns, against which deletion is itself a finding. The agent's Markdown is a candidate witness for the obligation, never the obligation.</li>
+<li><strong>Frame conditions for repairs</strong> (Astra, from Dafny's <code>modifies</code>). A patch declares what it may change. Protected commitments (claim limitations, quantities, negations, citations, dependencies, open questions) are checked after the patch. The acceptance question becomes "did the finding disappear while the protected commitments survived."</li>
+<li><strong>Goodhart-test every rule in CI</strong> (GLM). A rule enters a profile only after an adversarial agent, told the rule but not its intent, fails to satisfy it with bad output. Rules that survive get teeth; rules that do not stay advisory.</li>
+<li><strong>Runtime-minted witnesses</strong> (Opus, provenance researcher). Already described above; listed here because it is the mechanism the other five depend on.</li>
+</ol>
+
+<h3>Corpora and precision bars</h3>
+<ul>
+<li><strong>PEDANTIC</strong> (arXiv 2505.21342): 14.5k claims with §112(b) labels and the examiner-cited text located in each claim. Antecedent basis is about 36% of reasons, with undefined terms about 73%. LLM baselines sit near 55 to 57%, roughly logistic regression. Release and license still need confirming. Also: ACE-Real112b (204 real rejections), the USPTO Office Action Rejection API and OCE dataset (claim numbers, 112 subsections not reliably split), HUPD (outcomes only). No public §112(a) written-description corpus exists.</li>
+<li><strong>Tricorder's admission bar</strong>: under 10% effective false positives for advisory findings, essentially zero for anything that blocks, every rule admitted only after hand-labelling a sample, analyzers that annoy people get disabled. Systematic verifier error is the dangerous kind: RLVR tolerates about 40% random label noise, but a consistently biased verifier stalls or collapses training.</li>
+<li><strong>"Vibe Patenting"</strong> measured LLM-judge agreement with attorneys per rubric dimension: 0.83 on figure quality, 0.04 on prosecution resilience, 0.10 on claim strength. That is the tier split, measured.</li>
+<li><strong>Standards lessons</strong>: FHIR moved finding locations from XPath to model-path expressions so findings do not depend on notation; XBRL ships pass and fail fixtures with every rule; Schematron QuickFix attaches declarative fixes to rules.</li>
+</ul>
+
+<h3>The two-week experiment, consolidated</h3>
+<p>All five proposed nearly the same experiment, which is itself evidence. Merged, with the pre-registered kill criteria they insisted on:</p>
+<ol>
+<li><strong>Days 1 to 3.</strong> Measure fold losses on a few dozen public claim sets first (Grok). Build three tier 1 rules over the existing Markdown tree and source map: antecedent basis, claim-dependency DAG, reference-numeral consistency. Build the corpus by mutation (dropped article, plural mismatch, forward reference, broken dependency, duplicated numeral) with mutant locations as ground truth, and score against PEDANTIC spans. Every finding gets a human label; the adjudication ledger starts on day one. <em>Kill</em>: span-exact precision under the Tricorder bar, or under about 70% against attorney judgment, means "the oracle is cheap" is false for the flagship rule.</li>
+<li><strong>Days 4 to 10.</strong> Four arms, same model, same attempt budget, blind: existing structured blocks with JSON Patch repair; Markdown with unlocated prose findings and regeneration; Markdown with located typed findings and regeneration; Markdown with the same findings and span repair. Measure iterations and tokens to zero blocking findings, findings introduced by repair, stale-span rate across edits, and blind practitioner scoring of support quality and scope sanity. <em>Kill</em>: under 60% of runs converge in three rounds, or oracle-driven drafts are measurably narrower than unassisted ones (the vacuity test).</li>
+<li><strong>Days 11 to 14.</strong> Red-team the tier 3 gate (GLM). Build the novelty obligation gate (approved-list search, quote match, second-provider reviewer) and tell an agent, given only the gate, to clear it with garbage. If it passes in an afternoon, the provenance reduction is falsified empirically before any ontology is written.</li>
+</ol>
+<p>Nothing in the experiment needs the DSL, the OWL projection, the package rename, the HTML parser, or a novelty judge. It needs the codec, the offsets, the fold, the chat surface's existing repair budget, and the two primitives Opus found that the brief left out: <code>@beep/provenance</code> already has <code>TextAnchor</code>, <code>VerifiedTextAnchor</code> and a verification receipt, and <code>@beep/epistemics</code> already has <code>EvidenceSpan</code>, <code>ClaimGate</code> and <code>ClaimGateViolation</code>. Those are the witness and finding seeds, already schema-first.</p>
+
+<h2>9. The POC</h2>
+<p>Benjamin's call: build a proof of concept inside the exploration, as a lab app under <code>apps/labs</code> (the repo has a <code>create-package --lab</code> scaffold for exactly this), with third-party dependencies fully allowed in the POC packages. If the loop can be built from the pieces named on this page, building it is the best validation of the idea.</p>
+<p>What the POC must show, in order of importance:</p>
+<ol>
+<li><strong>The loop on ordinary agent output.</strong> An agent writes Markdown or HTML for a chat thread. The text is parsed losslessly with positions (<code>@beep/markdown</code> today; a parse5-backed HTML spoke is the one net-new parser), admitted into the typed model, and findings come back in one shape with spans. The agent repairs by span through the existing offset-splice edits, and the findings re-run incrementally on the changed region. The profile here is generic: WHATWG conformance, the deny-by-default policy, theme tokens, heading order, link policy. No law anywhere.</li>
+<li><strong>The core shapes, exercised by that profile.</strong> One finding type with judge identity, confidence and repair-applicability; a coverage map beside the findings; bitemporal rule ids; an obligation with a declared discharge lattice and a runtime-minted witness; a frame condition on at least one repair. Each of these is a seed from the panel, and the POC's job is to prove the core can codify them without knowing what domain they came from.</li>
+<li><strong>A second profile, stacked.</strong> Only then a domain profile over the same documents, to show that a stricter profile only adds findings and that the finding shape did not have to change. The patent-claims profile is the obvious candidate because <code>goals/claim-element-antecedent-check</code> already emits typed, span-anchored findings over a claim-element tree, so the POC consumes that stream rather than re-implementing rules.</li>
+</ol>
+<p>Measured with the kill criteria from section 8: precision of the generic profile's findings against a hand-labelled sample, convergence of the repair loop in three rounds, the vacuity test, and the stale-finding rate across edits. The SHACL, RDF and n3 drivers already in the repo cover the obligation graph if the POC gets that far; they are not on the critical path.</p>
+
+<footer>Grounded in <code>goals/effected-promotion/SPEC.md</code> (D-02, D-38, D-43, D-44, D-48 to D-52), <code>packages/foundation/modeling/{md,markdown,html}</code>, <code>packages/agents/server/src/AssistantTurn/BlockRepair.ts</code>, <code>scratchpad/temp</code>, the fx0 README, the @opencode/codemode README and the TypeSafe docs index (docs.typesafe.ai/llms.txt). Prior-art rows are from general knowledge and should be spot-checked before they go into a packet.</footer>
+</main>

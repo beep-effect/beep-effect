@@ -64,6 +64,64 @@ export * from "./DuckDb.test-layer.ts";
  */
 export * as DuckDbClient from "./DuckDbClient.service.ts";
 /**
+ * DuckDB event journal: the upstream `SqlEventJournal` over BIGINT tables.
+ *
+ * **Example** (Provide a DuckDB event journal)
+ *
+ * ```ts
+ * import { DuckDbClient, DuckDbEventJournal } from "@beep/duckdb"
+ * import * as Layer from "effect/Layer"
+ *
+ * const JournalLive = DuckDbEventJournal.layer().pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ * )
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export * as DuckDbEventJournal from "./DuckDbEventJournal.service.ts";
+/**
+ * DuckDB encrypted event-log server storage with 64-bit sequences.
+ *
+ * **Example** (Provide encrypted event-log storage)
+ *
+ * ```ts
+ * import { DuckDbClient, DuckDbEventLogServerEncrypted } from "@beep/duckdb"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StorageLive = DuckDbEventLogServerEncrypted.layerStorageSubtle().pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ * )
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export * as DuckDbEventLogServerEncrypted from "./DuckDbEventLogServerEncrypted.service.ts";
+/**
+ * DuckDB cluster message storage for single-process (`SingleRunner`) deployments.
+ *
+ * **Example** (Provide cluster message storage)
+ *
+ * ```ts
+ * import { DuckDbClient, DuckDbMessageStorage } from "@beep/duckdb"
+ * import * as NodeCrypto from "@effect/platform-node/NodeCrypto"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StorageLive = DuckDbMessageStorage.layer.pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer()),
+ *   Layer.provide(NodeCrypto.layer)
+ * )
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export * as DuckDbMessageStorage from "./DuckDbMessageStorage.service.ts";
+/**
  * The DuckDB Migrator module.
  *
  * **Example** (Run record migrations)
@@ -87,3 +145,61 @@ export * as DuckDbClient from "./DuckDbClient.service.ts";
  * @category layers
  */
 export * as DuckDbMigrator from "./DuckDbMigrator.service.ts";
+/**
+ * DuckDB `PersistedQueue` store; it also requires `Crypto` for claim ids.
+ *
+ * **Example** (Provide a persisted queue store)
+ *
+ * ```ts
+ * import { DuckDbClient, DuckDbPersistedQueue } from "@beep/duckdb"
+ * import * as NodeCrypto from "@effect/platform-node/NodeCrypto"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StoreLive = DuckDbPersistedQueue.layerStoreSql().pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(NodeCrypto.layer)
+ * )
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export * as DuckDbPersistedQueue from "./DuckDbPersistedQueue.service.ts";
+/**
+ * DuckDB `Persistence` backings, shared-table and table-per-store.
+ *
+ * **Example** (Provide SQL-backed persistence)
+ *
+ * ```ts
+ * import { DuckDbClient, DuckDbPersistence } from "@beep/duckdb"
+ * import * as Layer from "effect/Layer"
+ *
+ * const PersistenceLive = DuckDbPersistence.layerSql.pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" }))
+ * )
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export * as DuckDbPersistence from "./DuckDbPersistence.service.ts";
+/**
+ * DuckDB cluster runner storage for single-process (`SingleRunner`) deployments.
+ *
+ * **Example** (Provide cluster runner storage)
+ *
+ * ```ts
+ * import { DuckDbClient, DuckDbRunnerStorage } from "@beep/duckdb"
+ * import * as ShardingConfig from "effect/cluster/ShardingConfig"
+ * import * as Layer from "effect/Layer"
+ *
+ * const StorageLive = DuckDbRunnerStorage.layer.pipe(
+ *   Layer.provide(DuckDbClient.layer({ databasePath: ":memory:" })),
+ *   Layer.provide(ShardingConfig.layer())
+ * )
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export * as DuckDbRunnerStorage from "./DuckDbRunnerStorage.service.ts";

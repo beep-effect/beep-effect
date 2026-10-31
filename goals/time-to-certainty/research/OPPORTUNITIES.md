@@ -2874,3 +2874,99 @@ the committed corpus was redacted after ratification (#1032, #1037, #1041), so e
   plan.json` (landed in this PR). Any change under `packages/architecture-lab` should run that check
   and `architecture-operation-plan.test.ts`; the lab's `AGENTS.md` could say so where a contributor
   adding a test file would read it.
+
+## 2026-10-27 — the brief's "watermark push and review events" named a store that holds positions
+
+- Doing: designing the rounds-to-ready counter for ruling 81 from the lane brief, which said to
+  derive it "from the watermark's push and review events".
+- Evidence: `yeet-monitor-comments/v2` (`MonitorComments.ts`) carries three `(createdAt, id)` cursors
+  and a pull request number, nothing else; pushes are observed by the monitor loop's head timeline
+  (`MonitorLoop.ts` `observeMonitorHead`, in memory per loop) and reviews by the comment-stream
+  collector, which drops a body-less approval before it reaches the cursor. No durable event store
+  existed, so half a session went to establishing that before a ledger could be designed.
+- Prevention: a brief that names a store should name the field it expects to read; when the store is
+  a cursor, say "the stream it positions". The ruling records the model so the next lane reads it
+  from the decision log instead of the source.
+
+## 2026-10-27 — a fresh desktop-app worktree failed `check` with a wall of TS6305 before any edit
+
+- Doing: the first `bun run check` of `@beep/repo-cli` in the lane the app cut for this task.
+- Evidence: hundreds of `TS6305 Output file '…/dist/*.d.ts' has not been built from source file`
+  plus cascading `never` errors across untouched files; `node_modules` was present, no dependency
+  had a `dist`. `bun install --frozen-lockfile && bunx turbo run build --filter="@beep/repo-cli^..."`
+  built 69 tasks (68 cached) in 3 s and the check then reported only this lane's own findings.
+- Prevention: the app's worktree bootstrap (or the SessionStart hook) should run the dependency
+  build when a lane's referenced `dist` directories are absent, or print the one command; today the
+  recipe lives only in agent memory.
+
+## 2026-10-27 — `Console.warn` is invisible to `TestConsole`
+
+- Doing: proving that a failed review lane append warns and never fails the recorder.
+- Evidence: the recorder wrote its line with `Console.warn`; `effect/testing/TestConsole` captures
+  only `log` and `error` (`logLines`, `errorLines`), so the assertion read an empty string. Every
+  other `[yeet]` degradation line in `MonitorComments.ts` already uses `Console.error`.
+- Prevention: a Biome GritQL guard against `Console.warn` in `@beep/repo-cli`, or a line in the Yeet
+  test kit's docs naming the two captured channels; the recorder now uses `Console.error`.
+
+## 2026-10-28 — a sibling lane's `pgrep -n -x bun` probe killed this lane's package-verify
+
+- Doing: waiting on `bun run beep quality package-verify @beep/repo-cli`, whose audit runs the whole
+  repo-cli vitest suite (21 minutes here).
+- Evidence: the run ended `Worker exited unexpectedly with signal SIGINT during started state while
+  running test file …/test/AgentMessage.command.test.ts`; 376 files and 7942 tests had passed, the one
+  error was the worker exit, and the audit shard filed a P0 inbox row. The orchestrator confirmed a
+  probe in another lane had run `pgrep -n -x bun` and signalled the newest `bun` on the host, which
+  was this lane's vitest fork worker. A session-local waiter built on `pgrep -f '<command>'` never
+  fired either, because the same pattern matched a third session's identical command in its own
+  checkout.
+- Prevention: probes and waiters address processes by child handle, pid file or the systemd scope
+  `beep-heavy` creates, never by name across the host; package-verify could retry a test file whose
+  worker died by signal once before failing the shard, so one stray signal does not cost the full run.
+
+## 2026-10-28 — package-verify green, then `yeet publish` red on three gates it never runs
+
+- Doing: publishing the review lane measurement after a 25-minute green
+  `bun run beep quality package-verify @beep/repo-cli`.
+- Evidence: `yeet publish` committed, then its cheap gates went red on `lint:schema-first` (two
+  exported interfaces, one of them a service shape with a single data member), `lint:effect-vitest`
+  (eight `expect` assertions on Options in a new test file, then one hand-rolled `Arbitrary.checkEffect`
+  where the canon is `it.effect.prop`) and `fallow:audit` (three introduced clone groups: the ledger
+  read and append copied from the proof ledger, and a count helper copied from the economics fold).
+  Each gate runs in about a minute locally; none is part of package-verify, so the handoff gate
+  passed and the twelve-minute publish preflight was the first place they ran. The fix pass took
+  about an hour, mostly spent re-deriving the three detectors' rules from source
+  (`SchemaFirstDetectors.isInterfaceSchemaFirstCandidate`, `EffectVitestDetectors.containsDataShape`,
+  fallow's clone threshold).
+- Prevention: `quality package-verify` could run the package-scoped lint lanes the cheap gates will
+  run (`schema-first`, `effect-vitest`, `fallow audit --base`) before the long audit, or print the
+  three commands as its last line; `yeet publish --plan` could list the gates a lane's changed files
+  will meet. Until then a new `.test.ts` file or a new exported interface in `@beep/repo-cli` should
+  be followed by those three commands by hand (about three minutes) before `yeet publish`.
+
+## 2026-10-28 — the measurement counted the author's own replies as reviews, seen only in the live ledger
+
+- Doing: reading the owning clone's `review-lane.ndjson` after `yeet reply` answered #2310's two
+  threads, to show the new section reporting its own pull request.
+- Evidence: two `review` rows by the pull request author (`kind: human`, state `COMMENTED`) pinned
+  to the fix head, one per reply. GitHub records a reply on a review thread as a review submission
+  by the replier, so the author's replies would have counted as a round on the fix head. Nothing in
+  the design, the fixtures or the gates said so; the ruling's definition ("the distinct head commits
+  a submitted review names") was satisfied to the letter. The PR merged before the fix could ride
+  it, so the exclusion is a second PR.
+- Prevention: a measurement's done condition should include reading its own live output on real
+  data once before the PR is called final (one `yeet economics` run on the checkout, pasted into the
+  PR body), not only fixtures; and GitHub's "a reply is a review" is now in ruling 81 so the next
+  reviewer-shaped fact (reactions, suggestions) is checked against it.
+
+## 2026-10-28 — the desktop worktree guard refuses interactive-shell wrappers and heredoc scripts
+
+- Doing: continuing in a fresh app-made worktree (`.claude/worktrees/<name>`) after the merged lane
+  was retired, running the usual `zsh -ic 'bun run beep …'` (mise is not on the tool shell's PATH)
+  and multi-file Python edit heredocs.
+- Evidence: every such command was refused as "too complex to verify that it stays inside the
+  worktree"; so were `sed -n "$((L-3)),$((L+3))p"` reads. Plain commands with
+  `PATH="$HOME/.local/share/mise/shims:$PATH"` and scripts written to a file first, then run as
+  `python3 <path>`, pass.
+- Prevention: `docs/runbooks` (or the yeet skill) could carry the two forms that pass under the
+  guard, so a lane does not lose a round discovering them; the SessionStart hook could print the
+  shim PATH line when it detects a tool shell without mise.

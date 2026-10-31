@@ -4,6 +4,8 @@
  * {@link Citation}, {@link FullCitation}, and {@link ShortFormCitation} tagged
  * unions — ported from the eyecite `citation.ts` surface.
  *
+ * **Details**
+ *
  * Everything mutually recursive lives in this one module so the recursion
  * resolves through `S.suspend` without a cross-module import cycle: a
  * `Parenthetical` may nest child `Citation`s, and several citation subtypes

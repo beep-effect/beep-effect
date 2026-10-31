@@ -1,0 +1,17 @@
+{
+  "kind": "offline-repair-replay",
+  "baseHead": "48e36330c9603e2a48a5a691fa280242e5c8c879",
+  "sourceHashes": {
+    "packages/epistemic/server/scripts/retention-calibrate.ts": "12c35e2a8c5ad05cbf6a68204e3f1b3c37ad725e91e6b00bee95f3c6689b7741",
+    "packages/epistemic/use-cases/src/Retention/Retention.service.ts": "130437042df99b6bac9829470f1af22d6edb52ce513c3f938b6c0d737448f026",
+    "packages/epistemic/server/test/RetentionCalibrationCLI.test.ts": "698b3021a88b3d2efcf93909131ed0a96ae5937eeb9512023beabfc93d492d74",
+    "packages/epistemic/use-cases/test/RetentionEvaluation.test.ts": "9c38d36a4e03fadc934cc133f89a1276b5722d8857b08682f09788fa79091bf0"
+  },
+  "outputSha256": "245df0b67475dd56133be9e5abb65d043dcdd122252b5f91bbb6c99c50b92e86",
+  "byteIdentical": true,
+  "exitCode": 0,
+  "durationSeconds": 0.3000019079991034,
+  "productionEligible": false,
+  "approvalState": "not-requested",
+  "finalReceiptControlSourceSha256": "b43ff51930a5fc47d9869e986a289e0fb3b3ad566da748272bce4f36cf8b757a"
+}

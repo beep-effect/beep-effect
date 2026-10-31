@@ -1,6 +1,8 @@
 /**
  * Governed egress layer factory.
  *
+ * **Details**
+ *
  * Produces the `FetchHttpClient.Fetch` reference, which is what makes this a
  * boundary rather than a convention: every `HttpClient` built from
  * `FetchHttpClient.layer` resolves that reference per request, including

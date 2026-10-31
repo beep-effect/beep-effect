@@ -127,3 +127,4 @@ export * from "./EdgeAuthority/index.ts";
  * @since 0.0.0
  */
 export * as ExecutionLedger from "./ExecutionLedger/index.ts";
+export * from "./Retention/index.ts";

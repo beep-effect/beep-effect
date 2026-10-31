@@ -2,6 +2,8 @@
  * Execution verdict vocabulary: bounded denial reasons, the allowed/denied
  * verdict union, and the three-way egress classification.
  *
+ * **Details**
+ *
  * Denial reasons are a closed literal domain, never free text — free text is a
  * payload-smuggling channel into a no-payload ledger (exploration decision 4).
  * Guidance is a constant per reason from a total lookup, never interpolated

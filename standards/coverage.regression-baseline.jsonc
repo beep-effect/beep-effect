@@ -27792,15 +27792,15 @@
     },
     "@beep/practice-kg-mcp": {
       "path": "apps/practice-kg-mcp",
-      "lines": 57.01,
-      "statements": 57.82,
-      "branches": 55.48,
-      "functions": 58.23,
+      "lines": 62.8,
+      "statements": 63.52,
+      "branches": 64.06,
+      "functions": 61.61,
       "uncovered": {
-        "lines": 386,
-        "statements": 404,
-        "branches": 69,
-        "functions": 147
+        "lines": 279,
+        "statements": 294,
+        "branches": 46,
+        "functions": 119
       },
       "files": {
         "apps/practice-kg-mcp/src/BundleGraph.ts": {
@@ -27815,7 +27815,43 @@
             "functions": 3
           }
         },
+        "apps/practice-kg-mcp/src/NativeAddon.install.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-kg-mcp/src/NativeAddon.ts": {
+          "lines": 97.43,
+          "statements": 97.61,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "apps/practice-kg-mcp/src/PracticeKgMcp.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-kg-mcp/src/Version.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -27830,13 +27866,13 @@
         "apps/practice-kg-mcp/src/bin.ts": {
           "lines": 0,
           "statements": 0,
-          "branches": 0,
+          "branches": 100,
           "functions": 0,
           "uncovered": {
-            "lines": 13,
-            "statements": 13,
-            "branches": 2,
-            "functions": 2
+            "lines": 30,
+            "statements": 32,
+            "branches": 0,
+            "functions": 14
           }
         },
         "apps/practice-kg-mcp/src/build.ts": {
@@ -27845,8 +27881,8 @@
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 20,
-            "statements": 21,
+            "lines": 28,
+            "statements": 29,
             "branches": 4,
             "functions": 4
           }
@@ -27857,10 +27893,10 @@
           "branches": 100,
           "functions": 0,
           "uncovered": {
-            "lines": 8,
-            "statements": 8,
+            "lines": 22,
+            "statements": 22,
             "branches": 0,
-            "functions": 1
+            "functions": 9
           }
         },
         "apps/practice-kg-mcp/src/entrypoint.ts": {
@@ -27869,46 +27905,46 @@
           "branches": 0,
           "functions": 0,
           "uncovered": {
-            "lines": 4,
-            "statements": 4,
-            "branches": 2,
-            "functions": 1
+            "lines": 9,
+            "statements": 9,
+            "branches": 6,
+            "functions": 5
           }
         },
         "apps/practice-kg-mcp/src/package.ts": {
           "lines": 0,
           "statements": 0,
-          "branches": 0,
-          "functions": 0,
-          "uncovered": {
-            "lines": 113,
-            "statements": 116,
-            "branches": 20,
-            "functions": 33
-          }
-        },
-        "apps/practice-kg-mcp/src/runtime/Host.ts": {
-          "lines": 73.33,
-          "statements": 73.33,
           "branches": 100,
-          "functions": 60,
+          "functions": 0,
           "uncovered": {
             "lines": 4,
             "statements": 4,
             "branches": 0,
-            "functions": 2
+            "functions": 1
+          }
+        },
+        "apps/practice-kg-mcp/src/runtime/Host.ts": {
+          "lines": 75,
+          "statements": 75,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         },
         "apps/practice-kg-mcp/src/runtime/Layer.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 0,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
         "apps/practice-kg-mcp/src/runtime/PrivacyReceipt.ts": {
@@ -27921,6 +27957,30 @@
             "statements": 5,
             "branches": 1,
             "functions": 5
+          }
+        },
+        "apps/practice-kg-mcp/src/runtime/ProcessMetrics.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-kg-mcp/src/runtime/SelfCheck.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "apps/practice-kg-mcp/src/runtime/Telemetry.ts": {
@@ -27972,15 +28032,27 @@
           }
         },
         "apps/practice-kg-mcp/src/smoke.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 35.25,
+          "statements": 33.79,
           "branches": 0,
-          "functions": 0,
+          "functions": 7.14,
           "uncovered": {
             "lines": 90,
-            "statements": 92,
-            "branches": 12,
-            "functions": 23
+            "statements": 96,
+            "branches": 18,
+            "functions": 39
+          }
+        },
+        "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "apps/practice-kg-mcp/src/verify.ts": {
@@ -27989,10 +28061,10 @@
           "branches": 100,
           "functions": 0,
           "uncovered": {
-            "lines": 13,
-            "statements": 13,
+            "lines": 30,
+            "statements": 34,
             "branches": 0,
-            "functions": 4
+            "functions": 17
           }
         }
       }
@@ -41519,6 +41591,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-tsconfig/src/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -42276,18 +42360,6 @@
             "statements": 34,
             "branches": 30,
             "functions": 17
-          }
-        },
-        "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts": {
-          "lines": 92.77,
-          "statements": 92.43,
-          "branches": 68.75,
-          "functions": 81.25,
-          "uncovered": {
-            "lines": 13,
-            "statements": 14,
-            "branches": 5,
-            "functions": 12
           }
         },
         "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts": {
