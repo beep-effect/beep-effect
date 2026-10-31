@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -15,8 +16,8 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { globMatches } from "../../../internal/GlobPattern.ts";
 import { QualityTaskConfigurationError } from "../Quality.errors.ts";
 import { discoverWorkspacePackages } from "./QualityArtifactSupport.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
@@ -89,6 +90,19 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["turbo.json", "@beep/repo-cli"],
   ["packages/foundation/**/package.json", "@beep/repo-cli"],
 ];
+
+// The owner patterns are static literals compiled once; a guard trip here is a
+// wiring defect. The dot dialect keeps the previous matcher's behaviour, which
+// let `*` match a dot-leading segment; negation and comment prefixes stay the
+// literal characters they were to it.
+// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
+// minimatch magic here where the old compiler read them literally; no live
+// pattern uses them (R2b oracle, `dialectMagic` section).
+const fixtureOwnerGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
+const COVERAGE_REPOSITORY_FIXTURE_OWNER_PATTERNS: ReadonlyArray<readonly [GlobPattern, string]> = A.map(
+  COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES,
+  ([pattern, owner]) => [Result.getOrThrow(GlobPattern.compileResult(pattern, fixtureOwnerGlob)), owner] as const
+);
 
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string, string]> = [
   ["goals/speed-loop/ops/runner-burst/", "@beep/repo-cli"],
@@ -601,7 +615,7 @@ const isCoverageNoopInput = (filePath: string): boolean =>
 const repositoryFixtureOwnerNamesForFile = (filePath: string): ReadonlyArray<string> =>
   pipe(
     A.appendAll(
-      A.filter(COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES, ([pattern]) => globMatches(pattern)(filePath)),
+      A.filter(COVERAGE_REPOSITORY_FIXTURE_OWNER_PATTERNS, ([pattern]) => pattern.matches(filePath)),
       A.filter(COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES, ([prefix]) => Str.startsWith(prefix)(filePath))
     ),
     A.map(([, packageName]) => packageName),

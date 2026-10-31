@@ -106,6 +106,8 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       expect((yield* f.capture(`${f.directory}/existing`).pipe(Effect.flip)).reason).toBe("destination");
       expect(yield* f.fs.readFileString(`${f.directory}/existing/keep`)).toBe("preserve");
       yield* f.fs.makeDirectory(`${f.directory}/exposed`, { mode: 0o755 });
+      // Make the hostile fixture explicit even under a private service umask.
+      yield* f.fs.chmod(`${f.directory}/exposed`, 0o755);
       expect((yield* f.capture(`${f.directory}/exposed/backup`).pipe(Effect.flip)).reason).toBe("destination");
       yield* f.sql`CREATE TABLE foreign_data (payload TEXT)`;
       expect((yield* f.capture(`${f.directory}/foreign`).pipe(Effect.flip)).reason).toBe("configuration");

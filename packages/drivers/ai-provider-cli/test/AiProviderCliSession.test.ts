@@ -834,6 +834,7 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })(
           yield* fs.makeDirectory(workspace);
           if (invalid === "file") yield* fs.writeFileString(state, "synthetic", { mode: 0o600 });
           else yield* fs.makeDirectory(state, { mode: invalid === "public-directory" ? 0o755 : 0o700 });
+          if (invalid === "public-directory") yield* fs.chmod(state, 0o755);
           if (invalid === "existing-config") {
             yield* fs.makeDirectory(path.join(home, ".grok"), { recursive: true });
             yield* fs.writeFileString(path.join(home, ".grok/sandbox.toml"), "retained-synthetic", { mode: 0o600 });
