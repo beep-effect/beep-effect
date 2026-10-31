@@ -808,6 +808,39 @@ const renderManifest = Effect.fn("FFmpeg.renderManifest")(function* (
   );
 });
 
+const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  manifestPath: string,
+  tempDir: string,
+  operation: string
+) {
+  const exists = yield* fs
+    .exists(manifestPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        FFmpegError.fromUnknown(operation, `Failed to inspect previous manifest: "${manifestPath}"`, { cause })
+      )
+    );
+  if (!exists) return Effect.void;
+
+  const backupPath = path.join(tempDir, "previous-manifest.json");
+  yield* fs
+    .rename(manifestPath, backupPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        FFmpegError.fromUnknown(operation, `Failed to park previous manifest: "${manifestPath}"`, { cause })
+      )
+    );
+  return fs
+    .rename(backupPath, manifestPath)
+    .pipe(
+      Effect.mapError((cause) =>
+        FFmpegError.fromUnknown(operation, `Failed to restore previous manifest: "${manifestPath}"`, { cause })
+      )
+    );
+});
+
 const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
   fs: FileSystem.FileSystem,
   path: Path.Path,
@@ -841,15 +874,15 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
     yield* preflightWritable(fs, frame.targetPath, context.request.overwrite, "frame output");
   }
 
-  // A failed replacement must leave the previous destination intact.
+  const restoreManifest = yield* parkPreviousManifest(fs, path, context.manifestPath, tempDir, "extractFrames");
+  // Once any frame changes, the previous manifest no longer describes the batch.
   for (const frame of planned) {
-    yield* fs
-      .rename(frame.sourcePath, frame.targetPath)
-      .pipe(
-        Effect.mapError((cause) =>
-          FFmpegError.fromUnknown("extractFrames", `Failed to commit frame output: "${frame.targetPath}"`, { cause })
-        )
-      );
+    yield* fs.rename(frame.sourcePath, frame.targetPath).pipe(
+      Effect.mapError((cause) =>
+        FFmpegError.fromUnknown("extractFrames", `Failed to commit frame output: "${frame.targetPath}"`, { cause })
+      ),
+      Effect.onError(() => (A.isArrayEmpty(committed) ? restoreManifest : Effect.void))
+    );
     committed = A.append(
       committed,
       ExtractedFrame.make({
@@ -1056,16 +1089,16 @@ const commitTimestampedFrames = Effect.fn("FFmpeg.commitTimestampedFrames")(func
     );
   }
 
+  const restoreManifest = yield* parkPreviousManifest(fs, path, context.manifestPath, tempDir, "extractFramesAt");
   let committed = A.empty<TimestampedFrame>();
   for (const frame of staged) {
     const targetPath = path.join(context.outDir, frame.fileName);
-    yield* fs
-      .rename(frame.tempPath, targetPath)
-      .pipe(
-        Effect.mapError((cause) =>
-          FFmpegError.fromUnknown("extractFramesAt", `Failed to commit frame output: "${targetPath}"`, { cause })
-        )
-      );
+    yield* fs.rename(frame.tempPath, targetPath).pipe(
+      Effect.mapError((cause) =>
+        FFmpegError.fromUnknown("extractFramesAt", `Failed to commit frame output: "${targetPath}"`, { cause })
+      ),
+      Effect.onError(() => (A.isArrayEmpty(committed) ? restoreManifest : Effect.void))
+    );
     committed = A.append(
       committed,
       TimestampedFrame.make({

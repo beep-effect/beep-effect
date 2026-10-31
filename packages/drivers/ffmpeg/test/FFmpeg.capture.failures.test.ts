@@ -238,76 +238,104 @@ const exitCodeOf = (error: FFmpegError): number =>
   );
 
 describe("@beep/ffmpeg capture failures", () => {
-  for (const target of ["sample_frame_00000.png", "extract-frames-manifest.json"]) {
-    it.layer(makeTestLayer({}, O.some(target)))(`preserves existing ${target} on failed frame commit`, (it) => {
-      it.effect(`preserves existing ${target} on failed frame commit`, () =>
-        withTempDirectory((directory) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const ffmpeg = yield* FFmpeg;
-            const videoPath = path.join(directory, "sample.mp4");
-            const outDir = path.join(directory, "frames");
-            const existingPath = path.join(outDir, target);
-            yield* fs.writeFileString(videoPath, "video");
-            yield* fs.makeDirectory(outDir);
-            yield* fs.writeFileString(existingPath, "original artifact");
-            const error = yield* Effect.flip(
-              ffmpeg.extractFrames(
-                ExtractFramesRequest.make({
-                  fps: 1,
-                  manifestPath: O.none(),
-                  outDir,
-                  overwrite: true,
-                  prefix: O.none(),
-                  videoPath,
-                })
-              )
-            );
-            expect(error.operation).toBe("extractFrames");
-            expect(error.message).toContain("Failed to commit");
-            expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
-            expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
-          })
-        )
-      );
-    });
+  for (const target of ["sample_frame_00000.png", "sample_frame_00001.png", "extract-frames-manifest.json"]) {
+    it.layer(makeTestLayer({}, O.some(target)))(
+      `keeps the manifest consistent when committing ${target} fails`,
+      (it) => {
+        it.effect(`keeps the manifest consistent when committing ${target} fails`, () =>
+          withTempDirectory((directory) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const ffmpeg = yield* FFmpeg;
+              const videoPath = path.join(directory, "sample.mp4");
+              const outDir = path.join(directory, "frames");
+              const existingPath = path.join(outDir, target);
+              const manifestPath = path.join(outDir, "extract-frames-manifest.json");
+              yield* fs.writeFileString(videoPath, "video");
+              yield* fs.makeDirectory(outDir);
+              yield* fs.writeFileString(existingPath, "original artifact");
+              yield* fs.writeFileString(manifestPath, "original manifest");
+              const error = yield* Effect.flip(
+                ffmpeg.extractFrames(
+                  ExtractFramesRequest.make({
+                    fps: 1,
+                    manifestPath: O.none(),
+                    outDir,
+                    overwrite: true,
+                    prefix: O.none(),
+                    videoPath,
+                  })
+                )
+              );
+              expect(error.operation).toBe("extractFrames");
+              expect(error.message).toContain("Failed to commit");
+              if (target === "sample_frame_00000.png") {
+                expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+                expect(yield* fs.readFileString(manifestPath)).toBe("original manifest");
+              } else {
+                expect(yield* fs.exists(manifestPath)).toBe(false);
+                expect(yield* fs.readFileString(path.join(outDir, "sample_frame_00000.png"))).toBe("frame zero");
+                if (target !== "extract-frames-manifest.json") {
+                  expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+                }
+              }
+              expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+            })
+          )
+        );
+      }
+    );
   }
 
-  for (const target of ["sample_at_00000.png", "extract-frames-at-manifest.json"]) {
-    it.layer(makeTestLayer({}, O.some(target)))(`preserves existing ${target} on failed timestamped commit`, (it) => {
-      it.effect(`preserves existing ${target} on failed timestamped commit`, () =>
-        withTempDirectory((directory) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            const ffmpeg = yield* FFmpeg;
-            const videoPath = path.join(directory, "sample.mp4");
-            const outDir = path.join(directory, "frames");
-            const existingPath = path.join(outDir, target);
-            yield* fs.writeFileString(videoPath, "video");
-            yield* fs.makeDirectory(outDir);
-            yield* fs.writeFileString(existingPath, "original artifact");
-            const error = yield* Effect.flip(
-              ffmpeg.extractFramesAt(
-                ExtractFramesAtRequest.make({
-                  manifestPath: O.none(),
-                  outDir,
-                  overwrite: true,
-                  prefix: O.none(),
-                  timestampsSeconds: [0.25],
-                  videoPath,
-                })
-              )
-            );
-            expect(error.operation).toBe("extractFramesAt");
-            expect(error.message).toContain("Failed to commit");
-            expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
-            expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
-          })
-        )
-      );
-    });
+  for (const target of ["sample_at_00000.png", "sample_at_00001.png", "extract-frames-at-manifest.json"]) {
+    it.layer(makeTestLayer({}, O.some(target)))(
+      `keeps the timestamped manifest consistent when committing ${target} fails`,
+      (it) => {
+        it.effect(`keeps the timestamped manifest consistent when committing ${target} fails`, () =>
+          withTempDirectory((directory) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const ffmpeg = yield* FFmpeg;
+              const videoPath = path.join(directory, "sample.mp4");
+              const outDir = path.join(directory, "frames");
+              const existingPath = path.join(outDir, target);
+              const manifestPath = path.join(outDir, "extract-frames-at-manifest.json");
+              yield* fs.writeFileString(videoPath, "video");
+              yield* fs.makeDirectory(outDir);
+              yield* fs.writeFileString(existingPath, "original artifact");
+              yield* fs.writeFileString(manifestPath, "original manifest");
+              const error = yield* Effect.flip(
+                ffmpeg.extractFramesAt(
+                  ExtractFramesAtRequest.make({
+                    manifestPath: O.none(),
+                    outDir,
+                    overwrite: true,
+                    prefix: O.none(),
+                    timestampsSeconds: [0.25, 0.75],
+                    videoPath,
+                  })
+                )
+              );
+              expect(error.operation).toBe("extractFramesAt");
+              expect(error.message).toContain("Failed to commit");
+              if (target === "sample_at_00000.png") {
+                expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+                expect(yield* fs.readFileString(manifestPath)).toBe("original manifest");
+              } else {
+                expect(yield* fs.exists(manifestPath)).toBe(false);
+                expect(yield* fs.readFileString(path.join(outDir, "sample_at_00000.png"))).toBe("fake output");
+                if (target !== "extract-frames-at-manifest.json") {
+                  expect(yield* fs.readFileString(existingPath)).toBe("original artifact");
+                }
+              }
+              expect(A.some(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))).toBe(false);
+            })
+          )
+        );
+      }
+    );
   }
 
   it.layer(makeTestLayer())("replaces an existing output after successful encoding", (it) => {
