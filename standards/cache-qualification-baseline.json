@@ -7059,6 +7059,7 @@
             "packages/foundation/modeling/identity/src/Vocab.ts",
             "packages/foundation/modeling/identity/src/index.ts",
             "packages/foundation/modeling/identity/src/internal/generated/SparTerms.ts",
+            "packages/foundation/modeling/identity/src/internal/schemaStatics.ts",
             "packages/foundation/modeling/identity/src/packages.ts",
             "packages/foundation/modeling/jsonc/package.json",
             "packages/foundation/modeling/jsonc/src/Jsonc.ts",
@@ -135069,7 +135070,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "b63676ff5bac209b22271fdafc36674c61e18bc1b4356d9cad1a1d697d24280d"
+        "sha256": "712500c29d69370b36e545af764c67b59c6ec7d8168f346227c950cfc3b55846"
       }
     ]
   }
