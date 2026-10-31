@@ -16,7 +16,5 @@
   ],
   "profile": "local-linux-x64-bun1.4.2",
   "epoch": "qualification-v2",
-  "subjects": [
-    "//"
-  ]
+  "subjects": ["//"]
 }
