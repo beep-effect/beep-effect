@@ -9,6 +9,7 @@ export {
   CacheProducerAcceptanceReference,
   CacheProducerImportPreview,
   CacheProducerImportRequest,
+  CacheProducerPublication,
   CacheProducerStoreConfiguration,
   CacheProducerTrustLocations,
 } from "../commands/Cache/Cache.acceptance.schemas.ts";
@@ -80,6 +81,7 @@ export {
 export { runCacheProducerUploadExperiment } from "../commands/Cache/Cache.pilot.runner.ts";
 export { runCachePilotForTesting, runCacheSignedPilotUploadWorker } from "../commands/Cache/Cache.pilot.ts";
 export {
+  assertCacheProducerPrivateLocation,
   hashCacheProducerContract,
   initializeCacheProducerIssuer,
   inspectCacheProducerDirectory,
@@ -87,6 +89,9 @@ export {
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
   openCacheProducerVerifier,
+  readCacheProducerExecutionProfile,
+  readCacheProducerHostedApproval,
+  readCacheProducerProvisioning,
   revokeCacheProducerIssuer,
   validateCacheProducerApproval,
   validateCacheProducerBinding,
@@ -101,13 +106,23 @@ export {
 export { serveCachePrivateSocket } from "../commands/Cache/Cache.protocol.fixture.ts";
 export {
   CacheHostedProducerApproval,
+  CacheHostedProducerCompleteReport,
   CacheHostedProducerObservation,
   CacheHostedProducerReference,
   CacheHostedProducerReport,
+  CacheHostedProducerRunReference,
   CacheHostedProducerUpload,
 } from "../commands/Cache/Cache.workflow.github.schemas.ts";
-export { verifyCacheHostedProducerUpload } from "../commands/Cache/Cache.workflow.github.ts";
 export {
+  buildCacheHostedProducerCompleteReport,
+  CacheHostedProducerVerifier,
+  CacheHostedProducerVerifierLive,
+  layerCacheHostedProducerMetadata,
+  verifyCacheHostedProducerObservation,
+  verifyCacheHostedProducerUpload,
+} from "../commands/Cache/Cache.workflow.github.ts";
+export {
+  CacheProducerExecutionProfile,
   CacheProducerObservation,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
@@ -121,7 +136,9 @@ export {
   hashCacheProducerUploadKey,
   hashCacheProducerUploadTarget,
   hashCacheProducerWorkflow,
+  initializeCacheProducerExecution,
   inspectCacheProducerWorkflow,
+  loadCacheProducerExecutionRuntime,
   runCacheProducerWorkflow,
 } from "../commands/Cache/Cache.workflow.ts";
 export { CacheProducerUploadApproval } from "../commands/Cache/Cache.workflow.upload.schemas.ts";

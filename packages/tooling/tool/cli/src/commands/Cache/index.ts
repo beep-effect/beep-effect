@@ -397,3 +397,4 @@ export {
   type CacheQualificationServiceShape,
   encodeCachePolicyBaselineText,
 } from "./Cache.service.ts";
+export { CacheHostedProducerVerifier, CacheHostedProducerVerifierLive } from "./Cache.workflow.github.ts";

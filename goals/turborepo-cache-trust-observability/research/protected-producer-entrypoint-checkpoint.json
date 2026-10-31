@@ -1,0 +1,266 @@
+{
+  "schemaVersion": "cache-protected-producer-entrypoint-checkpoint/v1",
+  "authority": "Local component implementation and controls only. Dependent lane remains unpublished until the producer component is accepted on main. No hosted producer, credential grant, qualification, activation or full-goal acceptance.",
+  "sourceParent": "b128999055028cbac77f8880a10035024b5e2638",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "3edc5fa8c2c6feba3cfbfd6e20e27020797aefb6d7f0e57942c8404f9ebed4a0",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "c99012629fc4b74934a2d6be53b58352f39fd822636a445108d387cc21c36d4c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "cc0bcac59f927a1a9c62529f02369fa2230c283a8c192e9954237732907e721d",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "138942eb85b528d149cdf9240088e0bd98d8c50e854c2db1c117e54a2e9e3b14",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "dc41e415f6a4fe5e0c0833f7802c75e2b1d50c032d089484d0ac20012f16e1a2",
+    "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "17ae1fa06952c832e776e66e77495271803b33a2dc8d1d04ffa7322c658f72bf",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "65e02977fd2f7caa574f88154928bbebfc59c7c189f315d028ab76d1d12747d5",
+    "packages/tooling/tool/cli/test/cache-producer.test.ts": "485aa949ba5c99fac56968a8a98d2ca5e6b5da9981ddc7c02e363bce18034f6b",
+    ".github/workflows/cache-producer-inspect.yml": "615ba5efd494764b8bfdbdf3adeb97c1b308a73fa970819d6dd4593c6c655de9"
+  },
+  "implementation": [
+    "Closed producer-run request/output CLI; private pre-provisioned store is selected by supervisor configuration.",
+    "Owner-only bounded no-follow single-link execution profile, unchanged existing approval diagnostics and revocation-before-capability lookup.",
+    "Independent destination identity before any credential provider; reject signing/backend capability aliases.",
+    "Provide required HTTP and memory services at the command boundary without widening the public dispatch context."
+  ],
+  "verification": {
+    "node98": {
+      "exit": 0,
+      "elapsedSeconds": 8.087,
+      "finishedAt": "2026-10-30T08:44:24.102834+00:00"
+    },
+    "bun98": {
+      "exit": 0,
+      "elapsedSeconds": 5.878,
+      "finishedAt": "2026-10-30T08:44:29.997314+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 12.617,
+      "finishedAt": "2026-10-30T08:44:15.995497+00:00"
+    },
+    "inlinePolicy": {
+      "exit": 0,
+      "elapsedSeconds": 0.239,
+      "finishedAt": "2026-10-30T08:44:30.254073+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 8.908,
+      "finishedAt": "2026-10-30T08:44:39.177228+00:00"
+    },
+    "fallowHealth": {
+      "exit": 0,
+      "elapsedSeconds": 6.016,
+      "finishedAt": "2026-10-30T08:44:45.209318+00:00"
+    },
+    "effectPolicy": {
+      "exit": 0,
+      "elapsedSeconds": 38.831,
+      "finishedAt": "2026-10-30T08:46:25.942155+00:00"
+    },
+    "docgen": {
+      "exit": 0,
+      "elapsedSeconds": 40.189,
+      "finishedAt": "2026-10-30T08:47:06.146520+00:00"
+    },
+    "rootRulePolicy": {
+      "exit": 0,
+      "elapsedSeconds": 2.999,
+      "finishedAt": "2026-10-30T08:39:17.372474+00:00"
+    },
+    "staticWorkflow": {
+      "exit": 0,
+      "elapsedSeconds": 0.032,
+      "finishedAt": "2026-10-30T08:23:32.727789+00:00"
+    }
+  },
+  "artifactKeyGuardControl": {
+    "recordedAt": "2026-10-30T07:02:03.518292+00:00",
+    "nativeExit": 1,
+    "expectedSixAssertionFailures": true,
+    "sourceRestoredExactly": true,
+    "originalSourceSha256": "138942eb85b528d149cdf9240088e0bd98d8c50e854c2db1c117e54a2e9e3b14",
+    "mutation": "Remove only the artifact-key/backend-capability separation guard; leave all schema, digest, namespace, destination and launcher validation intact.",
+    "authority": "Local controlled negative test only; no real secret, runtime, issuer grant or deployment."
+  },
+  "reviewedNativeResource": "One EV010 judgment retains physical owner/mode/link/revocation semantics through the canonical typed inventory writer. The subsequent default policy check introduced zero findings.",
+  "attribution": {
+    "parallelBatchNodeTerminated": true,
+    "parallelBatchDocgenKilled": true,
+    "thoseTerminationsArePasses": false,
+    "singleSerialReplaysPassed": true,
+    "globalResourceCauseProven": false
+  },
+  "remaining": [
+    "Replay only the unpublished lane after parent acceptance, then complete default package/final/hosted checks and reviews.",
+    "Independent trusted provisioning, real protected workflow invocation, AWS user-manager and pinned-toolchain preflight, immutable actual publication.",
+    "Actual human bootstrap receipt and reference verification; signed activation remains off.",
+    "Normal-source canary diagnosis, task and feature qualification/adoption, production trust and 7/7/14-day observations, final same-PR reflection/lifecycle."
+  ],
+  "productionChanges": false,
+  "beforeSourceInspection": {
+    "sourceParent": "22b21f37d4a2d79ddfc687b4eca6867f4a0805f1",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "a975be3f21a3405c2207b75e0bf53737f0878ecab3963967e54382016916ce37",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "c99012629fc4b74934a2d6be53b58352f39fd822636a445108d387cc21c36d4c",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "cc0bcac59f927a1a9c62529f02369fa2230c283a8c192e9954237732907e721d",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "138942eb85b528d149cdf9240088e0bd98d8c50e854c2db1c117e54a2e9e3b14",
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "dc41e415f6a4fe5e0c0833f7802c75e2b1d50c032d089484d0ac20012f16e1a2",
+      "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "fb6ed215680d5cb175b95c8fd361597d75894be8cc9e7908d3c31cf925802cbe",
+      "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "65e02977fd2f7caa574f88154928bbebfc59c7c189f315d028ab76d1d12747d5",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "485aa949ba5c99fac56968a8a98d2ca5e6b5da9981ddc7c02e363bce18034f6b"
+    },
+    "verification": {
+      "node95": {
+        "exit": 0,
+        "elapsedSeconds": 8.095,
+        "finishedAt": "2026-10-30T06:55:27.195887+00:00"
+      },
+      "bun95": {
+        "exit": 0,
+        "elapsedSeconds": 15.452,
+        "finishedAt": "2026-10-30T06:21:39.115066+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 12.928,
+        "finishedAt": "2026-10-30T06:57:49.785096+00:00"
+      },
+      "effectPolicy": {
+        "exit": 0,
+        "elapsedSeconds": 37.181,
+        "finishedAt": "2026-10-30T06:51:27.071901+00:00"
+      },
+      "fallowAudit": {
+        "exit": 0,
+        "elapsedSeconds": 11.199,
+        "finishedAt": "2026-10-30T06:34:52.851593+00:00"
+      },
+      "fallowHealth": {
+        "exit": 0,
+        "elapsedSeconds": 90.447,
+        "finishedAt": "2026-10-30T06:57:36.840607+00:00"
+      },
+      "docgen": {
+        "exit": 0,
+        "elapsedSeconds": 39.154,
+        "finishedAt": "2026-10-30T06:56:06.364592+00:00"
+      },
+      "restoredGuardNode20": {
+        "exit": 0,
+        "elapsedSeconds": 2.827,
+        "finishedAt": "2026-10-30T07:03:28.966407+00:00"
+      }
+    },
+    "head": "b128999055028cbac77f8880a10035024b5e2638"
+  },
+  "sourceInspection": {
+    "command": "cache producer-inspect --output <file>",
+    "reuse": "Existing inspector, workflow schema and report writer; the writer gains an optional byte bound so the exact encoded bytes are checked once before output. Existing callers retain their prior default behavior.",
+    "outputLimitBytesIncludingNewline": 4194304,
+    "stdout": "One fixed status line; source/tool paths and observations are written only to the requested report.",
+    "credentialConfiguration": "Not read. A failing ConfigProvider is exercised by the positive command test.",
+    "refusals": [
+      "Existing source/profile/inspection failures propagate before writing output.",
+      "Oversized reports refuse before replacing existing output."
+    ],
+    "workflow": {
+      "path": ".github/workflows/cache-producer-inspect.yml",
+      "state": "prepared only; unpublished dependent branch, not dispatched",
+      "trigger": "Manual, main-only job, exact github.sha checkout, existing turbo-cache-write environment and beep-ec2-heavy runner",
+      "limits": "One concurrency group, ten-minute timeout, one artifact per run/attempt, one-day retention",
+      "capabilities": "Explicitly disabled cache-turbo/cache-write/turbo-remote-cache/R2/app-secrets setup; no secrets inputs.",
+      "authority": "Source and tool identity observation only. Not protected producer approval, immutable authenticated producer evidence, bwrap/user-manager/cgroup readiness, signed upload, qualification or activation."
+    },
+    "quality": "Current 98-case Node/Bun suites, quick lint/typecheck, Effect policy, inline policy, scoped Docgen, Fallow audit/health pass. Complete package/final/hosted/review remain required after accepted-parent replay."
+  },
+  "beforeBoundedWriterReuse": {
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "6e7af3c7a7f3076cbf76966e55f8415eeeaa768cecb9e1fe7da3855779f7cd6e",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "c99012629fc4b74934a2d6be53b58352f39fd822636a445108d387cc21c36d4c",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "cc0bcac59f927a1a9c62529f02369fa2230c283a8c192e9954237732907e721d",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "138942eb85b528d149cdf9240088e0bd98d8c50e854c2db1c117e54a2e9e3b14",
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "dc41e415f6a4fe5e0c0833f7802c75e2b1d50c032d089484d0ac20012f16e1a2",
+      "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "ca43c1cd6323e1f660db99b413e47c4c5e63df81874667a8f79b81cec6d35059",
+      "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "65e02977fd2f7caa574f88154928bbebfc59c7c189f315d028ab76d1d12747d5",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "485aa949ba5c99fac56968a8a98d2ca5e6b5da9981ddc7c02e363bce18034f6b",
+      ".github/workflows/cache-producer-inspect.yml": "615ba5efd494764b8bfdbdf3adeb97c1b308a73fa970819d6dd4593c6c655de9"
+    },
+    "verification": {
+      "node97": {
+        "exit": 0,
+        "elapsedSeconds": 8.358,
+        "finishedAt": "2026-10-30T08:24:12.945633+00:00"
+      },
+      "bun97": {
+        "exit": 0,
+        "elapsedSeconds": 5.891,
+        "finishedAt": "2026-10-30T08:24:18.855143+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 13.293,
+        "finishedAt": "2026-10-30T08:24:04.555025+00:00"
+      },
+      "staticWorkflow": {
+        "exit": 0,
+        "elapsedSeconds": 0.032,
+        "finishedAt": "2026-10-30T08:23:32.727789+00:00"
+      },
+      "inlinePolicy": {
+        "exit": 0,
+        "elapsedSeconds": 0.222,
+        "finishedAt": "2026-10-30T08:26:32.305961+00:00"
+      },
+      "rootRulePolicy": {
+        "exit": 0,
+        "elapsedSeconds": 2.563,
+        "finishedAt": "2026-10-30T08:26:47.758048+00:00"
+      },
+      "effectPolicy": {
+        "exit": 0,
+        "elapsedSeconds": 38.587,
+        "finishedAt": "2026-10-30T08:29:09.289208+00:00"
+      }
+    }
+  },
+  "beforeReviewReaderConsolidation": {
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts": "36b60478d3c2bf2499694b364b70b5b2eef66d82a03d086f7bd6d6479ce58232",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts": "c99012629fc4b74934a2d6be53b58352f39fd822636a445108d387cc21c36d4c",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "cc0bcac59f927a1a9c62529f02369fa2230c283a8c192e9954237732907e721d",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "138942eb85b528d149cdf9240088e0bd98d8c50e854c2db1c117e54a2e9e3b14",
+      "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "dc41e415f6a4fe5e0c0833f7802c75e2b1d50c032d089484d0ac20012f16e1a2",
+      "packages/tooling/tool/cli/test/cache-dispatch.test.ts": "c51c01f12226807215508419d883d1702c629055869e67f881d16842e6fee341",
+      "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "65e02977fd2f7caa574f88154928bbebfc59c7c189f315d028ab76d1d12747d5",
+      "packages/tooling/tool/cli/test/cache-producer.test.ts": "485aa949ba5c99fac56968a8a98d2ca5e6b5da9981ddc7c02e363bce18034f6b",
+      ".github/workflows/cache-producer-inspect.yml": "615ba5efd494764b8bfdbdf3adeb97c1b308a73fa970819d6dd4593c6c655de9"
+    },
+    "verification": {
+      "node97": {
+        "exit": 0,
+        "elapsedSeconds": 8.401,
+        "finishedAt": "2026-10-30T08:36:15.912296+00:00"
+      },
+      "bun97": {
+        "exit": 0,
+        "elapsedSeconds": 6.004,
+        "finishedAt": "2026-10-30T08:36:21.932773+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 12.394,
+        "finishedAt": "2026-10-30T08:36:07.482470+00:00"
+      },
+      "staticWorkflow": {
+        "exit": 0,
+        "elapsedSeconds": 0.032,
+        "finishedAt": "2026-10-30T08:23:32.727789+00:00"
+      }
+    }
+  },
+  "reviewReaderConsolidation": {
+    "finding": "One inherited-adjacent duplication in the touched Cache.command.ts baseline/transition readers.",
+    "reuseSearch": "Existing bounded experimental reader has a different containment policy; FsUtils.readJson returns optional untyped JSON and changes error semantics. Reuse FileSystem and existing module-scoped JsonStringCodec in one private named Effect reader.",
+    "behavior": "Preserve review commands external file paths, schema transformations and exact caller-owned error messages. Keep the contained experimental reader separate.",
+    "regression": "External baseline/transition paths succeed; malformed/missing inputs retain typed failures and do not call qualification authority.",
+    "after": "Current audit and health finding counts are both zero. No suppression or threshold change."
+  }
+}

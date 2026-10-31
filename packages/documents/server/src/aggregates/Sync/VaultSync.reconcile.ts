@@ -75,7 +75,7 @@ const idempotencyKeyFor = (
 // Review identity survives retargeting; only ordinary scan intent derives its
 // key from the latest local path and generation.
 const retargetedOperationKey = (item: DomainSyncItem.SyncItem, operation: DomainSyncOperation.SyncOperation): string =>
-  Str.includes(":review:")(operation.idempotencyKey)
+  Str.startsWith(`${operation.provider}:review:`)(operation.idempotencyKey)
     ? operation.idempotencyKey
     : idempotencyKeyFor(item, operation.operationType);
 
@@ -677,7 +677,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
           item,
           actionable.value,
           item.contentDigest,
-          O.some(`${item.provider}:${item.workspaceId}:${item.id}:${actionable.value}:review:${conflict.id}`)
+          O.some(`${item.provider}:review:${item.workspaceId}:${item.id}:${actionable.value}:${conflict.id}`)
         )
       : false;
     if (queued || SyncItemState.is.conflict(item.syncState)) {

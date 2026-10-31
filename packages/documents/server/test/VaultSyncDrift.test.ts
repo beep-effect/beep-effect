@@ -685,7 +685,11 @@ for (const pathChange of ["rename", "move"] as const) {
         yield* writeVaultFile(root, "original.txt", "unchanged bytes");
         yield* writeVaultFile(root, "other/keep.txt", "other bytes");
         yield* engine.syncOnce(syncInput(root));
-        const item = yield* findTrackedItem("original.txt");
+        // The ordinary completed rename key ends in :review:2. Review2 must
+        // have a distinct namespace rather than collide with this valid path.
+        yield* fs.rename(path.join(root, "original.txt"), path.join(root, "review"));
+        yield* engine.syncOnce(syncInput(root));
+        const item = yield* findTrackedItem("review");
         const remoteId = yield* Effect.fromOption(item.remoteId);
         for (const newName of ["first-drift.txt", "second-drift.txt"]) {
           yield* mirror.renameItem(RenameItemInput.make({ itemKind: "file", remoteId, newName }));
@@ -702,8 +706,8 @@ for (const pathChange of ["rename", "move"] as const) {
         const queuedInput = ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status: "queued" });
         const queued = yield* operations.listByStatus(queuedInput);
         expect(A.length(queued)).toBe(2);
-        const destination = pathChange === "rename" ? "renamed.txt" : "other/original.txt";
-        yield* fs.rename(path.join(root, "original.txt"), path.join(root, ...Str.split(destination, "/")));
+        const destination = pathChange === "rename" ? "renamed.txt" : "other/review";
+        yield* fs.rename(path.join(root, "review"), path.join(root, ...Str.split(destination, "/")));
         const status = yield* engine.syncOnce(syncInput(root));
         const succeeded = yield* operations.listByStatus(
           ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status: "succeeded" })
