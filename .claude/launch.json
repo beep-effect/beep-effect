@@ -20,6 +20,12 @@
       "autoPort": true
     },
     {
+      "name": "beep-effect-web",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/beep-effect-web", "dev"],
+      "autoPort": true
+    },
+    {
       "name": "todox",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "--cwd", "apps/todox", "dev"],

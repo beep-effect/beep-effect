@@ -409,6 +409,7 @@
     ".oxlintrc.json",
     "_typos.toml",
     "apps/architecture-lab-proof/package.json",
+    "apps/beep-effect-web/package.json",
     "apps/docket-intake/package.json",
     "apps/labs/api-docs/package.json",
     "apps/labs/ciops/package.json",
