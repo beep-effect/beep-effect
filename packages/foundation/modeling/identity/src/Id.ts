@@ -918,7 +918,7 @@ type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<
  *
  * **Example** (Describe an annotated string schema)
  *
- * ```ts import.meta.vitest name="Describe an annotated string schema"
+ * ```ts
  * import type { AnnotatedSchema } from "@beep/identity/Id"
  * import * as S from "effect/Schema"
  *
@@ -936,7 +936,7 @@ export type AnnotatedSchema<Schema extends S.Top> = SchemaStatics.Preserved<Sche
  *
  * **Example** (Name the record `compose` returns)
  *
- * ```ts import.meta.vitest name="Name the record compose returns"
+ * ```ts
  * import type { TaggedModuleRecord } from "@beep/identity/Id"
  *
  * type Modules = TaggedModuleRecord<"@beep/pkg", readonly ["auth", "billing"]>
@@ -1140,6 +1140,8 @@ export interface IdentityComposer<
    * Returns a function that annotates an Effect schema with identity metadata
    * plus optional `httpApiStatus` and encoding fields.
    *
+   * @throws A tagged invariant defect when the rebuilt schema rejects a custom static descriptor.
+   *
    * @since 0.0.0
    * @category combinators
    */
@@ -1203,6 +1205,8 @@ export interface IdentityComposer<
    *
    * Returns a function that calls `self.annotate(...)` with identity metadata
    * merged with any caller-supplied extras.
+   *
+   * @throws A tagged invariant defect when the rebuilt schema rejects a custom static descriptor.
    *
    * @since 0.0.0
    * @category combinators

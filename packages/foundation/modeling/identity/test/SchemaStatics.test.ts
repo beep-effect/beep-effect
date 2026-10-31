@@ -1,6 +1,7 @@
+import { preserve } from "@beep/identity/internal/schemaStatics";
 import { $SchemaId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 import * as S from "effect/Schema";
 
 const variants = [
@@ -15,6 +16,23 @@ const variants = [
 ];
 
 describe.each(variants)("$name static preservation", ({ annotate }) => {
+  it("rejects a rebuild that cannot receive a promised custom static", () => {
+    const source = Object.assign(S.String.annotate({}), { customStatic: 42 });
+    const originalAnnotate = source.annotate;
+    Reflect.defineProperty(source, "annotate", {
+      value: (annotations: S.Annotations.Bottom<string, readonly []>) =>
+        Object.preventExtensions(originalAnnotate.call(source, annotations)),
+    });
+
+    expect(() => annotate(source)).toThrowError(
+      expect.objectContaining({
+        _tag: "SchemaStaticPreservationError",
+        message: "Cannot preserve a custom static on the rebuilt schema.",
+      })
+    );
+    expect(source.customStatic).toBe(42);
+  });
+
   it("retains a non-enumerable getter without evaluating it during annotation", () => {
     const source = S.String.annotate({});
     let reads = 0;
@@ -81,4 +99,47 @@ describe.each(variants)("$name static preservation", ({ annotate }) => {
     expect(annotated.length).toBe(expectedLength);
     expect(annotated.length).not.toBe(57);
   });
+});
+
+describe("preserve data-last inference", () => {
+  it("retains custom statics and distinct decoded and encoded views", () => {
+    const source = Object.assign(S.FiniteFromString.annotate({}), { customStatic: 42 });
+    const directTarget = source.annotate({});
+    const curriedTarget = source.annotate({});
+    const pipedTarget = source.annotate({});
+    const direct = preserve(source, directTarget);
+    const curried = preserve(curriedTarget)(source);
+    const piped = source.pipe(preserve(pipedTarget));
+
+    expectTypeOf(direct.customStatic).toEqualTypeOf<number>();
+    expectTypeOf(curried.customStatic).toEqualTypeOf<number>();
+    expectTypeOf(piped.customStatic).toEqualTypeOf<number>();
+    expectTypeOf<typeof curried.Type>().toEqualTypeOf<number>();
+    expectTypeOf<typeof curried.Encoded>().toEqualTypeOf<string>();
+    expectTypeOf<typeof piped.Type>().toEqualTypeOf<number>();
+    expectTypeOf<typeof piped.Encoded>().toEqualTypeOf<string>();
+
+    expect(direct).toBe(directTarget);
+    expect(curried).toBe(curriedTarget);
+    expect(piped).toBe(pipedTarget);
+    expect(direct).not.toBe(source);
+    expect(curried).not.toBe(source);
+    expect(piped).not.toBe(source);
+    expect(direct.customStatic).toBe(42);
+    expect(curried.customStatic).toBe(42);
+    expect(piped.customStatic).toBe(42);
+  });
+
+  const rejectIncompatibleRebuilds = () => {
+    // @ts-expect-error A number rebuild cannot preserve a string schema.
+    preserve(S.String, S.Finite.annotate({}));
+    // @ts-expect-error The data-last form enforces the same rebuild relationship.
+    preserve(S.Finite.annotate({}))(S.String);
+    const unknownRebuild: S.Top = S.Finite;
+    // @ts-expect-error A broad target cannot establish the string rebuild contract.
+    preserve(S.String, unknownRebuild);
+    // @ts-expect-error A broad data-last target cannot establish it either.
+    preserve(unknownRebuild)(S.String);
+  };
+  expectTypeOf(rejectIncompatibleRebuilds).toEqualTypeOf<() => void>();
 });

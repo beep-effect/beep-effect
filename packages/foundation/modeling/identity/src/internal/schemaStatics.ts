@@ -6,7 +6,20 @@
  */
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
+
+// This module is initialized by Id.ts before its identity composers exist.
+class SchemaStaticPreservationError extends S.TaggedError<
+  SchemaStaticPreservationError,
+  { readonly brand: unique symbol }
+>()(
+  "SchemaStaticPreservationError",
+  { message: S.String },
+  {
+    title: "Schema static preservation error",
+    description: "A rebuilt schema rejected a custom static property descriptor.",
+  }
+) {}
 
 /**
  * Rebuilt schema with the original schema's additional static members.
@@ -49,12 +62,20 @@ const SCHEMA_PROTOCOL_KEYS: ReadonlyArray<PropertyKey> = [
  * Reflect.get(annotated, "empty") // => ""
  * ```
  *
+ * @throws A tagged invariant defect when the rebuilt schema rejects a custom static descriptor.
  * @category combinators
  * @since 0.0.0
  */
 export const preserve: {
-  <Schema extends S.Top>(source: Schema, annotated: Schema["Rebuild"]): Preserved<Schema>;
-  <Schema extends S.Top>(annotated: Schema["Rebuild"]): (source: Schema) => Preserved<Schema>;
+  <Annotated extends S.Top, Schema extends S.Top>(
+    source: Schema & (Annotated extends Schema["Rebuild"] ? unknown : never),
+    annotated: Annotated
+  ): Preserved<Schema>;
+  <Annotated extends S.Top>(
+    annotated: Annotated
+  ): <Schema extends S.Top>(
+    source: Schema & (Annotated extends Schema["Rebuild"] ? unknown : never)
+  ) => Preserved<Schema>;
 } = dual(2, <Schema extends S.Top>(source: Schema, annotated: Schema["Rebuild"]): Preserved<Schema> => {
   for (const key of Reflect.ownKeys(source)) {
     if (A.contains(SCHEMA_PROTOCOL_KEYS, key) || Reflect.getOwnPropertyDescriptor(annotated, key) !== undefined) {
@@ -63,8 +84,11 @@ export const preserve: {
 
     const descriptor = Reflect.getOwnPropertyDescriptor(source, key);
 
-    if (descriptor !== undefined) {
-      Reflect.defineProperty(annotated, key, descriptor);
+    if (descriptor !== undefined && !Reflect.defineProperty(annotated, key, descriptor)) {
+      // Synchronous invariant boundary: never return a falsely preserved schema.
+      throw SchemaStaticPreservationError.make({
+        message: "Cannot preserve a custom static on the rebuilt schema.",
+      });
     }
   }
 

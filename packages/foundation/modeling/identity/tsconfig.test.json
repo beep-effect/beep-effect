@@ -11,6 +11,11 @@
     "outDir": "dist-test",
     "rootDir": ".",
     "sourceMap": false,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@beep/identity/internal/schemaStatics": [
+        "./src/internal/schemaStatics.ts"
+      ]
+    }
   }
 }
