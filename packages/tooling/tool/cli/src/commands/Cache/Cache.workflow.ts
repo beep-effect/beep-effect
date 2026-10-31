@@ -557,8 +557,8 @@ export const initializeCacheProducerExecution = Effect.fn("CacheWorkflow.initial
     if (executable.sha256 !== selected.target.backend.digest)
       return yield* CacheCommandError.new("Producer provisioning executable differs from its approved digest.");
     yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
-    yield* Effect.uninterruptibleMask((restore) =>
-      Effect.gen(function* () {
+    yield* Effect.uninterruptibleMask(
+      Effect.fnUntraced(function* (restore) {
         yield* initializeCacheProducerIssuer(directory, trusted.binding, trusted.contract, material);
         yield* restore(
           Effect.gen(function* () {

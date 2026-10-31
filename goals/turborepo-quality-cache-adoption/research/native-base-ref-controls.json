@@ -1,0 +1,604 @@
+{
+  "schemaVersion": "cache-native-base-ref-controls/v1",
+  "scope": "Synthetic native dry selection only; no task execution, hosted run, qualification or production timing claim.",
+  "sourceRevisionAtExecution": "7e185306be44a940c5b16a9f4804939a4d314e1d",
+  "driverSha256": "680dcb7f6b6bdf586d8bd9bfa28c03c8d819446d22cac7b967c212c0e84f0182",
+  "sharedInvokeSourceSha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99",
+  "pinsSha256": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d",
+  "bunVersion": "1.4.4",
+  "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+  "pythonVersion": "3.15.1",
+  "gitSha256": "6ecf9d07e5243c833b603e1d4c9684b7f337b0db314c4ca5833db2dfea29e7a8",
+  "bwrapSha256": "54e8408bd5b325c17926dd2c2420e6f28086286fd5bf99b397f9b681be3dada0",
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "networkIsolated": true,
+  "ambientEnvironmentCleared": true,
+  "processBudgetSeconds": 90,
+  "childMaxSeconds": 10,
+  "channelMaxBytes": 1048576,
+  "cases": [
+    {
+      "channel": "stable",
+      "setting": "absent",
+      "flag": false,
+      "case": "implicit-remote-only",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.019245,
+      "stdoutSha256": "9c53bb7f2920d100666ad8efacaa20bf6963778126aa09593ef2bc6c6391d246",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "absent",
+      "flag": false,
+      "case": "explicit-remote",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.020095,
+      "stdoutSha256": "a21083fd0207a74ab748b17a76de6f6a9ae4b807ca0ed5641f90c1d3c8a5ab6c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "absent",
+      "flag": false,
+      "case": "explicit-sha",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018407,
+      "stdoutSha256": "b1af3ce4f3efd29dbcddce00f4d62c0c79e9af63cd28e3f97a3ba837b407f3a9",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "absent",
+      "flag": false,
+      "case": "local-main",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.022299,
+      "stdoutSha256": "b47492513fbea0d3b79e1133f52eccdbcbc2bc7ba037f7af2a6838b399b0a9af",
+      "stderrSha256": "ad77955d0e70549ad91f2bf320ff29ef8ffcda643dce3badec18ceef063fb91a",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "absent",
+      "flag": false,
+      "case": "explicit-missing",
+      "exitCode": 1,
+      "selectedTasks": [],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": true,
+      "elapsedSeconds": 0.021716,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c7284842cb209d4482272eeaad405f379b48b5c59bd63fff828380ffd5e67e57",
+      "taskHashes": {}
+    },
+    {
+      "channel": "stable",
+      "setting": "absent",
+      "flag": false,
+      "case": "missing-both",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.020217,
+      "stdoutSha256": "270ee9aa5744fb232e0e56f32574bb7caaf004391648ed1c17959f013bc3bf95",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "false",
+      "flag": false,
+      "case": "implicit-remote-only",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018737,
+      "stdoutSha256": "820a4e562ea7712b26d80537f25c0a9d0a88fb560651fe2c0367d8397c783f0a",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "false",
+      "flag": false,
+      "case": "explicit-remote",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.022625,
+      "stdoutSha256": "76817f40141b97de44968237f9b63957348f81569fe7e9a8c1eccb0f824a85f1",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "false",
+      "flag": false,
+      "case": "explicit-sha",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.021296,
+      "stdoutSha256": "5de8b4625ed0f26b55ff8eecd85a44b998c6638b32da347387deb907b733c425",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "false",
+      "flag": false,
+      "case": "local-main",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.020079,
+      "stdoutSha256": "ef6324184216bc2687321fc9fb3c247c6a0c7ba2dc955a23e0da86accafc0630",
+      "stderrSha256": "ad77955d0e70549ad91f2bf320ff29ef8ffcda643dce3badec18ceef063fb91a",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "false",
+      "flag": false,
+      "case": "explicit-missing",
+      "exitCode": 1,
+      "selectedTasks": [],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": true,
+      "elapsedSeconds": 0.018576,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c7284842cb209d4482272eeaad405f379b48b5c59bd63fff828380ffd5e67e57",
+      "taskHashes": {}
+    },
+    {
+      "channel": "stable",
+      "setting": "false",
+      "flag": false,
+      "case": "missing-both",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.021323,
+      "stdoutSha256": "7ae5958185d951b83fa3f9fd9dc0bd13dec70a109e99846006cae322165906c1",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "true",
+      "flag": true,
+      "case": "implicit-remote-only",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.022724,
+      "stdoutSha256": "bf1c16ede77f88e76c48909d86a05da091ca5bcee0ee3ca5008fb9e81f3a5b7b",
+      "stderrSha256": "b2235a2d3b5ac7a9a0eb51a93f536e39c15853bcc7cb88b9864a30b27571a6a5",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "true",
+      "flag": true,
+      "case": "explicit-remote",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.019009,
+      "stdoutSha256": "4e469338454632d17b44b2c61c4fbdfc99aedcdd752715730f6c4ef272952b7b",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "true",
+      "flag": true,
+      "case": "explicit-sha",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.021551,
+      "stdoutSha256": "5f50a4c0060be042d3487a57a273b1cfac6c91d6e1e008dbfc0852a68df5ebd7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "true",
+      "flag": true,
+      "case": "local-main",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.022952,
+      "stdoutSha256": "f024900e37ac06f0c78e1f81c68fce7e8bdca1ff49f791e31693a5fdf22df834",
+      "stderrSha256": "ad77955d0e70549ad91f2bf320ff29ef8ffcda643dce3badec18ceef063fb91a",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "stable",
+      "setting": "true",
+      "flag": true,
+      "case": "explicit-missing",
+      "exitCode": 1,
+      "selectedTasks": [],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": true,
+      "elapsedSeconds": 0.021339,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c7284842cb209d4482272eeaad405f379b48b5c59bd63fff828380ffd5e67e57",
+      "taskHashes": {}
+    },
+    {
+      "channel": "stable",
+      "setting": "true",
+      "flag": true,
+      "case": "missing-both",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.020819,
+      "stdoutSha256": "27937e98a09f7125188886d0a5ace6ba8c000cd99498c034a5821de08242f1ed",
+      "stderrSha256": "67dd5c70b52f9a5ade32cdbac9ee2bbf301b6281a57fa000d055887f36a3cdc9",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "absent",
+      "flag": false,
+      "case": "implicit-remote-only",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.020112,
+      "stdoutSha256": "6c166272c5e5e8e41831ba69a5e2cd8809ec7e3cb4d5d593e6f81cd5ce190244",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "absent",
+      "flag": false,
+      "case": "explicit-remote",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.019229,
+      "stdoutSha256": "74406b995b975b5a5d6972eb9f6546897bc75b710a898dfc0f5ff1ba4ca20057",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "absent",
+      "flag": false,
+      "case": "explicit-sha",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018915,
+      "stdoutSha256": "7c625f06c34009ee27612636ab7f5cd0e2cc31e9271431165cbfabb14167b9e0",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "absent",
+      "flag": false,
+      "case": "local-main",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.019323,
+      "stdoutSha256": "51e59b6bf3ad8f0ada042971f663731d22efc8996c4b625f57e4082e470fc24a",
+      "stderrSha256": "ad77955d0e70549ad91f2bf320ff29ef8ffcda643dce3badec18ceef063fb91a",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "absent",
+      "flag": false,
+      "case": "explicit-missing",
+      "exitCode": 1,
+      "selectedTasks": [],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": true,
+      "elapsedSeconds": 0.018512,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c7284842cb209d4482272eeaad405f379b48b5c59bd63fff828380ffd5e67e57",
+      "taskHashes": {}
+    },
+    {
+      "channel": "canary",
+      "setting": "absent",
+      "flag": false,
+      "case": "missing-both",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.019142,
+      "stdoutSha256": "c0d9f90200db1630c656ddf133cbe78e5f18cd3d4db05e8adafec999d75c826b",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "false",
+      "flag": false,
+      "case": "implicit-remote-only",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018332,
+      "stdoutSha256": "9887d976b3ea36d82b32b94cbbe32b4f8d2be5df5da94a47a4f952d79f126bbf",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "false",
+      "flag": false,
+      "case": "explicit-remote",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.021733,
+      "stdoutSha256": "d24f618a234660330bfb35ef5b0b3878fb4078bae16f046bb2153509de2f8f70",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "false",
+      "flag": false,
+      "case": "explicit-sha",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.023141,
+      "stdoutSha256": "ace9a394df320f58ae80d32289f3091a866fa914fd706cac26053f80620b0040",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "false",
+      "flag": false,
+      "case": "local-main",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018836,
+      "stdoutSha256": "97087e460fa9ea0037c14ea19ec3354303d1f9044acc45d9ee6982e0149f427a",
+      "stderrSha256": "ad77955d0e70549ad91f2bf320ff29ef8ffcda643dce3badec18ceef063fb91a",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "false",
+      "flag": false,
+      "case": "explicit-missing",
+      "exitCode": 1,
+      "selectedTasks": [],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": true,
+      "elapsedSeconds": 0.016898,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c7284842cb209d4482272eeaad405f379b48b5c59bd63fff828380ffd5e67e57",
+      "taskHashes": {}
+    },
+    {
+      "channel": "canary",
+      "setting": "false",
+      "flag": false,
+      "case": "missing-both",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.020134,
+      "stdoutSha256": "e0e19957307adad3b2ed50cf5b172e175a8d98ad074a66e1e3ea80984b944833",
+      "stderrSha256": "85f8dc1f65c6fd459321585f1684d6aa8b85be4cbbf0b3d30c34a844590df209",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "true",
+      "flag": true,
+      "case": "implicit-remote-only",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.019976,
+      "stdoutSha256": "da29e05747a8ffe5851917973bbed8e85e50d2b0d0bd52db030297ef147276b9",
+      "stderrSha256": "b2235a2d3b5ac7a9a0eb51a93f536e39c15853bcc7cb88b9864a30b27571a6a5",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "true",
+      "flag": true,
+      "case": "explicit-remote",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.020508,
+      "stdoutSha256": "385505eb9ca6d94b69b63be23a15c5354478eafa450b143c7cab97072c889931",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "true",
+      "flag": true,
+      "case": "explicit-sha",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018645,
+      "stdoutSha256": "f6988f013def3ca03fbe567bec55d919ed6b975451c21da5d20991377dbdde56",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "true",
+      "flag": true,
+      "case": "local-main",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe"],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018073,
+      "stdoutSha256": "d041599a84d0ab2634c857e88f282cf0c38096163311579e6fc3f9518e7ee35c",
+      "stderrSha256": "ad77955d0e70549ad91f2bf320ff29ef8ffcda643dce3badec18ceef063fb91a",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59"
+      }
+    },
+    {
+      "channel": "canary",
+      "setting": "true",
+      "flag": true,
+      "case": "explicit-missing",
+      "exitCode": 1,
+      "selectedTasks": [],
+      "conservativeAllTasks": false,
+      "explicitBaseRefused": true,
+      "elapsedSeconds": 0.017498,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c7284842cb209d4482272eeaad405f379b48b5c59bd63fff828380ffd5e67e57",
+      "taskHashes": {}
+    },
+    {
+      "channel": "canary",
+      "setting": "true",
+      "flag": true,
+      "case": "missing-both",
+      "exitCode": 0,
+      "selectedTasks": ["a#probe", "b#probe"],
+      "conservativeAllTasks": true,
+      "explicitBaseRefused": false,
+      "elapsedSeconds": 0.018367,
+      "stdoutSha256": "519cee291ce801c3051bb1bb08c26e0c87251a7e38938500695f2c965fc9672c",
+      "stderrSha256": "67dd5c70b52f9a5ade32cdbac9ee2bbf301b6281a57fa000d055887f36a3cdc9",
+      "taskHashes": {
+        "a#probe": "762f0bdc0fd5bf59",
+        "b#probe": "9ab45fb24a6a1359"
+      }
+    }
+  ]
+}

@@ -30,7 +30,7 @@
  * @since 0.0.0
  */
 
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -247,7 +247,7 @@ const filePatch = (repoRoot: string, from: string, to: string, path: string) =>
 
 const StatusCountDocument = S.Struct({ findings: S.Array(S.Struct({ status: S.String })) });
 
-const decodeStatusCountDocument = decodeJsoncTextAs(StatusCountDocument);
+const decodeStatusCountDocument = Jsonc.bind(StatusCountDocument).decode;
 
 // Finding count per status at one revision; an absent file has no findings,
 // and an undecodable one is none so the caller fails closed.
