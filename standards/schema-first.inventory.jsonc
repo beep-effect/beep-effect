@@ -1441,7 +1441,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 41,
+      "line": 108,
       "owner": "@beep/law-practice-server",
       "reason": "Read-only integrity audit of frozen public reference fixtures: selected claim ownership, exact source spans and cross-claim endpoints are the subjects. Generated arbitrary claims cannot establish the immutable source corpus. Owner: @beep/law-practice-server. Exit: retire when the detector distinguishes frozen-source integrity tests from schema-law tests."
     },
@@ -1451,9 +1451,19 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 38,
+      "line": 42,
       "owner": "@beep/law-practice-server",
       "reason": "Golden source-cohort integrity checks bind exact public native XML, source hashes, CPC quotas and selected claim numbers. Arbitrary records cannot replace provenance or frozen denominators. Owner: @beep/law-practice-server. Exit: retire when the detector recognizes source inventory integrity tests."
+    },
+    {
+      "file": "packages/law-practice/server/test/ClaimSelfCheck.public.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 78,
+      "owner": "@beep/law-practice-server",
+      "reason": "Owner: @beep/law-practice-server. Fixed public USPTO integration witnesses verify native XML, exact operative-source text, recorded office-action identifiers/date/rejection phrases, and full frozen-tree equality. Generated arbitrary payloads cannot establish those real-record facts. This is intentionally golden/source-integrity coverage, not a new codec-law suite. Exit: retire when the detector recognizes native public-slice regression subjects or equivalent source-integrity property coverage becomes meaningful."
     },
     {
       "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
@@ -1499,7 +1509,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 305,
+      "line": 307,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
     },

@@ -8,6 +8,7 @@ import { Uspto, UsptoConfigInput } from "@beep/uspto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -18,6 +19,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { compareStructuralFamily } from "./evaluation/Structural.ts";
 
 const fixture = Effect.fnUntraced(function* (name: string) {
   const path = yield* Path.Path;
@@ -27,36 +29,41 @@ const fixture = Effect.fnUntraced(function* (name: string) {
 
 // Replay only the public claims subtree and the metadata needed to locate it.
 // No network, credentials, party names or complete file-wrapper records.
-const nativeHttpClient = Layer.effect(
-  HttpClient.HttpClient,
-  Effect.gen(function* () {
-    const xml = yield* fixture("US20200109732A1.claims.xml");
-    return HttpClient.make((request) =>
-      Effect.succeed(
-        HttpClientResponse.fromWeb(
-          request,
-          Str.includes("/applications/search?")(request.url)
-            ? new Response(`{
-                "patentFileWrapperDataBag": [{
-                  "applicationNumberText": "16287736",
-                  "applicationMetaData": { "earliestPublicationNumber": "US20200109732A1" },
-                  "pgpubDocumentMetaData": {
-                    "productIdentifier": "APPXML", "xmlFileName": "16287736_20200109732.xml",
-                    "fileLocationURI": "https://api.uspto.gov/native-publication.xml"
-                  }
-                }]
-              }`)
-            : new Response(xml)
+const nativePublicationClient = (application: string, publication: string, xml: ReturnType<typeof fixture>) =>
+  Layer.effect(
+    HttpClient.HttpClient,
+    Effect.gen(function* () {
+      const text = yield* xml;
+      return HttpClient.make((request) =>
+        Effect.succeed(
+          HttpClientResponse.fromWeb(
+            request,
+            Str.includes("/applications/search?")(request.url)
+              ? new Response(`{
+                  "patentFileWrapperDataBag": [{
+                    "applicationNumberText": "${application}",
+                    "applicationMetaData": { "earliestPublicationNumber": "${publication}" },
+                    "pgpubDocumentMetaData": {
+                      "productIdentifier": "APPXML", "xmlFileName": "${publication}.xml",
+                      "fileLocationURI": "https://api.uspto.gov/native-publication.xml"
+                    }
+                  }]
+                }`)
+              : new Response(text)
+          )
         )
-      )
-    );
-  })
-);
+      );
+    })
+  );
 
-const checker = ClaimSelfCheckLive.pipe(
-  Layer.provide(UsptoClaimsLive),
-  Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
-  Layer.provide(nativeHttpClient)
+const checkerFor = (transport: ReturnType<typeof nativePublicationClient>) =>
+  ClaimSelfCheckLive.pipe(
+    Layer.provide(UsptoClaimsLive),
+    Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
+    Layer.provide(transport)
+  );
+const checker = checkerFor(
+  nativePublicationClient("16287736", "US20200109732A1", fixture("US20200109732A1.claims.xml"))
 );
 
 const patentClaimsJson = S.fromJsonString(PatentClaims);
@@ -134,6 +141,78 @@ describe("Public USPTO antecedent slice", () => {
               finding.referring.anchor.endChar === 364
           )
         );
+      })
+    );
+  });
+});
+
+// This witness uses an existing pre-prediction reference, selected after the
+// measurement solely to restore current full-tree vertical-slice evidence.
+// It is not a new label, extra benchmark claim or held-out accuracy result.
+const brushFixture = Effect.fnUntraced(function* (name: string) {
+  const path = yield* Path.Path;
+  const filename = yield* path.fromFileUrl(
+    new URL(`../../domain/test/fixtures/claim-element/positive/12838228-root-1/${name}`, import.meta.url)
+  );
+  return yield* (yield* FileSystem.FileSystem).readFileString(filename);
+});
+const brushChecker = checkerFor(
+  nativePublicationClient("12838228", "US20110074901A1", brushFixture("source.claims.xml"))
+);
+const referenceTreesJson = ClaimElementTree.pipe(S.Array, S.fromJsonString);
+const canonicalClaimsJson = S.fromJsonString(
+  S.Struct({ claims: S.Array(S.Struct({ claimNumber: S.Int, claimText: S.String })) })
+);
+const publicProvenanceJson = S.fromJsonString(
+  S.Struct({
+    officeActionDocumentIdentifiers: S.Array(S.String),
+    officeActionMailDate: S.String,
+    officeActionSection112Text: S.Array(S.String),
+  })
+);
+
+describe("Current strict public claim slice", () => {
+  it.layer(brushChecker.pipe(Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("matches the frozen full claim9 tree and the examiner's exact brush-roller phrase", () =>
+      Effect.gen(function* () {
+        const expected = yield* S.decodeEffect(referenceTreesJson)(yield* brushFixture("expected.json"));
+        const canonical = yield* S.decodeEffect(canonicalClaimsJson)(yield* brushFixture("claims.json"));
+        const provenance = yield* S.decodeEffect(publicProvenanceJson)(yield* brushFixture("provenance.json"));
+        assert.deepStrictEqual(provenance.officeActionDocumentIdentifiers, ["H2KCNOYDPXXIFW4"]);
+        assert.strictEqual(provenance.officeActionMailDate, "2012-05-25");
+        const action = A.join(provenance.officeActionSection112Text, " ");
+        assertTrue(
+          Str.includes("claims 6, 7, 8, 9, 10, 11-20 are rejected under 35 u.s.c. 112, second paragraph")(action)
+        );
+        assertTrue(Str.includes("claim 9, “the brush roller” lacks antecedent basis.")(action));
+        const result = yield* ClaimSelfCheck.use((service) =>
+          service.checkPublished(
+            UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make("20110074901") })
+          )
+        );
+        const source = yield* Effect.fromOption(A.findFirst(canonical.claims, (claim) => claim.claimNumber === 9));
+        const actual = yield* Effect.fromOption(
+          A.findFirst(result.claimSet.claims, (claim) => claim.claimNumber === 9)
+        );
+        assert.strictEqual(actual.claimText, source.claimText);
+        assert.deepStrictEqual(result.report.undecomposed, []);
+        const scores = yield* compareStructuralFamily(expected, result.report.trees);
+        const score = yield* Effect.fromOption(A.findFirst(scores, (value) => value.claimNumber === 9));
+        assertTrue(score.strict);
+        const finding = yield* Effect.fromOption(
+          A.findFirst(
+            result.report.findings,
+            (value) =>
+              value.kind === "missing-antecedent" &&
+              value.referring.path === "9.a" &&
+              value.referring.anchor.quote === "the brush roller"
+          )
+        );
+        assert.strictEqual(finding.referring.anchor.startChar, 44);
+        assert.strictEqual(finding.referring.anchor.endChar, 60);
+        assert.strictEqual(finding.referring.anchor.quote, "the brush roller");
       })
     );
   });
