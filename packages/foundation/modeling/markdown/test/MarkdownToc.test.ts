@@ -197,6 +197,26 @@ describe("MarkdownToc", () => {
       );
     });
 
+    it("strips blockquote markers from a quoted multi-line heading", () => {
+      const entries = MarkdownToc.entries(parse(lines("> Foo", "> bar", "> ===", "")));
+      assert.deepStrictEqual(
+        A.map(entries, (entry) => [entry.text, entry.slug]),
+        [["Foo bar", "foo-bar"]]
+      );
+      assert.strictEqual(MarkdownToc.renderEntries(entries), "- [Foo bar](#foo-bar)");
+    });
+
+    it("counts a multi-line heading and its one-line twin as duplicates", () => {
+      const entries = MarkdownToc.entries(parse(lines("Foo", "bar", "===", "", "## Foo bar", "")));
+      assert.deepStrictEqual(
+        A.map(entries, (entry) => [entry.occurrence, entry.slug]),
+        [
+          [0, "foo-bar"],
+          [1, "foo-bar-1"],
+        ]
+      );
+    });
+
     it("yields no entries for a document without headings", () => {
       assert.deepStrictEqual(MarkdownToc.entries(parse("just a paragraph\n")), []);
       assert.deepStrictEqual(MarkdownToc.entries(parse("")), []);

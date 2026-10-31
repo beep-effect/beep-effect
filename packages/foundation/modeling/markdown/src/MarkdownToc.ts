@@ -75,7 +75,9 @@ const Ordinal = S.Int.pipe(S.check(S.isGreaterThanOrEqualTo(0)));
 export class TocEntry extends S.Opaque<TocEntry, { readonly brand: unique symbol }>()(
   S.Struct({
     text: S.String.pipe(
-      $I.annoteKey("TocEntry.text", { description: "The heading content exactly as written in the source" })
+      $I.annoteKey("TocEntry.text", {
+        description: "The heading content as written in the source, its lines joined by MarkdownSlug.headingLine",
+      })
     ),
     slug: HeadingSlug.pipe($I.annoteKey("TocEntry.slug", { description: "The anchor slug the entry links to" })),
     depth: HeadingDepth.pipe($I.annoteKey("TocEntry.depth", { description: "The heading depth, 1 to 6" })),
@@ -241,9 +243,11 @@ export abstract class MarkdownToc {
    *
    * `index` counts all headings in the document, listed or not, so an entry
    * can be traced back to `document.headings`. `occurrence` counts earlier
-   * listed headings with the same lower-cased text as written. The slug is
-   * `MarkdownSlug.slugify` of the text as written, so a heading opening with
-   * a `[text](` link slugs its link text.
+   * listed headings with the same lower-cased text. The text is the heading
+   * as written with its lines joined (`MarkdownSlug.headingLine`), so a
+   * multi-line setext heading counts with its one-line twin. The slug is
+   * `MarkdownSlug.slugify` of that text, so a heading opening with a
+   * `[text](` link slugs its link text.
    *
    * **Example** (Headings before the marker are not listed)
    *
@@ -269,7 +273,7 @@ export abstract class MarkdownToc {
       ({ heading }) => O.isNone(boundary) || heading.node.position.start.line > boundary.value + 1
     );
     const [, entries] = A.mapAccum(listed, HashMap.empty<string, number>(), (seen, { heading, index }) => {
-      const text = document.headingSource(heading.node);
+      const text = MarkdownSlug.headingLine(document.headingSource(heading.node));
       const key = Str.toLowerCase(text);
       const occurrence = O.match(HashMap.get(seen, key), { onNone: () => 0, onSome: (count) => count + 1 });
       const entry = TocEntry.make({

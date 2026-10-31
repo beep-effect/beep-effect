@@ -76,9 +76,10 @@ export type HeadingSlug = typeof HeadingSlug.Type;
 const LEADING_LINK = /^\[([^\]]+)\]\(/;
 const HTML_TAG = /<\/?[^>]+>/g;
 const SPACE_RUN = /[ \t]+/g;
-// A multi-line setext heading's soft line breaks: read as one space each, as CommonMark renders them.
-const LINE_BREAK = /\r\n?|\n/g;
-const unwrapLines = Str.replace(LINE_BREAK, " ");
+// A multi-line setext heading's soft line break, with the spaces before it and the continuation line's
+// container prefix (indentation and blockquote markers) after it. CommonMark strips that prefix, and a
+// continuation line cannot open with `>` past its containers' markers (that would open a blockquote).
+const LINE_BREAK = /[ \t]*(?:\r\n?|\n)[ \t]*(?:>[ \t]*)*/g;
 // `markdown-toc`'s two deletion lists, verbatim (the ASCII list names `=` twice; the CJK list carries an ASCII space).
 const ASCII_PUNCTUATION = /[|$&`~=\\/@+*!?({[\]})<>=.,;:'"^]/g;
 const CJK_PUNCTUATION = /[。？！，、；：“”【】（）〔〕［］﹃﹄“ ”‘’﹁﹂—…－～《》〈〉「」]/g;
@@ -141,6 +142,35 @@ const foldDiacritics = (text: string): string => A.join(A.map(A.fromIterable(tex
  */
 export abstract class MarkdownSlug {
   /**
+   * A heading's content on one line: each line break of a multi-line setext
+   * heading, with the spaces before it and the continuation line's
+   * indentation and blockquote markers after it, becomes one space.
+   *
+   * **Details**
+   *
+   * CommonMark renders a soft line break as one space and strips each
+   * continuation line's container prefix, so this is the heading as a reader
+   * sees it, still in source syntax. A one-line heading comes back unchanged.
+   * This is the kit's one departure from `markdown-toc`, which kept the raw
+   * newline in slugs and titles.
+   *
+   * **Example** (A quoted multi-line heading)
+   *
+   * ```ts
+   * import { MarkdownSlug } from "@beep/markdown/MarkdownSlug";
+   *
+   * console.log(MarkdownSlug.headingLine("Foo\n> bar")) // Foo bar
+   * console.log(MarkdownSlug.headingLine("Use  `pipe`")) // Use  `pipe`
+   * ```
+   *
+   * @param text - A heading's content as written.
+   * @returns The content with its lines joined by single spaces.
+   * @category utilities
+   * @since 0.0.0
+   */
+  static readonly headingLine = (text: string): string => Str.replace(LINE_BREAK, " ")(text);
+
+  /**
    * The text a heading contributes to its slug and title: when the heading
    * opens with a markdown link, `[text](`, that link's text; otherwise the
    * heading as given.
@@ -167,9 +197,8 @@ export abstract class MarkdownSlug {
    *
    * **Details**
    *
-   * Steps, in `markdown-toc` order: each line break of a multi-line setext
-   * heading becomes one space (the kit's one departure from `markdown-toc`,
-   * which kept the raw newline in the anchor); {@link MarkdownSlug.linkText}; lower-case;
+   * Steps, in `markdown-toc` order after {@link MarkdownSlug.headingLine}
+   * (the kit's one departure): {@link MarkdownSlug.linkText}; lower-case;
    * each space becomes `-` and each tab `--`; HTML tags are deleted; the
    * ASCII list (pipe, dollar, ampersand, backtick, tilde, equals, backslash,
    * slash, at, plus, asterisk, exclamation and question marks, braces,
@@ -195,7 +224,7 @@ export abstract class MarkdownSlug {
    * @since 0.0.0
    */
   static readonly slugify = (text: string, occurrence = 0): HeadingSlug => {
-    const base = Str.toLowerCase(MarkdownSlug.linkText(unwrapLines(text)));
+    const base = Str.toLowerCase(MarkdownSlug.linkText(MarkdownSlug.headingLine(text)));
     const hyphenated = Str.replaceAll("\t", "--")(Str.replaceAll(" ", "-")(base));
     const stripped = Str.replace(
       CJK_PUNCTUATION,
@@ -207,8 +236,8 @@ export abstract class MarkdownSlug {
 
   /**
    * The link text a TOC entry shows for a heading: the leading link's text
-   * if any, with line breaks read as spaces, HTML tags deleted, space and
-   * tab runs collapsed to one space, and the ends trimmed.
+   * if any, after {@link MarkdownSlug.headingLine}, with HTML tags deleted,
+   * space and tab runs collapsed to one space, and the ends trimmed.
    *
    * **Example** (Inline HTML and spacing)
    *
@@ -224,7 +253,9 @@ export abstract class MarkdownSlug {
    * @since 0.0.0
    */
   static readonly titleize = (text: string): string =>
-    Str.trim(Str.replace(SPACE_RUN, " ")(Str.replace(HTML_TAG, "")(MarkdownSlug.linkText(unwrapLines(text)))));
+    Str.trim(
+      Str.replace(SPACE_RUN, " ")(Str.replace(HTML_TAG, "")(MarkdownSlug.linkText(MarkdownSlug.headingLine(text))))
+    );
 
   /**
    * The `href` of a slug: `#` followed by the slug percent-escaped as a
