@@ -18,8 +18,30 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301); final closeout PR #2444 carries the P3 evidence and reflection through repository gates.",
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2435,
+        "role": "supporting"
+      },
+      {
+        "number": 2444,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-closeout-b46f6b891dac/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -89,5 +111,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2444
+  }
 }
