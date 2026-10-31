@@ -1,0 +1,4020 @@
+{
+  "tool": "goals/effected-promotion/ops/qas-discovery-adoption-parity.ts",
+  "surfaces": {
+    "discovery": [
+      {
+        "name": "@beep/acp",
+        "path": "packages/drivers/acp",
+        "absolutePath": "packages/drivers/acp",
+        "manifestSha256": "5416de3654b45120119fda0b079fcfabc0c1368e49fb6943a04f2868c06cd173"
+      },
+      {
+        "name": "@beep/agents-client",
+        "path": "packages/agents/client",
+        "absolutePath": "packages/agents/client",
+        "manifestSha256": "d9db9f1355602fa744514b0fd430b6015265934ce29b25a01f76e6347607b7e7"
+      },
+      {
+        "name": "@beep/agents-domain",
+        "path": "packages/agents/domain",
+        "absolutePath": "packages/agents/domain",
+        "manifestSha256": "5e95c372cd7bd953731f95f17e5fb9cce37dc56bcb7f1dd7567886ede330adc3"
+      },
+      {
+        "name": "@beep/agents-server",
+        "path": "packages/agents/server",
+        "absolutePath": "packages/agents/server",
+        "manifestSha256": "4479dcc37c249de3da226b6448b5e25a44f784994b128defdaeeef17982be4c0"
+      },
+      {
+        "name": "@beep/agents-tables",
+        "path": "packages/agents/tables",
+        "absolutePath": "packages/agents/tables",
+        "manifestSha256": "be16499cb26df81949e1d8a0139eb4406f258ad858b32777df5365be8cc8e2bb"
+      },
+      {
+        "name": "@beep/agents-use-cases",
+        "path": "packages/agents/use-cases",
+        "absolutePath": "packages/agents/use-cases",
+        "manifestSha256": "7a715af460a65b4de63d884d13130312ff77e5c030d317aa18349beb0c45f627"
+      },
+      {
+        "name": "@beep/ai-provider-cli",
+        "path": "packages/drivers/ai-provider-cli",
+        "absolutePath": "packages/drivers/ai-provider-cli",
+        "manifestSha256": "63f90c119048f807b86b56de232853ab397e3cd59934c6c8deb289583bb433a4"
+      },
+      {
+        "name": "@beep/ai-sync",
+        "path": "packages/tooling/library/ai-sync",
+        "absolutePath": "packages/tooling/library/ai-sync",
+        "manifestSha256": "54b1f963b1f7169511c62ce9f9573f1765bc6448f1d3012b569605a41093b50a"
+      },
+      {
+        "name": "@beep/anthropic",
+        "path": "packages/drivers/anthropic",
+        "absolutePath": "packages/drivers/anthropic",
+        "manifestSha256": "1dd359290f0fa43cc38cce4138e20d600d2cf3531effc71a31246638911aaafe"
+      },
+      {
+        "name": "@beep/api-docs",
+        "path": "apps/labs/api-docs",
+        "absolutePath": "apps/labs/api-docs",
+        "manifestSha256": "9ff2b7bbbc548e7ba9687c652f12ec836f5722451198b03d449b4beb5eb71f17"
+      },
+      {
+        "name": "@beep/api-transport",
+        "path": "packages/foundation/capability/api-transport",
+        "absolutePath": "packages/foundation/capability/api-transport",
+        "manifestSha256": "ce0167d959e3d7bbc80f09b791bd034f98fb5ad767e1f7f2235786d32713f03c"
+      },
+      {
+        "name": "@beep/architecture-lab-client",
+        "path": "packages/architecture-lab/client",
+        "absolutePath": "packages/architecture-lab/client",
+        "manifestSha256": "19cdc815a8ca7e5133e40f846b56fac26cea3dc3ea528af42051fcf9cef1fa83"
+      },
+      {
+        "name": "@beep/architecture-lab-config",
+        "path": "packages/architecture-lab/config",
+        "absolutePath": "packages/architecture-lab/config",
+        "manifestSha256": "28f24c6ecf6f41243039a8dce2d0501420f9123612bfc91f3cdf6dc62452bec9"
+      },
+      {
+        "name": "@beep/architecture-lab-domain",
+        "path": "packages/architecture-lab/domain",
+        "absolutePath": "packages/architecture-lab/domain",
+        "manifestSha256": "aabe2de913d9fcf93a188ca775be9a1f5ca72bb170286aedc1d914146820e988"
+      },
+      {
+        "name": "@beep/architecture-lab-proof",
+        "path": "apps/architecture-lab-proof",
+        "absolutePath": "apps/architecture-lab-proof",
+        "manifestSha256": "9a0a0e17206b41d568b08cf4ffe93da77615bd81979c81ee8c11b0b92406ce52"
+      },
+      {
+        "name": "@beep/architecture-lab-server",
+        "path": "packages/architecture-lab/server",
+        "absolutePath": "packages/architecture-lab/server",
+        "manifestSha256": "842ca270b7e6daa6dc583654494e05abdbfaecd62bfa336122e2bb86b2d26a39"
+      },
+      {
+        "name": "@beep/architecture-lab-tables",
+        "path": "packages/architecture-lab/tables",
+        "absolutePath": "packages/architecture-lab/tables",
+        "manifestSha256": "e837f931dcf35cd515c9bd0b06310e57aa709071e1625538bfc17b00027c3d72"
+      },
+      {
+        "name": "@beep/architecture-lab-ui",
+        "path": "packages/architecture-lab/ui",
+        "absolutePath": "packages/architecture-lab/ui",
+        "manifestSha256": "e9699fbaa9c8a3c2c9ec9b9f8e66d40527ec92b203dd85aea07d87e8d4fe492c"
+      },
+      {
+        "name": "@beep/architecture-lab-use-cases",
+        "path": "packages/architecture-lab/use-cases",
+        "absolutePath": "packages/architecture-lab/use-cases",
+        "manifestSha256": "a1d95f5b1cc0f5767bdddb79799db996b7444bcb36a1f0d7081ef61af60bab53"
+      },
+      {
+        "name": "@beep/box",
+        "path": "packages/drivers/box",
+        "absolutePath": "packages/drivers/box",
+        "manifestSha256": "2e0503a87e08934291b0600db6441d08e7366829ca8ded4bf583805dc9f6f1ff"
+      },
+      {
+        "name": "@beep/box-provisioning",
+        "path": "packages/drivers/box-provisioning",
+        "absolutePath": "packages/drivers/box-provisioning",
+        "manifestSha256": "b5b5900656e91cd9b0de6e28d5c0af3db52aea4c1499e6c5fb71a1ea12dd46f2"
+      },
+      {
+        "name": "@beep/brand",
+        "path": "packages/foundation/ui-system/brand",
+        "absolutePath": "packages/foundation/ui-system/brand",
+        "manifestSha256": "e423d4ba78b9e58a5d5601780c56160a18459cdb4db270625d7feeb292b27cc7"
+      },
+      {
+        "name": "@beep/chalk",
+        "path": "packages/foundation/capability/chalk",
+        "absolutePath": "packages/foundation/capability/chalk",
+        "manifestSha256": "ee9cd46fd7a8c13a02a84de2f69ef788e53e6d1fb8e479f0f026c7b79ea763f5"
+      },
+      {
+        "name": "@beep/ciops",
+        "path": "apps/labs/ciops",
+        "absolutePath": "apps/labs/ciops",
+        "manifestSha256": "6e28009ecec27f7bcc62547b7acd5f6bca16159c333f047af213ffb3aacd3151"
+      },
+      {
+        "name": "@beep/cli-kit",
+        "path": "packages/foundation/capability/cli-kit",
+        "absolutePath": "packages/foundation/capability/cli-kit",
+        "manifestSha256": "6bc4fe1faf3eda10e07ea17b65c33eb904cf29b00d818f13a3581c1a668e64d7"
+      },
+      {
+        "name": "@beep/codegen-kit",
+        "path": "packages/tooling/library/codegen-kit",
+        "absolutePath": "packages/tooling/library/codegen-kit",
+        "manifestSha256": "7d9523409a636647a4431d65d78033d182fbead5c839ffca68b9e91ffe932ee3"
+      },
+      {
+        "name": "@beep/colors",
+        "path": "packages/foundation/capability/colors",
+        "absolutePath": "packages/foundation/capability/colors",
+        "manifestSha256": "ff757a0880f6e8dc0101e98cab3cf62115c8584ca2fa93d9aa97fb03305999cc"
+      },
+      {
+        "name": "@beep/commands",
+        "path": "packages/drivers/commands",
+        "absolutePath": "packages/drivers/commands",
+        "manifestSha256": "819a686f5c4ad2649ae610efeeb5bce83a4d1a155f3b37885e350f236698cfdc"
+      },
+      {
+        "name": "@beep/config-file",
+        "path": "packages/foundation/capability/config-file",
+        "absolutePath": "packages/foundation/capability/config-file",
+        "manifestSha256": "1b350333b30b8bee1e4fbdb7538704c6fe656d3de3cdb07ea151fc0e71364144"
+      },
+      {
+        "name": "@beep/cosmos",
+        "path": "packages/drivers/cosmos",
+        "absolutePath": "packages/drivers/cosmos",
+        "manifestSha256": "fdb6c4eb7e04b73ecd45dc18e21d10c95adad7926428beb04e7dd5704c65df11"
+      },
+      {
+        "name": "@beep/data",
+        "path": "packages/foundation/primitive/data",
+        "absolutePath": "packages/foundation/primitive/data",
+        "manifestSha256": "c1b7f8ee39c4b3da8085d22c011c59cbd580d65fc47a6f7023e7c911470dc889"
+      },
+      {
+        "name": "@beep/db-admin",
+        "path": "packages/_internal/db-admin",
+        "absolutePath": "packages/_internal/db-admin",
+        "manifestSha256": "d130e39ab0aa045c70d3349b19f2660b47324897c11de48a0501031b15286028"
+      },
+      {
+        "name": "@beep/discord",
+        "path": "packages/drivers/discord",
+        "absolutePath": "packages/drivers/discord",
+        "manifestSha256": "52dacd08b12c7fb597322df4a86cf35d6019866d809efcde3a9a673bf673bd35"
+      },
+      {
+        "name": "@beep/doc-text",
+        "path": "packages/drivers/doc-text",
+        "absolutePath": "packages/drivers/doc-text",
+        "manifestSha256": "4e2240944c7c911683d70d9e14ef074cb1ed78101fa7563f69adebc632fa3f5a"
+      },
+      {
+        "name": "@beep/dock",
+        "path": "packages/foundation/ui-system/dock",
+        "absolutePath": "packages/foundation/ui-system/dock",
+        "manifestSha256": "b6a3762ada30bd58e4a77a24e77e8f5e4bfb5eb380c5b53c799a8746a6ea0ef5"
+      },
+      {
+        "name": "@beep/dock-react",
+        "path": "packages/foundation/ui-system/dock-react",
+        "absolutePath": "packages/foundation/ui-system/dock-react",
+        "manifestSha256": "23f50b79167266dc4cce1bc6de215c97c6b8384673a36cbfd614e2b1a7a37faa"
+      },
+      {
+        "name": "@beep/docket-intake",
+        "path": "apps/docket-intake",
+        "absolutePath": "apps/docket-intake",
+        "manifestSha256": "dddead5e240b1f2bf5ef62ca2b38efd9daeb6c21701adef2c35ed6be9a26c596"
+      },
+      {
+        "name": "@beep/documents-domain",
+        "path": "packages/documents/domain",
+        "absolutePath": "packages/documents/domain",
+        "manifestSha256": "769fbe2fd9e0276b4d88982b54f5f0ee98362f8893f469e309d79a067ff2fa16"
+      },
+      {
+        "name": "@beep/documents-server",
+        "path": "packages/documents/server",
+        "absolutePath": "packages/documents/server",
+        "manifestSha256": "01022e4ffb20e47f17bd3bd1a91c0fe9b8866671ef7d2858bad6a1ac0fedd523"
+      },
+      {
+        "name": "@beep/documents-tables",
+        "path": "packages/documents/tables",
+        "absolutePath": "packages/documents/tables",
+        "manifestSha256": "a255ab5f708dd57e7d264352f0dd4b11ef6c09e611bdf649ac2759f4f9e21ee3"
+      },
+      {
+        "name": "@beep/documents-use-cases",
+        "path": "packages/documents/use-cases",
+        "absolutePath": "packages/documents/use-cases",
+        "manifestSha256": "f55a7efaa4333069bd763640f0027851b4170b90139a2a05854fb040899b0df8"
+      },
+      {
+        "name": "@beep/drizzle",
+        "path": "packages/drivers/drizzle",
+        "absolutePath": "packages/drivers/drizzle",
+        "manifestSha256": "076fcb5cc2791b58da32657af1e9f69cd6c5ded2b4e649afb18140827e6353b4"
+      },
+      {
+        "name": "@beep/duckdb",
+        "path": "packages/drivers/duckdb",
+        "absolutePath": "packages/drivers/duckdb",
+        "manifestSha256": "87aebd35ce0d49988c21e46aa96a071dd15fa5064d951d060d9a2a3709279338"
+      },
+      {
+        "name": "@beep/ecfr",
+        "path": "packages/drivers/ecfr",
+        "absolutePath": "packages/drivers/ecfr",
+        "manifestSha256": "6eb21ea9eee74818496ecb419fb03d7a625231ae8d8e8010f75c58119e9eada0"
+      },
+      {
+        "name": "@beep/editor",
+        "path": "packages/foundation/ui-system/editor",
+        "absolutePath": "packages/foundation/ui-system/editor",
+        "manifestSha256": "84923435bbe0c8da22c0e6f43b548348a8828698263e393cc2adbbc5981ddb0a"
+      },
+      {
+        "name": "@beep/effect-drizzle",
+        "path": "packages/ecosystem/effect-drizzle",
+        "absolutePath": "packages/ecosystem/effect-drizzle",
+        "manifestSha256": "e12a1e3c71b49d41dbebdc470e0c19850e38ac9e5fb32971a686eabc26dd221a"
+      },
+      {
+        "name": "@beep/epistemic-client",
+        "path": "packages/epistemic/client",
+        "absolutePath": "packages/epistemic/client",
+        "manifestSha256": "05cae4728501142edc671285d094dfb71d01fba1def926092cd4a93512dd9ea4"
+      },
+      {
+        "name": "@beep/epistemic-config",
+        "path": "packages/epistemic/config",
+        "absolutePath": "packages/epistemic/config",
+        "manifestSha256": "31ba580273437d7a0474329f42b45717f7b62c1f2b2f64d1e42720e5280238b6"
+      },
+      {
+        "name": "@beep/epistemic-domain",
+        "path": "packages/epistemic/domain",
+        "absolutePath": "packages/epistemic/domain",
+        "manifestSha256": "c97844e844783e8ddda40cd3cebb5910d78bd159d2828275099a426dfe3f0e4e"
+      },
+      {
+        "name": "@beep/epistemic-server",
+        "path": "packages/epistemic/server",
+        "absolutePath": "packages/epistemic/server",
+        "manifestSha256": "8893e807c165886f672494a2bad14da9dacfb7a85481e5db58207ea1b0f398dc"
+      },
+      {
+        "name": "@beep/epistemic-tables",
+        "path": "packages/epistemic/tables",
+        "absolutePath": "packages/epistemic/tables",
+        "manifestSha256": "4b950634081a1f300912b52ae9db671eb5a81a48a545fa2c9c72a3409119e329"
+      },
+      {
+        "name": "@beep/epistemic-ui",
+        "path": "packages/epistemic/ui",
+        "absolutePath": "packages/epistemic/ui",
+        "manifestSha256": "3a029a4d3b24b48792fa483334902356abff2326878dd4089f4065b067b8e73f"
+      },
+      {
+        "name": "@beep/epistemic-use-cases",
+        "path": "packages/epistemic/use-cases",
+        "absolutePath": "packages/epistemic/use-cases",
+        "manifestSha256": "95d83a933e8c16aa85ecd671df7094a104ae6e0d90cbebb86e4bb6312f7da43a"
+      },
+      {
+        "name": "@beep/epistemics",
+        "path": "packages/foundation/modeling/epistemics",
+        "absolutePath": "packages/foundation/modeling/epistemics",
+        "manifestSha256": "288cb33964ab48746d6ac6c88d4ff368766307b136e920739b47d06c966eb322"
+      },
+      {
+        "name": "@beep/exiftool",
+        "path": "packages/drivers/exiftool",
+        "absolutePath": "packages/drivers/exiftool",
+        "manifestSha256": "bef304e254f40bac8bb9ea100d030cf3aba280fb9c7de39c541a1b92ab9706ba"
+      },
+      {
+        "name": "@beep/fc-runs",
+        "path": "packages/tooling/test-kit/fc-runs",
+        "absolutePath": "packages/tooling/test-kit/fc-runs",
+        "manifestSha256": "b51340231ea81b528b3b30dee4caee787d0f7989e9bd9c6158f83a5c5d4648e8"
+      },
+      {
+        "name": "@beep/ffmpeg",
+        "path": "packages/drivers/ffmpeg",
+        "absolutePath": "packages/drivers/ffmpeg",
+        "manifestSha256": "c57d2edc8cf88d00e61fefc01efe9ed81b07f7aee807ea5b9eb1702511dcd13d"
+      },
+      {
+        "name": "@beep/file-processing",
+        "path": "packages/foundation/capability/file-processing",
+        "absolutePath": "packages/foundation/capability/file-processing",
+        "manifestSha256": "7900b3aa9f27d8485b3a60de493d4a48ec7a62245afd78d1baa50d9ce89cf593"
+      },
+      {
+        "name": "@beep/freshbooks",
+        "path": "packages/drivers/freshbooks",
+        "absolutePath": "packages/drivers/freshbooks",
+        "manifestSha256": "97beed48523dcacbe2aa0815cc8ec9a07a7038157521f2d9c5819fc441758d13"
+      },
+      {
+        "name": "@beep/git",
+        "path": "packages/drivers/git",
+        "absolutePath": "packages/drivers/git",
+        "manifestSha256": "c60377ebc3335b07d998881f9e34ff3c8e7582e82c8dd4198ffef9d2e3066d12"
+      },
+      {
+        "name": "@beep/github",
+        "path": "packages/drivers/github",
+        "absolutePath": "packages/drivers/github",
+        "manifestSha256": "51a7aa6b821cba1b84047d336d29f0b698658994e6f3541c63ee4679c1dbdf53"
+      },
+      {
+        "name": "@beep/github-actions",
+        "path": "packages/drivers/github-actions",
+        "absolutePath": "packages/drivers/github-actions",
+        "manifestSha256": "b96f53d56c94597644bb5ac8392e78e2642c69d5b77d7f9175e632a5caa74915"
+      },
+      {
+        "name": "@beep/github-commands",
+        "path": "packages/foundation/modeling/github-commands",
+        "absolutePath": "packages/foundation/modeling/github-commands",
+        "manifestSha256": "aa27669a799c50e56e61e57b5d9cd6ee0a5c100699c2980148ab248dbdc4e26b"
+      },
+      {
+        "name": "@beep/github-references",
+        "path": "packages/foundation/modeling/github-references",
+        "absolutePath": "packages/foundation/modeling/github-references",
+        "manifestSha256": "b1469b978fafe4fa2908a3d72b3408dba37f14e361090104d1ef0a8b5659ebf1"
+      },
+      {
+        "name": "@beep/github-reporting",
+        "path": "packages/foundation/modeling/github-reporting",
+        "absolutePath": "packages/foundation/modeling/github-reporting",
+        "manifestSha256": "d2f645b5e4d83500ae7c96178696606140c1b88c501df706e6d9a399c27d3f02"
+      },
+      {
+        "name": "@beep/glob",
+        "path": "packages/foundation/modeling/glob",
+        "absolutePath": "packages/foundation/modeling/glob",
+        "manifestSha256": "215e867e4d610044260509bcae0cd4c135884f6cd64696c7c5c471ace5b42813"
+      },
+      {
+        "name": "@beep/gov-legal-mcp",
+        "path": "packages/drivers/gov-legal-mcp",
+        "absolutePath": "packages/drivers/gov-legal-mcp",
+        "manifestSha256": "9c6cd16eab0ab3b204ae7c01eef4137cf8d06caec2d817b8f0ac3e0084957bb0"
+      },
+      {
+        "name": "@beep/govinfo",
+        "path": "packages/drivers/govinfo",
+        "absolutePath": "packages/drivers/govinfo",
+        "manifestSha256": "c9c77b79ff759aaef6118d88bbf199179b3ddd2e8d23f2fe494378e2b232f980"
+      },
+      {
+        "name": "@beep/graph-3d",
+        "path": "packages/drivers/graph-3d",
+        "absolutePath": "packages/drivers/graph-3d",
+        "manifestSha256": "42744d0a6e64f2412905992a54a8d834b1fa00cf51da4f5a1dfde323aaa21949"
+      },
+      {
+        "name": "@beep/html",
+        "path": "packages/foundation/modeling/html",
+        "absolutePath": "packages/foundation/modeling/html",
+        "manifestSha256": "7b6e65cca3f2605f67490ad5845cc9b5b7a332e839643ea2ff67d06e9ab48ed0"
+      },
+      {
+        "name": "@beep/hubspot",
+        "path": "packages/drivers/hubspot",
+        "absolutePath": "packages/drivers/hubspot",
+        "manifestSha256": "3c9cdf4b7ec8f28be32ca4f163e741d2804d47680598c741ad86a57e2a9e7b43"
+      },
+      {
+        "name": "@beep/identity",
+        "path": "packages/foundation/modeling/identity",
+        "absolutePath": "packages/foundation/modeling/identity",
+        "manifestSha256": "4036da51c6c8d782ddaf2fa821878a283a8fe94d7efcc2d2112913b353b6da02"
+      },
+      {
+        "name": "@beep/infra",
+        "path": "infra",
+        "absolutePath": "infra",
+        "manifestSha256": "6f6cf145d50525a9a08fe2e6214a33fb075ea9c08eb12af4d2dceed774d76230"
+      },
+      {
+        "name": "@beep/jsonc",
+        "path": "packages/foundation/modeling/jsonc",
+        "absolutePath": "packages/foundation/modeling/jsonc",
+        "manifestSha256": "fa87576e55b2f937c63f15f9579f4b377773e8f1ca79ff08da1f4b021a1092a3"
+      },
+      {
+        "name": "@beep/jsonl",
+        "path": "packages/foundation/modeling/jsonl",
+        "absolutePath": "packages/foundation/modeling/jsonl",
+        "manifestSha256": "ec3685accb4cac415e8a412a3d8cdfbbb6f4614b62734625991ebaf5497e381e"
+      },
+      {
+        "name": "@beep/langextract",
+        "path": "packages/foundation/capability/langextract",
+        "absolutePath": "packages/foundation/capability/langextract",
+        "manifestSha256": "6a9e9e629fd2a90d8371f618212da99b49331a34eb5c67c4d956c5879ed2646a"
+      },
+      {
+        "name": "@beep/law-practice-domain",
+        "path": "packages/law-practice/domain",
+        "absolutePath": "packages/law-practice/domain",
+        "manifestSha256": "e5fcf8f0ce7d83b00a76562b9f29225b2886380a353d5f34c482c8b738e1a6a5"
+      },
+      {
+        "name": "@beep/law-practice-server",
+        "path": "packages/law-practice/server",
+        "absolutePath": "packages/law-practice/server",
+        "manifestSha256": "ad66e3fce449baa44a6b58dd310286e477e1b7729f6171ea3469e5df22925518"
+      },
+      {
+        "name": "@beep/law-practice-tables",
+        "path": "packages/law-practice/tables",
+        "absolutePath": "packages/law-practice/tables",
+        "manifestSha256": "3fb95718212a72b698905db115f6434df2098383cb3a03ecf571299d333103ba"
+      },
+      {
+        "name": "@beep/law-practice-use-cases",
+        "path": "packages/law-practice/use-cases",
+        "absolutePath": "packages/law-practice/use-cases",
+        "manifestSha256": "8202b57802f9c906b41f4b0d34bcdc263f8229e7db8cf8c9e37f8f13bcf7247a"
+      },
+      {
+        "name": "@beep/lejeune-bolt-workbench",
+        "path": "apps/labs/lejeune-bolt-workbench",
+        "absolutePath": "apps/labs/lejeune-bolt-workbench",
+        "manifestSha256": "d8416fe81f9dbc571d564358a4b1ed284e0041b43724251888ab99389020ba47"
+      },
+      {
+        "name": "@beep/lexical-schema",
+        "path": "packages/foundation/modeling/lexical",
+        "absolutePath": "packages/foundation/modeling/lexical",
+        "manifestSha256": "704b878df30ba7133a91a49c9b7e66e340d248d2ce1dac88f3b4dc3a7b26b478"
+      },
+      {
+        "name": "@beep/libpff",
+        "path": "packages/drivers/libpff",
+        "absolutePath": "packages/drivers/libpff",
+        "manifestSha256": "638b9ea0a9d38a65ee0790036cae08b4e2f67686ae2918289e235da5c2bc2426"
+      },
+      {
+        "name": "@beep/lint-rules",
+        "path": "packages/tooling/policy-pack/lint-rules",
+        "absolutePath": "packages/tooling/policy-pack/lint-rules",
+        "manifestSha256": "a351e746b7b98ce45d0a5288a70788f7afb4164ae6df640cc141d733a21f72ab"
+      },
+      {
+        "name": "@beep/lockfiles",
+        "path": "packages/foundation/modeling/lockfiles",
+        "absolutePath": "packages/foundation/modeling/lockfiles",
+        "manifestSha256": "38df3f16172118b8b540d0bb92ae1a370066f8ac0816b82f2744368205f66426"
+      },
+      {
+        "name": "@beep/m365",
+        "path": "packages/drivers/m365",
+        "absolutePath": "packages/drivers/m365",
+        "manifestSha256": "1ee671ea04588db1a0d9b214eb4df7cb01d2257727300d0932ef5122ea9d8c06"
+      },
+      {
+        "name": "@beep/m365-mcp",
+        "path": "packages/drivers/m365-mcp",
+        "absolutePath": "packages/drivers/m365-mcp",
+        "manifestSha256": "66aeffafbd98654567f5dd2146447d21e176e6493143fea779ee54a6f424c011"
+      },
+      {
+        "name": "@beep/managed-section",
+        "path": "packages/foundation/modeling/managed-section",
+        "absolutePath": "packages/foundation/modeling/managed-section",
+        "manifestSha256": "9dbe5b0afc28fcc6e91afc538bb56731c60dad83d7a4356dfa3a39a0d460fe80"
+      },
+      {
+        "name": "@beep/markdown",
+        "path": "packages/foundation/modeling/markdown",
+        "absolutePath": "packages/foundation/modeling/markdown",
+        "manifestSha256": "c3de40cdde8e5a5b1544c767767d9e5a6bf8d90c9c145135ef54ceec1f347053"
+      },
+      {
+        "name": "@beep/mcp-kit",
+        "path": "packages/foundation/capability/mcp-kit",
+        "absolutePath": "packages/foundation/capability/mcp-kit",
+        "manifestSha256": "1cbc1f4c568da631800fac0db7eabb871b1cf9d90a8aa8757f150366a92163c7"
+      },
+      {
+        "name": "@beep/mcpb-kit",
+        "path": "packages/tooling/library/mcpb-kit",
+        "absolutePath": "packages/tooling/library/mcpb-kit",
+        "manifestSha256": "57abde26f709f8a068209737c7a451e9ba0635c0d3d2ab959661d4180070d70e"
+      },
+      {
+        "name": "@beep/md",
+        "path": "packages/foundation/modeling/md",
+        "absolutePath": "packages/foundation/modeling/md",
+        "manifestSha256": "240c201469b08dd73de1e9d1044c9c1ea14c28d0d0e6f968657227c71acde160"
+      },
+      {
+        "name": "@beep/memfs",
+        "path": "packages/tooling/test-kit/memfs",
+        "absolutePath": "packages/tooling/test-kit/memfs",
+        "manifestSha256": "2aa9613e0a1fc43e541c41f5636f6782f72a9df19117ef194799c71d50509653"
+      },
+      {
+        "name": "@beep/n3",
+        "path": "packages/drivers/n3",
+        "absolutePath": "packages/drivers/n3",
+        "manifestSha256": "12350e0806d7672373122e83fbb3b3f2882911cbeebcc62d9988537f24392c1e"
+      },
+      {
+        "name": "@beep/nlp",
+        "path": "packages/foundation/modeling/nlp",
+        "absolutePath": "packages/foundation/modeling/nlp",
+        "manifestSha256": "5b4a17ba3e954d46e8afd7e47f7fd8a954321c299d3e1c93abb1d037fc3d4d49"
+      },
+      {
+        "name": "@beep/nlp-mcp",
+        "path": "packages/drivers/nlp-mcp",
+        "absolutePath": "packages/drivers/nlp-mcp",
+        "manifestSha256": "adbd787c54ee08bc59cdff25682a2921b425d778bb0d17f09a01bbbbe2359ebd"
+      },
+      {
+        "name": "@beep/nlp-processing",
+        "path": "packages/foundation/capability/nlp-processing",
+        "absolutePath": "packages/foundation/capability/nlp-processing",
+        "manifestSha256": "8cc0dff3326d2d96c8e3f3225a4bfe06e706eb8253d4188066e8b65ee92fc3d0"
+      },
+      {
+        "name": "@beep/npm-spec",
+        "path": "packages/foundation/modeling/npm-spec",
+        "absolutePath": "packages/foundation/modeling/npm-spec",
+        "manifestSha256": "bbd025097bf48739d45c9935e9c180f68c8e321ee53d75901f551c7b3849d821"
+      },
+      {
+        "name": "@beep/obs",
+        "path": "packages/drivers/obs",
+        "absolutePath": "packages/drivers/obs",
+        "manifestSha256": "53126fa50b73a15d8a80ea7ffe5c2a3eda1b90ded4dea48662dc965b08baa8d3"
+      },
+      {
+        "name": "@beep/observability",
+        "path": "packages/foundation/capability/observability",
+        "absolutePath": "packages/foundation/capability/observability",
+        "manifestSha256": "8305726ff703baacbdfda94feb19f72feb661f2f9546101a6ec8fdb1202a111c"
+      },
+      {
+        "name": "@beep/occt",
+        "path": "packages/drivers/occt",
+        "absolutePath": "packages/drivers/occt",
+        "manifestSha256": "eb9f5fb738937183ab134cd0e213b9fc077e34c241a087d75ecdbd8c7a5f9ae4"
+      },
+      {
+        "name": "@beep/oip-web",
+        "path": "apps/oip-web",
+        "absolutePath": "apps/oip-web",
+        "manifestSha256": "80a9db95a79e5cf5fe56982dbcfcc8ba9e6a49cf26dba6476a1cd3b65b69ba85"
+      },
+      {
+        "name": "@beep/onepassword-cli",
+        "path": "packages/drivers/onepassword-cli",
+        "absolutePath": "packages/drivers/onepassword-cli",
+        "manifestSha256": "fdd84686ee31598a233cd71f663712ee68c30c7b0642f3475a0c15472693768d"
+      },
+      {
+        "name": "@beep/ontology",
+        "path": "packages/foundation/modeling/ontology",
+        "absolutePath": "packages/foundation/modeling/ontology",
+        "manifestSha256": "060050a3e1fffbb2fa7b7668c423e2eaa25c7555324dd5703ec1a2ece2023c77"
+      },
+      {
+        "name": "@beep/ontology-client",
+        "path": "packages/ontology/client",
+        "absolutePath": "packages/ontology/client",
+        "manifestSha256": "47e5d1bf9ce3b4698f5c2b5b079094f108fc2330637d755217b7683a42f0a4c3"
+      },
+      {
+        "name": "@beep/ontology-config",
+        "path": "packages/ontology/config",
+        "absolutePath": "packages/ontology/config",
+        "manifestSha256": "21bcbf224a463b0a721b0e44ea7e70754fa626d54b7d73083495334385de0e09"
+      },
+      {
+        "name": "@beep/ontology-domain",
+        "path": "packages/ontology/domain",
+        "absolutePath": "packages/ontology/domain",
+        "manifestSha256": "1e35a432585782b756dd646926209bd12c54b4c55a4b2337b661baa21c20be4d"
+      },
+      {
+        "name": "@beep/ontology-server",
+        "path": "packages/ontology/server",
+        "absolutePath": "packages/ontology/server",
+        "manifestSha256": "4ee6e5f709cb63783bd0a6bb5c8e5e43960a63717804bb8d873b604019a9440b"
+      },
+      {
+        "name": "@beep/ontology-ui",
+        "path": "packages/ontology/ui",
+        "absolutePath": "packages/ontology/ui",
+        "manifestSha256": "09fb25e8bef46177f6510c57c8826fd135dc63134b1bcd74af277fae5c59f509"
+      },
+      {
+        "name": "@beep/ontology-use-cases",
+        "path": "packages/ontology/use-cases",
+        "absolutePath": "packages/ontology/use-cases",
+        "manifestSha256": "936fa3735b0650d06ff9ca662f7908274e57ffe7274e803147c9312035f03639"
+      },
+      {
+        "name": "@beep/openai",
+        "path": "packages/drivers/openai",
+        "absolutePath": "packages/drivers/openai",
+        "manifestSha256": "a9e44f8cc5a3737927c38c3f5bd02b75e8f3d94ab6de507b67e62aa729bbb6a1"
+      },
+      {
+        "name": "@beep/openai-compat",
+        "path": "packages/drivers/openai-compat",
+        "absolutePath": "packages/drivers/openai-compat",
+        "manifestSha256": "d69192d5c8e5595c6d1356308401ddd37f41f1e92933acd42dbb182d1f165d45"
+      },
+      {
+        "name": "@beep/openclaw",
+        "path": "packages/drivers/openclaw",
+        "absolutePath": "packages/drivers/openclaw",
+        "manifestSha256": "46b9ae2a836dd86ed8a66ea5463f267f7d1695b17298ac84c1707a062703c40b"
+      },
+      {
+        "name": "@beep/oxigraph",
+        "path": "packages/drivers/oxigraph",
+        "absolutePath": "packages/drivers/oxigraph",
+        "manifestSha256": "fa6865897f4d9ac7d9d34a701b80d1e846151cb6e6ab88e0f7d58f8dc1a4c680"
+      },
+      {
+        "name": "@beep/pacer",
+        "path": "packages/drivers/pacer",
+        "absolutePath": "packages/drivers/pacer",
+        "manifestSha256": "5856248a5f6e87728936a8a27642af6b1c86f189cbf0d4b418a6643aafa4b2c6"
+      },
+      {
+        "name": "@beep/package-json",
+        "path": "packages/foundation/modeling/package-json",
+        "absolutePath": "packages/foundation/modeling/package-json",
+        "manifestSha256": "c80c0b7b61793721c5228fa86142c30ce7efec0935f5f2022fb180e48aabea0a"
+      },
+      {
+        "name": "@beep/palantiri",
+        "path": "packages/tooling/library/palantiri",
+        "absolutePath": "packages/tooling/library/palantiri",
+        "manifestSha256": "f41b6661a7e902a91e4f55cf03537aa3c3262116a2cb802ca50e4d2498caa9fd"
+      },
+      {
+        "name": "@beep/pandoc-ast",
+        "path": "packages/foundation/modeling/pandoc-ast",
+        "absolutePath": "packages/foundation/modeling/pandoc-ast",
+        "manifestSha256": "929ca2adcbe5a4b816624d5ae898cc1810ad997d52adc27d6946b41a88172fb1"
+      },
+      {
+        "name": "@beep/pdf-tools",
+        "path": "packages/drivers/pdf-tools",
+        "absolutePath": "packages/drivers/pdf-tools",
+        "manifestSha256": "d8dfdd72c6a73fca47f37679650315bfa817ec7925a50dbe127fb5becaabad79"
+      },
+      {
+        "name": "@beep/pglite",
+        "path": "packages/drivers/pglite",
+        "absolutePath": "packages/drivers/pglite",
+        "manifestSha256": "7595d35282e6fdc664a9c977c047a5a2ffa96a5d62061897bcf7503b29cf9373"
+      },
+      {
+        "name": "@beep/phoenix",
+        "path": "packages/drivers/phoenix",
+        "absolutePath": "packages/drivers/phoenix",
+        "manifestSha256": "cdc0a0652d6cc9debefb496012a08729e8d03f4f295b3d7d93a4c65d86a611a1"
+      },
+      {
+        "name": "@beep/poppler",
+        "path": "packages/drivers/poppler",
+        "absolutePath": "packages/drivers/poppler",
+        "manifestSha256": "78ed0c485891a81b8d2552f3f2c32a4a2b183712e9c10ed0e8e05c2700ea533a"
+      },
+      {
+        "name": "@beep/postgres",
+        "path": "packages/drivers/postgres",
+        "absolutePath": "packages/drivers/postgres",
+        "manifestSha256": "91f573117bb39db1ffcf98fdc779e23904fd7099ab43125c03623661557e00ef"
+      },
+      {
+        "name": "@beep/practice-claude-mod",
+        "path": "apps/practice-claude-mod",
+        "absolutePath": "apps/practice-claude-mod",
+        "manifestSha256": "c15a254aa2ff152a77215407516b82366aa3c5ae60733a94775acde7379d8a77"
+      },
+      {
+        "name": "@beep/practice-gateway",
+        "path": "apps/practice-gateway",
+        "absolutePath": "apps/practice-gateway",
+        "manifestSha256": "15d9ad5030652e3198f4a2af080b49ab1fac34181fb037ec95820f8648b6cb89"
+      },
+      {
+        "name": "@beep/practice-identify",
+        "path": "apps/practice-identify",
+        "absolutePath": "apps/practice-identify",
+        "manifestSha256": "b70655015a182c49e0d113e777aa6bed4af99c1d8206e6494c8f851d9efa02b8"
+      },
+      {
+        "name": "@beep/practice-kg-mcp",
+        "path": "apps/practice-kg-mcp",
+        "absolutePath": "apps/practice-kg-mcp",
+        "manifestSha256": "8851b73149d5eae69ef44cffad00153f06d9222c0036f09e5aef4e763fc51a61"
+      },
+      {
+        "name": "@beep/practice-m365-contacts",
+        "path": "apps/practice-m365-contacts",
+        "absolutePath": "apps/practice-m365-contacts",
+        "manifestSha256": "0a80eace0a08948070d24c25fb0ce0b7855656eaed5eb6190885f390c91c33fb"
+      },
+      {
+        "name": "@beep/practice-mail-tagging",
+        "path": "apps/practice-mail-tagging",
+        "absolutePath": "apps/practice-mail-tagging",
+        "manifestSha256": "3ff8f568d5af859712f8c87c474daea43b5338554c52bccbc1410716dc0fa491"
+      },
+      {
+        "name": "@beep/practice-review-hub",
+        "path": "apps/practice-review-hub",
+        "absolutePath": "apps/practice-review-hub",
+        "manifestSha256": "3e7c53edffd0438de81cfedaa0b1d8ecd507f65ba132850d168f2027a9cd1ebf"
+      },
+      {
+        "name": "@beep/practice-setup",
+        "path": "apps/practice-setup",
+        "absolutePath": "apps/practice-setup",
+        "manifestSha256": "142abb9bb0397ddb4c3fb62dc357335d1e3a54949d66953a7473496e50fdfc7c"
+      },
+      {
+        "name": "@beep/pretext",
+        "path": "packages/drivers/pretext",
+        "absolutePath": "packages/drivers/pretext",
+        "manifestSha256": "7aab4fecf4d570de88d642c90ba5281414f481ec1315a43e0181e9bb8b0374f5"
+      },
+      {
+        "name": "@beep/professional-desktop",
+        "path": "apps/professional-desktop",
+        "absolutePath": "apps/professional-desktop",
+        "manifestSha256": "8dc01170dc7efa44dc8c58a7fe8606eda08e4f97d7640a26300f16703f26bcb0"
+      },
+      {
+        "name": "@beep/provenance",
+        "path": "packages/foundation/modeling/provenance",
+        "absolutePath": "packages/foundation/modeling/provenance",
+        "manifestSha256": "ffebce4172f68fdb6660e4fd4cba369ce019c797622858ab31a15d55df21e46b"
+      },
+      {
+        "name": "@beep/public-site",
+        "path": "packages/foundation/modeling/public-site",
+        "absolutePath": "packages/foundation/modeling/public-site",
+        "manifestSha256": "920fad37193129fe337bbfb70ed69b3104804418471f1f6fca3a805cc1247172"
+      },
+      {
+        "name": "@beep/qa-capture",
+        "path": "packages/tooling/library/qa-capture",
+        "absolutePath": "packages/tooling/library/qa-capture",
+        "manifestSha256": "5c3178df7e18672e92bf8530fda2adfb3a800fb61297f71af4b2b83e7dcfbec3"
+      },
+      {
+        "name": "@beep/rdf",
+        "path": "packages/foundation/modeling/rdf",
+        "absolutePath": "packages/foundation/modeling/rdf",
+        "manifestSha256": "1610451508c17d83d582b9e77dbab6cef4af0b0946b6658e8dd9918daabcb36d"
+      },
+      {
+        "name": "@beep/rdf-canonize",
+        "path": "packages/drivers/rdf-canonize",
+        "absolutePath": "packages/drivers/rdf-canonize",
+        "manifestSha256": "22625472d1ae98af8c0a70d33e1986eac7dbeda4b10fd947ba206fe966029288"
+      },
+      {
+        "name": "@beep/repo-ai-metrics",
+        "path": "packages/tooling/library/ai-metrics",
+        "absolutePath": "packages/tooling/library/ai-metrics",
+        "manifestSha256": "f6eafa4a0e6f13251a57bc7250c36db81ab4609f658409032930889fbd057bae"
+      },
+      {
+        "name": "@beep/repo-cli",
+        "path": "packages/tooling/tool/cli",
+        "absolutePath": "packages/tooling/tool/cli",
+        "manifestSha256": "8992a8d6b165dd6aed8c352fb2835dc6944cb7a1cf4faf335c07d689bc990f43"
+      },
+      {
+        "name": "@beep/repo-configs",
+        "path": "packages/tooling/policy-pack/repo-configs",
+        "absolutePath": "packages/tooling/policy-pack/repo-configs",
+        "manifestSha256": "09e2691cc2bf0dae638764b0656be57f8d7b253a66ae6bc58bf856c60f834047"
+      },
+      {
+        "name": "@beep/repo-docgen",
+        "path": "packages/tooling/tool/docgen",
+        "absolutePath": "packages/tooling/tool/docgen",
+        "manifestSha256": "9919bcf030ae1832b1a78d52aecd1352d2eb44e60a3582c46f2182370ac4f6ef"
+      },
+      {
+        "name": "@beep/repo-tsconfig",
+        "path": "packages/tooling/library/repo-tsconfig",
+        "absolutePath": "packages/tooling/library/repo-tsconfig",
+        "manifestSha256": "b033b0d8ef341b9480d67d969e5075de7fb332846ef73ceeb98877f6d414d2d1"
+      },
+      {
+        "name": "@beep/repo-utils",
+        "path": "packages/tooling/library/repo-utils",
+        "absolutePath": "packages/tooling/library/repo-utils",
+        "manifestSha256": "029244c3a9f002a7787ed847572c75dae014b518bf68976ae78374b7c067ce5b"
+      },
+      {
+        "name": "@beep/repo-workspaces",
+        "path": "packages/tooling/library/repo-workspaces",
+        "absolutePath": "packages/tooling/library/repo-workspaces",
+        "manifestSha256": "304e37c64c5f75258b326e6221f1981cd2b1dd1a18e250d6bddace546a90bbf5"
+      },
+      {
+        "name": "@beep/root",
+        "path": ".",
+        "absolutePath": ".",
+        "manifestSha256": "bf218e498912238b8c72b3c239e50875d420c7a80788ec911d00b32b484d3412"
+      },
+      {
+        "name": "@beep/runpod",
+        "path": "packages/drivers/runpod",
+        "absolutePath": "packages/drivers/runpod",
+        "manifestSha256": "3a7c50a20548a5b5749823a13f48772dadd4d37de662f9352141404586b172c0"
+      },
+      {
+        "name": "@beep/runtime-env",
+        "path": "packages/foundation/capability/runtime-env",
+        "absolutePath": "packages/foundation/capability/runtime-env",
+        "manifestSha256": "e792f8bfe8d8c69e9d36b116f73078f4ea48f7d758bba4f132d7f80384ae0d82"
+      },
+      {
+        "name": "@beep/sanity",
+        "path": "packages/drivers/sanity",
+        "absolutePath": "packages/drivers/sanity",
+        "manifestSha256": "f9fa12d11b393f088a75618539569dac0b3d5766f139e726ab633b0b38f09531"
+      },
+      {
+        "name": "@beep/sbom",
+        "path": "packages/foundation/modeling/sbom",
+        "absolutePath": "packages/foundation/modeling/sbom",
+        "manifestSha256": "e162e68b386db9479d1d485e948694803c8201fbc819ee1ab3dbcf0bb890b190"
+      },
+      {
+        "name": "@beep/schema",
+        "path": "packages/foundation/modeling/schema",
+        "absolutePath": "packages/foundation/modeling/schema",
+        "manifestSha256": "a1734797da125b00c0ce6feacaa53ccfb9a2228fc8a192c4fa4059dfb4f87c70"
+      },
+      {
+        "name": "@beep/schema-org",
+        "path": "packages/foundation/modeling/schema-org",
+        "absolutePath": "packages/foundation/modeling/schema-org",
+        "manifestSha256": "efcc61a54533629401ac891b0ebc67075ed6973bff12029fe2a5e170071e8605"
+      },
+      {
+        "name": "@beep/scratchpad",
+        "path": "scratchpad",
+        "absolutePath": "scratchpad",
+        "manifestSha256": "15d60981ab26662fdc64bc3d8724731abde5f7f4db095250f65b093005c2dc50"
+      },
+      {
+        "name": "@beep/semantic-web",
+        "path": "packages/foundation/capability/semantic-web",
+        "absolutePath": "packages/foundation/capability/semantic-web",
+        "manifestSha256": "7753049a26a7238afde832abb58c0010e2f75376d02c2a241a47de4b7a500c55"
+      },
+      {
+        "name": "@beep/semantica",
+        "path": "apps/labs/semantica",
+        "absolutePath": "apps/labs/semantica",
+        "manifestSha256": "a5561b63343fa7ede4ef6993826e9a9a3b9876d9d6711bc9a01452a5f91e32fb"
+      },
+      {
+        "name": "@beep/semver",
+        "path": "packages/foundation/modeling/semver",
+        "absolutePath": "packages/foundation/modeling/semver",
+        "manifestSha256": "1221b62a5c3336017bb3dec67f559f21dfa96cda63855bb21bf660e66f3a72da"
+      },
+      {
+        "name": "@beep/shacl",
+        "path": "packages/drivers/shacl",
+        "absolutePath": "packages/drivers/shacl",
+        "manifestSha256": "d295bb6a7b6c0fe37f51f60487bbbac422aa7cbe523783a76bf4d635edceb6d8"
+      },
+      {
+        "name": "@beep/shared-domain",
+        "path": "packages/shared/domain",
+        "absolutePath": "packages/shared/domain",
+        "manifestSha256": "76eef9f87ff554cdac30208a3b20d31f5ff024fd26c8646c29f686b5c2f4e392"
+      },
+      {
+        "name": "@beep/shared-tables",
+        "path": "packages/shared/tables",
+        "absolutePath": "packages/shared/tables",
+        "manifestSha256": "ff49182165d070a3ac1af806c5d98f6890189e40d024529fcd44463582e0eb9b"
+      },
+      {
+        "name": "@beep/shared-use-cases",
+        "path": "packages/shared/use-cases",
+        "absolutePath": "packages/shared/use-cases",
+        "manifestSha256": "0879002028cc78dc1836d2e9a7af54d3d9e06754a0547331f59008e27a3d1ec4"
+      },
+      {
+        "name": "@beep/skill-contract",
+        "path": "packages/foundation/modeling/skill-contract",
+        "absolutePath": "packages/foundation/modeling/skill-contract",
+        "manifestSha256": "1784591629b19ddbcb17064cad91dcb7e80f1f9ac6e6b61eea98cfdb76459082"
+      },
+      {
+        "name": "@beep/spdx",
+        "path": "packages/foundation/modeling/spdx",
+        "absolutePath": "packages/foundation/modeling/spdx",
+        "manifestSha256": "247b340e47aac3e7818bf80731c63ba9c59c73a47ff0eb6212e58e0bd0a1424e"
+      },
+      {
+        "name": "@beep/storybook",
+        "path": "apps/storybook",
+        "absolutePath": "apps/storybook",
+        "manifestSha256": "89e7b47762f0e779b863ce01fd15a47b3d5387e697a85b5205dfb5da0ddbacd9"
+      },
+      {
+        "name": "@beep/t3-code",
+        "path": "packages/drivers/t3-code",
+        "absolutePath": "packages/drivers/t3-code",
+        "manifestSha256": "7898d47185fab7dc41bef577c564c6e9f2faa64985f7b7ef5cd4824f0bc0bdfd"
+      },
+      {
+        "name": "@beep/tailscale",
+        "path": "packages/drivers/tailscale",
+        "absolutePath": "packages/drivers/tailscale",
+        "manifestSha256": "3a5a62fe5aaf4459db316409cf4cf40bc1172b86581a3677e5c5c874ad7dbe26"
+      },
+      {
+        "name": "@beep/technical-drawing",
+        "path": "packages/foundation/capability/technical-drawing",
+        "absolutePath": "packages/foundation/capability/technical-drawing",
+        "manifestSha256": "e4e010cd094505ac62888100e34b4acf3358037bd5be53451c22bbf2d7b7b2ab"
+      },
+      {
+        "name": "@beep/tesseract",
+        "path": "packages/drivers/tesseract",
+        "absolutePath": "packages/drivers/tesseract",
+        "manifestSha256": "2c4d8a9cf3d51f2ed1520c60542380d19eb635ba1ea9128dfa071360b65452fa"
+      },
+      {
+        "name": "@beep/test-runner",
+        "path": "packages/tooling/test-kit/test-runner",
+        "absolutePath": "packages/tooling/test-kit/test-runner",
+        "manifestSha256": "fac70c083a56c3a6ad2a26ceaea07a6954c33823de7bebec46be978faee6e672"
+      },
+      {
+        "name": "@beep/test-utils",
+        "path": "packages/tooling/test-kit/test-utils",
+        "absolutePath": "packages/tooling/test-kit/test-utils",
+        "manifestSha256": "54b1cec68cda42d1c04b005582b6da9b1847a49d7fa9b8fe3cbabc558d999978"
+      },
+      {
+        "name": "@beep/tika",
+        "path": "packages/drivers/tika",
+        "absolutePath": "packages/drivers/tika",
+        "manifestSha256": "aab3cf179111d32f20d730c3400c0022df95d04ee7a58a294d82bade202403e3"
+      },
+      {
+        "name": "@beep/todox",
+        "path": "apps/todox",
+        "absolutePath": "apps/todox",
+        "manifestSha256": "5690008eb6151e8d923761696c53b3f7bfcb445b9db813391914103c6d36edbf"
+      },
+      {
+        "name": "@beep/toml",
+        "path": "packages/foundation/modeling/toml",
+        "absolutePath": "packages/foundation/modeling/toml",
+        "manifestSha256": "fb03b2ef976adcbd1d0f7f141bea912a33b12d9fc6a0b71648f669a254b3f16a"
+      },
+      {
+        "name": "@beep/trustgraph-workbench",
+        "path": "apps/labs/trustgraph-workbench",
+        "absolutePath": "apps/labs/trustgraph-workbench",
+        "manifestSha256": "1b3a974cbcfed10f09bc466375ec15066c3630a77f473b637e336f63c89f2423"
+      },
+      {
+        "name": "@beep/tsconfig",
+        "path": "packages/foundation/modeling/tsconfig",
+        "absolutePath": "packages/foundation/modeling/tsconfig",
+        "manifestSha256": "ddf946d3010aebfc8096315875037d95dcb3e0e785d5b8e26afea9fff474dfda"
+      },
+      {
+        "name": "@beep/tsgo-shim",
+        "path": "tools/tsgo-shim",
+        "absolutePath": "tools/tsgo-shim",
+        "manifestSha256": "656f739ce93ffd3e04f6bef2a16690640da656ae5eb3d6275eb7dc40fe16ec40"
+      },
+      {
+        "name": "@beep/types",
+        "path": "packages/foundation/primitive/types",
+        "absolutePath": "packages/foundation/primitive/types",
+        "manifestSha256": "e0484829040b77871a2ea459d7600dec0dc26643df31da66a46fd13648506255"
+      },
+      {
+        "name": "@beep/ui",
+        "path": "packages/foundation/ui-system/ui",
+        "absolutePath": "packages/foundation/ui-system/ui",
+        "manifestSha256": "559dc689789ad4cf8f99350d5bcae3ebcff3f22b411b5c0eb275c08dbf8a06c5"
+      },
+      {
+        "name": "@beep/uspto",
+        "path": "packages/drivers/uspto",
+        "absolutePath": "packages/drivers/uspto",
+        "manifestSha256": "d8ab005f5816a7c2571774ffa95e73dd598968e6d0b46b923c5a705902fd2dca"
+      },
+      {
+        "name": "@beep/uspto-mcp",
+        "path": "packages/drivers/uspto-mcp",
+        "absolutePath": "packages/drivers/uspto-mcp",
+        "manifestSha256": "4ac69d32062a4a31a4e948fbdc121f26be7535c8ed965dcb225240dd8a03263d"
+      },
+      {
+        "name": "@beep/utils",
+        "path": "packages/foundation/modeling/utils",
+        "absolutePath": "packages/foundation/modeling/utils",
+        "manifestSha256": "35547911bbee85a778cfc18a4255f95448898bf3caa30133440f9169ecda524f"
+      },
+      {
+        "name": "@beep/walker",
+        "path": "packages/foundation/capability/walker",
+        "absolutePath": "packages/foundation/capability/walker",
+        "manifestSha256": "184fc70392b4e2ff96d99d177d8c1c315016cdcacd3c9166daa23f948ea05047"
+      },
+      {
+        "name": "@beep/windows-secrets",
+        "path": "packages/drivers/windows-secrets",
+        "absolutePath": "packages/drivers/windows-secrets",
+        "manifestSha256": "1f1572924422ba94931ef19e7670c5d5668866247ae9b000aec9b9b960122860"
+      },
+      {
+        "name": "@beep/wink",
+        "path": "packages/drivers/wink",
+        "absolutePath": "packages/drivers/wink",
+        "manifestSha256": "ce37235f486767e1ba3af8f698abff946e532bc5fe43554fac0c602696328879"
+      },
+      {
+        "name": "@beep/workspace-domain",
+        "path": "packages/workspace/domain",
+        "absolutePath": "packages/workspace/domain",
+        "manifestSha256": "3f7a1f9aebbd2fcf06203ff922a818557c2904805f845b97e9d77d994c65c6a2"
+      },
+      {
+        "name": "@beep/workspace-server",
+        "path": "packages/workspace/server",
+        "absolutePath": "packages/workspace/server",
+        "manifestSha256": "e52842d3181d6c07cc0b93c20e8b8745fd3280ceb616995540864d7bb9e08b0d"
+      },
+      {
+        "name": "@beep/workspace-tables",
+        "path": "packages/workspace/tables",
+        "absolutePath": "packages/workspace/tables",
+        "manifestSha256": "bae7277cf6949cd5bba9af25cfbf760dcdfacebb9be3d4eee940299978333642"
+      },
+      {
+        "name": "@beep/workspace-use-cases",
+        "path": "packages/workspace/use-cases",
+        "absolutePath": "packages/workspace/use-cases",
+        "manifestSha256": "dcc90c1f5b8c5dfab2ea064834905b1c1a4b09cff9794ed006700c83c44124c2"
+      },
+      {
+        "name": "@beep/xdg",
+        "path": "packages/foundation/capability/xdg",
+        "absolutePath": "packages/foundation/capability/xdg",
+        "manifestSha256": "b85fdacc32ebe30cb4d763b4580441eaf98d05cdce28db17c36928795d86474f"
+      },
+      {
+        "name": "@beep/xstate",
+        "path": "packages/drivers/xstate",
+        "absolutePath": "packages/drivers/xstate",
+        "manifestSha256": "e984781dfe76fae83ac2827cd8a8f646494251174fc2ae1da87bf027981151ea"
+      },
+      {
+        "name": "@beep/yaml",
+        "path": "packages/foundation/modeling/yaml",
+        "absolutePath": "packages/foundation/modeling/yaml",
+        "manifestSha256": "27577cc7e771c8d15a5e7479067b163af5cd1406fcd2e892a85ad251a8aa2a7e"
+      }
+    ],
+    "coverageScope": {
+      "owners": [
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/acp",
+          "packagePath": "packages/drivers/acp",
+          "workspaceDependencies": [
+            "@beep/codegen-kit",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/agents-client",
+          "packagePath": "packages/agents/client",
+          "workspaceDependencies": [
+            "@beep/agents-domain",
+            "@beep/agents-use-cases",
+            "@beep/identity",
+            "@beep/md",
+            "@beep/observability",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/workspace-use-cases"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/agents-domain",
+          "packagePath": "packages/agents/domain",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/agents-server",
+          "packagePath": "packages/agents/server",
+          "workspaceDependencies": [
+            "@beep/agents-domain",
+            "@beep/agents-tables",
+            "@beep/agents-use-cases",
+            "@beep/ai-provider-cli",
+            "@beep/anthropic",
+            "@beep/identity",
+            "@beep/observability",
+            "@beep/postgres",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/agents-tables",
+          "packagePath": "packages/agents/tables",
+          "workspaceDependencies": [
+            "@beep/agents-domain",
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/agents-use-cases",
+          "packagePath": "packages/agents/use-cases",
+          "workspaceDependencies": [
+            "@beep/agents-domain",
+            "@beep/identity",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/shared-use-cases",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/workspace-domain",
+            "@beep/workspace-use-cases"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ai-provider-cli",
+          "packagePath": "packages/drivers/ai-provider-cli",
+          "workspaceDependencies": [
+            "@beep/acp",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ai-sync",
+          "packagePath": "packages/tooling/library/ai-sync",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/anthropic",
+          "packagePath": "packages/drivers/anthropic",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/api-docs",
+          "packagePath": "apps/labs/api-docs",
+          "workspaceDependencies": [
+            "@beep/codegen-kit",
+            "@beep/ecfr",
+            "@beep/govinfo",
+            "@beep/identity",
+            "@beep/pacer",
+            "@beep/qa-capture",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/api-transport",
+          "packagePath": "packages/foundation/capability/api-transport",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-client",
+          "packagePath": "packages/architecture-lab/client",
+          "workspaceDependencies": [
+            "@beep/architecture-lab-domain",
+            "@beep/architecture-lab-use-cases",
+            "@beep/identity",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-config",
+          "packagePath": "packages/architecture-lab/config",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-domain",
+          "packagePath": "packages/architecture-lab/domain",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-proof",
+          "packagePath": "apps/architecture-lab-proof",
+          "workspaceDependencies": [
+            "@beep/architecture-lab-config",
+            "@beep/architecture-lab-domain",
+            "@beep/architecture-lab-server",
+            "@beep/architecture-lab-ui",
+            "@beep/architecture-lab-use-cases",
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-server",
+          "packagePath": "packages/architecture-lab/server",
+          "workspaceDependencies": [
+            "@beep/architecture-lab-config",
+            "@beep/architecture-lab-domain",
+            "@beep/architecture-lab-tables",
+            "@beep/architecture-lab-use-cases",
+            "@beep/identity",
+            "@beep/postgres",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-tables",
+          "packagePath": "packages/architecture-lab/tables",
+          "workspaceDependencies": [
+            "@beep/architecture-lab-domain",
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-ui",
+          "packagePath": "packages/architecture-lab/ui",
+          "workspaceDependencies": [
+            "@beep/architecture-lab-config",
+            "@beep/architecture-lab-domain",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/architecture-lab-use-cases",
+          "packagePath": "packages/architecture-lab/use-cases",
+          "workspaceDependencies": [
+            "@beep/architecture-lab-domain",
+            "@beep/identity",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/box",
+          "packagePath": "packages/drivers/box",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/box-provisioning",
+          "packagePath": "packages/drivers/box-provisioning",
+          "workspaceDependencies": [
+            "@beep/box",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/brand",
+          "packagePath": "packages/foundation/ui-system/brand",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/chalk",
+          "packagePath": "packages/foundation/capability/chalk",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/runtime-env",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ciops",
+          "packagePath": "apps/labs/ciops",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/cli-kit",
+          "packagePath": "packages/foundation/capability/cli-kit",
+          "workspaceDependencies": [
+            "@beep/config-file",
+            "@beep/fc-runs",
+            "@beep/github-commands",
+            "@beep/identity",
+            "@beep/markdown",
+            "@beep/memfs",
+            "@beep/runtime-env",
+            "@beep/schema",
+            "@beep/utils",
+            "@beep/walker"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/codegen-kit",
+          "packagePath": "packages/tooling/library/codegen-kit",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/colors",
+          "packagePath": "packages/foundation/capability/colors",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/runtime-env",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/commands",
+          "packagePath": "packages/drivers/commands",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/config-file",
+          "packagePath": "packages/foundation/capability/config-file",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/jsonc",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/toml",
+            "@beep/utils",
+            "@beep/walker",
+            "@beep/yaml"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/cosmos",
+          "packagePath": "packages/drivers/cosmos",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/data",
+          "packagePath": "packages/foundation/primitive/data",
+          "workspaceDependencies": ["@beep/test-runner", "@beep/utils"]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/db-admin",
+          "packagePath": "packages/_internal/db-admin",
+          "workspaceDependencies": [
+            "@beep/architecture-lab-tables",
+            "@beep/documents-domain",
+            "@beep/documents-tables",
+            "@beep/epistemic-domain",
+            "@beep/epistemic-tables",
+            "@beep/identity",
+            "@beep/law-practice-domain",
+            "@beep/law-practice-tables",
+            "@beep/postgres",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/workspace-tables"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/discord",
+          "packagePath": "packages/drivers/discord",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/doc-text",
+          "packagePath": "packages/drivers/doc-text",
+          "workspaceDependencies": [
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/dock",
+          "packagePath": "packages/foundation/ui-system/dock",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/pretext",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/dock-react",
+          "packagePath": "packages/foundation/ui-system/dock-react",
+          "workspaceDependencies": [
+            "@beep/dock",
+            "@beep/identity",
+            "@beep/pretext",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/docket-intake",
+          "packagePath": "apps/docket-intake",
+          "workspaceDependencies": [
+            "@beep/anthropic",
+            "@beep/identity",
+            "@beep/law-practice-domain",
+            "@beep/law-practice-server",
+            "@beep/law-practice-use-cases",
+            "@beep/m365",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/xdg"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/documents-domain",
+          "packagePath": "packages/documents/domain",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/documents-server",
+          "packagePath": "packages/documents/server",
+          "workspaceDependencies": [
+            "@beep/box",
+            "@beep/documents-domain",
+            "@beep/documents-tables",
+            "@beep/documents-use-cases",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/postgres",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/documents-tables",
+          "packagePath": "packages/documents/tables",
+          "workspaceDependencies": [
+            "@beep/documents-domain",
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/documents-use-cases",
+          "packagePath": "packages/documents/use-cases",
+          "workspaceDependencies": [
+            "@beep/documents-domain",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/drizzle",
+          "packagePath": "packages/drivers/drizzle",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/duckdb",
+          "packagePath": "packages/drivers/duckdb",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ecfr",
+          "packagePath": "packages/drivers/ecfr",
+          "workspaceDependencies": [
+            "@beep/api-transport",
+            "@beep/codegen-kit",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/editor",
+          "packagePath": "packages/foundation/ui-system/editor",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/lexical-schema",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/ui",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/effect-drizzle",
+          "packagePath": "packages/ecosystem/effect-drizzle",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/pglite",
+            "@beep/repo-utils",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemic-client",
+          "packagePath": "packages/epistemic/client",
+          "workspaceDependencies": [
+            "@beep/epistemic-domain",
+            "@beep/epistemic-use-cases",
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemic-config",
+          "packagePath": "packages/epistemic/config",
+          "workspaceDependencies": [
+            "@beep/epistemic-domain",
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemic-domain",
+          "packagePath": "packages/epistemic/domain",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/epistemics",
+            "@beep/identity",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemic-server",
+          "packagePath": "packages/epistemic/server",
+          "workspaceDependencies": [
+            "@beep/api-transport",
+            "@beep/epistemic-config",
+            "@beep/epistemic-domain",
+            "@beep/epistemic-tables",
+            "@beep/epistemic-use-cases",
+            "@beep/epistemics",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/mcp-kit",
+            "@beep/observability",
+            "@beep/pglite",
+            "@beep/postgres",
+            "@beep/provenance",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemic-tables",
+          "packagePath": "packages/epistemic/tables",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/epistemic-domain",
+            "@beep/epistemics",
+            "@beep/identity",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemic-ui",
+          "packagePath": "packages/epistemic/ui",
+          "workspaceDependencies": [
+            "@beep/epistemic-client",
+            "@beep/epistemic-domain",
+            "@beep/epistemic-use-cases",
+            "@beep/epistemics",
+            "@beep/identity",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/ui"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemic-use-cases",
+          "packagePath": "packages/epistemic/use-cases",
+          "workspaceDependencies": [
+            "@beep/epistemic-domain",
+            "@beep/epistemics",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/provenance",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/epistemics",
+          "packagePath": "packages/foundation/modeling/epistemics",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/exiftool",
+          "packagePath": "packages/drivers/exiftool",
+          "workspaceDependencies": [
+            "@beep/commands",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/fc-runs",
+          "packagePath": "packages/tooling/test-kit/fc-runs",
+          "workspaceDependencies": []
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ffmpeg",
+          "packagePath": "packages/drivers/ffmpeg",
+          "workspaceDependencies": [
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/file-processing",
+          "packagePath": "packages/foundation/capability/file-processing",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/freshbooks",
+          "packagePath": "packages/drivers/freshbooks",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/git",
+          "packagePath": "packages/drivers/git",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/github",
+          "packagePath": "packages/drivers/github",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/semver",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/github-actions",
+          "packagePath": "packages/drivers/github-actions",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/github",
+            "@beep/github-commands",
+            "@beep/glob",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/npm-spec",
+            "@beep/sbom",
+            "@beep/schema",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/walker"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/github-commands",
+          "packagePath": "packages/foundation/modeling/github-commands",
+          "workspaceDependencies": ["@beep/fc-runs", "@beep/identity"]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/github-references",
+          "packagePath": "packages/foundation/modeling/github-references",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/github-reporting",
+          "packagePath": "packages/foundation/modeling/github-reporting",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/github",
+            "@beep/identity",
+            "@beep/managed-section",
+            "@beep/markdown",
+            "@beep/schema",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/glob",
+          "packagePath": "packages/foundation/modeling/glob",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/gov-legal-mcp",
+          "packagePath": "packages/drivers/gov-legal-mcp",
+          "workspaceDependencies": [
+            "@beep/ecfr",
+            "@beep/govinfo",
+            "@beep/identity",
+            "@beep/mcp-kit",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/govinfo",
+          "packagePath": "packages/drivers/govinfo",
+          "workspaceDependencies": [
+            "@beep/api-transport",
+            "@beep/codegen-kit",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/graph-3d",
+          "packagePath": "packages/drivers/graph-3d",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/html",
+          "packagePath": "packages/foundation/modeling/html",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/hubspot",
+          "packagePath": "packages/drivers/hubspot",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/identity",
+          "packagePath": "packages/foundation/modeling/identity",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/test-runner",
+            "@beep/types"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/infra",
+          "packagePath": "infra",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/openclaw",
+            "@beep/repo-ai-metrics",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/jsonc",
+          "packagePath": "packages/foundation/modeling/jsonc",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/jsonl",
+          "packagePath": "packages/foundation/modeling/jsonl",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/langextract",
+          "packagePath": "packages/foundation/capability/langextract",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/nlp",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/law-practice-domain",
+          "packagePath": "packages/law-practice/domain",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/md",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/law-practice-server",
+          "packagePath": "packages/law-practice/server",
+          "workspaceDependencies": [
+            "@beep/box",
+            "@beep/duckdb",
+            "@beep/epistemic-domain",
+            "@beep/epistemic-server",
+            "@beep/epistemic-tables",
+            "@beep/epistemic-use-cases",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/langextract",
+            "@beep/law-practice-domain",
+            "@beep/law-practice-tables",
+            "@beep/law-practice-use-cases",
+            "@beep/libpff",
+            "@beep/m365",
+            "@beep/mcp-kit",
+            "@beep/md",
+            "@beep/memfs",
+            "@beep/nlp",
+            "@beep/pglite",
+            "@beep/postgres",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/shared-use-cases",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/tika",
+            "@beep/uspto",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/law-practice-tables",
+          "packagePath": "packages/law-practice/tables",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/law-practice-domain",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/law-practice-use-cases",
+          "packagePath": "packages/law-practice/use-cases",
+          "workspaceDependencies": [
+            "@beep/epistemic-domain",
+            "@beep/epistemic-use-cases",
+            "@beep/epistemics",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/langextract",
+            "@beep/law-practice-domain",
+            "@beep/mcp-kit",
+            "@beep/nlp",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/lejeune-bolt-workbench",
+          "packagePath": "apps/labs/lejeune-bolt-workbench",
+          "workspaceDependencies": [
+            "@beep/anthropic",
+            "@beep/doc-text",
+            "@beep/duckdb",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/langextract",
+            "@beep/nlp",
+            "@beep/oxigraph",
+            "@beep/pglite",
+            "@beep/provenance",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/ui"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/lexical-schema",
+          "packagePath": "packages/foundation/modeling/lexical",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/libpff",
+          "packagePath": "packages/drivers/libpff",
+          "workspaceDependencies": [
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/lint-rules",
+          "packagePath": "packages/tooling/policy-pack/lint-rules",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/lockfiles",
+          "packagePath": "packages/foundation/modeling/lockfiles",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/jsonc",
+            "@beep/npm-spec",
+            "@beep/schema",
+            "@beep/semver",
+            "@beep/utils",
+            "@beep/yaml"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/m365",
+          "packagePath": "packages/drivers/m365",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/m365-mcp",
+          "packagePath": "packages/drivers/m365-mcp",
+          "workspaceDependencies": [
+            "@beep/data",
+            "@beep/identity",
+            "@beep/m365",
+            "@beep/mcp-kit",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/xdg"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/managed-section",
+          "packagePath": "packages/foundation/modeling/managed-section",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/markdown",
+          "packagePath": "packages/foundation/modeling/markdown",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/jsonc",
+            "@beep/schema",
+            "@beep/test-utils",
+            "@beep/toml",
+            "@beep/utils",
+            "@beep/yaml"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/mcp-kit",
+          "packagePath": "packages/foundation/capability/mcp-kit",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/mcpb-kit",
+          "packagePath": "packages/tooling/library/mcpb-kit",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/md",
+          "packagePath": "packages/foundation/modeling/md",
+          "workspaceDependencies": [
+            "@beep/html",
+            "@beep/identity",
+            "@beep/markdown",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/memfs",
+          "packagePath": "packages/tooling/test-kit/memfs",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/n3",
+          "packagePath": "packages/drivers/n3",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/nlp",
+          "packagePath": "packages/foundation/modeling/nlp",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/nlp-mcp",
+          "packagePath": "packages/drivers/nlp-mcp",
+          "workspaceDependencies": [
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/mcp-kit",
+            "@beep/nlp-processing",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/wink"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/nlp-processing",
+          "packagePath": "packages/foundation/capability/nlp-processing",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/nlp",
+            "@beep/observability",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/npm-spec",
+          "packagePath": "packages/foundation/modeling/npm-spec",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/semver",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/obs",
+          "packagePath": "packages/drivers/obs",
+          "workspaceDependencies": [
+            "@beep/commands",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/observability",
+          "packagePath": "packages/foundation/capability/observability",
+          "workspaceDependencies": [
+            "@beep/colors",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/package-json",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/occt",
+          "packagePath": "packages/drivers/occt",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/technical-drawing",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/oip-web",
+          "packagePath": "apps/oip-web",
+          "workspaceDependencies": [
+            "@beep/hubspot",
+            "@beep/identity",
+            "@beep/repo-configs",
+            "@beep/repo-utils",
+            "@beep/sanity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/ui",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/onepassword-cli",
+          "packagePath": "packages/drivers/onepassword-cli",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ontology",
+          "packagePath": "packages/foundation/modeling/ontology",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ontology-client",
+          "packagePath": "packages/ontology/client",
+          "workspaceDependencies": [
+            "@beep/agents-client",
+            "@beep/cosmos",
+            "@beep/identity",
+            "@beep/observability",
+            "@beep/ontology-domain",
+            "@beep/ontology-use-cases",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ontology-config",
+          "packagePath": "packages/ontology/config",
+          "workspaceDependencies": ["@beep/identity", "@beep/test-runner"]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ontology-domain",
+          "packagePath": "packages/ontology/domain",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ontology-server",
+          "packagePath": "packages/ontology/server",
+          "workspaceDependencies": [
+            "@beep/api-transport",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/mcp-kit",
+            "@beep/n3",
+            "@beep/ontology-config",
+            "@beep/ontology-domain",
+            "@beep/ontology-use-cases",
+            "@beep/oxigraph",
+            "@beep/rdf",
+            "@beep/rdf-canonize",
+            "@beep/semantic-web",
+            "@beep/shacl",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ontology-ui",
+          "packagePath": "packages/ontology/ui",
+          "workspaceDependencies": [
+            "@beep/ontology-client",
+            "@beep/ontology-domain",
+            "@beep/ontology-use-cases",
+            "@beep/rdf",
+            "@beep/test-runner",
+            "@beep/ui",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ontology-use-cases",
+          "packagePath": "packages/ontology/use-cases",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/mcp-kit",
+            "@beep/ontology-domain",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/shacl",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/openai",
+          "packagePath": "packages/drivers/openai",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/openai-compat",
+          "packagePath": "packages/drivers/openai-compat",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/openclaw",
+          "packagePath": "packages/drivers/openclaw",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/oxigraph",
+          "packagePath": "packages/drivers/oxigraph",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/pacer",
+          "packagePath": "packages/drivers/pacer",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/package-json",
+          "packagePath": "packages/foundation/modeling/package-json",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/jsonc",
+            "@beep/memfs",
+            "@beep/npm-spec",
+            "@beep/semver",
+            "@beep/spdx",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/palantiri",
+          "packagePath": "packages/tooling/library/palantiri",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/observability",
+            "@beep/repo-ai-metrics",
+            "@beep/schema"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/pandoc-ast",
+          "packagePath": "packages/foundation/modeling/pandoc-ast",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/pdf-tools",
+          "packagePath": "packages/drivers/pdf-tools",
+          "workspaceDependencies": [
+            "@beep/commands",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/pglite",
+          "packagePath": "packages/drivers/pglite",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/phoenix",
+          "packagePath": "packages/drivers/phoenix",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/poppler",
+          "packagePath": "packages/drivers/poppler",
+          "workspaceDependencies": [
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/postgres",
+          "packagePath": "packages/drivers/postgres",
+          "workspaceDependencies": [
+            "@beep/colors",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-claude-mod",
+          "packagePath": "apps/practice-claude-mod",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/law-practice-domain",
+            "@beep/schema",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-gateway",
+          "packagePath": "apps/practice-gateway",
+          "workspaceDependencies": [
+            "@beep/doc-text",
+            "@beep/duckdb",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/law-practice-domain",
+            "@beep/law-practice-server",
+            "@beep/law-practice-use-cases",
+            "@beep/m365",
+            "@beep/m365-mcp",
+            "@beep/mcp-kit",
+            "@beep/mcpb-kit",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/windows-secrets"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-identify",
+          "packagePath": "apps/practice-identify",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/law-practice-server",
+            "@beep/law-practice-use-cases",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/uspto"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-kg-mcp",
+          "packagePath": "apps/practice-kg-mcp",
+          "workspaceDependencies": [
+            "@beep/anthropic",
+            "@beep/duckdb",
+            "@beep/identity",
+            "@beep/law-practice-server",
+            "@beep/mcp-kit",
+            "@beep/mcpb-kit",
+            "@beep/memfs",
+            "@beep/observability",
+            "@beep/pglite",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-m365-contacts",
+          "packagePath": "apps/practice-m365-contacts",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/law-practice-server",
+            "@beep/law-practice-use-cases",
+            "@beep/m365",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/xdg"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-mail-tagging",
+          "packagePath": "apps/practice-mail-tagging",
+          "workspaceDependencies": [
+            "@beep/box",
+            "@beep/duckdb",
+            "@beep/identity",
+            "@beep/law-practice-domain",
+            "@beep/law-practice-server",
+            "@beep/law-practice-use-cases",
+            "@beep/m365",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-review-hub",
+          "packagePath": "apps/practice-review-hub",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/law-practice-domain",
+            "@beep/law-practice-server",
+            "@beep/law-practice-use-cases",
+            "@beep/m365",
+            "@beep/mcp-kit",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/practice-setup",
+          "packagePath": "apps/practice-setup",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/mcpb-kit",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/pretext",
+          "packagePath": "packages/drivers/pretext",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/professional-desktop",
+          "packagePath": "apps/professional-desktop",
+          "workspaceDependencies": [
+            "@beep/agents-client",
+            "@beep/agents-domain",
+            "@beep/agents-server",
+            "@beep/agents-use-cases",
+            "@beep/anthropic",
+            "@beep/box",
+            "@beep/cosmos",
+            "@beep/doc-text",
+            "@beep/dock",
+            "@beep/dock-react",
+            "@beep/documents-domain",
+            "@beep/documents-server",
+            "@beep/documents-use-cases",
+            "@beep/editor",
+            "@beep/epistemic-client",
+            "@beep/epistemic-config",
+            "@beep/epistemic-domain",
+            "@beep/epistemic-server",
+            "@beep/epistemic-tables",
+            "@beep/epistemic-ui",
+            "@beep/epistemic-use-cases",
+            "@beep/epistemics",
+            "@beep/file-processing",
+            "@beep/graph-3d",
+            "@beep/identity",
+            "@beep/lexical-schema",
+            "@beep/mcp-kit",
+            "@beep/md",
+            "@beep/memfs",
+            "@beep/observability",
+            "@beep/ontology-client",
+            "@beep/ontology-config",
+            "@beep/ontology-domain",
+            "@beep/ontology-server",
+            "@beep/ontology-ui",
+            "@beep/ontology-use-cases",
+            "@beep/pglite",
+            "@beep/postgres",
+            "@beep/provenance",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/ui",
+            "@beep/utils",
+            "@beep/workspace-domain",
+            "@beep/workspace-server",
+            "@beep/workspace-use-cases",
+            "@beep/xstate"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/provenance",
+          "packagePath": "packages/foundation/modeling/provenance",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/public-site",
+          "packagePath": "packages/foundation/modeling/public-site",
+          "workspaceDependencies": ["@beep/identity", "@beep/schema"]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/qa-capture",
+          "packagePath": "packages/tooling/library/qa-capture",
+          "workspaceDependencies": [
+            "@beep/ffmpeg",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/rdf",
+          "packagePath": "packages/foundation/modeling/rdf",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/rdf-canonize",
+          "packagePath": "packages/drivers/rdf-canonize",
+          "workspaceDependencies": [
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/repo-ai-metrics",
+          "packagePath": "packages/tooling/library/ai-metrics",
+          "workspaceDependencies": [
+            "@beep/cli-kit",
+            "@beep/duckdb",
+            "@beep/fc-runs",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/observability",
+            "@beep/phoenix",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/xdg"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/repo-cli",
+          "packagePath": "packages/tooling/tool/cli",
+          "workspaceDependencies": [
+            "@beep/ai-provider-cli",
+            "@beep/ai-sync",
+            "@beep/chalk",
+            "@beep/cli-kit",
+            "@beep/colors",
+            "@beep/config-file",
+            "@beep/duckdb",
+            "@beep/exiftool",
+            "@beep/fc-runs",
+            "@beep/ffmpeg",
+            "@beep/file-processing",
+            "@beep/git",
+            "@beep/github",
+            "@beep/github-actions",
+            "@beep/github-commands",
+            "@beep/github-reporting",
+            "@beep/glob",
+            "@beep/identity",
+            "@beep/libpff",
+            "@beep/lockfiles",
+            "@beep/m365",
+            "@beep/managed-section",
+            "@beep/markdown",
+            "@beep/mcp-kit",
+            "@beep/md",
+            "@beep/memfs",
+            "@beep/obs",
+            "@beep/observability",
+            "@beep/occt",
+            "@beep/package-json",
+            "@beep/palantiri",
+            "@beep/pdf-tools",
+            "@beep/phoenix",
+            "@beep/poppler",
+            "@beep/qa-capture",
+            "@beep/repo-ai-metrics",
+            "@beep/repo-configs",
+            "@beep/repo-docgen",
+            "@beep/repo-tsconfig",
+            "@beep/repo-utils",
+            "@beep/repo-workspaces",
+            "@beep/runpod",
+            "@beep/runtime-env",
+            "@beep/schema",
+            "@beep/semver",
+            "@beep/skill-contract",
+            "@beep/spdx",
+            "@beep/t3-code",
+            "@beep/technical-drawing",
+            "@beep/tesseract",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/tika",
+            "@beep/uspto",
+            "@beep/utils",
+            "@beep/walker",
+            "@beep/xdg"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/repo-configs",
+          "packagePath": "packages/tooling/policy-pack/repo-configs",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/semver",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/repo-docgen",
+          "packagePath": "packages/tooling/tool/docgen",
+          "workspaceDependencies": [
+            "@beep/chalk",
+            "@beep/config-file",
+            "@beep/identity",
+            "@beep/md",
+            "@beep/package-json",
+            "@beep/repo-utils",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/repo-tsconfig",
+          "packagePath": "packages/tooling/library/repo-tsconfig",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/jsonc",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/tsconfig",
+            "@beep/walker"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/repo-utils",
+          "packagePath": "packages/tooling/library/repo-utils",
+          "workspaceDependencies": [
+            "@beep/glob",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/package-json",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/walker"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/repo-workspaces",
+          "packagePath": "packages/tooling/library/repo-workspaces",
+          "workspaceDependencies": [
+            "@beep/commands",
+            "@beep/fc-runs",
+            "@beep/git",
+            "@beep/glob",
+            "@beep/identity",
+            "@beep/lockfiles",
+            "@beep/memfs",
+            "@beep/npm-spec",
+            "@beep/package-json",
+            "@beep/schema",
+            "@beep/semver",
+            "@beep/utils",
+            "@beep/walker",
+            "@beep/yaml"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/runpod",
+          "packagePath": "packages/drivers/runpod",
+          "workspaceDependencies": [
+            "@beep/codegen-kit",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/runtime-env",
+          "packagePath": "packages/foundation/capability/runtime-env",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/sanity",
+          "packagePath": "packages/drivers/sanity",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/sbom",
+          "packagePath": "packages/foundation/modeling/sbom",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/package-json",
+            "@beep/schema",
+            "@beep/spdx"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/schema",
+          "packagePath": "packages/foundation/modeling/schema",
+          "workspaceDependencies": [
+            "@beep/data",
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/schema-org",
+          "packagePath": "packages/foundation/modeling/schema-org",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema"
+          ]
+        },
+        {
+          "hasCoverage": false,
+          "packageName": "@beep/scratchpad",
+          "packagePath": "scratchpad",
+          "workspaceDependencies": [
+            "@beep/cli-kit",
+            "@beep/commands",
+            "@beep/config-file",
+            "@beep/dock",
+            "@beep/dock-react",
+            "@beep/drizzle",
+            "@beep/effect-drizzle",
+            "@beep/epistemic-domain",
+            "@beep/epistemics",
+            "@beep/fc-runs",
+            "@beep/file-processing",
+            "@beep/git",
+            "@beep/github",
+            "@beep/github-commands",
+            "@beep/github-references",
+            "@beep/github-reporting",
+            "@beep/glob",
+            "@beep/identity",
+            "@beep/jsonc",
+            "@beep/law-practice-use-cases",
+            "@beep/lockfiles",
+            "@beep/m365",
+            "@beep/managed-section",
+            "@beep/markdown",
+            "@beep/md",
+            "@beep/memfs",
+            "@beep/n3",
+            "@beep/nlp",
+            "@beep/nlp-processing",
+            "@beep/npm-spec",
+            "@beep/ontology",
+            "@beep/oxigraph",
+            "@beep/package-json",
+            "@beep/pglite",
+            "@beep/postgres",
+            "@beep/pretext",
+            "@beep/provenance",
+            "@beep/rdf",
+            "@beep/repo-cli",
+            "@beep/repo-tsconfig",
+            "@beep/repo-utils",
+            "@beep/repo-workspaces",
+            "@beep/runtime-env",
+            "@beep/sbom",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/semver",
+            "@beep/shacl",
+            "@beep/spdx",
+            "@beep/test-utils",
+            "@beep/toml",
+            "@beep/tsconfig",
+            "@beep/utils",
+            "@beep/walker",
+            "@beep/wink",
+            "@beep/yaml"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/semantic-web",
+          "packagePath": "packages/foundation/capability/semantic-web",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/semantica",
+          "packagePath": "apps/labs/semantica",
+          "workspaceDependencies": [
+            "@beep/anthropic",
+            "@beep/doc-text",
+            "@beep/duckdb",
+            "@beep/epistemics",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/langextract",
+            "@beep/nlp",
+            "@beep/nlp-processing",
+            "@beep/openai",
+            "@beep/oxigraph",
+            "@beep/pglite",
+            "@beep/provenance",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/wink"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/semver",
+          "packagePath": "packages/foundation/modeling/semver",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/shacl",
+          "packagePath": "packages/drivers/shacl",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/rdf",
+            "@beep/schema",
+            "@beep/semantic-web",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/shared-domain",
+          "packagePath": "packages/shared/domain",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/shared-tables",
+          "packagePath": "packages/shared/tables",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/shared-use-cases",
+          "packagePath": "packages/shared/use-cases",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/skill-contract",
+          "packagePath": "packages/foundation/modeling/skill-contract",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/markdown",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/spdx",
+          "packagePath": "packages/foundation/modeling/spdx",
+          "workspaceDependencies": ["@beep/fc-runs", "@beep/identity"]
+        },
+        {
+          "hasCoverage": false,
+          "packageName": "@beep/storybook",
+          "packagePath": "apps/storybook",
+          "workspaceDependencies": [
+            "@beep/epistemic-ui",
+            "@beep/graph-3d",
+            "@beep/ui",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/t3-code",
+          "packagePath": "packages/drivers/t3-code",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/mcp-kit",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/tailscale",
+          "packagePath": "packages/drivers/tailscale",
+          "workspaceDependencies": [
+            "@beep/commands",
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/technical-drawing",
+          "packagePath": "packages/foundation/capability/technical-drawing",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/tesseract",
+          "packagePath": "packages/drivers/tesseract",
+          "workspaceDependencies": [
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/test-runner",
+          "packagePath": "packages/tooling/test-kit/test-runner",
+          "workspaceDependencies": ["@beep/fc-runs"]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/test-utils",
+          "packagePath": "packages/tooling/test-kit/test-utils",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/tika",
+          "packagePath": "packages/drivers/tika",
+          "workspaceDependencies": [
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/todox",
+          "packagePath": "apps/todox",
+          "workspaceDependencies": ["@beep/identity", "@beep/schema"]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/toml",
+          "packagePath": "packages/foundation/modeling/toml",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/trustgraph-workbench",
+          "packagePath": "apps/labs/trustgraph-workbench",
+          "workspaceDependencies": [
+            "@beep/brand",
+            "@beep/test-runner",
+            "@beep/ui"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/tsconfig",
+          "packagePath": "packages/foundation/modeling/tsconfig",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/jsonc",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": false,
+          "packageName": "@beep/tsgo-shim",
+          "packagePath": "tools/tsgo-shim",
+          "workspaceDependencies": []
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/types",
+          "packagePath": "packages/foundation/primitive/types",
+          "workspaceDependencies": []
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/ui",
+          "packagePath": "packages/foundation/ui-system/ui",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/uspto",
+          "packagePath": "packages/drivers/uspto",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/uspto-mcp",
+          "packagePath": "packages/drivers/uspto-mcp",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/mcp-kit",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/uspto"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/utils",
+          "packagePath": "packages/foundation/modeling/utils",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/types"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/walker",
+          "packagePath": "packages/foundation/capability/walker",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/glob",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/windows-secrets",
+          "packagePath": "packages/drivers/windows-secrets",
+          "workspaceDependencies": ["@beep/identity", "@beep/schema"]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/wink",
+          "packagePath": "packages/drivers/wink",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/nlp",
+            "@beep/nlp-processing",
+            "@beep/observability",
+            "@beep/schema",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/workspace-domain",
+          "packagePath": "packages/workspace/domain",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/md",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/workspace-server",
+          "packagePath": "packages/workspace/server",
+          "workspaceDependencies": [
+            "@beep/doc-text",
+            "@beep/file-processing",
+            "@beep/identity",
+            "@beep/md",
+            "@beep/memfs",
+            "@beep/postgres",
+            "@beep/provenance",
+            "@beep/schema",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/utils",
+            "@beep/workspace-domain",
+            "@beep/workspace-tables",
+            "@beep/workspace-use-cases"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/workspace-tables",
+          "packagePath": "packages/workspace/tables",
+          "workspaceDependencies": [
+            "@beep/effect-drizzle",
+            "@beep/identity",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/workspace-domain"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/workspace-use-cases",
+          "packagePath": "packages/workspace/use-cases",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/md",
+            "@beep/shared-domain",
+            "@beep/test-runner",
+            "@beep/test-utils",
+            "@beep/workspace-domain"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/xdg",
+          "packagePath": "packages/foundation/capability/xdg",
+          "workspaceDependencies": [
+            "@beep/config-file",
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/memfs",
+            "@beep/schema",
+            "@beep/utils",
+            "@beep/walker"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/xstate",
+          "packagePath": "packages/drivers/xstate",
+          "workspaceDependencies": [
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/test-runner"
+          ]
+        },
+        {
+          "hasCoverage": true,
+          "packageName": "@beep/yaml",
+          "packagePath": "packages/foundation/modeling/yaml",
+          "workspaceDependencies": [
+            "@beep/fc-runs",
+            "@beep/identity",
+            "@beep/schema",
+            "@beep/utils"
+          ]
+        }
+      ],
+      "affected": {
+        "_tag": "full",
+        "reasons": [
+          "packages/foundation/primitive/utils/src/index.ts: no current workspace owner",
+          "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts: global coverage input changed"
+        ]
+      }
+    },
+    "coverageRegression": {
+      "snapshot": [],
+      "verdict": "failure: QualityTaskFailed: ",
+      "console": [
+        "log: [coverage-minimum] named exemptions: @beep/scratchpad (User-excluded aggregate workspace with multiple experimental Vitest boundaries.); @beep/storybook (User-excluded Storybook runner whose self-coverage would be self-fulfilling.); @beep/tsgo-shim (Plain JavaScript launcher shim with no TypeScript source surface.)",
+        "error: [coverage-ratchet] missing coverage summaries for required package(s):\n  - @beep/acp\n  - @beep/agents-client\n  - @beep/agents-domain\n  - @beep/agents-server\n  - @beep/agents-tables\n  - @beep/agents-use-cases\n  - @beep/ai-provider-cli\n  - @beep/ai-sync\n  - @beep/anthropic\n  - @beep/api-docs\n  - @beep/api-transport\n  - @beep/architecture-lab-client\n  - @beep/architecture-lab-config\n  - @beep/architecture-lab-domain\n  - @beep/architecture-lab-proof\n  - @beep/architecture-lab-server\n  - @beep/architecture-lab-tables\n  - @beep/architecture-lab-ui\n  - @beep/architecture-lab-use-cases\n  - @beep/box\n  - @beep/box-provisioning\n  - @beep/brand\n  - @beep/chalk\n  - @beep/ciops\n  - @beep/cli-kit\n  - @beep/codegen-kit\n  - @beep/colors\n  - @beep/commands\n  - @beep/config-file\n  - @beep/cosmos\n  - @beep/data\n  - @beep/db-admin\n  - @beep/discord\n  - @beep/doc-text\n  - @beep/dock\n  - @beep/dock-react\n  - @beep/docket-intake\n  - @beep/documents-domain\n  - @beep/documents-server\n  - @beep/documents-tables\n  - @beep/documents-use-cases\n  - @beep/drizzle\n  - @beep/duckdb\n  - @beep/ecfr\n  - @beep/editor\n  - @beep/effect-drizzle\n  - @beep/epistemic-client\n  - @beep/epistemic-config\n  - @beep/epistemic-domain\n  - @beep/epistemic-server\n  - @beep/epistemic-tables\n  - @beep/epistemic-ui\n  - @beep/epistemic-use-cases\n  - @beep/epistemics\n  - @beep/exiftool\n  - @beep/fc-runs\n  - @beep/ffmpeg\n  - @beep/file-processing\n  - @beep/freshbooks\n  - @beep/git\n  - @beep/github\n  - @beep/github-actions\n  - @beep/github-commands\n  - @beep/github-references\n  - @beep/github-reporting\n  - @beep/glob\n  - @beep/gov-legal-mcp\n  - @beep/govinfo\n  - @beep/graph-3d\n  - @beep/html\n  - @beep/hubspot\n  - @beep/identity\n  - @beep/infra\n  - @beep/jsonc\n  - @beep/jsonl\n  - @beep/langextract\n  - @beep/law-practice-domain\n  - @beep/law-practice-server\n  - @beep/law-practice-tables\n  - @beep/law-practice-use-cases\n  - @beep/lejeune-bolt-workbench\n  - @beep/lexical-schema\n  - @beep/libpff\n  - @beep/lint-rules\n  - @beep/lockfiles\n  - @beep/m365\n  - @beep/m365-mcp\n  - @beep/managed-section\n  - @beep/markdown\n  - @beep/mcp-kit\n  - @beep/mcpb-kit\n  - @beep/md\n  - @beep/memfs\n  - @beep/n3\n  - @beep/nlp\n  - @beep/nlp-mcp\n  - @beep/nlp-processing\n  - @beep/npm-spec\n  - @beep/obs\n  - @beep/observability\n  - @beep/occt\n  - @beep/oip-web\n  - @beep/onepassword-cli\n  - @beep/ontology\n  - @beep/ontology-client\n  - @beep/ontology-config\n  - @beep/ontology-domain\n  - @beep/ontology-server\n  - @beep/ontology-ui\n  - @beep/ontology-use-cases\n  - @beep/openai\n  - @beep/openai-compat\n  - @beep/openclaw\n  - @beep/oxigraph\n  - @beep/pacer\n  - @beep/package-json\n  - @beep/palantiri\n  - @beep/pandoc-ast\n  - @beep/pdf-tools\n  - @beep/pglite\n  - @beep/phoenix\n  - @beep/poppler\n  - @beep/postgres\n  - @beep/practice-claude-mod\n  - @beep/practice-gateway\n  - @beep/practice-identify\n  - @beep/practice-kg-mcp\n  - @beep/practice-m365-contacts\n  - @beep/practice-mail-tagging\n  - @beep/practice-review-hub\n  - @beep/practice-setup\n  - @beep/pretext\n  - @beep/professional-desktop\n  - @beep/provenance\n  - @beep/public-site\n  - @beep/qa-capture\n  - @beep/rdf\n  - @beep/rdf-canonize\n  - @beep/repo-ai-metrics\n  - @beep/repo-cli\n  - @beep/repo-configs\n  - @beep/repo-docgen\n  - @beep/repo-tsconfig\n  - @beep/repo-utils\n  - @beep/repo-workspaces\n  - @beep/runpod\n  - @beep/runtime-env\n  - @beep/sanity\n  - @beep/sbom\n  - @beep/schema\n  - @beep/schema-org\n  - @beep/semantic-web\n  - @beep/semantica\n  - @beep/semver\n  - @beep/shacl\n  - @beep/shared-domain\n  - @beep/shared-tables\n  - @beep/shared-use-cases\n  - @beep/skill-contract\n  - @beep/spdx\n  - @beep/t3-code\n  - @beep/tailscale\n  - @beep/technical-drawing\n  - @beep/tesseract\n  - @beep/test-runner\n  - @beep/test-utils\n  - @beep/tika\n  - @beep/todox\n  - @beep/toml\n  - @beep/trustgraph-workbench\n  - @beep/tsconfig\n  - @beep/types\n  - @beep/ui\n  - @beep/uspto\n  - @beep/uspto-mcp\n  - @beep/utils\n  - @beep/walker\n  - @beep/windows-secrets\n  - @beep/wink\n  - @beep/workspace-domain\n  - @beep/workspace-server\n  - @beep/workspace-tables\n  - @beep/workspace-use-cases\n  - @beep/xdg\n  - @beep/xstate\n  - @beep/yaml"
+      ]
+    }
+  },
+  "probes": [
+    {
+      "id": "star-and-literal",
+      "output": "a=packages/a@repo/packages/a\nb=packages/b@repo/packages/b\nroot=.@repo\nx=tools/x@repo/tools/x"
+    },
+    {
+      "id": "root-only",
+      "output": "root=.@repo"
+    },
+    {
+      "id": "object-form",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "symlink-escape-star",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "symlink-inside",
+      "output": "real=packages/real@repo/packages/real\nroot=.@repo"
+    },
+    {
+      "id": "literal-symlink-escape",
+      "output": "root=.@repo"
+    },
+    {
+      "id": "dot-directory",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "negated-pattern",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "double-star",
+      "output": "a=packages/a@repo/packages/a\nb=packages/group/b@repo/packages/group/b\nroot=.@repo"
+    },
+    {
+      "id": "missing-base-dir",
+      "output": "error: Failed to expand workspace pattern absent/*."
+    },
+    {
+      "id": "missing-literal",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "malformed-workspaces",
+      "output": "error: Failed to decode package manifest <scratch>/repo/package.json."
+    },
+    {
+      "id": "member-invalid-json",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/bad/package.json."
+    },
+    {
+      "id": "member-missing-name",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/bad/package.json."
+    },
+    {
+      "id": "member-jsonc",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/bad/package.json."
+    },
+    {
+      "id": "escaping-member-invalid-json",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "double-star-symlink-escape",
+      "output": "a=packages/a@repo/packages/a\nroot=.@repo"
+    },
+    {
+      "id": "member-numeric-version",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "member-empty-version",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "member-empty-name",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "member-dependencies-array",
+      "output": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json."
+    },
+    {
+      "id": "pnpm-workspace-precedence",
+      "output": "root=.@repo\nt=tools/t@repo/tools/t"
+    },
+    {
+      "id": "pnpm-workspace-invalid-yaml",
+      "output": "error: Failed to decode workspace config <scratch>/repo/pnpm-workspace.yaml."
+    },
+    {
+      "id": "symlink-inside-only",
+      "output": "real=linked/alias@repo/linked/alias\nroot=.@repo"
+    },
+    {
+      "id": "symlinked-root-ancestor",
+      "output": "a=packages/a@alias/repo/packages/a\nroot=.@alias/repo\nx=tools/x@alias/repo/tools/x"
+    }
+  ],
+  "comparison": {
+    "baseline": "goals/effected-promotion/research/qas-discovery-adoption-parity-4-a1-before.json",
+    "surfacesIdentical": {
+      "discovery": true,
+      "coverageScope": true,
+      "coverageRegression": true
+    },
+    "probeShifts": [
+      {
+        "id": "literal-symlink-escape",
+        "before": "escaped=linked@repo/linked\nroot=.@repo",
+        "after": "root=.@repo",
+        "reason": "A literal pattern segment is contained like a `*` entry: a member whose real path leaves the root is skipped (the expander only checked `*` entries)."
+      },
+      {
+        "id": "dot-directory",
+        "before": "a=packages/a@repo/packages/a\nhidden=packages/.hidden@repo/packages/.hidden\nroot=.@repo",
+        "after": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "reason": "A `*` segment does not match a dot directory, as the package managers' globbers read it (the expander listed every entry)."
+      },
+      {
+        "id": "negated-pattern",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo\nskip=packages/skip@repo/packages/skip",
+        "after": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "reason": "A `!` pattern excludes its matches, as npm, yarn, bun and pnpm read it (the expander read it as a literal path)."
+      },
+      {
+        "id": "double-star",
+        "before": "root=.@repo",
+        "after": "a=packages/a@repo/packages/a\nb=packages/group/b@repo/packages/group/b\nroot=.@repo",
+        "reason": "A `**` pattern descends, as npm, yarn, bun and pnpm read it (the expander read it as a literal segment and found nothing)."
+      },
+      {
+        "id": "missing-base-dir",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to expand workspace pattern absent/*.",
+        "reason": "A wildcard pattern whose base directory is absent fails discovery as a likely typo (the expander skipped it silently); a missing literal member is still skipped."
+      },
+      {
+        "id": "double-star-symlink-escape",
+        "before": "root=.@repo",
+        "after": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "reason": "A `**` pattern descends (the expander found nothing), and the kit's `containWithinRoot` neither reads nor descends into a link whose real path leaves the root."
+      },
+      {
+        "id": "member-numeric-version",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json.",
+        "reason": "The kit's tolerant projection rejects a present non-string `version` before the strict reader runs (the expander's `LenientManifest` read ignored `version`)."
+      },
+      {
+        "id": "member-empty-version",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json.",
+        "reason": "The kit's tolerant projection rejects an empty `version`, which would resolve `workspace:^` to a bare `^` (the expander ignored `version`)."
+      },
+      {
+        "id": "member-empty-name",
+        "before": "=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to decode package manifest <scratch>/repo/packages/a/package.json.",
+        "reason": "The kit's tolerant projection rejects an empty `name` (the expander accepted any string name, `\"\"` included)."
+      },
+      {
+        "id": "pnpm-workspace-precedence",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "root=.@repo\nt=tools/t@repo/tools/t",
+        "reason": "The kit reads a non-empty `pnpm-workspace.yaml` `packages` list before the root `workspaces`, as pnpm does (the expander read only `workspaces`)."
+      },
+      {
+        "id": "pnpm-workspace-invalid-yaml",
+        "before": "a=packages/a@repo/packages/a\nroot=.@repo",
+        "after": "error: Failed to decode workspace config <scratch>/repo/pnpm-workspace.yaml.",
+        "reason": "The kit parses `pnpm-workspace.yaml` when it exists, so a malformed one fails discovery as a workspace config decode (the expander never read it)."
+      },
+      {
+        "id": "symlink-inside-only",
+        "before": "real=packages/real@repo/packages/real\nroot=.@repo",
+        "after": "real=linked/alias@repo/linked/alias\nroot=.@repo",
+        "reason": "A member reached through an in-root link is recorded at its repo-relative link path, as the kit enumerated it (the expander recorded a `*` entry at its link target)."
+      },
+      {
+        "id": "symlinked-root-ancestor",
+        "before": "a=../../real/repo/packages/a@real/repo/packages/a\nroot=.@alias/repo\nx=tools/x@alias/repo/tools/x",
+        "after": "a=packages/a@alias/repo/packages/a\nroot=.@alias/repo\nx=tools/x@alias/repo/tools/x",
+        "reason": "Members are recorded lexically under the root as given, so a root behind a symlinked ancestor keeps plain repo-relative paths (the expander recorded `*` entries at their canonical paths, relative to the uncanonicalized root, i.e. `../..`)."
+      }
+    ],
+    "unclassified": []
+  }
+}

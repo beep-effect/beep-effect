@@ -390,3 +390,18 @@ exact count-row schema retain its original assertions while checking those
 boundaries. Fresh synthetic execution preserves the original measurements.
 Compile the proof scripts before running them, and validate a positive Git root
 in preparation; a directory name alone is not root qualification.
+
+## A first page is not a complete verification population — 2026-10-31
+
+The workflow-job connector returned its first 30 jobs without a total in the
+normalized view. Reading 29 successes and one inherited failure as a settled
+workflow omitted the later coverage job. An independent watcher caught the
+pending job; the handoff was corrected and this owner performed no foreign
+merge. A direct
+per-page 100 request returned 33 of 33 jobs, including the pending coverage job.
+The pending job remained pending; no coverage pass or final delivery was inferred.
+
+Metric and gate adapters should retain total/returned counts, pagination state
+and observation scope. A missing record is not a zero, a pass or proof of
+complete coverage. Consumers should prove response completeness before making
+whole-population claims, and revalidate the current head at the actual gate.

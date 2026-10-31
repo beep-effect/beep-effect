@@ -258,3 +258,28 @@ Neither operation fixture belongs to the accepted 88/87 canary source sets; ever
 bound source still matches. Production collector state and recovery hold stay
 unchanged. Final-head hosted results, review/window, merge and canonical goal
 completion remain required.
+
+## Accepted canonical policy main — October 31
+
+Accepted main f16d82e9f1 replaces the earlier duplicate policy DTO repair with
+the canonical implementation. Both source conflicts use incoming main exactly.
+Canonical writers resolve both JSDoc conflicts, remove five stale schema-first
+records, refresh the schema catalog (9,465 entries / 173 shards) and refresh the
+instrumentation catalog. JSDoc remains 183 packages / 97 open exports. Interrupted
+and declined runs retain their resource outcomes; only the completed writers are
+reported as successful. No unrelated process was stopped or reserve weakened.
+
+The cache auto-merge needs no new baseline write: the full audit has zero
+findings, with 1,655 unassessed computations explicitly remaining unqualified.
+Only the eight previously reviewed AI-metrics dependency projections differ;
+188 other reviews, commands, configuration and membership remain unchanged.
+All 88/87 canary source bindings still match. See the
+[generated integration receipt](../ops/history/f16-generated-integration-20261031.json)
+and [cache receipt](../ops/history/f16-cache-integration-20261031.json).
+
+The three inherited repository CLI coverage gaps remain owned by security
+PR2389's reviewed test-only repair. No competing patch or coverage-floor reduction
+is added here. Today's operator instructions require immediate coherent push,
+hosted verification and coordinator-owned merging; no new local final-check gate
+is introduced. Required green checks, actual accepted merge and canonical goal
+completion remain mandatory. The recovery hold stays intact.
