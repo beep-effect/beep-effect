@@ -10,6 +10,7 @@ import * as DuckDbMessageStorage from "@beep/duckdb/DuckDbMessageStorage";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { assert, describe, expect } from "@effect/vitest";
+import { assertExitSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Entity from "effect/cluster/Entity";
@@ -30,7 +31,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
+import * as O from "effect/Option";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
@@ -84,13 +85,13 @@ const saveRequestsFor = Effect.fnUntraced(function* (ids: ReadonlyArray<number>)
   return storage;
 });
 // beep: Narrow to requests instead of upstream's `(m: any) => m.envelope.payload.id`.
-const payloadIds = A.map((message: Message.Incoming<any>) =>
+const payloadIds = A.map((message: Message.Incoming<Rpc.Any>) =>
   message._tag === "IncomingRequest" ? message.envelope.payload.id : undefined
 );
 const expectDuplicateReply = Effect.fnUntraced(function* (tag: "Chunk" | "WithExit") {
   const storage = yield* MessageStorage.MessageStorage;
   const result = yield* storage.saveRequest(yield* makeStreamRequest());
-  assert(result._tag === "Duplicate" && Option.isSome(result.lastReceivedReply));
+  assert(result._tag === "Duplicate" && O.isSome(result.lastReceivedReply));
   expect(result.lastReceivedReply.value._tag).toEqual(tag);
 });
 const expectRequestIdForKey = Effect.fnUntraced(function* (request: Message.OutgoingRequest<Rpc.Any>, id: string) {
@@ -100,7 +101,7 @@ const expectRequestIdForKey = Effect.fnUntraced(function* (request: Message.Outg
     tag: request.envelope.tag,
     id,
   });
-  expect(requestId).toEqual(Option.some(request.envelope.requestId));
+  expect(requestId).toEqual(O.some(request.envelope.requestId));
 });
 const expectDuplicateOf = Effect.fnUntraced(function* (
   request: Message.OutgoingRequest<Rpc.Any>,
@@ -172,14 +173,14 @@ describe("SqlMessageStorage", () => {
         );
         assert(duplicate._tag === "Duplicate");
         assert.strictEqual(duplicate.originalId, requestId);
-        assert.deepStrictEqual(duplicate.lastReceivedReply, Option.some(reply.reply));
+        assert.deepStrictEqual(duplicate.lastReceivedReply, O.some(reply.reply));
         assert.deepStrictEqual(
           yield* storage.requestIdForPrimaryKey({
             address: request.envelope.address,
             tag: request.envelope.tag,
             id: "123",
           }),
-          Option.some(requestId)
+          O.some(requestId)
         );
       })
     );
@@ -611,8 +612,12 @@ describe("SqlMessageStorage", () => {
           yield* TestClock.adjust(100);
           // beep: Virtual time does not flush DuckDB's native asynchronous work.
           yield* replied.await;
-          expect(yield* storage.repliesFor([request])).toHaveLength(1);
-          yield* Fiber.await(replyReader);
+          const replies = yield* storage.repliesFor([request]);
+          expect(replies).toHaveLength(1);
+          const reply = A.head(replies);
+          assert(O.isSome(reply) && reply.value._tag === "WithExit");
+          assertExitSuccess(reply.value.exit, undefined);
+          yield* Fiber.join(replyReader);
           yield* Fiber.interrupt(fiber);
         }),
       { timeout: 15_000 }
