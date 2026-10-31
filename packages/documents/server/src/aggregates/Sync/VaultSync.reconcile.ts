@@ -174,7 +174,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
     const queued = yield* queuedOperationsFor(item);
     const existing = A.findFirst(queued, (operation) => operation.operationType === operationType);
 
-    yield* O.match(existing, {
+    return yield* O.match(existing, {
       onNone: () =>
         operationRepository
           .enqueue(
@@ -194,10 +194,11 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
             })
           )
           .pipe(
-            Effect.asVoid,
+            Effect.as(true),
             Effect.catchTag("SyncOperationRepositoryConflict", (conflict) =>
-              Effect.logDebug("Documents vault sync treated a duplicate idempotency key as already queued").pipe(
-                Effect.annotateLogs({ idempotencyKey: conflict.idempotencyKey })
+              Effect.logDebug("Documents vault sync treated a duplicate idempotency key as already recorded").pipe(
+                Effect.annotateLogs({ idempotencyKey: conflict.idempotencyKey }),
+                Effect.as(false)
               )
             )
           ),
@@ -214,7 +215,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
               targetRelPath: item.localRelPath,
             })
           )
-          .pipe(Effect.asVoid),
+          .pipe(Effect.as(true)),
     });
   });
 
@@ -666,15 +667,17 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
     ) {
       return;
     }
-    if (O.isSome(actionable)) {
-      yield* enqueueOrSquash(
-        item,
-        actionable.value,
-        item.contentDigest,
-        O.some(`${idempotencyKeyFor(item, actionable.value)}:review:${conflict.id}`)
-      );
+    const queued = O.isSome(actionable)
+      ? yield* enqueueOrSquash(
+          item,
+          actionable.value,
+          item.contentDigest,
+          O.some(`${idempotencyKeyFor(item, actionable.value)}:review:${conflict.id}`)
+        )
+      : false;
+    if (queued || SyncItemState.is.conflict(item.syncState)) {
+      yield* itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending }));
     }
-    yield* itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending }));
   });
 
   return { recoverStalledOperations, requeueReviewedConflict, scanVault };
