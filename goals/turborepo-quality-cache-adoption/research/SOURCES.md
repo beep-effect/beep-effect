@@ -461,3 +461,16 @@ child environments and require active Python assertions.
 - [Prior controls](native-log-controls-before-pin-default-fix.json): byte-identical
   retained execution with the original driver bindings; matching driver source
   content is available at `70145eb55b`. This is historical, not current replay.
+
+
+### GitHub base-ref fallback, current frozen native clients
+
+- [Applicability review](base-ref-feature-review.json) binds the exact hosted,
+  CI-lane, Quality and Yeet sources separately from native fixture execution.
+- [Current driver](native-base-ref-controls.py) and [36 selection cases](native-base-ref-controls.json)
+  bind the executed source revision and file digest, accepted frozen client
+  digests, private raw receipt digest and three exact refusal controls.
+- The native subprocesses clear ambient environment, run in an isolated network
+  namespace and mount only synthetic work plus read-only executable dependencies.
+  Explicit invalid bases fail; unknown implicit bases conservatively select all.
+  No Beep task, protected workflow, remote cache or production speedup is proven.

@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "cache-base-ref-feature-review/v1",
+  "feature": "futureFlag:githubActionsRemoteBaseRefFallback",
+  "decision": "retain-current-absence",
+  "scope": "Source applicability plus synthetic native selection; no Beep task execution, hosted qualification or production performance claim.",
+  "nativeEvidence": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.json",
+    "sha256": "87450ae903f8ddc7832ec4872bae76fb5bdd994cebfbe592d8e2f83113d09b7d",
+    "cases": 36,
+    "executionSourceRevision": "7e185306be44a940c5b16a9f4804939a4d314e1d",
+    "driverSha256": "680dcb7f6b6bdf586d8bd9bfa28c03c8d819446d22cac7b967c212c0e84f0182",
+    "privateRawReceiptSha256": "d404485cd76994853307123569a6269ecb2a2e91675fbbaffe0a9b1cbcd64a3e",
+    "publicProjection": "Same decoded report values as the private execution receipt; JSON formatting only.",
+    "driverRefusals": {
+      "driverSha256": "680dcb7f6b6bdf586d8bd9bfa28c03c8d819446d22cac7b967c212c0e84f0182",
+      "controls": [
+        {
+          "case": "optimized-python",
+          "exitCode": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "ed9329da4ff06f87cd467b811c6dc64917c9978bd71c184a66aab145e19bedab"
+        },
+        {
+          "case": "wrong-native-pin",
+          "exitCode": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "47377463282be1b0b2ada59f0823497355aec399e76fe37e21e027ce7f64cd0d"
+        },
+        {
+          "case": "existing-report",
+          "exitCode": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "095b4c6bc2c2a6dc4e812b79189de24c9bd548482e4bba5753cdffecd076a9aa"
+        }
+      ],
+      "passingReportUnchanged": true
+    }
+  },
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "sourceBindings": [
+    {
+      "path": ".github/workflows/check.yml",
+      "sha256": "50de7d50cc34e0ec09f0f79b122f0ee24eb21d0b8c2d595891072c7fe501068c"
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "sha256": "f9a821c2f3c3e6254c44517a32a6271ac95f58eeb950f33a5d9e80930a4970f4"
+    },
+    {
+      "path": ".github/workflows/storybook.yml",
+      "sha256": "2b08e38b9fc0d6b0b5b7712ee4abf078fe3a549d3d5b966b56331005fd7f132f"
+    },
+    {
+      "path": "scripts/ci-change-profile.sh",
+      "sha256": "11ca4dc9e9f565ca63d32472d0362c91c3ec97fe5c612f037a70d5320c55557f"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "sha256": "1aea0da4c8401986e5a893a48ab98427b0f025df6e32b7ae87a90fe21ddd1c3c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "a68e3da1c3e8930ee364f4f2bde8fd7ad9482889cc97558267211d81c734f3fd"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "sha256": "e9292fb7325dd81136d7faf01d256089b13ee45a9c983dd9c75bdb5de11801af"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "37aea241ec77dd83bb6b333397268251bc1ec07b650771de029c4c476a052745"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Yeet/internal/FinalCheck.ts",
+      "sha256": "3f02f7dc96ac217e0af9693eae088c51ff87da0908508fac84005c9d8766b332"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "sha256": "72035518df6a7c86f842870cfe0b8d4589492a6e5b64dc71ebde244deceeb2bc"
+    }
+  ],
+  "rootFutureFlagsObservation": {
+    "path": "turbo.json",
+    "futureFlags": {
+      "affectedUsingTaskInputs": true,
+      "filterUsingTasks": true,
+      "globalConfiguration": true
+    },
+    "setting": "absent"
+  },
+  "findings": [
+    "On both frozen clients, absent and explicit false have the same selected sets and exit results in all six cases.",
+    "With only origin/main present, implicit GitHub main inference selects both fixture tasks by default and only the changed task with the flag enabled.",
+    "Explicit origin/main and exact commit SHA select only the changed task under all three flag settings, even when the GitHub event base name is unavailable.",
+    "An unavailable explicit base fails with exit 1 and the SCM-query error under every setting; it is not a successful empty selection or a conservative success.",
+    "When both implicit base refs are unavailable, every setting warns and selects all fixture tasks.",
+    "Within each fixed setting, changing base-selection inputs leaves the unchanged task input hash constant; no synthetic task was executed.",
+    "Reviewed automatic hosted callers pass --base with a fetched origin ref or BEEP_COVERAGE_BASE_SHA. CiLane exports that base as TURBO_SCM_BASE. The reviewed Quality review-fix/policy and Yeet final-check paths also pass explicit bases."
+  ],
+  "valueDecision": "No additional selection reduction in the reviewed explicit-base path. The flag remains absent; no real CI timing or bill reduction is inferred from synthetic task counts.",
+  "reopenWhen": "A named GitHub caller intentionally relies on native implicit base inference with remote-only refs; review source identity and measure that caller before changing configuration.",
+  "historicalAttempt": "An initial assertion incorrectly expected an invalid explicit base to conservatively succeed. The failure remains private, the assertion was corrected to require SCM refusal, and the complete current-source matrix was re-executed.",
+  "qualificationGranted": false,
+  "productionConfigurationChanged": false,
+  "diagnosticConsumer": {
+    "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+    "observation": "The opt-in turbo-config-proof command deliberately offers an ambient --affected dry selector and an explicit filter-range selector. Its --base flag is documented for the query proof; no automatic workflow/script caller was found in the reviewed source. It executes dry plans, not quality tasks.",
+    "decisionScope": "The absence decision is for current automatic execution paths. Reassess if this diagnostic becomes an automatic consumer; no performance benefit is claimed for it."
+  }
+}
