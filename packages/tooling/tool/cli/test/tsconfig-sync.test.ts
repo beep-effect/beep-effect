@@ -5,6 +5,7 @@ import {
   TsconfigSyncRunOptionsSync,
   tsconfigSyncCommand,
 } from "@beep/repo-cli/commands/TsconfigSync";
+import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -25,6 +26,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
@@ -255,6 +257,42 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000
+    );
+
+    // Pinned shift (4-A2, SPEC W4-f): the deleted `readRootPackageJson` decoded the
+    // whole root manifest through the strict `WorkspacesField`, so a `workspaces`
+    // field with a non-string entry failed the syncpack plan. Through the kit the
+    // plan reads the string entries the field carries, as `WorkspaceDiscovery` does.
+    it.effect("plans the syncpack sources from the string entries of a mixed workspaces field", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const rootDir = process.cwd();
+
+          yield* writeJsonFile(path.join(rootDir, "package.json"), {
+            name: "@beep/test-root",
+            private: true,
+            workspaces: ["packages/example-domain", 42, null],
+          });
+          yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), ["package.json"]);
+
+          const change = yield* TsconfigSyncPlan.planRootSyncpackSync(rootDir);
+
+          assertSome(
+            O.map(change, (planned) => planned.section),
+            "root-syncpack"
+          );
+          assertSome(
+            O.map(change, (planned) => planned.summary),
+            "sources: 1 -> 2 (add 1, remove 0)"
+          );
+          assertSome(
+            O.map(change, (planned) => Str.includes(`"packages/example-domain/package.json"`)(planned.content)),
+            true
+          );
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("synchronizes root references, aliases, and syncpack from workspace discovery", () =>
