@@ -160,6 +160,21 @@ describe("policy fingerprint closures", () => {
     );
 
     it.effect(
+      "fails on an unresolvable relative import in the shell instead of dropping the module",
+      Effect.fnUntraced(function* () {
+        const files = policyCliFixtureFiles([{ group: "topo-sort", imports: [] }]);
+        const root = yield* fixture({
+          ...files,
+          "packages/cli/src/bin-main.ts": `import "./internal/Missing.ts";\n${files["packages/cli/src/bin-main.ts"] ?? ""}`,
+          "package.json": rootManifest({ "topo-sort": "beep-cli topo-sort" }),
+          "turbo.json": turbo(["//#topo-sort"]),
+        });
+        const failure = yield* computePolicyFingerprint(root).pipe(Effect.flip);
+        expect(failure.message).toBe("Cannot resolve ./internal/Missing.ts imported by packages/cli/src/bin-main.ts");
+      })
+    );
+
+    it.effect(
       "rejects policy scripts it cannot attribute to one beep command",
       Effect.fnUntraced(function* () {
         const files = {
