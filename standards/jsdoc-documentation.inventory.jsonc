@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T18:59:46.217Z",
+  "generatedAt": "2026-10-31T19:18:41.797Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -541722,8 +541722,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 38,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-38-export-changesetgrapherror-from-quality-errors-ts",
+          "line": 39,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-39-export-changesetgrapherror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -541744,8 +541744,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 88,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-88-changesetgraphpackagereference",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-89-changesetgraphpackagereference",
           "currentTags": [
             "@category",
             "@since"
@@ -541766,8 +541766,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-122-changesetgraphsummary",
+          "line": 123,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-123-changesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -541836,8 +541836,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 334,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-334-collectworkspacepackagejsonfiles",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-336-collectworkspacepackagejsonfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -541860,8 +541860,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 437,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-437-changesetpackagereferencesfromtext",
+          "line": 435,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-435-changesetpackagereferencesfromtext",
           "currentTags": [
             "@category",
             "@since"
@@ -541882,8 +541882,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 546,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-546-findmissingchangesetpackagereferences",
+          "line": 544,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-544-findmissingchangesetpackagereferences",
           "currentTags": [
             "@param",
             "@returns",
@@ -541906,8 +541906,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 617,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-617-makechangesetgraphsummary",
+          "line": 615,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-615-makechangesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -541928,8 +541928,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 644,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-644-runchangesetgraphcheck",
+          "line": 642,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-642-runchangesetgraphcheck",
           "currentTags": [
             "@category",
             "@since"
