@@ -75,7 +75,7 @@ export type PartitionedCiLane = typeof PartitionedCiLane.Type;
  *
  * **Details**
  *
- * `repo-cli-1` and `repo-cli-2` are the two Vitest `--shard` halves of the
+ * `repo-cli-1` to `repo-cli-4` are the four Vitest `--shard` quarters of the
  * single `@beep/repo-cli#test` task; every other partition is a package bin.
  *
  * **Example** (Recognize a lint partition)
@@ -89,7 +89,16 @@ export type PartitionedCiLane = typeof PartitionedCiLane.Type;
  * @category models
  * @since 0.0.0
  */
-export const CiLanePartitionId = LiteralKit(["lint-a", "lint-b", "repo-cli-1", "repo-cli-2", "unit-a", "unit-b"]).pipe(
+export const CiLanePartitionId = LiteralKit([
+  "lint-a",
+  "lint-b",
+  "repo-cli-1",
+  "repo-cli-2",
+  "repo-cli-3",
+  "repo-cli-4",
+  "unit-a",
+  "unit-b",
+]).pipe(
   $I.annoteSchema("CiLanePartitionId", {
     description: "Stable identifier for one hosted Lint or Test Unit partition.",
   })
@@ -199,10 +208,11 @@ export class CiLanePartition extends S.Opaque<CiLanePartition, { readonly brand:
  * `goals/ci-lane-economics/research/tail-attribution.md`. For each lane,
  * candidates are ordered by descending p95 weight with task id as the stable
  * tie-break, then assigned to the currently lightest bin. Test Unit first
- * isolates `@beep/repo-cli` and splits it into two Vitest `--shard` halves;
- * their 440 s weights are arithmetic halves of the measured 879 s serial body
- * (the split is by path hash, so the real halves are close but not equal),
- * per the `goals/ci-lane-economics` window-2 repair decision. The remaining
+ * isolates `@beep/repo-cli` and splits it into four Vitest `--shard` quarters;
+ * their 603 s weights are arithmetic quarters of the 2,412 s Vitest body the
+ * two former halves measured on 2026-10-31 (the split is by file, so the real
+ * quarters are close but not equal), per `goals/beep-cli-composition` G2
+ * (`research/g2-coverage-shards.md`). The remaining
  * tasks are assigned to two bins. The extracted `@beep/test-runner` stays
  * beside `@beep/test-utils` in each lane so the moved workload retains its
  * existing placement. The weights are evidence, not runtime scheduling inputs.
@@ -378,16 +388,30 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   CiLanePartition.make({
     id: "repo-cli-1",
     lane: "test-unit",
-    weightSeconds: 440,
+    weightSeconds: 603,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 1, total: 2 }),
+    shard: CiLanePartitionShard.make({ index: 1, total: 4 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-2",
     lane: "test-unit",
-    weightSeconds: 440,
+    weightSeconds: 603,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 2, total: 2 }),
+    shard: CiLanePartitionShard.make({ index: 2, total: 4 }),
+  }),
+  CiLanePartition.make({
+    id: "repo-cli-3",
+    lane: "test-unit",
+    weightSeconds: 603,
+    packages: ["@beep/repo-cli"],
+    shard: CiLanePartitionShard.make({ index: 3, total: 4 }),
+  }),
+  CiLanePartition.make({
+    id: "repo-cli-4",
+    lane: "test-unit",
+    weightSeconds: 603,
+    packages: ["@beep/repo-cli"],
+    shard: CiLanePartitionShard.make({ index: 4, total: 4 }),
   }),
   CiLanePartition.make({
     id: "unit-a",

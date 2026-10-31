@@ -98,7 +98,7 @@ describe("harness-ledger", () => {
   describe("context surfaces", () => {
     it("keys surfaces as kind:name with no trailing newline", () => {
       expect(contextSurfaceKey("skill", "yeet")).toBe("skill:yeet");
-      expect(contextSurfaceKey("mcp-server", "graft")).toBe("mcp-server:graft");
+      expect(contextSurfaceKey("mcp-server", "phoenix-docs")).toBe("mcp-server:phoenix-docs");
       expect(ContextSurfaceKind.literals).toContain("jsdoc");
     });
 
