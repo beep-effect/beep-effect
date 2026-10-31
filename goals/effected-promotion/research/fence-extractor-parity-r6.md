@@ -41,6 +41,13 @@ extension) is byte-identical.
 | Markdown | typescript-fences | 2,490 | 2,443 | 32 `value-normalized`, 15 `inside-other-fence`, 5 `inside-container` | 0 |
 | Markdown | effect-imports-markdown | 2,519 | 2,504 | 15 `inside-other-fence`, 5 `inside-container`, 1 `closer-differs` | 0 |
 
+Re-run after the lane merged `origin/main` `c7eed00930` (no extractor code
+changed; the corpora grew to 8,844 Markdown files and 30,994 fence-bearing
+JSDoc blocks): the Markdown rows are unchanged, the three JSDoc rows read
+31,065 old fences with 31,057, 31,065 and 31,065 identical (the same 8
+`closer-differs`), and `unclassified=0`. The JSON record stays the one taken at
+`d247e0e12a`.
+
 docgen's unterminated-fence warnings fall from 27 to 9 on the Markdown corpus
 (the old pattern called a fence unterminated whenever no later run of three
 backticks or tildes followed it anywhere, so the count tracked marker runs, not
