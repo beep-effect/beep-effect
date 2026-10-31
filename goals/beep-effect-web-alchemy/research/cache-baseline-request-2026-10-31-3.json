@@ -1,0 +1,20 @@
+{
+  "previous": "b733417d9f3089aae017cf929b3418c3b2aff23872fdb407d50879422c5d4ca5",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy)",
+    "reason": "Re-record // policy-fingerprint seals (inputs removed by #2381/#2376, JsDocNodes.ts and the new app manifest added) and the seven @beep/beep-effect-web scaffold tasks after taking main baseline at 3fbb6e614b. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-3.md",
+      "sha256": "f4a7d19b1b336b04830d90428e40ea627a6cffef33c82c1224c53f9f195e3838"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "subjects": ["//", "@beep/beep-effect-web"]
+}
