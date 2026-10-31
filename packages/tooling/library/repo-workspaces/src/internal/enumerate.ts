@@ -401,6 +401,16 @@ const visitEntry = Effect.fnUntraced(function* (
   if (wildcard.crossesSegments) traversal.push(frame, relative, absolute);
 });
 
+/** An absent wildcard base: a `missingBaseDir` failure, or nothing at all with `skipMissingBaseDirs`. */
+const missingBase = (
+  scope: EnumerationScope,
+  wildcard: GlobPattern,
+  base: string
+): Effect.Effect<void, EnumerationFailure> =>
+  scope.skipMissingBaseDirs
+    ? Effect.void
+    : Effect.fail({ kind: "missingBaseDir", pattern: wildcard.source, detail: base === "" ? scope.root : base });
+
 /**
  * One wildcard include, walked with THE shared traversal — the same state
  * machine `WorkspacesSync` drives.
@@ -416,14 +426,7 @@ const visitEntry = Effect.fnUntraced(function* (
 const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, wildcard: GlobPattern) {
   const base = baseOf(wildcard);
   const absoluteBase = scope.path.join(scope.root, base);
-  if (!(yield* isDirectoryAt(scope, absoluteBase))) {
-    if (scope.skipMissingBaseDirs) return;
-    return yield* Effect.fail<EnumerationFailure>({
-      kind: "missingBaseDir",
-      pattern: wildcard.source,
-      detail: base === "" ? scope.root : base,
-    });
-  }
+  if (!(yield* isDirectoryAt(scope, absoluteBase))) return yield* missingBase(scope, wildcard, base);
   // A base that exists but leaves the root is not a typo: there is simply
   // nothing inside the root to enumerate under it.
   if (!(yield* scope.contains(absoluteBase))) return;
