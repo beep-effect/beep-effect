@@ -6,7 +6,7 @@
   // fails when an opsScripts entry or any ops/**/*.ts file falls outside `include`.
   "extends": "../tsconfig.configs.json",
   "include": ["*/ops/**/*.ts", "ops-ambient.d.ts"],
-  "exclude": ["**/node_modules/**", "**/dist/**", "**/tmp/**"],
+  "exclude": ["**/node_modules/**", "**/dist/**"],
   "compilerOptions": {
     "rootDir": "..",
     // Playwright-driven exercise harnesses type browser globals inside page.evaluate bodies.
