@@ -31,10 +31,33 @@ from the scope up to the test or helper callback gives up, and the row stays a j
 - the path crosses a nested function declaration;
 - the path crosses a fork (`forkChild`, `forkScoped`, `forkDetach`), whose scope can outlive
   the later statements;
-- the scoped operand is `Effect.succeed(...)` or `Effect.sync(...)`, which acquires nothing.
+- the scoped operand is `Effect.succeed(...)` or `Effect.sync(...)`, which acquires nothing. The
+  operand is claimed only when `Effect.scoped` is the first pipe stage, because a later stage
+  closes the earlier stages' output;
+- no `yield*` runs the scoped effect at the statement (`const work = Effect.scoped(acquire)`
+  builds it without running it). A `return` passes the effect to the enclosing call, and the walk
+  checks that call next.
 
 An assertion counts only when it runs directly in the later statement, not inside a nested
-closure. An assertion inside the scope, or before it, does not count.
+closure. An assertion inside the scope, or before it, does not count. Observations are the
+`expect` and Boolean forms plus the `@effect/vitest/utils` and vitest `assert` value assertions
+(`deepStrictEqual`, `strictEqual`, `assertSome`, `assertSuccess`, `assertFailure`, and so on).
+
+### Review round 1 (greptile on #2424)
+
+- The rule accepted a scope that was built but never yielded before the assertion. It is fixed
+  with the executed-statement requirement and the `built` and `bare` counterexamples. That
+  returned one of the 68 rows to review: `setup-effect-ref.test.ts:85`, whose scope runs inside
+  an effect stored in a variable and yielded later. Its original exception and reason are
+  restored unchanged.
+- The pure-operand check read the pipe input even when `Effect.scoped` was a later stage. That
+  made it conservative (a row stayed flagged), and it is now precise (`staged` and `pure stage`
+  cases).
+- Value assertions from `@effect/vitest/utils` and `assert` were not counted as observations.
+  That was also conservative, and they now count (`utils` and `assert` cases).
+- Fallow's complexity and duplication findings on the new code were fixed by splitting the walk
+  into `leavesExecution`, `statementVerdict`, `atStatement` and `scopeObservedFrom`, and by sharing
+  `observedShorterScope` and `appliedScopeRuns` between the two call sites.
 
 Counterexamples added to `test/effect-vitest-detectors.test.ts`:
 
@@ -51,17 +74,17 @@ report a judgment.
 | | Rows | Exceptions | Open |
 | --- | ---: | ---: | ---: |
 | Before | 553 | 553 | 0 |
-| After | 485 | 485 | 0 |
+| After | 486 | 486 | 0 |
 
 | Change | Count |
 | --- | ---: |
-| Gone | 68, all EV004 (`shorter-scope` 41, `inner-helper` 26, `shared-helper` 1) |
+| Gone | 67, all EV004 (68 at first push; review round 1 restored `setup-effect-ref.test.ts:85`) |
 | New | 0 |
 | Status changed | 0 |
 | Reason changed | 0 |
 | Line-only drift already on `main` | 3 (`ci-lane`, `package-scripts.policy`, `lint-workers`) |
 
-Of the 68 gone, 55 carried the cohort exit. The other 13 described the same shape in their own
+Of the 68 first retired, 55 carried the cohort exit. The other 13 described the same shape in their own
 words: cleanup-before-assertion scopes (4), assertions that read state finalizers wrote (2), a
 shorter property-case lifetime (1), and the six `cache-command` TURBO_* environment scopes that
 restore the environment before the following assertions. 17 rows of the 72-row cohort survive
@@ -105,7 +128,8 @@ fixture object built in the body. It is the next wave's design question.
 | --- | --- |
 | `test/effect-vitest-detectors.test.ts`, Bun (`bunx --bun vitest run`) | 259 passed |
 | same, Node 24 (`bunx vitest run`) | 259 passed |
-| `bun run beep lint effect-vitest --write` | 553 → 485 rows, 0 introduced |
+| `bun run beep lint effect-vitest --write` | 553 → 486 rows after review round 1, 0 introduced; plain rescan after merging main `introduced=0 resolved=0` |
+| `quality fallow audit --base origin/main` | pass, 0 introduced |
 | repo-cli `bun run check` (after `turbo run build --filter=@beep/repo-cli^...`) | exit 0 |
 | Biome on the two touched source files | clean |
 

@@ -3045,6 +3045,28 @@
       "reason": "withScratchCheckout keeps its own shorter scope for native Git clone and worktree cleanup inside the shared it.layer block. Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:85:scoped@12#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "line": 85,
+      "endLine": 85,
+      "symbol": "scoped",
+      "occurrence": "v2:e1d472e6a2ce089671ff0f2c8a539b15d9da5bc0e90f8efbb4922291a5020e91",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Each subprocess or resource helper scope ends before the test examines files or starts the next invocation. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:392:scoped@8#1",
       "lens": "resource",
       "ruleId": "EV004",
