@@ -18,5 +18,12 @@ subject `//`. These are the only configuration-drift BLOCKs in
 | `//#lint:policy-fingerprint:quality` | `packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts` | `GlobPattern.ts`, `packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts`, `packages/foundation/modeling/schema/src/UnitInterval.ts` | Inherited: #2381 moved the docgen quality subjects onto `JsDocNodes.ts`. #2376 deleted the Graft group; `UnitInterval.ts` was reached only through `Graft.schemas.ts`. |
 
 No task, flag or edge outside these input lists changed. No qualification is
-granted, and no exception row or standards debt is added. Scope, profile and
-epoch are copied unchanged.
+granted, and no exception row or standards debt is added. Scope is unchanged.
+
+The header does change from `main`. Before #2376 (`3fbb6e614b`), `main`
+recorded `profile: local-linux-x64-bun1.4.4` and `epoch: qualification-v3`.
+#2376 re-recorded the file with `local-linux-x64-bun1.4.2` and
+`qualification-v2`, which do not match the repository's pinned runtime
+(`packageManager: bun@1.4.4`, `.bun-version` `1.4.4`). This request records
+`bun1.4.4` / `qualification-v3` again, as it was before #2376 and as every
+other lane on this host measures it.

@@ -14,7 +14,7 @@
       "reason": "Re-record the root subject after resealing seven policy-fingerprint seal tasks: the shared seal gains the lazy dispatch modules; six seals drop inputs that #2381 and #2376 deleted or moved after #2390 sealed; no qualification is granted.",
       "basis": {
         "path": "goals/beep-cli-composition/research/g3-cache-baseline-review.md",
-        "sha256": "2be3c4139c7ae0cd4eb2f43bfbff9149b1130919480f6b26d5aad8becbd1e272"
+        "sha256": "1e37f7e33e927e004b80ea5a215418a1bd9a1f78d0aed5fffd3fbef4eb9f4b00"
       }
     },
     "@beep/acp": {
