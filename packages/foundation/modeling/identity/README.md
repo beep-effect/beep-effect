@@ -61,13 +61,12 @@ import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Example");
-class Request extends S.Class<Request>($I`Request`)(
-  { title: S.String },
-  $I.annote("Request", { description: "A request carrying a title." })
-) {}
+const Title = S.String.check(
+  S.isMinLength(1, $I.annote("TitleNotEmpty", { description: "A title must contain text." }))
+).pipe($I.annoteSchema("Title", { description: "A non-empty title." }));
 
-console.log(new Request({ title: "Review identity usage" }).title);
-// Review identity usage
+console.log(S.is(Title)("Review identity usage")); // true
+console.log(S.is(Title)("")); // false
 ```
 
 The [composer contract](src/Id.ts) also documents declaration-specific
