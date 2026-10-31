@@ -17,7 +17,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, flow, identity, pipe } from "effect/Function";
+import { constant, dual, flow, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
@@ -606,12 +606,7 @@ const termsIn =
     );
     const entitySpan = O.match(material, {
       onNone: () => span,
-      onSome: (match) =>
-        sliceSpan(
-          span,
-          0,
-          O.getOrElse(O.fromUndefinedOr(match.index), () => span.text.length)
-        ),
+      onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(span.text.length))),
     });
     const tokens = matchesIn(tokenPattern)(entitySpan);
     const step = scanStep(claimText, tokens);
@@ -643,12 +638,7 @@ const elementOf =
               )(span.text),
               {
                 onNone: () => span,
-                onSome: (match) =>
-                  sliceSpan(
-                    span,
-                    0,
-                    O.getOrElse(O.fromUndefinedOr(match.index), () => 0)
-                  ),
+                onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0))),
               }
             )
           : span
@@ -955,10 +945,7 @@ export const decomposeClaim: {
       Num.Order(left.claimNumber, right.claimNumber)
     )) {
       const branches = A.map(referencesOf(earlier), (parent) =>
-        HashSet.add(
-          O.getOrElse(HashMap.get(commonByClaim, parent), () => HashSet.empty<number>()),
-          parent
-        )
+        HashSet.add(O.getOrElse(HashMap.get(commonByClaim, parent), HashSet.empty<number>), parent)
       );
       const common = O.match(A.head(branches), {
         onNone: () => HashSet.empty<number>(),
@@ -967,7 +954,7 @@ export const decomposeClaim: {
       });
       commonByClaim = HashMap.set(commonByClaim, earlier.claimNumber, common);
     }
-    const ancestorNumbers = O.getOrElse(HashMap.get(commonByClaim, claimNumber), () => HashSet.empty<number>());
+    const ancestorNumbers = O.getOrElse(HashMap.get(commonByClaim, claimNumber), HashSet.empty<number>);
     const ancestors = A.flatMap(
       A.filter(claims, (candidate: PatentClaim) => HashSet.has(ancestorNumbers, candidate.claimNumber)),
       (candidate: PatentClaim) =>

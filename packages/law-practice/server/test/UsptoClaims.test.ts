@@ -92,5 +92,22 @@ describe("UsptoClaims adapter", () => {
         );
       })
     );
+
+    it.effect("excludes OCR grant claims and publications without a native XML reference", () =>
+      Effect.gen(function* () {
+        const port = yield* UsptoClaims;
+        const failureOf = (publicationNumber: string) =>
+          Effect.flip(
+            port.claims(
+              UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make(publicationNumber) })
+            )
+          );
+        const ocr = yield* failureOf("10200001");
+        const unreferenced = yield* failureOf("20260100002");
+        assert.deepStrictEqual([ocr.reason, unreferenced.reason], ["no-full-text-claims", "no-full-text-claims"]);
+        assert.strictEqual(ocr.message, "OCR-derived claims are excluded from the native publication source.");
+        assert.strictEqual(unreferenced.message, "The publication has no native XML reference.");
+      })
+    );
   });
 });

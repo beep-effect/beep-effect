@@ -10,7 +10,7 @@ import { Heading, Ol, renderPlainTextBlock } from "@beep/md";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { flow, pipe } from "effect/Function";
+import { constant, flow, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -341,7 +341,7 @@ const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
 const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> => {
   const matches = A.filter(A.fromIterable(Str.matchAll(transitionPattern)(claimText)), (match) => {
     const transition = pipe(A.get(match, 0), O.getOrThrow, Str.toLowerCase);
-    const index = O.getOrElse(O.fromUndefinedOr(match.index), () => 0);
+    const index = O.getOrElse(O.fromUndefinedOr(match.index), constant(0));
     return (
       !isAmbiguousLexicalTransition(transition) ||
       O.isNone(Str.match(ambiguousTransitionPrefixPattern)(Str.slice(0, index)(claimText)))
@@ -349,7 +349,7 @@ const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> 
   });
   const implicit = () =>
     A.findFirst(A.fromIterable(Str.matchAll(/,(?=\s+(?:the|said|each|an?|operating)\b)/giu)(claimText)), (match) => {
-      const index = O.getOrElse(O.fromUndefinedOr(match.index), () => 0);
+      const index = O.getOrElse(O.fromUndefinedOr(match.index), constant(0));
       return (
         O.isSome(
           Str.match(/\bclaims?\s+\d+(?:(?:\s*,\s*|\s+(?:and|or|to|through)\s+)\d+)*\s*$/iu)(
