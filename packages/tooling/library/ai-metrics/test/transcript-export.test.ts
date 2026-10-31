@@ -410,7 +410,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const f = yield* fixture();
       const frame = f.frames[0];
       if (frame === undefined || O.isNone(frame.metadata.usage)) return yield* Effect.die("Missing synthetic usage");
-      const exportSpan = Effect.fnUntraced(function* (usage: (typeof TranscriptMetadata.Type)["usage"]) {
+      const exportSpan = Effect.fnUntraced(function* (usage: TranscriptMetadata["usage"]) {
         const metadata = TranscriptMetadata.make({ ...frame.metadata, usage, workingDirectoryHash: O.some(id("f")) });
         const encoded: NativeEncodedBatch = yield* encodeTranscriptTraceBatch(
           TranscriptExportInput.make({
