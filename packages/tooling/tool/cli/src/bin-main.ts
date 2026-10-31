@@ -9,37 +9,10 @@
  */
 
 import * as Result from "effect/Result";
-import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
-
-const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
-const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit", "coverage"];
-const ROOT_CLI_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
-  "--completions",
-  "--help",
-  "--log-level",
-  "--version",
-  "-h",
-  "-v",
-];
+import type * as HashSetType from "effect/HashSet";
+import type { DispatchTarget, RuntimeService } from "./internal/dispatch/Dispatch.schemas.ts";
 
 const { A, Str } = await import("@beep/utils");
-
-const isQualityTaskName = (value: string | undefined): boolean =>
-  value !== undefined && QUALITY_TASK_NAMES.includes(value);
-
-const isLintPolicySubcommand = (value: string | undefined): boolean =>
-  value !== undefined && LINT_POLICY_SUBCOMMAND_NAMES.includes(value);
-
-const isRootCliGlobalFlag = (value: string): boolean =>
-  ROOT_CLI_GLOBAL_FLAG_NAMES.includes(value) ||
-  A.some(ROOT_CLI_GLOBAL_FLAG_NAMES, (name) => Str.startsWith(`${name}=`)(value));
-
-const hasRootCliGlobalFlag = (argv: ReadonlyArray<string>): boolean => A.some(argv, isRootCliGlobalFlag);
-
-const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
-  isQualityTaskName(argv[0]) && !hasRootCliGlobalFlag(argv) && !(argv[0] === "lint" && isLintPolicySubcommand(argv[1]));
-
-const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
 const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { CliRuntime }, { renderCliFailure }] =
@@ -58,6 +31,12 @@ const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { Cli
 const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
   "./internal/cli/Stdout.ts"
 );
+const [Dispatch, { loadQualityTasks }, HashSet, Command] = await Promise.all([
+  import("./internal/dispatch/Dispatch.ts"),
+  import("./internal/dispatch/Dispatch.manifest.ts"),
+  import("effect/HashSet"),
+  import("effect/cli/Command"),
+]);
 const O = await import("effect/Option");
 
 /**
@@ -211,89 +190,89 @@ const runRepoCliMain = <E, A>(effect: import("effect/Effect").Effect<A, E>) =>
   );
 
 /**
- * Top-level CLI program effect produced by running the root command tree
- * with the fully-resolved {@link DerivedLayers}.
+ * Build the platform base plus only the runtime services the dispatched groups declare.
  *
- * This is the value handed to `Effect.runPromise` to execute the CLI.
+ * Each extra Layer's module is imported only when a group needs it, so a group
+ * that declares none never loads `@beep/repo-utils` or the quality scheduler here.
  *
+ * @param services - The runtime services named by the dispatch target's routes.
+ * @returns The Layer providing the platform base and those services.
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+const runtimeLayerFor = Effect.fnUntraced(function* (services: HashSetType.HashSet<RuntimeService>) {
+  const needsRepoUtils = HashSet.has(services, "fs-utils") || HashSet.has(services, "ts-morph");
+  const repoUtils = needsRepoUtils ? O.some(yield* Effect.promise(() => import("@beep/repo-utils"))) : O.none();
+  const scheduler = HashSet.has(services, "memory-stats")
+    ? O.some(yield* Effect.promise(() => import("./internal/repo-run/QualityScheduler.ts")))
+    : O.none();
+  const extras = A.getSomes([
+    O.filter(
+      O.map(repoUtils, ({ FsUtilsLive }) => FsUtilsLive),
+      () => HashSet.has(services, "fs-utils")
+    ),
+    O.filter(
+      O.map(repoUtils, ({ TSMorphServiceLive }) => TSMorphServiceLive),
+      () => HashSet.has(services, "ts-morph")
+    ),
+    O.map(scheduler, ({ MemoryStatsLive }) => MemoryStatsLive),
+  ]);
+  return Layer.mergeAll(Layer.empty, ...extras).pipe(Layer.provideMerge(BaseLayers));
+});
+
+/**
+ * Run the command groups argv names through the lazy dispatch manifest.
+ *
+ * Only the named group's facade is imported and only its runtime services are
+ * built; the rest of the root renders from static help stubs
+ * (`internal/dispatch`).
+ *
+ * @param target - A command-group dispatch target (not the quality-task route).
+ * @returns The CLI program for that target.
  * @internal
  * @category use-cases
  * @since 0.0.0
  */
-let handledByQualityFastPath = false;
-
-if (canUseQualityTaskFastPath(argv)) {
-  const { parseQualityTaskInvocation, runQualityTask } = await import("./commands/Quality/Tasks.ts");
-  const qualityTaskInvocation = parseQualityTaskInvocation(argv);
-
-  if (O.isSome(qualityTaskInvocation)) {
-    handledByQualityFastPath = true;
-    const qualityProgram = Effect.scoped(
-      Layer.build(BaseLayers).pipe(
+const commandProgram = (target: DispatchTarget) =>
+  Effect.scoped(
+    Effect.flatMap(runtimeLayerFor(Dispatch.dispatchRuntimeServices(target)), (layer) =>
+      Layer.build(layer).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
-            return yield* runQualityTask(qualityTaskInvocation.value).pipe(
+            const commands = yield* Dispatch.loadDispatchTarget(target);
+            return yield* Command.run(Dispatch.makeRootCommand(commands), { version: "0.0.0" }).pipe(
               withHostTurboCacheDefaults,
               Effect.provide(context)
             );
           })
         )
       )
-    );
-    runRepoCliMain(qualityProgram);
-  }
-}
-
-let handledByCiFastPath = false;
-
-if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
-  handledByCiFastPath = true;
-  const [{ ciCommand }, { FsUtilsLive }, Command] = await Promise.all([
-    import("./commands/Ci/index.ts"),
-    import("@beep/repo-utils"),
-    import("effect/cli/Command"),
-  ]);
-  const ciRootCommand = Command.make("beep-cli").pipe(
-    Command.withDescription("CLI tool for managing beep-effect monorepo packages"),
-    Command.withSubcommands([ciCommand])
+    )
   );
-  const CiLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
-  const ciProgram = Effect.scoped(
-    Layer.build(CiLayers).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(
-            withHostTurboCacheDefaults,
-            Effect.provide(context)
-          );
-        })
+
+const dispatchTarget = Dispatch.resolveDispatchTarget(argv);
+
+// A quality-task invocation that does not parse falls back to the command groups, as before.
+const qualityTaskInvocation =
+  dispatchTarget._tag === "quality-task"
+    ? await loadQualityTasks().then(({ parseQualityTaskInvocation, runQualityTask }) =>
+        O.map(parseQualityTaskInvocation(argv), (invocation) => runQualityTask(invocation))
+      )
+    : O.none();
+
+if (O.isSome(qualityTaskInvocation)) {
+  runRepoCliMain(
+    Effect.scoped(
+      Layer.build(BaseLayers).pipe(
+        Effect.flatMap((context) =>
+          qualityTaskInvocation.value.pipe(withHostTurboCacheDefaults, Effect.provide(context))
+        )
       )
     )
   );
-  runRepoCliMain(ciProgram);
-}
-
-if (!handledByQualityFastPath && !handledByCiFastPath) {
-  const [{ FsUtilsLive, TSMorphServiceLive }, Command, { rootCommand }, { MemoryStatsLive }] = await Promise.all([
-    import("@beep/repo-utils"),
-    import("effect/cli/Command"),
-    import("./commands/Root.ts"),
-    import("./internal/repo-run/QualityScheduler.ts"),
-  ]);
-  const DerivedLayers = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, MemoryStatsLive).pipe(
-    Layer.provideMerge(BaseLayers)
+} else {
+  runRepoCliMain(
+    commandProgram(dispatchTarget._tag === "quality-task" ? Dispatch.resolveCommandTarget(argv) : dispatchTarget)
   );
-  const commandProgram = Effect.scoped(
-    Layer.build(DerivedLayers).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (context) {
-          return yield* Command.run(rootCommand, { version: "0.0.0" }).pipe(
-            withHostTurboCacheDefaults,
-            Effect.provide(context)
-          );
-        })
-      )
-    )
-  );
-  runRepoCliMain(commandProgram);
 }
