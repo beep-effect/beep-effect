@@ -4,9 +4,8 @@
  * Config-sync command groups (TsconfigSync, CreatePackage, VersionSync) each
  * carried a verbatim `jsonc.modify` + `jsonc.applyEdits` helper and the same
  * 2-space {@link JSONC_FORMATTING_OPTIONS}. This module owns that formatting
- * policy and the comment-preserving modification once, and re-exports
- * `@beep/schema`'s {@link decodeJsoncTextAs} so callers reach parsing and editing
- * through a single import rather than re-implementing either.
+ * policy and the comment-preserving modification once. Parsing is not here:
+ * callers decode JSONC through `@beep/jsonc` (`Jsonc.bind(schema).decode`).
  *
  * @internal
  * @packageDocumentation
@@ -18,17 +17,6 @@ import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 
 const $I = $RepoCliId.create("internal/cli/Jsonc");
-
-/**
- * Schema-driven JSONC decoder from `@beep/schema`.
- *
- * Re-exported so JSONC parsing and editing share one import surface; the parsing
- * implementation is not duplicated here.
- *
- * @category utilities
- * @since 0.0.0
- */
-export { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 
 /**
  * The repo's canonical 2-space JSONC formatting options.
