@@ -2,11 +2,14 @@
 // `WorkspaceDiscovery`, edges and order from `DependencyGraph`. These pin the
 // behaviour the retired repo-utils readers had and every caller relies on: the
 // root is never a member, directories are real paths, a wildcard whose base is
-// absent selects nothing, a root without workspaces has no members, and a
-// member link that leaves the checkout is skipped.
+// absent selects nothing, a root without workspaces has no members, a member
+// link that leaves the checkout is skipped, a bad root fails closed (a strictly
+// invalid manifest or an escaping pattern), generated directories hold no
+// members, and a self-dependency is no edge.
 
 import {
   DecodedWorkspaceMember,
+  UnsafeWorkspacePatternError,
   workspaceDependencyGraph,
   workspaceDirectories,
   workspaceManifests,
@@ -96,6 +99,60 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
       })
     );
 
+    it.effect("fails typed on a root manifest that is valid JSON but fails the strict model", () =>
+      Effect.gen(function* () {
+        const notArray = yield* Effect.flip(
+          workspaceMembers(yield* repository({ "package.json": json({ name: "root", workspaces: "notarray" }) }))
+        );
+        assertInstanceOf(notArray, WorkspaceDiscoveryError);
+        strictEqual(notArray.kind, "invalidShape");
+        const badName = yield* Effect.flip(
+          workspaceMembers(yield* repository({ "package.json": json({ name: 42, workspaces: ["packages/*"] }) }))
+        );
+        assertInstanceOf(badName, WorkspaceDiscoveryError);
+        strictEqual(badName.kind, "invalidShape");
+      })
+    );
+
+    it.effect("fails closed on an empty, absolute or parent-traversing root pattern before reading members", () =>
+      Effect.gen(function* () {
+        const cases: ReadonlyArray<readonly [string, string]> = [
+          ["../*", "parentSegment"],
+          ["packages/../../*", "parentSegment"],
+          ["", "empty"],
+          ["!", "empty"],
+          ["C:/outside/*", "absolute"],
+          ["/etc/*", "absolute"],
+          ["\\\\host\\share\\*", "absolute"],
+        ];
+        for (const [pattern, reason] of cases) {
+          const root = yield* repository({
+            ...twoMembers,
+            "package.json": json({ name: "root", workspaces: ["packages/*", pattern] }),
+          });
+          const error = yield* Effect.flip(workspacePackages(root));
+          assertInstanceOf(error, UnsafeWorkspacePatternError);
+          strictEqual(error.pattern, pattern);
+          strictEqual(error.reason, reason);
+        }
+      })
+    );
+
+    it.effect("drops members beneath generated directories", () =>
+      Effect.gen(function* () {
+        const root = yield* repository({
+          ...twoMembers,
+          "package.json": json({ name: "root", workspaces: ["packages/*", "packages/*/coverage", "dist/*"] }),
+          "packages/core/coverage/package.json": json({ name: "@gen/cov" }),
+          "dist/out/package.json": json({ name: "@gen/dist" }),
+        });
+        deepStrictEqual(
+          A.map(yield* workspaceMembers(root), (pkg) => pkg.name),
+          ["@beep/app", "@beep/core"]
+        );
+      })
+    );
+
     it.effect("skips a member link whose real path leaves the checkout", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -162,6 +219,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
         const root = yield* repository(twoMembers);
         const graph = yield* workspaceDependencyGraph(root);
         deepStrictEqual(yield* graph.dependenciesOf("@beep/app"), ["@beep/core"]);
+        deepStrictEqual(yield* graph.sort(), ["@beep/core", "@beep/app"]);
+      })
+    );
+
+    it.effect("gives a self-dependency no edge, so it sorts instead of reading as a cycle", () =>
+      Effect.gen(function* () {
+        const root = yield* repository({
+          ...twoMembers,
+          "packages/core/package.json": json({ name: "@beep/core", dependencies: { "@beep/core": "workspace:*" } }),
+        });
+        const graph = yield* workspaceDependencyGraph(root);
+        deepStrictEqual(yield* graph.dependenciesOf("@beep/core"), []);
         deepStrictEqual(yield* graph.sort(), ["@beep/core", "@beep/app"]);
       })
     );
