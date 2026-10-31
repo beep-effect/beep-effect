@@ -1,5 +1,5 @@
 {
-  "previous": "921f97055f51a6e6117576e7929b872b7f1de1122ed7315b2083352a7aa7a119",
+  "previous": "fc1afbb089bec054bc84f88cd61a5559e36f14c040817590944f97e0d3b47365",
   "review": {
     "reviewer": "Claude Opus 5.5 (W0 lane, refactor/beep-cli-w0-retirements)",
     "reason": "Re-record the cache posture of the root, repo-cli and repo-docgen subjects after the W0 retirements: the quality policy seal loses the JSDocMigrate inputs, repo-cli drops the runpod and codex-sdk dependencies, and the repo-docgen docs:aggregate script points at docgen aggregate; no qualification is granted.",

@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T16:54:02.409Z",
+  "generatedAt": "2026-10-31T18:13:00.931Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
     "publicModules": 3572,
-    "publicExports": 25302,
+    "publicExports": 25320,
     "openModules": 165,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -452667,7 +452667,7 @@
         "srcDir": "src",
         "sourceFileCount": 481,
         "publicModuleCount": 479,
-        "publicExportCount": 4429
+        "publicExportCount": 4447
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -453567,7 +453567,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -453589,7 +453589,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -454227,7 +454227,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         },
         {
@@ -454469,7 +454469,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -454491,7 +454491,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -454513,7 +454513,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -454535,7 +454535,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 9,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         },
         {
@@ -454601,7 +454601,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 30,
+          "exportCount": 31,
           "remediationStatus": "resolved"
         },
         {
@@ -469520,8 +469520,30 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.acceptance.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts",
-          "line": 29,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-29-cacheproducertrustlocations",
+          "line": 31,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-31-cacheproducertrustlocations",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CacheProducerPublication",
+          "exportKind": "class",
+          "filePath": "src/commands/Cache/Cache.acceptance.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts",
+          "line": 67,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-67-cacheproducerpublication",
           "currentTags": [
             "@category",
             "@since"
@@ -469542,8 +469564,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.acceptance.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts",
-          "line": 52,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-52-cacheproducerimportrequest",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-90-cacheproducerimportrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -469564,8 +469586,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.acceptance.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts",
-          "line": 79,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-79-cacheproducerimportpreview",
+          "line": 123,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-123-cacheproducerimportpreview",
           "currentTags": [
             "@category",
             "@since"
@@ -469586,8 +469608,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.acceptance.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts",
-          "line": 107,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-107-cacheproduceracceptancereference",
+          "line": 151,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-151-cacheproduceracceptancereference",
           "currentTags": [
             "@category",
             "@since"
@@ -469608,9 +469630,55 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.acceptance.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.schemas.ts",
-          "line": 130,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-130-cacheproducerstoreconfiguration",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-schemas-ts-174-cacheproducerstoreconfiguration",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "cacheProducerObservationMaxBytes",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.acceptance.store.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.store.ts",
+          "line": 38,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-38-cacheproducerobservationmaxbytes",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "cacheProducerImportMaxBytes",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.acceptance.store.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.store.ts",
+          "line": 57,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-57-cacheproducerimportmaxbytes",
+          "currentTags": [
+            "@internal",
             "@category",
             "@since"
           ],
@@ -469630,8 +469698,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.acceptance.store.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.store.ts",
-          "line": 47,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-47-readcacheproduceracceptance",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-79-readcacheproduceracceptance",
           "currentTags": [
             "@category",
             "@since"
@@ -469652,8 +469720,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.acceptance.store.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.store.ts",
-          "line": 88,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-88-persistcacheproduceracceptance",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-120-persistcacheproduceracceptance",
           "currentTags": [
             "@category",
             "@since"
@@ -469674,8 +469742,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.acceptance.store.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.store.ts",
-          "line": 130,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-130-loadcacheproducerstoreconfiguration",
+          "line": 163,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-store-ts-163-loadcacheproducerstoreconfiguration",
           "currentTags": [
             "@category",
             "@since"
@@ -469696,8 +469764,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.acceptance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.ts",
-          "line": 95,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-ts-95-derivecacheproducerevidence",
+          "line": 98,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-ts-98-derivecacheproducerevidence",
           "currentTags": [
             "@category",
             "@since"
@@ -469718,8 +469786,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.acceptance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.ts",
-          "line": 249,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-ts-249-previewcacheproducerimport",
+          "line": 313,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-ts-313-previewcacheproducerimport",
           "currentTags": [
             "@category",
             "@since"
@@ -469740,8 +469808,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.acceptance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.acceptance.ts",
-          "line": 303,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-ts-303-validatecacheproducerimport",
+          "line": 371,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-acceptance-ts-371-validatecacheproducerimport",
           "currentTags": [
             "@category",
             "@since"
@@ -469900,9 +469968,11 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 91,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-91-resolvecacheturbobinary",
+          "line": 98,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-98-resolvecacheturbobinary",
           "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -469922,8 +469992,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 164,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-164-joincachecensusplan",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-175-joincachecensusplan",
           "currentTags": [
             "@category",
             "@since"
@@ -469944,8 +470014,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 237,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-237-iscachetaskinspectionarg",
+          "line": 248,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-248-iscachetaskinspectionarg",
           "currentTags": [
             "@param",
             "@returns",
@@ -469968,8 +470038,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 263,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-263-cachetaskselectionargs",
+          "line": 274,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-274-cachetaskselectionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -469990,8 +470060,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 362,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-362-forwardsbiomeconfigpath",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-373-forwardsbiomeconfigpath",
           "currentTags": [
             "@param",
             "@returns",
@@ -470014,9 +470084,11 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 443,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-443-collectcachetaskselection",
+          "line": 459,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-459-collectcachetaskselection",
           "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -470036,9 +470108,11 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.census.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
-          "line": 522,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-522-collectcachecensus",
+          "line": 544,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-census-ts-544-collectcachecensus",
           "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -470058,8 +470132,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 288,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-288-runcachewarm",
+          "line": 315,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-315-runcachewarm",
           "currentTags": [
             "@category",
             "@since"
@@ -470086,8 +470160,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 314,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-314-runcachewarmfortesting",
+          "line": 342,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-342-runcachewarmfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -470109,8 +470183,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 336,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-336-runcachewarmlanefortesting",
+          "line": 364,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-364-runcachewarmlanefortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -470132,8 +470206,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 485,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-485-buildcachedashboard",
+          "line": 513,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-513-buildcachedashboard",
           "currentTags": [
             "@category",
             "@since"
@@ -470160,8 +470234,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 539,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-539-runcacherestorationprobe",
+          "line": 567,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-567-runcacherestorationprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -470182,8 +470256,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 657,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-657-runcachepolicyaudit",
+          "line": 685,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-685-runcachepolicyaudit",
           "currentTags": [
             "@category",
             "@since"
@@ -470204,8 +470278,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 1126,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1126-cachecommand",
+          "line": 1290,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1290-cachecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -470226,8 +470300,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 1146,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1146-makecachecommandfortesting",
+          "line": 1312,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-1312-makecachecommandfortesting",
           "currentTags": [
             "@internal",
             "@param",
@@ -473451,8 +473525,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-340-runcachesignedpilotexperiment",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-352-runcachesignedpilotexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -473473,8 +473547,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.runner.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
-          "line": 375,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-375-runcacheproduceruploadexperiment",
+          "line": 387,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-runner-ts-387-runcacheproduceruploadexperiment",
           "currentTags": [
             "@internal",
             "@category",
@@ -474178,8 +474252,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2239,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2239-runcachepilotfortesting",
+          "line": 2243,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2243-runcachepilotfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -474201,8 +474275,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2267,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2267-runcachepilotexperiment",
+          "line": 2271,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2271-runcachepilotexperiment",
           "currentTags": [
             "@category",
             "@since"
@@ -474223,8 +474297,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2305,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2305-runcachesignedpilotworker",
+          "line": 2309,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2309-runcachesignedpilotworker",
           "currentTags": [
             "@internal",
             "@category",
@@ -474246,8 +474320,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.pilot.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
-          "line": 2335,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2335-runcachesignedpilotuploadworker",
+          "line": 2339,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-pilot-ts-2339-runcachesignedpilotuploadworker",
           "currentTags": [
             "@internal",
             "@category",
@@ -474401,8 +474475,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-71-hashcacheproducercontract",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-78-hashcacheproducercontract",
           "currentTags": [
             "@category",
             "@since"
@@ -474423,8 +474497,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 113,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-113-validatecacheproducerapproval",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-120-validatecacheproducerapproval",
           "currentTags": [
             "@category",
             "@since"
@@ -474445,8 +474519,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 160,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-160-validatecacheproducerbundle",
+          "line": 167,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-167-validatecacheproducerbundle",
           "currentTags": [
             "@category",
             "@since"
@@ -474467,8 +474541,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 198,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-198-validatecacheproducerbinding",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-205-validatecacheproducerbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -474489,8 +474563,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 337,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-337-makecacheproducerissuer",
+          "line": 344,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-344-makecacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -474512,8 +474586,31 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 357,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-357-inspectcacheproducerdirectory",
+          "line": 364,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-364-inspectcacheproducerdirectory",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "assertCacheProducerPrivateLocation",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.producer.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+          "line": 400,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-400-assertcacheproducerprivatelocation",
           "currentTags": [
             "@internal",
             "@category",
@@ -474535,8 +474632,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 390,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-390-inspectcacheproducerfile",
+          "line": 428,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-428-inspectcacheproducerfile",
           "currentTags": [
             "@category",
             "@since"
@@ -474557,8 +474654,79 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 446,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-446-opencacheproducerissuer",
+          "line": 492,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-492-opencacheproducerissuer",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readCacheProducerHostedApproval",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.producer.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+          "line": 575,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-575-readcacheproducerhostedapproval",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readCacheProducerProvisioning",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.producer.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+          "line": 611,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-611-readcacheproducerprovisioning",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readCacheProducerExecutionProfile",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.producer.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
+          "line": 654,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-654-readcacheproducerexecutionprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -474580,8 +474748,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 523,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-523-opencacheproducerverifier",
+          "line": 691,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-691-opencacheproducerverifier",
           "currentTags": [
             "@internal",
             "@category",
@@ -474603,8 +474771,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 562,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-562-initializecacheproducerissuer",
+          "line": 733,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-733-initializecacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -474626,8 +474794,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 604,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-604-revokecacheproducerissuer",
+          "line": 807,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-807-revokecacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -476375,12 +476543,35 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "CacheHostedProducerRunReference",
+          "exportKind": "class",
+          "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+          "line": 69,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-69-cachehostedproducerrunreference",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "CacheHostedProducerReference",
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 64,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-64-cachehostedproducerreference",
+          "line": 93,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-93-cachehostedproducerreference",
           "currentTags": [
             "@category",
             "@since"
@@ -476401,9 +476592,32 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-87-cachehostedproducerreport",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-116-cachehostedproducerreport",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CacheHostedProducerCompleteReport",
+          "exportKind": "class",
+          "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+          "line": 150,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-150-cachehostedproducercompletereport",
+          "currentTags": [
+            "@internal",
             "@category",
             "@since"
           ],
@@ -476423,9 +476637,80 @@
           "exportKind": "class",
           "filePath": "src/commands/Cache/Cache.workflow.github.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
-          "line": 114,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-114-cachehostedproducerobservation",
+          "line": 186,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-schemas-ts-186-cachehostedproducerobservation",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerCacheHostedProducerMetadata",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.workflow.github.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+          "line": 70,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-70-layercachehostedproducermetadata",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CacheHostedProducerVerifier",
+          "exportKind": "class",
+          "filePath": "src/commands/Cache/Cache.workflow.github.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-107-cachehostedproducerverifier",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CacheHostedProducerVerifierLive",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.workflow.github.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+          "line": 144,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-144-cachehostedproducerverifierlive",
+          "currentTags": [
+            "@internal",
             "@category",
             "@since"
           ],
@@ -476445,8 +476730,54 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.github.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "line": 242,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-242-verifycachehostedproducerupload",
+          "line": 380,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-380-verifycachehostedproducerupload",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildCacheHostedProducerCompleteReport",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.workflow.github.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+          "line": 446,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-446-buildcachehostedproducercompletereport",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "verifyCacheHostedProducerObservation",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.workflow.github.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+          "line": 494,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-494-verifycachehostedproducerobservation",
           "currentTags": [
             "@internal",
             "@category",
@@ -476553,12 +476884,35 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "CacheProducerExecutionProfile",
+          "exportKind": "class",
+          "filePath": "src/commands/Cache/Cache.workflow.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "line": 152,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-schemas-ts-152-cacheproducerexecutionprofile",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "assertCacheProducerWorkflowProfile",
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-132-assertcacheproducerworkflowprofile",
+          "line": 144,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-144-assertcacheproducerworkflowprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -476580,8 +476934,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 162,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-162-assertcacheproducerworkflowlocation",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-174-assertcacheproducerworkflowlocation",
           "currentTags": [
             "@internal",
             "@category",
@@ -476603,8 +476957,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-187-collectcacheproducerworkflowfiles",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-199-collectcacheproducerworkflowfiles",
           "currentTags": [
             "@internal",
             "@category",
@@ -476626,8 +476980,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-233-inspectcacheproducerworkflow",
+          "line": 245,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-245-inspectcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -476649,8 +477003,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 273,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-273-hashcacheproducerworkflow",
+          "line": 285,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-285-hashcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -476672,8 +477026,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 291,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-291-hashcacheproduceruploadtarget",
+          "line": 314,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-314-hashcacheproduceruploadtarget",
           "currentTags": [
             "@internal",
             "@category",
@@ -476695,8 +477049,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-311-hashcacheproduceruploadkey",
+          "line": 334,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-334-hashcacheproduceruploadkey",
           "currentTags": [
             "@internal",
             "@category",
@@ -476718,8 +477072,54 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-333-assertcacheproduceruploadruntime",
+          "line": 437,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-437-assertcacheproduceruploadruntime",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "loadCacheProducerExecutionRuntime",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.workflow.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "line": 470,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-470-loadcacheproducerexecutionruntime",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "initializeCacheProducerExecution",
+          "exportKind": "const",
+          "filePath": "src/commands/Cache/Cache.workflow.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "line": 530,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-530-initializecacheproducerexecution",
           "currentTags": [
             "@internal",
             "@category",
@@ -476741,8 +477141,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 407,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-407-runcacheproducerworkflow",
+          "line": 601,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-601-runcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",
@@ -477455,6 +477855,25 @@
             "@category",
             "@since"
           ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { CacheHostedProducerVerifier, CacheHostedProducerVerifierLive } from \"./Cache.workflow.github.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Cache/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+          "line": 389,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-index-ts-389-export-cachehostedproducerverifier-cachehostedproducerverifierlive-from-cache-workflow-github-ts",
+          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -537628,8 +538047,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 147,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-147-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
+          "line": 148,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-148-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -537650,8 +538069,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 154,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-154-export-qualityscriptcommanderror-from-quality-errors-ts",
+          "line": 155,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-155-export-qualityscriptcommanderror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -537672,8 +538091,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 161,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-161-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
+          "line": 162,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-162-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -537694,8 +538113,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 185,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-185-qualityprofiledetectioninput",
+          "line": 186,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-186-qualityprofiledetectioninput",
           "currentTags": [
             "@category",
             "@since"
@@ -537716,8 +538135,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-201-githubchecklanesformodefortesting",
+          "line": 202,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-202-githubchecklanesformodefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537738,8 +538157,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 217,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-217-githubcheckprepushexternallanesfortesting",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-218-githubcheckprepushexternallanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537760,8 +538179,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-233-githubcheckpromotedfallowlanediagnosticsfortesting",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-234-githubcheckpromotedfallowlanediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537782,8 +538201,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 250,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-250-githubcheckqualitylanesfortesting",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-251-githubcheckqualitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537804,8 +538223,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 266,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-266-githubcheckreposanitylanesfortesting",
+          "line": 267,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-267-githubcheckreposanitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537826,8 +538245,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 282,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-282-promotedfallowgithubchecklaneidsfortesting",
+          "line": 283,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-283-promotedfallowgithubchecklaneidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537848,8 +538267,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-298-detectqualityprofilefortesting",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-299-detectqualityprofilefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537870,8 +538289,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 314,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-314-qualityprofileconfigfortesting",
+          "line": 315,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-315-qualityprofileconfigfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537892,8 +538311,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 330,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-330-activeosvignoreidsfortesting",
+          "line": 331,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-331-activeosvignoreidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537914,8 +538333,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 380,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-380-iseffectdiagnosticsdirectivefortesting",
+          "line": 381,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-381-iseffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -537938,8 +538357,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 418,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-418-effectdiagnosticsdirectiveexemption",
+          "line": 419,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-419-effectdiagnosticsdirectiveexemption",
           "currentTags": [
             "@category",
             "@since"
@@ -537960,8 +538379,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 459,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-459-effectdiagnosticsdirectiveexemptions",
+          "line": 460,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-460-effectdiagnosticsdirectiveexemptions",
           "currentTags": [
             "@category",
             "@since"
@@ -537982,8 +538401,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 509,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-509-tsgodisabledrule",
+          "line": 510,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-510-tsgodisabledrule",
           "currentTags": [
             "@category",
             "@since"
@@ -538004,8 +538423,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 551,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-551-tsgodisabledrules",
+          "line": 552,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-552-tsgodisabledrules",
           "currentTags": [
             "@category",
             "@since"
@@ -538026,8 +538445,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 625,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-625-isrejectedeffectdiagnosticsdirectivefortesting",
+          "line": 626,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-626-isrejectedeffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538050,8 +538469,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 869,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-869-qualitycommandprimitivehelpersfortesting",
+          "line": 870,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-870-qualitycommandprimitivehelpersfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538072,8 +538491,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1044,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1044-runbunaudit",
+          "line": 1045,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1045-runbunaudit",
           "currentTags": [
             "@param",
             "@returns",
@@ -538100,8 +538519,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1178,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1178-devqualitystepsfortesting",
+          "line": 1179,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1179-devqualitystepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538124,8 +538543,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1246,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1246-reviewfixdocgenlocalargsfortesting",
+          "line": 1247,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1247-reviewfixdocgenlocalargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538148,8 +538567,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1473,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1473-rungithubchecks",
+          "line": 1501,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1501-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -538172,8 +538591,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1731,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1731-testtsgoplanningfortesting",
+          "line": 1759,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1759-testtsgoplanningfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538194,8 +538613,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1876,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1876-collecteffecttsgodiagnosticlines",
+          "line": 1904,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1904-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -538218,8 +538637,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1909,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1909-missingtesttsgotaskmessagefortesting",
+          "line": 1937,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1937-missingtesttsgotaskmessagefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538242,8 +538661,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2025,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2025-extracteffecttsgoreadmepluginoptionnamesfortesting",
+          "line": 2053,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2053-extracteffecttsgoreadmepluginoptionnamesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538266,8 +538685,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2095,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2095-collecttsgopluginoptionparitydiagnosticsfortesting",
+          "line": 2123,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2123-collecttsgopluginoptionparitydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538290,8 +538709,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2223,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2223-collecttsgoseveritydiagnosticsfortesting",
+          "line": 2251,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2251-collecttsgoseveritydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538314,8 +538733,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2511,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2511-collecttsgopluginprofilediagnosticsfortesting",
+          "line": 2539,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2539-collecttsgopluginprofilediagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538338,8 +538757,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2533,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2533-collecttsconfiginheritancediagnosticsfortesting",
+          "line": 2561,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2561-collecttsconfiginheritancediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -538360,8 +538779,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2728,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2728-collecttsgoworkspacescandiagnosticsfortesting",
+          "line": 2756,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2756-collecttsgoworkspacescandiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538384,8 +538803,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2798,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2798-runtsgorulescheck",
+          "line": 2826,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2826-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -538407,8 +538826,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2938,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2938-runtesttsgochecks",
+          "line": 2966,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2966-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -538431,8 +538850,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3040,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3040-runtesttsgochecksat",
+          "line": 3068,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3068-runtesttsgochecksat",
           "currentTags": [
             "@param",
             "@returns",
@@ -538455,8 +538874,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3086,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3086-runtsgosmokecheck",
+          "line": 3114,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3114-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -538478,8 +538897,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3199,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3199-ismoduletagscannedpathfortesting",
+          "line": 3227,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3227-ismoduletagscannedpathfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538502,8 +538921,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3220,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3220-runjsdocmoduletagscheck",
+          "line": 3248,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3248-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -538525,8 +538944,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3293,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3293-runjsdocinventory",
+          "line": 3321,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3321-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -538548,8 +538967,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3360,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3360-runjsdocquality",
+          "line": 3388,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3388-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -538570,8 +538989,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3798,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3798-renderadmissionsnapshotlinesfortesting",
+          "line": 3826,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3826-renderadmissionsnapshotlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538594,8 +539013,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3965,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3965-rendertmpfsreportlinesfortesting",
+          "line": 3993,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3993-rendertmpfsreportlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538618,8 +539037,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4118,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4118-renderresiduereportlinesfortesting",
+          "line": 4146,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4146-renderresiduereportlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -538642,8 +539061,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4249,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4249-qualitycommand",
+          "line": 4277,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4277-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
