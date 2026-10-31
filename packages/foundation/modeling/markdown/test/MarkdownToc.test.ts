@@ -185,6 +185,18 @@ describe("MarkdownToc", () => {
       );
     });
 
+    it("renders a multi-line setext heading on one TOC line", () => {
+      const entries = MarkdownToc.entries(parse(lines("Goal *Title*", "second line", "===", "", "## Next", "")));
+      assert.deepStrictEqual(
+        A.map(entries, (entry) => entry.slug),
+        ["goal-title-second-line", "next"]
+      );
+      assert.strictEqual(
+        MarkdownToc.renderEntries(entries),
+        lines("- [Goal *Title* second line](#goal-title-second-line)", "  - [Next](#next)")
+      );
+    });
+
     it("yields no entries for a document without headings", () => {
       assert.deepStrictEqual(MarkdownToc.entries(parse("just a paragraph\n")), []);
       assert.deepStrictEqual(MarkdownToc.entries(parse("")), []);

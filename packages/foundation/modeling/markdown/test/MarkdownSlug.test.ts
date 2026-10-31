@@ -35,6 +35,13 @@ describe("MarkdownSlug", () => {
       assert.strictEqual(MarkdownSlug.slugify("tab\there"), "tab--here");
     });
 
+    it("reads each line break of a multi-line heading as one space (a kit departure from markdown-toc)", () => {
+      assert.strictEqual(MarkdownSlug.slugify("Goal *Title*\nsecond line"), "goal-title-second-line");
+      assert.strictEqual(MarkdownSlug.slugify("one\r\ntwo\rthree"), "one-two-three");
+      assert.isTrue(Result.isSuccess(decodeSlug(MarkdownSlug.slugify("a\nb"))));
+      assert.isTrue(Result.isFailure(decodeSlug("a\nb")));
+    });
+
     it("deletes HTML tags and the fixed ASCII and CJK punctuation lists", () => {
       assert.strictEqual(MarkdownSlug.slugify("Use <b>Effect.gen</b> now"), "use-effectgen-now");
       assert.strictEqual(MarkdownSlug.slugify("Effect.fn (function)"), "effectfn-function");
@@ -89,6 +96,11 @@ describe("MarkdownSlug", () => {
       assert.strictEqual(MarkdownSlug.titleize("[Guide](./guide.md) and more"), "Guide");
       assert.strictEqual(MarkdownSlug.titleize("<http://a.b> auto"), "auto");
       assert.strictEqual(MarkdownSlug.titleize("`Point` (class)"), "`Point` (class)");
+    });
+
+    it("joins the lines of a multi-line heading with one space", () => {
+      assert.strictEqual(MarkdownSlug.titleize("Goal *Title*\nsecond line"), "Goal *Title* second line");
+      assert.strictEqual(MarkdownSlug.titleize("one \r\n two"), "one two");
     });
   });
 
