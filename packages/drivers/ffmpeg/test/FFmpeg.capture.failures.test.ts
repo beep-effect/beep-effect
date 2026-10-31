@@ -417,7 +417,7 @@ describe("@beep/ffmpeg capture failures", () => {
                       .extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
                       .pipe(Effect.asVoid)
               );
-              assertTrue(Exit.isFailure(exit));
+              exit.pipe(Exit.isFailure, assertTrue);
               const recoveryDirectory = yield* Effect.fromOption(
                 A.findFirst(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))
               );
