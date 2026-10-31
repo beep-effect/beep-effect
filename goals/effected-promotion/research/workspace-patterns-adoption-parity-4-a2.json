@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/workspace-patterns-adoption-parity.ts",
-  "commit": "057a76131d8f0d1ddf4e74e10dbc21473ed2351f",
+  "commit": "06e84882dd006bdf287a00e44e6707c6266951eb",
   "patterns": {
     "legacyStrict": {
       "count": 122,
@@ -521,11 +521,11 @@
       },
       "tasksCandidateDirs": {
         "count": 192,
-        "sha256": "54c48e4df4f7ba56ec7d7bacb6738f4d918fce64fc9529572a6e989694c2e10d"
+        "sha256": "653b79f8ae4a2887135bef631cd324e0bb9380c9225a2afe084f5685052cf53a"
       },
       "tasksMatchedPackageDirs": {
         "count": 189,
-        "sha256": "04619a2b3f3672df90f58e055295ad8e2f8d0b1a24106cbdc53dba03fd9252e4"
+        "sha256": "1f1131b8da63d60c1ebac052046db628bd25210f589421a97e5cd858eb4e707a"
       },
       "tsconfigSyncSyncpackSources": {
         "count": 123,
@@ -544,11 +544,11 @@
       },
       "tasksCandidateDirs": {
         "count": 192,
-        "sha256": "54c48e4df4f7ba56ec7d7bacb6738f4d918fce64fc9529572a6e989694c2e10d"
+        "sha256": "653b79f8ae4a2887135bef631cd324e0bb9380c9225a2afe084f5685052cf53a"
       },
       "tasksMatchedPackageDirs": {
         "count": 189,
-        "sha256": "04619a2b3f3672df90f58e055295ad8e2f8d0b1a24106cbdc53dba03fd9252e4"
+        "sha256": "1f1131b8da63d60c1ebac052046db628bd25210f589421a97e5cd858eb4e707a"
       },
       "tsconfigSyncSyncpackSources": {
         "count": 123,
@@ -579,7 +579,7 @@
     {
       "command": "beep create-package parity-probe --type library --family tooling --kind library --description 4-A2 parity probe --dry-run --skip-lockfile",
       "exitCode": 0,
-      "stdoutSha256": "6b6747c448f9aaec81c988aace21d62d17658eaa1831c91c023da9c13a2b7538",
+      "stdoutSha256": "99ec849a6d3f77d85a83e7cb730050b06071f7fef4880cc60df179add25742ad",
       "stdoutLines": 23
     }
   ],
