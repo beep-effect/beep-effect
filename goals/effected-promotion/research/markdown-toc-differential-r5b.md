@@ -1,9 +1,9 @@
 # Markdown TOC differential: roadmap PR R5b
 
 Run 2026-10-31 on lane `refactor/markdown-toc-onto-beep-markdown` at commit
-ae75405fd7, a clean tree after the lane merged `origin/main` f16d82e9f1 and took the #2407 review fix
-(`MarkdownSlug.headingLine`: a multi-line setext heading's lines join with one space, without their
-continuation prefixes), by
+5f8c8b0c16, a clean tree after the lane merged `origin/main` c67424f9e2 and took the #2407 review fixes
+(`MarkdownDocument.headingContent` drops continuation-line container prefixes by inline positions;
+`MarkdownSlug.headingLine` joins the lines with one space), by
 `ops/markdown-toc-differential.ts` against a
 disposable `@effect/markdown-toc@0.1.0` install (`remarkable` 1.7.4) under
 `~/.cache/beep/markdown-toc-oracle`. The machine-readable report is
