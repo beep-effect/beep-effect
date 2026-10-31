@@ -427,6 +427,10 @@ describe("@beep/ffmpeg capture failures", () => {
               expect(yield* fs.readFileString(path.join(outDir, firstFrame))).toBe("original frame");
               if (Exit.isFailure(exit)) {
                 expect(Cause.pretty(exit.cause)).toContain(`Recovery copy retained at "${backupPath}"`);
+                expect(Cause.pretty(exit.cause)).toContain("Failed to commit frame output");
+                const typedError = yield* exit.cause.pipe(Effect.failCause, Effect.flip);
+                expect(typedError.message).toContain(`Recovery copy retained at "${backupPath}"`);
+                expect(typedError.operation).toBe(operation);
               }
             })
           )

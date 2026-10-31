@@ -846,7 +846,7 @@ const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* 
         )
       ),
       Effect.matchCauseEffect({
-        onFailure: (restoreCause) => Effect.failCause(Cause.combine(cause, restoreCause)),
+        onFailure: (restoreCause) => Effect.failCause(Cause.combine(restoreCause, cause)),
         onSuccess: () => Effect.failCause(cause),
       })
     );
