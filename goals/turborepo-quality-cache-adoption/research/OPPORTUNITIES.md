@@ -386,3 +386,10 @@ workstation's memory protection policy.
 - Prevention: keep a failing-original control, real HTTP response checks, and
   explicit abandoned/live reclaimer cases. A focused pass is not whole-proof,
   hosted, cache-performance, or goal-acceptance evidence.
+
+- Publication review caught the allocator function's complexity and a plain
+  Vitest import in the added test. Separate inode reclamation from intent
+  ownership, and use the existing Effect-aware Vitest entry point. The native
+  boundary control needs no policy exception or lowered threshold. Current
+  Fallow audit and health checks pass; retain the interrupted package attempt
+  as unproven and complete the normal proof and hosted review before closure.

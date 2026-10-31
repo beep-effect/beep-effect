@@ -408,31 +408,35 @@ const pruneAbandonedShimPortLinks = (port: number): void => {
   }
 };
 
+const reclaimAbandonedShimPort = (port: number, intent: string): boolean => {
+  const owner = Number.parseInt(NodeFS.readFileSync(intent, "utf8"), 10);
+  if (Number.isInteger(owner) && isLiveProcess(owner)) return false;
+  pruneAbandonedShimPortLinks(port);
+  const inspected = NodeFS.statSync(intent);
+  const canonical = shimPortLockPath(port);
+  let current: NodeFS.Stats;
+  try {
+    current = NodeFS.statSync(canonical);
+  } catch (cause) {
+    if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
+    throw cause;
+  }
+  if (current.dev !== inspected.dev || current.ino !== inspected.ino || current.nlink !== 2) return false;
+  NodeFS.rmSync(canonical, { force: true });
+  return createShimPortLock(port);
+};
+
 const lockShimPort = (port: number): boolean => {
   if (createShimPortLock(port)) return true;
-  const canonical = shimPortLockPath(port);
   const intent = NodePath.join(shimPortLockDirectory, `${port}.${process.pid}.${NodeCrypto.randomUUID()}.reap`);
   try {
-    NodeFS.linkSync(canonical, intent);
+    NodeFS.linkSync(shimPortLockPath(port), intent);
   } catch (cause) {
     if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
     throw cause;
   }
   try {
-    const owner = Number.parseInt(NodeFS.readFileSync(intent, "utf8"), 10);
-    if (Number.isInteger(owner) && isLiveProcess(owner)) return false;
-    pruneAbandonedShimPortLinks(port);
-    const inspected = NodeFS.statSync(intent);
-    let current: NodeFS.Stats;
-    try {
-      current = NodeFS.statSync(canonical);
-    } catch (cause) {
-      if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
-      throw cause;
-    }
-    if (current.dev !== inspected.dev || current.ino !== inspected.ino || current.nlink !== 2) return false;
-    NodeFS.rmSync(canonical, { force: true });
-    return createShimPortLock(port);
+    return reclaimAbandonedShimPort(port, intent);
   } finally {
     NodeFS.rmSync(intent, { force: true });
   }

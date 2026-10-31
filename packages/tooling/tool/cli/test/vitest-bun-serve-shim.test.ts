@@ -1,12 +1,11 @@
 import { syncBuiltinESMExports } from "node:module";
-import { assert, it } from "@effect/vitest";
+import { assert, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as P from "effect/Predicate";
-import { vi } from "vitest";
 
 // These cases exercise the Bun.serve shim that vitest.setup.ts installs for Node runs, which names
 // its port lock directory on the Bun global; real Bun binds port 0 itself and has no such property.
