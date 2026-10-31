@@ -6,18 +6,20 @@
  * before 3-A4 (QualityArtifactSupport, CatalogUsage manifests and root,
  * BunResolver, RootCatalog, PackageTestTypecheck); each now rejects comments
  * and trailing commas, while the same document as strict JSON still reads.
+ *
+ * The root workspace-pattern readers of ChangesetGraph and the Quality tasks
+ * moved onto `@beep/repo-workspaces` `WorkspacePatterns` in 4-A2; their pins
+ * live in that package's `WorkspacePatterns.test.ts`.
  */
 import { readTestTypecheckManifest } from "@beep/repo-cli/commands/Lint";
 import {
   readCatalogUsageManifest,
-  readChangesetGraphRootPatterns,
   readChangesetGraphWorkspaceManifest,
   readChangesetStatusWorkspacePackage,
   readPackageVerifyWorkspace,
   readQualityTaskManifest,
   readRootCatalogs,
   readWorkspacePackageText,
-  workspacePatternsFromPackageJson,
 } from "@beep/repo-cli/test/Quality";
 import { readPackageManagerField, readRootPackageJsonText } from "@beep/repo-cli/test/VersionSync";
 import { it } from "@beep/test-runner";
@@ -95,14 +97,8 @@ describe("package.json site readers reject JSONC", () => {
 });
 
 describe("package.json site readers on strict JSON", () => {
-  it.effect("ChangesetGraph reads root patterns and workspace members", () =>
+  it.effect("ChangesetGraph reads workspace members", () =>
     Effect.gen(function* () {
-      deepStrictEqual(yield* readChangesetGraphRootPatterns('{"workspaces":["packages/*"]}', "package.json"), [
-        "packages/*",
-      ]);
-      deepStrictEqual(yield* readChangesetGraphRootPatterns("{}", "package.json"), []);
-      const error = yield* Effect.flip(readChangesetGraphRootPatterns('{"workspaces":7}', "package.json"));
-      strictEqual(error._tag, "ChangesetGraphError");
       const member = yield* readChangesetGraphWorkspaceManifest('{"name":"@beep/demo","private":true}', path);
       strictEqual(member.name, "@beep/demo");
       assertTrue(member.isPrivate);
@@ -129,10 +125,11 @@ describe("package.json site readers on strict JSON", () => {
     })
   );
 
-  it.effect("Tasks reads a catalog-only workspaces object as no workspaces", () =>
+  it.effect("Tasks reads a member's name and scripts and rejects JSONC", () =>
     Effect.gen(function* () {
-      const manifest = yield* readQualityTaskManifest('{"workspaces":{"catalog":{"effect":"4.0.0"}}}', "package.json");
-      deepStrictEqual(yield* workspacePatternsFromPackageJson(manifest, "package.json"), []);
+      const manifest = yield* readQualityTaskManifest('{"name":"@beep/demo","scripts":{"check":"tsc"}}', path);
+      strictEqual(manifest.name, "@beep/demo");
+      deepStrictEqual(manifest.scripts, { check: "tsc" });
       const error = yield* Effect.flip(readQualityTaskManifest(jsonc, "package.json"));
       strictEqual(error._tag, "QualityTaskConfigurationError");
     })

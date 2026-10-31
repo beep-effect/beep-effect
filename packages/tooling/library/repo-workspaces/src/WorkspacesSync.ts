@@ -35,7 +35,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { MAX_ENUMERATION_DEPTH } from "./internal/limits.ts";
 import { manifestVersionOf } from "./internal/manifestFields.ts";
-import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import {
   badMaxDepthMessage,
   excludedBy,
@@ -46,6 +45,7 @@ import {
 } from "./internal/traverse.ts";
 import { WorkspaceDiscoveryError } from "./WorkspaceDiscovery.ts";
 import { PublishConfig, WorkspacePackage } from "./WorkspacePackage.ts";
+import { WorkspacePatterns } from "./WorkspacePatterns.ts";
 import type { GlobPattern } from "@beep/glob";
 import type { TraversalFrame } from "./internal/traverse.ts";
 
@@ -782,7 +782,7 @@ const ascentFrom = (path: SyncPath, current: string, ceiling: string | undefined
 };
 
 /**
- * The workspace `packages:` patterns for `root`, matching `internal/patterns.ts`'s precedence.
+ * The workspace `packages:` patterns for `root`, matching `WorkspacePatterns.read`'s precedence.
  */
 const readPatternsSync: {
   (options: WorkspacesSyncOptions, root: string): ReadonlyArray<string>;
@@ -800,11 +800,11 @@ const readPatternsSync: {
     // bridge. A parse failure is an empty pattern list, not a throw.
     const exit = Effect.runSyncExit(Yaml.parse(text));
     if (Exit.isSuccess(exit)) {
-      const patterns = pnpmPatternsOf(exit.value);
+      const patterns = WorkspacePatterns.fromPnpmWorkspace(exit.value);
       if (patterns.length > 0) return patterns;
     }
   }
-  return manifestPatternsOf(readJson(fileSystem, path.join(root, "package.json")) ?? {});
+  return WorkspacePatterns.fromManifest(readJson(fileSystem, path.join(root, "package.json")) ?? {});
 });
 
 /**
