@@ -269,6 +269,8 @@ export class HoldProbe extends Context.Service<HoldProbe, HoldProbeShape>()($I`H
  * console.log(outcome._tag) // "Reproduced"
  * ```
  *
+ * @param failureSignature - Text whose presence means the recorded failure reproduced.
+ * @returns A classifier from one command result to a {@link ProbeOutcome}.
  * @category utilities
  * @since 0.0.0
  */
@@ -438,6 +440,8 @@ export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot:
  * console.log(Layer.isLayer(layerHoldLedger("."))) // true
  * ```
  *
+ * @param repoRoot - Repository checkout that contains `hold-ledger/`.
+ * @returns A layer providing {@link HoldLedger}.
  * @category layers
  * @since 0.0.0
  */
@@ -455,6 +459,8 @@ export const layerHoldLedger = (repoRoot: string) => Layer.effect(HoldLedger, ma
  * console.log(Layer.isLayer(layerHoldProbe(".cache/holds"))) // true
  * ```
  *
+ * @param scratchRoot - Directory under which each probe run gets its own install directory.
+ * @returns A layer providing {@link HoldProbe}.
  * @category layers
  * @since 0.0.0
  */

@@ -74,6 +74,8 @@ export class HoldsError extends S.TaggedError<HoldsError, { readonly brand: uniq
  * console.log(typeof toHoldsError) // "function"
  * ```
  *
+ * @param message - Context prefixed to the platform message.
+ * @returns A mapper from a platform failure to an `io` {@link HoldsError}.
  * @category errors
  * @since 0.0.0
  */

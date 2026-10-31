@@ -64,6 +64,8 @@ const verdictOf = (run: ProbeRun): ProbeRunVerdict => run.verdict;
  * console.log(confirmHoldVerdict(["candidate-passed", "still-holds"])) // "Unconfirmed"
  * ```
  *
+ * @param newestFirst - Per-run verdicts, newest first.
+ * @returns Whether the probe history is safe to act on.
  * @category policies
  * @since 0.0.0
  */
@@ -103,6 +105,8 @@ export const confirmHoldVerdict = (newestFirst: ReadonlyArray<ProbeRunVerdict>):
  * console.log(confirmHoldRuns([])) // "Inconclusive"
  * ```
  *
+ * @param newestFirst - Recorded probe runs for one claim version, newest first.
+ * @returns Whether the probe history is safe to act on.
  * @category policies
  * @since 0.0.0
  */
