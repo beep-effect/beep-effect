@@ -778,113 +778,115 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })("managed nativ
     );
   }
   for (const control of ["steer", "cancel", "timeout"] satisfies ReadonlyArray<string>) {
-    it.effect(
-      `fences targeted Codex ${control} against stale completion`,
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped();
-        const home = path.join(root, "home");
-        const workspace = path.join(root, "workspace");
-        yield* fs.makeDirectory(workspace);
-        const sessions = yield* AiProviderCliSession;
-        const session = yield* sessions.open(
-          ManagedLaunchProfile.make({
-            provider: "codex",
-            executable: "bun",
-            prefixArgs: [
-              "run",
-              path.join(import.meta.dirname, "fixtures/managed-codex-peer.ts"),
-              "--beep-fixture-mode=busy",
-            ],
-            workspace,
-            profileRoot: home,
-            env: {
-              HOME: home,
-              CODEX_HOME: path.join(home, ".codex"),
-              PATH: yield* Config.String("PATH"),
-            },
-            authLane: "existing-subscription",
-            tools: [],
-          })
-        );
-        const started = yield* Deferred.make<string>();
-        const secondStarted = yield* Deferred.make<string>();
-        const Turn = S.Struct({ turnId: S.String });
-        yield* session.events.pipe(
-          Stream.runForEach((event) => {
-            if (event.kind === "update" && S.is(Turn)(event.payload))
-              return Deferred.succeed(
-                event.payload.turnId === "owned-turn-2" ? secondStarted : started,
-                event.payload.turnId
-              );
-            return Effect.void;
-          }),
-          Effect.forkChild
-        );
-        yield* Effect.yieldNow;
-        const running = yield* session
-          .prompt(ManagedSessionMessage.make({ messageId: "active", text: "bounded-synthetic" }))
-          .pipe(Effect.result, Effect.forkChild);
-        const turnId = yield* Deferred.await(started);
-        const queued =
-          control === "steer"
-            ? yield* session
-                .prompt(ManagedSessionMessage.make({ messageId: "queued", text: "bounded-queued" }))
-                .pipe(Effect.forkChild)
-            : undefined;
-        const stale = yield* session
-          .steer(
-            ManagedSessionSteering.make({
-              expectedTurnId: "stale-turn",
-              message: ManagedSessionMessage.make({ messageId: "stale", text: "synthetic" }),
-            })
-          )
-          .pipe(Effect.flip);
-        assert.equal(stale.reason, "policy-mismatch");
-        const applyControl = Effect.fn("SyntheticSession.applyControl")(function* () {
-          if (control === "steer")
-            yield* session.steer(
-              ManagedSessionSteering.make({
-                expectedTurnId: turnId,
-                message: ManagedSessionMessage.make({ messageId: "steering", text: "bounded-synthetic" }),
-              })
-            );
-          if (control === "cancel") yield* session.cancel;
-          if (control === "timeout") yield* TestClock.adjust("2 minutes");
-        });
-        yield* applyControl();
-        const result = yield* Fiber.join(running);
-        if (queued !== undefined) {
-          const secondId = yield* Deferred.await(secondStarted);
-          assert.notEqual(secondId, turnId);
-          yield* session.steer(
-            ManagedSessionSteering.make({
-              expectedTurnId: secondId,
-              message: ManagedSessionMessage.make({ messageId: "second-steer", text: "bounded-synthetic" }),
+    it.layer(TestClock.layer())("own TestClock", (it) => {
+      it.effect(
+        `fences targeted Codex ${control} against stale completion`,
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped();
+          const home = path.join(root, "home");
+          const workspace = path.join(root, "workspace");
+          yield* fs.makeDirectory(workspace);
+          const sessions = yield* AiProviderCliSession;
+          const session = yield* sessions.open(
+            ManagedLaunchProfile.make({
+              provider: "codex",
+              executable: "bun",
+              prefixArgs: [
+                "run",
+                path.join(import.meta.dirname, "fixtures/managed-codex-peer.ts"),
+                "--beep-fixture-mode=busy",
+              ],
+              workspace,
+              profileRoot: home,
+              env: {
+                HOME: home,
+                CODEX_HOME: path.join(home, ".codex"),
+                PATH: yield* Config.String("PATH"),
+              },
+              authLane: "existing-subscription",
+              tools: [],
             })
           );
-          assert.equal((yield* Fiber.join(queued)).messageId, "queued");
-        }
-        const verifyTerminal = Effect.fn("SyntheticSession.verifyTerminal")(function* () {
-          if (control === "timeout") {
-            assert.equal(result._tag, "Failure");
-            if (result._tag === "Failure") assert.equal(result.failure.reason, "timeout");
-            const after = yield* session
-              .prompt(ManagedSessionMessage.make({ messageId: "fenced", text: "synthetic" }))
-              .pipe(Effect.flip);
-            assert.equal(after.reason, "closed");
-            return;
+          const started = yield* Deferred.make<string>();
+          const secondStarted = yield* Deferred.make<string>();
+          const Turn = S.Struct({ turnId: S.String });
+          yield* session.events.pipe(
+            Stream.runForEach((event) => {
+              if (event.kind === "update" && S.is(Turn)(event.payload))
+                return Deferred.succeed(
+                  event.payload.turnId === "owned-turn-2" ? secondStarted : started,
+                  event.payload.turnId
+                );
+              return Effect.void;
+            }),
+            Effect.forkChild
+          );
+          yield* Effect.yieldNow;
+          const running = yield* session
+            .prompt(ManagedSessionMessage.make({ messageId: "active", text: "bounded-synthetic" }))
+            .pipe(Effect.result, Effect.forkChild);
+          const turnId = yield* Deferred.await(started);
+          const queued =
+            control === "steer"
+              ? yield* session
+                  .prompt(ManagedSessionMessage.make({ messageId: "queued", text: "bounded-queued" }))
+                  .pipe(Effect.forkChild)
+              : undefined;
+          const stale = yield* session
+            .steer(
+              ManagedSessionSteering.make({
+                expectedTurnId: "stale-turn",
+                message: ManagedSessionMessage.make({ messageId: "stale", text: "synthetic" }),
+              })
+            )
+            .pipe(Effect.flip);
+          assert.equal(stale.reason, "policy-mismatch");
+          const applyControl = Effect.fn("SyntheticSession.applyControl")(function* () {
+            if (control === "steer")
+              yield* session.steer(
+                ManagedSessionSteering.make({
+                  expectedTurnId: turnId,
+                  message: ManagedSessionMessage.make({ messageId: "steering", text: "bounded-synthetic" }),
+                })
+              );
+            if (control === "cancel") yield* session.cancel;
+            if (control === "timeout") yield* TestClock.adjust("2 minutes");
+          });
+          yield* applyControl();
+          const result = yield* Fiber.join(running);
+          if (queued !== undefined) {
+            const secondId = yield* Deferred.await(secondStarted);
+            assert.notEqual(secondId, turnId);
+            yield* session.steer(
+              ManagedSessionSteering.make({
+                expectedTurnId: secondId,
+                message: ManagedSessionMessage.make({ messageId: "second-steer", text: "bounded-synthetic" }),
+              })
+            );
+            assert.equal((yield* Fiber.join(queued)).messageId, "queued");
           }
-          assert.equal(result._tag, "Success");
-          if (result._tag === "Success") {
-            assert.equal(result.success.stopReason, control === "steer" ? "completed" : "interrupted");
-            if (control === "cancel") assertNone(result.success.terminalEvidence);
-          }
-        });
-        yield* verifyTerminal();
-      })
-    );
+          const verifyTerminal = Effect.fn("SyntheticSession.verifyTerminal")(function* () {
+            if (control === "timeout") {
+              assert.equal(result._tag, "Failure");
+              if (result._tag === "Failure") assert.equal(result.failure.reason, "timeout");
+              const after = yield* session
+                .prompt(ManagedSessionMessage.make({ messageId: "fenced", text: "synthetic" }))
+                .pipe(Effect.flip);
+              assert.equal(after.reason, "closed");
+              return;
+            }
+            assert.equal(result._tag, "Success");
+            if (result._tag === "Success") {
+              assert.equal(result.success.stopReason, control === "steer" ? "completed" : "interrupted");
+              if (control === "cancel") assertNone(result.success.terminalEvidence);
+            }
+          });
+          yield* verifyTerminal();
+        })
+      );
+    });
   }
   for (const operation of [
     "initialize",
@@ -892,42 +894,44 @@ it.layer(TestLayer, { timeout: "20 seconds", concurrent: false })("managed nativ
     "session/new",
     "session/set_mode",
   ] satisfies ReadonlyArray<string>) {
-    it.effect(
-      `bounds ACP enrollment ${operation} before inference`,
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped();
-        const home = path.join(root, "home");
-        const workspace = path.join(root, "workspace");
-        yield* fs.makeDirectory(home, { mode: 0o700 });
-        yield* fs.makeDirectory(workspace);
-        const provider = operation === "session/set_mode" ? "cursor" : "grok";
-        const sessions = yield* AiProviderCliSession;
-        const opening = yield* sessions
-          .open(
-            ManagedLaunchProfile.make({
-              provider,
-              executable: "bun",
-              prefixArgs: [
-                "run",
-                path.join(import.meta.dirname, `fixtures/managed-${provider}-peer.ts`),
-                `--beep-fixture-stall-at=${operation}`,
-              ],
-              workspace,
-              profileRoot: home,
-              env: { HOME: home, PATH: yield* Config.String("PATH") },
-              authLane: "existing-subscription",
-              tools: [],
-            })
-          )
-          .pipe(Effect.flip, Effect.forkChild);
-        yield* fs.exists(path.join(home, "stall-reached")).pipe(Effect.repeat({ until: (exists) => exists }));
-        yield* TestClock.adjust("30 seconds");
-        const error = yield* Fiber.join(opening);
-        assert.equal(error.reason, "timeout");
-        assert.equal(error.operation, operation);
-      })
-    );
+    it.layer(TestClock.layer())("own TestClock", (it) => {
+      it.effect(
+        `bounds ACP enrollment ${operation} before inference`,
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped();
+          const home = path.join(root, "home");
+          const workspace = path.join(root, "workspace");
+          yield* fs.makeDirectory(home, { mode: 0o700 });
+          yield* fs.makeDirectory(workspace);
+          const provider = operation === "session/set_mode" ? "cursor" : "grok";
+          const sessions = yield* AiProviderCliSession;
+          const opening = yield* sessions
+            .open(
+              ManagedLaunchProfile.make({
+                provider,
+                executable: "bun",
+                prefixArgs: [
+                  "run",
+                  path.join(import.meta.dirname, `fixtures/managed-${provider}-peer.ts`),
+                  `--beep-fixture-stall-at=${operation}`,
+                ],
+                workspace,
+                profileRoot: home,
+                env: { HOME: home, PATH: yield* Config.String("PATH") },
+                authLane: "existing-subscription",
+                tools: [],
+              })
+            )
+            .pipe(Effect.flip, Effect.forkChild);
+          yield* fs.exists(path.join(home, "stall-reached")).pipe(Effect.repeat({ until: (exists) => exists }));
+          yield* TestClock.adjust("30 seconds");
+          const error = yield* Fiber.join(opening);
+          assert.equal(error.reason, "timeout");
+          assert.equal(error.operation, operation);
+        })
+      );
+    });
   }
 });
