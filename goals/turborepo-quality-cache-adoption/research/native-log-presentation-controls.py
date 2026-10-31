@@ -17,7 +17,7 @@ if not __debug__:
 repo = Path(__file__).resolve().parents[3]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--stable', type=Path, help='Pinned stable executable; defaults to this checkout installation')
-parser.add_argument('--pins', type=Path, help='Reviewed feature-local pin observation; defaults to current-client-pins.json')
+parser.add_argument('--pins', type=Path, help='Reviewed feature-local pin observation; defaults to errors-only-client-pins.json')
 parser.add_argument('--output', type=Path, help='Fresh private report path; existing reports are refused')
 args = parser.parse_args()
 report_dir = repo / '.beep/errors-only-controls'
@@ -30,7 +30,7 @@ node = next(n for n in ast.parse(shared.read_text()).body if isinstance(n, ast.F
 namespace = dict(time=time, subprocess=subprocess, os=os, signal=signal, deadline=time.monotonic() + 90)
 exec(compile(ast.Module(body=[node], type_ignores=[]), str(shared), 'exec'), namespace)
 invoke = namespace['invoke']
-pins_file = args.pins or repo / 'goals/turborepo-quality-cache-adoption/research/current-client-pins.json'
+pins_file = args.pins or repo / 'goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json'
 pins = json.loads(pins_file.read_text())
 bun = Path(subprocess.check_output(['bun', '--no-env-file', '-p', 'process.execPath'], text=True).strip())
 clients = {

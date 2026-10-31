@@ -409,3 +409,8 @@ goals-ops typecheck lane assertion; its errors-only assertions are unchanged.
 The source hash is refreshed after inspecting that diff. The production probe
 still reads structured summaries, and the optional flag remains absent. This
 adds no feature decision, native replay, task qualification or activation.
+
+A review caught that the two reproduction drivers still defaulted to the older
+shared pin observation. Their default and help text now name the feature-local
+`errors-only-client-pins.json` used by the retained evidence. Explicit `--pins`
+remains available; historical reports and the broader shared pin file are unchanged.
