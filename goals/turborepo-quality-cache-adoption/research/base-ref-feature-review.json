@@ -73,7 +73,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-      "sha256": "e9292fb7325dd81136d7faf01d256089b13ee45a9c983dd9c75bdb5de11801af"
+      "sha256": "ccb55fce3a47b32fc13cc3ab75d70750c9de84bb8b9975aa5a9119917a00b717"
     },
     {
       "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
@@ -115,5 +115,16 @@
     "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
     "observation": "The opt-in turbo-config-proof command deliberately offers an ambient --affected dry selector and an explicit filter-range selector. Its --base flag is documented for the query proof; no automatic workflow/script caller was found in the reviewed source. It executes dry plans, not quality tasks.",
     "decisionScope": "The absence decision is for current automatic execution paths. Reassess if this diagnostic becomes an automatic consumer; no performance benefit is claimed for it."
-  }
+  },
+  "applicabilityRefreshes": [
+    {
+      "acceptedMain": "480b302e427d3aca139f9a5c62e71ecc1e00c5bc",
+      "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "priorSha256": "e9292fb7325dd81136d7faf01d256089b13ee45a9c983dd9c75bdb5de11801af",
+      "currentSha256": "ccb55fce3a47b32fc13cc3ab75d70750c9de84bb8b9975aa5a9119917a00b717",
+      "reviewedDelta": "Exactly one verifier import and its CacheQualificationLive provideMerge on cache-policy; exhaustive byte substitution matches the full file. Every explicit SCM-base helper and all other bytes are unchanged.",
+      "nativeDriverAndReportUnchanged": true,
+      "newNativeExecutionClaimed": false
+    }
+  ]
 }

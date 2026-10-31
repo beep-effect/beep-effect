@@ -435,6 +435,14 @@ one MiB. Both cap stderr at one MiB. Their default raw outputs stay under the
 ignored `.beep/cargo-feature-review/` directory. They use finite credential-free
 child environments and require active Python assertions.
 
+
+### Stable signed-worker diagnostic, 2026-10-31
+
+[Trust-owner checkpoint](../../turborepo-cache-trust-observability/research/normal-source-worker-observation.json):
+accepted-source stable worker matrix under a transparent outer observer, with
+the complete private receipt retained by digest. Ordinary CLI failures remain
+separate. No computation, current-canary command or production profile is promoted.
+
 ### Quiet-log hash option, fresh canary snapshot (2026-10-31)
 
 - The [turbo registry tags](https://registry.npmjs.org/-/package/turbo/dist-tags)

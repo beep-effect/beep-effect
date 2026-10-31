@@ -361,6 +361,66 @@ it.layer(
     })
   );
   it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated upload admission clock", (it) => {
+    it.effect("reports a comparison deadline safely and releases its private worker directory", () =>
+      Effect.gen(function* () {
+        const { root, request, process: captured } = yield* fixture("none");
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const started = yield* Deferred.make<string>();
+        const original = O.getOrThrow(O.fromUndefinedOr(captured.getMockImplementation()));
+        captured.mockImplementation((options) =>
+          options.command === "/usr/bin/bwrap"
+            ? Deferred.succeed(started, O.getOrThrow(A.last(options.args ?? []))).pipe(Effect.andThen(Effect.never))
+            : original(options)
+        );
+        const worker = yield* runCacheSignedPilotExperiment(root, request).pipe(Effect.result, Effect.forkScoped);
+        const script = yield* Deferred.await(started);
+        yield* TestClock.adjust("21 minutes");
+        const result = yield* Fiber.join(worker);
+        Result.match(result, {
+          onSuccess: () => expect.fail("Supervisor accepted an expired comparison"),
+          onFailure: (error) => {
+            expect(error.message).toBe("Signed pilot comparison exceeded its twenty-minute execution limit.");
+            expect(error.cause).toBeUndefined();
+          },
+        });
+        expect(yield* fs.exists(path.dirname(script))).toBe(false);
+      })
+    );
+    it.effect("reports the shorter upload execution deadline and releases private storage", () =>
+      Effect.gen(function* () {
+        const f = yield* ownedUploadFixture("none");
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const started = yield* Deferred.make<string>();
+        const original = O.getOrThrow(O.fromUndefinedOr(f.process.getMockImplementation()));
+        f.process.mockImplementation((options) =>
+          options.command === "/usr/bin/bwrap"
+            ? Deferred.succeed(started, O.getOrThrow(A.last(options.args ?? []))).pipe(Effect.andThen(Effect.never))
+            : original(options)
+        );
+        const worker = yield* runCacheProducerUploadExperiment(
+          f.root,
+          f.request,
+          f.runtime,
+          f.binding,
+          [f.binding.key.computation],
+          f.issuer
+        ).pipe(Effect.result, Effect.forkScoped);
+        const script = yield* Deferred.await(started);
+        yield* TestClock.adjust("11 minutes");
+        const result = yield* Fiber.join(worker);
+        Result.match(result, {
+          onSuccess: () => expect.fail("Supervisor accepted an expired upload"),
+          onFailure: (error) => {
+            expect(error.message).toBe("Signed pilot upload exceeded its ten-minute execution limit.");
+            expect(error.cause).toBeUndefined();
+          },
+        });
+        expect(f.adapterStarted).toHaveBeenCalledOnce();
+        expect(yield* fs.exists(path.dirname(script))).toBe(false);
+      })
+    );
     it.effect("does not start an owned backend while waiting for upload admission", () =>
       Effect.gen(function* () {
         const f = yield* ownedUploadFixture("none");
