@@ -84,7 +84,8 @@ five secret-scanning alerts. Their separate sanitized catalog is
 without accepted risk, before final completion. Preserve the original seven
 Cloud IDs and twenty dependency IDs.
 
-Final closeout depends on shared PR #2399 for inherited policy-tooling failures.
+Shared PR #2399 repaired the inherited policy-tooling failures and merged as
+`f16d82e9f16d72f64d42b40284bf2867566e796b`; the final security branch incorporates it.
 This packet retains distinct test-only coverage repairs and consumes the shared
 implementation through main. The strict readiness contract and security
 finding inventories remain unchanged; see the decision and review records.

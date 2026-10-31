@@ -100,8 +100,8 @@ merged and the operator requested full closure.
 ## Decision Log
 
 - 2026-10-31: Strict completion requires the inherited Fallow and Lint Policy
-  failures to be repaired. Shared PR #2399 owns those fixes; consume it through
-  main after it lands. A locally reviewed candidate is retained in branch
+  failures to be repaired. Shared PR #2399 owns those fixes and was consumed
+  through main at `f16d82e9f16d72f64d42b40284bf2867566e796b`. A locally reviewed candidate is retained in branch
   history but excluded from the final change to avoid duplicate implementation.
   Keep the distinct test-only fixes for three inherited coverage gaps, with
   measured coverage, independent review and unchanged production behavior and
