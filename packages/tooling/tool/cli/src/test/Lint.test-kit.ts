@@ -16,6 +16,10 @@ export * from "@beep/repo-cli/commands/Lint";
 export {
   makePolicyGraph,
   moduleSyntax,
+  PolicyCliLayout,
+  PolicyClosure,
+  PolicyCommandNode,
+  PolicyWorkspace,
   renderClosureInputs,
   resolvePackageSubpath,
 } from "../commands/Lint/internal/PolicyFingerprintGraph.ts";

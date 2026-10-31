@@ -1,5 +1,5 @@
 // Exact declaration excerpts from packages/effect/src/Layer.ts at
-// @effect/vitest@4.0.6 (MIT; see ../LICENSE).
+// @effect/vitest@4.1.0 (MIT; see ../LICENSE).
 // Pinned full-file SHA-256: 557d656c68a30468c484576c04505efb149abb4d73bb93a9e61938f29409457c
 
 // @effect-vitest-anchor Layer.mock 2354 2362

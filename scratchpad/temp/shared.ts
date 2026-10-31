@@ -1,7 +1,11 @@
 /**
  * Shared pieces for the scratch projection programs: the source Markdown AST
  * built with `@beep/md` constructors, the file sink, and the entry-point runner.
+ *
+ * @since 0.0.0
  */
+
+import { $ScratchpadId } from "@beep/identity/packages";
 
 import { Md } from "@beep/md/Md";
 import type { Document as MdDocument } from "@beep/md/Md.model";
@@ -15,18 +19,53 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
+const $I = $ScratchpadId.create("temp/shared");
+
 // ---------------------------------------------------------------------------
 // Input schema shared by every projection program.
 // ---------------------------------------------------------------------------
 
-export class PageSpec extends S.Class<PageSpec, { readonly brand: unique symbol }>("PageSpec")({
-  title: S.NonEmptyString,
-  lang: S.NonEmptyString,
-  outputPath: S.NonEmptyString,
-}) {}
+/**
+ * Page metadata and output location every projection program writes against.
+ *
+ * **Example** (Describe an HTML page)
+ *
+ * ```ts
+ * import { PageSpec } from "@beep/scratchpad/temp/shared"
+ *
+ * const spec = PageSpec.make({ title: "Release notes", lang: "en", outputPath: "out/index.html" })
+ * console.log(spec.outputPath) // "out/index.html"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PageSpec extends S.Class<PageSpec, { readonly brand: unique symbol }>($I`PageSpec`)(
+  {
+    title: S.NonEmptyString,
+    lang: S.NonEmptyString,
+    outputPath: S.NonEmptyString,
+  },
+  $I.annote("PageSpec", {
+    description: "Page metadata and output location every projection program writes against.",
+  })
+) {}
 
 /**
  * Builds the spec for one program: `argv[2]` overrides the default output path.
+ *
+ * **Example** (Resolve the output path for the HTML projection)
+ *
+ * ```ts
+ * import { specFor } from "@beep/scratchpad/temp/shared"
+ *
+ * // `bun scratchpad/temp/index.ts` with no argument keeps the default path.
+ * const spec = specFor("scratchpad/temp/out/index.html")
+ * console.log(spec.title) // "Schema-first Markdown projections"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const specFor = (defaultOutputPath: string): PageSpec =>
   PageSpec.make({
@@ -39,6 +78,28 @@ export const specFor = (defaultOutputPath: string): PageSpec =>
 // Source document, built only with @beep/md constructors.
 // ---------------------------------------------------------------------------
 
+/**
+ * The source Markdown AST every projection program serializes.
+ *
+ * **Details**
+ *
+ * It covers headings, inline marks, an ordered list, an aligned table, a code
+ * block, an admonition, a blockquote, a rule and a link, so each target's
+ * projection exercises its common node kinds.
+ *
+ * **Example** (Render the source document back to Markdown)
+ *
+ * ```ts
+ * import { Md } from "@beep/md/Md"
+ * import { markdownDocument } from "@beep/scratchpad/temp/shared"
+ *
+ * const rendered = Md.render(markdownDocument)
+ * console.log(rendered._tag) // "Success"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const markdownDocument: MdDocument = Md.make(
   [
     Md.h1("Schema-first Markdown projections"),
@@ -88,6 +149,29 @@ export const markdownDocument: MdDocument = Md.make(
 // File sink.
 // ---------------------------------------------------------------------------
 
+/**
+ * Write text to a file, creating its parent directories first.
+ *
+ * **Details**
+ *
+ * The path resolves against the current working directory, and the effect
+ * logs and returns the absolute path it wrote.
+ *
+ * **Example** (Write a rendered page)
+ *
+ * ```ts
+ * import * as BunServices from "@effect/platform-bun/BunServices"
+ * import { writeTextFile } from "@beep/scratchpad/temp/shared"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = writeTextFile("scratchpad/temp/out/index.md", "# Hello\n").pipe(
+ *   Effect.provide(BunServices.layer)
+ * )
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const writeTextFile = Effect.fn("writeTextFile")(function* (outputPath: string, text: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -102,6 +186,34 @@ export const writeTextFile = Effect.fn("writeTextFile")(function* (outputPath: s
 // Entry point: compose the platform layer once and run inside its scope.
 // ---------------------------------------------------------------------------
 
+/**
+ * Run a scratch program as the process entry point with the Bun platform services.
+ *
+ * **Details**
+ *
+ * The program runs inside a scoped layer built over `BunServices.layer`, so
+ * its file system and path requirements are satisfied once, and
+ * `BunRuntime.runMain` owns exit codes and interruption.
+ *
+ * **Example** (Run a projection program)
+ *
+ * ```ts
+ * import { markdownDocument, runScratch, specFor, writeTextFile } from "@beep/scratchpad/temp/shared"
+ * import { Md } from "@beep/md/Md"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const spec = specFor("scratchpad/temp/out/index.md")
+ *   const markdown = yield* Effect.fromResult(Md.render(markdownDocument))
+ *   yield* writeTextFile(spec.outputPath, markdown)
+ * })
+ *
+ * runScratch(program)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const runScratch = <E>(program: Effect.Effect<unknown, E, FileSystem.FileSystem | Path.Path>): void =>
   BunRuntime.runMain(
     program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped)

@@ -24,6 +24,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -33,8 +34,11 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { ts } from "ts-morph";
 import { PolicyFingerprintError } from "../PolicyFingerprint.schemas.ts";
+
+const $I = $RepoCliId.create("commands/Lint/internal/PolicyFingerprintGraph");
 
 /**
  * The file tree a fingerprint is computed from, addressed by repo-relative
@@ -54,34 +58,84 @@ export interface PolicySourceTree {
 /**
  * One workspace package: its directory and raw `exports` / `imports` maps.
  *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface PolicyWorkspace {
-  readonly directory: string;
-  readonly exports: unknown;
-  readonly imports: unknown;
-  readonly name: string;
-}
-
-/**
- * The fixed entry points of the CLI being fingerprinted.
+ * **Details**
+ *
+ * The `exports` and `imports` maps stay `unknown`: the manifest decoder owns
+ * their wire shape and {@link resolvePackageSubpath} reads them defensively.
+ *
+ * **Example** (Describe a workspace)
+ *
+ * ```ts
+ * import { PolicyWorkspace } from "@beep/repo-cli/test/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * const workspace = PolicyWorkspace.make({
+ *   name: "@beep/a",
+ *   directory: "packages/a",
+ *   exports: { ".": "./src/index.ts" },
+ *   imports: undefined,
+ * })
+ * console.log(S.is(PolicyWorkspace)(workspace)) // true
+ * ```
  *
  * @internal
  * @category models
  * @since 0.0.0
  */
-export interface PolicyCliLayout {
-  /** Directory holding every command module; dispatch edges into it are cut. */
-  readonly commandsDirectory: string;
-  /** The root command's binding in `rootModule`. */
-  readonly rootBinding: string;
-  /** The module that defines the root command. */
-  readonly rootModule: string;
-  /** Shell modules loaded for every invocation; their edges into `commandsDirectory` are cut. */
-  readonly shell: ReadonlyArray<string>;
-}
+export class PolicyWorkspace extends S.Opaque<PolicyWorkspace, { readonly brand: unique symbol }>()(
+  S.Struct({
+    directory: S.String,
+    exports: S.Unknown,
+    imports: S.Unknown,
+    name: S.String,
+  }).pipe(
+    $I.annoteSchema("PolicyWorkspace", {
+      description: "A workspace package's repo-relative directory, package name and raw exports/imports maps.",
+    })
+  )
+) {}
+
+/**
+ * The fixed entry points of the CLI being fingerprinted.
+ *
+ * **Details**
+ *
+ * `commandsDirectory` holds every command module; dispatch edges into it are
+ * cut. `rootModule` defines the root command bound as `rootBinding`. `shell`
+ * lists the modules loaded for every invocation; their edges into
+ * `commandsDirectory` are cut too.
+ *
+ * **Example** (Describe a CLI layout)
+ *
+ * ```ts
+ * import { PolicyCliLayout } from "@beep/repo-cli/test/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * const layout = PolicyCliLayout.make({
+ *   shell: ["cli/src/bin.ts"],
+ *   rootModule: "cli/src/commands/Root.ts",
+ *   rootBinding: "rootCommand",
+ *   commandsDirectory: "cli/src/commands",
+ * })
+ * console.log(S.is(PolicyCliLayout)(layout)) // true
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class PolicyCliLayout extends S.Opaque<PolicyCliLayout, { readonly brand: unique symbol }>()(
+  S.Struct({
+    commandsDirectory: S.String,
+    rootBinding: S.String,
+    rootModule: S.String,
+    shell: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("PolicyCliLayout", {
+      description: "Repo-relative entry points of the CLI whose command paths a policy fingerprint walks.",
+    })
+  )
+) {}
 
 interface ImportEdge {
   /** Local names bound by a named or default import; `none` for namespace, side-effect, re-export or dynamic edges. */
@@ -180,7 +234,7 @@ export const moduleSyntax: {
     if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
       const clause = statement.importClause;
       const specifier = statement.moduleSpecifier.text;
-      if (clause?.isTypeOnly === true) continue;
+      if (clause?.phaseModifier === ts.SyntaxKind.TypeKeyword) continue;
       if (clause === undefined) {
         edges.push({ specifier, bindings: O.none(), dynamic: false });
         continue;
@@ -394,67 +448,71 @@ const TYPESCRIPT_SOURCE = /\.(?:ts|tsx|mts|cts)$/;
 /**
  * The resolved graph a fingerprint key reaches.
  *
+ * **Details**
+ *
+ * `modules` holds every module reached, repo-relative. `opaqueWorkspaces`
+ * holds the workspace directories whose reached sources contain a
+ * non-literal dynamic import.
+ *
+ * **Example** (Describe a closure)
+ *
+ * ```ts
+ * import { PolicyClosure } from "@beep/repo-cli/test/Lint"
+ * import * as HashSet from "effect/HashSet"
+ * import * as S from "effect/Schema"
+ *
+ * const closure = PolicyClosure.make({
+ *   modules: HashSet.make("packages/a/src/index.ts"),
+ *   opaqueWorkspaces: HashSet.empty<string>(),
+ * })
+ * console.log(S.is(PolicyClosure)(closure)) // true
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
  */
-export interface PolicyClosure {
-  /** Every module reached, repo-relative. */
-  readonly modules: HashSet.HashSet<string>;
-  /** Workspace directories whose sources hold a non-literal dynamic import that was reached. */
-  readonly opaqueWorkspaces: HashSet.HashSet<string>;
-}
+export class PolicyClosure extends S.Opaque<PolicyClosure, { readonly brand: unique symbol }>()(
+  S.Struct({
+    modules: S.HashSet(S.String),
+    opaqueWorkspaces: S.HashSet(S.String),
+  }).pipe(
+    $I.annoteSchema("PolicyClosure", {
+      description: "Modules a fingerprint key reaches and the workspaces whose reached sources import dynamically.",
+    })
+  )
+) {}
 
 /**
  * One resolved command on an argv path.
  *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface PolicyCommandNode {
-  readonly binding: string;
-  readonly module: string;
-  readonly name: string;
-}
-
-/**
- * What a {@link makePolicyGraph} reader walks.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface PolicyGraphOptions {
-  readonly tree: PolicySourceTree;
-  readonly workspaces: ReadonlyArray<PolicyWorkspace>;
-}
-
-/**
- * Build a graph reader over a source tree and its workspaces.
- *
- * **Details**
- *
- * The reader caches parsed modules, so one reader serves every key of a
- * fingerprint computation.
- *
- * **Example** (Create a graph reader)
+ * **Example** (Describe a command node)
  *
  * ```ts
- * import { makePolicyGraph } from "@beep/repo-cli/test/Lint"
- * import * as Effect from "effect/Effect"
- * import * as O from "effect/Option"
+ * import { PolicyCommandNode } from "@beep/repo-cli/test/Lint"
+ * import * as S from "effect/Schema"
  *
- * const tree = { read: () => Effect.succeed(O.none()), files: () => Effect.succeed([]) }
- * const graph = makePolicyGraph({ tree, workspaces: [] })
- * console.log(typeof graph.closure) // "function"
+ * const node = PolicyCommandNode.make({ module: "cli/src/commands/Root.ts", binding: "rootCommand", name: "beep" })
+ * console.log(S.is(PolicyCommandNode)(node)) // true
  * ```
  *
  * @internal
- * @category constructors
+ * @category models
  * @since 0.0.0
  */
-export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
+export class PolicyCommandNode extends S.Opaque<PolicyCommandNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    binding: S.String,
+    module: S.String,
+    name: S.String,
+  }).pipe(
+    $I.annoteSchema("PolicyCommandNode", {
+      description: "A command on an argv path: its defining module, local binding and command name.",
+    })
+  )
+) {}
+
+const policyGraph = (tree: PolicySourceTree, workspaces: ReadonlyArray<PolicyWorkspace>) => {
   const byName = HashMap.fromIterable(A.map(workspaces, (workspace) => [workspace.name, workspace] as const));
   const byDepth = A.sort(
     workspaces,
@@ -578,11 +636,11 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
       });
     }
     const nodes: Array<PolicyCommandNode> = [
-      {
+      PolicyCommandNode.make({
         module: layout.rootModule,
         binding: layout.rootBinding,
         name: O.getOrElse(rootDefinition.value.name, () => ""),
-      },
+      }),
     ];
     let current = rootDefinition.value;
     let currentModule = layout.rootModule;
@@ -595,7 +653,7 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
         const definition = yield* definitionOf(target.value.module, target.value.local);
         if (O.isSome(definition) && O.contains(definition.value.name, token)) {
           next = O.some({
-            node: { module: target.value.module, binding: target.value.local, name: token },
+            node: PolicyCommandNode.make({ module: target.value.module, binding: target.value.local, name: token }),
             definition: definition.value,
           });
           break;
@@ -679,7 +737,7 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
         pending.push({ module: target.value, cut: noCut });
       }
     }
-    return { modules, opaqueWorkspaces } satisfies PolicyClosure;
+    return PolicyClosure.make({ modules, opaqueWorkspaces });
   });
 
   /**
@@ -724,7 +782,7 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
         pending.push(target.value);
       }
     }
-    return { modules, opaqueWorkspaces } satisfies PolicyClosure;
+    return PolicyClosure.make({ modules, opaqueWorkspaces });
   });
 
   /** The closure of one command path, without the shell. */
@@ -748,7 +806,40 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
  * @category models
  * @since 0.0.0
  */
-export type PolicyGraph = ReturnType<typeof makePolicyGraph>;
+export type PolicyGraph = ReturnType<typeof policyGraph>;
+
+/**
+ * Build a graph reader over a source tree and its workspaces.
+ *
+ * **Details**
+ *
+ * The reader caches parsed modules, so one reader serves every key of a
+ * fingerprint computation.
+ *
+ * **Example** (Create a graph reader)
+ *
+ * ```ts
+ * import { makePolicyGraph } from "@beep/repo-cli/test/Lint"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const tree = { read: () => Effect.succeed(O.none()), files: () => Effect.succeed([]) }
+ * const graph = makePolicyGraph(tree, [])
+ * console.log(typeof graph.closure) // "function"
+ * ```
+ *
+ * @returns A reader whose `closure`, `commandClosure` and `shellClosure` compute
+ * the modules a command reaches, alongside the `resolve`, `commandPath`,
+ * `workspaceOf` and `syntaxOf` lookups they are built from.
+ *
+ * @internal
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makePolicyGraph: {
+  (workspaces: ReadonlyArray<PolicyWorkspace>): (tree: PolicySourceTree) => PolicyGraph;
+  (tree: PolicySourceTree, workspaces: ReadonlyArray<PolicyWorkspace>): PolicyGraph;
+} = dual(2, policyGraph);
 
 /**
  * Render a closure as Turbo inputs: every reached module, each reached

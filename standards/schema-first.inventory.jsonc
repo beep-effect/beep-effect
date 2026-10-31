@@ -1459,7 +1459,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 43,
+      "line": 42,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
@@ -1865,7 +1865,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 188,
+      "line": 193,
       "owner": "@beep/repo-cli",
       "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
     },
