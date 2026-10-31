@@ -46,3 +46,10 @@ Rules:
 Stop if the signed-in CSV export is unavailable, tracked evidence contains secret
 or raw-path material, a fix needs an out-of-packet architecture decision, or the
 same blocker repeats after reasonable investigation.
+
+## Current acceptance — 2026-10-31
+
+The seven Cloud findings merged in #2333 and are Fixed. PR #2389 carries
+20 newer dependency fixes (#450–#469) in `ops/dependabot.json`. Finish its
+hosted review, merge, exact alert closure and completion receipt; preserve
+the original Cloud catalog and historical evidence.
