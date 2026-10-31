@@ -24,6 +24,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -33,8 +34,11 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { ts } from "ts-morph";
 import { PolicyFingerprintError } from "../PolicyFingerprint.schemas.ts";
+
+const $I = $RepoCliId.create("commands/Lint/internal/PolicyFingerprintGraph");
 
 /**
  * The file tree a fingerprint is computed from, addressed by repo-relative
@@ -58,12 +62,11 @@ export interface PolicySourceTree {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyWorkspace {
-  readonly directory: string;
-  readonly exports: unknown;
-  readonly imports: unknown;
-  readonly name: string;
-}
+export class PolicyWorkspace extends S.Opaque<PolicyWorkspace, { readonly brand: unique symbol }>()(
+  S.Struct({ directory: S.String, exports: S.Unknown, imports: S.Unknown, name: S.String }).pipe(
+    $I.annoteSchema("PolicyWorkspace", { description: "PolicyWorkspace data used by the policy graph." })
+  )
+) {}
 
 /**
  * The fixed entry points of the CLI being fingerprinted.
@@ -72,16 +75,11 @@ export interface PolicyWorkspace {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyCliLayout {
-  /** Directory holding every command module; dispatch edges into it are cut. */
-  readonly commandsDirectory: string;
-  /** The root command's binding in `rootModule`. */
-  readonly rootBinding: string;
-  /** The module that defines the root command. */
-  readonly rootModule: string;
-  /** Shell modules loaded for every invocation; their edges into `commandsDirectory` are cut. */
-  readonly shell: ReadonlyArray<string>;
-}
+export class PolicyCliLayout extends S.Opaque<PolicyCliLayout, { readonly brand: unique symbol }>()(
+  S.Struct({ commandsDirectory: S.String, rootBinding: S.String, rootModule: S.String, shell: S.Array(S.String) }).pipe(
+    $I.annoteSchema("PolicyCliLayout", { description: "PolicyCliLayout data used by the policy graph." })
+  )
+) {}
 
 interface ImportEdge {
   /** Local names bound by a named or default import; `none` for namespace, side-effect, re-export or dynamic edges. */
@@ -140,6 +138,111 @@ const elementBinding = (node: ts.Expression): O.Option<string> => {
   return ts.isIdentifier(inner) ? O.some(inner.text) : O.none();
 };
 
+interface DeclarationState {
+  arrays: HashMap.HashMap<string, ReadonlyArray<ts.Expression>>;
+  readonly definitions: Array<readonly [string, ts.Expression]>;
+  readonly edges: Array<ImportEdge>;
+  exports: ModuleSyntax["exports"];
+  imports: ModuleSyntax["imports"];
+  namespaces: HashSet.HashSet<string>;
+  readonly starExports: Array<string>;
+}
+
+const readImportBindings = (state: DeclarationState, clause: ts.ImportClause, specifier: string) => {
+  const named = clause.namedBindings;
+  const locals: Array<string> = [];
+  if (clause.name !== undefined) {
+    locals.push(clause.name.text);
+    state.imports = HashMap.set(state.imports, clause.name.text, { specifier, imported: "default" });
+  }
+  if (named !== undefined && ts.isNamedImports(named)) {
+    for (const element of A.filter(named.elements, (element) => !element.isTypeOnly)) {
+      locals.push(element.name.text);
+      state.imports = HashMap.set(state.imports, element.name.text, {
+        specifier,
+        imported: element.propertyName?.text ?? element.name.text,
+      });
+    }
+  }
+  state.edges.push({ specifier, bindings: O.some(locals), dynamic: false });
+};
+
+const readImport = (state: DeclarationState, statement: ts.ImportDeclaration) => {
+  if (!ts.isStringLiteral(statement.moduleSpecifier)) return;
+  const clause = statement.importClause;
+  const specifier = statement.moduleSpecifier.text;
+  if (clause?.phaseModifier === ts.SyntaxKind.TypeKeyword) return;
+  if (clause === undefined) {
+    state.edges.push({ specifier, bindings: O.none(), dynamic: false });
+    return;
+  }
+  const named = clause.namedBindings;
+  if (named !== undefined && ts.isNamespaceImport(named)) {
+    if (specifier === CLI_COMMAND_MODULE) state.namespaces = HashSet.add(state.namespaces, named.name.text);
+    state.edges.push({ specifier, bindings: O.none(), dynamic: false });
+    return;
+  }
+  readImportBindings(state, clause, specifier);
+};
+
+const readNamedExports = (state: DeclarationState, clause: ts.NamedExports, specifier: O.Option<string>) => {
+  for (const element of A.filter(clause.elements, (element) => !element.isTypeOnly)) {
+    const local = element.propertyName?.text ?? element.name.text;
+    state.exports = HashMap.set(
+      state.exports,
+      element.name.text,
+      O.isSome(specifier) ? { _tag: "From", specifier: specifier.value, imported: local } : { _tag: "Local", local }
+    );
+  }
+};
+
+const readExport = (state: DeclarationState, statement: ts.ExportDeclaration) => {
+  if (statement.isTypeOnly) return;
+  const specifier =
+    statement.moduleSpecifier !== undefined && ts.isStringLiteral(statement.moduleSpecifier)
+      ? O.some(statement.moduleSpecifier.text)
+      : O.none<string>();
+  const clause = statement.exportClause;
+  if (O.isSome(specifier)) {
+    state.edges.push({ specifier: specifier.value, bindings: O.none(), dynamic: false });
+    if (clause === undefined) state.starExports.push(specifier.value);
+  }
+  if (clause !== undefined && ts.isNamedExports(clause)) readNamedExports(state, clause, specifier);
+};
+
+const readVariable = (state: DeclarationState, declaration: ts.VariableDeclaration, exported: boolean) => {
+  if (!ts.isIdentifier(declaration.name) || declaration.initializer === undefined) return;
+  const name = declaration.name.text;
+  if (exported) state.exports = HashMap.set(state.exports, name, { _tag: "Local", local: name });
+  const initializer = unwrap(declaration.initializer);
+  if (ts.isArrayLiteralExpression(initializer)) state.arrays = HashMap.set(state.arrays, name, initializer.elements);
+  state.definitions.push([name, initializer]);
+};
+
+const readVariables = (state: DeclarationState, statement: ts.VariableStatement) => {
+  const exported = A.some(statement.modifiers ?? [], (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
+  for (const declaration of statement.declarationList.declarations) readVariable(state, declaration, exported);
+};
+
+const readDeclarations = (source: ts.SourceFile): DeclarationState => {
+  const state: DeclarationState = {
+    edges: [],
+    starExports: [],
+    imports: HashMap.empty(),
+    exports: HashMap.empty(),
+    namespaces: HashSet.empty(),
+    arrays: HashMap.empty(),
+    definitions: [],
+  };
+  for (const statement of source.statements) {
+    if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier))
+      readImport(state, statement);
+    else if (ts.isExportDeclaration(statement)) readExport(state, statement);
+    else if (ts.isVariableStatement(statement)) readVariables(state, statement);
+  }
+  return state;
+};
+
 /**
  * Read the import edges, export map and command definitions of one module.
  *
@@ -167,86 +270,8 @@ export const moduleSyntax: {
     false,
     Str.endsWith("x")(file) ? ts.ScriptKind.TSX : ts.ScriptKind.TS
   );
-  const edges: Array<ImportEdge> = [];
-  const starExports: Array<string> = [];
-  let imports = HashMap.empty<string, { readonly specifier: string; readonly imported: string }>();
-  let exports = HashMap.empty<string, ExportTarget>();
-  let namespaces = HashSet.empty<string>();
-  let arrays = HashMap.empty<string, ReadonlyArray<ts.Expression>>();
-  const definitions: Array<readonly [string, ts.Expression]> = [];
+  const { edges, starExports, imports, exports, namespaces, arrays, definitions } = readDeclarations(source);
   let opaqueDynamicImport = false;
-
-  for (const statement of source.statements) {
-    if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) {
-      const clause = statement.importClause;
-      const specifier = statement.moduleSpecifier.text;
-      if (clause?.isTypeOnly === true) continue;
-      if (clause === undefined) {
-        edges.push({ specifier, bindings: O.none(), dynamic: false });
-        continue;
-      }
-      const named = clause.namedBindings;
-      if (named !== undefined && ts.isNamespaceImport(named)) {
-        if (specifier === CLI_COMMAND_MODULE) namespaces = HashSet.add(namespaces, named.name.text);
-        edges.push({ specifier, bindings: O.none(), dynamic: false });
-        continue;
-      }
-      const locals: Array<string> = [];
-      if (clause.name !== undefined) {
-        locals.push(clause.name.text);
-        imports = HashMap.set(imports, clause.name.text, { specifier, imported: "default" });
-      }
-      if (named !== undefined && ts.isNamedImports(named)) {
-        for (const element of named.elements) {
-          if (element.isTypeOnly) continue;
-          locals.push(element.name.text);
-          imports = HashMap.set(imports, element.name.text, {
-            specifier,
-            imported: element.propertyName?.text ?? element.name.text,
-          });
-        }
-      }
-      edges.push({ specifier, bindings: O.some(locals), dynamic: false });
-      continue;
-    }
-    if (ts.isExportDeclaration(statement)) {
-      if (statement.isTypeOnly) continue;
-      const specifier =
-        statement.moduleSpecifier !== undefined && ts.isStringLiteral(statement.moduleSpecifier)
-          ? O.some(statement.moduleSpecifier.text)
-          : O.none<string>();
-      const clause = statement.exportClause;
-      if (O.isSome(specifier)) {
-        edges.push({ specifier: specifier.value, bindings: O.none(), dynamic: false });
-        if (clause === undefined) starExports.push(specifier.value);
-      }
-      if (clause !== undefined && ts.isNamedExports(clause)) {
-        for (const element of clause.elements) {
-          if (element.isTypeOnly) continue;
-          const local = element.propertyName?.text ?? element.name.text;
-          exports = HashMap.set(
-            exports,
-            element.name.text,
-            O.isSome(specifier)
-              ? { _tag: "From", specifier: specifier.value, imported: local }
-              : { _tag: "Local", local }
-          );
-        }
-      }
-      continue;
-    }
-    if (ts.isVariableStatement(statement)) {
-      const exported = A.some(statement.modifiers ?? [], (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
-      for (const declaration of statement.declarationList.declarations) {
-        if (!ts.isIdentifier(declaration.name) || declaration.initializer === undefined) continue;
-        const name = declaration.name.text;
-        if (exported) exports = HashMap.set(exports, name, { _tag: "Local", local: name });
-        const initializer = unwrap(declaration.initializer);
-        if (ts.isArrayLiteralExpression(initializer)) arrays = HashMap.set(arrays, name, initializer.elements);
-        definitions.push([name, initializer]);
-      }
-    }
-  }
 
   const visit = (node: ts.Node): void => {
     if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
@@ -272,6 +297,26 @@ export const moduleSyntax: {
     return [O.none()];
   };
 
+  const analyzePipe = (call: ts.CallExpression, receiver: ts.Expression) => {
+    const base = analyze(receiver);
+    const piped = A.flatMap(call.arguments, (argument) => {
+      const call = unwrap(argument);
+      return ts.isCallExpression(call) && isNamespaceCall(call, namespaces, "withSubcommands")
+        ? A.flatMap(call.arguments, subcommandElements)
+        : [];
+    });
+    return { make: base.make, subcommands: [...base.subcommands, ...piped] };
+  };
+
+  const analyzeSubcommands = (call: ts.CallExpression) => {
+    const [self, subcommands] = call.arguments;
+    const base = self === undefined ? { make: O.none(), subcommands: [] } : analyze(self);
+    return {
+      make: base.make,
+      subcommands: [...base.subcommands, ...(subcommands === undefined ? [] : subcommandElements(subcommands))],
+    };
+  };
+
   const analyze = (
     node: ts.Expression
   ): { readonly make: O.Option<ts.CallExpression>; readonly subcommands: ReadonlyArray<O.Option<string>> } => {
@@ -279,22 +324,10 @@ export const moduleSyntax: {
     if (!ts.isCallExpression(inner)) return { make: O.none(), subcommands: [] };
     if (isNamespaceCall(inner, namespaces, "make")) return { make: O.some(inner), subcommands: [] };
     if (isNamespaceCall(inner, namespaces, "withSubcommands") && inner.arguments.length === 2) {
-      const [self, subcommands] = inner.arguments;
-      const base = self === undefined ? { make: O.none(), subcommands: [] } : analyze(self);
-      return {
-        make: base.make,
-        subcommands: [...base.subcommands, ...(subcommands === undefined ? [] : subcommandElements(subcommands))],
-      };
+      return analyzeSubcommands(inner);
     }
     if (ts.isPropertyAccessExpression(inner.expression) && inner.expression.name.text === "pipe") {
-      const base = analyze(inner.expression.expression);
-      const piped = A.flatMap(inner.arguments, (argument) => {
-        const call = unwrap(argument);
-        return ts.isCallExpression(call) && isNamespaceCall(call, namespaces, "withSubcommands")
-          ? A.flatMap(call.arguments, subcommandElements)
-          : [];
-      });
-      return { make: base.make, subcommands: [...base.subcommands, ...piped] };
+      return analyzePipe(inner, inner.expression.expression);
     }
     return { make: O.none(), subcommands: [] };
   };
@@ -398,12 +431,11 @@ const TYPESCRIPT_SOURCE = /\.(?:ts|tsx|mts|cts)$/;
  * @category models
  * @since 0.0.0
  */
-export interface PolicyClosure {
-  /** Every module reached, repo-relative. */
-  readonly modules: HashSet.HashSet<string>;
-  /** Workspace directories whose sources hold a non-literal dynamic import that was reached. */
-  readonly opaqueWorkspaces: HashSet.HashSet<string>;
-}
+export class PolicyClosure extends S.Opaque<PolicyClosure, { readonly brand: unique symbol }>()(
+  S.Struct({ modules: S.HashSet(S.String), opaqueWorkspaces: S.HashSet(S.String) }).pipe(
+    $I.annoteSchema("PolicyClosure", { description: "PolicyClosure data used by the policy graph." })
+  )
+) {}
 
 /**
  * One resolved command on an argv path.
@@ -412,11 +444,11 @@ export interface PolicyClosure {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyCommandNode {
-  readonly binding: string;
-  readonly module: string;
-  readonly name: string;
-}
+export class PolicyCommandNode extends S.Opaque<PolicyCommandNode, { readonly brand: unique symbol }>()(
+  S.Struct({ binding: S.String, module: S.String, name: S.String }).pipe(
+    $I.annoteSchema("PolicyCommandNode", { description: "PolicyCommandNode data used by the policy graph." })
+  )
+) {}
 
 /**
  * What a {@link makePolicyGraph} reader walks.
@@ -425,10 +457,19 @@ export interface PolicyCommandNode {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyGraphOptions {
-  readonly tree: PolicySourceTree;
-  readonly workspaces: ReadonlyArray<PolicyWorkspace>;
-}
+export class PolicyGraphOptions extends S.Opaque<PolicyGraphOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    tree: S.declare<PolicySourceTree>(
+      (value): value is PolicySourceTree =>
+        P.isObject(value) &&
+        "files" in value &&
+        P.isFunction(value.files) &&
+        "read" in value &&
+        P.isFunction(value.read)
+    ),
+    workspaces: S.Array(PolicyWorkspace),
+  }).pipe($I.annoteSchema("PolicyGraphOptions", { description: "PolicyGraphOptions data used by the policy graph." }))
+) {}
 
 /**
  * Build a graph reader over a source tree and its workspaces.
@@ -441,16 +482,18 @@ export interface PolicyGraphOptions {
  * **Example** (Create a graph reader)
  *
  * ```ts
- * import { makePolicyGraph } from "@beep/repo-cli/test/Lint"
+ * import { makePolicyGraph, PolicyGraphOptions } from "@beep/repo-cli/test/Lint"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const tree = { read: () => Effect.succeed(O.none()), files: () => Effect.succeed([]) }
- * const graph = makePolicyGraph({ tree, workspaces: [] })
+ * const graph = makePolicyGraph(PolicyGraphOptions.make({ tree, workspaces: [] }))
  * console.log(typeof graph.closure) // "function"
  * ```
  *
  * @internal
+ * @param options - Source tree and workspace definitions to traverse.
+ * @returns A cached graph reader for command and import closures.
  * @category constructors
  * @since 0.0.0
  */
@@ -526,6 +569,21 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
     return yield* resolveRelative(`${workspace.value.directory}/package.json`, target.value);
   });
 
+  const resolveStarExport = Effect.fnUntraced(function* (
+    module: string,
+    name: string,
+    depth: number,
+    specifiers: ReadonlyArray<string>
+  ) {
+    for (const specifier of specifiers) {
+      const next = yield* resolve(module, specifier);
+      if (O.isNone(next)) continue;
+      const found = yield* resolveExport(next.value, name, depth + 1);
+      if (O.isSome(found)) return found;
+    }
+    return O.none<{ readonly module: string; readonly local: string }>();
+  });
+
   const resolveExport: (
     module: string,
     name: string,
@@ -541,13 +599,7 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
         const next = yield* resolve(module, target.value.specifier);
         return O.isNone(next) ? O.none() : yield* resolveExport(next.value, target.value.imported, depth + 1);
       }
-      for (const specifier of syntax.value.starExports) {
-        const next = yield* resolve(module, specifier);
-        if (O.isNone(next)) continue;
-        const found = yield* resolveExport(next.value, name, depth + 1);
-        if (O.isSome(found)) return found;
-      }
-      return O.none();
+      return yield* resolveStarExport(module, name, depth, syntax.value.starExports);
     });
 
   const resolveLocal = Effect.fnUntraced(function* (module: string, local: string, depth: number) {
@@ -565,6 +617,24 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
     return O.flatMap(syntax, (value) => HashMap.get(value.commands, binding));
   });
 
+  const findSubcommand = Effect.fnUntraced(function* (module: string, current: CommandDefinition, token: string) {
+    let next = O.none<{ readonly node: PolicyCommandNode; readonly definition: CommandDefinition }>();
+    for (const element of current.subcommands) {
+      if (O.isNone(element)) continue;
+      const target = yield* resolveLocal(module, element.value, 0);
+      if (O.isNone(target)) continue;
+      const definition = yield* definitionOf(target.value.module, target.value.local);
+      if (O.isSome(definition) && O.contains(definition.value.name, token)) {
+        next = O.some({
+          node: PolicyCommandNode.make({ module: target.value.module, binding: target.value.local, name: token }),
+          definition: definition.value,
+        });
+        break;
+      }
+    }
+    return next;
+  });
+
   /**
    * Walk argv tokens from the root command. Returns every command on the
    * matched path, root first, and how many tokens it consumed.
@@ -578,29 +648,16 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
       });
     }
     const nodes: Array<PolicyCommandNode> = [
-      {
+      PolicyCommandNode.make({
         module: layout.rootModule,
         binding: layout.rootBinding,
         name: O.getOrElse(rootDefinition.value.name, () => ""),
-      },
+      }),
     ];
     let current = rootDefinition.value;
     let currentModule = layout.rootModule;
     for (const token of tokens) {
-      let next = O.none<{ readonly node: PolicyCommandNode; readonly definition: CommandDefinition }>();
-      for (const element of current.subcommands) {
-        if (O.isNone(element)) continue;
-        const target = yield* resolveLocal(currentModule, element.value, 0);
-        if (O.isNone(target)) continue;
-        const definition = yield* definitionOf(target.value.module, target.value.local);
-        if (O.isSome(definition) && O.contains(definition.value.name, token)) {
-          next = O.some({
-            node: { module: target.value.module, binding: target.value.local, name: token },
-            definition: definition.value,
-          });
-          break;
-        }
-      }
+      const next = yield* findSubcommand(currentModule, current, token);
       if (O.isNone(next)) break;
       nodes.push(next.value.node);
       current = next.value.definition;
@@ -626,6 +683,28 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
     );
   });
 
+  const closureTargets = Effect.fnUntraced(function* (
+    item: { readonly module: string; readonly cut: (specifier: string, target: string) => boolean },
+    syntax: ModuleSyntax
+  ) {
+    const targets: Array<string> = [];
+    for (const edge of syntax.edges) {
+      const target = yield* resolve(item.module, edge.specifier);
+      if (O.isNone(target)) {
+        if (Str.startsWith(".")(edge.specifier)) {
+          return yield* PolicyFingerprintError.make({
+            message: `Cannot resolve ${edge.specifier} imported by ${item.module}`,
+            cause: edge.specifier,
+          });
+        }
+        continue;
+      }
+      if (item.cut(edge.specifier, target.value)) continue;
+      targets.push(target.value);
+    }
+    return targets;
+  });
+
   /**
    * The closure of a set of entry modules. An entry with cut specifiers does
    * not follow those edges; a module reached any other way follows all of its
@@ -644,11 +723,12 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
       ...entries,
     ];
     const noCut = () => false;
-    while (A.isReadonlyArrayNonEmpty(pending)) {
-      const item = pending.pop();
-      if (item === undefined) break;
+    const expand = Effect.fnUntraced(function* (item: {
+      readonly module: string;
+      readonly cut: (specifier: string, target: string) => boolean;
+    }) {
       const full = item.cut === noCut;
-      if (full ? HashSet.has(expanded, item.module) : HashSet.has(modules, item.module)) continue;
+      if (full ? HashSet.has(expanded, item.module) : HashSet.has(modules, item.module)) return;
       modules = HashSet.add(modules, item.module);
       if (full) expanded = HashSet.add(expanded, item.module);
       const syntax = yield* syntaxOf(item.module);
@@ -664,22 +744,45 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
           onSome: (workspace) => HashSet.add(opaqueWorkspaces, workspace.directory),
         });
       }
-      for (const edge of syntax.value.edges) {
-        const target = yield* resolve(item.module, edge.specifier);
-        if (O.isNone(target)) {
-          if (Str.startsWith(".")(edge.specifier)) {
-            return yield* PolicyFingerprintError.make({
-              message: `Cannot resolve ${edge.specifier} imported by ${item.module}`,
-              cause: edge.specifier,
-            });
-          }
-          continue;
-        }
-        if (item.cut(edge.specifier, target.value)) continue;
-        pending.push({ module: target.value, cut: noCut });
-      }
+      for (const target of yield* closureTargets(item, syntax.value)) pending.push({ module: target, cut: noCut });
+    });
+    while (A.isReadonlyArrayNonEmpty(pending)) {
+      const item = pending.pop();
+      if (item !== undefined) yield* expand(item);
     }
-    return { modules, opaqueWorkspaces } satisfies PolicyClosure;
+    return PolicyClosure.make({ modules, opaqueWorkspaces });
+  });
+
+  const requireDispatchEdge = Effect.fnUntraced(function* (
+    module: string,
+    target: string,
+    edge: ImportEdge,
+    entries: HashSet.HashSet<string>
+  ) {
+    if (edge.dynamic || HashSet.has(entries, module)) return;
+    return yield* PolicyFingerprintError.make({
+      message: `Shell module ${module} statically imports command module ${target}`,
+      cause: target,
+    });
+  });
+
+  const shellTargets = Effect.fnUntraced(function* (
+    module: string,
+    syntax: ModuleSyntax,
+    entries: HashSet.HashSet<string>,
+    insideCommands: (target: string) => boolean
+  ) {
+    const targets: Array<string> = [];
+    for (const edge of syntax.edges) {
+      const target = yield* resolve(module, edge.specifier);
+      if (O.isNone(target)) continue;
+      if (!insideCommands(target.value)) {
+        targets.push(target.value);
+        continue;
+      }
+      yield* requireDispatchEdge(module, target.value, edge, entries);
+    }
+    return targets;
   });
 
   /**
@@ -698,9 +801,8 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
     let modules = HashSet.empty<string>();
     let opaqueWorkspaces = HashSet.empty<string>();
     const pending = [...layout.shell];
-    while (A.isReadonlyArrayNonEmpty(pending)) {
-      const module = pending.pop();
-      if (module === undefined || HashSet.has(modules, module)) continue;
+    const expandShell = Effect.fnUntraced(function* (module: string) {
+      if (HashSet.has(modules, module)) return;
       modules = HashSet.add(modules, module);
       const syntax = yield* syntaxOf(module);
       if (O.isNone(syntax))
@@ -711,20 +813,13 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
           onSome: (workspace) => HashSet.add(opaqueWorkspaces, workspace.directory),
         });
       }
-      for (const edge of syntax.value.edges) {
-        const target = yield* resolve(module, edge.specifier);
-        if (O.isNone(target)) continue;
-        if (insideCommands(target.value)) {
-          if (edge.dynamic || HashSet.has(entries, module)) continue;
-          return yield* PolicyFingerprintError.make({
-            message: `Shell module ${module} statically imports command module ${target.value}`,
-            cause: target.value,
-          });
-        }
-        pending.push(target.value);
-      }
+      pending.push(...(yield* shellTargets(module, syntax.value, entries, insideCommands)));
+    });
+    while (A.isReadonlyArrayNonEmpty(pending)) {
+      const module = pending.pop();
+      if (module !== undefined) yield* expandShell(module);
     }
-    return { modules, opaqueWorkspaces } satisfies PolicyClosure;
+    return PolicyClosure.make({ modules, opaqueWorkspaces });
   });
 
   /** The closure of one command path, without the shell. */

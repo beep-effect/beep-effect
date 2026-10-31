@@ -38,6 +38,15 @@ merged and the operator requested full closure.
 - `goals/codex-security-findings-2026-10-28/**`.
 - Gitignored raw evidence under `goals/codex-security-findings-2026-10-28/raw/**`.
 - Maintained repo paths named by `findings/INDEX.md` after current-HEAD validation.
+- Bounded inherited policy repairs in CLI `Lint/PolicyFingerprint.ts`,
+  `Lint/internal/PolicyFingerprintGraph.ts`, `Lint/internal/LintPackage.ts`,
+  `Lint/ToolingSchemaFirst.command.ts`, the `src/test/Lint.test-kit.ts` export,
+  and the focused fingerprint closure test;
+  canonical generated fingerprints, Turbo inputs and reviewed cache metadata.
+- Test-only restoration of inherited coverage gaps in
+  `test/effect-schema-inventory.test.ts`, `test/refs-refresh-plan.test.ts` and
+  `test/knowledge-doctor.test.ts`; production behavior and coverage floors stay
+  unchanged.
 
 ## Constraints
 
@@ -94,6 +103,17 @@ merged and the operator requested full closure.
 - The same blocking condition repeats after reasonable investigation.
 
 ## Decision Log
+
+- 2026-10-31: Repair inherited policy-tooling failures from integrated main
+  #2390 because the packets require canonical strict readiness, which excludes
+  failed Fallow and Lint Policy checks even when a separate merge-gate tolerance
+  could attribute them. Scope is schema declarations, documentation, test
+  conventions and behavior-preserving complexity refactors in the target
+  surfaces above. Preserve thresholds, policy rules and security controls.
+  Require focused regressions, independent review and a fresh hosted run.
+  The completed coverage job additionally exposed three inherited file-level
+  gaps; add meaningful tests for those exact paths without lowering floors.
+  Reversal is a reviewed corrective PR retaining the strict completion contract.
 
 - 2026-10-31: Close the seven exact Cloud IDs after #2333 merge and current-main
   source proof. Capture 20 newer dependency alerts and fix all four affected

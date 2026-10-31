@@ -14,13 +14,13 @@ import { dual } from "effect/Function";
 import * as Path from "effect/Path";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 
-/** Root config the deprecated-apis oxlint profile reads. @internal @since 0.0.0 */
+/** Root config the deprecated-apis oxlint profile reads. @internal @category utilities @since 0.0.0 */
 export const OXLINT_DEPRECATED_APIS_CONFIG = ".oxlintrc.deprecated-apis.jsonc";
 
-/** Root config the circular-import oxlint profile reads. @internal @since 0.0.0 */
+/** Root config the circular-import oxlint profile reads. @internal @category utilities @since 0.0.0 */
 export const OXLINT_CIRCULAR_CONFIG = ".oxlintrc.circular.json";
 
-/** Whether a candidate path stays inside the lint root. @internal @since 0.0.0 */
+/** Whether a candidate path stays inside the lint root. @internal @category utilities @since 0.0.0 */
 export const isContainedLintPath: {
   (root: string, candidate: string): (path: Path.Path) => boolean;
   (path: Path.Path, root: string, candidate: string): boolean;
@@ -34,14 +34,14 @@ export const isContainedLintPath: {
   );
 });
 
-/** `--package` flag of the package-scoped lint subcommands. @internal @since 0.0.0 */
+/** `--package` flag of the package-scoped lint subcommands. @internal @category utilities @since 0.0.0 */
 export const lintPackageFlag = Flag.String("package").pipe(Flag.optional);
-/** `--base` flag of the root sweep subcommands. @internal @since 0.0.0 */
+/** `--base` flag of the root sweep subcommands. @internal @category utilities @since 0.0.0 */
 export const lintBaseFlag = Flag.String("base").pipe(Flag.withDefault("origin/main"));
-/** `--full` flag of the root sweep subcommands. @internal @since 0.0.0 */
+/** `--full` flag of the root sweep subcommands. @internal @category utilities @since 0.0.0 */
 export const lintFullFlag = Flag.Boolean("full").pipe(Flag.withDefault(false));
 
-/** Resolve a `--package` directory to a repo-relative prefix inside the repository. @internal @since 0.0.0 */
+/** Resolve a `--package` directory to a repo-relative prefix inside the repository. @internal @category utilities @since 0.0.0 */
 export const resolveLintPackage = Effect.fn("Lint.resolvePackage")(function* (root: string, directory: string) {
   const path = yield* Path.Path;
   const absolute = path.resolve(directory);

@@ -3,6 +3,7 @@ import { computePolicyFingerprint } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -59,24 +60,61 @@ describe("policy fingerprint import graph", () => {
       "./barrel.ts",
       "./Lazy.ts",
     ]);
-    expect(syntax.edges[0]?.bindings).toEqual(O.some(["lawsCommand"]));
+    assertSome(O.getOrThrow(O.fromUndefinedOr(syntax.edges[0]?.bindings)), ["lawsCommand"]);
     expect(syntax.opaqueDynamicImport).toBe(false);
     const lint = O.getOrThrow(HashMap.get(syntax.commands, "lintCommand"));
-    expect(lint.name).toEqual(O.some("lint"));
-    expect(lint.subcommands).toEqual([O.some("lawsCommand"), O.none()]);
+    assertSome(lint.name, "lint");
+    deepStrictEqual(lint.subcommands, [O.some("lawsCommand"), O.none()]);
     expect(moduleSyntax("a.ts", "const load = (name: string) => import(name);").opaqueDynamicImport).toBe(true);
   });
 
-  it("resolves exports subpaths with wildcards and runtime conditions", () => {
-    expect(resolvePackageSubpath({ ".": "./src/index.ts" }, ".")).toEqual(O.some("./src/index.ts"));
-    expect(resolvePackageSubpath({ "./*": "./src/*.ts" }, "./A/B")).toEqual(O.some("./src/A/B.ts"));
-    expect(
-      resolvePackageSubpath({ "./*": "./src/*.ts", "./internal/*": "./src/internal/*.ts" }, "./internal/x")
-    ).toEqual(O.some("./src/internal/x.ts"));
-    expect(resolvePackageSubpath({ ".": { types: "./a.d.ts", import: "./src/a.ts" } }, ".")).toEqual(
-      O.some("./src/a.ts")
+  it("preserves direct and piped command definitions and runtime export aliases", () => {
+    const syntax = moduleSyntax(
+      "commands.ts",
+      A.join(
+        [
+          'import * as Command from "effect/cli/Command";',
+          'import defaultChild, { type Ignored, child as alias } from "./child.ts";',
+          'import "./setup.ts";',
+          "export { alias as publicChild };",
+          'export { child as forwarded, type Ignored } from "./child.ts";',
+          'const leaf = Command.make("leaf");',
+          "const children = [leaf, ...external];",
+          'export const direct = Command.withSubcommands(Command.make("direct"), children);',
+          'export const piped = (Command.make("piped") as unknown).pipe(Command.withSubcommands([leaf]));',
+        ],
+        "\n"
+      )
     );
-    expect(resolvePackageSubpath({ "./hidden": null }, "./hidden")).toEqual(O.none());
+    const direct = O.getOrThrow(HashMap.get(syntax.commands, "direct"));
+    assertSome(direct.name, "direct");
+    deepStrictEqual(direct.subcommands, [O.some("leaf"), O.none()]);
+    const piped = O.getOrThrow(HashMap.get(syntax.commands, "piped"));
+    assertSome(piped.name, "piped");
+    deepStrictEqual(piped.subcommands, [O.some("leaf")]);
+    assertSome(HashMap.get(syntax.imports, "defaultChild"), { specifier: "./child.ts", imported: "default" });
+    assertSome(HashMap.get(syntax.imports, "alias"), { specifier: "./child.ts", imported: "child" });
+    assertSome(HashMap.get(syntax.exports, "publicChild"), { _tag: "Local", local: "alias" });
+    assertSome(HashMap.get(syntax.exports, "forwarded"), { _tag: "From", specifier: "./child.ts", imported: "child" });
+    assertNone(HashMap.get(syntax.imports, "Ignored"));
+    assertNone(HashMap.get(syntax.exports, "Ignored"));
+    assertSome(O.fromUndefinedOr(syntax.edges[1]), {
+      specifier: "./child.ts",
+      bindings: O.some(["defaultChild", "alias"]),
+      dynamic: false,
+    });
+    assertNone(O.getOrThrow(O.fromUndefinedOr(syntax.edges[2])).bindings);
+  });
+
+  it("resolves exports subpaths with wildcards and runtime conditions", () => {
+    assertSome(resolvePackageSubpath({ ".": "./src/index.ts" }, "."), "./src/index.ts");
+    assertSome(resolvePackageSubpath({ "./*": "./src/*.ts" }, "./A/B"), "./src/A/B.ts");
+    assertSome(
+      resolvePackageSubpath({ "./*": "./src/*.ts", "./internal/*": "./src/internal/*.ts" }, "./internal/x"),
+      "./src/internal/x.ts"
+    );
+    assertSome(resolvePackageSubpath({ ".": { types: "./a.d.ts", import: "./src/a.ts" } }, "."), "./src/a.ts");
+    assertNone(resolvePackageSubpath({ "./hidden": null }, "./hidden"));
   });
 });
 

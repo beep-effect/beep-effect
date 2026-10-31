@@ -83,3 +83,8 @@ five secret-scanning alerts. Their separate sanitized catalog is
 `research/2026-10-31-scanning.md`. All nine must be resolved with evidence,
 without accepted risk, before final completion. Preserve the original seven
 Cloud IDs and twenty dependency IDs.
+
+Final closeout also repairs bounded policy-tooling failures inherited from main
+#2390. These repairs are required by the strict readiness contract; they do not
+change the security finding inventories or weaken any check. See the decision
+log and the separate review addendum for the expanded scope.
