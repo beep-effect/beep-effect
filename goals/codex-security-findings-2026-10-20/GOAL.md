@@ -4,14 +4,13 @@ Repo root: the current working directory. Do not assume an absolute path.
 
 Outcome: fix and close the 8 Codex security findings captured on
 2026-10-20 for `kriegcloud/beep-effect`: 3 Low, 5 Informational.
-Ship one Yeet-driven PR to mergeable, merge it, then resolve the exact captured
-Codex IDs until no packet-applicable finding remains open.
+Retain merged implementation and exact closure; finish final receipt PR #2416
+with genuine pre-merge readiness and verified post-merge completion evidence.
 
-The operator expanded this same single-PR goal to include all 123 captured GitHub
-Dependabot alerts captured in `ops/dependabot.json` (63 unique advisories after the post-publication refresh).
-Keep this separate from the exact eight Cloud identities. Every captured alert
-requires a source-backed disposition and merged-revision closure evidence;
-fixture location alone does not establish an invalid alert.
+The original implementation also covers 123 Dependabot IDs (63 advisories) in
+`ops/dependabot.json`, separate from the eight Cloud identities. Each requires
+a source-backed disposition and merged-revision closure proof; fixture location
+alone does not invalidate an alert.
 
 Read first:
 
@@ -45,7 +44,7 @@ Rules:
 4. Keep raw report bodies ignored under `raw/`. Tracked records may contain only
    sanitized metadata, summaries, decisions, changed files, and proof.
 5. Run focused tests, affected package checks, packet validation, then Yeet
-   repair/verify. Publish one intentional PR and monitor through mergeable.
+   repair/verify. Qualify #2416 and preserve its authentic final-head readiness before merge.
 6. After merge, close only the exact 8-ID allowlist in Codex as Fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
 
@@ -53,16 +52,21 @@ Stop if the signed-in CSV export is unavailable, tracked evidence contains secre
 or raw-path material, a fix needs an out-of-packet architecture decision, or the
 same blocker repeats after reasonable investigation.
 
-The manifest proposes closeout for PR #2389. Resume its outstanding gates rather
-than treating that proposal as completion. After merge, merged proof and exact-ID
-closure, retain the genuine final-head merge-ready Yeet verdict and run
+## Current acceptance — 2026-10-31
+
+PRs #1930 and #2333 are merged; all fifteen Cloud IDs are Fixed. The original
+123 dependency IDs are resolved (121 fixed, two withdrawn). #2389 merged the
+20 newer dependency fixes; their exact alerts remain open pending reconciliation.
+Code and secret scanning show zero open alerts. Read the linked
+`../codex-security-findings-2026-10-28/GOAL.md` and complete both inventories.
+
+## Final receipt reconciliation — October 31
+
+#2389 merged before this lane captured positive canonical readiness; later
+green checks cannot replace it. Hold #2416 until its genuine final-head
+`merge-ready: yes` is recorded while open. Preserve the verdict before merge.
+After #2416 merges and exact dependency closure is verified, run
 `bun run beep goals completion refresh --slug codex-security-findings-2026-10-20`.
-
-## Supplemental scope — 2026-10-28
-
-The user added the current Cloud batch. Read
-`research/2026-10-28-cloud-refresh.md` and the linked
-`../codex-security-findings-2026-10-28/GOAL.md`. Complete both inventories.
-PRs #1930 and #2333 are merged; all 15 Cloud IDs are Fixed. PR #2389 carries
-final reconciliation and 20 newer dependency fixes; verify their post-merge
-closure and both completion receipts.
+Refresh the linked packet too. Keep declared lifecycle active and prospective
+`completed-retained` until verified receipts derive completion. See the
+[accepted report](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

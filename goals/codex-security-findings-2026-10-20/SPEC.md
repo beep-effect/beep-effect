@@ -8,11 +8,18 @@ Remediate every open Codex Cloud security finding visible at
 the work through Yeet, reach mergeable hosted state, merge, then resolve the
 exact captured findings until no packet-applicable finding remains open.
 
-The operator expanded this same single-PR goal to include all 123 captured GitHub
+The operator expanded the original implementation goal to include all 123 captured GitHub
 Dependabot alerts captured in `ops/dependabot.json` (63 unique advisories after the post-publication refresh).
 Keep this separate from the exact eight Cloud identities. Every captured alert
 requires a source-backed disposition and merged-revision closure evidence;
 fixture location alone does not establish an invalid alert.
+
+Current delivery: implementation PR #2389 is merged. Final receipt PR #2416
+must capture genuine canonical readiness before merge, retain exact external
+closure evidence, and yield verified post-merge receipts for both packets.
+The twenty supplemental dependency alerts remain open despite fixed graph
+versions; all fifteen Cloud findings are Fixed and code/secret inventories
+show zero open alerts. The final PR changes evidence only.
 
 ## Non-Goals
 
@@ -69,8 +76,11 @@ fixture location alone does not establish an invalid alert.
 - [ ] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
 - [ ] Yeet repair and verify are green on the complete remediation scope.
-- [ ] The branch is published, hosted checks and reviews are closed, and the PR
-      is mergeable and merged.
+- [ ] Final receipt PR #2416 is published; its exact final head has genuine
+      canonical readiness before merge, all reviews are closed, and it is merged.
+- [ ] Both packets retain active declared lifecycle until verified post-merge
+      completion receipts derive `completed-retained`; all supplemental dependency
+      and scanning IDs are resolved with exact evidence and zero-open inventories.
 - [ ] All 8 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
@@ -289,3 +299,23 @@ packet. PRs #1930 and #2333 remain supporting merged remediation. All fifteen
 Cloud identities are verified Fixed. Preserve historical verdicts; obtain a
 genuine final-head readiness verdict and merge-time completion receipt for
 #2389 before deriving `completed-retained` for either packet.
+
+## Final receipt reconciliation — October 31
+
+Implementation PR #2389 merged at `ac8993e7773065c55b11e6b71b0f1471a0105d2f`.
+All 35 hosted check jobs ultimately passed on its accepted head; the separate
+optional Vercel statuses report deployment rate limits. The merge preceded this
+lane's positive canonical readiness capture. Later green checks do not supply
+that missing historical observation.
+
+Final closeout PR [#2416](https://github.com/beep-effect/beep-effect/pull/2416)
+retains the merged implementation and must obtain genuine final-head canonical
+`merge-ready: yes` while it is still open. Preserve that evidence before merge.
+After #2416 merges and all exact external statuses are verified, run
+`goals completion refresh` for both packets. Their declared lifecycle remains
+`active` with prospective `completed-retained` until verified receipts derive
+completion. No gate is weakened and no readiness receipt is fabricated.
+
+Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
+fixed versions in the dependency graph alone do not establish closure. See the
+[accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

@@ -18,8 +18,8 @@ reports the missing readiness evidence as unknown. Later green checks do not
 create a historical readiness observation. No verdict is fabricated and no
 completion gate is weakened.
 
-A documentation-only final closeout PR will retain #2389 as supporting
-implementation evidence, bind both packets to the new final PR, and capture
+Documentation-only final closeout PR #2416 retains #2389 as supporting
+implementation evidence, binds both packets to the new final PR, and will capture
 genuine canonical readiness while that PR is still open. Both declarations stay
 active with prospective completed-retained status until verified completion
 receipts project their final lifecycle.
