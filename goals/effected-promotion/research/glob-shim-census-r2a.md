@@ -7,9 +7,9 @@ each `GlobShim` pattern matched before the switch, and a proof that the set is t
 
 ## What was measured
 
-- **Universe** (66,959 paths at `f77a32de6d`): every git-tracked path and each of its ancestor directories,
-  repo-relative, plus the same paths relative to every tracked `package.json` directory that contains them
-  (199 package directories). Directories are included because the shim's `scanSync` walker asks the matcher
+- **Universe** (66,959 paths at `f77a32de6d`): every path of that tree (`git ls-tree -r f77a32de6d`, 43,586
+  files) and each of its ancestor directories, repo-relative, plus the same paths relative to every
+  `package.json` directory of the tree that contains them (199 package directories). Directories are included because the shim's `scanSync` walker asks the matcher
   about directories as well as files. No path carries a trailing slash, because the walker never produces one.
 - **Patterns** (16): the five literals the repo hands to `new Bun.Glob(...)` (`**/*.ts`, `*.json`, `*`,
   `**/*` for the relativized `${repoPath}/**/*`, `**/package.json`), the `vitest.shared.ts` include and
@@ -17,17 +17,20 @@ each `GlobShim` pattern matched before the switch, and a proof that the set is t
   four semantics probes (brace expansion, dotfiles, dot directories, a trailing globstar after a file-shaped
   segment).
 - **Engines**: `picomatch` 4.0.7 with `{ dot: true }` (before) and `@beep/glob` `GlobPattern.compileResult`
-  under `GlobPatternOptions.make({ dot: true })` (after; minimatch 10.2.6 underneath). Each side is recorded
+  under `GlobPatternOptions.make({ dot: true, nocomment: true })` (after; minimatch 10.2.6 underneath).
+  `nocomment` changes no census set (no pattern starts with `#`); it is there because `Bun.Glob.match` reads
+  a leading `#` as a literal while minimatch drops the pattern as a comment, see the probes below. Each side is recorded
   as a count, a sha256 of the newline-joined sorted list, and the list itself when it holds at most 400 paths.
 
 The record is `research/glob-shim-census-r2a.json`. Its `before` side was taken once, on the lane at
 `f77a32de6d` with `picomatch` still installed, by a scratch script run on Bun 1.4.4 (so every difference
-also carries real `Bun.Glob.match` verdicts for its witness paths). `ops/glob-shim-census.ts` recomputes the
-`after` side on the current tree and compares it with the record:
+also carries real `Bun.Glob.match` verdicts for its witness paths). `ops/glob-shim-census.ts` rebuilds the
+universe from the census tree (`git ls-tree -r`, not the checkout), recomputes the `after` side with the kit
+and compares it with the record, so the verdict reproduces from any head that has the commit:
 
 ```
 bun goals/effected-promotion/ops/glob-shim-census.ts --out <report.json>
-# universe 66959 paths matches the census; patterns identical 16/16
+# universe 66959 paths at f77a32de6daf0e440994d157d42e8c7825e2af25 matches the census; patterns identical 16/16
 ```
 
 ## Result
@@ -58,10 +61,17 @@ but not `x`. Real `Bun.Glob.match` returns `false` for every picomatch-only witn
 (`a/**` does not match `a`; it matches `a/`), so on those patterns the switch moves the shim onto Bun's
 side rather than away from it.
 
-One further probe, outside the census because the walker never produces the input: `Bun.Glob.match` and
-picomatch both reject `a/b.ts/` (a file path with a trailing slash) for `**/*.ts`, while minimatch accepts
-it. The shim's `scanSync` strips nothing and appends nothing, so no path with a trailing slash reaches
-`match`.
+Three further probes sit outside the census because no tracked path or caller pattern produces the input:
+
+- A leading `#`: `new Bun.Glob("#a").match("#a")` and `new Bun.Glob("#*").match("#foo")` are `true` on Bun
+  1.4.4, as under picomatch; minimatch reads a pattern starting with `#` as a comment that matches nothing
+  unless `nocomment` is set. The shim sets `nocomment: true`, and the parity test pins `#a`, `#*` and `#a`
+  against `a` on both runtimes.
+- A leading `!`: Bun negates it exactly as minimatch does (`!a` matches `b` and not `a`; `!*.ts` matches
+  `x.js`), so `nonegate` stays off; the parity test pins those three cases too.
+- A trailing slash: `Bun.Glob.match` and picomatch both reject `a/b.ts/` for `**/*.ts`, while minimatch
+  accepts it. The shim's `scanSync` strips nothing and appends nothing, so no path with a trailing slash
+  reaches `match`.
 
 ## scanSync parity (found while pinning the census)
 

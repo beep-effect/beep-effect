@@ -14,7 +14,7 @@
       "reason": "Record the R2a root manifest edit (toml, picomatch and @types/picomatch leave devDependencies and the catalog; @beep/glob joins devDependencies for the vitest.setup.ts Bun.Glob shim) and the one-time cache-key move of the vitest.setup.ts global test input; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
         "path": "goals/effected-promotion/research/cache-baseline-review-r2a.md",
-        "sha256": "ff7f9b8d0633fea24b5eed3a91d816d72c2ae2fff3d796624a0d48711134b465"
+        "sha256": "e5535b412a04adb1387762ce6172851bf42b400be4bcc326bf3595ffa4ad0dcd"
       }
     },
     "@beep/acp": {

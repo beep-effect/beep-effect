@@ -8,11 +8,11 @@
  * and the same paths relative to every tracked `package.json` directory that contains them. Each side is a
  * count, a sha256 of the newline-joined sorted list, and the list itself when it holds at most `fullListMax`
  * entries. The `before` (picomatch) side was taken once, before the dependency left the root, by the scratch
- * run described in `research/glob-shim-census-r2a.md`; this script recomputes the `after` side with the kit on
- * the current tree and compares it with the record, pattern by pattern.
+ * run described in `research/glob-shim-census-r2a.md`; this script recomputes the `after` side with the kit over
+ * the census tree and compares it with the record, pattern by pattern.
  *
- * The comparison is meaningful only on the tree the census names: a different tree changes the universe, and
- * the script says so instead of comparing the sets.
+ * The universe is read from the tree the census names (`git ls-tree -r <tree>`), not from the checkout, so the
+ * comparison reproduces from any head that has that commit; a missing commit is reported instead of compared.
  *
  * Usage (from the repo root):
  *
@@ -63,7 +63,7 @@ const CensusPattern = S.Struct({
   after: CensusSide,
 });
 const Census = S.Struct({
-  schemaVersion: S.Literal("glob-shim-census/v1"),
+  schemaVersion: S.tag("glob-shim-census/v1"),
   pr: S.String,
   tree: S.String,
   universe: S.Struct({ definition: S.String, count: S.Number, sha256: S.String }),
@@ -80,18 +80,29 @@ const gitLines = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
   return A.filter(yield* spawner.lines(ChildProcess.make("git", [...args], { cwd: repoRoot })), Str.isNonEmpty);
 });
 
-// NUL-separated so paths with characters git would otherwise quote come back verbatim.
-const trackedPaths = Effect.fnUntraced(function* () {
+// The paths of one tree, NUL-separated so names git would otherwise quote come back verbatim.
+const treePaths = Effect.fnUntraced(function* (tree: string) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const output = yield* spawner.string(ChildProcess.make("git", ["ls-files", "-z"], { cwd: repoRoot }));
+  const output = yield* spawner.string(
+    ChildProcess.make("git", ["ls-tree", "-r", "-z", "--name-only", tree], { cwd: repoRoot })
+  );
   return A.filter(Str.split("\0")(output), Str.isNonEmpty);
 });
 
-// The census universe: tracked paths and their ancestor directories, repo-relative, then the same paths
-// relative to each tracked package.json directory that contains them. Sorted and unique.
-const buildUniverse = Effect.fnUntraced(function* () {
+// The census universe over one tree: its paths and their ancestor directories, repo-relative, plus the same
+// paths relative to each package.json directory that contains them. One pass over the tree: a path enters once
+// per package directory among its ancestors, so the work is paths x depth, not paths x packages.
+const buildUniverse = Effect.fnUntraced(function* (tree: string) {
   const path = yield* Path.Path;
-  const tracked = yield* trackedPaths();
+  const tracked = yield* treePaths(tree);
+  const packageDirectories = MutableHashSet.fromIterable(
+    pipe(
+      tracked,
+      A.filter((file) => path.basename(file) === "package.json" && !Str.includes("node_modules/")(file)),
+      A.map(path.dirname),
+      A.filter((directory) => directory !== ".")
+    )
+  );
   const universe = MutableHashSet.empty<string>();
   const addWithAncestors = (relative: string): void => {
     MutableHashSet.add(universe, relative);
@@ -101,29 +112,38 @@ const buildUniverse = Effect.fnUntraced(function* () {
       directory = path.dirname(directory);
     }
   };
-  A.forEach(tracked, addWithAncestors);
-  const packageDirectories = pipe(
-    tracked,
-    A.filter((file) => path.basename(file) === "package.json" && !Str.includes("node_modules/")(file)),
-    A.map(path.dirname),
-    A.filter((directory) => directory !== ".")
-  );
-  A.forEach(packageDirectories, (directory) => {
-    const prefix = `${directory}/`;
-    A.forEach(tracked, (file) => {
-      if (Str.startsWith(prefix)(file)) addWithAncestors(Str.slice(prefix.length)(file));
-    });
+  A.forEach(tracked, (file) => {
+    addWithAncestors(file);
+    let directory = path.dirname(file);
+    while (directory !== "." && Str.isNonEmpty(directory)) {
+      if (MutableHashSet.has(packageDirectories, directory)) addWithAncestors(Str.slice(directory.length + 1)(file));
+      directory = path.dirname(directory);
+    }
   });
-  return A.sort(Str.Order)(A.fromIterable(universe));
+  return {
+    trackedFiles: tracked.length,
+    packageDirectories: MutableHashSet.size(packageDirectories),
+    candidates: A.sort(Str.Order)(A.fromIterable(universe)),
+  };
 });
 
-const globShimOptions = GlobPatternOptions.make({ dot: true });
+// The shim's own options (vitest.setup.ts): Bun.Glob.match admits dotfiles and reads a leading `#` literally.
+const globShimOptions = GlobPatternOptions.make({ dot: true, nocomment: true });
 
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const census = yield* decodeCensus(yield* fs.readFileString(censusPath));
-  const tree = A.join(yield* gitLines(["rev-parse", "HEAD"]), "");
-  const candidates = yield* buildUniverse();
+  const head = A.join(yield* gitLines(["rev-parse", "HEAD"]), "");
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const treeProbe = yield* spawner.exitCode(
+    ChildProcess.make("git", ["cat-file", "-e", `${census.tree}^{commit}`], { cwd: repoRoot })
+  );
+  if (treeProbe !== 0) {
+    yield* Console.error(`census tree ${census.tree} is not in this repository; fetch it before running the census`);
+    process.exitCode = 1;
+    return;
+  }
+  const { trackedFiles, packageDirectories, candidates } = yield* buildUniverse(census.tree);
   const universeSha = sha256(candidates);
   const universeMatches = universeSha === census.universe.sha256 && candidates.length === census.universe.count;
 
@@ -147,12 +167,12 @@ const program = Effect.gen(function* () {
   const report = {
     tool: "goals/effected-promotion/ops/glob-shim-census.ts",
     census: censusPath,
-    censusTree: census.tree,
-    tree,
-    engine: { name: "@beep/glob GlobPattern", options: { dot: true } },
+    tree: census.tree,
+    head,
+    engine: { name: "@beep/glob GlobPattern", options: { dot: true, nocomment: true } },
     universe: {
       recorded: { count: census.universe.count, sha256: census.universe.sha256 },
-      recomputed: { count: candidates.length, sha256: universeSha },
+      recomputed: { trackedFiles, packageDirectories, count: candidates.length, sha256: universeSha },
       identical: universeMatches,
     },
     summary: {
@@ -170,8 +190,8 @@ const program = Effect.gen(function* () {
   });
   yield* Console.error(
     universeMatches
-      ? `universe ${candidates.length} paths matches the census; patterns identical ${identicalPatterns}/${patterns.length}`
-      : `universe differs from the census (${census.tree} vs ${tree}): ${census.universe.count} recorded, ${candidates.length} now; the per-pattern comparison below is not a parity verdict`
+      ? `universe ${candidates.length} paths at ${census.tree} matches the census; patterns identical ${identicalPatterns}/${patterns.length}`
+      : `universe at ${census.tree} differs from the census: ${census.universe.count} recorded, ${candidates.length} now; the per-pattern comparison below is not a parity verdict`
   );
   if (!(gates.universe && gates.patterns)) process.exitCode = 1;
 });

@@ -242,16 +242,16 @@ projections and 7 Models blocks are identical, and the 8 probe shifts are each c
 
 R2a is a matcher swap and a dependency drop in the root `vitest.setup.ts` Bun shim. Parity is recorded in
 `research/glob-shim-census-r2a.json` (the census: 16 patterns over 66,959 tracked paths and directories at
-f77a32de6d, picomatch 4.0.7 beside `@beep/glob` `GlobPattern` with `dot: true`, each side a count and sha256)
-and explained in `research/glob-shim-census-r2a.md`; `ops/glob-shim-census.ts` recomputes the kit side and
-reports 16/16 identical to the record. The five `new Bun.Glob` literals and every vitest glob match the same
+f77a32de6d, picomatch 4.0.7 beside `@beep/glob` `GlobPattern` with `dot: true, nocomment: true`, each side a
+count and sha256) and explained in `research/glob-shim-census-r2a.md`; `ops/glob-shim-census.ts` rebuilds the
+universe from that tree and recomputes the kit side, 16/16 identical to the record from any head. The five `new Bun.Glob` literals and every vitest glob match the same
 set under both engines; the three trailing-`/**` probes differ, and real `Bun.Glob.match` agrees with the kit
 on every witness. `packages/tooling/tool/cli/test/vitest-bun-glob-shim.test.ts` pins `match` and `scanSync`
 on Bun (native) and Node (shim).
 
 | Site | Map id | Status | Notes |
 | --- | --- | --- | --- |
-| `vitest.setup.ts` `GlobShim.match` (picomatch) | #60 | adopted (R2a) | `GlobPattern.compileResult` once per shim instance under `GlobPatternOptions.make({ dot: true })`; a guard trip throws from the constructor. The walker and the shim class stay. Found and fixed alongside: `scanSync` listed directories by default, Bun defaults `onlyFiles` to `true`. |
+| `vitest.setup.ts` `GlobShim.match` (picomatch) | #60 | adopted (R2a) | `GlobPattern.compileResult` once per shim instance under `GlobPatternOptions.make({ dot: true, nocomment: true })` (Bun reads a leading `#` literally); a guard trip throws from the constructor with the `GlobPatternError` message and cause. The walker and the shim class stay. Found and fixed alongside: `scanSync` listed directories by default, Bun defaults `onlyFiles` to `true`. |
 | root `package.json` `toml` devDependency and catalog entry, `Bun.TOML` shim | #234 | dropped (R2a) | No reader of `Bun.TOML` in the repo (`@beep/ai-sync` and repo-cli parse TOML with `effect/encoding/Toml`; `@beep/toml` is the kit). `toml@5.0.1` leaves `bun.lock`. |
 | root `package.json` `picomatch` and `@types/picomatch` devDependencies and catalog entries | #235 | dropped (R2a) | `picomatch@4.0.7` stays in `bun.lock` only as a `vite`, `tinyglobby` and `fdir` transitive; `@types/picomatch@4.0.3` leaves it. |
 | The six `new Bun.Glob(...)` callers (`Cache.command.ts`, `MatchPerson.ts`, three repo-cli tests, effect-drizzle `import-boundary.test.ts`) | - | out of scope (W4-p) | They keep calling `Bun.Glob`; the shim serves them on Node. |

@@ -11,7 +11,8 @@ import * as Str from "effect/String";
 // W4-p): the same suite runs on Bun against the native Bun.Glob and on Node against the shim, so every
 // expectation below is a verdict both runtimes must share. The match cases are the patterns the repo
 // hands to `new Bun.Glob(...)` plus the dot and trailing-globstar semantics the shim's matcher switch
-// (picomatch to `@beep/glob` GlobPattern) moved onto Bun's side.
+// (picomatch to `@beep/glob` GlobPattern) moved onto Bun's side, and the leading `#` (a literal for
+// Bun, a comment for minimatch unless `nocomment`) and leading `!` (a negation for both) probes.
 const matchCases: ReadonlyArray<readonly [pattern: string, path: string, expected: boolean]> = [
   ["**/*.ts", "src/index.ts", true],
   ["**/*.ts", "index.ts", true],
@@ -33,6 +34,12 @@ const matchCases: ReadonlyArray<readonly [pattern: string, path: string, expecte
   ["packages/**/test/**", "packages/x/test", false],
   ["packages/**/test/**", "packages/x/test/a.ts", true],
   ["src/**/*.ts/**", "src/x.ts", false],
+  ["#a", "#a", true],
+  ["#*", "#foo", true],
+  ["#a", "a", false],
+  ["!a", "b", true],
+  ["!a", "a", false],
+  ["!*.ts", "x.js", true],
 ];
 
 const fixtureFiles: ReadonlyArray<string> = [

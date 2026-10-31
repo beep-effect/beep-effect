@@ -16,12 +16,13 @@
       "name": "@beep/glob GlobPattern",
       "engine": "minimatch 10.2.6",
       "options": {
-        "dot": true
+        "dot": true,
+        "nocomment": true
       }
     }
   },
   "universe": {
-    "definition": "Every git-tracked path (git ls-files) and each of its ancestor directories, repo-relative; plus the same paths relative to every tracked package.json directory that contains them. Sorted, unique, no trailing slashes.",
+    "definition": "Every path of the census tree (git ls-tree -r <tree>) and each of its ancestor directories, repo-relative; plus the same paths relative to every package.json directory of that tree that contains them. Sorted, unique, no trailing slashes.",
     "trackedFiles": 43586,
     "packageDirectories": 199,
     "count": 66959,

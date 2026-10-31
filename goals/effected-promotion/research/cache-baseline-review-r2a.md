@@ -32,6 +32,15 @@ runs changes in two places, both pinned by `packages/tooling/tool/cli/test/vites
 on Bun and Node: the matcher (identical over the census in `research/glob-shim-census-r2a.json`, closer to
 `Bun.Glob.match` on trailing `/**`) and the `scanSync` `onlyFiles` default, now `true` like Bun's.
 
+The new import also has a per-file cost: `@beep/glob/GlobPattern` brings `@beep/schema` and `@beep/identity`
+into the setup graph that every test file evaluates. Measured on repo-cli `test/foundation-topology.test.ts`
+(four warm runs each, alternating `main` at `2c1ff256c1` and this lane, vitest's own setup share of the
+reported duration): Node 190-233 ms before against 210-240 ms after, about +25 ms of setup per test file;
+Bun 140-160 ms before against 140-170 ms after, within the run-to-run noise. Over the repo's ~5,800 test
+files that is a few minutes of aggregate worker time on the Node lane of a full proof and nothing measurable
+on the Bun lane; it is recorded here as part of the global-test-input review and is not a reason to hold
+the one-time key move.
+
 ## Turbo coupling
 
 Measured on this branch at `f77a32de6d` (the lane's base, current `origin/main`) by walking the workspace

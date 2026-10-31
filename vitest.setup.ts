@@ -596,9 +596,10 @@ class CryptoHasherShim {
   }
 }
 
-// Bun.Glob.match admits dotfiles wherever a wildcard stands; the walker below applies
-// Bun.Glob.scanSync's own `dot` option before any path reaches the matcher.
-const globShimOptions = GlobPatternOptions.make({ dot: true });
+// Bun.Glob.match admits dotfiles wherever a wildcard stands (the walker below applies
+// Bun.Glob.scanSync's own `dot` option before any path reaches the matcher) and reads a
+// leading `#` as a literal, not a comment; it negates a leading `!` as minimatch does.
+const globShimOptions = GlobPatternOptions.make({ dot: true, nocomment: true });
 
 // Bun.Glob over `@beep/glob`: the matcher is the kit's `GlobPattern`; the walker keeps Bun's
 // scanSync semantics for Node runs of Bun-targeted suites (effected-promotion W4-p).
@@ -608,10 +609,7 @@ class GlobShim {
   constructor(readonly pattern: string) {
     this.matcher = Result.getOrThrowWith(
       GlobPattern.compileResult(normalizeFilePath(pattern), globShimOptions),
-      (error) =>
-        new Error(
-          `Bun.Glob shim rejected ${JSON.stringify(pattern)}: ${error.reason} ${error.actual} exceeds ${error.limit}`
-        )
+      (error) => new Error(`Bun.Glob shim: ${error.message}`, { cause: error })
     );
   }
 
