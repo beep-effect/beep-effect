@@ -57,7 +57,8 @@ import {
   setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
-import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
+import { runCachePolicyAudit } from "../Cache/Cache.command.ts";
+import { CacheQualificationLive } from "../Cache/Cache.service.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts";
@@ -359,8 +360,6 @@ const effectDiagnosticsDirectivePattern = new RegExp(
   "u"
 );
 const effectTsgoDiagnosticPattern = /\b(?:error|warning) TS\d+: .* effect\([^)]+\)/u;
-const EcosystemEffectDiagnosticOffRule = LiteralKit(["missedPipeableOpportunity"]);
-const isEcosystemEffectDiagnosticOffRule = S.is(EcosystemEffectDiagnosticOffRule);
 const TsconfigFileName = S.String.check(S.isPattern(/^tsconfig(?:\..+)?\.json$/u));
 const isTsconfigFileName = S.is(TsconfigFileName);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
@@ -449,9 +448,7 @@ export class EffectDiagnosticsDirectiveExemption extends S.Opaque<
  * Exactly two entries exist and the tuple type keeps it that way: the root Bun-compat shim,
  * which implements `Bun.*` over node builtins before any Effect runtime exists, and the root
  * Vitest shared config, whose include list is scanned synchronously before any Effect runtime
- * exists. Five dated catalog payload
- * next-line directives are separately admitted until the split public rename PR;
- * they do not admit file-wide disables. Every other `@effect-diagnostics`
+ * exists. No `-next-line` form is admitted anywhere. Every other `@effect-diagnostics`
  * directive in a scanned root (`apps`, `packages`, `tooling`, `infra`, and the
  * repo-root TypeScript files) fails `beep quality tsgo-rules`; a lane that wants a third entry
  * has found a rule-card gap, not a reason to grow this list.
@@ -541,8 +538,12 @@ export class TsgoDisabledRule extends S.Opaque<TsgoDisabledRule, { readonly bran
  * expose one. This repository builds on Effect's `@stability unstable` modules (`effect/http`,
  * `effect/http-api`, `effect/cli`, and friends) on purpose.
  *
- * The import-style rules stay off: named helper imports are deliberate, and
- * barrel imports contradict the dedicated Effect module-path law.
+ * The import-style rules stay off. `preferBarrelImport` contradicts the dedicated Effect
+ * module-path law. `preferNamespaceImport` has no named-import allowlist, so with `effect` in
+ * `namespaceImportPackages` it reports every `pipe`, `flow`, `identity`, `dual` and `constant`
+ * named import from `effect/Function` that the code law requires (2026-10-31 census: 6422
+ * reports in 1998 files, 5125 of them from `effect/Function`); enabling it needs either an
+ * upstream allowlist option or a change to that law.
  *
  * **Example** (Read the disabled rule names)
  *
@@ -580,7 +581,7 @@ export const tsgoDisabledRules: readonly [
   TsgoDisabledRule.make({
     rule: "preferNamespaceImport",
     reason:
-      "Namespace auto-import preferences do not prohibit deliberate named @beep helper and identity imports; enforcing this needs a separate import migration.",
+      "The rule has no named-import allowlist, so it reports the named pipe, flow, identity, dual and constant imports from effect/Function that the code law requires; enabling it needs an upstream allowlist option or a law change.",
   }),
   TsgoDisabledRule.make({
     rule: "preferBarrelImport",
@@ -2311,16 +2312,12 @@ const collectEffectDrizzleSeverityDiffDiagnostics = (
   const mismatched = pipe(
     baseRuleNames,
     A.filter((ruleName) => {
-      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
-        ? "off"
-        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const expectedSeverity = pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
       const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
       return actualSeverity !== undefined && actualSeverity !== expectedSeverity;
     }),
     A.map((ruleName) => {
-      const expectedSeverity = isEcosystemEffectDiagnosticOffRule(ruleName)
-        ? "off"
-        : pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
+      const expectedSeverity = pipe(R.get(baseSeverity, ruleName), O.getOrUndefined);
       const actualSeverity = pipe(R.get(severity, ruleName), O.getOrUndefined);
       return `${file}: Effect Drizzle diagnosticSeverity.${ruleName} must be ${Inspectable.toStringUnknown(expectedSeverity, 0)}; found ${Inspectable.toStringUnknown(actualSeverity, 0)}`;
     })
@@ -2391,16 +2388,7 @@ const collectPluginMismatchDiagnostics = (
   basePlugin: Readonly<Record<string, unknown>>,
   baseSeverity: Readonly<Record<string, unknown>>
 ): ReadonlyArray<string> => {
-  const expectedPlugin = isDirectEffectDrizzleTsconfig(file)
-    ? {
-        ...basePlugin,
-        diagnosticSeverity: {
-          ...baseSeverity,
-          missedPipeableOpportunity: "off",
-        },
-      }
-    : basePlugin;
-  if (Equal.equals(plugin, expectedPlugin)) {
+  if (Equal.equals(plugin, basePlugin)) {
     return A.empty();
   }
   if (!isDirectEffectDrizzleTsconfig(file)) {
@@ -2414,7 +2402,7 @@ const collectPluginMismatchDiagnostics = (
   return A.isReadonlyArrayNonEmpty(severityDiagnostics)
     ? severityDiagnostics
     : A.of(
-        `${file}: Effect Drizzle @effect/language-service profile differs from tsconfig.base.json beyond missedPipeableOpportunity`
+        `${file}: Effect Drizzle @effect/language-service profile differs from tsconfig.base.json beyond diagnosticSeverity`
       );
 };
 
@@ -2715,13 +2703,8 @@ const collectDisabledEffectDiagnosticDirectives = Effect.fn(
   const scannedFiles = yield* Effect.forEach(
     effectDiagnosticsDirectiveScannedRoots,
     (root) =>
-      collectFiles(
-        path.join(repoRoot, root),
-        isScannedExtension,
-        (normalized, name) =>
-          A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name) ||
-          name === ".storybook" ||
-          Str.includes("/apps/storybook/")(normalized)
+      collectFiles(path.join(repoRoot, root), isScannedExtension, (_normalized, name) =>
+        A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
       ),
     { concurrency: 1 }
   ).pipe(

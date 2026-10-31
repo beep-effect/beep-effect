@@ -22,6 +22,7 @@ export {
   rewriteDoctestSourceForTesting,
   validateDoctestAssertions,
 } from "../commands/Docgen/internal/Doctest.ts";
+export { getDeclaredJsDocs } from "../commands/Docgen/internal/JsDocNodes.ts";
 export * from "../commands/Docgen/internal/Local.ts";
 export * from "../commands/Docgen/internal/Operations.ts";
 export * from "../commands/Docgen/internal/Quality.ts";

@@ -131,7 +131,7 @@
           "mapSomeToAsSome": "error",
           "matchEffectToMapBoth": "error",
           "matchEffectToMatch": "error",
-          "missedPipeableOpportunity": "off",
+          "missedPipeableOpportunity": "error",
           "missingEffectContext": "error",
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",

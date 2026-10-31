@@ -13,6 +13,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
@@ -217,16 +218,6 @@ export const repoRelative: {
 } = dual(3, (absolutePath: string, repoRoot: string, path: Path.Path): string =>
   normalizeSlashes(path.relative(repoRoot, absolutePath) || ".")
 );
-
-/**
- * Escape user text for safe inclusion in a regular expression.
- *
- * @param value - Literal text to escape.
- * @returns Regular expression source that matches the input text literally.
- * @category parsing
- * @since 0.0.0
- */
-export const escapeRegExp = (value: string): string => Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")(value);
 
 /**
  * Resolve a scanned filesystem entry to its canonical path inside an allowed
@@ -695,7 +686,7 @@ export const valuesForTag: {
   (commentText: string, tagName: string): ReadonlyArray<string>;
 } = dual(2, (commentText: string, tagName: string): ReadonlyArray<string> => {
   const values: Array<string> = [];
-  const pattern = new RegExp(`^\\s*${escapeRegExp(tagName)}\\b\\s*(.*)$`);
+  const pattern = new RegExp(`^\\s*${Regex.escape(tagName)}\\b\\s*(.*)$`);
 
   for (const line of stripCommentFraming(commentText)) {
     const match = pattern.exec(line);

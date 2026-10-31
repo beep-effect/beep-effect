@@ -10,6 +10,9 @@
     {"file":"packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts","symbol":"DmsMirrorFixtureCounts","kind":"struct-const","owner":"@beep/documents-server","identity":"DmsMirrorFixtureCounts","description":"Per-verb call counts observed by the fixture since construction."},
     {"file":"packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts","symbol":"DmsMirrorFixtureNode","kind":"struct-const","owner":"@beep/documents-server","identity":"DmsMirrorFixtureNode","description":"One node of the fixture's synthetic remote tree keyed by mirror-root-relative path."},
     {"file":"packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts","symbol":"DmsMirrorFixtureVerb","kind":"literal-kit","owner":"@beep/documents-server","identity":"DmsMirrorFixtureVerb","description":"Mirror verb addressed by fixture call counts and failure injection."},
+    {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"ObservedFile","kind":"struct-const","owner":"@beep/documents-server","identity":"ObservedFile","description":"A safely read regular vault file."},
+    {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"ObservedFolder","kind":"struct-const","owner":"@beep/documents-server","identity":"ObservedFolder","description":"A visible directory within the canonical vault root."},
+    {"file":"packages/documents/server/src/aggregates/Sync/VaultScan.model.ts","symbol":"VaultScanObservation","kind":"struct-const","owner":"@beep/documents-server","identity":"VaultScanObservation","description":"Files and folders observed by a safe vault scan."},
     {"file":"packages/documents/server/src/aggregates/Sync/VaultSync.config.ts","symbol":"VaultSyncConfigValue","kind":"struct-const","owner":"@beep/documents-server","identity":"VaultSyncConfigValue","description":"Resolved configuration value for the vault sync engine."}
   ]
 }

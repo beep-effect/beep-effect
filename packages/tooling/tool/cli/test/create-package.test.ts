@@ -1590,7 +1590,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             // Lint and Test Unit partition proofs: each new package lands in exactly one shard.
             for (const [laneId, partitions] of [
               ["lint", ["lint-a", "lint-b"]],
-              ["test-unit", ["repo-cli-1", "repo-cli-2", "unit-a", "unit-b"]],
+              ["test-unit", ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "unit-a", "unit-b"]],
             ] as const) {
               const taskPackages = pipe(
                 CI_LANE_PARTITIONS,

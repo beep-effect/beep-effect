@@ -20,8 +20,10 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
+import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
 import type {
   canUseTurboCacheSecretSession,
   turboEnvironmentHealthWarnings,
@@ -76,6 +78,19 @@ const runSweepCommand = Effect.fnUntraced(function* (
   );
 });
 const prefix = "packages/tooling/tool/cli";
+const decodeTurboTasks = S.decodeEffect(
+  S.fromJsonString(
+    S.Struct({
+      tasks: S.Record(
+        S.String,
+        S.Struct({
+          dependsOn: S.Array(S.String).pipe(S.optionalKey),
+          inputs: S.Array(S.String).pipe(S.optionalKey),
+        })
+      ),
+    })
+  )
+);
 beforeEach(() => {
   execution.mockReset().mockImplementation(() => Effect.succeed(0));
   captured.mockReset().mockImplementation(() =>
@@ -183,76 +198,91 @@ describe("thin lint workers", { concurrent: false }, () => {
   });
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "checks declared fingerprint inputs independently of formatting and source contents",
+      "checks and writes the per-task seals independently of formatting and source contents",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "fingerprint-gate-" });
-        yield* fs.makeDirectory(`${root}/packages/cli/src`, { recursive: true });
-        yield* fs.makeDirectory(`${root}/packages/helper/src`, { recursive: true });
-        yield* fs.makeDirectory(`${root}/standards`);
-        yield* fs.writeFileString(`${root}/package.json`, '{"name":"fixture","workspaces":["packages/*"]}');
-        yield* fs.writeFileString(`${root}/packages/cli/package.json`, '{"name":"@beep/repo-cli"}');
-        yield* fs.writeFileString(`${root}/packages/helper/package.json`, '{"name":"@beep/helper"}');
+        yield* writeFixtureFiles(root, {
+          ...policyCliFixtureFiles([
+            { group: "foo", imports: ["@beep/helper"] },
+            { group: "bar", imports: ["./BarHelper.ts"] },
+          ]),
+          ...fixturePackageFiles("helper"),
+          ...fixturePackageFiles("other"),
+          "packages/cli/src/commands/Bar/BarHelper.ts": "export const value = 1;\n",
+          "package.json":
+            '{\n  "name": "fixture",\n  "workspaces": ["packages/*"],\n  "scripts": {\n    "foo:check": "beep-cli foo --check",\n    "bar:check": "bun run beep bar",\n    "lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check"\n  }\n}\n',
+          "standards/lint-policy.sweeps.jsonc": "{}\n",
+        });
         const turboFile = `${root}/turbo.json`;
         const turboBefore =
-          '{\n  "tasks": {\n    "//#lint:policy-fingerprint": {\n      "cache": true,\n      "outputs": [],\n      "inputs": []\n    },\n    "untouched": { "inputs": ["keep/**"] }\n  }\n}\n';
+          '{\n  "tasks": {\n    "//#lint:policy-fingerprint": {\n      "cache": true,\n      "outputs": [],\n      "inputs": []\n    },\n    "//#foo:check": { "dependsOn": ["^build", "//#lint:policy-fingerprint"] },\n    "//#bar:check": { "dependsOn": ["//#lint:policy-fingerprint"] },\n    "untouched": { "inputs": ["keep/**"] }\n  }\n}\n';
         yield* fs.writeFileString(turboFile, turboBefore);
-        selection.root = root;
-        try {
-          expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+        const file = `${root}/standards/policy-tools.fingerprint.json`;
+        const driftMessage = Effect.fnUntraced(function* () {
+          const exit = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
+          exit.pipe(Exit.isFailure, assertTrue);
+          return Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
+        });
+        yield* Effect.gen(function* () {
+          selection.root = root;
+          expect(yield* driftMessage()).toContain(
+            'Policy fingerprint drift: standards/policy-tools.fingerprint.json; turbo.json tasks["//#lint:policy-fingerprint"].inputs;'
+          );
           yield* run(["policy-fingerprint", "--write"]);
-          const file = `${root}/standards/policy-tools.fingerprint.json`;
           const declaration = yield* fs.readFileString(file);
           expect(declaration).toContain("standards/lint-policy.sweeps.jsonc");
           const turbo = yield* fs.readFileString(turboFile);
           expect(turbo).toContain('"untouched": { "inputs": ["keep/**"] }');
-          expect(Str.replace(/"inputs": \[[\s\S]*?\]/, '"inputs": []')(turbo)).toBe(turboBefore);
+          const tasks = (yield* decodeTurboTasks(turbo)).tasks;
+          expect(tasks["//#foo:check"]?.dependsOn).toEqual(["^build", "//#lint:policy-fingerprint:foo"]);
+          expect(tasks["//#bar:check"]?.dependsOn).toEqual(["//#lint:policy-fingerprint:bar"]);
+          expect(tasks["//#lint:policy-fingerprint:foo"]?.dependsOn).toEqual(["//#lint:policy-fingerprint:shared"]);
+          expect(tasks["//#lint:policy-fingerprint:foo"]?.inputs).toContain("packages/helper/src/index.ts");
+          expect(tasks["//#lint:policy-fingerprint:bar"]?.inputs).not.toContain("packages/helper/src/index.ts");
+          const manifest = yield* fs.readFileString(`${root}/package.json`);
+          expect(manifest).toContain('"lint:policy-fingerprint:foo": "true"');
+          expect(manifest).toContain('"lint:policy-fingerprint:shared": "true"');
+          yield* run(["policy-fingerprint", "--check"]);
+          // Idempotent bytes.
           yield* run(["policy-fingerprint", "--write"]);
           expect(yield* fs.readFileString(file)).toBe(declaration);
           expect(yield* fs.readFileString(turboFile)).toBe(turbo);
-          yield* fs.writeFileString(turboFile, turboBefore);
-          const turboDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-          turboDrift.pipe(Exit.isFailure, assertTrue);
-          if (Exit.isFailure(turboDrift)) {
-            const message = Cause.pretty(turboDrift.cause);
-            expect(message).toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
-            expect(message).not.toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json");
-          }
-          yield* run(["policy-fingerprint", "--write"]);
+          // Contents and formatting of inputs are not part of the declaration.
           yield* fs.writeFileString(file, `  ${declaration}  `);
-          yield* fs.writeFileString(`${root}/packages/cli/src/index.ts`, "changed source");
+          yield* fs.writeFileString(`${root}/packages/helper/src/index.ts`, "export const value = 2;\n");
           yield* fs.writeFileString(`${root}/.oxlintrc.docs.json`, "changed config");
           yield* run(["policy-fingerprint", "--check"]);
+          // A new import edge widens one seal and fails the check until --write.
           yield* fs.writeFileString(
-            `${root}/packages/cli/package.json`,
-            '{"name":"@beep/repo-cli","dependencies":{"@beep/helper":"workspace:*"}}'
+            `${root}/packages/cli/src/commands/Bar/BarHelper.ts`,
+            'export { value } from "@beep/other";\n'
           );
-          expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
+          expect(yield* driftMessage()).toContain('turbo.json tasks["//#lint:policy-fingerprint:bar"]');
           yield* run(["policy-fingerprint", "--write"]);
+          expect(yield* fs.readFileString(file)).toContain("packages/other/src/index.ts");
           yield* run(["policy-fingerprint", "--check"]);
+          // An edge the writer owns is restored; a stale seal is reported.
+          yield* fs.writeFileString(turboFile, turboBefore);
+          expect(yield* driftMessage()).toContain('turbo.json tasks["//#foo:check"].dependsOn');
+          yield* run(["policy-fingerprint", "--write"]);
           yield* fs.writeFileString(file, "invalid json");
-          const fileDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-          fileDrift.pipe(Exit.isFailure, assertTrue);
-          if (Exit.isFailure(fileDrift)) {
-            const message = Cause.pretty(fileDrift.cause);
-            expect(message).toContain("Policy fingerprint drift: standards/policy-tools.fingerprint.json;");
-            expect(message).not.toContain('turbo.json tasks["//#lint:policy-fingerprint"].inputs');
-          }
+          const fileDrift = yield* driftMessage();
+          expect(fileDrift).toContain(
+            "Policy fingerprint drift: standards/policy-tools.fingerprint.json; run bun run beep"
+          );
           yield* fs.writeFileString(turboFile, "invalid json");
           expect(yield* run(["policy-fingerprint", "--write"]).pipe(Effect.isFailure)).toBe(true);
           expect(yield* fs.readFileString(file)).toBe("invalid json");
-          const bothDrift = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.exit);
-          bothDrift.pipe(Exit.isFailure, assertTrue);
-          if (Exit.isFailure(bothDrift)) {
-            expect(Cause.pretty(bothDrift.cause)).toContain(
-              'Policy fingerprint drift: standards/policy-tools.fingerprint.json; turbo.json tasks["//#lint:policy-fingerprint"].inputs;'
-            );
-          }
           yield* fs.remove(turboFile);
           expect(yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isFailure)).toBe(true);
-        } finally {
-          selection.root = "";
-        }
+        }).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              selection.root = "";
+            })
+          )
+        );
       })
     );
   });

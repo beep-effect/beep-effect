@@ -4392,7 +4392,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           `--maxWorkers=${workers}`,
         ]);
       }
-      for (const selector of ["missing[selector]", "missing", "!B"]) {
+      // The last selector passes the selector grammar but trips the glob compiler's pattern-length guard.
+      for (const selector of ["missing[selector]", "missing", "!B", pipe("a", Str.repeat(65_537))]) {
         assertNone(resolveCoverageSelector(owners, selector));
         expect(A.takeRight(coverageStepForTesting("/repo", [`--filter=${selector}`], owners).args, 1)).toEqual([
           "--maxWorkers=2",

@@ -19,6 +19,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
@@ -381,7 +382,7 @@ const packageRelativeInput = (pkg: DocgenWorkspacePackage, filePath: string): O.
   pipe(
     O.some(filePath),
     O.filter(Str.startsWith(packagePrefix(pkg))),
-    O.map(Str.replace(new RegExp(`^${Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")(packagePrefix(pkg))}`), ""))
+    O.map(Str.replace(new RegExp(`^${Regex.escape(packagePrefix(pkg))}`), ""))
   );
 
 const isPackageLocalDocgenInput = (relativePath: string): boolean =>

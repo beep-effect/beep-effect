@@ -27,6 +27,7 @@ import {
   generateQualityJson,
   generateQualityReport,
   generateQualityWorkerEvalJson,
+  getDeclaredJsDocs,
   isCanonicalDocgenAggregateConfigForTesting,
   loadDocgenConfigDocument,
   makeQualityWorkerRunpodEvalPodCreateInput,
@@ -83,6 +84,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { Project, SyntaxKind } from "ts-morph";
 import { commandArgs } from "./support/commandArgs.ts";
 import type {
   DocgenQualityPackageReport,
@@ -5346,4 +5348,35 @@ describe("DocgenQualityWorkerEvalReport schema", () => {
       { arbitrary: fcRuns(16) }
     );
   }
+});
+
+describe("getDeclaredJsDocs", () => {
+  it("reads a JSDoc-able node's own blocks, a variable's statement blocks, and none elsewhere", () => {
+    const file = new Project({ useInMemoryFileSystem: true }).createSourceFile(
+      "a.ts",
+      A.join(
+        [
+          "/** A function. */",
+          "export function run() {}",
+          "/** A value. */",
+          "export const answer = 42",
+          "export const items: ReadonlyArray<number> = []",
+          "for (const item of items) { void item }",
+        ],
+        "\n"
+      )
+    );
+    expect(A.map(getDeclaredJsDocs(file.getFunctionOrThrow("run")), (doc) => Str.trim(doc.getDescription()))).toEqual([
+      "A function.",
+    ]);
+    expect(
+      A.map(getDeclaredJsDocs(file.getVariableDeclarationOrThrow("answer")), (doc) => Str.trim(doc.getDescription()))
+    ).toEqual(["A value."]);
+    // A `for (const item of ...)` declaration sits in a declaration list without a statement: no blocks.
+    const forOf = file.getStatements()[3];
+    expect(forOf?.getKindName()).toBe("ForOfStatement");
+    const declaration = forOf?.getDescendantsOfKind(SyntaxKind.VariableDeclaration)[0];
+    expect(declaration).toBeDefined();
+    if (declaration !== undefined) expect(getDeclaredJsDocs(declaration)).toEqual([]);
+  });
 });

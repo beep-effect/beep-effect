@@ -160,6 +160,48 @@ export {
   sortSchemaFirstEntries,
 } from "./Lint.schemas.ts";
 /**
+ * Circular-import lint command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LintCircular.command.ts";
+/**
+ * Deprecated vendor API lint command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LintDeprecatedApis.command.ts";
+/**
+ * Goal packet lint command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LintGoalPackets.command.ts";
+/**
+ * Documentation lint command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LintJsdoc.command.ts";
+/**
+ * Package-scoped law lint command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LintLaws.command.ts";
+/**
+ * Root policy sweep command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./LintPolicy.command.ts";
+/**
  * Type-aware generated Opaque sample roundtrip lint.
  *
  * **Example** (Inspect the roundtrip command)
@@ -171,6 +213,13 @@ export {
  * @since 0.0.0
  */
 export * from "./OpaqueRoundtrips.ts";
+/**
+ * Workspace scripts policy command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./PackageScripts.command.ts";
 /**
  * Package test-typecheck blind-spot lint utilities.
  *
@@ -189,6 +238,20 @@ export {
   TestTypecheckBlindSpotKind,
   TestTypecheckBlindSpotSummary,
 } from "./PackageTestTypecheck.ts";
+/**
+ * Per-task policy fingerprint schema export.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./PolicyFingerprint.schemas.ts";
+/**
+ * Per-task policy fingerprint command and service export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./PolicyFingerprint.ts";
 /**
  * Schema catalog generation utilities.
  *
@@ -253,6 +316,13 @@ export * from "./SchemaParityCodemod.ts";
  * @since 0.0.0
  */
 export * from "./SchemaTopology.ts";
+/**
+ * Tooling schema-first lint command export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./ToolingSchemaFirst.command.ts";
 /**
  * Check-overlay allowlist lint utilities.
  *
