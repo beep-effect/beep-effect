@@ -64,9 +64,9 @@ it.effect.prop(
   runs
 );
 
-it.layer(Path.layer, { timeout: "30 seconds" })("readPatterns fidelity", (it) => {
+it.layer(Path.layer, { timeout: "30 seconds" })("WorkspacePatterns.read fidelity", (it) => {
   it.effect.prop(
-    "readPatterns preserves YAML patterns, gives them precedence, and falls back to JSON for an empty list",
+    "WorkspacePatterns.read preserves YAML patterns, gives them precedence, and falls back to JSON for an empty list",
     [stringEntries, stringEntries],
     ([patterns, fallback]) =>
       Effect.gen(function* () {

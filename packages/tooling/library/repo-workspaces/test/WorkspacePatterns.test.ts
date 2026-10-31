@@ -23,7 +23,7 @@ const tree: Tree = {
   "/repo/package.json": JSON.stringify({ name: "root", workspaces: ["apps/*"] }),
 };
 
-describe("readPatterns — the happy paths", () => {
+describe("WorkspacePatterns.read — the happy paths", () => {
   layer(platform(tree), { timeout: "30 seconds" })((it) => {
     it.effect("prefers pnpm-workspace.yaml over the manifest workspaces field", () =>
       Effect.gen(function* () {
@@ -33,7 +33,7 @@ describe("readPatterns — the happy paths", () => {
   });
 });
 
-describe("readPatterns — a pnpm-workspace.yaml with no packages key falls through", () => {
+describe("WorkspacePatterns.read — a pnpm-workspace.yaml with no packages key falls through", () => {
   layer(
     platform({
       "/repo/pnpm-workspace.yaml": "onlyBuiltDependencies:\n  - esbuild\n",
@@ -49,7 +49,7 @@ describe("readPatterns — a pnpm-workspace.yaml with no packages key falls thro
   });
 });
 
-describe("readPatterns — an absent config is not an error", () => {
+describe("WorkspacePatterns.read — an absent config is not an error", () => {
   layer(platform({ "/repo/README.md": "no config here" }), { timeout: "30 seconds" })((it) => {
     it.effect("a standalone directory declares no patterns", () =>
       Effect.gen(function* () {
@@ -67,7 +67,7 @@ describe("readPatterns — an absent config is not an error", () => {
 // produce byte-identical results, so the failure was invisible by construction:
 // a permission error yielded "this workspace declares no packages".
 
-describe("readPatterns — an unreadable pnpm-workspace.yaml", () => {
+describe("WorkspacePatterns.read — an unreadable pnpm-workspace.yaml", () => {
   layer(platformWith({ unreadableFiles: ["/repo/pnpm-workspace.yaml"] })(tree), { timeout: "30 seconds" })((it) => {
     it.effect("fails typed rather than reading as an empty document", () =>
       Effect.gen(function* () {
@@ -79,7 +79,7 @@ describe("readPatterns — an unreadable pnpm-workspace.yaml", () => {
   });
 });
 
-describe("readPatterns — an unreadable package.json", () => {
+describe("WorkspacePatterns.read — an unreadable package.json", () => {
   // The pnpm config parses but declares no `packages:`, so pattern reading falls
   // through to the manifest — and THAT is the unreadable file.
   layer(
@@ -99,7 +99,7 @@ describe("readPatterns — an unreadable package.json", () => {
   });
 });
 
-describe("readPatterns — a malformed config still fails typed", () => {
+describe("WorkspacePatterns.read — a malformed config still fails typed", () => {
   layer(platform({ "/repo/pnpm-workspace.yaml": "packages:\n  - [unclosed\n" }), { timeout: "30 seconds" })((it) => {
     it.effect("invalid YAML is invalidYaml, not a defect", () =>
       Effect.gen(function* () {

@@ -8,7 +8,7 @@
  * canonical syncpack sources from the same read, and `CreatePackage/CreatePackage.command.ts` projects the root
  * manifest it already holds through `WorkspacePatterns.fromManifest` (it edits that field, so the manifest is the
  * document that matters there). `CreatePackage/ConfigUpdater.ts` carried no pattern reader: its share of the
- * three `fallow-ignore-next-line code-duplication` suppressions covered the positional `applyJsoncModification`
+ * three `code-duplication` suppression comments covered the positional `applyJsoncModification`
  * wrapper the three files copied, which is inlined onto the `internal/cli/Jsonc.ts` facade.
  *
  * Oracle, as the wave-4 plan names it (pattern-literal parity over the live repository):
@@ -158,7 +158,7 @@ const DerivedSurfaces = S.Struct({
 });
 const CliRun = S.Struct({ command: S.String, exitCode: S.Finite, stdoutSha256: S.String, stdoutLines: S.Finite });
 const Report = S.Struct({
-  schemaVersion: S.Literal(1),
+  schemaVersion: S.tag(1),
   tool: S.String,
   commit: S.optionalKey(S.String),
   patterns: S.Struct({

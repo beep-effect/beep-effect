@@ -375,6 +375,28 @@ Record a null bump.
       })
     );
 
+    // Pinned shift (4-A2, SPEC W4-f): the retired reader took the root `package.json`
+    // `workspaces` alone; through the kit a non-empty `pnpm-workspace.yaml`
+    // `packages:` list wins, the precedence `WorkspaceDiscovery` always applied.
+    // The live repository has no `pnpm-workspace.yaml`, so this is the one place
+    // the divergent input is exercised.
+    it.effect("follows a non-empty pnpm-workspace.yaml over the root package.json workspaces field", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeRepoFile(tmpDir, "pnpm-workspace.yaml", "packages:\n  - 'a/*'\n");
+        yield* writePackageJson(tmpDir, "package.json", { private: true, workspaces: ["b/*"] });
+        yield* writePackageJson(tmpDir, "a/from-yaml/package.json", { name: "@beep/from-yaml", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "b/from-manifest/package.json", {
+          name: "@beep/from-manifest",
+          version: "0.0.0",
+        });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["a/from-yaml/package.json"]);
+      })
+    );
+
     it.effect("accepts tracked workspace changesets through the release-path check", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
