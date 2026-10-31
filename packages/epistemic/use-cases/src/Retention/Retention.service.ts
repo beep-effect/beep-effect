@@ -26,6 +26,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -69,23 +70,18 @@ const endpointDisposition = (
   O.match(claimId, {
     onNone: () => RetentionDisposition.Enum["not-applicable"],
     onSome: (id) =>
-      O.getOrElse(
-        O.map(
-          A.last(
-            A.sort(
-              A.filter(
-                snapshot.dispositions,
-                (d) =>
-                  Equal.equals(d.orgId, query.orgId) &&
-                  Equal.equals(d.claimId, id) &&
-                  DateTime.toEpochMillis(d.resolvedAt) <= DateTime.toEpochMillis(query.knownAt)
-              ),
-              dispositionOrder
-            )
-          ),
-          (d) => d.status
+      pipe(
+        snapshot.dispositions,
+        A.filter(
+          (disposition) =>
+            Equal.equals(disposition.orgId, query.orgId) &&
+            Equal.equals(disposition.claimId, id) &&
+            DateTime.toEpochMillis(disposition.resolvedAt) <= DateTime.toEpochMillis(query.knownAt)
         ),
-        () => RetentionDisposition.Enum.unresolved
+        A.sort(dispositionOrder),
+        A.last,
+        O.map((disposition) => disposition.status),
+        O.getOrElse(() => RetentionDisposition.Enum.unresolved)
       ),
   });
 const rowOrder = Order.combine(
@@ -107,10 +103,34 @@ const canonicalQuery = (query: RetentionQuery) =>
  * all policy values inert. Payload pressure measures canonical fact bytes; it never estimates RAM.
  * Disposition filtering happens after the as-of snapshot. Requested absent keys stay visible.
  *
- * **Example** (Inspect the reporting operation)
+ * **Example** (Build an inert report from an empty snapshot)
  * ```ts
- * import { generateRetentionReport } from "@beep/epistemic-use-cases/Retention"
- * console.log(generateRetentionReport)
+ * import { RetentionQuery, RetentionSnapshot } from "@beep/epistemic-domain/values/Retention"
+ * import {
+ *   generateRetentionReport,
+ *   RetentionAuthorityReader,
+ *   RetentionCalibrationRegistry,
+ * } from "@beep/epistemic-use-cases/Retention"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const report = Effect.gen(function* () {
+ *   const query = yield* S.decodeEffect(RetentionQuery)({
+ *     orgId: 1,
+ *     logicalKeys: [],
+ *     validAt: 0,
+ *     knownAt: 0,
+ *     dispositions: [],
+ *   })
+ *   return yield* generateRetentionReport(query, O.none())
+ * }).pipe(
+ *   Effect.provideService(RetentionAuthorityReader, {
+ *     read: () => Effect.succeed(RetentionSnapshot.make({ edges: [], dispositions: [] })),
+ *   }),
+ *   Effect.provide(RetentionCalibrationRegistry.inert),
+ * )
+ * // Running report produces no rows and admission.state === "inert".
  * ```
  * @category use-cases
  * @since 0.0.0
