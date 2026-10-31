@@ -304,6 +304,14 @@
       "formatter": { "enabled": false }
     },
     {
+      "includes": ["standards/cache-qualification-baseline.json"],
+      "files": { "maxSize": 8388608 }
+    },
+    {
+      "includes": ["standards/coverage.regression-baseline.jsonc"],
+      "files": { "maxSize": 2097152 }
+    },
+    {
       "includes": [
         "goals/lexical-playground-capability-atlas/research/capability-atlas.json"
       ],
