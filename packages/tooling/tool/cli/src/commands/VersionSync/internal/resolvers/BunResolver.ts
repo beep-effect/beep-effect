@@ -9,7 +9,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { SemVer } from "@beep/semver/SemVer";
 import { A, Str } from "@beep/utils";
 import * as Bool from "effect/Boolean";
@@ -291,9 +291,11 @@ export const resolveBunVersions: {
             fs.readFileString(vercelJsonPath).pipe(
               VersionSyncError.mapError("Failed to read apps/oip-web/vercel.json", "apps/oip-web/vercel.json"),
               Effect.flatMap((content) =>
-                decodeJsoncTextAs(BunVercelDocument)(content).pipe(
-                  VersionSyncError.mapError("Failed to parse apps/oip-web/vercel.json", "apps/oip-web/vercel.json")
-                )
+                Jsonc.bind(BunVercelDocument)
+                  .decode(content)
+                  .pipe(
+                    VersionSyncError.mapError("Failed to parse apps/oip-web/vercel.json", "apps/oip-web/vercel.json")
+                  )
               ),
               Effect.asSome
             ),

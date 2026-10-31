@@ -10,7 +10,7 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6.1-Sol independent identity_fix_review; accepted source input carried across main integration",
+      "reviewer": "GPT-6.1-Sol independent identity_fix_review; re-applied by Claude Opus 5.5 on main 66d3427553 (Codex takeover)",
       "reason": "Retain accepted main reviews and acknowledge only the reviewed schemaStatics shared seal input; no qualification granted.",
       "basis": {
         "path": "docs/reports/identity-statics-cache-review-2026-10-31.md",
@@ -682,11 +682,11 @@
       }
     },
     "@beep/lint-rules": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion R3a, effected-r3a)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
+        "sha256": "053533247f4683369733fc65c8b9b76c3413a79cc32b90fe14fc8d3c09d1c40c"
       }
     },
     "@beep/lockfiles": {
@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion 4-A1, refactor/qas-discovery-workspace-kit)",
-      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the QAS discovery adoption (map site #143); the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion R3a, effected-r3a)",
+      "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-4-a1.md",
-        "sha256": "ed51615669ff4ed8d5bdfd8c573f66258580e94c115f6ddf7ac22d82c5aee297"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
+        "sha256": "053533247f4683369733fc65c8b9b76c3413a79cc32b90fe14fc8d3c09d1c40c"
       }
     },
     "@beep/repo-configs": {
@@ -3571,7 +3571,6 @@
             "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
-            "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
@@ -3982,7 +3981,6 @@
             "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
-            "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
@@ -4498,7 +4496,6 @@
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
             "packages/tooling/tool/cli/src/internal/cli/Json.ts",
-            "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
@@ -5122,7 +5119,6 @@
             "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
-            "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
@@ -5983,7 +5979,6 @@
             "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
-            "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
@@ -6585,7 +6580,6 @@
             "packages/tooling/tool/cli/src/internal/cli/Flags.ts",
             "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
             "packages/tooling/tool/cli/src/internal/cli/Json.ts",
-            "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
@@ -7173,7 +7167,6 @@
             "packages/foundation/modeling/schema/src/Fn/index.ts",
             "packages/foundation/modeling/schema/src/Html.ts",
             "packages/foundation/modeling/schema/src/IeeeNumber.ts",
-            "packages/foundation/modeling/schema/src/Jsonc.ts",
             "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.errors.ts",
             "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
             "packages/foundation/modeling/schema/src/LiteralKit/index.ts",
@@ -64410,6 +64403,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#audit",
+          "@beep/jsonc#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
@@ -64476,6 +64470,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -64531,6 +64526,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -64573,6 +64569,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
@@ -64700,6 +64697,7 @@
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -64905,6 +64903,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -64950,6 +64949,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -65001,6 +65001,7 @@
         "commandDigest": "217ff530fdad80094d387f5b5b247ca0b2b81e12de4a61cf253cc8f1a852ee69",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
@@ -102347,6 +102348,7 @@
           "@beep/github-reporting#audit",
           "@beep/glob#audit",
           "@beep/identity#audit",
+          "@beep/jsonc#audit",
           "@beep/libpff#audit",
           "@beep/lockfiles#audit",
           "@beep/m365#audit",
@@ -102467,6 +102469,7 @@
           "@beep/github-reporting#build",
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
@@ -102576,6 +102579,7 @@
           "@beep/github-reporting#build",
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
@@ -102672,6 +102676,7 @@
           "@beep/github-reporting#build",
           "@beep/glob#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/libpff#build",
           "@beep/lockfiles#build",
           "@beep/m365#build",
@@ -102817,6 +102822,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -102958,6 +102964,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -103217,6 +103224,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -103316,6 +103324,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -103439,6 +103448,7 @@
           "@beep/github-reporting#transit",
           "@beep/glob#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/libpff#transit",
           "@beep/lockfiles#transit",
           "@beep/m365#transit",
@@ -134462,7 +134472,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "8dc49ddf06aa985d5ef20df95ba96436ae787f0074e1fe129a5a46d63e24edc7"
+        "sha256": "586a2236d1fd7fa3f10f0144d2cef954833375fc520352a9e9c81c06e39f2760"
       }
     ]
   }
