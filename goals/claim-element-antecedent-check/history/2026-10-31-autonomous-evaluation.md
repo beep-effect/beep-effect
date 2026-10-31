@@ -90,3 +90,10 @@ The canonical schema-catalog writer updates only the two named shards (five adde
 ## Base synchronization and dependency replay
 
 Publication catches five newly landed main commits before push, overlapping the generated JSDoc and schema-first inventories. The feature branch merges the new base rather than rebasing. Both generated-inventory parents are preserved locally and the canonical writer rebuilds the combined inventories. All 20 v19 runtime files retain their exact hashes. After the new frozen-lockfile install, both full positive/allowed result files and all 251 successful prediction reports are identical to the previous v19 measurement. The adjacent current-base receipt binds the merged main, feature parent, merge commit and lockfile hash; strict recovery remains 37/538 with all 34 protected passes. This is dependency compatibility evidence, not new accuracy. The immutable earlier benchmark and review artifacts remain unchanged.
+
+
+## Inherited policy publication checkpoint
+
+The publication attempt on `74d81eaff6` completes 23 of 25 collected checks but stops before push on two violations reproduced on clean main `b30cd9e6dd`: five exported internal graph records fail schema-first, and eight new Option/data assertions fail effect-vitest. The [separate checkpoint](2026-10-31-inherited-policy-checkpoint.json) preserves the failure and clean-main attribution. A separate repair lane keeps graph records private, derives reader types from capability signatures, uses exact Effect assertions and canonically refreshes stale policy fingerprints. Both repository policy scans, the fingerprint consistency check and all 10 focused policy tests pass there; its package and documentation verification are still running. This repair has not yet landed and is not merged into this branch.
+
+All 20 frozen runtime hashes and all 631 protected historical/fixture hashes are rechecked with zero changes. The measured result remains 37/538, retaining all 34 protected passes. Attorney attendance is optional under the recorded user authority; publication and closeout remain incomplete delivery work.
