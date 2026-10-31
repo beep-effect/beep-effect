@@ -37,7 +37,7 @@ Do not infer that an enum, installed app, green service, transport acknowledgmen
 - [ ] Keep Muse requested proxy route, reported harness/model and verified provider identity separate. Never infer upstream identity from a model alias or Claude-formatted event.
 - [ ] Preserve intended bounded telemetry context through managed child environments without forwarding secrets or all parent environment variables.
 - [ ] Discover all declared clone/worktree roots and source namespaces independently of collector cwd; test worktree creation/retirement and archived/copied sessions.
-- [ ] Qualify desktop apps separately from CLI: controlled canary identity and receipt, actual config/home/host evidence, plus explicit unsupported states for inaccessible cloud conversations.
+- [ ] Qualify desktop apps separately from CLI: controlled canary identity and receipt, actual config, home and host evidence, plus explicit unsupported states for inaccessible cloud conversations.
 - [ ] Qualify dankserver worker account and each additionally declared remote host through authorized wrappers/config writers. The prior unreadable worker config is not proof of no telemetry.
 - [ ] Implement privacy allowlists and bounded field cardinality for every adapter. Native resource/account/body fields must not bypass metadata policy.
 - [ ] Run per-route main/clone/worktree/restart/resume/cancellation/child-handoff canaries with exact expected IDs, dedup and a stated acknowledgment boundary.

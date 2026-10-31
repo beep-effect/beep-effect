@@ -179,13 +179,13 @@ export interface PackageTarballShape {
 	readonly extract: (published: PublishedVersion) => Effect.Effect<string, TarballError, Scope.Scope>;
 }
 
-/** Map an SRI algorithm name onto core's digest algorithm spelling. */
-const digestAlgorithmOf = (algorithm: string): Digest.Algorithm | undefined =>
+/** Map an SRI algorithm name onto core's digest algorithm, keeping the SRI name for the result. */
+const digestAlgorithmOf = (algorithm: string): { readonly sri: string; readonly digest: Digest.Algorithm } | undefined =>
 	Match.value(algorithm).pipe(
-		Match.when("sha1", () => "SHA-1" as const),
-		Match.when("sha256", () => "SHA-256" as const),
-		Match.when("sha384", () => "SHA-384" as const),
-		Match.when("sha512", () => "SHA-512" as const),
+		Match.when("sha1", () => ({ sri: "sha1", digest: Digest.sha1 })),
+		Match.when("sha256", () => ({ sri: "sha256", digest: Digest.sha256 })),
+		Match.when("sha384", () => ({ sri: "sha384", digest: Digest.sha384 })),
+		Match.when("sha512", () => ({ sri: "sha512", digest: Digest.sha512 })),
 		Match.orElse(() => undefined),
 	);
 
@@ -225,8 +225,10 @@ const make = Effect.fnUntraced(function* () {
 		}
 
 		const bytes = yield* response.arrayBuffer.pipe(
-			Effect.map((buffer) => new Uint8Array(buffer)),
-			Effect.mapError((cause) => fail("http", { cause })),
+			Effect.mapBoth({
+				onSuccess: (buffer) => new Uint8Array(buffer),
+				onFailure: (cause) => fail("http", { cause }),
+			}),
 		);
 
 		// Verification happens BEFORE extraction and before anything reads the
@@ -249,13 +251,9 @@ const make = Effect.fnUntraced(function* () {
 					`PackageTarball: cannot verify ${name}@${version} — "${expected}" is not an integrity form this can check`,
 				);
 			} else {
-				const digest = yield* crypto
-					.digest(algorithm.value, bytes)
-					// NOT integrityMismatch: nothing was compared. See the reason
-					// docstring — a failure to verify presented as a measured
-					// mismatch is the exact class this package fixes elsewhere.
-					.pipe(Effect.mapError((cause) => fail("integrityUnverifiable", { expected, cause })));
-				const actual = `${Str.toLowerCase(Str.replace("-", "")(algorithm.value))}-${Base64.encode(digest)}`;
+				// effect 4.1.0's digest cannot fail, so there is no unverifiable branch here.
+				const digest = yield* crypto.digest(algorithm.value.digest, bytes);
+				const actual = `${algorithm.value.sri}-${Base64.encode(digest)}`;
 				// Compared without base64 padding: the SRI grammar permits an
 				// unpadded value, and a padding difference is not a byte
 				// difference. Refusing a valid tarball over one would be the
