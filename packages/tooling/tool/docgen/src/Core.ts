@@ -5,13 +5,11 @@
  * @since 0.0.0
  */
 
-/// <reference path="./markdown-toc.d.ts" />
-
 import chalk from "@beep/chalk";
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { MarkdownToc } from "@beep/markdown/MarkdownToc";
 import { encodeTSConfigPrettyEffect, FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
-import markdownToc from "@effect/markdown-toc";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -761,7 +759,7 @@ const getModuleMarkdownFiles = (modules: ReadonlyArray<Domain.Module>) =>
     Effect.fnUntraced(function* (module, index) {
       const outputPath = yield* getModuleMarkdownOutputPath(module);
       const moduleContent = yield* Printer.printModule(module);
-      const toc = markdownToc(moduleContent, { bullets: "-" }).content;
+      const toc = yield* MarkdownToc.render(moduleContent, { bullet: "-" });
       const frontMatter = Printer.printFrontMatter(module, index + 1);
       const content = pipe(
         `${frontMatter}\n\n${moduleContent}`,

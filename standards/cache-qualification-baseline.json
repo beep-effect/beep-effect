@@ -378,11 +378,11 @@
       }
     },
     "@beep/effect-drizzle": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R5b, refactor/markdown-toc-onto-beep-markdown)",
+      "reason": "Record the dependency-only drift of @beep/repo-docgen (gains a direct @beep/markdown edge, already upstream through @beep/md, and drops @effect/markdown-toc) and @beep/effect-drizzle (gains @beep/markdown as a devDependency for assemble-readme.ts) for the R5b table-of-contents adoption; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r5b.md",
+        "sha256": "ca8939ef9784becc9e46f8e45602bc4e9fb51ad27a3fb80e75fa750a9d2fd6e3"
       }
     },
     "@beep/epistemic-client": {
@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-docgen": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R5b, refactor/markdown-toc-onto-beep-markdown)",
+      "reason": "Record the dependency-only drift of @beep/repo-docgen (gains a direct @beep/markdown edge, already upstream through @beep/md, and drops @effect/markdown-toc) and @beep/effect-drizzle (gains @beep/markdown as a devDependency for assemble-readme.ts) for the R5b table-of-contents adoption; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r5b.md",
+        "sha256": "ca8939ef9784becc9e46f8e45602bc4e9fb51ad27a3fb80e75fa750a9d2fd6e3"
       }
     },
     "@beep/repo-tsconfig": {
@@ -34189,6 +34189,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#audit",
+          "@beep/markdown#audit",
           "@beep/pglite#audit",
           "@beep/repo-utils#audit",
           "@beep/test-runner#audit"
@@ -34254,6 +34255,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
+          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34308,6 +34310,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
+          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34349,6 +34352,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
+          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34475,6 +34479,7 @@
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/fc-runs#transit",
+          "@beep/markdown#transit",
           "@beep/pglite#transit",
           "@beep/repo-utils#transit",
           "@beep/test-runner#transit"
@@ -34650,6 +34655,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#transit",
+          "@beep/markdown#transit",
           "@beep/pglite#transit",
           "@beep/repo-utils#transit",
           "@beep/test-runner#transit"
@@ -34694,6 +34700,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#transit",
+          "@beep/markdown#transit",
           "@beep/pglite#transit",
           "@beep/repo-utils#transit",
           "@beep/test-runner#transit",
@@ -34744,6 +34751,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
+          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34786,6 +34794,7 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
+          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -99721,6 +99730,7 @@
           "@beep/chalk#audit",
           "@beep/config-file#audit",
           "@beep/identity#audit",
+          "@beep/markdown#audit",
           "@beep/md#audit",
           "@beep/package-json#audit",
           "@beep/repo-utils#audit",
@@ -99792,6 +99802,7 @@
           "@beep/chalk#build",
           "@beep/config-file#build",
           "@beep/identity#build",
+          "@beep/markdown#build",
           "@beep/md#build",
           "@beep/package-json#build",
           "@beep/repo-utils#build",
@@ -99852,6 +99863,7 @@
           "@beep/chalk#build",
           "@beep/config-file#build",
           "@beep/identity#build",
+          "@beep/markdown#build",
           "@beep/md#build",
           "@beep/package-json#build",
           "@beep/repo-utils#build",
@@ -99899,6 +99911,7 @@
           "@beep/chalk#build",
           "@beep/config-file#build",
           "@beep/identity#build",
+          "@beep/markdown#build",
           "@beep/md#build",
           "@beep/package-json#build",
           "@beep/repo-utils#build",
@@ -100031,6 +100044,7 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/md#transit",
           "@beep/package-json#transit",
           "@beep/repo-utils#transit",
@@ -100241,6 +100255,7 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/md#transit",
           "@beep/package-json#transit",
           "@beep/repo-utils#transit",
@@ -100291,6 +100306,7 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/md#transit",
           "@beep/package-json#transit",
           "@beep/repo-utils#transit",
@@ -100347,6 +100363,7 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
+          "@beep/markdown#transit",
           "@beep/md#transit",
           "@beep/package-json#transit",
           "@beep/repo-utils#transit",
