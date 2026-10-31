@@ -22,6 +22,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerPipeline");
@@ -156,6 +157,15 @@ export interface CitationCleanerWork {
   readonly nested: (plan: string, initial: CitationCleanerObject) => Effect.Effect<CitationCleanerObject, Failure>;
   readonly reserveText: (units: number) => Effect.Effect<CitationCleanerTextCharge, Failure>;
   readonly snapshot: Effect.Effect<CitationCleanerWorkSnapshot>;
+  /**
+   * Exclusively lend remaining capacity to a captured bounded producer. It must
+   * enforce this ceiling before allocating output and retire native work before
+   * returning. No ledger reentry is permitted from the borrowing fiber. Empty
+   * output is valid even at zero capacity; settlement issues no empty ticket.
+   */
+  readonly withTextCapacity: <A, E>(
+    produce: (remaining: number) => Effect.Effect<{ readonly value: A; readonly units: number }, E>
+  ) => Effect.Effect<{ readonly value: A; readonly charges: ReadonlyArray<CitationCleanerTextCharge> }, E | Failure>;
 }
 /**
  * All host values, callables, registries and iterator state stay in a captured
@@ -233,10 +243,21 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
   const makeWork = Effect.gen(function* () {
     const state = yield* Ref.make(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false }));
     const issued = new WeakMap<CitationCleanerTextCharge, number>();
+    const capacity = yield* Semaphore.make(1);
+    let borrower = O.none<number>();
+    const exclusive = <A, E>(body: Effect.Effect<A, E>): Effect.Effect<A, E | Failure> =>
+      Effect.withFiber((fiber) =>
+        Effect.suspend(
+          (): Effect.Effect<A, E | Failure> =>
+            O.isSome(borrower) && borrower.value === fiber.id
+              ? Effect.fail(fail("invalid-reservation"))
+              : capacity.withPermit(body)
+        )
+      );
     const ensureOpen = Ref.get(state).pipe(
       Effect.flatMap((value) => (value.closed ? Effect.fail(fail("closed-work")) : Effect.void))
     );
-    const reserveText = Effect.fn("Citation.reserveCleanerText")(function* (units: number) {
+    const reserveUnlocked = Effect.fn("Citation.reserveCleanerText")(function* (units: number) {
       const amount = yield* S.decodeEffect(ReservationUnits)(units).pipe(
         Effect.mapError(() => fail("invalid-reservation"))
       );
@@ -255,6 +276,36 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         }
       ).pipe(Effect.flatten);
     });
+    const reserveText = (units: number) => exclusive(reserveUnlocked(units));
+    const withTextCapacity: CitationCleanerWork["withTextCapacity"] = (produce) =>
+      exclusive(
+        Effect.withFiber((fiber) =>
+          Effect.acquireUseRelease(
+            ensureOpen.pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  borrower = O.some(fiber.id);
+                })
+              )
+            ),
+            () =>
+              Effect.gen(function* () {
+                const remaining = limits.producedTextUtf16 - (yield* Ref.get(state)).producedTextUtf16;
+                const result = yield* produce(remaining);
+                const units = yield* S.decodeEffect(Units)(result.units).pipe(
+                  Effect.mapError(() => fail("invalid-reservation"))
+                );
+                yield* ensureOpen;
+                const charges = units === 0 ? [] : [yield* reserveUnlocked(units)];
+                return { value: result.value, charges };
+              }),
+            () =>
+              Effect.sync(() => {
+                borrower = O.none();
+              })
+          )
+        )
+      );
     const consume = Effect.fn("Citation.consumeCleanerText")(function* (
       charges: ReadonlyArray<CitationCleanerTextCharge>,
       units: number
@@ -325,6 +376,7 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     });
     const work: CitationCleanerWork = {
       reserveText,
+      withTextCapacity,
       snapshot: Ref.get(state),
       nested: Effect.fn("Citation.nestedCleanerPlan")(
         (plan: string, initial: CitationCleanerObject) => sanitize(execute(plan, initial)),

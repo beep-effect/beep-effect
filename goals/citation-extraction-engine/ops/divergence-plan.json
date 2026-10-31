@@ -160,6 +160,7 @@
         "packages/law-practice/server/test/CitationDictionaryReentrancy.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/dictionary-reentrancy.json",
         "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-execution-core.md",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-capacity.md",
         "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
         "packages/law-practice/server/test/CitationCleanerPipeline.test.ts"
       ],

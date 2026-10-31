@@ -162,6 +162,13 @@ raw-source and intermediate bounds remain distinct. See
 history/evidence/2026-10-31-cleaner-execution-core.md. Global admission/native
 adapters, full custom host/registry proof, maps and public Layer remain open.
 
+The private cleaner ledger now lends exclusive remaining output capacity to
+captured bounded producers and settles original live charge tickets. Ordinary
+reservations wait until producer cleanup completes; empty output is allowed at
+zero remaining capacity. This does not complete native stage integration or
+global process ownership. See
+[capacity evidence](./history/evidence/2026-10-31-cleaner-capacity.md).
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

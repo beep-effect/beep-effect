@@ -1175,6 +1175,13 @@ instead of silently splitting delivery or weakening scope.
   admission, native/default owners, full custom replay, maps and public Layer
   remain open; no canonical completion or normalization law follows.
 
+The private cleaner ledger now lends exclusive remaining output capacity to
+captured bounded producers and settles original live charge tickets. Ordinary
+reservations wait until producer cleanup completes; empty output is allowed at
+zero remaining capacity. This does not complete native stage integration or
+global process ownership. See
+[capacity evidence](./history/evidence/2026-10-31-cleaner-capacity.md).
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

@@ -483,3 +483,131 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("reserved literal cl
     })
   );
 });
+
+it.effect("lends exclusive remaining text capacity and settles exact issued charges before waking producers", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const entered = yield* Deferred.make<void>();
+    const release = yield* Deferred.make<void>();
+    let competingFinished = false;
+    const step = h.callback((_, work) =>
+      Effect.gen(function* () {
+        const native = yield* work
+          .withTextCapacity((remaining) =>
+            Effect.gen(function* () {
+              expect(remaining).toBe(4);
+              expect(yield* Effect.exit(work.reserveText(1))).toMatchObject({ _tag: "Failure" });
+              yield* Deferred.succeed(entered, undefined);
+              yield* Deferred.await(release);
+              return { value: "abc", units: 3 };
+            })
+          )
+          .pipe(Effect.forkChild);
+        yield* Deferred.await(entered);
+        const competing = yield* work.reserveText(1).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              competingFinished = true;
+            })
+          ),
+          Effect.forkChild
+        );
+        yield* Effect.yieldNow;
+        expect(competingFinished).toBe(false);
+        expect((yield* work.snapshot).producedTextUtf16).toBe(0);
+        yield* Deferred.succeed(release, undefined);
+        const result = yield* Fiber.join(native);
+        const extra = yield* Fiber.join(competing);
+        return CitationCleanerProduced.make({ value: h.own(`${result.value}d`), charges: [...result.charges, extra] });
+      })
+    );
+    h.plans.set("capacity", () => h.sequence([step]));
+    const result = yield* (yield* pipeline(h, { producedTextUtf16: 4 })).run({ text: "x", plan: "capacity" });
+    expect(yield* h.raw(result.value)).toBe("abcd");
+    expect(result.producedTextUtf16).toBe(4);
+    let called = false;
+    expect(
+      yield* Effect.flip(
+        (yield* h.work).withTextCapacity(() =>
+          Effect.sync(() => {
+            called = true;
+            return { value: "", units: 0 };
+          })
+        )
+      )
+    ).toMatchObject({ reason: "closed-work" });
+    expect(called).toBe(false);
+  })
+);
+it.effect("permits empty native output at zero capacity and rejects excess or malformed settlement", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const full = h.callback((_, work) => h.emit(work, 1, () => "x"));
+    const empty = h.callback((_, work) =>
+      work
+        .withTextCapacity((remaining) =>
+          Effect.sync(() => {
+            expect(remaining).toBe(0);
+            return { value: h.own(""), units: 0 };
+          })
+        )
+        .pipe(Effect.map(CitationCleanerProduced.make))
+    );
+    h.plans.set("empty", () => h.sequence([full, empty]));
+    const p = yield* pipeline(h, { producedTextUtf16: 1 });
+    const result = yield* p.run({ text: "x", plan: "empty" });
+    expect(yield* h.raw(result.value)).toBe("");
+    expect(result.producedTextUtf16).toBe(1);
+    for (const units of [2, -1, 0.5, Number.NaN]) {
+      const invalid = h.callback((_, work) =>
+        work
+          .withTextCapacity(() => Effect.succeed({ value: h.own("xx"), units }))
+          .pipe(Effect.map(CitationCleanerProduced.make))
+      );
+      h.plans.set("invalid-capacity", () => h.sequence([invalid]));
+      const error = yield* Effect.flip(p.run({ text: "x", plan: "invalid-capacity" }));
+      expect(error._tag).toBe(units === 2 ? "CitationSafetyLimitExceeded" : "CitationCleanerFailure");
+      expect((yield* (yield* h.work).snapshot).producedTextUtf16).toBe(0);
+    }
+  })
+);
+it.effect("releases borrowed capacity after producer failure and interruption without issuing charges", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const step = h.callback((_, work) =>
+      Effect.gen(function* () {
+        const failed = yield* Effect.exit(work.withTextCapacity(() => Effect.fail(fail("callback-failed"))));
+        expect(Exit.isFailure(failed)).toBe(true);
+        const entered = yield* Deferred.make<void>();
+        const retired = yield* Deferred.make<void>();
+        const native = yield* work
+          .withTextCapacity(() =>
+            Deferred.succeed(entered, undefined).pipe(
+              Effect.andThen(Effect.never),
+              Effect.ensuring(Deferred.succeed(retired, undefined))
+            )
+          )
+          .pipe(Effect.forkChild);
+        yield* Deferred.await(entered);
+        const waiting = yield* work.reserveText(1).pipe(
+          Effect.tap(() =>
+            Effect.gen(function* () {
+              expect(yield* Deferred.isDone(retired)).toBe(true);
+            })
+          ),
+          Effect.forkChild
+        );
+        yield* Effect.yieldNow;
+        expect((yield* work.snapshot).producedTextUtf16).toBe(0);
+        yield* Fiber.interrupt(native);
+        const charge = yield* Fiber.join(waiting);
+        expect(yield* Deferred.isDone(retired)).toBe(true);
+        return CitationCleanerProduced.make({ value: h.own("R"), charges: [charge] });
+      })
+    );
+    h.plans.set("release", () => h.sequence([step]));
+    const result = yield* (yield* pipeline(h, { producedTextUtf16: 1 })).run({ text: "x", plan: "release" });
+    expect(yield* h.raw(result.value)).toBe("R");
+    expect(result.producedTextUtf16).toBe(1);
+  })
+);
