@@ -3697,6 +3697,39 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("accepts shorter scopes whose close a later assertion observes", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("call", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }));',
+        'it.effect("pipe", () => Fx.gen(function* () { const error = yield* serve.pipe(Fx.flip, Fx.scoped); expect(error.closed).toBe(true); }));',
+        'it.effect("nested", Fx.fnUntraced(function* () { if (ready) { yield* Fx.scoped(acquire); } expect(released).toBe(true); }));',
+        'it.effect("callback", () => Fx.flatMap(root, () => Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); })));',
+        'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); expect(closed).toBe(true); }); it.effect("helper", helper);',
+      ]) {
+        assertFalse(yield* hasRule(source, "EV004"));
+      }
+    })
+  );
+
+  it.effect("keeps shorter scopes no later assertion observes as judgments", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("before", Fx.fnUntraced(function* () { expect(ready).toBe(true); yield* Fx.scoped(acquire); yield* after; }));',
+        'it.effect("closure", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); yield* Fx.sync(() => expect(released).toBe(true)); }));',
+        'it.effect("deferred", Fx.fnUntraced(function* () { const later = () => Fx.scoped(acquire); expect(ready).toBe(true); yield* later(); }));',
+        'it.effect("fork", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire).pipe(Fx.forkChild); expect(running).toBe(true); }));',
+        'it.effect("pure", Fx.fnUntraced(function* () { const value = yield* Fx.scoped(Fx.succeed(1)); expect(value).toBe(1); }));',
+        'it.effect("inner", Fx.fnUntraced(function* () { yield* Fx.scoped(Fx.gen(function* () { yield* acquire; expect(open).toBe(true); })); }));',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        deepStrictEqual(
+          A.map(rows, (row) => row.mechanization),
+          ["judgment"]
+        );
+      }
+    })
+  );
+
   it.effect("does not invent applied test scopes: (each)", () =>
     Effect.gen(function* () {
       for (const source of [

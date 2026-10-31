@@ -3536,6 +3536,66 @@ const detectResourceWrapper = (context: ReturnType<typeof inspectContext>, state
   }
 };
 
+// Whether `node` runs an assertion itself, outside nested closures that may run later or never.
+const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean => {
+  let asserts = false;
+  node.forEachDescendant((child, traversal) => {
+    if (isFunctionValue(child) || Node.isFunctionDeclaration(child)) {
+      traversal.skip();
+    } else if (Node.isCallExpression(child) && isAssertion(child, imports)) {
+      asserts = true;
+      traversal.stop();
+    }
+  });
+  return asserts;
+};
+
+// The operand an `Effect.scoped(operand)` call or `operand.pipe(..., Effect.scoped)` stage closes.
+const scopedOperand = (call: CallExpression, stage: O.Option<MorphNode>): O.Option<MorphNode> => {
+  if (O.isNone(stage)) return O.fromUndefinedOr(call.getArguments()[0]);
+  const callee = call.getExpression();
+  return Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe"
+    ? O.some(callee.getExpression())
+    : O.fromUndefinedOr(call.getArguments()[0]);
+};
+
+// A shorter scope the test observes closing: a later statement of the same test or helper asserts
+// after the scoped effect has completed. The walk gives up at a closure that is not an executed
+// call argument, at a nested function declaration, and at a fork, whose scope can outlive the
+// statements after it. An operand built by `Effect.succeed` or `Effect.sync` acquires nothing.
+const assertsAfterScopeClose = (
+  call: CallExpression,
+  stage: O.Option<MorphNode>,
+  root: O.Option<EffectVitestFunctionNode>,
+  imports: EffectVitestImports
+): boolean => {
+  if (
+    O.isNone(root) ||
+    O.exists(
+      scopedOperand(call, stage),
+      (operand) =>
+        Node.isCallExpression(operand) &&
+        isProvenanceCall(operand, imports, EFFECT_MODULES, "Effect", ["succeed", "sync"])
+    )
+  )
+    return false;
+  let current: MorphNode = call;
+  while (current !== root.value) {
+    const parent = current.getParent();
+    if (parent === undefined || Node.isFunctionDeclaration(current)) return false;
+    if (Node.isCallExpression(current) && forkCall(current, imports)) return false;
+    if (isFunctionValue(current) && !Node.isCallExpression(parent)) return false;
+    if (
+      Node.isBlock(parent) &&
+      Node.isStatement(current) &&
+      A.some(current.getNextSiblings(), (statement) => assertsDirectly(statement, imports))
+    )
+      return true;
+    current = parent;
+  }
+  return false;
+};
+
 const scopeLifetimeClass = (
   call: CallExpression,
   helper: ReturnType<EffectVitestHarnessIndex["reachableHelper"]>
@@ -3562,6 +3622,11 @@ const detectScopeLifetime = (
     isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["scoped"])
   ) {
     const wholeBody = O.exists(test, ({ callback }) => isWholeBodyCall(call, callback));
+    const root = O.orElse(
+      O.map(test, ({ callback }) => callback),
+      () => O.map(helper, ({ callback }) => callback)
+    );
+    if (!wholeBody && assertsAfterScopeClose(call, O.none(), root, imports)) return;
     const scopeClass = scopeLifetimeClass(call, helper);
     findings.push(
       makeFinding({
@@ -4286,6 +4351,11 @@ const detectAppliedScope = (
     O.exists(test, ({ mode }) => mode === "effect" || mode === "live") || directlyRegisteredEffect(call, imports);
   if (!inEffect && !O.exists(helper, ({ effect }) => effect)) return;
   const wholeBody = finalStage && scopeReferenceWholeBody(call, state);
+  const root = O.orElse(
+    O.map(test, ({ callback }) => callback),
+    () => O.map(helper, ({ callback }) => callback)
+  );
+  if (!wholeBody && assertsAfterScopeClose(call, O.some(stage), root, imports)) return;
   const scopeClass = scopeLifetimeClass(call, helper);
   findings.push(
     makeFinding({
