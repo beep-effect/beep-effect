@@ -1,6 +1,8 @@
 /**
  * Bitemporal epistemic edge version entity model.
  *
+ * **Details**
+ *
  * One row is one immutable assertion of one logical edge over one valid-time
  * interval, recorded over one transaction-time interval. Both axes are half-open
  * (`[validFrom, validTo)`, `[recordedAt, expiredAt)`) BIGINT epoch millis with an

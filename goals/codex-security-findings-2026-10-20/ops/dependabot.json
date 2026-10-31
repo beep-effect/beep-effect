@@ -20,14 +20,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -44,14 +49,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -68,14 +78,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -92,14 +107,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -116,7 +136,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/effect-vitest-canon/research/OPPORTUNITIES.md",
         "goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md",
@@ -128,8 +152,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -146,7 +171,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -154,8 +183,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -172,7 +202,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -180,8 +214,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -198,14 +233,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -222,14 +262,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -246,14 +291,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -270,14 +320,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -294,14 +349,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -318,14 +378,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -342,14 +407,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -366,7 +436,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/ai-metrics-stack/research/OPPORTUNITIES.md",
         "goals/candor-gate-followups-closeout/research/OPPORTUNITIES.md",
@@ -379,8 +453,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -397,14 +472,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -421,14 +501,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -436,7 +521,7 @@
       "url": "https://github.com/beep-effect/beep-effect/security/dependabot/413",
       "ghsa": "GHSA-fxqj-rqcc-2cmp",
       "severity": "medium",
-      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
       "ecosystem": "npm",
       "package": "postcss",
       "manifest": "scratchpad/test/lockfiles/fixtures/yarn/v2/yarn.lock",
@@ -445,7 +530,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -453,8 +542,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -471,14 +561,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -495,14 +590,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -519,14 +619,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -543,7 +648,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -551,8 +660,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -569,7 +679,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -577,8 +691,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -595,14 +710,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -619,14 +739,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -643,14 +768,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -667,14 +797,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -691,7 +826,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -699,8 +838,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -717,14 +857,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -741,14 +886,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -765,14 +915,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -789,14 +944,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -813,14 +973,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -837,14 +1002,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -861,14 +1031,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -885,14 +1060,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -909,14 +1089,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -933,14 +1118,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -957,14 +1147,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -981,7 +1176,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -990,8 +1189,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1008,7 +1208,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1017,8 +1221,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1035,7 +1240,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1044,8 +1253,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1062,7 +1272,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1071,8 +1285,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1089,7 +1304,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1098,8 +1317,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1116,7 +1336,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1125,8 +1349,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1143,14 +1368,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1167,14 +1397,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1191,14 +1426,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1215,14 +1455,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1239,14 +1484,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1263,14 +1513,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1287,7 +1542,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/ai-metrics-stack/research/OPPORTUNITIES.md",
         "goals/candor-gate-followups-closeout/research/OPPORTUNITIES.md",
@@ -1300,8 +1559,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1318,14 +1578,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1333,7 +1598,7 @@
       "url": "https://github.com/beep-effect/beep-effect/security/dependabot/377",
       "ghsa": "GHSA-fxqj-rqcc-2cmp",
       "severity": "medium",
-      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
       "ecosystem": "npm",
       "package": "postcss",
       "manifest": "scratchpad/test/lockfiles/fixtures/pnpm/v2/pnpm-lock.yaml",
@@ -1342,7 +1607,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -1350,8 +1619,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1368,7 +1638,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -1376,8 +1650,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1394,7 +1669,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -1402,8 +1681,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1420,14 +1700,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1444,14 +1729,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1468,14 +1758,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1492,14 +1787,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1516,14 +1816,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1540,14 +1845,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1564,14 +1874,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1588,14 +1903,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1612,7 +1932,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1621,8 +1945,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1639,7 +1964,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1648,8 +1977,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1666,7 +1996,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1675,8 +2009,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1693,7 +2028,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -1702,8 +2041,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1720,14 +2060,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1744,14 +2089,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1768,14 +2118,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1792,14 +2147,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1816,14 +2176,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1840,14 +2205,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1864,14 +2234,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1888,14 +2263,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1912,14 +2292,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1936,14 +2321,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1960,14 +2350,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -1975,7 +2370,7 @@
       "url": "https://github.com/beep-effect/beep-effect/security/dependabot/349",
       "ghsa": "GHSA-fxqj-rqcc-2cmp",
       "severity": "medium",
-      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
       "ecosystem": "npm",
       "package": "postcss",
       "manifest": "scratchpad/test/lockfiles/fixtures/npm/v2/package-lock.json",
@@ -1984,7 +2379,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -1992,8 +2391,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2010,7 +2410,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -2018,8 +2422,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2036,7 +2441,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
@@ -2044,8 +2453,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2062,14 +2472,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2086,14 +2501,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2110,14 +2530,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2134,14 +2559,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2158,14 +2588,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2182,14 +2617,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2206,14 +2646,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2230,14 +2675,19 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2254,7 +2704,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -2263,8 +2717,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2281,7 +2736,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -2290,8 +2749,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2308,7 +2768,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -2317,8 +2781,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2335,7 +2800,11 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md",
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
@@ -2344,8 +2813,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2362,14 +2832,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2386,14 +2861,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2410,14 +2890,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2434,14 +2919,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2458,14 +2948,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2482,14 +2977,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2506,14 +3006,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2530,14 +3035,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-python.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2554,14 +3064,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2578,14 +3093,19 @@
       "lane": "rust",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
       "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-rust.md",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       }
     },
     {
@@ -2602,13 +3122,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2626,13 +3151,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2650,13 +3180,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2674,13 +3209,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2698,13 +3238,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2722,13 +3267,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2746,13 +3296,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2770,13 +3325,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2794,13 +3354,18 @@
       "lane": "fixtures",
       "verdict": "inert-parser-input",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-fixtures.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2818,13 +3383,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2842,13 +3412,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2866,13 +3441,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2890,13 +3470,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2914,13 +3499,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2938,13 +3528,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2962,13 +3557,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -2986,13 +3586,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3010,13 +3615,18 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "fixed",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3034,13 +3644,19 @@
       "lane": "python",
       "verdict": "affected-version-remediated-in-working-diff",
       "remediation": "implemented-and-scoped-proof-passed",
-      "merged_proof": null,
+      "merged_proof": {
+        "revision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "receipt": "research/2026-10-28-cloud-refresh.md"
+      },
       "report": "research/dependabot-python.md",
       "prior_packet_references": [],
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
-        "state": "pending-merged-revision",
-        "observedLiveStatus": "open-at-capture"
+        "state": "withdrawn",
+        "observedAt": "2026-10-28",
+        "source": "GitHub REST exact captured alert IDs",
+        "evidence": "Exact-ID GET returns HTTP 410: Alert number 431 has been withdrawn."
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     }

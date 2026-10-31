@@ -1,5 +1,6 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import {
+  ClosedTsconfigJson,
   Reference,
   TsconfigJson,
   TsconfigJsonFromString,
@@ -8,8 +9,10 @@ import {
   WatchOptions,
 } from "@beep/tsconfig/TsconfigJson";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 
 // A realistic multi-field JSONC document — comments and a trailing comma —
 // exercising every top-level field plus nested compilerOptions/watchOptions/
@@ -217,3 +220,46 @@ it.effect.prop(
     }),
   { arbitrary: fcRuns(100) }
 );
+
+describe("ClosedTsconfigJson", () => {
+  it("shares the passthrough schema's typed top-level keys and closes every nested section", () => {
+    const names = (ast: SchemaAST.AST): ReadonlyArray<PropertyKey> =>
+      SchemaAST.isObjects(ast) ? A.map(ast.propertySignatures, (signature) => signature.name) : [];
+    assert.deepStrictEqual(names(ClosedTsconfigJson.ast), names(TsconfigJson.ast));
+    assert.isTrue(SchemaAST.isObjects(ClosedTsconfigJson.ast) && ClosedTsconfigJson.ast.indexSignatures.length === 0);
+  });
+
+  it.effect("rejects unknown keys at every level under onExcessProperty=error", () =>
+    Effect.gen(function* () {
+      const strict = (input: unknown) =>
+        Effect.flip(S.decodeUnknownEffect(ClosedTsconfigJson)(input, { onExcessProperty: "error" }));
+      assert.include((yield* strict({ "ts-node": { transpileOnly: true } })).message, '["ts-node"]');
+      assert.include((yield* strict({ buildOptions: { verbose: true } })).message, '["buildOptions"]');
+      assert.include((yield* strict({ compilerOptions: { bogus: 1 } })).message, '["compilerOptions"]["bogus"]');
+      assert.include(
+        (yield* strict({ references: [{ path: "./a", custom: true }] })).message,
+        '["references"][0]["custom"]'
+      );
+      assert.include((yield* strict({ watchOptions: { force: "x" } })).message, '["watchOptions"]["force"]');
+      assert.include((yield* strict({ typeAcquisition: { bogus: 1 } })).message, '["typeAcquisition"]["bogus"]');
+    })
+  );
+
+  it.effect("decodes the same realistic document as the passthrough schema when every key is typed", () =>
+    Effect.gen(function* () {
+      const input = {
+        compilerOptions: { target: "ES2022", lib: ["DOM"] },
+        references: [{ path: "./a" }],
+        watchOptions: { watchFile: "UseFsEvents" },
+        typeAcquisition: { enable: true },
+        compileOnSave: true,
+      };
+      const closed = yield* S.decodeEffect(ClosedTsconfigJson)(input, { onExcessProperty: "error" });
+      const open = yield* S.decodeEffect(TsconfigJson)(input);
+      assert.deepStrictEqual(closed, open);
+      // By default an unknown top-level key is dropped rather than kept.
+      const dropped = yield* S.decodeUnknownEffect(ClosedTsconfigJson)({ compileOnSave: true, "ts-node": {} });
+      assert.deepStrictEqual(dropped, { compileOnSave: true });
+    })
+  );
+});

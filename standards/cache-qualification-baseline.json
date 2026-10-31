@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.2",
-  "epoch": "qualification-v2",
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R9, refactor/drivers-run-collect)",
-      "reason": "Record the R9 manifest edits that add the @beep/commands workspace dependency to @beep/exiftool, @beep/obs, @beep/pdf-tools and @beep/tailscale (Run.collect and Run.detach) and the root policy-fingerprint input that follows from repo-cli reaching @beep/commands; the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "codex",
+      "reason": "Observe the repository-pinned Bun1.4.4 in a distinct qualification-v3 tuple without inheriting qualification; configuration and ledger remain unchanged.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r9.md",
-        "sha256": "ffe6422230b602e4868f45ceb9a5ed0e384a9fe75b195f8d7d560d047eea20ec"
+        "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-review.md",
+        "sha256": "5e95d5e96383350f068d827913faa80268d9e06867876b7a6b3681a824b7ed5e"
       }
     },
     "@beep/acp": {
@@ -378,11 +378,11 @@
       }
     },
     "@beep/effect-drizzle": {
-      "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R5b, refactor/markdown-toc-onto-beep-markdown)",
-      "reason": "Record the dependency-only drift of @beep/repo-docgen (gains a direct @beep/markdown edge, already upstream through @beep/md, and drops @effect/markdown-toc) and @beep/effect-drizzle (gains @beep/markdown as a devDependency for assemble-readme.ts) for the R5b table-of-contents adoption; the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
+      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r5b.md",
-        "sha256": "ca8939ef9784becc9e46f8e45602bc4e9fb51ad27a3fb80e75fa750a9d2fd6e3"
+        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
+        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
       }
     },
     "@beep/epistemic-client": {
@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R5a, refactor/r5a-typed-frontmatter)",
-      "reason": "Record the dependency-only drift of @beep/repo-cli, which gains a direct @beep/yaml edge for the R5a changeset-key removal; the package was already upstream through @beep/markdown, so no closure grows; no qualification is granted.",
+      "reviewer": "codex (docgen-node-launch, source-bound manifest review)",
+      "reason": "Acknowledge the ten repo-cli configuration-drift tasks after removing only the forced Bun interpreter flag from beep:docgen. All other manifest/task settings and qualification state remain unchanged.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r5a.md",
-        "sha256": "047a5042a79f973815b44fe1ebe8dd27f53cdccb076d943e1df54b9aa7266965"
+        "path": "goals/turborepo-cache-trust-observability/research/docgen-launch-baseline-review-2026-10-29.md",
+        "sha256": "8f3187c95bdd5b4fb8b17904c5738578211f5f881f1dad8d6655c098a48d1cba"
       }
     },
     "@beep/repo-configs": {
@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-docgen": {
-      "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R5b, refactor/markdown-toc-onto-beep-markdown)",
-      "reason": "Record the dependency-only drift of @beep/repo-docgen (gains a direct @beep/markdown edge, already upstream through @beep/md, and drops @effect/markdown-toc) and @beep/effect-drizzle (gains @beep/markdown as a devDependency for assemble-readme.ts) for the R5b table-of-contents adoption; the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (effected-promotion 3-A6, effected-3a6)",
+      "reason": "Record the dependency-only drift of @beep/repo-docgen from its new @beep/repo-tsconfig and @beep/tsconfig edges and the @beep/memfs devDependency (docgen readTSConfig through TsconfigValidator, map sites #160, #161, #242, #266); no other workspace gains a closure member, as measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r5b.md",
-        "sha256": "ca8939ef9784becc9e46f8e45602bc4e9fb51ad27a3fb80e75fa750a9d2fd6e3"
+        "path": "goals/effected-promotion/research/cache-baseline-review-3-a6.md",
+        "sha256": "c46f603fa15141acc23197ab84c8169013e29896a60c4919b40a728c09a6d835"
       }
     },
     "@beep/repo-tsconfig": {
@@ -3064,6 +3064,8 @@
             "packages/tooling/library/repo-tsconfig/src/**",
             "packages/tooling/library/repo-utils/package.json",
             "packages/tooling/library/repo-utils/src/**",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/**",
             "packages/tooling/policy-pack/repo-configs/package.json",
             "packages/tooling/policy-pack/repo-configs/src/**",
             "packages/tooling/test-kit/fc-runs/package.json",
@@ -34189,7 +34191,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#audit",
-          "@beep/markdown#audit",
           "@beep/pglite#audit",
           "@beep/repo-utils#audit",
           "@beep/test-runner#audit"
@@ -34255,7 +34256,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
-          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34310,7 +34310,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
-          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34352,7 +34351,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
-          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34479,7 +34477,6 @@
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/fc-runs#transit",
-          "@beep/markdown#transit",
           "@beep/pglite#transit",
           "@beep/repo-utils#transit",
           "@beep/test-runner#transit"
@@ -34655,7 +34652,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#transit",
-          "@beep/markdown#transit",
           "@beep/pglite#transit",
           "@beep/repo-utils#transit",
           "@beep/test-runner#transit"
@@ -34700,7 +34696,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#transit",
-          "@beep/markdown#transit",
           "@beep/pglite#transit",
           "@beep/repo-utils#transit",
           "@beep/test-runner#transit",
@@ -34751,7 +34746,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
-          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -34794,7 +34788,6 @@
         "commandDigest": "e5a178eb1ca28e6b5754906cb67881e7525bc98b6c239488d971ae5e096547d5",
         "dependencies": [
           "@beep/fc-runs#build",
-          "@beep/markdown#build",
           "@beep/pglite#build",
           "@beep/repo-utils#build",
           "@beep/test-runner#build"
@@ -97857,7 +97850,7 @@
       {
         "computation": "@beep/repo-cli#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#audit",
           "@beep/ai-sync#audit",
@@ -97899,6 +97892,7 @@
           "@beep/repo-docgen#audit",
           "@beep/repo-tsconfig#audit",
           "@beep/repo-utils#audit",
+          "@beep/repo-workspaces#audit",
           "@beep/runpod#audit",
           "@beep/runtime-env#audit",
           "@beep/schema#audit",
@@ -97976,7 +97970,7 @@
       {
         "computation": "@beep/repo-cli#build",
         "command": "bun run beep:build",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#build",
           "@beep/ai-sync#build",
@@ -98018,6 +98012,7 @@
           "@beep/repo-docgen#build",
           "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
+          "@beep/repo-workspaces#build",
           "@beep/runpod#build",
           "@beep/runtime-env#build",
           "@beep/schema#build",
@@ -98084,7 +98079,7 @@
       {
         "computation": "@beep/repo-cli#check",
         "command": "bun run beep:check",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#build",
           "@beep/ai-sync#build",
@@ -98126,6 +98121,7 @@
           "@beep/repo-docgen#build",
           "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
+          "@beep/repo-workspaces#build",
           "@beep/runpod#build",
           "@beep/runtime-env#build",
           "@beep/schema#build",
@@ -98179,7 +98175,7 @@
       {
         "computation": "@beep/repo-cli#coverage",
         "command": "bunx vitest run --coverage",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#build",
           "@beep/ai-sync#build",
@@ -98221,6 +98217,7 @@
           "@beep/repo-docgen#build",
           "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
+          "@beep/repo-workspaces#build",
           "@beep/runpod#build",
           "@beep/runtime-env#build",
           "@beep/schema#build",
@@ -98284,7 +98281,7 @@
       {
         "computation": "@beep/repo-cli#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/repo-cli#transit",
           "@beep/repo-docgen#transit"
@@ -98323,7 +98320,7 @@
       {
         "computation": "@beep/repo-cli#doctest",
         "command": "bun run beep:doctest",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98365,6 +98362,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98427,7 +98425,7 @@
       {
         "computation": "@beep/repo-cli#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -98462,7 +98460,7 @@
       {
         "computation": "@beep/repo-cli#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/ai-provider-cli#transit",
@@ -98505,6 +98503,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98583,7 +98582,7 @@
       {
         "computation": "@beep/repo-cli#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -98612,7 +98611,7 @@
       {
         "computation": "@beep/repo-cli#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -98667,7 +98666,7 @@
       {
         "computation": "@beep/repo-cli#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -98721,7 +98720,7 @@
       {
         "computation": "@beep/repo-cli#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98763,6 +98762,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98819,7 +98819,7 @@
       {
         "computation": "@beep/repo-cli#test",
         "command": "bun run beep:test",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98861,6 +98861,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -98941,7 +98942,7 @@
       {
         "computation": "@beep/repo-cli#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "6aa8d01d86cfdbacc8645ec4a0e5b53f64b650624d40a48088a87dff3e185c33",
+        "commandDigest": "45e85cf12a7a770ca4a933c863cf964b56280cac4b010a045f728bbeb1ed2d8b",
         "dependencies": [
           "@beep/ai-provider-cli#transit",
           "@beep/ai-sync#transit",
@@ -98983,6 +98984,7 @@
           "@beep/repo-docgen#transit",
           "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
+          "@beep/repo-workspaces#transit",
           "@beep/runpod#transit",
           "@beep/runtime-env#transit",
           "@beep/schema#transit",
@@ -99730,13 +99732,15 @@
           "@beep/chalk#audit",
           "@beep/config-file#audit",
           "@beep/identity#audit",
-          "@beep/markdown#audit",
           "@beep/md#audit",
+          "@beep/memfs#audit",
           "@beep/package-json#audit",
+          "@beep/repo-tsconfig#audit",
           "@beep/repo-utils#audit",
           "@beep/schema#audit",
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
+          "@beep/tsconfig#audit",
           "@beep/utils#audit"
         ],
         "configuration": {
@@ -99802,13 +99806,15 @@
           "@beep/chalk#build",
           "@beep/config-file#build",
           "@beep/identity#build",
-          "@beep/markdown#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -99863,13 +99869,15 @@
           "@beep/chalk#build",
           "@beep/config-file#build",
           "@beep/identity#build",
-          "@beep/markdown#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -99911,13 +99919,15 @@
           "@beep/chalk#build",
           "@beep/config-file#build",
           "@beep/identity#build",
-          "@beep/markdown#build",
           "@beep/md#build",
+          "@beep/memfs#build",
           "@beep/package-json#build",
+          "@beep/repo-tsconfig#build",
           "@beep/repo-utils#build",
           "@beep/schema#build",
           "@beep/test-runner#build",
           "@beep/test-utils#build",
+          "@beep/tsconfig#build",
           "@beep/utils#build"
         ],
         "configuration": {
@@ -100044,13 +100054,15 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
-          "@beep/markdown#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit"
         ],
         "configuration": {
@@ -100255,13 +100267,15 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
-          "@beep/markdown#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit"
         ],
         "configuration": {
@@ -100306,13 +100320,15 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
-          "@beep/markdown#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
         ],
@@ -100363,13 +100379,15 @@
           "@beep/chalk#transit",
           "@beep/config-file#transit",
           "@beep/identity#transit",
-          "@beep/markdown#transit",
           "@beep/md#transit",
+          "@beep/memfs#transit",
           "@beep/package-json#transit",
+          "@beep/repo-tsconfig#transit",
           "@beep/repo-utils#transit",
           "@beep/schema#transit",
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
+          "@beep/tsconfig#transit",
           "@beep/utils#transit",
           "@beep/utils#transit"
         ],
@@ -129959,7 +129977,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "ed1b5b765ba479a578f19c0c1175b5248ecd14b2024c56d93c99f9546839e180"
+        "sha256": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf"
       }
     ]
   }

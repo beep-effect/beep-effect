@@ -71,6 +71,10 @@
       "purpose": "R5a parity: reflection, SKILL.md, KnowledgeDoctor beep-historical and delete-package changeset-prune verdicts over the live corpus and git history, before and after the @beep/markdown switch, plus classified probe shifts."
     },
     {
+      "path": "ops/ecosystem-polarity-differential.ts",
+      "purpose": "4-A4 differential: runEcosystemPolarityCheck over the live repo and a synthetic ecosystem of import forms, recorded before the SourceBoundary.scan switch and compared at the head with every difference classified into an intended shift class."
+    },
+    {
       "path": "ops/github-reporting-gfm-differential.ts",
       "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
     },
@@ -115,12 +119,12 @@
       "purpose": "Wave 3-2 differential: TsconfigLoader.resolve against tsc --showConfig, optionally three-way with get-tsconfig."
     },
     {
-      "path": "ops/repo-workspaces-differential.ts",
-      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
-    },
-    {
       "path": "ops/repo-utils-package-json-parity.ts",
       "purpose": "Wave 3-A3 parity: the repo-utils package.json model and workspace dependency helpers recorded before the @beep/package-json re-base and compared at the head, with a mutation corpus."
+    },
+    {
+      "path": "ops/repo-workspaces-differential.ts",
+      "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
     },
     {
       "path": "ops/sbom-corpus.ts",
@@ -133,6 +137,10 @@
     {
       "path": "ops/tsconfig-sync-parity.ts",
       "purpose": "3-A7 parity: tsconfig-sync dry-run and write outputs (stdout, exit codes, sha256 of every file) over fixed mutations, before and after the @beep/tsconfig schema switch, plus a TsconfigJson decode of every tracked tsconfig."
+    },
+    {
+      "path": "ops/tsconfig-validator-parity.ts",
+      "purpose": "3-A6 parity: records the strict tsconfig verdict over every tracked tsconfig*.json and docgen's resolved compiler options for every docgen.json, and compares a before/after pair against the intended TsconfigValidator verdict shifts."
     },
     {
       "path": "ops/xdg-systemd-differential.ts",

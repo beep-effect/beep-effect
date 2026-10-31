@@ -1,6 +1,8 @@
 /**
  * IR-to-law mapping implementation.
  *
+ * **Details**
+ *
  * Maps the span-bearing `GroundedExtraction[]` for one office action into the
  * five law-practice domain entities, keyed by the extraction `label`
  * vocabulary (`"office_action"`, `"claim"`, `"rejection_reference"`,

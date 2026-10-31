@@ -8,7 +8,7 @@
 import chalk from "@beep/chalk";
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { MarkdownToc } from "@beep/markdown/MarkdownToc";
-import { encodeTSConfigPrettyEffect, FsUtils } from "@beep/repo-utils";
+import { FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -639,15 +639,7 @@ const createExamplesTsConfigJson = Effect.gen(function* () {
   const process = yield* Domain.Process;
   const cwd = yield* process.cwd;
   const path = yield* Path.Path;
-  const content = yield* encodeTSConfigPrettyEffect({
-    compilerOptions: config.examplesCompilerOptions,
-  }).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[Core.createExamplesTsConfigJson] Failed to encode examples tsconfig\n${String(cause)}`,
-      })
-    )
-  );
+  const content = yield* Configuration.encodeExamplesTsconfig(config.examplesCompilerOptions);
   yield* writeFileToOutDir(
     Domain.File.new(path.join(cwd, config.outDir, "examples", "tsconfig.json"), content, { isOverwritable: true })
   );

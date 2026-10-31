@@ -29,6 +29,7 @@ import {
   YeetStatusWorktree,
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
@@ -100,6 +101,7 @@ const extrasWith = (mergeReady: O.Option<YeetMergeReady>): YeetVerdictExtrasForT
   baseFreshness: O.none(),
   mergeReady,
   stash: O.none(),
+  publishedHeadSha: O.none(),
 });
 
 // Resolved through the same path helper the writer uses, so the bytes read back
@@ -143,6 +145,22 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) 
             output: "[beep-quality-task-lane-run] {truncated",
           }),
         }),
+        YeetExecutedStep.make({
+          step: RepoPlanStep.make({
+            ...wrapper,
+            id: "publish:01-git-push",
+            label: "publish:git:push",
+            phase: "publish",
+            command: "git",
+            args: ["push"],
+          }),
+          result: RepoStepRunResult.make({
+            stepId: "publish:01-git-push",
+            commandText: "git push",
+            exitCode: 0,
+            output: "",
+          }),
+        }),
       ]);
       const report = QualityTaskLaneRunReport.make({
         schemaVersion: "quality-task-lane-run/v1",
@@ -160,6 +178,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) 
       yield* fs.makeDirectory(path.dirname(reportPath), { recursive: true });
       yield* fs.writeFileString(reportPath, `${yield* encodeQualityTaskLaneRunReportJson(report)}\n`);
       const extras = yield* O.some(blockedMergeReady).pipe(extrasWith, Ref.make);
+      const publishedHeadSha = GitObjectId.make("1111111111111111111111111111111111111111");
+      yield* Ref.update(extras, (state) => ({ ...state, publishedHeadSha: O.some(publishedHeadSha) }));
 
       yield* writeRunVerdictForTesting(
         plan,
@@ -181,9 +201,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) 
       expect(decoded.mode).toBe("publish");
       assertSome(decoded.attemptId, attemptId);
       assertSome(decoded.resolvedHeadSha, "0123456789abcdef0123456789abcdef01234567");
+      assertSome(decoded.publishedHeadSha, publishedHeadSha);
+      expect(decoded.head).toBe(attemptFor(context).head);
+      expect(decoded.pushed).toBe(true);
       assertSome(decoded.diffFingerprint, "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd");
       assertSome(decoded.proofTier, "full");
-      expect(decoded.lanes[1]).toMatchObject({ id: "check", label: "ci:check", phase: "full", status: "passed" });
+      expect(A.filter(decoded.lanes, (lane) => lane.id === "check")).toMatchObject([
+        { id: "check", label: "ci:check", phase: "full", status: "passed" },
+      ]);
       // Threaded from the status snapshot the publish/monitor path read.
       assertSome(
         O.flatMap(decoded.mergeReady, (value) => value.failing),

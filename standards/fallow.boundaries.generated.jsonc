@@ -2149,7 +2149,6 @@
         "allow": [
           "@beep/effect-drizzle",
           "@beep/fc-runs",
-          "@beep/markdown",
           "@beep/pglite",
           "@beep/repo-utils",
           "@beep/test-runner"
@@ -2157,7 +2156,6 @@
         "allowTypeOnly": [
           "@beep/effect-drizzle",
           "@beep/fc-runs",
-          "@beep/markdown",
           "@beep/pglite",
           "@beep/repo-utils",
           "@beep/test-runner"
@@ -4426,6 +4424,7 @@
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
+          "@beep/repo-workspaces",
           "@beep/runpod",
           "@beep/runtime-env",
           "@beep/schema",
@@ -4487,6 +4486,7 @@
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
+          "@beep/repo-workspaces",
           "@beep/runpod",
           "@beep/runtime-env",
           "@beep/schema",
@@ -4534,28 +4534,32 @@
           "@beep/chalk",
           "@beep/config-file",
           "@beep/identity",
-          "@beep/markdown",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/chalk",
           "@beep/config-file",
           "@beep/identity",
-          "@beep/markdown",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ]
       },
