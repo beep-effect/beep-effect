@@ -6,6 +6,7 @@ import { lineCharacterAt, lineCharacterIndex } from "@beep/utils/Text";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -38,19 +39,24 @@ describe("Text.lineCharacterAt", () => {
 });
 
 describe("Text.lineCharacterIndex", () => {
+  const grammars = A.flatMap([false, true], (unicodeSeparators) =>
+    A.map(["text", "prefix"] as const, (crlfLookahead) => ({ unicodeSeparators, crlfLookahead }))
+  );
+  const texts = ["", sample, "\r\n\r\n", "\r\r\n\n", "\u2028\u2029", "😀\r\n𐀀\n"];
+  const cases = A.flatMap(grammars, (grammar) => A.map(texts, (text) => ({ grammar, text })));
+  // Descending half-steps from past the end to before the start, then the non-finite offsets.
+  const lookupOffsets = (text: string) => [
+    ...A.makeBy(2 * (text.length + 4) + 1, (step) => text.length + 2 - step / 2),
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+  ];
+
   it("preserves both CRLF rules and Unicode separator grammars for arbitrary lookup order", () => {
-    for (const unicodeSeparators of [false, true]) {
-      for (const crlfLookahead of ["text", "prefix"] as const) {
-        const grammar = { unicodeSeparators, crlfLookahead };
-        for (const text of ["", sample, "\r\n\r\n", "\r\r\n\n", "\u2028\u2029", "😀\r\n𐀀\n"]) {
-          const position = lineCharacterIndex(text, grammar);
-          for (let offset = text.length + 2; offset >= -2; offset -= 0.5) {
-            expect(position(offset)).toEqual(lineCharacterAt(text, offset, grammar));
-          }
-          for (const offset of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
-            expect(position(offset)).toEqual(lineCharacterAt(text, offset, grammar));
-          }
-        }
+    for (const { grammar, text } of cases) {
+      const position = lineCharacterIndex(text, grammar);
+      for (const offset of lookupOffsets(text)) {
+        expect(position(offset)).toEqual(lineCharacterAt(text, offset, grammar));
       }
     }
   });
