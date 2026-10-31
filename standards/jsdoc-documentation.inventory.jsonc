@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T13:15:46.942Z",
+  "generatedAt": "2026-10-31T14:01:06.680Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -534770,8 +534770,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-343-computepolicyfingerprint",
+          "line": 354,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-354-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -534792,8 +534792,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 763,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-763-policytoolsfingerprintpolicy",
+          "line": 812,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-812-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -534814,8 +534814,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 841,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-841-lintpolicyfingerprintcommand",
+          "line": 890,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-890-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -558393,8 +558393,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Root.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Root.ts",
-          "line": 77,
-          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-77-rootcommand",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-79-rootcommand",
           "currentTags": [
             "@internal",
             "@category",

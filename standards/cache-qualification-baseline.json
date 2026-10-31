@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.2",
-  "epoch": "qualification-v2",
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6-Astra independent foundation panel",
-      "reason": "Carry reviewed foundation closure/dependency deltas onto accepted Graft-retirement main baseline; exactly11configuration drifts across2subjects, no qualification or exception growth.",
+      "reviewer": "Claude Opus 5.5 (G3 lane, claude/beep-lazy-dispatch-369e54)",
+      "reason": "Re-record the root subject after resealing seven policy-fingerprint seal tasks: the shared seal gains the lazy dispatch modules; six seals drop inputs that #2381 and #2376 deleted or moved after #2390 sealed; no qualification is granted.",
       "basis": {
-        "path": "goals/agent-observability-foundation/research/CACHE-GRAFT-SYNC-20261031.md",
-        "sha256": "e0f087b467a96dfeab475310d3ae0068b3857e6e4f191d74ac65db6dab20125f"
+        "path": "goals/beep-cli-composition/research/g3-cache-baseline-review.md",
+        "sha256": "1e37f7e33e927e004b80ea5a215418a1bd9a1f78d0aed5fffd3fbef4eb9f4b00"
       }
     },
     "@beep/acp": {
@@ -1123,10 +1123,10 @@
     },
     "@beep/repo-ai-metrics": {
       "reviewer": "GPT-6-Astra independent foundation panel",
-      "reason": "Carry reviewed foundation closure/dependency deltas onto accepted Graft-retirement main baseline; exactly11configuration drifts across2subjects, no qualification or exception growth.",
+      "reason": "Carry only previously reviewed AI-metrics dependency deltas onto accepted main e733; root seals already match incoming main; no qualification or exception growth.",
       "basis": {
-        "path": "goals/agent-observability-foundation/research/CACHE-GRAFT-SYNC-20261031.md",
-        "sha256": "e0f087b467a96dfeab475310d3ae0068b3857e6e4f191d74ac65db6dab20125f"
+        "path": "goals/agent-observability-foundation/research/CACHE-E733-SYNC-20261031.md",
+        "sha256": "844d0b3a32550fa207520930ab9010696cf79e31723e4fce411a95fc2818547b"
       }
     },
     "@beep/repo-cli": {
@@ -5756,7 +5756,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5904,7 +5903,6 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -6737,6 +6735,9 @@
             "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
             "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
             "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.ts",
             "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
@@ -133867,7 +133868,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "038dbf3d92fdfe34f0263bbb8183ed4ebfe2085f49d8269b55cbbd95808a0b36"
+        "sha256": "bc2e6d19c56f42ff35fe68a5a5fc80ddb2fd6287bb61547db6ab07a06298a2ae"
       }
     ]
   }

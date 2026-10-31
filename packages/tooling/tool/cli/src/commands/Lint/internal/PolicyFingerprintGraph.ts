@@ -514,6 +514,8 @@ export class PolicyGraphOptions extends S.Opaque<PolicyGraphOptions, { readonly 
  * console.log(typeof graph.closure) // "function"
  * ```
  *
+ * @param options - The source tree to read and the workspaces it contains.
+ * @returns A graph reader exposing workspace lookup, command paths and import closures.
  * @internal
  * @category constructors
  * @since 0.0.0
