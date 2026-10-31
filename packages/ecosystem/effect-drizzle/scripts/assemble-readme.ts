@@ -150,6 +150,6 @@ const program = Effect.gen(function* () {
   yield* Console.log(`README API reference assembled from ${modules.length} modules.`);
 });
 
-const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
+const main = program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped);
 
 BunRuntime.runMain(main);

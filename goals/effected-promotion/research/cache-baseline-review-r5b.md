@@ -56,7 +56,14 @@ Turbo coupling, measured over the workspace manifests:
 own tuples do not drift. No other workspace's dependencies change, and
 `bun run beep lint policy-fingerprint` reports the fingerprint current.
 
-Recording these two subjects accepts the existing posture for
-`@beep/repo-docgen` with its one new direct dependency and for
-`@beep/effect-drizzle` with its one new dev dependency. No qualification is
-granted, and no other subject changes.
+The root subject (`//`) drifts for one reason: `@effect/markdown-toc` leaves
+the root `package.json` devDependencies (and `bun.lock` loses its entry) now
+that `@beep/markdown` owns the slugger and table of contents. The root
+`turbo.json` task graph is unchanged by this PR; the manifest bytes are part of
+the root subject's identity, so the root tuple is re-recorded as is.
+
+Recording these three subjects accepts the existing posture for
+`@beep/repo-docgen` with its one new direct dependency, for
+`@beep/effect-drizzle` with its one new dev dependency, and for the root with
+one dev dependency removed. No qualification is granted, and no other subject
+changes.

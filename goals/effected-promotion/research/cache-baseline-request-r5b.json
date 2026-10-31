@@ -1,11 +1,11 @@
 {
-  "previous": "d9376177110c2e43f810b16b9658cb546b0205fb2677bd58dc2bf5d425506e9e",
+  "previous": "b733417d9f3089aae017cf929b3418c3b2aff23872fdb407d50879422c5d4ca5",
   "review": {
     "reviewer": "Claude Fable 5.1 (effected-promotion roadmap R5b, refactor/markdown-toc-onto-beep-markdown)",
-    "reason": "Record the dependency-only drift of @beep/repo-docgen (gains a direct @beep/markdown edge, already upstream through @beep/md, and drops @effect/markdown-toc) and @beep/effect-drizzle (gains @beep/markdown as a devDependency for assemble-readme.ts) for the R5b table-of-contents adoption; the turbo coupling is measured in the review; no qualification is granted.",
+    "reason": "Record the dependency-only drift of @beep/repo-docgen (gains a direct @beep/markdown edge, already upstream through @beep/md, and drops @effect/markdown-toc) and @beep/effect-drizzle (gains @beep/markdown as a devDependency for assemble-readme.ts) and the root manifest (@effect/markdown-toc leaves devDependencies) for the R5b table-of-contents adoption; the turbo coupling is measured in the review; no qualification is granted.",
     "basis": {
       "path": "goals/effected-promotion/research/cache-baseline-review-r5b.md",
-      "sha256": "7347ed0d9d9fec532dc0c0363988de370983d6cc41fc96670b5fe48322d6cf17"
+      "sha256": "5c6f315e967f86015bd8cfcac11bf2e724c941623ff65670386f887a278b0429"
     }
   },
   "scope": [
@@ -16,5 +16,5 @@
   ],
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
-  "subjects": ["@beep/repo-docgen", "@beep/effect-drizzle"]
+  "subjects": ["@beep/repo-docgen", "@beep/effect-drizzle", "//"]
 }

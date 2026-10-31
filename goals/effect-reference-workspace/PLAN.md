@@ -12,7 +12,7 @@ first two scheduled nights are recorded: on 2026-09-26 the run ended with exit 1
 manager restarted, and on 2026-09-27 the model cooled down. Reading back the first clean scheduled
 night is deferred to an operator follow-up. It is recorded in `research/OPPORTUNITIES.md` when it
 lands, from the receipt at `$HOME/.local/state/beep/refs/last-refresh.json`;
-`docs/runbooks/graft-local-recovery.md` describes how to read it.
+the graft local-recovery runbook (retired 2026-10-28) describes how to read it.
 
 ## Phases
 
@@ -79,7 +79,7 @@ spent only by the graft deep pass. Prepend the mise bun to PATH in every lane th
    reference workspace lives at the manifest-configured reference root (provisioned by
    `scripts/setup-effect-ref.sh` from `scripts/references.json`), `.repos/effect` is the Effect
    child, `.repos/effect-workspace` is the graft target. Add the routing line to the AGENTS.md
-   graft block. Cross-link `docs/runbooks/graft-local-recovery.md` and
+   graft block. Cross-link the graft local-recovery runbook (retired 2026-10-28) and
    `docs/runbooks/systemd-timers.md`. No edits under `explorations/**` or `goals/**`.
 4. **S4 Operator move** (executed by the orchestrating session after S1–S3 pass locally, with the
    operator present; not a Codex lane). Order:

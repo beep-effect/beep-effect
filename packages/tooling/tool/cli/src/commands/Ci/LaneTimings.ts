@@ -1756,7 +1756,14 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
   CiEffectiveLaneSpec.make({
     aggregator: "Test Unit",
     lane: "Test Unit",
-    shards: ["Test Unit (repo-cli-1)", "Test Unit (repo-cli-2)", "Test Unit (unit-a)", "Test Unit (unit-b)"],
+    shards: [
+      "Test Unit (repo-cli-1)",
+      "Test Unit (repo-cli-2)",
+      "Test Unit (repo-cli-3)",
+      "Test Unit (repo-cli-4)",
+      "Test Unit (unit-a)",
+      "Test Unit (unit-b)",
+    ],
   }),
 ];
 

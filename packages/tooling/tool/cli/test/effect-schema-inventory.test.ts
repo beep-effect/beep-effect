@@ -7,8 +7,6 @@ import {
   EffectSchemaInventoryDrift,
   EffectSchemaInventoryFile,
   EffectSchemaInventoryFixturePath,
-  EffectSchemaInventoryGraftContext,
-  EffectSchemaInventoryGraftEntry,
   EffectSchemaInventoryModule,
   EffectSchemaInventoryModules,
   EffectSchemaInventoryPinAbsentError,
@@ -38,14 +36,10 @@ import {
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { it, vi } from "@effect/vitest";
+import { it } from "@effect/vitest";
 import { assertFalse, assertInclude, assertNone, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
-import * as Bool from "effect/Boolean";
-import * as Clock from "effect/Clock";
-import * as Config from "effect/Config";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
-import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
@@ -56,7 +50,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
-import * as TestClock from "effect/testing/TestClock";
 import type { EffectSchemaInventorySourceShape } from "@beep/repo-cli/commands/Lint";
 
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
@@ -153,20 +146,6 @@ const makeRow = (fields: { readonly line: number; readonly symbol: string; reado
     importable: true,
   });
 
-const demoGraft = EffectSchemaInventoryGraftContext.make({
-  head: PIN,
-  workingTreeMatchesPin: true,
-  entries: [
-    EffectSchemaInventoryGraftEntry.make({
-      name: "a",
-      kind: "function",
-      span: "L13-L17",
-      signature: O.none(),
-      summary: O.some("Formats | values."),
-    }),
-  ],
-});
-
 const emptyReceipt = EffectSchemaInventoryReceipt.make({
   pin: PIN,
   parser: "6.0.2",
@@ -199,7 +178,6 @@ const fakeSource = (
   readPinned: Effect.fn("EffectSchemaInventoryTest.readPinned")((_pin, file) =>
     Ref.update(reads, (count) => count + 1).pipe(Effect.as(pinnedText(file)))
   ),
-  graftContext: Effect.fn("EffectSchemaInventoryTest.graftContext")(() => Effect.succeed(demoGraft)),
   ...overrides,
 });
 
@@ -541,11 +519,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       const semver = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-semver-" });
       yield* fs.writeFileString(path.join(semver, "package.json"), '{"catalog":{"effect":"4.0.0-rc.118"}}');
       strictEqual((yield* verify(semver))._tag, "EffectSchemaInventoryCatalogPinError");
-
-      const live = yield* EffectSchemaInventorySource.make(linked);
-      const graft = yield* Effect.flip(live.graftContext(ABSENT_PIN, "packages/effect/src/Nope.ts"));
-      strictEqual(graft._tag, "EffectSchemaInventoryGraftUnavailableError");
-      assertFalse(Str.includes(linked)(graft.message), "graft failures never carry the checkout path");
     })
   );
 
@@ -559,22 +532,11 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
         pin: PIN,
         rows,
         source: demoSource,
-        graft: demoGraft,
       });
       assertInclude(prompt, "export function a(x: unknown): string {\n  return `${x}`\n}");
       assertInclude(prompt, "**Example** (Format)");
       assertInclude(prompt, "````ts\n/**\n * Formats a value.");
       assertInclude(prompt, "const local = 1");
-      assertInclude(prompt, "hashes to the same blob as the pin, so the spans line up with the inlined source");
-      assertInclude(prompt, "| L13-L17 | function | `a` | Formats \\| values. |");
-      const drifting = yield* renderEffectSchemaInventoryPrompt({
-        module: demoModule,
-        pin: PIN,
-        rows,
-        source: demoSource,
-        graft: EffectSchemaInventoryGraftContext.make({ ...demoGraft, workingTreeMatchesPin: false }),
-      });
-      assertInclude(drifting, "working-tree context whose spans and summaries may drift");
     })
   );
 
@@ -588,7 +550,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
             pin: PIN,
             rows,
             source: demoSource,
-            graft: demoGraft,
           })
         );
       const unresolved = yield* render([makeRow({ line: 999, symbol: "ghost", hasExample: false })]);
@@ -746,7 +707,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
   );
 
   it.effect(
-    "verifies committed prompts outside their graft section and ignores hand-written files",
+    "verifies committed prompts byte for byte and ignores hand-written files",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -760,7 +721,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
         pin: PIN,
         rows,
         source: demoSource,
-        graft: demoGraft,
       });
       const check = checkEffectSchemaInventoryPrompts(root, PIN, extraction.modules, [
         [demoModule, demoSource],
@@ -770,8 +730,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       yield* fs.makeDirectory(directory, { recursive: true });
       yield* fs.writeFileString(path.join(directory, "notes.md"), "hand-written\n");
       yield* fs.writeFileString(file, prompt);
-      deepStrictEqual(yield* check, []);
-      yield* fs.writeFileString(file, Str.replace("Formats \\| values.", "Graft wording moved.")(prompt));
       deepStrictEqual(yield* check, []);
       yield* fs.writeFileString(file, Str.replace("return `${x}`", "return x")(prompt));
       const drift = yield* check;
@@ -804,29 +762,14 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
     Effect.fnUntraced(function* () {
       const extraction = yield* extractEffectSchemaInventory(PIN, [[provenanceBranchModule, promptBranchSource]]);
       const rows = O.getOrThrow(A.head(extraction.modules)).rows;
-      const graft = EffectSchemaInventoryGraftContext.make({
-        head: PIN,
-        workingTreeMatchesPin: true,
-        entries: [
-          EffectSchemaInventoryGraftEntry.make({
-            name: "old",
-            kind: "function",
-            span: "L6-L10",
-            signature: O.none(),
-            summary: O.none(),
-          }),
-        ],
-      });
       const prompt = yield* renderEffectSchemaInventoryPrompt({
         module: provenanceBranchModule,
         pin: PIN,
         rows,
         source: promptBranchSource,
-        graft,
       });
       assertInclude(prompt, "provenance only: Effect's exports map nulls this path");
       assertInclude(prompt, "1 overload signature, deprecated, not importable");
-      assertInclude(prompt, "| L6-L10 | function | `old` |  |");
       assertInclude(prompt, 'export function old(x: unknown): string {\n  return ""\n}');
       strictEqual(A.length(Str.split(prompt, "const shared = 1")) - 1, 1);
       const foreign = yield* Effect.flip(
@@ -835,7 +778,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
           pin: ABSENT_PIN,
           rows,
           source: promptBranchSource,
-          graft,
         })
       );
       assertInclude(foreign.message, "must all read");
@@ -843,7 +785,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
   );
 
   it.effect(
-    "reports a prompt without a graft section and fails when a prompt's module source is missing",
+    "reports a hand-edited prompt as stale and fails when a prompt's module source is missing",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -943,7 +885,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
         pin: PIN,
         rows,
         source: localGroupsSource,
-        graft: demoGraft,
       });
       assertInclude(
         prompt,
@@ -962,18 +903,9 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-run-" });
       const reads = yield* Ref.make(0);
-      const driftingGraft = EffectSchemaInventoryGraftContext.make({ ...demoGraft, workingTreeMatchesPin: false });
       const run = (request: EffectSchemaInventoryRequest) =>
         runEffectSchemaInventory(root, request).pipe(
-          Effect.provideService(
-            EffectSchemaInventorySource,
-            fakeSource(
-              {
-                graftContext: Effect.fn("EffectSchemaInventoryTest.driftingGraft")(() => Effect.succeed(driftingGraft)),
-              },
-              reads
-            )
-          )
+          Effect.provideService(EffectSchemaInventorySource, fakeSource({}, reads))
         );
       yield* run(EffectSchemaInventoryRequest.cases.write.make({}));
       const directory = path.join(root, EffectSchemaInventoryFixturePath);
@@ -985,7 +917,10 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
           out: O.some("prompts/enable.md"),
         })
       );
-      assertInclude(yield* fs.readFileString(path.join(root, "prompts/enable.md")), "may drift");
+      assertInclude(
+        yield* fs.readFileString(path.join(root, "prompts/enable.md")),
+        "# Lane prompt: `effect/schema/SchemaJITCompiler/enable`"
+      );
     })
   );
 
@@ -1028,7 +963,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
   });
 
   it.effect(
-    "live source reads pinned bytes, refuses a non-git reference, and reports every graft failure",
+    "live source reads pinned bytes and refuses a non-git reference",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1057,64 +992,14 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
         (yield* Effect.flip(live.readPinned(head, "missing-file.txt"))).message,
         "Unable to read missing-file.txt"
       );
-
-      // A fake `graft` first on PATH makes every graft outcome deterministic, locally and hosted.
-      const bin = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-bin-" });
-      const graft = path.join(bin, "graft");
-      const ambientPath = yield* Config.String("PATH");
-      const withPath = <A, E, R>(pathValue: string, effect: Effect.Effect<A, E, R>) =>
-        Effect.acquireUseRelease(
-          Effect.sync(() => vi.stubEnv("PATH", pathValue)),
-          () => effect,
-          () => Effect.sync(() => vi.unstubAllEnvs())
-        );
-      const withGraft = Effect.fnUntraced(function* (script: string) {
-        yield* fs.writeFileString(graft, script);
-        yield* fs.chmod(graft, 0o755);
-        return yield* withPath(`${bin}:${ambientPath}`, Effect.result(live.graftContext(head, "package.json")));
-      });
-      const decoded = yield* withGraft(
-        '#!/bin/sh\nprintf \'{"file":"%s","entries":[{"name":"x","kind":"const","span":"L1-L1"}]}\' "$4"\n'
-      );
-      assertTrue(decoded._tag === "Success");
-      strictEqual(decoded.success.entries.length, 1);
-      strictEqual(decoded.success.head, head);
-      const exited = yield* withGraft("#!/bin/sh\necho boom >&2\nexit 3\n");
-      assertTrue(exited._tag === "Failure");
-      assertInclude(exited.failure.message, "exit 3: boom");
-      const garbled = yield* withGraft("#!/bin/sh\necho nope\n");
-      assertTrue(garbled._tag === "Failure");
-      assertInclude(garbled.failure.message, "output did not decode");
-      // A private TestClock passes the graft timeout only once the fake has started, so the timeout
-      // arm ends the run (and kills the child) without moving the block's shared clock.
-      const started = path.join(bin, "started");
-      const clock = yield* TestClock.make();
-      const pending = yield* Effect.forkChild(
-        withGraft(`#!/bin/sh\n: > '${started}'\nexec sleep 30\n`).pipe(Effect.provideService(Clock.Clock, clock))
-      );
-      yield* Effect.repeat(fs.exists(started), { while: Bool.not });
-      yield* clock.adjust("60 seconds");
-      const timedOut = yield* Fiber.join(pending);
-      assertTrue(timedOut._tag === "Failure");
-      assertInclude(timedOut.failure.message, "timed out after");
-      // Only git's own directory on PATH: git answers, and no `graft` can be found.
-      const gitDirectory = path.dirname(
-        Str.trim(yield* spawner.string(ChildProcess.make("sh", ["-c", "command -v git"], { cwd: repositoryRoot })))
-      );
-      const unrunnable = yield* withPath(gitDirectory, Effect.result(live.graftContext(head, "package.json")));
-      assertTrue(unrunnable._tag === "Failure");
-      assertInclude(unrunnable.failure.message, "could not run");
-      const noGit = yield* withPath(bin, Effect.flip(live.graftContext(head, "package.json")));
-      assertInclude(noGit.message, "git rev-parse");
     })
   );
 
   it.effect(
-    "live source reads an unstatable reference as missing and refuses a HEAD that is not a SHA-1 id",
+    "live source reads an unstatable reference as missing",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-reference-" });
       const reference = path.join(root, ".repos", "effect");
       yield* fs.makeDirectory(reference, { recursive: true });
@@ -1131,29 +1016,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       const missing = yield* Effect.flip(unstatable.verifyPin(PIN));
       strictEqual(missing._tag, "EffectSchemaInventoryReferenceMissingError");
       assertInclude(missing.message, "is missing");
-
-      // A SHA-256 repository names HEAD with 64 hex digits, which the pin schema rejects.
-      const git = (args: ReadonlyArray<string>) => spawner.string(ChildProcess.make("git", args, { cwd: reference }));
-      yield* git(["init", "-q", "--object-format=sha256"]);
-      yield* git([
-        "-c",
-        "user.name=inventory",
-        "-c",
-        "user.email=inventory@example.invalid",
-        "-c",
-        "commit.gpgsign=false",
-        "-c",
-        "core.hooksPath=/dev/null",
-        "commit",
-        "-q",
-        "--no-verify",
-        "--allow-empty",
-        "-m",
-        "init",
-      ]);
-      const live = yield* EffectSchemaInventorySource.make(root);
-      const failure = yield* Effect.flip(live.graftContext(PIN, "package.json"));
-      assertTrue(Str.startsWith("git rev-parse HEAD: ")(failure.message));
     })
   );
 });
