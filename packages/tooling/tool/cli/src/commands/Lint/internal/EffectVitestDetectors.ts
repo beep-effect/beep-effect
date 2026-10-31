@@ -3560,11 +3560,12 @@ const isObservation = (call: CallExpression, imports: EffectVitestImports): bool
   isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", VALUE_ASSERTIONS) ||
   isProvenanceCall(call, imports, VITEST_MODULES, "assert", VALUE_ASSERTIONS);
 
-// Whether `node` runs an assertion itself, outside nested closures that may run later or never.
+// Whether `node` runs an assertion itself, outside nested function, method, accessor and class bodies,
+// which may run later or never.
 const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean => {
   let asserts = false;
   node.forEachDescendant((child, traversal) => {
-    if (isFunctionValue(child) || Node.isFunctionDeclaration(child)) {
+    if (Node.isFunctionLikeDeclaration(child) || Node.isClassDeclaration(child) || Node.isClassExpression(child)) {
       traversal.skip();
     } else if (Node.isCallExpression(child) && isObservation(child, imports)) {
       asserts = true;
@@ -3596,9 +3597,18 @@ const closesPureOperand = (call: CallExpression, stage: O.Option<MorphNode>, imp
 
 // A closure that may run later or never, a nested declaration, or a fork whose scope can outlive the
 // following statements ends the walk.
+// `pipe(effect, ..., Effect.forkChild)` from `effect/Function`, the free-function form `forkCall` leaves out.
+const functionPipeFork = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(call, imports, ["effect", "effect/Function"], "Function", ["pipe"]) &&
+  A.some(call.getArguments().slice(1), (argument) =>
+    Node.isCallExpression(argument)
+      ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
+      : Node.isExpression(argument) && isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
+  );
+
 const leavesExecution = (current: MorphNode, parent: MorphNode, imports: EffectVitestImports): boolean =>
   Node.isFunctionDeclaration(current) ||
-  (Node.isCallExpression(current) && forkCall(current, imports)) ||
+  (Node.isCallExpression(current) && (forkCall(current, imports) || functionPipeFork(current, imports))) ||
   (isFunctionValue(current) && !Node.isCallExpression(parent));
 
 // At a statement that ran the scoped effect: observed when a later sibling asserts, otherwise keep

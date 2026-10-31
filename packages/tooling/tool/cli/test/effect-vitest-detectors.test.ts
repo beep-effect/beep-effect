@@ -3727,6 +3727,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("built", Fx.fnUntraced(function* () { const work = Fx.scoped(acquire); expect(ready).toBe(true); yield* work; }));',
         'it.effect("bare", Fx.fnUntraced(function* () { Fx.scoped(acquire); expect(ready).toBe(true); }));',
         'it.effect("pure stage", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.scoped); expect(ready).toBe(true); }));',
+        'it.effect("method", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); const observer = { check() { expect(released).toBe(true); } }; yield* use(observer); }));',
+        'it.effect("accessor", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); const observer = { get closed() { return expect(released).toBe(true); } }; yield* use(observer); }));',
+        'it.effect("class", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); class Probe { run() { expect(released).toBe(true); } } yield* use(Probe); }));',
+        'import { pipe } from "effect/Function"; it.effect("pipe fork", Fx.fnUntraced(function* () { yield* pipe(Fx.scoped(acquire), Fx.forkChild); expect(running).toBe(true); }));',
       ]) {
         const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
         deepStrictEqual(
