@@ -123,6 +123,10 @@
       "purpose": "Wave 3-A4 parity: every retired repo-cli and docgen package.json reader, as an oracle, against its @beep/package-json replacement over every tracked manifest."
     },
     {
+      "path": "ops/qas-discovery-adoption-parity.ts",
+      "purpose": "4-A1 parity: the QualityArtifactSupport discovery, CoverageScope and CoverageRegression surfaces before and after the move onto WorkspaceDiscovery, plus classified fixture probes."
+    },
+    {
       "path": "ops/repo-tsconfig-differential.ts",
       "purpose": "Wave 3-2 differential: TsconfigLoader.resolve against tsc --showConfig, optionally three-way with get-tsconfig."
     },
