@@ -24,15 +24,8 @@ import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
 import { SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
-  DmsMirror,
   DmsMirrorAvailability,
-  DmsMirrorUnavailable,
-  EnsureFolderInput,
-  MoveItemInput,
-  RenameItemInput,
   SyncOnceInput,
-  UploadFileInput,
-  UploadFileVersionInput,
   VaultScanFailed,
   VaultSyncEngine,
   VaultSyncStatus,
@@ -46,14 +39,12 @@ import {
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { FindSyncCursorInput, SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import {
-  FindSyncItemByPathInput,
   ListSyncItemsByWorkspaceInput,
   SyncItemRepository,
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import {
   ListQueuedSyncOperationsForItemInput,
-  ListQueuedSyncOperationsInput,
   ListSyncOperationsByStatusInput,
   RequeueLeasedSyncOperationsInput,
   SyncOperationRepository,
@@ -63,8 +54,7 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as F from "effect/Function";
-import { identity, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -74,16 +64,13 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
-import { echoClassForOperation, makePushRecord } from "./VaultPush.model.ts";
-import { VaultSyncConfig } from "./VaultSync.config.ts";
 import { makeVaultSyncDrift } from "./VaultSync.drift.ts";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
+import { makeVaultSyncPush } from "./VaultSync.push.ts";
 import type { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
-import type { RemoteItemId } from "@beep/documents-domain/values/Sync";
-import type { DmsRemoteItem, MarkConflictReviewedInput } from "@beep/documents-use-cases/aggregates/Sync/server";
+import type { MarkConflictReviewedInput } from "@beep/documents-use-cases/aggregates/Sync/server";
 import type * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import type { PushRecord } from "./VaultPush.model.ts";
 import type { ObservedFile, ObservedFolder } from "./VaultScan.model.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncEngine.service");
@@ -167,15 +154,6 @@ const pickMoveCandidate = (
   );
 };
 
-const requiresRemoteId = (operationType: DomainSyncOperation.SyncOperationType): boolean =>
-  SyncOperationType.match(operationType, {
-    createFolder: F.constFalse,
-    moveItem: F.constTrue,
-    renameItem: F.constTrue,
-    uploadFile: F.constFalse,
-    uploadFileVersion: F.constTrue,
-  });
-
 /**
  * Fresh push verb that re-converges a `pending` item stranded with no active
  * operation (the crash window between marking an operation `succeeded` and
@@ -241,13 +219,12 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   const operationRepository = yield* SyncOperationRepository;
   const cursorRepository = yield* SyncCursorRepository;
   const conflictRepository = yield* SyncConflictRepository;
-  const mirror = yield* DmsMirror;
   const availability = yield* DmsMirrorAvailability;
-  const config = yield* VaultSyncConfig;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* makeVaultSyncFileStore();
   const drift = yield* makeVaultSyncDrift();
+  const push = yield* makeVaultSyncPush();
 
   // One sync pass per workspace at a time. Every pass opens by requeuing all
   // leased operations, so two overlapping passes hand each other's in-flight
@@ -602,261 +579,6 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   });
 
   /**
-   * Resolve an operation's remote parent. The outer `none` means the parent
-   * folder has no remote identifier yet and the operation must stay queued;
-   * the inner option is the port-facing parent (`none` targets the mirror root).
-   */
-  const resolveParentRemoteId = Effect.fn($I`resolveParentRemoteId`)(function* (
-    workspaceId: WorkspaceIdentity.WorkspaceId,
-    targetParentRelPath: O.Option<VaultRelPath>
-  ) {
-    return yield* O.match(targetParentRelPath, {
-      onNone: () => Effect.succeedSome(O.none<RemoteItemId>()),
-      onSome: (parentRelPath) =>
-        itemRepository
-          .findByPath(
-            FindSyncItemByPathInput.make({
-              localRelPath: parentRelPath,
-              provider: BOX_PROVIDER,
-              workspaceId,
-            })
-          )
-          .pipe(
-            Effect.map((parent) =>
-              O.map(
-                O.flatMap(parent, (folder) => folder.remoteId),
-                O.some
-              )
-            )
-          ),
-    });
-  });
-
-  const withItemRemoteId = <Value, Error>(
-    item: DomainSyncItem.SyncItem,
-    use: (remoteId: RemoteItemId) => Effect.Effect<Value, Error>
-  ): Effect.Effect<Value, Error | DmsMirrorUnavailable> =>
-    O.match(item.remoteId, {
-      // Defensive: runOperation skips these operations before leasing.
-      onNone: () =>
-        Effect.fail(
-          DmsMirrorUnavailable.make({
-            provider: BOX_PROVIDER,
-            reason: `sync item ${item.localRelPath} has no remote identifier yet`,
-            retryable: true,
-          })
-        ),
-      onSome: use,
-    });
-
-  const mirrorVerbFor = (
-    input: SyncOnceInput,
-    operation: DomainSyncOperation.SyncOperation,
-    item: DomainSyncItem.SyncItem,
-    parentRemoteId: O.Option<RemoteItemId>
-  ): Effect.Effect<DmsRemoteItem, DmsMirrorUnavailable | VaultScanFailed> =>
-    SyncOperationType.match(operation.operationType, {
-      createFolder: () =>
-        mirror.ensureFolder(
-          EnsureFolderInput.make({
-            name: operation.targetName,
-            parentRemoteId,
-          })
-        ),
-      moveItem: () =>
-        withItemRemoteId(item, (remoteId) =>
-          mirror.moveItem(
-            MoveItemInput.make({
-              itemKind: item.itemKind,
-              newParentRemoteId: parentRemoteId,
-              remoteId,
-            })
-          )
-        ),
-      renameItem: () =>
-        withItemRemoteId(item, (remoteId) =>
-          mirror.renameItem(
-            RenameItemInput.make({
-              itemKind: item.itemKind,
-              newName: operation.targetName,
-              remoteId,
-            })
-          )
-        ),
-      uploadFile: () =>
-        files.read(input.vaultRootPath, operation.targetRelPath).pipe(
-          Effect.flatMap((content) =>
-            mirror.uploadFile(
-              UploadFileInput.make({
-                content,
-                name: operation.targetName,
-                parentRemoteId,
-              })
-            )
-          )
-        ),
-      uploadFileVersion: () =>
-        withItemRemoteId(item, (remoteId) =>
-          files.read(input.vaultRootPath, operation.targetRelPath).pipe(
-            Effect.flatMap((content) =>
-              mirror.uploadFileVersion(
-                UploadFileVersionInput.make({
-                  content,
-                  name: operation.targetName,
-                  remoteId,
-                })
-              )
-            )
-          )
-        ),
-    });
-
-  const recordPushSuccess = Effect.fn($I`recordPushSuccess`)(function* (
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
-    pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
-    operation: DomainSyncOperation.SyncOperation,
-    item: DomainSyncItem.SyncItem,
-    remote: DmsRemoteItem
-  ) {
-    yield* operationRepository.update(
-      DomainSyncOperation.SyncOperation.make({
-        ...operation,
-        lastError: O.none(),
-        status: "succeeded",
-      })
-    );
-    const updated = yield* itemRepository.update(
-      DomainSyncItem.SyncItem.make({
-        ...item,
-        lastError: O.none(),
-        lastPushedDigest: operation.inputContentDigest,
-        lastPushedGeneration: O.some(operation.inputGeneration),
-        remoteId: O.some(remote.remoteId),
-        remoteName: O.some(remote.name),
-        remoteParentId: remote.parentRemoteId,
-        syncState: SyncItemState.Enum.current,
-      })
-    );
-    yield* Ref.update(itemsByIdRef, HashMap.set(updated.id, updated));
-    yield* Ref.update(pushRecordsRef, (records) =>
-      A.append(records, makePushRecord(echoClassForOperation(operation.operationType), remote.remoteId))
-    );
-  });
-
-  const recordPushFailure = Effect.fn($I`recordPushFailure`)(function* (
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
-    operation: DomainSyncOperation.SyncOperation,
-    item: DomainSyncItem.SyncItem,
-    error: DmsMirrorUnavailable
-  ) {
-    const attemptCount = S.Natural.make(operation.attemptCount + 1);
-    const requeue = error.retryable && attemptCount < config.maxAttempts;
-    yield* operationRepository.update(
-      DomainSyncOperation.SyncOperation.make({
-        ...operation,
-        attemptCount,
-        lastError: O.some(error.reason),
-        status: requeue ? "queued" : "failed",
-      })
-    );
-    if (!requeue) {
-      const updated = yield* itemRepository.update(
-        DomainSyncItem.SyncItem.make({
-          ...item,
-          lastError: O.some(error.reason),
-          syncState: SyncItemState.Enum.error,
-        })
-      );
-      yield* Ref.update(itemsByIdRef, HashMap.set(updated.id, updated));
-    }
-  });
-
-  /**
-   * Attempt one queued operation. Returns `false` (no attempt burned, stays
-   * queued) when the operation is not yet executable: its parent folder or its
-   * own item has no remote identifier.
-   */
-  const runOperation = Effect.fn($I`runOperation`)(function* (
-    input: SyncOnceInput,
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
-    pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
-    operation: DomainSyncOperation.SyncOperation
-  ) {
-    const items = yield* Ref.get(itemsByIdRef);
-    const tracked = HashMap.get(items, operation.syncItemId);
-    if (O.isNone(tracked)) {
-      yield* Effect.logDebug("Documents vault sync skipped an operation without a tracked item").pipe(
-        Effect.annotateLogs({
-          syncItemId: operation.syncItemId,
-          syncOperationId: operation.id,
-        })
-      );
-      return false;
-    }
-    const item = tracked.value;
-    if (requiresRemoteId(operation.operationType) && O.isNone(item.remoteId)) {
-      return false;
-    }
-    const parentResolution = yield* resolveParentRemoteId(input.workspaceId, operation.targetParentRelPath);
-    if (O.isNone(parentResolution)) {
-      return false;
-    }
-    const leased = yield* operationRepository.update(
-      DomainSyncOperation.SyncOperation.make({ ...operation, status: "leased" })
-    );
-    yield* mirrorVerbFor(input, leased, item, parentResolution.value).pipe(
-      Effect.flatMap((remote) => recordPushSuccess(itemsByIdRef, pushRecordsRef, leased, item, remote)),
-      Effect.catchTags({
-        DmsMirrorUnavailable: (error) => recordPushFailure(itemsByIdRef, leased, item, error),
-        // A vanished local file must fail the operation, not escape the pump:
-        // an escape would strand the row leased and wedge every later pass.
-        VaultScanFailed: (error) =>
-          recordPushFailure(
-            itemsByIdRef,
-            leased,
-            item,
-            DmsMirrorUnavailable.make({
-              provider: BOX_PROVIDER,
-              reason: error.reason,
-              retryable: false,
-            })
-          ),
-      })
-    );
-    return true;
-  });
-
-  /**
-   * Pump passes over the queued outbox in id (FIFO) order until the queue is
-   * empty or a full pass makes no progress (every remaining op is blocked on a
-   * parent without a remote identifier).
-   */
-  const pumpQueue = Effect.fn($I`pumpQueue`)(function* (input: SyncOnceInput) {
-    const trackedItems = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({
-        provider: BOX_PROVIDER,
-        workspaceId: input.workspaceId,
-      })
-    );
-    const itemsByIdRef = yield* Ref.make(HashMap.fromIterable(A.map(trackedItems, (item) => [item.id, item] as const)));
-    const pushRecordsRef = yield* Ref.make<ReadonlyArray<PushRecord>>(A.empty());
-    let progressed = true;
-    while (progressed) {
-      const queue = yield* operationRepository.listQueued(
-        ListQueuedSyncOperationsInput.make({
-          provider: BOX_PROVIDER,
-          workspaceId: input.workspaceId,
-        })
-      );
-      const outcomes = yield* Effect.forEach(queue, (operation) =>
-        runOperation(input, itemsByIdRef, pushRecordsRef, operation)
-      );
-      progressed = A.some(outcomes, identity);
-    }
-    return yield* Ref.get(pushRecordsRef);
-  });
-
-  /**
    * Revive-eligibility for a failed operation: its item still sits at the
    * operation's target path, its type still matches the item kind, no queued
    * twin of the same type already exists, and the target file is still present
@@ -1151,7 +873,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           );
           yield* recoverStalledOperations(canonicalInput, probe.connected);
           yield* scanVault(canonicalInput);
-          const pushRecords = yield* pumpQueue(canonicalInput);
+          const pushRecords = yield* push.pumpQueue(canonicalInput);
           yield* drift
             .pollRemoteEvents(canonicalInput, pushRecords)
             .pipe(Effect.catchTag("DmsMirrorUnavailable", (error) => drift.recordPollFailure(canonicalInput, error)));
