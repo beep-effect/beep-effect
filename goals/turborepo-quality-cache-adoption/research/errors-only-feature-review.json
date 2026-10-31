@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-errors-only-feature-review/v1",
   "authority": "Final current-tree optional presentation decision on frozen feature-local pins; not an actual task/profile qualification or production performance claim.",
-  "sourceBaseRevision": "8a1252423e907b31755b54321a65849a9e17b12b",
+  "sourceBaseRevision": "f16d82e9f16d72f64d42b40284bf2867566e796b",
   "feature": "futureFlag:errorsOnlyShowHash",
   "disposition": "accepted-retain-current-default",
   "rationale": "The runtime consumer already obtains hashes from structured summaries. No current named log-only consumer needs successful task hashes. Retain the absent default instead of adding an output-only flag with no measured execution benefit.",
@@ -16,7 +16,7 @@
       },
       {
         "path": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-        "sha256": "590c0b0b964684256eda71f68b6ebf87b47f0c57062b06bd7df6b605f5853334",
+        "sha256": "c7ed5b2c9898d7691245a064707bbfa6d669b22919e44008bbd1e650c583c58e",
         "role": "Tests preserve caller-supplied errors-only arguments and summary output; they add no production output-log default or success-hash parser."
       },
       {
@@ -52,5 +52,19 @@
   "schemaAvailability": {
     "report": "errors-only-schema-observation.json",
     "scope": "Integrity-verified exact2.11.11-canary.1 package schema; native cases establish behavior."
+  },
+  "acceptedMainRefresh": {
+    "priorSourceBaseRevision": "8a1252423e907b31755b54321a65849a9e17b12b",
+    "acceptedMain": "f16d82e9f16d72f64d42b40284bf2867566e796b",
+    "changedBindings": [
+      {
+        "path": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+        "priorSha256": "590c0b0b964684256eda71f68b6ebf87b47f0c57062b06bd7df6b605f5853334",
+        "sha256": "c7ed5b2c9898d7691245a064707bbfa6d669b22919e44008bbd1e650c583c58e"
+      }
+    ],
+    "review": "The changed quality-tasks test adds the goals-ops typecheck lane descriptor only; every errors-only assertion and the named production summary consumer are unchanged. Root errorsOnlyShowHash remains absent.",
+    "newFeatureAcceptance": false,
+    "nativeControlsReplayed": false
   }
 }

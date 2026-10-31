@@ -402,3 +402,10 @@ This branch proposes a fifth final no-change feature decision, leaving thirty
 reviews pending; four are already accepted on main. The historical computation
 disposition snapshot is not refreshed, and every whole-goal criterion remains
 unproven. No cache mode, runtime signing or deployed service changes.
+
+The accepted-main refresh after #2399 preserves this decision and its frozen
+feature-local native evidence. The only changed bound census file adds a
+goals-ops typecheck lane assertion; its errors-only assertions are unchanged.
+The source hash is refreshed after inspecting that diff. The production probe
+still reads structured summaries, and the optional flag remains absent. This
+adds no feature decision, native replay, task qualification or activation.
