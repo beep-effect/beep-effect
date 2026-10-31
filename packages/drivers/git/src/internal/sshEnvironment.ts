@@ -1,6 +1,7 @@
 /**
  * Pure prompt-suppression and conservative SSH command policy for Git spawns.
- * Repository config acquisition and precedence resolution remain in Git.ts.
+ * Repository config acquisition and precedence resolution belong to
+ * internal/execution.ts; this module applies the resolved command policy.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -216,7 +217,7 @@ const withBatchMode = (command: string): O.Option<string> => {
  * console.log(sshEnv("ssh -i key").GIT_SSH_COMMAND); // "ssh -i key -o BatchMode=yes"
  * ```
  *
- * @category environment
+ * @category configuration
  * @since 0.0.0
  */
 export const sshEnv = (resolved: string): Record<string, string> =>

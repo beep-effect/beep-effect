@@ -249,10 +249,10 @@ const classify: {
  * the redaction mask the pure constructor carries is applied here, at the
  * single classification choke point (the redaction policy).
  *
- * This is also the single ENVIRONMENT choke point: `env` (computed once in
- * the Git live layer) is applied here the same way `cwd` is, so every one of
- * the service's members is spawned with the pins and nothing else in the
- * package needs to know they exist.
+ * The supplied `env` is applied here alongside `cwd`. The execution module
+ * uses fixed base pins for local commands. Network commands combine those
+ * pins with ambient SSH settings captured at service construction and
+ * repository configuration resolved for each call.
  *
  * **Example** (Construct a classified repository query)
  *
