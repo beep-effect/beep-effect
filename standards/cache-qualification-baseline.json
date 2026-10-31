@@ -490,11 +490,11 @@
       }
     },
     "@beep/git": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 doctest scripts)",
+      "reason": "Record only nine audit-named Git computations after canonical doctest script generation, including one new unassessed doctest task; existing script values unchanged and no qualification granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "docs/reports/git-doctest-scripts-cache-review-2026-10-31.md",
+        "sha256": "dce3a2fe8e715662b5e46387f14f97b003384ba86e56c298397b9a9770465dff"
       }
     },
     "@beep/github": {
@@ -48282,7 +48282,7 @@
       {
         "computation": "@beep/git#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#audit",
           "@beep/identity#audit",
@@ -48347,7 +48347,7 @@
       {
         "computation": "@beep/git#build",
         "command": "bun run beep:build",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
@@ -48401,7 +48401,7 @@
       {
         "computation": "@beep/git#check",
         "command": "bun run beep:check",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
@@ -48442,7 +48442,7 @@
       {
         "computation": "@beep/git#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
@@ -48493,7 +48493,7 @@
       {
         "computation": "@beep/git#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/git#transit",
           "@beep/repo-docgen#transit"
@@ -48530,9 +48530,59 @@
         }
       },
       {
+        "computation": "@beep/git#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
+        "dependencies": [
+          "@beep/fc-runs#transit",
+          "@beep/identity#transit",
+          "@beep/schema#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vite.shared.ts",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/git#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -48567,7 +48617,7 @@
       {
         "computation": "@beep/git#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/fc-runs#transit",
@@ -48634,7 +48684,7 @@
       {
         "computation": "@beep/git#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -48663,7 +48713,7 @@
       {
         "computation": "@beep/git#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -48718,7 +48768,7 @@
       {
         "computation": "@beep/git#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-laws"
         ],
@@ -48772,7 +48822,7 @@
       {
         "computation": "@beep/git#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
@@ -48816,7 +48866,7 @@
       {
         "computation": "@beep/git#test",
         "command": "bun run beep:test",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#transit",
           "@beep/identity#transit",
@@ -48866,7 +48916,7 @@
       {
         "computation": "@beep/git#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "5245b8b27f845ecf8e5746485d4280473494b34d3c15a0ae1e84f04545b7b5b4",
+        "commandDigest": "32b1c1f73a48f346ae895ec95402dcdc176ab667220730e4583d0cfac8fd31d2",
         "dependencies": [
           "@beep/fc-runs#build",
           "@beep/identity#build",
