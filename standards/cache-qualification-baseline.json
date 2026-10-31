@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.4",
-  "epoch": "qualification-v3",
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the root subject after a main merge added one generated input to the //#lint:policy-fingerprint:knowledge seal; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (graft retirement, chore/retire-graft)",
+      "reason": "Record the root turbo.json drift after the retired graft env names and graft/ input exclusions are removed; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review-2.md",
-        "sha256": "e2df2b079fa631d5eb0e43850e5802ff5ea5dda3b1f5301b3dfce3db6ba0809b"
+        "path": "docs/reports/graft-retirement/cache-baseline-review.md",
+        "sha256": "047f9af01941510edd3b182ceae76cd75a5355453b23343b06d384d8542e2087"
       }
     },
     "@beep/acp": {
@@ -1565,8 +1565,6 @@
           "CODEX_SESSION_ID",
           "CODEX_THREAD_ID",
           "GITHUB_ACTIONS",
-          "GRAFT_CRUX_MODULE",
-          "GRAFT_EXTRACT_MODULE",
           "TURBO_CACHE",
           "TURBO_FORCE",
           "TURBO_TOKEN",
@@ -2690,7 +2688,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7032,7 +7029,6 @@
             "!.claude/worktrees/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7073,7 +7069,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7185,7 +7180,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7349,7 +7343,6 @@
             "!explorations/**",
             "!explorations/*/CAPTURE.md",
             "!goals/**",
-            "!graft/**",
             "!infra/ci-runners/sdks/**",
             "!node_modules/**",
             "!outputs/agent-reliability/**",
@@ -133863,7 +133856,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "c9ea6cdde0ba65a1d58dbc21c8f3323e47669114948cf24715a87ae8fab8aed1"
+        "sha256": "28bc7d83ec1ffa4b7401fd63364c8be877581535c0fa2487ecf68b630038d1dc"
       }
     ]
   }

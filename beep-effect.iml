@@ -178,7 +178,6 @@
       <excludeFolder url="file://$MODULE_DIR$/.serena" />
       <excludeFolder url="file://$MODULE_DIR$/docker" />
       <excludeFolder url="file://$MODULE_DIR$/docs/generated" />
-      <excludeFolder url="file://$MODULE_DIR$/graft" />
       <excludeFolder url="file://$MODULE_DIR$/licenses" />
       <excludeFolder url="file://$MODULE_DIR$/research" />
       <excludeFolder url="file://$MODULE_DIR$/docs" />

@@ -48,21 +48,12 @@
       "Bash(bun run beep lint:*)",
       "Bash(bun run beep laws:*)",
       "Bash(bun run beep research install-timers:*)",
-      "Bash(bun run beep graft deep install-timer --refresh:*)",
       "Bash(bun run beep refs plan:*)",
       "Bash(bun run beep refs install-timer --refresh:*)",
       "Bash(systemctl --user list-timers:*)",
       "Bash(rm -rf .beep/fallow)",
       "Bash(bunx commitlint:*)",
-      "Bash(bun install:*)",
-      "Bash(graft ask:*)",
-      "Bash(graft grep:*)",
-      "Bash(graft skeleton:*)",
-      "Bash(graft callers:*)",
-      "Bash(graft map:*)",
-      "Bash(graft blast:*)",
-      "Bash(graft check:*)",
-      "Bash(graft build)"
+      "Bash(bun install:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -84,10 +75,7 @@
       "Edit(**/docs/_internal/**)",
       "Edit(**/.claude/settings.json)",
       "Bash(bun run beep refs refresh:*)",
-      "Bash(bun run beep refs install-timer)",
-      "Bash(graft init:*)",
-      "Bash(graft uninstall:*)",
-      "Bash(graft upgrade:*)"
+      "Bash(bun run beep refs install-timer)"
     ],
     "defaultMode": "default"
   },
@@ -150,16 +138,6 @@
           {
             "type": "command",
             "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || exit 0; BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh\""
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || exit 0; node \"$CLAUDE_PROJECT_DIR/.claude/helpers/graft-hooks.cjs\" post-edit",
-            "timeout": 10
           }
         ]
       }
@@ -232,15 +210,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || exit 0; node \"$CLAUDE_PROJECT_DIR/.claude/helpers/graft-hooks.cjs\" session-start",
-            "timeout": 8
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || exit 0; BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh\"",
             "timeout": 5
           }
@@ -271,15 +240,6 @@
             "statusMessage": "Checking Yeet inbox"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || exit 0; node \"$CLAUDE_PROJECT_DIR/.claude/helpers/graft-hooks.cjs\" stop",
-            "timeout": 8
-          }
-        ]
       }
     ],
     "SessionEnd": [
@@ -306,9 +266,5 @@
       }
     }
   },
-  "autoMemoryDirectory": "~/.claude/memory/beep-effect",
-  "statusLine": {
-    "type": "command",
-    "command": "node \"${CLAUDE_PROJECT_DIR:-.}/.claude/helpers/graft-statusline.cjs\""
-  }
+  "autoMemoryDirectory": "~/.claude/memory/beep-effect"
 }
