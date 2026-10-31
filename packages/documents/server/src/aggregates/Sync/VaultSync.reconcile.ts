@@ -172,7 +172,12 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
   ) {
     const idempotencyKey = O.getOrElse(reviewKey, () => idempotencyKeyFor(item, operationType));
     const queued = yield* queuedOperationsFor(item);
-    const existing = A.findFirst(queued, (operation) => operation.operationType === operationType);
+    // A review owns a durable key across every status. Enqueue it unchanged
+    // rather than rewriting another review's queued identity; a completed retry
+    // is then rejected as a duplicate before any other operation is mutated.
+    const existing = O.isSome(reviewKey)
+      ? O.none<DomainSyncOperation.SyncOperation>()
+      : A.findFirst(queued, (operation) => operation.operationType === operationType);
 
     return yield* O.match(existing, {
       onNone: () =>
@@ -660,13 +665,6 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
     // Another reviewed correction may have completed between review calls.
     // Its `current` state does not discharge this still-open path conflict.
     const actionable = O.filter(correction, () => O.isSome(item.remoteId));
-    if (
-      O.isNone(actionable) &&
-      !SyncItemState.is.conflict(item.syncState) &&
-      !SyncItemState.is.pending(item.syncState)
-    ) {
-      return;
-    }
     const queued = O.isSome(actionable)
       ? yield* enqueueOrSquash(
           item,

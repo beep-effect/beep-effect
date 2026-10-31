@@ -24,6 +24,7 @@ import {
 import { FindSyncCursorInput, SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import { FindSyncItemByPathInput, SyncItemRepository } from "@beep/documents-use-cases/entities/SyncItem/server";
 import {
+  ListSyncOperationsByStatusInput,
   SyncOperationRepository,
   SyncOperationRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
@@ -567,60 +568,105 @@ const FailedReviewCloseLayer = Layer.effect(
     });
   })
 ).pipe(Layer.provideMerge(SyncDriftTestLayer));
+const UniqueReviewOperationLayer = Layer.effect(
+  SyncOperationRepository,
+  Effect.gen(function* () {
+    const repository = yield* SyncOperationRepository;
+    return SyncOperationRepository.of({
+      ...repository,
+      update: Effect.fn("VaultReviewIdentityTest.update")(function* (operation) {
+        for (const status of ["queued", "leased", "succeeded", "failed"] as const) {
+          const recorded = yield* repository.listByStatus(
+            ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status })
+          );
+          if (
+            A.some(recorded, (other) => other.id !== operation.id && other.idempotencyKey === operation.idempotencyKey)
+          ) {
+            return yield* SyncOperationRepositoryUnavailable.make({ reason: "duplicate operation identity" });
+          }
+        }
+        return yield* repository.update(operation);
+      }),
+    });
+  })
+).pipe(Layer.provideMerge(FailedReviewCloseLayer));
 const FailedReviewCloseEngineLayer = Layer.effect(VaultSyncEngine, makeVaultSyncEngine()).pipe(
-  Layer.provideMerge(FailedReviewCloseLayer)
+  Layer.provideMerge(UniqueReviewOperationLayer)
 );
 
-for (const itemKind of ["file", "folder"] as const) {
-  for (const correction of ["rename", "move"] as const) {
-    it.layer(Layer.fresh(FailedReviewCloseEngineLayer), { timeout: "10 seconds" })((it) => {
-      it.effect(
-        `keeps an already-corrected ${itemKind} current when retrying a failed ${correction} review close`,
-        Effect.fnUntraced(function* () {
-          const engine = yield* VaultSyncEngine;
-          const mirror = yield* DmsMirror;
-          const handle = yield* DmsMirrorFixtureHandle;
-          const root = yield* makeVaultRoot();
-          const originalPath = itemKind === "file" ? "original.txt" : "original";
-          yield* writeVaultFile(root, itemKind === "file" ? originalPath : "original/child.txt", "unchanged bytes");
-          yield* writeVaultFile(root, "other/keep.txt", "unrelated bytes");
-          yield* engine.syncOnce(syncInput(root));
-          const item = yield* findTrackedItem(originalPath);
-          const remoteId = yield* Effect.fromOption(item.remoteId);
-          if (correction === "rename") {
-            yield* mirror.renameItem(RenameItemInput.make({ itemKind, remoteId, newName: "renamed" }));
-          } else {
-            const other = yield* findTrackedItem("other");
-            yield* mirror.moveItem(MoveItemInput.make({ itemKind, remoteId, newParentRemoteId: other.remoteId }));
-          }
-          yield* engine.syncOnce(syncInput(root));
-          const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
-          const review = MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId });
-          const failure = yield* Effect.flip(engine.markConflictReviewed(review));
-          expect(failure).toMatchObject({
-            _tag: "SyncConflictRepositoryUnavailable",
-            reason: "injected review close failure",
-          });
-          expect((yield* engine.status(VaultSyncStatusInput.make({ workspaceId }))).queuedOperations).toBe(1);
-          yield* engine.syncOnce(syncInput(root));
-          const corrected = yield* findTrackedItem(originalPath);
-          expect(corrected.syncState).toBe("current");
-          const counts = yield* handle.counts;
-          expect((yield* engine.markConflictReviewed(review)).resolutionStatus).toBe("reviewed");
-          expect(yield* findTrackedItem(originalPath)).toEqual(corrected);
-          const afterRetry = yield* engine.status(VaultSyncStatusInput.make({ workspaceId }));
-          expect(afterRetry.pendingItems).toBe(0);
-          expect(afterRetry.queuedOperations).toBe(0);
-          expect(afterRetry.openConflicts).toBe(0);
-          const converged = yield* engine.syncOnce(syncInput(root));
-          expect(converged.pendingItems).toBe(0);
-          expect(converged.queuedOperations).toBe(0);
-          const afterCounts = yield* handle.counts;
-          expect(afterCounts.uploadFileVersion).toBe(counts.uploadFileVersion);
-          expect(afterCounts.renameItem).toBe(counts.renameItem);
-          expect(afterCounts.moveItem).toBe(counts.moveItem);
-        })
-      );
-    });
+for (const laterReview of [false, true]) {
+  for (const itemKind of ["file", "folder"] as const) {
+    for (const correction of ["rename", "move"] as const) {
+      it.layer(Layer.fresh(FailedReviewCloseEngineLayer), { timeout: "10 seconds" })((it) => {
+        it.effect(
+          `preserves ${laterReview ? "a newer queued review" : "the current item"} when retrying ${itemKind} ${correction} review close`,
+          Effect.fnUntraced(function* () {
+            const engine = yield* VaultSyncEngine;
+            const mirror = yield* DmsMirror;
+            const handle = yield* DmsMirrorFixtureHandle;
+            const root = yield* makeVaultRoot();
+            const originalPath = itemKind === "file" ? "original.txt" : "original";
+            yield* writeVaultFile(root, itemKind === "file" ? originalPath : "original/child.txt", "unchanged bytes");
+            yield* writeVaultFile(root, "other/keep.txt", "unrelated bytes");
+            yield* engine.syncOnce(syncInput(root));
+            const item = yield* findTrackedItem(originalPath);
+            const remoteId = yield* Effect.fromOption(item.remoteId);
+            if (correction === "rename") {
+              yield* mirror.renameItem(RenameItemInput.make({ itemKind, remoteId, newName: "renamed" }));
+            } else {
+              const other = yield* findTrackedItem("other");
+              yield* mirror.moveItem(MoveItemInput.make({ itemKind, remoteId, newParentRemoteId: other.remoteId }));
+            }
+            yield* engine.syncOnce(syncInput(root));
+            const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+            const review = MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId });
+            const failure = yield* Effect.flip(engine.markConflictReviewed(review));
+            expect(failure).toMatchObject({
+              _tag: "SyncConflictRepositoryUnavailable",
+              reason: "injected review close failure",
+            });
+            expect((yield* engine.status(VaultSyncStatusInput.make({ workspaceId }))).queuedOperations).toBe(1);
+            yield* engine.syncOnce(syncInput(root));
+            const corrected = yield* findTrackedItem(originalPath);
+            expect(corrected.syncState).toBe("current");
+            const counts = yield* handle.counts;
+            const operations = yield* SyncOperationRepository;
+            const queuedInput = ListSyncOperationsByStatusInput.make({
+              provider: "box",
+              workspaceId,
+              status: "queued",
+            });
+            if (laterReview) {
+              if (correction === "rename") {
+                yield* mirror.renameItem(RenameItemInput.make({ itemKind, remoteId, newName: "later-drift" }));
+              } else {
+                const other = yield* findTrackedItem("other");
+                yield* mirror.moveItem(MoveItemInput.make({ itemKind, remoteId, newParentRemoteId: other.remoteId }));
+              }
+              yield* engine.syncOnce(syncInput(root));
+              const conflicts = yield* engine.listOpenConflicts(listConflictsInput);
+              const next = yield* Effect.fromOption(A.findFirst(conflicts, (entry) => entry.id !== conflict.id));
+              yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: next.id, workspaceId }));
+            }
+            const queuedBeforeRetry = yield* operations.listByStatus(queuedInput);
+            const itemBeforeRetry = yield* findTrackedItem(originalPath);
+            expect((yield* engine.markConflictReviewed(review)).resolutionStatus).toBe("reviewed");
+            expect(yield* findTrackedItem(originalPath)).toEqual(itemBeforeRetry);
+            expect(yield* operations.listByStatus(queuedInput)).toEqual(queuedBeforeRetry);
+            const afterRetry = yield* engine.status(VaultSyncStatusInput.make({ workspaceId }));
+            expect(afterRetry.pendingItems).toBe(laterReview ? 1 : 0);
+            expect(afterRetry.queuedOperations).toBe(laterReview ? 1 : 0);
+            expect(afterRetry.openConflicts).toBe(0);
+            const converged = yield* engine.syncOnce(syncInput(root));
+            expect(converged.pendingItems).toBe(0);
+            expect(converged.queuedOperations).toBe(0);
+            const afterCounts = yield* handle.counts;
+            expect(afterCounts.uploadFileVersion).toBe(counts.uploadFileVersion);
+            expect(afterCounts.renameItem).toBe(counts.renameItem + (laterReview && correction === "rename" ? 2 : 0));
+            expect(afterCounts.moveItem).toBe(counts.moveItem + (laterReview && correction === "move" ? 2 : 0));
+          })
+        );
+      });
+    }
   }
 }

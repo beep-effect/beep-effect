@@ -125,18 +125,8 @@ export const makeVaultSyncPush = Effect.fn($I`makeVaultSyncPush`)(function* () {
     item: DomainSyncItem.SyncItem,
     use: (remoteId: RemoteItemId) => Effect.Effect<Value, Error>
   ): Effect.Effect<Value, Error | DmsMirrorUnavailable> =>
-    O.match(item.remoteId, {
-      // Defensive: runOperation skips these operations before leasing.
-      onNone: () =>
-        Effect.fail(
-          DmsMirrorUnavailable.make({
-            provider: BOX_PROVIDER,
-            reason: `sync item ${item.localRelPath} has no remote identifier yet`,
-            retryable: true,
-          })
-        ),
-      onSome: use,
-    });
+    // runOperation checks the captured immutable item before leasing.
+    use(O.getOrThrow(item.remoteId));
 
   const mirrorVerbFor = (
     input: SyncOnceInput,
@@ -207,13 +197,6 @@ export const makeVaultSyncPush = Effect.fn($I`makeVaultSyncPush`)(function* () {
     item: DomainSyncItem.SyncItem,
     remote: DmsRemoteItem
   ) {
-    yield* operationRepository.update(
-      DomainSyncOperation.SyncOperation.make({
-        ...operation,
-        lastError: O.none(),
-        status: "succeeded",
-      })
-    );
     const updated = yield* itemRepository.update(
       DomainSyncItem.SyncItem.make({
         ...item,
@@ -224,6 +207,15 @@ export const makeVaultSyncPush = Effect.fn($I`makeVaultSyncPush`)(function* () {
         remoteName: O.some(remote.name),
         remoteParentId: remote.parentRemoteId,
         syncState: SyncItemState.Enum.current,
+      })
+    );
+    // Keep the operation leased until the item is durable. A failed item write
+    // can then use ordinary lease recovery on restart, including folder moves.
+    yield* operationRepository.update(
+      DomainSyncOperation.SyncOperation.make({
+        ...operation,
+        lastError: O.none(),
+        status: "succeeded",
       })
     );
     yield* Ref.update(itemsByIdRef, HashMap.set(updated.id, updated));

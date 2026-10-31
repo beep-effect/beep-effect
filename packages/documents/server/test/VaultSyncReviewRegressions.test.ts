@@ -1,20 +1,32 @@
 import { RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
-import { DMS_MIRROR_FIXTURE_ROOT_ID, DmsMirrorFixtureHandle } from "@beep/documents-server/aggregates/Sync";
+import {
+  DMS_MIRROR_FIXTURE_ROOT_ID,
+  DmsMirrorFixtureHandle,
+  makeVaultSyncEngine,
+} from "@beep/documents-server/aggregates/Sync";
 import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer";
 import {
+  DmsMirror,
+  DmsMirrorAvailability,
+  DmsMirrorProbe,
   DmsRemoteEvent,
   ListOpenConflictsInput,
+  MarkConflictReviewedInput,
+  MoveItemInput,
+  RenameItemInput,
   SyncOnceInput,
   VaultSyncEngine,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import {
   FindSyncItemByPathInput,
   SyncItemRepository,
+  SyncItemRepositoryUnavailable,
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import {
   ListSyncOperationsByStatusInput,
   SyncOperationRepository,
+  SyncOperationRepositoryUnavailable,
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -31,6 +43,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -592,3 +605,161 @@ for (const missing of ["remote-id", "parent"] as const) {
     );
   });
 }
+
+const failedCorrectionLayer = (failureWindow: "item" | "operation") => {
+  const operationsLayer = Layer.effect(
+    SyncOperationRepository,
+    Effect.gen(function* () {
+      const repository = yield* SyncOperationRepository;
+      const failNext = yield* Ref.make(true);
+      return SyncOperationRepository.of({
+        ...repository,
+        update: Effect.fn("VaultCorrectionOperationFailureTest.update")(function* (operation) {
+          if (
+            failureWindow === "operation" &&
+            operation.status === "succeeded" &&
+            (operation.operationType === "renameItem" || operation.operationType === "moveItem") &&
+            (yield* Ref.getAndSet(failNext, false))
+          ) {
+            return yield* SyncOperationRepositoryUnavailable.make({
+              reason: "injected correction operation write failure",
+            });
+          }
+          return yield* repository.update(operation);
+        }),
+      });
+    })
+  ).pipe(Layer.provideMerge(RegressionTestLayer));
+  const itemLayer = Layer.effect(
+    SyncItemRepository,
+    Effect.gen(function* () {
+      const repository = yield* SyncItemRepository;
+      const operations = yield* SyncOperationRepository;
+      const failNext = yield* Ref.make(true);
+      return SyncItemRepository.of({
+        ...repository,
+        update: Effect.fn("VaultCorrectionItemFailureTest.update")(function* (item) {
+          const leased = yield* operations
+            .listByStatus(ListSyncOperationsByStatusInput.make({ provider: "box", workspaceId, status: "leased" }))
+            .pipe(Effect.mapError((error) => SyncItemRepositoryUnavailable.make({ reason: error.reason })));
+          const correction = A.some(
+            leased,
+            (operation) =>
+              operation.syncItemId === item.id &&
+              (operation.operationType === "renameItem" || operation.operationType === "moveItem")
+          );
+          if (
+            failureWindow === "item" &&
+            item.syncState === "current" &&
+            correction &&
+            (yield* Ref.getAndSet(failNext, false))
+          ) {
+            return yield* SyncItemRepositoryUnavailable.make({ reason: "injected correction item write failure" });
+          }
+          return yield* repository.update(item);
+        }),
+      });
+    })
+  ).pipe(Layer.provideMerge(operationsLayer));
+  return Layer.effect(VaultSyncEngine, makeVaultSyncEngine()).pipe(Layer.provideMerge(itemLayer));
+};
+
+for (const failureWindow of ["item", "operation"] as const) {
+  for (const itemKind of ["file", "folder"] as const) {
+    for (const correction of ["rename", "move"] as const) {
+      it.layer(Layer.fresh(failedCorrectionLayer(failureWindow)), { timeout: "10 seconds" })((it) => {
+        it.effect(
+          `recovers a ${itemKind} ${correction} after the remote push succeeds but its ${failureWindow} write fails`,
+          Effect.fnUntraced(function* () {
+            const engine = yield* VaultSyncEngine;
+            const mirror = yield* DmsMirror;
+            const root = yield* makeVaultRoot();
+            const originalPath = itemKind === "file" ? "original.txt" : "original";
+            yield* writeVaultFile(root, itemKind === "file" ? originalPath : "original/child.txt", "unchanged bytes");
+            yield* writeVaultFile(root, "other/keep.txt", "other bytes");
+            yield* engine.syncOnce(syncInput(root));
+            const item = yield* findTrackedItem(originalPath);
+            const remoteId = yield* Effect.fromOption(item.remoteId);
+            if (correction === "rename") {
+              yield* mirror.renameItem(RenameItemInput.make({ itemKind, remoteId, newName: "drifted" }));
+            } else {
+              const other = yield* findTrackedItem("other");
+              yield* mirror.moveItem(MoveItemInput.make({ itemKind, remoteId, newParentRemoteId: other.remoteId }));
+            }
+            yield* engine.syncOnce(syncInput(root));
+            const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+            yield* engine.markConflictReviewed(
+              MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId })
+            );
+            const failure = yield* Effect.flip(engine.syncOnce(syncInput(root)));
+            expect(failure).toMatchObject({
+              _tag: failureWindow === "item" ? "SyncItemRepositoryUnavailable" : "SyncOperationRepositoryUnavailable",
+              reason: `injected correction ${failureWindow} write failure`,
+            });
+            expect((yield* findTrackedItem(originalPath)).syncState).toBe(
+              failureWindow === "item" ? "pending" : "current"
+            );
+            expect(A.length(yield* listOperationsByStatus("leased"))).toBe(1);
+            // Rebuild the engine while retaining the durable repositories.
+            const restarted = yield* makeVaultSyncEngine();
+            const recovered = yield* restarted.syncOnce(syncInput(root));
+            expect(recovered.pendingItems).toBe(0);
+            expect(recovered.queuedOperations).toBe(0);
+            expect(yield* listOperationsByStatus("leased")).toEqual([]);
+            const current = yield* findTrackedItem(originalPath);
+            expect(current.syncState).toBe("current");
+            expect(current.remoteId).toEqual(item.remoteId);
+            expect(current.remoteName).toEqual(item.remoteName);
+            expect(current.remoteParentId).toEqual(item.remoteParentId);
+            expect((yield* restarted.syncOnce(syncInput(root))).pendingItems).toBe(0);
+          })
+        );
+      });
+    }
+  }
+}
+
+it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "chooses the lexicographically first duplicate-content move candidate",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "a.txt", "identical bytes");
+      yield* writeVaultFile(root, "b.txt", "identical bytes");
+      yield* engine.syncOnce(syncInput(root));
+      const first = yield* findTrackedItem("a.txt");
+      yield* removeVaultPath(root, "a.txt");
+      yield* removeVaultPath(root, "b.txt");
+      yield* writeVaultFile(root, "c.txt", "identical bytes");
+      yield* engine.syncOnce(syncInput(root));
+      expect((yield* findTrackedItem("c.txt")).id).toBe(first.id);
+    })
+  );
+});
+
+it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "leaves a terminal operation untouched while the mirror reports disconnected",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "offline.txt", "offline bytes");
+      yield* handle.failNext("uploadFile", false);
+      yield* engine.syncOnce(syncInput(root));
+      const failed = yield* listOperationsByStatus("failed");
+      expect(A.length(failed)).toBe(1);
+      const disconnected = Effect.succeed(DmsMirrorProbe.make({ provider: "box", connected: false }));
+      const offline = yield* makeVaultSyncEngine().pipe(
+        Effect.provideService(
+          DmsMirrorAvailability,
+          DmsMirrorAvailability.of({ probe: disconnected, refresh: disconnected })
+        )
+      );
+      yield* offline.syncOnce(syncInput(root));
+      expect(yield* listOperationsByStatus("failed")).toEqual(failed);
+      expect(yield* listOperationsByStatus("queued")).toEqual([]);
+    })
+  );
+});
