@@ -1,6 +1,8 @@
 /**
  * Epistemic server layer.
  *
+ * **Details**
+ *
  * Composes the slice's live service surface: the claim gate (wired over the
  * bounded SHACL engine), the lifecycle transition, and the gate-outcome resolver
  * that gives a rejected verdict somewhere durable to land. The shared

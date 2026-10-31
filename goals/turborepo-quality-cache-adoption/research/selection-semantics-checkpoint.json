@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "cache-selection-semantics-checkpoint/v1",
+  "recordedAt": "2026-10-30T20:35:33.184136+00:00",
+  "authority": "Pinned native synthetic feature semantics and driver integrity only; no real computation qualification, feature activation, remote rollout or whole-goal acceptance.",
+  "sourceBaseRevision": "91322bf96426b34daaae6d0e4c577303d1847a7a",
+  "driver": {
+    "path": "research/native-selection-controls.py",
+    "sha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99"
+  },
+  "nativeReport": {
+    "path": "research/native-selection-controls.json",
+    "sha256": "048d44ace9322686c87adeb5cfca07ccc251e16c9e8aba74066b9b46a85e41f9",
+    "cases": 44,
+    "dryAndExecutionInvocations": 88,
+    "selectedExecutionRecords": 8,
+    "zeroExitWithoutSelectedExecution": 16,
+    "expectedNativeRefusals": 20,
+    "capturedReportSha256": "e2fd615447d5d438ab43e7eda8277ec87a1980387d251c2c86000463c481e935",
+    "normalization": "Canonical JSON whitespace only; decoded tracked data equals the captured report exactly."
+  },
+  "driverIntegrity": {
+    "schemaVersion": "cache-selection-driver-controls/v1",
+    "recordedAt": "2026-10-30T20:29:57.457473+00:00",
+    "driverSha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99",
+    "controls": [
+      {
+        "control": "optimized-mode-refused",
+        "exit": 64,
+        "intendedRefusal": true
+      },
+      {
+        "control": "remove-only-strict-toggle",
+        "exit": 1,
+        "intendedCaseFailed": "stable-true-missing-command",
+        "intendedAssertion": "task graph differs",
+        "stderrSha256": "9834c469c31388d92f7b06313af0d55c85c3dc42f31b3395f8c4844546d1a101"
+      }
+    ],
+    "sourceRestoredExactly": true,
+    "authority": "Controlled fixture-driver integrity only; no production setting or qualification changed."
+  },
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.9-canary.1",
+      "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb"
+    }
+  },
+  "rootConfiguration": {
+    "path": "turbo.json",
+    "sha256": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+    "unchanged": true,
+    "observedFutureFlags": {
+      "affectedUsingTaskInputs": true,
+      "filterUsingTasks": true,
+      "globalConfiguration": true
+    },
+    "strictTaskEntrypointSelection": "absent; native false default remains"
+  },
+  "consumerGuard": {
+    "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+    "sha256": "0db66290385c73048895e9fb06c24822d248cf6d0e63abfa051e8b35928fdbe6",
+    "symbol": "observeSelectedExecution",
+    "requirement": "Matching selected task ID, nonempty command other than <NONEXISTENT>, and a native execution record. A native zero exit alone is not selected computation evidence.",
+    "scope": "Source identity and compatible native observations, not new consumer qualification."
+  },
+  "observations": [
+    "Strict selection removes a package-filtered missing command entrypoint; default selection executes its real dependency. Both native exits are zero, and neither produces selected-command evidence.",
+    "Explicit empty#probe keeps commandless nodes and real prerequisites in both modes; strict selection does not make an explicit missing task executable.",
+    "Graph-only collect remains available in both modes. Default mode contains two additional commandless probe/prepare nodes; strict mode removes those extra entrypoints while preserving the required real dependency.",
+    "A selected real task retains its commandless dependency as a transit node and executes all required real probe/prepare tasks in both modes.",
+    "--only removes other-name prepare prerequisites but retains same-name probe dependencies and commandless transit nodes. Do not treat it as a general dependency bypass.",
+    "Excluding every package yields a successful empty selection with no execution record. Missing tasks/packages/paths, unresolved package selectors and malformed regex selectors fail for their intended reasons without output markers."
+  ],
+  "disposition": "Semantic controls established for this named synthetic profile. Real repository/entrypoint review, benefit measurement and any qualified one-flag rollout remain pending.",
+  "featureAcceptanceChanged": false,
+  "reviewCounts": {
+    "final": 2,
+    "pending": 33
+  },
+  "remaining": [
+    "Reconcile actual root/child task and entrypoint population, including graph-only callers, with these pinned semantics.",
+    "Prove relevant real task profiles and preserve their actual dependency closure before any flag or selection change.",
+    "Review other filter families (tags, Git ranges and mixed selectors) and all other feature-specific requirements.",
+    "Complete protected producer/trust/cohort rollout, every eligible computation and the real seven/seven/fourteen-day observation windows."
+  ],
+  "allAcceptanceUnproven": true,
+  "productionChanges": false
+}

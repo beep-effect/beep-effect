@@ -3,13 +3,13 @@
   "initiative": {
     "id": "turborepo-quality-cache-adoption",
     "title": "Turborepo quality cache adoption",
-    "status": "paused",
+    "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-08",
+    "updated": "2026-10-28",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-quality-cache-adoption",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -36,7 +36,42 @@
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/OPPORTUNITIES.md",
+    "research/current-completion-audit.json",
+    "research/current-population.json",
+    "research/current-feature-matrix.json",
+    "research/current-client-pins.json",
+    "research/population-source-refresh-checkpoint.json",
+    "research/native-input-controls.json",
+    "research/current-runtime-profile-control.ts",
+    "research/current-runtime-profile-observation.json",
+    "research/current-runtime-profile-checkpoint.json",
+    "research/actual-ignored-input-control.py",
+    "research/actual-ignored-input-observation.json",
+    "research/current-runtime-baseline-review.md",
+    "research/current-runtime-baseline-checkpoint.json",
+    "research/mutating-fixer-disposition-review.json",
+    "research/mutating-fixer-replay-control.json",
+    "research/persistent-service-disposition-review.json",
+    "research/remaining-mutating-fixer-disposition-review.json",
+    "research/remaining-persistent-service-disposition-review.json",
+    "research/go-workspace-feature-review.json",
+    "research/native-future-flag-availability.json",
+    "research/native-future-flag-availability.py",
+    "research/published-head-identity-checkpoint.json",
+    "research/task-descriptions-feature-review.json",
+    "research/native-selection-controls.py",
+    "research/native-selection-controls.json",
+    "research/selection-semantics-checkpoint.json",
+    "research/python-workspace-feature-review.json",
+    "research/external-security-disposition-review.json",
+    "research/markdown-coverage-isolation-checkpoint.json",
+    "research/external-verdict-source-review.json",
+    "research/generator-boundary-source-review.json",
+    "research/accepted-feature-merge-checkpoint.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,7 +85,7 @@
     {
       "id": "P0",
       "name": "Population, feature and value audit",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -97,5 +132,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Graduated 2026-09-08 after user approval; authored but not started. Launch GOAL.md to activate P0. SPEC/PLAN define milestone dependencies and measured deployment gates."
+  "statusNote": "Active. Source review gives 199 keep-fresh whole-command dispositions: 186 lint fixers, 12 persistent services and one current external advisory verdict. Nine generator write boundaries have source-reviewed pure decomposition leads, not final exclusions. The other 2372 final dispositions, all qualification/adoption/observation and all whole-goal acceptance remain unfinished."
 }

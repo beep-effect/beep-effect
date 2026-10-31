@@ -458,9 +458,9 @@ comments exist). Deep review is on-demand:
 
 `yeet publish` is push-first by default (push-first-publish, 2026-10-05):
 
-- Gate before the push: cheap-gates tier + head-install preflight. No
-  admission ticket is taken; the publish never queues behind another
-  session's full proof.
+- Gate before the push: cheap-gates tier + head-install preflight. The schema-catalog
+  scan holds weighted admission for its measured memory cost. If admission or
+  local gates wait ten minutes, use the hosted escape in AGENTS.md.
 - After the push: `gh pr create --draft`, `ready-for-heavy` label (skipped on
   docs-only diffs and on PRs that already existed), provenance stamp, then
   `monitor --until-ready --detach` is submitted and publish exits with the PR

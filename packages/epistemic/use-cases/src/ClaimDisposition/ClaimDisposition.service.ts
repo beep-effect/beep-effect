@@ -1,6 +1,8 @@
 /**
  * Claim gate outcome resolution.
  *
+ * **Details**
+ *
  * The lifecycle transition treats a rejected verdict as a no-op: it hands the
  * claim back unchanged and the rejection survives only in whatever log line
  * produced it. That is the gap this use-case closes, WITHOUT touching the shared

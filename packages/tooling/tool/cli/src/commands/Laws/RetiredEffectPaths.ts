@@ -53,10 +53,11 @@ const SOURCE_PATH_PATTERN =
 
 /**
  * The `#fragment` of an inline link `](…#…)` or a reference definition
- * `]: …#…`. The target before the `#` excludes `#`, so the scan stays linear
- * on long `#`-dense lines (a leading lookbehind here backtracks cubically).
+ * `]: …#…`. Consume unterminated candidates too, so a failed opener cannot
+ * restart the search over the same suffix. Callers discard candidates without
+ * a fragment. Both valid and malformed candidates advance over disjoint spans.
  */
-const LINK_FRAGMENT_PATTERN = /\](?:\(|:[ \t]*)[^\s)#]*#[^\s)]*/gu;
+const LINK_FRAGMENT_PATTERN = /\](?:\(|:[ \t]*)[^\s)#]*(?:#[^\s)]*|(?=[\s)]|$))/gu;
 
 /**
  * A retired path's GitHub heading slug (`effect/unstable/reactivity/Atom` →
@@ -85,13 +86,19 @@ const collectMatches = (content: string, pattern: RegExp, rule: RetiredEffectPat
   }));
 
 const collectAnchorSlugMatches = (content: string): ReadonlyArray<RawMatch> =>
-  A.flatMap(collectMatches(content, LINK_FRAGMENT_PATTERN, "anchor-slug"), (link) => {
-    const fragmentStart = Str.length(A.headNonEmpty(Str.split(link.text, "#"))) + 1;
-    return A.map(collectMatches(Str.slice(fragmentStart)(link.text), ANCHOR_SLUG_PATTERN, "anchor-slug"), (match) => ({
-      ...match,
-      index: link.index + fragmentStart + match.index,
-    }));
-  });
+  A.flatMap(
+    A.filter(collectMatches(content, LINK_FRAGMENT_PATTERN, "anchor-slug"), (link) => Str.includes("#")(link.text)),
+    (link: RawMatch) => {
+      const fragmentStart = Str.length(A.headNonEmpty(Str.split(link.text, "#"))) + 1;
+      return A.map(
+        collectMatches(Str.slice(fragmentStart)(link.text), ANCHOR_SLUG_PATTERN, "anchor-slug"),
+        (match) => ({
+          ...match,
+          index: link.index + fragmentStart + match.index,
+        })
+      );
+    }
+  );
 
 const isInsideSpan =
   (spans: ReadonlyArray<RawMatch>) =>

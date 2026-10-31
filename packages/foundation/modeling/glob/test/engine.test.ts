@@ -16,6 +16,7 @@ import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { minimatch as oracle } from "minimatch";
+import { legacyOracle } from "./legacyOracle.ts";
 
 const reasonOf = (fn: () => unknown): string => {
   try {
@@ -297,44 +298,10 @@ describe("extglob depth behavior", () => {
 });
 
 describe("repeated extglob automaton", () => {
-  it("preserves positive, negative, dot, case and segment oracle results", () => {
-    for (const pattern of [
-      "*(a|aa)b",
-      "+(a|aa)b",
-      "*(a|?)",
-      "!(+(a|aa))b",
-      "@(*(a|aa)|x)b",
-      "*(?|??)b",
-      "*(|a)b",
-      "*(a|aa)!(b)",
-      "x/*(a|aa)b",
-      "*(a|aa).*",
-    ]) {
-      for (const options of [{}, { dot: true }, { nocase: true }, { noext: true }]) {
-        const matcher = new Minimatch(pattern, options);
-        for (const candidate of [
-          "",
-          "b",
-          "ab",
-          "aaaab",
-          "aaaaac",
-          "Ab",
-          ".b",
-          "a.b",
-          "a.",
-          "b.",
-          ".",
-          "..",
-          "a",
-          "aa",
-          "x",
-          "x/aaaab",
-          "x/aaaaac",
-          "a/b",
-        ]) {
-          assert.strictEqual(matcher.match(candidate), oracle(candidate, pattern, options), `${pattern}: ${candidate}`);
-        }
-      }
+  it("preserves independently recorded positive, negative, dot, case and segment results", () => {
+    for (const [suite, pattern, candidate, options, expected] of legacyOracle.matches) {
+      if (suite === "engine-repetition")
+        assert.strictEqual(new Minimatch(pattern, options).match(candidate), expected, `${pattern}: ${candidate}`);
     }
   });
 

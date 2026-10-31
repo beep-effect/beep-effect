@@ -5,7 +5,7 @@
     "title": "Turborepo cache trust and observability",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-29",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-trust-observability",
@@ -53,7 +53,57 @@
     "research/actual-persistent-issuer-canary.json",
     "research/owned-producer-workflow.json",
     "research/owned-producer-frozen-profile.json",
-    "research/owned-producer-private-approval.json"
+    "research/owned-producer-private-approval.json",
+    "research/signing-posture-checkpoint.json",
+    "research/signing-posture-native-stable.json",
+    "research/signing-posture-native-canary.json",
+    "research/current-completion-audit.json",
+    "research/current-native-stable.json",
+    "research/current-native-canary.json",
+    "research/current-native-checkpoint.json",
+    "research/receipt-media-type-checkpoint.json",
+    "research/adapter-policy-lab.json",
+    "research/adapter-dependency-review.json",
+    "research/backend-result-checkpoint.json",
+    "research/proxy-capture-bounds-checkpoint.json",
+    "research/proxy-request-completion-checkpoint.json",
+    "research/adapter-runtime-checkpoint.json",
+    "research/adapter-runtime-lab.json",
+    "research/adapter-runtime-lab-before-cleanup-review.json",
+    "research/proxy-node-runtime-checkpoint.json",
+    "research/reply-error-coverage-checkpoint.json",
+    "research/hosted-producer-verifier-checkpoint.json",
+    "research/native-upload-join-checkpoint.json",
+    "research/native-upload-join-observations.json",
+    "research/signed-credential-readiness-checkpoint.json",
+    "research/workflow-git-fixture-checkpoint.json",
+    "research/producer-package-replay-checkpoint.json",
+    "research/signed-credential-deployment-checkpoint.json",
+    "research/producer-publication-gate-repair-checkpoint.json",
+    "research/producer-coverage-repair-checkpoint.json",
+    "research/producer-review-repair-checkpoint.json",
+    "research/producer-packet-review-checkpoint.json",
+    "research/fs-guards-directory-coverage-checkpoint.json",
+    "research/producer-capture-checkpoint.json",
+    "research/private-socket-checkpoint.json",
+    "research/private-socket-scope-review.json",
+    "research/docgen-launch-repair-checkpoint.json",
+    "research/docgen-launch-baseline-review-2026-10-29.md",
+    "research/docgen-launch-baseline-request-2026-10-29.json",
+    "research/signed-runtime-alias-checkpoint.json",
+    "research/private-pilot-storage-checkpoint.json",
+    "research/private-orchestration-cleanup-checkpoint.json",
+    "research/private-storage-refusal-coverage-checkpoint.json",
+    "research/closed-producer-upload-checkpoint.json",
+    "research/signed-adapter-launch-checkpoint.json",
+    "research/owned-adapter-lifecycle-checkpoint.json",
+    "research/owned-adapter-integration-checkpoint.json",
+    "research/producer-integration-policy-review.json",
+    "research/producer-fallow-repair-checkpoint.json",
+    "research/producer-execution-coverage-repair.json",
+    "research/producer-upload-lifetime-checkpoint.json",
+    "research/producer-approval-refusal-checkpoint.json",
+    "research/dependency-security-compatibility-checkpoint.json"
   ],
   "agentLaunchers": [
     {
@@ -73,7 +123,7 @@
     {
       "id": "P1",
       "name": "Posture and safe events",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -115,5 +165,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active early handoff for task qualification under delegated blocker-resolution authority. PR #1327 merged; remaining work is consolidated on the final implementation branch. Single writer for shared Cache contracts and local signed fixtures. Broader packet criteria remain incomplete; no cloud deployment or production readiness is claimed."
+  "statusNote": "Completion resumed 2026-10-28. Retained PR1327/1389 producer and protocol mechanisms are reused under their original evidence scope; current native and deployed trust boundaries are being refreshed. All nine SPEC acceptance criteria remain unproven as a whole; no deployment, observation-window completion or production readiness is claimed."
 }

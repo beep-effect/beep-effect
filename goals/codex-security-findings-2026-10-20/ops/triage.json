@@ -67,10 +67,16 @@
         "verificationCommands": [
           "bun run beep quality package-verify @beep/practice-review-hub"
         ],
-        "summary": "Implemented with scoped proof recorded in PR #1930; parent-confirmed remote head 02b5bd3f47. Coverage repair passed locally; next-head hosted checks, merged-revision verification and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "Review hub authentication",
-      "lane": "hub-auth"
+      "lane": "hub-auth",
+      "proof": {
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
+      }
     },
     {
       "id": "CSF-002",
@@ -93,7 +99,7 @@
         "verificationCommands": [
           "bun run beep quality package-verify @beep/pdf-tools"
         ],
-        "summary": "Implemented with scoped proof recorded in PR #1930; parent-confirmed remote head 02b5bd3f47. Coverage repair passed locally; next-head hosted checks, merged-revision verification and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "PDF structure inspection",
       "lane": "pdf-discovery",
@@ -102,7 +108,10 @@
         "receipt": "research/cloud-proof.md",
         "baseRevision": "426d494b3433ccddf797a2d896984f1ad23c81ad",
         "workingDiff": true,
-        "mergedRevision": null
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
       }
     },
     {
@@ -127,7 +136,7 @@
         "verificationCommands": [
           "bun run beep quality package-verify @beep/doc-text"
         ],
-        "summary": "Implemented with scoped proof recorded in PR #1930; parent-confirmed remote head 02b5bd3f47. Coverage repair passed locally; next-head hosted checks, merged-revision verification and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "DOCX extraction driver",
       "lane": "docx-bounds",
@@ -136,7 +145,10 @@
         "receipt": "research/cloud-proof.md",
         "baseRevision": "426d494b3433ccddf797a2d896984f1ad23c81ad",
         "workingDiff": true,
-        "mergedRevision": null
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
       }
     },
     {
@@ -157,10 +169,16 @@
         "verificationCommands": [
           "bun run beep quality package-verify @beep/practice-review-hub"
         ],
-        "summary": "Runbook uses the selected HTTPS listener, matching 8787 examples, protects other listeners and keeps pre-authentication rollback code stopped. Source review and shared hub package proof recorded in PR #1930; no live Tailscale mutation. Merge and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "Review hub operational runbook",
-      "lane": "hub-auth"
+      "lane": "hub-auth",
+      "proof": {
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
+      }
     },
     {
       "id": "CSF-005",
@@ -183,7 +201,7 @@
         "verificationCommands": [
           "bun run beep quality package-verify @beep/repo-ai-metrics"
         ],
-        "summary": "Implemented with scoped proof recorded in PR #1930; parent-confirmed remote head 02b5bd3f47. Coverage repair passed locally; next-head hosted checks, merged-revision verification and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "AI metrics snapshot metadata",
       "lane": "snapshot-bounds",
@@ -192,7 +210,10 @@
         "receipt": "research/cloud-proof.md",
         "baseRevision": "426d494b3433ccddf797a2d896984f1ad23c81ad",
         "workingDiff": true,
-        "mergedRevision": null
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
       }
     },
     {
@@ -219,7 +240,7 @@
           "bun run beep:check (from packages/tooling/tool/cli)",
           "bun run docgen (from packages/tooling/tool/cli)"
         ],
-        "summary": "Implemented with scoped proof recorded in PR #1930; parent-confirmed remote head 02b5bd3f47. Coverage repair passed locally; next-head hosted checks, merged-revision verification and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "Accounts HTTP telemetry",
       "lane": "credential-redaction",
@@ -228,7 +249,10 @@
         "receipt": "research/cloud-proof.md",
         "baseRevision": "426d494b3433ccddf797a2d896984f1ad23c81ad",
         "workingDiff": true,
-        "mergedRevision": null
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
       }
     },
     {
@@ -252,7 +276,7 @@
         "verificationCommands": [
           "bun run beep quality package-verify @beep/palantiri"
         ],
-        "summary": "Implemented with scoped proof recorded in PR #1930; parent-confirmed remote head 02b5bd3f47. Coverage repair passed locally; next-head hosted checks, merged-revision verification and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "Parcel text redaction",
       "lane": "redaction-bounds",
@@ -261,7 +285,10 @@
         "receipt": "research/cloud-proof.md",
         "baseRevision": "426d494b3433ccddf797a2d896984f1ad23c81ad",
         "workingDiff": true,
-        "mergedRevision": null
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
       }
     },
     {
@@ -285,7 +312,7 @@
         "verificationCommands": [
           "bun run beep quality package-verify @beep/law-practice-domain"
         ],
-        "summary": "Implemented with scoped proof recorded in PR #1930; parent-confirmed remote head 02b5bd3f47. Coverage repair passed locally; next-head hosted checks, merged-revision verification and exact-ID Cloud closure remain pending."
+        "summary": "PR #1930 merged; accepted-head required checks and retained readiness verified in owning clone. Exact Cloud status observed Fixed on 2026-10-28. See research/2026-10-28-cloud-refresh.md."
       },
       "ownerArea": "Claim antecedent dependency traversal",
       "lane": "claim-work-budget",
@@ -294,7 +321,10 @@
         "receipt": "research/cloud-proof.md",
         "baseRevision": "426d494b3433ccddf797a2d896984f1ad23c81ad",
         "workingDiff": true,
-        "mergedRevision": null
+        "mergedRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
+        "externalStatusObservedAt": "2026-10-28",
+        "externalStatus": "Fixed"
       }
     }
   ]

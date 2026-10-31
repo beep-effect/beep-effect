@@ -32,6 +32,13 @@ const $I = $RepoCliId.create("commands/Accounts/Accounts.wire.schemas");
 /**
  * The fields of a proxy stored-login file the poller needs.
  *
+ * **Details**
+ *
+ * The proxy writes no identity for a Kimi login, so `email` is optional; the
+ * poller then names the account after the file and reads the identity from
+ * the profile endpoint. `base_url` is the Kimi API root the proxy resolved for
+ * the login's region.
+ *
  * **Example** (Decode a login file)
  *
  * ```ts
@@ -47,9 +54,10 @@ const $I = $RepoCliId.create("commands/Accounts/Accounts.wire.schemas");
 export class ProxyAuthFile extends S.Opaque<ProxyAuthFile, { readonly brand: unique symbol }>()(
   S.Struct({
     type: S.String,
-    email: AccountLabel,
+    email: S.optionalKey(AccountLabel),
     access_token: S.RedactedFromValue(S.String, { label: "access_token" }),
     account_id: S.optionalKey(S.String),
+    base_url: S.optionalKey(S.String),
     dca_token: S.RedactedFromValue(S.String, { label: "dca_token" }).pipe(S.optionalKey),
     disabled: S.optionalKey(S.Boolean),
   }).pipe(
@@ -463,6 +471,257 @@ export const museUsageWindows = (body: MuseKeyBody): ReadonlyArray<UsageWindow> 
     O.map((usage) => A.getSomes([museWindow("session", usage.window), museWindow("weekly", usage.weekly)])),
     O.getOrElse(A.empty<UsageWindow>)
   );
+
+const KimiRatio = S.Union([S.Finite, S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.numberFromString))]);
+
+const KimiQuotaEntry = S.Struct({
+  used_ratio: KimiRatio,
+  reset_time: S.String.pipe(S.NullOr, S.optionalKey),
+});
+
+const KimiMoney = S.Struct({
+  priceInCents: KimiRatio.pipe(S.NullOr, S.optionalKey),
+  currency: S.String.pipe(S.NullOr, S.optionalKey),
+});
+
+const KimiBoosterBalance = S.Struct({
+  type: S.String.pipe(S.NullOr, S.optionalKey),
+  amount: KimiRatio.pipe(S.NullOr, S.optionalKey),
+  amountLeft: KimiRatio.pipe(S.NullOr, S.optionalKey),
+});
+
+const KimiBoosterWallet = S.Struct({
+  balance: KimiBoosterBalance.pipe(S.NullOr, S.optionalKey),
+  monthlyChargeLimit: KimiMoney.pipe(S.NullOr, S.optionalKey),
+  monthlyUsed: KimiMoney.pipe(S.NullOr, S.optionalKey),
+});
+
+/**
+ * Kimi Code's usages response: each plan limit as the fraction used and when
+ * it resets, plus the Extra Usage wallet once one is enabled.
+ *
+ * **Gotchas**
+ *
+ * The five-hour and monthly limits apply to every member; the seven-day limit
+ * exists only on legacy plans, so a new plan reports no `limit_7d`. The
+ * wallet's amounts are fixed-point with eight decimals of the currency unit
+ * (a million wire units to one cent), as the CLI's own parser reads them.
+ *
+ * **Example** (Decode a quiet account)
+ *
+ * ```ts
+ * import { KimiUsageBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isSome(KimiUsageBodyJson.decodeOption('{"usages":{"limit_5h":{"used_ratio":0.01}}}'))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KimiUsageBody extends S.Opaque<KimiUsageBody, { readonly brand: unique symbol }>()(
+  S.Struct({
+    usages: S.Struct({
+      limit_5h: KimiQuotaEntry.pipe(S.NullOr, S.optionalKey),
+      limit_7d: KimiQuotaEntry.pipe(S.NullOr, S.optionalKey),
+      limit_month_total: KimiQuotaEntry.pipe(S.NullOr, S.optionalKey),
+      limit_month_code: KimiQuotaEntry.pipe(S.NullOr, S.optionalKey),
+    }).pipe(S.NullOr, S.optionalKey),
+    boosterWallet: KimiBoosterWallet.pipe(S.NullOr, S.optionalKey),
+  }).pipe($I.annoteSchema("KimiUsageBody", { description: "Kimi Code plan limits and the Extra Usage wallet." }))
+) {}
+
+/**
+ * JSON-string codec for {@link KimiUsageBody}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { KimiUsageBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(KimiUsageBodyJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const KimiUsageBodyJson = JsonStringCodec(KimiUsageBody);
+
+const kimiResetsAt = (entry: typeof KimiQuotaEntry.Type): O.Option<DateTime.Utc> =>
+  pipe(O.fromNullishOr(entry.reset_time), O.filter(Str.isNonEmpty), O.flatMap(DateTime.make));
+
+const kimiWindow = (
+  kind: UsageWindow["kind"],
+  scope: O.Option<string>,
+  wire: typeof KimiQuotaEntry.Type | null | undefined
+): O.Option<UsageWindow> =>
+  O.map(O.fromNullishOr(wire), (entry) =>
+    UsageWindow.make({ kind, scope, usedPercent: entry.used_ratio * 100, resetsAt: kimiResetsAt(entry) })
+  );
+
+/**
+ * The usage windows in a Kimi Code usages response: the five-hour window as
+ * the session, the legacy seven-day limit as the week, the monthly total as
+ * the billing cycle, and the monthly coding limit as a cycle scoped to coding.
+ *
+ * **Example** (Read a new-plan account)
+ *
+ * ```ts
+ * import { KimiUsageBody, kimiUsageWindows } from "@beep/repo-cli/test/Accounts"
+ *
+ * const body = KimiUsageBody.make({ usages: { limit_5h: { used_ratio: 0.25 }, limit_month_total: { used_ratio: 0.1 } } })
+ * console.log(kimiUsageWindows(body).map((window) => window.kind)) // ["session", "cycle"]
+ * ```
+ *
+ * @param body - The decoded response.
+ * @returns The windows Kimi reports, in session, weekly, cycle order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const kimiUsageWindows = (body: KimiUsageBody): ReadonlyArray<UsageWindow> =>
+  O.fromNullishOr(body.usages).pipe(
+    O.map((usages) =>
+      A.getSomes([
+        kimiWindow("session", O.none(), usages.limit_5h),
+        kimiWindow("weekly", O.none(), usages.limit_7d),
+        kimiWindow("cycle", O.none(), usages.limit_month_total),
+        kimiWindow("cycle-scoped", O.some("coding"), usages.limit_month_code),
+      ])
+    ),
+    O.getOrElse(A.empty<UsageWindow>)
+  );
+
+// Kimi wallet amounts carry eight decimals of the currency unit.
+const KIMI_WALLET_UNITS = 100_000_000;
+
+const kimiCurrency = (wallet: typeof KimiBoosterWallet.Type): O.Option<string> =>
+  pipe(
+    A.getSomes([O.fromNullishOr(wallet.monthlyChargeLimit), O.fromNullishOr(wallet.monthlyUsed)]),
+    A.findFirst((money) => O.exists(O.fromNullishOr(money.currency), Str.isNonEmpty)),
+    O.flatMap((money) => O.fromNullishOr(money.currency))
+  );
+
+/**
+ * The Extra Usage balance in a Kimi Code usages response, when the member has
+ * topped one up.
+ *
+ * **Example** (No wallet yet)
+ *
+ * ```ts
+ * import { KimiUsageBody, kimiCreditBalances } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(kimiCreditBalances(KimiUsageBody.make({})).length) // 0
+ * ```
+ *
+ * @param body - The decoded response.
+ * @returns One balance for the wallet, in dollars when it is kept in USD and in
+ * the wallet's own currency units otherwise.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const kimiCreditBalances = (body: KimiUsageBody): ReadonlyArray<CreditBalance> =>
+  pipe(
+    O.fromNullishOr(body.boosterWallet),
+    O.flatMap((wallet) =>
+      pipe(
+        O.fromNullishOr(wallet.balance),
+        O.filter((balance) => balance.type === "BOOSTER"),
+        O.flatMap((balance) =>
+          O.map(O.fromNullishOr(balance.amount), (amount) => {
+            const currency = O.getOrElse(kimiCurrency(wallet), () => "USD");
+            return CreditBalance.make({
+              label: currency === "USD" ? "extra usage" : `extra usage (${currency})`,
+              unit: currency === "USD" ? "usd" : "credits",
+              remaining: O.getOrElse(O.fromNullishOr(balance.amountLeft), () => 0) / KIMI_WALLET_UNITS,
+              limit: O.some(amount / KIMI_WALLET_UNITS),
+              expiresAt: O.none(),
+            });
+          })
+        )
+      )
+    ),
+    O.toArray
+  );
+
+// The profile's email is external text: a value outside the label format is
+// dropped, so one odd email cannot fail the whole profile and lose the tier.
+const KimiProfileEmail = S.String.pipe(
+  S.NullOr,
+  S.decodeTo(
+    S.Option(AccountLabel),
+    SchemaTransformation.transform({
+      decode: (input: string | null) => O.filter(O.fromNullishOr(input), S.is(AccountLabel)),
+      encode: O.getOrNull,
+    })
+  )
+);
+
+/**
+ * The Kimi Code profile response: who the login belongs to and the membership
+ * tier it holds.
+ *
+ * **Details**
+ *
+ * `email` decodes to `None` when Kimi reports one outside the account-label
+ * format, so the nickname and tier still read.
+ *
+ * **Example** (Decode a profile)
+ *
+ * ```ts
+ * import { KimiProfileBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isSome(KimiProfileBodyJson.decodeOption('{"user_id":"u_1","user_level_name":"Pro"}'))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KimiProfileBody extends S.Opaque<KimiProfileBody, { readonly brand: unique symbol }>()(
+  S.Struct({
+    email: KimiProfileEmail.pipe(S.optionalKey),
+    nickname: S.String.pipe(S.NullOr, S.optionalKey),
+    user_level_name: S.String.pipe(S.NullOr, S.optionalKey),
+  }).pipe($I.annoteSchema("KimiProfileBody", { description: "Kimi Code login identity and membership tier." }))
+) {}
+
+/**
+ * JSON-string codec for {@link KimiProfileBody}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { KimiProfileBodyJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(KimiProfileBodyJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const KimiProfileBodyJson = JsonStringCodec(KimiProfileBody);
+
+/**
+ * The identity a Kimi profile names: the email, else the nickname.
+ *
+ * **Example** (Prefer the email)
+ *
+ * ```ts
+ * import { KimiProfileBody, kimiProfileIdentity } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(kimiProfileIdentity(KimiProfileBody.make({ email: O.some("me@example.com"), nickname: "me" })))) // "me@example.com"
+ * ```
+ *
+ * @param body - The decoded profile.
+ * @returns The email, else the non-empty nickname, when the profile carries one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const kimiProfileIdentity = (body: KimiProfileBody): O.Option<string> =>
+  O.orElse(O.flatten(O.fromNullishOr(body.email)), () => O.filter(O.fromNullishOr(body.nickname), Str.isNonEmpty));
 
 // Protobuf wire types: 0 varint, 1 fixed 64-bit, 2 length-delimited, 5 fixed 32-bit.
 const ProtoField = S.Struct({

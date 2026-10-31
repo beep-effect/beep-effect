@@ -1,0 +1,13 @@
+--- a/packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts
++++ b/packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.proxy.ts
+@@ -557,9 +557,7 @@
+       upstreamStatus: HashSet.has(syntheticFaults, fault) ? O.none() : delivered.status,
+       exchange,
+     });
+-    const encoded = yield* encodeEvent(event).pipe(Effect.result);
+-    if (Result.isFailure(encoded) || new TextEncoder().encode(encoded.success).byteLength > 4096)
+-      return yield* reject(503);
++    if (new TextEncoder().encode(yield* encodeEvent(event)).byteLength > 4096) return yield* reject(503);
+     yield* Ref.update(events, A.append(event));
+     return (yield* Ref.get(invalid)) ? HttpServerResponse.empty({ status: 503 }) : delivered.response;
+   });

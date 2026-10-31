@@ -1,1250 +1,1055 @@
 {
-  "dialect": "draft-2020-12",
-  "schema": {
-    "$ref": "#/$defs/@beep~1docgen~1Configuration~1ConfigurationSchema"
-  },
-  "definitions": {
-    "TSConfigUniqueStringArray": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/@beep~1repo-docgen~1Configuration~1ConfigurationSchema",
+  "$defs": {
+    "@beep/tsconfig/CompilerOptions/IgnoreDeprecations": {
+      "type": "string",
+      "enum": ["5.0", "6.0"],
+      "title": "IgnoreDeprecations",
+      "description": "The deprecation version whose diagnostics are suppressed."
     },
-    "TSConfigPathTargets": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TSConfigUniqueStringArray"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "title": "TSConfigPathTargets",
-      "description": "A tsconfig `paths` entry target array or null when explicitly disabled in the encoded document."
-    },
-    "TSConfigPaths": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/TSConfigPathTargets"
-      },
-      "title": "TSConfigPaths",
-      "description": "The compilerOptions.paths map from module specifier aliases to arrays of target paths or null."
-    },
-    "TSConfigCompilerPlugins": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "allOf": [
-              {
-                "description": "Language service plugin package or module name."
-              }
-            ]
-          }
-        },
-        "required": ["name"]
-      },
-      "title": "TSConfigCompilerPlugins",
-      "description": "An ordered array of compiler plugin entries."
-    },
-    "TSConfigLibNames": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "TSConfigCompilerOptionsSemantic": {
+    "@beep/tsconfig/CompilerOptions/PluginEntry": {
       "type": "object",
       "properties": {
-        "allowArbitraryExtensions": {
-          "anyOf": [
+        "name": {
+          "type": "string",
+          "allOf": [
             {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
+              "title": "PluginEntry.name",
+              "description": "The module name of the TypeScript language-service plugin."
             }
           ]
+        }
+      },
+      "required": ["name"],
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      ],
+      "title": "PluginEntry",
+      "description": "A named language-service plugin with arbitrary plugin configuration preserved."
+    },
+    "@beep/repo-docgen/Configuration/CompilerOptionsShape": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "string"
         },
-        "allowImportingTsExtensions": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "module": {
+          "type": "string"
         },
-        "charset": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "composite": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "customConditions": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigUniqueStringArray"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "declaration": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "declarationDir": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "diagnostics": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "disableReferencedProjectLoad": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noPropertyAccessFromIndexSignature": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "emitBOM": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "emitDeclarationOnly": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "erasableSyntaxOnly": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "exactOptionalPropertyTypes": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "incremental": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "tsBuildInfoFile": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "inlineSourceMap": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "inlineSources": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "moduleResolution": {
+          "type": "string"
         },
         "jsx": {
           "type": "string"
         },
-        "reactNamespace": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "jsxFactory": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "jsxFragmentFactory": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "jsxImportSource": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "listFiles": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "mapRoot": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "module": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "moduleResolution": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "moduleSuffixes": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigUniqueStringArray"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "newLine": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noEmit": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noEmitHelpers": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noEmitOnError": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noImplicitAny": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noImplicitThis": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noUnusedLocals": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noUnusedParameters": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noLib": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noResolve": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noStrictGenericChecks": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "out": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "skipDefaultLibCheck": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "skipLibCheck": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "outFile": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "outDir": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "preserveConstEnums": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "preserveSymlinks": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "preserveValueImports": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "preserveWatchOutput": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "pretty": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "removeComments": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "rewriteRelativeImportExtensions": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "rootDir": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "isolatedModules": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "sourceMap": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "sourceRoot": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "suppressExcessPropertyErrors": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "suppressImplicitAnyIndexErrors": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "stripInternal": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "target": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "useUnknownInCatchVariables": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "watch": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "fallbackPolling": {
           "type": "string"
-        },
-        "watchDirectory": {
-          "type": "string"
-        },
-        "watchFile": {
-          "type": "string"
-        },
-        "experimentalDecorators": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "emitDecoratorMetadata": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allowUnusedLabels": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noImplicitReturns": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noUncheckedIndexedAccess": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noFallthroughCasesInSwitch": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noImplicitOverride": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allowUnreachableCode": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "forceConsistentCasingInFileNames": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "generateCpuProfile": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "baseUrl": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "paths": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigPaths"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "plugins": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigCompilerPlugins"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "rootDirs": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigUniqueStringArray"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "typeRoots": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigUniqueStringArray"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "types": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigUniqueStringArray"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "traceResolution": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allowJs": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noErrorTruncation": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allowSyntheticDefaultImports": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noImplicitUseStrict": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "listEmittedFiles": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "disableSizeLimit": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "lib": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TSConfigLibNames"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "libReplacement": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
         },
         "moduleDetection": {
           "type": "string"
         },
-        "strictNullChecks": {
-          "anyOf": [
+        "lib": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "allOf": [
             {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
+              "title": "CompilerOptions.lib",
+              "description": "The standard libraries included in compilation."
             }
           ]
         },
-        "maxNodeModuleJsDepth": {
-          "anyOf": [
+        "ignoreDeprecations": {
+          "allOf": [
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string",
-                  "enum": ["NaN"]
-                },
-                {
-                  "type": "string",
-                  "enum": ["Infinity"]
-                },
-                {
-                  "type": "string",
-                  "enum": ["-Infinity"]
-                }
-              ]
+              "$ref": "#/$defs/@beep~1tsconfig~1CompilerOptions~1IgnoreDeprecations"
             },
             {
-              "type": "null"
-            }
-          ]
-        },
-        "importHelpers": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "importsNotUsedAsValues": {
-          "type": "string"
-        },
-        "alwaysStrict": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
+              "title": "CompilerOptions.ignoreDeprecations",
+              "description": "The deprecation version whose diagnostics are suppressed."
             }
           ]
         },
         "strict": {
-          "anyOf": [
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
+              "title": "CompilerOptions.strict",
+              "description": "Enables all strict type-checking options."
             }
           ]
         },
-        "strictBindCallApply": {
-          "anyOf": [
+        "noImplicitAny": {
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
+              "title": "CompilerOptions.noImplicitAny",
+              "description": "Reports expressions and declarations with an implied any type."
             }
           ]
         },
-        "downlevelIteration": {
-          "anyOf": [
+        "strictNullChecks": {
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "checkJs": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
+              "title": "CompilerOptions.strictNullChecks",
+              "description": "Distinguishes null and undefined from other types."
             }
           ]
         },
         "strictFunctionTypes": {
-          "anyOf": [
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "boolean"
-            },
+              "title": "CompilerOptions.strictFunctionTypes",
+              "description": "Checks function parameter variance strictly."
+            }
+          ]
+        },
+        "strictBindCallApply": {
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "null"
+              "title": "CompilerOptions.strictBindCallApply",
+              "description": "Checks bind, call and apply arguments strictly."
             }
           ]
         },
         "strictPropertyInitialization": {
-          "anyOf": [
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "esModuleInterop": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allowUmdGlobalAccess": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "keyofStringsOnly": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "useDefineForClassFields": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "declarationMap": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "resolveJsonModule": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "resolvePackageJsonExports": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "resolvePackageJsonImports": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumeChangesOnlyAffectDirectDependencies": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "extendedDiagnostics": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "listFilesOnly": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "disableSourceOfProjectReferenceRedirect": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "disableSolutionSearching": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "verbatimModuleSyntax": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noCheck": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "isolatedDeclarations": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "noUncheckedSideEffectImports": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
+              "title": "CompilerOptions.strictPropertyInitialization",
+              "description": "Checks that class properties are initialized."
             }
           ]
         },
         "strictBuiltinIteratorReturn": {
-          "anyOf": [
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "boolean"
-            },
+              "title": "CompilerOptions.strictBuiltinIteratorReturn",
+              "description": "Uses strict return types for built-in iterators."
+            }
+          ]
+        },
+        "noImplicitThis": {
+          "type": "boolean",
+          "allOf": [
             {
-              "type": "null"
+              "title": "CompilerOptions.noImplicitThis",
+              "description": "Reports this expressions with an implied any type."
+            }
+          ]
+        },
+        "useUnknownInCatchVariables": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.useUnknownInCatchVariables",
+              "description": "Types catch-clause variables as unknown."
+            }
+          ]
+        },
+        "alwaysStrict": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.alwaysStrict",
+              "description": "Parses files in strict mode and emits a use-strict directive. Deprecated in TypeScript 6.0 when set to `false`."
+            }
+          ]
+        },
+        "noUnusedLocals": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noUnusedLocals",
+              "description": "Reports unused local declarations."
+            }
+          ]
+        },
+        "noUnusedParameters": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noUnusedParameters",
+              "description": "Reports unused function parameters."
+            }
+          ]
+        },
+        "exactOptionalPropertyTypes": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.exactOptionalPropertyTypes",
+              "description": "Checks optional properties without adding undefined."
+            }
+          ]
+        },
+        "noImplicitReturns": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noImplicitReturns",
+              "description": "Reports code paths that do not return a value."
+            }
+          ]
+        },
+        "noFallthroughCasesInSwitch": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noFallthroughCasesInSwitch",
+              "description": "Reports fallthrough cases in switch statements."
+            }
+          ]
+        },
+        "noUncheckedIndexedAccess": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noUncheckedIndexedAccess",
+              "description": "Adds undefined to unchecked indexed accesses."
+            }
+          ]
+        },
+        "noImplicitOverride": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noImplicitOverride",
+              "description": "Requires override on overriding class members."
+            }
+          ]
+        },
+        "noPropertyAccessFromIndexSignature": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noPropertyAccessFromIndexSignature",
+              "description": "Requires indexed access for index-signature properties."
+            }
+          ]
+        },
+        "allowUnusedLabels": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.allowUnusedLabels",
+              "description": "Controls diagnostics for unused labels."
+            }
+          ]
+        },
+        "allowUnreachableCode": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.allowUnreachableCode",
+              "description": "Controls diagnostics for unreachable code."
+            }
+          ]
+        },
+        "noUncheckedSideEffectImports": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noUncheckedSideEffectImports",
+              "description": "Checks unresolved side-effect imports."
+            }
+          ]
+        },
+        "allowJs": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.allowJs",
+              "description": "Includes JavaScript files in compilation."
+            }
+          ]
+        },
+        "checkJs": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.checkJs",
+              "description": "Reports type errors in JavaScript files."
+            }
+          ]
+        },
+        "resolveJsonModule": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.resolveJsonModule",
+              "description": "Enables importing JSON modules."
+            }
+          ]
+        },
+        "allowArbitraryExtensions": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.allowArbitraryExtensions",
+              "description": "Allows imports with arbitrary extensions when declarations exist."
+            }
+          ]
+        },
+        "allowImportingTsExtensions": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.allowImportingTsExtensions",
+              "description": "Allows TypeScript extensions in import paths."
+            }
+          ]
+        },
+        "rewriteRelativeImportExtensions": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.rewriteRelativeImportExtensions",
+              "description": "Rewrites relative TypeScript import extensions on emit."
+            }
+          ]
+        },
+        "resolvePackageJsonExports": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.resolvePackageJsonExports",
+              "description": "Uses package.json exports during module resolution."
+            }
+          ]
+        },
+        "resolvePackageJsonImports": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.resolvePackageJsonImports",
+              "description": "Uses package.json imports during module resolution."
+            }
+          ]
+        },
+        "allowSyntheticDefaultImports": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.allowSyntheticDefaultImports",
+              "description": "Allows default imports from modules without a default export. Deprecated in TypeScript 6.0 when set to `false`."
+            }
+          ]
+        },
+        "esModuleInterop": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.esModuleInterop",
+              "description": "Emits interoperability helpers for CommonJS imports. Deprecated in TypeScript 6.0 when set to `false`."
+            }
+          ]
+        },
+        "preserveSymlinks": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.preserveSymlinks",
+              "description": "Resolves modules without resolving symlinks to their real paths."
+            }
+          ]
+        },
+        "allowUmdGlobalAccess": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.allowUmdGlobalAccess",
+              "description": "Allows accessing UMD globals from module files."
+            }
+          ]
+        },
+        "verbatimModuleSyntax": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.verbatimModuleSyntax",
+              "description": "Preserves imports and exports without rewriting module syntax."
+            }
+          ]
+        },
+        "isolatedModules": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.isolatedModules",
+              "description": "Checks compatibility with single-file transpilation."
+            }
+          ]
+        },
+        "isolatedDeclarations": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.isolatedDeclarations",
+              "description": "Requires explicit declarations for isolated declaration emit."
+            }
+          ]
+        },
+        "erasableSyntaxOnly": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.erasableSyntaxOnly",
+              "description": "Allows only TypeScript syntax that can be erased."
+            }
+          ]
+        },
+        "forceConsistentCasingInFileNames": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.forceConsistentCasingInFileNames",
+              "description": "Checks consistent filename casing across references."
+            }
+          ]
+        },
+        "declaration": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.declaration",
+              "description": "Emits declaration files."
+            }
+          ]
+        },
+        "declarationMap": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.declarationMap",
+              "description": "Emits source maps for declaration files."
+            }
+          ]
+        },
+        "emitDeclarationOnly": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.emitDeclarationOnly",
+              "description": "Emits declarations without JavaScript."
+            }
+          ]
+        },
+        "sourceMap": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.sourceMap",
+              "description": "Emits separate JavaScript source maps."
+            }
+          ]
+        },
+        "inlineSourceMap": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.inlineSourceMap",
+              "description": "Embeds source maps in emitted JavaScript."
+            }
+          ]
+        },
+        "inlineSources": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.inlineSources",
+              "description": "Embeds source contents in source maps."
+            }
+          ]
+        },
+        "removeComments": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.removeComments",
+              "description": "Removes comments from emitted files."
+            }
+          ]
+        },
+        "importHelpers": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.importHelpers",
+              "description": "Imports emit helpers from tslib."
+            }
+          ]
+        },
+        "downlevelIteration": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.downlevelIteration",
+              "description": "Emits iterable-compatible helpers for older targets. Deprecated in TypeScript 6.0."
+            }
+          ]
+        },
+        "emitBOM": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.emitBOM",
+              "description": "Adds a byte-order mark to emitted files."
+            }
+          ]
+        },
+        "noEmit": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noEmit",
+              "description": "Disables all file emission."
+            }
+          ]
+        },
+        "noEmitHelpers": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noEmitHelpers",
+              "description": "Disables generation of emit helpers."
+            }
+          ]
+        },
+        "noEmitOnError": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noEmitOnError",
+              "description": "Disables emit when diagnostics report errors."
+            }
+          ]
+        },
+        "preserveConstEnums": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.preserveConstEnums",
+              "description": "Preserves const enum declarations on emit."
+            }
+          ]
+        },
+        "stripInternal": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.stripInternal",
+              "description": "Omits declarations marked internal."
+            }
+          ]
+        },
+        "experimentalDecorators": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.experimentalDecorators",
+              "description": "Enables legacy experimental decorators."
+            }
+          ]
+        },
+        "emitDecoratorMetadata": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.emitDecoratorMetadata",
+              "description": "Emits decorator type metadata."
+            }
+          ]
+        },
+        "useDefineForClassFields": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.useDefineForClassFields",
+              "description": "Uses define semantics for class fields."
+            }
+          ]
+        },
+        "noCheck": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noCheck",
+              "description": "Disables full type checking."
+            }
+          ]
+        },
+        "composite": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.composite",
+              "description": "Enables constraints for referenced composite projects."
+            }
+          ]
+        },
+        "incremental": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.incremental",
+              "description": "Stores incremental compilation information."
+            }
+          ]
+        },
+        "disableSourceOfProjectReferenceRedirect": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.disableSourceOfProjectReferenceRedirect",
+              "description": "Uses referenced declaration files instead of project sources."
+            }
+          ]
+        },
+        "disableSolutionSearching": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.disableSolutionSearching",
+              "description": "Disables automatic solution-project searching."
+            }
+          ]
+        },
+        "disableReferencedProjectLoad": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.disableReferencedProjectLoad",
+              "description": "Disables automatic loading of referenced projects."
+            }
+          ]
+        },
+        "assumeChangesOnlyAffectDirectDependencies": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.assumeChangesOnlyAffectDirectDependencies",
+              "description": "Limits incremental checking to direct dependencies."
+            }
+          ]
+        },
+        "noErrorTruncation": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noErrorTruncation",
+              "description": "Prevents truncation of diagnostic messages."
+            }
+          ]
+        },
+        "noLib": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noLib",
+              "description": "Disables automatic inclusion of library files."
+            }
+          ]
+        },
+        "noResolve": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.noResolve",
+              "description": "Disables adding imported files to the compilation."
+            }
+          ]
+        },
+        "skipDefaultLibCheck": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.skipDefaultLibCheck",
+              "description": "Skips checking bundled declaration libraries."
+            }
+          ]
+        },
+        "skipLibCheck": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.skipLibCheck",
+              "description": "Skips checking declaration files."
+            }
+          ]
+        },
+        "diagnostics": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.diagnostics",
+              "description": "Reports compiler performance diagnostics."
+            }
+          ]
+        },
+        "extendedDiagnostics": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.extendedDiagnostics",
+              "description": "Reports detailed compiler performance diagnostics."
+            }
+          ]
+        },
+        "listFiles": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.listFiles",
+              "description": "Lists files included in compilation."
+            }
+          ]
+        },
+        "listFilesOnly": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.listFilesOnly",
+              "description": "Lists compilation files without further processing."
+            }
+          ]
+        },
+        "listEmittedFiles": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.listEmittedFiles",
+              "description": "Lists generated output files."
+            }
+          ]
+        },
+        "explainFiles": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.explainFiles",
+              "description": "Explains why files are included in compilation."
+            }
+          ]
+        },
+        "traceResolution": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.traceResolution",
+              "description": "Reports module-resolution decisions."
+            }
+          ]
+        },
+        "preserveWatchOutput": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.preserveWatchOutput",
+              "description": "Preserves terminal output between watch compilations."
+            }
+          ]
+        },
+        "pretty": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.pretty",
+              "description": "Formats diagnostics with color and context."
+            }
+          ]
+        },
+        "disableSizeLimit": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.disableSizeLimit",
+              "description": "Disables the language-service source size limit."
+            }
+          ]
+        },
+        "libReplacement": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.libReplacement",
+              "description": "Enables replacement of bundled libraries through packages."
+            }
+          ]
+        },
+        "stableTypeOrdering": {
+          "type": "boolean",
+          "allOf": [
+            {
+              "title": "CompilerOptions.stableTypeOrdering",
+              "description": "Uses stable ordering when serializing types."
+            }
+          ]
+        },
+        "outFile": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.outFile",
+              "description": "The combined JavaScript output file. Deprecated in TypeScript 6.0."
+            }
+          ]
+        },
+        "outDir": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.outDir",
+              "description": "The directory for emitted files."
+            }
+          ]
+        },
+        "rootDir": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.rootDir",
+              "description": "The root directory of compilation sources."
+            }
+          ]
+        },
+        "declarationDir": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.declarationDir",
+              "description": "The directory for emitted declaration files."
+            }
+          ]
+        },
+        "sourceRoot": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.sourceRoot",
+              "description": "The source root recorded in source maps."
+            }
+          ]
+        },
+        "mapRoot": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.mapRoot",
+              "description": "The location of emitted source maps."
+            }
+          ]
+        },
+        "tsBuildInfoFile": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.tsBuildInfoFile",
+              "description": "The incremental compilation state file."
+            }
+          ]
+        },
+        "baseUrl": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.baseUrl",
+              "description": "The base directory for non-relative module resolution. Deprecated in TypeScript 6.0."
+            }
+          ]
+        },
+        "generateCpuProfile": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.generateCpuProfile",
+              "description": "The output file for the compiler CPU profile."
+            }
+          ]
+        },
+        "generateTrace": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.generateTrace",
+              "description": "The directory for compiler tracing output."
+            }
+          ]
+        },
+        "typeRoots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "allOf": [
+            {
+              "title": "CompilerOptions.typeRoots",
+              "description": "The directories searched for type packages."
+            }
+          ]
+        },
+        "rootDirs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "allOf": [
+            {
+              "title": "CompilerOptions.rootDirs",
+              "description": "The source directories treated as one virtual root."
+            }
+          ]
+        },
+        "jsxFactory": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.jsxFactory",
+              "description": "The factory used for classic JSX elements."
+            }
+          ]
+        },
+        "jsxFragmentFactory": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.jsxFragmentFactory",
+              "description": "The factory used for classic JSX fragments."
+            }
+          ]
+        },
+        "jsxImportSource": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.jsxImportSource",
+              "description": "The module providing the automatic JSX runtime."
+            }
+          ]
+        },
+        "reactNamespace": {
+          "type": "string",
+          "allOf": [
+            {
+              "title": "CompilerOptions.reactNamespace",
+              "description": "The namespace used for legacy React JSX."
+            }
+          ]
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "allOf": [
+            {
+              "title": "CompilerOptions.types",
+              "description": "The type packages included in the global scope."
+            }
+          ]
+        },
+        "customConditions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "allOf": [
+            {
+              "title": "CompilerOptions.customConditions",
+              "description": "Additional package export conditions for resolution."
+            }
+          ]
+        },
+        "moduleSuffixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "allOf": [
+            {
+              "title": "CompilerOptions.moduleSuffixes",
+              "description": "Filename suffixes tried during module resolution."
+            }
+          ]
+        },
+        "paths": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allOf": [
+            {
+              "title": "CompilerOptions.paths",
+              "description": "Module specifiers mapped to candidate path patterns."
+            }
+          ]
+        },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/@beep~1tsconfig~1CompilerOptions~1PluginEntry"
+          },
+          "allOf": [
+            {
+              "title": "CompilerOptions.plugins",
+              "description": "Language-service plugins and their configuration."
+            }
+          ]
+        },
+        "maxNodeModuleJsDepth": {
+          "type": "number",
+          "allOf": [
+            {
+              "title": "CompilerOptions.maxNodeModuleJsDepth",
+              "description": "The maximum dependency depth for JavaScript files."
             }
           ]
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "CompilerOptionsShape",
+      "description": "The on-disk compilerOptions shape docgen accepts inline, from docgen.json or a CLI flag."
+    },
+    "@beep/repo-docgen/Configuration/CompilerOptionsInput": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/@beep~1repo-docgen~1Configuration~1CompilerOptionsShape"
+        }
+      ],
+      "title": "CompilerOptionsInput",
+      "description": "Accepted CLI or config-file input for TypeScript compiler options."
+    },
+    "@beep/schema/SchemaUtils/withKeyDefaults/ArrayKeyDefaultEmptyEncoded": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "@beep/repo-docgen/Configuration/ConfigurationSchema": {
       "type": "object",
       "properties": {
         "$schema": {
-          "type": "string"
-        },
-        "projectHomepage": {
-          "type": "string"
-        },
-        "srcLink": {
-          "type": "string"
-        },
-        "srcDir": {
-          "type": "string"
-        },
-        "outDir": {
-          "type": "string"
-        },
-        "theme": {
-          "type": "string"
+          "type": "string",
+          "allOf": [
+            {
+              "description": "Optional JSON schema URI for editor tooling."
+            }
+          ]
         },
         "enableSearch": {
           "type": "boolean"
@@ -1258,43 +1063,64 @@
         "enforceVersion": {
           "type": "boolean"
         },
-        "tscExecutable": {
-          "type": "string"
-        },
-        "include": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "examplesCompilerOptions": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/@beep~1repo-docgen~1Configuration~1CompilerOptionsInput"
+            },
+            {
+              "description": "Compiler options or TSConfig path used when checking generated examples."
+            }
+          ]
         },
         "exclude": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "$ref": "#/$defs/@beep~1schema~1SchemaUtils~1withKeyDefaults~1ArrayKeyDefaultEmptyEncoded"
+        },
+        "include": {
+          "$ref": "#/$defs/@beep~1schema~1SchemaUtils~1withKeyDefaults~1ArrayKeyDefaultEmptyEncoded"
+        },
+        "outDir": {
+          "type": "string"
         },
         "parseCompilerOptions": {
-          "anyOf": [
+          "allOf": [
             {
-              "type": "string"
+              "$ref": "#/$defs/@beep~1repo-docgen~1Configuration~1CompilerOptionsInput"
             },
             {
-              "$ref": "#/$defs/TSConfigCompilerOptionsSemantic"
+              "description": "Compiler options or TSConfig path used when parsing package source files."
             }
           ]
         },
-        "examplesCompilerOptions": {
-          "anyOf": [
+        "projectHomepage": {
+          "type": "string",
+          "allOf": [
             {
-              "type": "string"
-            },
-            {
-              "$ref": "#/$defs/TSConfigCompilerOptionsSemantic"
+              "description": "Project homepage URL used as the base for generated links."
             }
           ]
+        },
+        "srcDir": {
+          "type": "string"
+        },
+        "srcLink": {
+          "type": "string",
+          "allOf": [
+            {
+              "description": "Source URL prefix used for generated source links."
+            }
+          ]
+        },
+        "theme": {
+          "type": "string"
+        },
+        "tscExecutable": {
+          "type": "string"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "ConfigurationSchema",
+      "description": "Optional package-local docgen.json document."
     }
   }
 }

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
@@ -25,6 +26,7 @@ import { OutputBound, runCaptured } from "../../internal/process/index.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus, resolveCacheTurboBinary } from "./Cache.census.ts";
 import { inspectCacheDependencyTree } from "./Cache.dependencies.ts";
+import { decodeCacheExperimentText } from "./Cache.evidence.ts";
 import { collectCacheRuntimeLinker } from "./Cache.linker.ts";
 import {
   CacheCensusDefinition,
@@ -38,6 +40,79 @@ import {
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
 import type { CacheActivationProjection, CacheQualificationKey } from "@beep/repo-configs/cache";
+
+const $I = $RepoCliId.create("commands/Cache/Cache.fingerprint");
+
+class NativeRemoteSigning extends S.Opaque<NativeRemoteSigning, { readonly brand: unique symbol }>()(
+  S.Struct({
+    enabled: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(true))),
+    signature: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(false))),
+  }).pipe(
+    $I.annoteSchema("NativeRemoteSigning", {
+      description: "Only native remote-cache enablement and signing policy fields.",
+    })
+  )
+) {}
+
+class NativeGlobalSigning extends S.Opaque<NativeGlobalSigning, { readonly brand: unique symbol }>()(
+  S.Struct({ remoteCache: S.OptionFromOptionalKey(NativeRemoteSigning) }).pipe(
+    $I.annoteSchema("NativeGlobalSigning", { description: "Native global configuration's optional signing policy." })
+  )
+) {}
+
+class NativeSigningRoot extends S.Opaque<NativeSigningRoot, { readonly brand: unique symbol }>()(
+  S.Struct({
+    futureFlags: S.OptionFromOptionalKey(
+      S.Struct({ globalConfiguration: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(false))) })
+    ),
+    global: S.OptionFromOptionalKey(NativeGlobalSigning),
+    remoteCache: S.OptionFromOptionalKey(NativeRemoteSigning),
+  }).pipe(
+    $I.annoteSchema("NativeSigningRoot", {
+      description: "Native root/global signing configuration with decoded absence.",
+    })
+  )
+) {}
+
+/**
+ * Read the checkout's bounded native signing requirement without retaining configuration values.
+ *
+ * **Details**
+ * Supports both root configuration and the enabled global-configuration flag.
+ * Missing, ambiguous, escaping or malformed configuration fails closed. No
+ * remote request runs and no artifact key is read by this operation.
+ *
+ * **Example** (Inspect the native signing requirement)
+ * ```ts
+ * import { readCacheSignatureRequired } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * console.assert(Effect.isEffect(readCacheSignatureRequired(".")))
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const readCacheSignatureRequired = Effect.fn("CacheFingerprint.readSignatureRequired")(
+  function* (root: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const json = yield* fs.exists(path.join(root, "turbo.json"));
+    const jsonc = yield* fs.exists(path.join(root, "turbo.jsonc"));
+    if (json === jsonc)
+      return yield* CacheCommandError.new("Signing posture requires exactly one checkout root Turbo configuration.");
+    const read = yield* readContainedFileBytesNoFollow(root, json ? "turbo.json" : "turbo.jsonc", 1024 * 1024);
+    const bytes = yield* read.contents.pipe(
+      Effect.fromOption(() => CacheCommandError.new("Root Turbo configuration is unavailable."))
+    );
+    const source = yield* decodeCacheExperimentText(bytes);
+    const document = yield* decodeJsoncTextAs(NativeSigningRoot)(source);
+    const remote = O.exists(document.futureFlags, (flags) => flags.globalConfiguration)
+      ? O.flatMap(document.global, (global) => global.remoteCache)
+      : document.remoteCache;
+    return O.exists(remote, (configuration) => configuration.enabled && configuration.signature);
+  },
+  Effect.mapError(() => CacheCommandError.new("Cannot resolve the checkout's native artifact signing policy."))
+);
 
 const CacheGlobalConfigurationFlag = S.Literal(true);
 
