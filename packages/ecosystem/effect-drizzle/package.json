@@ -73,6 +73,7 @@
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
+    "@beep/markdown": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/repo-utils": "workspace:^",
     "@beep/test-runner": "workspace:^",
