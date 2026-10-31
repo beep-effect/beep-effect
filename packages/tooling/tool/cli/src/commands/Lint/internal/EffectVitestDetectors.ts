@@ -3556,8 +3556,18 @@ const VALUE_ASSERTIONS = [
   "assertUndefined",
 ];
 
+// `expect(x).toBe(y)`, `expect(x).not.toBe(y)` or `expect(p).resolves.toBe(y)`: a matcher call on an
+// `expect(...)` receiver. A bare `expect(x)` checks nothing.
+const isExpectMatcher = (call: CallExpression, imports: EffectVitestImports): boolean => {
+  let receiver: MorphNode = call.getExpression();
+  if (!Node.isPropertyAccessExpression(receiver)) return false;
+  while (Node.isPropertyAccessExpression(receiver)) receiver = receiver.getExpression();
+  return Node.isCallExpression(receiver) && isExpectCall(receiver, imports);
+};
+
 const isObservation = (call: CallExpression, imports: EffectVitestImports): boolean =>
-  isAssertion(call, imports) ||
+  isExpectMatcher(call, imports) ||
+  (!isExpectCall(call, imports) && isAssertion(call, imports)) ||
   isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", VALUE_ASSERTIONS) ||
   isProvenanceCall(call, imports, VITEST_MODULES, "assert", VALUE_ASSERTIONS);
 
