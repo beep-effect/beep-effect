@@ -75,6 +75,10 @@
       "purpose": "4-A4 differential: runEcosystemPolarityCheck over the live repo and a synthetic ecosystem of import forms, recorded before the SourceBoundary.scan switch and compared at the head with every difference classified into an intended shift class."
     },
     {
+      "path": "ops/fence-extractor-parity.ts",
+      "purpose": "R6 parity: frozen copies of the docgen fencePattern, TypeScriptFences and EffectImports Markdown fence regexes beside their @beep/markdown MarkdownFence replacements over every tracked Markdown file and every JSDoc block, with each differing fence classified against the CommonMark reading (gate: 0 unclassified)."
+    },
+    {
       "path": "ops/git-adoption-differential.ts",
       "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
     },
