@@ -25,6 +25,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Schedule from "effect/Schedule";
 import { spawnInotifyWatcher } from "./support/InotifyWatcher.ts";
 import type { ProcessAttachment } from "@beep/repo-cli/test/RepoRun";
 
@@ -226,24 +227,44 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("processName", (it) => {
 
 // A child started with extra exported variables, the way a harness starts its
 // tool shells; the parent's own environment is kept so `sleep` still resolves.
-const spawnSleeperWith = (env: Record<string, string>) =>
-  ChildProcess.make("sleep", ["60"], { env, extendEnv: true, stdin: "ignore", stdout: "ignore", stderr: "ignore" });
-
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("ancestryChainOf and processEnvironmentValue", (it) => {
-  it.effect("orders the chain nearest first and reads what a child was started with", () =>
-    Effect.gen(function* () {
-      const child = yield* spawnSleeperWith({ BEEP_TEST_MARKER: "present" });
-      const chain = yield* ancestryChainOf(child.pid);
-      expect(A.take(chain, 2)).toEqual([child.pid, process.pid]);
-      expect(yield* processEnvironmentValue(child.pid, "BEEP_TEST_MARKER")).toEqual(O.some("present"));
-      expect(yield* processEnvironmentValue(child.pid, "BEEP_TEST_ABSENT")).toEqual(O.none());
-      expect(yield* processEnvironmentValue(2 ** 31, "HOME")).toEqual(O.none());
-      yield* Effect.ignore(child.kill());
-    })
+// `ChildProcess.make` returns once the child is forked. Until it execs `sleep`,
+// `/proc/<pid>/environ` still shows this process's environment, so a loaded
+// host can read the marker before it exists. Wait for the exec (bounded at
+// five seconds) before the test reads what the child was started with.
+const spawnSleeperWith = Effect.fnUntraced(function* (env: Record<string, string>) {
+  const fs = yield* FileSystem.FileSystem;
+  const child = yield* ChildProcess.make("sleep", ["60"], {
+    env,
+    extendEnv: true,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  yield* fs.readFileString(`/proc/${child.pid}/comm`).pipe(
+    Effect.orElseSucceed(() => ""),
+    Effect.repeat({ until: (comm) => Str.trim(comm) === "sleep", schedule: Schedule.spaced("10 millis"), times: 500 })
   );
+  return child;
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("sessionRootOf", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })(
+  "ancestryChainOf and processEnvironmentValue",
+  (it) => {
+    it.effect("orders the chain nearest first and reads what a child was started with", () =>
+      Effect.gen(function* () {
+        const child = yield* spawnSleeperWith({ BEEP_TEST_MARKER: "present" });
+        const chain = yield* ancestryChainOf(child.pid);
+        expect(A.take(chain, 2)).toEqual([child.pid, process.pid]);
+        expect(yield* processEnvironmentValue(child.pid, "BEEP_TEST_MARKER")).toEqual(O.some("present"));
+        expect(yield* processEnvironmentValue(child.pid, "BEEP_TEST_ABSENT")).toEqual(O.none());
+        expect(yield* processEnvironmentValue(2 ** 31, "HOME")).toEqual(O.none());
+        yield* Effect.ignore(child.kill());
+      })
+    );
+  }
+);
+
+it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })("sessionRootOf", (it) => {
   it.effect("proves the session from the marker its child carries and refuses every other claim", () =>
     Effect.gen(function* () {
       const marker = "CLAUDE_PID";
