@@ -170,3 +170,15 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** `package-verify` running the catalog checks, the JSDoc ratchet and
   schema-tag-idioms for the package, or a `beep` preflight that lists the generated artifacts a new
   export requires.
+
+## 2026-10-31 — `yeet publish --push-only` cannot publish a branch that was never pushed
+
+- **Doing:** publishing slice 1 after a base-sync merge that pulled in main's fix for an inherited
+  `lint:schema-first` red (five stale inventory rows, fixed on main by #2409 minutes after the
+  previous merge). The cheap gates had already passed every other lane on the commit below the merge.
+- **Evidence:** `yeet publish --push-only` exits 128 on
+  `git fetch --quiet --no-tags origin refs/heads/feat/verification-route-slice-1`; the branch has no
+  remote yet. The only Yeet path left was `--amend --no-edit` on the merge, a second full cheap-gate
+  run of about 18 minutes for a tree that differs from the gated one by one generated inventory file.
+- **Would have prevented it:** `--push-only` treating a missing remote branch as a first push, or a
+  cheap-gate receipt that carries across a base-sync merge whose only new files come from `main`.
