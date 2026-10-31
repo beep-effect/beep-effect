@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (P0 slice 1 implemented 2026-10-31 in lane `verification-route-s1`; census pending its corpus). Graduated 2026-10-28 from `explorations/verification-route`
+Status: `in-progress` (P0 slice 1 complete 2026-10-31: census and replay in `research/census-2026-10-31.md`; P1 next). Graduated 2026-10-28 from `explorations/verification-route`
 (16 rulings). Each slice is one PR through Yeet; phase ids match
 `ops/manifest.json`.
 
@@ -10,7 +10,7 @@ Status: `in-progress` (P0 slice 1 implemented 2026-10-31 in lane `verification-r
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Slice 1: schemas, route, census | in-progress | `ChangeAtom`/`CheckFootprint`/`Propagation` schemas, the total record at `unknown`, `classify`, `route`, the corpus fetch, `beep ci route plan|census|replay`. | Slice-1 acceptance rows in `SPEC.md` green; the census printed with the `unknown` share; PR merged. |
+| P0 Slice 1: schemas, route, census | complete | `ChangeAtom`/`CheckFootprint`/`Propagation` schemas, the total record at `unknown`, `classify`, `route`, the corpus fetch, `beep ci route plan|census|replay`. | Slice-1 acceptance rows in `SPEC.md` green; the census printed with the `unknown` share; PR merged. |
 | P1 Slice 2: refinements, both layers, final-check | pending | Refine in census rank with fixtures and recall; compile file/field-grain footprints to turbo inputs and root `package.json` projections; sweep package-local `turbo.json`; final-check shadow then enforced; sentinel row. | At least one refinement enforced; layer-1 fixture green under pinned turbo; receipts carry the route section; PR merged. |
 | P2 Slice 3: hosted per lane | pending | Extend `HeavyAdmission` to per-lane `skip-satisfied` with the receipt in the job summary. | A real PR shows a routed-out lane completing `skip-satisfied`; required contexts unchanged; PR merged. |
 | P3 Yeet: PR to mergeable | pending | Each slice PR through `yeet publish`, `final-check`, `ready`, `monitor --until-ready`. | `merge-ready: yes`; zero unresolved review threads. |
@@ -53,7 +53,12 @@ work.
 - [x] `beep ci route plan|capture|census|replay` (`--json`), A1 cost source per lane — done
       2026-10-31 (`Route.command.ts`; cost basis `gate-order-seed` for lanes with a `quality:<id>`
       seed row, `hosted-median` from the corpus otherwise, `none` when neither exists).
-- [ ] Friction receipts in the exploration's `research/OPPORTUNITIES.md`.
+- [x] Friction receipts in the exploration's `research/OPPORTUNITIES.md` (16 receipts by 2026-10-31).
+- [x] Census and replay over the pinned corpus — done 2026-10-31
+      (`research/census-2026-10-31.md`: 6,328 runs, 5,083 PR heads, 11,710 h of hosted machine time;
+      replay recall 100% at the all-`unknown` record after modelling `commits` and `external`; the
+      first attempt's 97.92% found both facts; `unknown` is 33.55% of atoms, mostly packet data
+      files, scratchpad sources and standards baselines; refinements ranked for P1).
 
 ## P1 — Slice 2
 
