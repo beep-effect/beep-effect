@@ -64,8 +64,7 @@ failures, with existing subscriptions and authorized billing:
   tracks the interactive launch model in `$HOME/.junie/settings.json`.
 - `muse.opt-in`: Meta Muse through CLIProxyAPI (`claudem`); opt-in only, never in
   a fallback chain.
-- `research.web`: `grok-4.7` (CLIProxyAPI injects `x_search`); `graft.deep`:
-  `claude-opus-5-5` through the proxy.
+- `research.web`: `grok-4.7` (CLIProxyAPI injects `x_search`).
 
 **Pins per surface** (verified identifiers 2026-10-14; `beep models check`
 reports drift against the manifest):
@@ -137,7 +136,6 @@ Manifest projection (tool-owned; `beep models check`):
 | cursor.review | cursor-seat | `claude-opus-5-5-high` | — |
 | cursor.mechanical | cursor-seat | `composer-2.5` | — |
 | qa.judge | claude-code | `claude-opus-5-5` | — |
-| graft.deep | proxy-workflow | `claude-opus-5-5` | — |
 | jsdoc.migrate-titles | grok-cli | `grok-4.7` | — |
 | deprecated.routable | proxy-workflow | `gpt-daybreak-blue-latest` | — |
 
@@ -412,8 +410,7 @@ needed only for the escalation list below.
   `cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>`.
   The trailing `cd` moves the shell to the swept clone. When the merged
   change touched a systemd unit renderer, follow with
-  `bun run beep research install-timers --refresh`,
-  `bun run beep graft deep install-timer --refresh`, and/or
+  `bun run beep research install-timers --refresh` and/or
   `bun run beep refs install-timer --refresh` (the `--refresh` forms are the
   only agent-allowed forms of those commands) from the swept clone — the installed
   units are snapshots and stay stale until re-rendered. These are granted Bash
@@ -499,11 +496,9 @@ If you touch this, load or run this first. Do not hand-author around it.
 - File memory is the memory layer: each agent's own durable files
   (`CLAUDE.md` / `MEMORY.md` auto-memory) plus repo docs. There is no shared
   external memory service; basic-memory and codegraph were removed on
-  2026-08-29 (`standards/memory-architecture/04-decision-log.md`). Graft is
-  the sanctioned code-structure query path (2026-09-08 entry there): a
-  git-ignored, regenerable tree-sitter code graph, not a memory layer. Do not
-  reintroduce a memory service or wire another code index without a new
-  decision there.
+  2026-08-29 (`standards/memory-architecture/04-decision-log.md`), and the
+  graft code graph was retired on 2026-10-28 (same log). Do not reintroduce a
+  memory service or wire another code index without a new decision there.
 - If context is missing, fall back to repo-local docs, code search, and this
   file.
 
@@ -513,7 +508,9 @@ If you touch this, load or run this first. Do not hand-author around it.
   (`.repos/effect`, the Effect child at `$HOME/YeeBois/references/effect/effect`),
   never training-data priors. `bun run beep refs provision` provisions the
   workspace from `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides
-  its `$HOME/YeeBois/references/effect` root.
+  its `$HOME/YeeBois/references/effect` root. `beep refs plan` and
+  `beep refs install-timer --refresh` are agent-permitted; `beep refs refresh`
+  and a fresh `beep refs install-timer` are operator-only.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA
@@ -556,24 +553,3 @@ If you touch this, load or run this first. Do not hand-author around it.
   `yeet sweep --retire` write the `done` row themselves. At session start,
   read `bun run beep session open` (the Claude SessionStart hook prints it;
   Codex runs it) and offer the live rows as resume options.
-
-<!-- graft:start -->
-## Graft — repo context graph
-
-`graft/` is a git-ignored tree-sitter code graph (a regenerable cache, not a
-memory layer; decision log 2026-09-08). Before grepping or opening source, run
-`graft ask "<task>" --source` (locate + read), `graft grep "<literal>"`
-(exhaustive), `graft callers <symbol> [--depth N]` (edges), `graft skeleton
-<file>` (API surface), or `graft map` (orientation); the `graft` skill has the
-routing rules and caveats. Route Effect API questions to
-`graft ask "<q>" .repos/effect-workspace` (federated across members) or
-`graft ask "<q>" .repos/effect` (Effect only). Refresh with the exact
-`graft build` (structural, no key). Never run `graft init`, `uninstall`,
-`upgrade`, `build --deep`, `beep graft deep refresh`, `beep refs refresh`, or
-a fresh `beep graft deep install-timer` / `beep refs install-timer` from an
-agent: they rewrite tracked wiring, spend model quota, or schedule a job that
-does. The exceptions `beep graft deep install-timer --refresh` and
-`beep refs install-timer --refresh` re-render already installed units and
-schedule nothing new; these are the only installer forms the agent permission
-grant admits. `beep refs plan` is read-only and agent-permitted.
-<!-- graft:end -->

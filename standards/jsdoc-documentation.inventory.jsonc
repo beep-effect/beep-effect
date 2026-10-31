@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-28T10:57:30.794Z",
+  "generatedAt": "2026-10-28T19:39:53.038Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 148,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 33,
-    "publicModules": 3552,
-    "publicExports": 25272,
+    "publicModules": 3546,
+    "publicExports": 25208,
     "openModules": 225,
     "openExports": 130,
     "missingExportExamples": 6,
@@ -119093,8 +119093,8 @@
           "exportKind": "const",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 273,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-273-makeclaimenvelope",
+          "line": 276,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-276-makeclaimenvelope",
           "currentTags": [
             "@category",
             "@since"
@@ -119115,8 +119115,8 @@
           "exportKind": "type",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 375,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-375-bitemporalversion",
+          "line": 392,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-392-bitemporalversion",
           "currentTags": [
             "@category",
             "@since"
@@ -119137,8 +119137,8 @@
           "exportKind": "type",
           "filePath": "src/Claim/Claim.model.ts",
           "repoPath": "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
-          "line": 396,
-          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-396-bitemporalscope",
+          "line": 413,
+          "anchor": "packages-foundation-modeling-epistemics-src-claim-claim-model-ts-413-bitemporalscope",
           "currentTags": [
             "@category",
             "@since"
@@ -363351,8 +363351,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 440,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-440-validaterepoconfig",
+          "line": 428,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-428-validaterepoconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -363374,8 +363374,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 483,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-483-validatereposafetypolicy",
+          "line": 471,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-471-validatereposafetypolicy",
           "currentTags": [
             "@effects",
             "@category",
@@ -363397,8 +363397,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 524,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-524-validatedogfoodconfig",
+          "line": 512,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-512-validatedogfoodconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -363420,8 +363420,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 552,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-552-validatedogfoodconfigs",
+          "line": 540,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-540-validatedogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
@@ -363443,8 +363443,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 578,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-578-defaultreporoot",
+          "line": 566,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-566-defaultreporoot",
           "currentTags": [
             "@effects",
             "@category",
@@ -363466,8 +363466,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 606,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-606-validatecurrentcheckoutdogfood",
+          "line": 594,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-594-validatecurrentcheckoutdogfood",
           "currentTags": [
             "@effects",
             "@category",
@@ -363489,8 +363489,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 635,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-635-validatecurrentcheckoutdogfoodconfigs",
+          "line": 623,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-623-validatecurrentcheckoutdogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
@@ -450378,9 +450378,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 475,
-        "publicModuleCount": 473,
-        "publicExportCount": 4450
+        "sourceFileCount": 469,
+        "publicModuleCount": 467,
+        "publicExportCount": 4386
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -455109,138 +455109,6 @@
         },
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/commands/Graft/Graft.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
-          "line": 1,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-command-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 4,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/commands/Graft/Graft.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
-          "line": 1,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-errors-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 6,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 1,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 23,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/commands/Graft/Graft.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
-          "line": 1,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-service-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 3,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 1,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 11,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 1,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 7,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.command.ts",
           "line": 1,
@@ -456323,7 +456191,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 29,
+          "exportCount": 26,
           "remediationStatus": "resolved"
         },
         {
@@ -456459,7 +456327,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 15,
+          "exportCount": 14,
           "remediationStatus": "resolved"
         },
         {
@@ -458419,7 +458287,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 17,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         },
         {
@@ -502992,1206 +502860,6 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "runDeepRefresh",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
-          "line": 285,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-command-ts-285-rundeeprefresh",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "runDeepStatus",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
-          "line": 348,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-command-ts-348-rundeepstatus",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "runDeepInstallTimer",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
-          "line": 400,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-command-ts-400-rundeepinstalltimer",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "graftCommand",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.command.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
-          "line": 532,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-command-ts-532-graftcommand",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSourceError",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
-          "line": 32,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-errors-ts-32-graftcachesourceerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheTargetError",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
-          "line": 64,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-errors-ts-64-graftcachetargeterror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheIoError",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
-          "line": 96,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-errors-ts-96-graftcacheioerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepLockError",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
-          "line": 129,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-errors-ts-129-graftdeeplockerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepPreflightError",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
-          "line": 162,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-errors-ts-162-graftdeeppreflighterror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepStepError",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
-          "line": 200,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-errors-ts-200-graftdeepsteperror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheArtifact",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 39,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-39-graftcacheartifact",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheArtifact",
-          "exportKind": "type",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 49,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-49-graftcacheartifact",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncAction",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 69,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-69-graftcachesyncaction",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncAction",
-          "exportKind": "type",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 81,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-81-graftcachesyncaction",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncTarget",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 101,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-101-graftcachesynctarget",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncPlanEntry",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 131,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-131-graftcachesyncplanentry",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncPlan",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 163,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-163-graftcachesyncplan",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncReport",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-196-graftcachesyncreport",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshPhase",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 230,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-230-graftdeeprefreshphase",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshPhase",
-          "exportKind": "type",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 250,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-250-graftdeeprefreshphase",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshOutcome",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 271,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-271-graftdeeprefreshoutcome",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshOutcome",
-          "exportKind": "type",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 283,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-283-graftdeeprefreshoutcome",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepCoverage",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 310,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-310-graftdeepcoverage",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "parseDeepCoverage",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 377,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-377-parsedeepcoverage",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshOptions",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 441,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-441-graftdeeprefreshoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepSiblingRebuild",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 482,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-482-graftdeepsiblingrebuild",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshStatus",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 522,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-522-graftdeeprefreshstatus",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepLock",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 564,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-564-graftdeeplock",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRecordedTimer",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 595,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-595-graftdeeprecordedtimer",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepTimerOptions",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 639,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-639-graftdeeptimeroptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepCaptureSource",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 672,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-672-graftdeepcapturesource",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepCaptureSource",
-          "exportKind": "type",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 684,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-684-graftdeepcapturesource",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRunnerStep",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
-          "line": 739,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-schemas-ts-739-graftdeeprunnerstep",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncShape",
-          "exportKind": "interface",
-          "filePath": "src/commands/Graft/Graft.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
-          "line": 49,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-service-ts-49-graftcachesyncshape",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSync",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/Graft.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
-          "line": 83,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-service-ts-83-graftcachesync",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftCacheSyncLive",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/Graft.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
-          "line": 438,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-service-ts-438-graftcachesynclive",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRunnerShape",
-          "exportKind": "interface",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 262,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-262-graftdeeprunnershape",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRunner",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 287,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-287-graftdeeprunner",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRunnerLive",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 367,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-367-graftdeeprunnerlive",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshProgress",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 394,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-394-graftdeeprefreshprogress",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshFailure",
-          "exportKind": "type",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 405,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-405-graftdeeprefreshfailure",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshShape",
-          "exportKind": "interface",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 425,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-425-graftdeeprefreshshape",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefresh",
-          "exportKind": "class",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 459,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-459-graftdeeprefresh",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "renderGraftDeepRefreshUnits",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 502,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-502-rendergraftdeeprefreshunits",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "readRecordedGraftDeepTimer",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 578,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-578-readrecordedgraftdeeptimer",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshLayer",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 1213,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-1213-graftdeeprefreshlayer",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "GraftDeepRefreshLive",
-          "exportKind": "const",
-          "filePath": "src/commands/Graft/GraftDeep.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 1238,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-1238-graftdeeprefreshlive",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { graftCommand, runDeepInstallTimer, runDeepRefresh, runDeepStatus } from \"./Graft.command.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 13,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-13-export-graftcommand-rundeepinstalltimer-rundeeprefresh-rundeepstatus-from-graft-command-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./Graft.errors.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 20,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-20-export-from-graft-errors-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./Graft.schemas.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 27,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-27-export-from-graft-schemas-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export { GraftCacheSync, GraftCacheSyncLive } from \"./Graft.service.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 34,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-34-export-graftcachesync-graftcachesynclive-from-graft-service-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export {\n  GraftDeepRefresh,\n  GraftDeepRefreshLayer,\n  GraftDeepRefreshLive,\n  GraftDeepRefreshProgress,\n  GraftDeepRunner,\n  GraftDeepRunnerLive,\n  readRecordedGraftDeepTimer,\n  renderGraftDeepRefreshUnits,\n} from \"./GraftDeep.service.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 41,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-41-export-graftdeeprefresh-graftdeeprefreshlayer-graftdeeprefreshlive-graftdeeprefreshprogress-graftdeeprunner-graftdeeprunnerlive-readrecordedgraftdeeptimer-rendergraftdeeprefreshunits-from-graftdeep-service-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export type { GraftCacheSyncShape } from \"./Graft.service.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 57,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-57-export-type-graftcachesyncshape-from-graft-service-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export type {\n  GraftDeepRefreshFailure,\n  GraftDeepRefreshShape,\n  GraftDeepRunnerShape,\n} from \"./GraftDeep.service.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/commands/Graft/index.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Graft/index.ts",
-          "line": 64,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-index-ts-64-export-type-graftdeeprefreshfailure-graftdeeprefreshshape-graftdeeprunnershape-from-graftdeep-service-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "harnessLedgerProposeCommand",
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.command.ts",
@@ -517074,78 +515742,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "EffectSchemaInventoryGraftEntry",
-          "exportKind": "class",
-          "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 623,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-623-effectschemainventorygraftentry",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "EffectSchemaInventoryGraftSkeleton",
-          "exportKind": "class",
-          "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 655,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-655-effectschemainventorygraftskeleton",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "EffectSchemaInventoryGraftContext",
-          "exportKind": "class",
-          "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 696,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-696-effectschemainventorygraftcontext",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "EffectSchemaInventoryPromptReceipt",
           "exportKind": "class",
           "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 732,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-732-effectschemainventorypromptreceipt",
+          "line": 620,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-620-effectschemainventorypromptreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -517166,8 +515768,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 765,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-765-effectschemainventoryrequest",
+          "line": 651,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-651-effectschemainventoryrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -517188,8 +515790,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 781,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-781-effectschemainventoryrequest",
+          "line": 667,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-667-effectschemainventoryrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -517210,8 +515812,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 800,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-800-decodeeffectschemainventoryrowjson",
+          "line": 686,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-686-decodeeffectschemainventoryrowjson",
           "currentTags": [
             "@category",
             "@since"
@@ -517232,8 +515834,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 820,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-820-decodeeffectschemainventoryrowoption",
+          "line": 706,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-706-decodeeffectschemainventoryrowoption",
           "currentTags": [
             "@category",
             "@since"
@@ -517254,8 +515856,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/EffectSchemaInventory.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
-          "line": 846,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-846-encodeeffectschemainventoryrowjson",
+          "line": 732,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-schemas-ts-732-encodeeffectschemainventoryrowjson",
           "currentTags": [
             "@category",
             "@since"
@@ -517276,8 +515878,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 123,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-123-export-compacteffectschemainventorypreview-effectschemainventoryjsdocblocks-extracteffectschemainventory-from-internal-effectschemainventoryextract-ts",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-122-export-compacteffectschemainventorypreview-effectschemainventoryjsdocblocks-extracteffectschemainventory-from-internal-effectschemainventoryextract-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517298,8 +515900,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 134,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-134-export-effectschemainventorymodules-effectschemainventorymoduleof-effectschemainventoryslugof-findeffectschemainventorymodule-parseeffectschemainventorypin-from-internal-effectschemainventorymodules-ts",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-133-export-effectschemainventorymodules-effectschemainventorymoduleof-effectschemainventoryslugof-findeffectschemainventorymodule-parseeffectschemainventorypin-from-internal-effectschemainventorymodules-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517320,8 +515922,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 147,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-147-export-checkeffectschemainventoryprompts-generateeffectschemainventoryprompt-rendereffectschemainventoryprompt-from-internal-effectschemainventoryprompt-ts",
+          "line": 146,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-146-export-checkeffectschemainventoryprompts-generateeffectschemainventoryprompt-rendereffectschemainventoryprompt-from-internal-effectschemainventoryprompt-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517342,8 +515944,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 158,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-158-export-diffeffectschemainventoryfiles-digesteffectschemainventoryjsonl-effectschemainventorybytelength-effectschemainventoryjsonlname-formateffectschemainventorydrift-readeffectschemainventoryindexheader-rendereffectschemainventory-rendereffectschemainventoryindex-rendereffectschemainventoryjsonl-from-internal-effectschemainventoryrender-ts",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-157-export-diffeffectschemainventoryfiles-digesteffectschemainventoryjsonl-effectschemainventorybytelength-effectschemainventoryjsonlname-formateffectschemainventorydrift-readeffectschemainventoryindexheader-rendereffectschemainventory-rendereffectschemainventoryindex-rendereffectschemainventoryjsonl-from-internal-effectschemainventoryrender-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517364,8 +515966,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 175,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-175-export-checkeffectschemainventory-effectschemainventoryrequestfromflags-generateeffectschemainventory-reporteffectschemainventorycheck-runeffectschemainventory-from-internal-effectschemainventoryrun-ts",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-174-export-checkeffectschemainventory-effectschemainventoryrequestfromflags-generateeffectschemainventory-reporteffectschemainventorycheck-runeffectschemainventory-from-internal-effectschemainventoryrun-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517386,8 +515988,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 188,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-188-export-effectschemainventorysource-from-internal-effectschemainventorysource-ts",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-187-export-effectschemainventorysource-from-internal-effectschemainventorysource-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517408,8 +516010,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-195-export-readeffectschemainventoryfixture-readeffectschemainventorymodulerows-writeeffectschemainventoryfixture-from-internal-effectschemainventorystore-ts",
+          "line": 194,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-194-export-readeffectschemainventoryfixture-readeffectschemainventorymodulerows-writeeffectschemainventoryfixture-from-internal-effectschemainventorystore-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517430,8 +516032,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 206,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-206-export-type-effectschemainventorysourceshape-from-internal-effectschemainventorysource-ts",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-205-export-type-effectschemainventorysourceshape-from-internal-effectschemainventorysource-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -517452,8 +516054,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 84,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-84-linteffectschemainventorycommand",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-83-linteffectschemainventorycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -517474,8 +516076,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/EffectSchemaInventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.ts",
-          "line": 113,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-113-makeeffectschemainventorycommandfortesting",
+          "line": 112,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectschemainventory-ts-112-makeeffectschemainventorycommandfortesting",
           "currentTags": [
             "@internal",
             "@param",
@@ -518228,34 +516830,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "EffectSchemaInventoryGraftUnavailableError",
-          "exportKind": "class",
-          "filePath": "src/commands/Lint/Lint.errors.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
-          "line": 489,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-errors-ts-489-effectschemainventorygraftunavailableerror",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "EffectSchemaInventoryDriftError",
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
-          "line": 523,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-errors-ts-523-effectschemainventorydrifterror",
+          "line": 488,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-errors-ts-488-effectschemainventorydrifterror",
           "currentTags": [
             "@category",
             "@since"
@@ -518276,8 +516856,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
-          "line": 550,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-errors-ts-550-schemaparitycodemoderror",
+          "line": 515,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-errors-ts-515-schemaparitycodemoderror",
           "currentTags": [
             "@category",
             "@since"
@@ -518298,8 +516878,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/Lint.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
-          "line": 585,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-errors-ts-585-lintprogramassignmenterror",
+          "line": 550,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-errors-ts-550-lintprogramassignmenterror",
           "currentTags": [
             "@category",
             "@since"
@@ -524238,8 +522818,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 94,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-94-routingrole",
+          "line": 93,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-93-routingrole",
           "currentTags": [
             "@category",
             "@since"
@@ -524260,8 +522840,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 107,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-107-routingrole",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-106-routingrole",
           "currentTags": [
             "@see",
             "@category",
@@ -524283,8 +522863,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 123,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-123-routingroleoptions",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-122-routingroleoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -524305,8 +522885,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-139-routingroleis",
+          "line": 138,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-138-routingroleis",
           "currentTags": [
             "@category",
             "@since"
@@ -524327,8 +522907,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 175,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-175-routingsurface",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-174-routingsurface",
           "currentTags": [
             "@category",
             "@since"
@@ -524349,8 +522929,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 188,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-188-routingsurface",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-187-routingsurface",
           "currentTags": [
             "@see",
             "@category",
@@ -524372,8 +522952,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-204-routingsurfaceoptions",
+          "line": 203,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-203-routingsurfaceoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -524394,8 +522974,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 220,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-220-routingsurfaceis",
+          "line": 219,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-219-routingsurfaceis",
           "currentTags": [
             "@category",
             "@since"
@@ -524416,8 +522996,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 272,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-272-surfaceeffortdomain",
+          "line": 271,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-271-surfaceeffortdomain",
           "currentTags": [
             "@category",
             "@since"
@@ -524438,8 +523018,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 312,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-312-iseffortallowedonsurface",
+          "line": 311,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-311-iseffortallowedonsurface",
           "currentTags": [
             "@param",
             "@returns",
@@ -524462,8 +523042,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 356,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-356-modelbinding",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-355-modelbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -524484,8 +523064,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 397,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-397-targetroot",
+          "line": 396,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-396-targetroot",
           "currentTags": [
             "@category",
             "@since"
@@ -524506,8 +523086,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 410,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-410-targetroot",
+          "line": 409,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-409-targetroot",
           "currentTags": [
             "@see",
             "@category",
@@ -524529,8 +523109,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 426,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-426-targetrootis",
+          "line": 425,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-425-targetrootis",
           "currentTags": [
             "@category",
             "@since"
@@ -524551,8 +523131,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 443,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-443-targetid",
+          "line": 442,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-442-targetid",
           "currentTags": [
             "@category",
             "@since"
@@ -524573,8 +523153,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 457,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-457-targetid",
+          "line": 456,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-456-targetid",
           "currentTags": [
             "@see",
             "@category",
@@ -524596,8 +523176,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 486,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-486-locatorfield",
+          "line": 485,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-485-locatorfield",
           "currentTags": [
             "@category",
             "@since"
@@ -524618,8 +523198,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 499,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-499-locatorfield",
+          "line": 498,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-498-locatorfield",
           "currentTags": [
             "@see",
             "@category",
@@ -524641,8 +523221,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 516,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-516-locatorfieldis",
+          "line": 515,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-515-locatorfieldis",
           "currentTags": [
             "@category",
             "@since"
@@ -524663,8 +523243,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 543,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-543-locatorbinding",
+          "line": 542,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-542-locatorbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -524685,8 +523265,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 578,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-578-bindingfilter",
+          "line": 577,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-577-bindingfilter",
           "currentTags": [
             "@category",
             "@since"
@@ -524707,8 +523287,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 604,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-604-effortdisplaylabel",
+          "line": 603,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-603-effortdisplaylabel",
           "currentTags": [
             "@category",
             "@since"
@@ -524729,8 +523309,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 638,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-638-locatorrender",
+          "line": 637,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-637-locatorrender",
           "currentTags": [
             "@category",
             "@since"
@@ -524751,8 +523331,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 658,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-658-locatorrender",
+          "line": 657,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-657-locatorrender",
           "currentTags": [
             "@see",
             "@category",
@@ -524774,8 +523354,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 699,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-699-locator",
+          "line": 698,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-698-locator",
           "currentTags": [
             "@category",
             "@since"
@@ -524796,8 +523376,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 795,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-795-locator",
+          "line": 794,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-794-locator",
           "currentTags": [
             "@see",
             "@category",
@@ -524819,8 +523399,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 812,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-812-modelslocatorwrite",
+          "line": 811,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-811-modelslocatorwrite",
           "currentTags": [
             "@category",
             "@since"
@@ -524841,8 +523421,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 838,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-838-modelswritespan",
+          "line": 837,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-837-modelswritespan",
           "currentTags": [
             "@category",
             "@since"
@@ -524863,8 +523443,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 865,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-865-modelsapplymode",
+          "line": 864,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-864-modelsapplymode",
           "currentTags": [
             "@category",
             "@since"
@@ -524885,8 +523465,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 877,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-877-modelsapplymode",
+          "line": 876,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-876-modelsapplymode",
           "currentTags": [
             "@category",
             "@since"
@@ -524907,8 +523487,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 903,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-903-modelsapplyjournal",
+          "line": 902,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-902-modelsapplyjournal",
           "currentTags": [
             "@category",
             "@since"
@@ -524929,8 +523509,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 954,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-954-modelsynctarget",
+          "line": 953,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-953-modelsynctarget",
           "currentTags": [
             "@category",
             "@since"
@@ -524951,8 +523531,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 1001,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1001-supersededmodel",
+          "line": 1000,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1000-supersededmodel",
           "currentTags": [
             "@category",
             "@since"
@@ -524973,8 +523553,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 1041,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1041-modelsmanifest",
+          "line": 1040,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1040-modelsmanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -524995,8 +523575,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 1068,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1068-modelseligibilityresult",
+          "line": 1067,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1067-modelseligibilityresult",
           "currentTags": [
             "@category",
             "@since"
@@ -525017,8 +523597,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Models/Models.manifest.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.schemas.ts",
-          "line": 1089,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1089-modelseligibilityresult",
+          "line": 1088,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-schemas-ts-1088-modelseligibilityresult",
           "currentTags": [
             "@category",
             "@since"
@@ -525758,8 +524338,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.seed.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.seed.ts",
-          "line": 531,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-seed-ts-531-seedmodelsmanifest",
+          "line": 519,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-seed-ts-519-seedmodelsmanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -538928,8 +537508,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Refs/Refs.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.command.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-command-ts-151-refscommand",
+          "line": 149,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-command-ts-149-refscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -538968,56 +537548,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "ReferenceTier",
-          "exportKind": "const",
-          "filePath": "src/commands/Refs/Refs.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 43,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-43-referencetier",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ReferenceTier",
-          "exportKind": "type",
-          "filePath": "src/commands/Refs/Refs.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 52,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-52-referencetier",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "ReferenceMember",
           "exportKind": "class",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 67,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-67-referencemember",
+          "line": 36,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-36-referencemember",
           "currentTags": [
             "@category",
             "@since"
@@ -539038,8 +537574,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 112,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-112-referenceworkspacemanifest",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-79-referenceworkspacemanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -539060,8 +537596,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-201-memberrefreshoutcome",
+          "line": 168,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-168-memberrefreshoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -539082,8 +537618,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 217,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-217-memberrefreshoutcome",
+          "line": 181,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-181-memberrefreshoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -539104,8 +537640,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 231,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-231-member-refresh-detail-max-chars",
+          "line": 195,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-195-member-refresh-detail-max-chars",
           "currentTags": [
             "@category",
             "@since"
@@ -539126,8 +537662,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 251,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-251-memberrefreshdetail",
+          "line": 213,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-213-memberrefreshdetail",
           "currentTags": [
             "@category",
             "@since"
@@ -539148,8 +537684,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 260,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-260-memberrefreshdetail",
+          "line": 222,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-222-memberrefreshdetail",
           "currentTags": [
             "@category",
             "@since"
@@ -539170,96 +537706,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 280,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-280-memberrefreshreport",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ReferenceWorkspaceCheck",
-          "exportKind": "class",
-          "filePath": "src/commands/Refs/Refs.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 305,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-305-referenceworkspacecheck",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "PatchKitStatus",
-          "exportKind": "const",
-          "filePath": "src/commands/Refs/Refs.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 330,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-330-patchkitstatus",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "PatchKitStatus",
-          "exportKind": "type",
-          "filePath": "src/commands/Refs/Refs.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 339,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-339-patchkitstatus",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "RefsRefreshPreflight",
-          "exportKind": "class",
-          "filePath": "src/commands/Refs/Refs.schemas.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 358,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-358-refsrefreshpreflight",
+          "line": 240,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-240-memberrefreshreport",
           "currentTags": [
             "@category",
             "@since"
@@ -539280,8 +537728,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 382,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-382-refsrefreshstatus",
+          "line": 265,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-265-refsrefreshstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -539302,8 +537750,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 440,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-440-refstimeroptions",
+          "line": 321,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-321-refstimeroptions",
           "currentTags": [
             "@category",
             "@since"
@@ -539324,8 +537772,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Refs/Refs.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
-          "line": 479,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-479-refstimerunit",
+          "line": 360,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-schemas-ts-360-refstimerunit",
           "currentTags": [
             "@category",
             "@since"
@@ -539346,8 +537794,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Refs/Refs.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
-          "line": 93,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-93-referenceworkspaceshape",
+          "line": 58,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-58-referenceworkspaceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -539368,8 +537816,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Refs/Refs.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
-          "line": 151,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-151-referenceworkspace",
+          "line": 110,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-110-referenceworkspace",
           "currentTags": [
             "@category",
             "@since"
@@ -539390,8 +537838,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Refs/Refs.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
-          "line": 799,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-799-referenceworkspacelayer",
+          "line": 554,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-554-referenceworkspacelayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -539414,8 +537862,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Refs/Refs.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
-          "line": 820,
-          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-820-referenceworkspacelive",
+          "line": 575,
+          "anchor": "packages-tooling-tool-cli-src-commands-refs-refs-service-ts-575-referenceworkspacelive",
           "currentTags": [
             "@category",
             "@since"
@@ -543434,8 +541882,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Root.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Root.ts",
-          "line": 78,
-          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-78-rootcommand",
+          "line": 77,
+          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-77-rootcommand",
           "currentTags": [
             "@internal",
             "@category",

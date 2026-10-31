@@ -50,7 +50,6 @@ const RoutingRoleKit = LiteralKit([
   "fallback.cursor",
   "fallback.grok",
   "qa.judge",
-  "graft.deep",
   "research.routine",
   "jsdoc.migrate-titles",
   "deprecated.routable",

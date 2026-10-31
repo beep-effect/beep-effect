@@ -438,7 +438,7 @@ from a real security failure) before shipping such a fix.
     If the merged change touched a systemd unit renderer, re-render the
     installed units from the swept clone with
     `bun run beep research install-timers --refresh` and/or
-    `bun run beep graft deep install-timer --refresh` (see
+    `bun run beep refs install-timer --refresh` (see
     `docs/runbooks/systemd-timers.md`). Do not hand any of this to the operator.
 
 `yeet closeout` is read-first. It classifies review threads and bot findings and
