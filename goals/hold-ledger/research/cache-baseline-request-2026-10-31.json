@@ -1,5 +1,5 @@
 {
-  "previous": "fc1afbb089bec054bc84f88cd61a5559e36f14c040817590944f97e0d3b47365",
+  "previous": "7d081d691b23f8fc110f459403bfcee960ee0d08c63bc4847b1e092dd5b12e3d",
   "review": {
     "reviewer": "Claude Opus 5.5 (hold-ledger, feat/hold-ledger)",
     "reason": "Re-record the existing cache posture of @beep/repo-cli after its manifest gained the @beep/epistemics dependency and the ./commands/Holds export (goals/hold-ledger). Script words, tasks, inputs, outputs and cache flags are unchanged; no qualification is granted.",

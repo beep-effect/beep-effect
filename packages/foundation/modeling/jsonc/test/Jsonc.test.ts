@@ -713,6 +713,24 @@ describe("Jsonc", () => {
       })
     );
 
+    // R3a (SPEC W4-o): the repo-cli artifact readers bind `S.Opaque` classes, so
+    // the bound codec must yield the branded class type, not the struct it wraps.
+    it.effect("keeps an Opaque target's branded type through decode and encode", () =>
+      Effect.gen(function* () {
+        class Manifest extends S.Opaque<Manifest, { readonly brand: unique symbol }>()(
+          S.Struct({ name: S.String, version: S.Finite })
+        ) {}
+        const manifest = Jsonc.bind(Manifest);
+        const decoded: Manifest = yield* manifest.decode('{ "name": "app", "version": 1 }');
+        assert.isTrue(S.is(Manifest)(decoded));
+        const viaSchema: Manifest = yield* S.decodeEffect(Jsonc.schema(Manifest))(
+          '{ "name": "app" /* c */, "version": 1 }'
+        );
+        assert.strictEqual(viaSchema.name, "app");
+        assert.strictEqual(yield* manifest.encode(decoded), '{\n  "name": "app",\n  "version": 1\n}');
+      })
+    );
+
     it.effect("surfaces parse and target failures as SchemaError", () =>
       Effect.gen(function* () {
         const parseError = yield* failureOf(config.decode("{ bad }"));
