@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.2",
-  "epoch": "qualification-v2",
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
