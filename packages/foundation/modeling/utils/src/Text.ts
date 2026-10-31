@@ -18,7 +18,7 @@ const descriptionFromOptions = (options: { readonly description: string }): stri
  *
  * **Example** (Trim and drop empties)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Trim and drop empties"
  * import * as Text from "@beep/utils/Text"
  *
  * const tags = Text.splitCommaSeparatedTrimmed(" foo , bar , , baz ")
@@ -42,7 +42,7 @@ export const splitCommaSeparatedTrimmed = flow(Str.split(","), A.map(Str.trim), 
  *
  * **Example** (Format name with aliases)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Format name with aliases"
  * import * as Text from "@beep/utils/Text"
  *
  * const row = Text.formatNameWithAliases("ls", ["list", "dir"], { description: "List files" })
@@ -78,7 +78,7 @@ export const formatNameWithAliases: {
  *
  * **Example** (Join lines with newline)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Join lines with newline"
  * import * as Text from "@beep/utils/Text"
  *
  * const block = Text.joinLines(["hello", "world"])
@@ -137,12 +137,12 @@ const lineBreakWidth = (text: string, index: number, pairEnd: number, unicodeSep
  *
  * **Example** (Locate offsets under two newline grammars)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Locate offsets under two newline grammars"
  * import { lineCharacterAt } from "@beep/utils/Text"
  *
- * console.log(lineCharacterAt("ab\r\ncd", 5)) // { line: 1, character: 1 }
- * console.log(lineCharacterAt(3, { crlfLookahead: "prefix" })("ab\r\ncd")) // { line: 1, character: 0 }
- * console.log(lineCharacterAt("a\u2028b", 2, { unicodeSeparators: true })) // { line: 1, character: 0 }
+ * lineCharacterAt("ab\r\ncd", 5) // => { line: 1, character: 1 }
+ * lineCharacterAt(3, { crlfLookahead: "prefix" })("ab\r\ncd") // => { line: 1, character: 0 }
+ * lineCharacterAt("a\u2028b", 2, { unicodeSeparators: true }) // => { line: 1, character: 0 }
  * ```
  *
  * @param text - The source text the offset indexes into.
@@ -188,12 +188,12 @@ export const lineCharacterAt: {
  *
  * **Example** (Locate several diagnostics in one source)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Locate several diagnostics in one source"
  * import { lineCharacterIndex } from "@beep/utils/Text"
  *
  * const position = lineCharacterIndex("ab\r\ncd", { crlfLookahead: "prefix" })
- * console.log(position(3)) // { line: 1, character: 0 }
- * console.log(position(5)) // { line: 1, character: 1 }
+ * position(3) // => { line: 1, character: 0 }
+ * position(5) // => { line: 1, character: 1 }
  * ```
  *
  * @param text - The source shared by the offset lookups.
