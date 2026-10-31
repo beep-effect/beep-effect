@@ -475,3 +475,8 @@ Istanbul run map the source guard; the existing coverage owner's normalizer and
 scoped Istanbul library combine the diagnostic counters. See the source-bound
 repair checkpoint. New published-head canonical and hosted acceptance remain
 required.
+
+- [Dependency security compatibility checkpoint](dependency-security-compatibility-checkpoint.json):
+  patched dependency identities, independent legacy-reference provenance,
+  complete package and cross-runtime test/coverage proof, and restored negative
+  controls. This component repair grants no signed reuse or whole-goal acceptance.

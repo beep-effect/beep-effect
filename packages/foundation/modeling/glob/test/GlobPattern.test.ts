@@ -5,14 +5,13 @@
 import { GlobPattern, GlobPatternError, GlobPatternOptions } from "@beep/glob";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
-import * as Arbitrary from "effect/Arbitrary";
-import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { minimatch as oracle } from "minimatch";
 import { deliberatelyInvalid } from "./deliberatelyInvalid.ts";
+import { legacySamples } from "./legacyOracle.ts";
 
 describe("GlobPattern.compile", () => {
   it.effect("compiles and matches with segment-scoped star", () =>
@@ -324,30 +323,13 @@ describe("GlobPattern statics", () => {
 });
 
 describe("GlobPattern oracle (public seam)", () => {
-  // Literal and magic segments are two equal-weight groups (a Union of two
-  // Literals unions, not one flat list), so the pattern mix stays balanced
-  // between plain paths and paths that exercise the dialect.
-  const literalSeg = S.Literals(["a", "b", "abc", "x-y", "a.b+c", ".hidden", ""]);
-  const magicSeg = S.Literals(["*", "?", "**", "*.js", "a*", "+(a|b)", "[abc]", "{a,b}", "!x"]);
-  const patternArb = Arbitrary.schema(S.Array(S.Union([literalSeg, magicSeg])).check(S.isBetweenLength(1, 4))).pipe(
-    Arbitrary.map((xs) => A.join(xs, "/"))
-  );
-  const candidateArb = Arbitrary.schema(
-    S.Array(S.Literals(["a", "b", "abc", ".hidden", "x", ""])).check(S.isBetweenLength(1, 5))
-  ).pipe(Arbitrary.map((xs) => A.join(xs, "/")));
-
   it.effect.prop(
-    "agrees with upstream through compile and matches",
-    [patternArb, candidateArb],
-    ([pattern, candidate]) =>
+    "agrees with independently recorded upstream cases through compile and matches",
+    [legacySamples("public-facade")],
+    ([[, pattern, candidate, options, expected]]) =>
       Effect.gen(function* () {
-        const compiled = yield* Effect.result(GlobPattern.compile(pattern));
-        if (compiled._tag === "Failure") return; // guard-tripping input; the engine gate covers those
-        assert.strictEqual(
-          compiled.success.matches(candidate),
-          oracle(candidate, pattern, { platform: "linux" }),
-          `${pattern} vs ${candidate}`
-        );
+        const compiled = yield* GlobPattern.compile(pattern, GlobPatternOptions.make(options));
+        assert.strictEqual(compiled.matches(candidate), expected, `${pattern} vs ${candidate}`);
       }),
     { arbitrary: { runs: 200 } }
   );

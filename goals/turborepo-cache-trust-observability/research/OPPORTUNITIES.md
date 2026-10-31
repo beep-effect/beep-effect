@@ -11,6 +11,29 @@ Historical leads remain in the [exploration ledger](../../../explorations/turbor
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
 
+## 2026-10-31: inherited dependency advisories interrupt protected qualification
+
+PR #2368's Security job found newly reviewed `glob` and `minimatch`
+advisories in dependency state shared with `main`. The affected installed
+versions were `glob` 10.5.0/13.0.6 and `minimatch` 5.1.9/9.0.9/10.2.6.
+The repair lane pins `glob` 14.0.3 and `minimatch` 11.0.3 and regenerates
+the lockfile without changing scanner exceptions. Cache policy audit passes.
+
+The first complete `@beep/glob` package check exposed removed upstream
+test-oracle APIs (`AST`, `makeRe`, `levelTwoFileOptimize`). A direct runtime
+probe also found changed empty-path and dot-segment matching semantics.
+These are introduced compatibility failures, not inherited-red waivers.
+Keep the dependency repair in draft until the old dialect contract and
+its independent assertions are preserved against a secure oracle. Owner:
+this goal's dependency repair lane. Prevent recurrence by checking oracle
+API and dialect compatibility before calling a security upgrade final.
+The same uncapped optimizer cloning existed in the vendored engine. Its
+repair now enforces the existing expansion cap before cloning and before
+pairwise preprocessing. The focused hostile-input suite passes 20 tests,
+including first-excess and oversized direct-input controls; this does not
+turn the still-red complete oracle suite into a pass.
+The signed trial remains inactive and the credential helper remains unrun.
+
 ## 2026-10-29: request tags need their own captured evidence
 
 The closed-producer source inspection found that `CacheFixtureEvent.tagPresent`
@@ -924,3 +947,47 @@ normalization. Keep the diagnostic distinct from a new hosted proof.
 - Reuse `serveCacheLoopback`, retain the original 128 MiB body limit, and
   qualify recovery against an actually occupied socket in both runtimes.
   Production trust, credentials and cache activation remain unchanged.
+
+
+### 2026-10-31: secure dependency upgrade preserves its older oracle contract
+
+The initial patched dependency fixed hosted Security but broke the vendored
+engine's test oracle APIs and matching assumptions. Preserve all original
+expected outcomes with published-source-verified reference data, then execute
+the full original-generator samples and fresh bounded fragment candidates.
+The package audit/docgen, 270 Node tests and V8/Istanbul coverage now pass.
+Removing the budget check or corrupting a matching result each fails the
+intended control; source restores byte-for-byte. The
+[checkpoint](dependency-security-compatibility-checkpoint.json) records the
+scope and current hosted-proof requirement. No scanner exception or quality
+floor was changed. Reference JSON is decoded through the existing schemas in
+an owned, disposed FileSystem runtime, avoiding giant inferred JSON unions.
+
+
+### 2026-10-31: publication lint has stricter source imports than the compiler hint
+
+The first compatibility wave created an unpublished commit, then correctly
+stopped at repository lint: NodeNext's `.js` import suggestion conflicts with
+the repo's explicit `.ts` rule. The same gate required the NodeURL namespace
+and a module-scoped JSON codec. Correct all three, run repository lint without
+quiet output, and refresh the full package and both runtime coverage proofs.
+Those checks and the repeated negative controls pass; the initial refusal
+remains retained. No gate or diagnostic was disabled. Prevent recurrence by
+checking existing source-import conventions before applying compiler hints.
+
+
+### 2026-10-31: expansion budgets do not bound optional pairwise work
+
+PR2373 review found that 4,096 alternatives remain below the existing expansion
+budget but still entered quadratic second-phase processing. Mirror the patched
+upstream 1,000-alternative deduplication ceiling and retain all larger sets.
+The exact-boundary and zero-comparison tests plus a subprocess watchdog pass.
+Removing only the new guard fails the fast 1,001-alternative assertion; source
+restores exactly. Full package and both runtime coverage suites pass 273 tests.
+The same review found a stray import inside JSDoc; remove that text while keeping
+the actual filesystem import. Preserve the earlier proof as historical and
+require a new complete final check for this source wave.
+
+A first coverage launch was refused by the shell's unmatched-glob rule before
+any test process started. Quoting the literal exclusion argument allowed the
+intended run; no test or coverage rule was changed.
