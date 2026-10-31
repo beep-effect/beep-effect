@@ -173,3 +173,7 @@ decomposition abstentions separately. Keep implementation failures in the
 frozen end-to-end denominator. Primary strict structural equality is reported
 overall and per rule; typed-edge F1 is diagnostic only. Poor recovery is a
 result to report, not permission to simplify gold or expand implementation.
+
+## Operator authority amendment — 2026-10-31
+
+For current completion, mandatory attorney escalation above is superseded by AUTONOMOUS-ACCEPTANCE-v1.md. Use separate independent automated reviewer sessions, preserve frozen reference labels, retain bounded unresolved outcomes and distinguish automated authority from actual attorney agreement. The original reference-derivation receipts and all prior review requirements remain historical evidence.

@@ -65,6 +65,10 @@ agreement remain incomplete. The P3 read-only tool is implemented and verified.
 The first structural measurement triggered the explicit poor-floor stop condition;
 the subsequent user-directed repair is recorded below; publication remains pending. Closeout remains incomplete.
 
+## Current Acceptance Authority
+
+The user explicitly requires autonomous completion without attorney presence. [Autonomous acceptance v1](research/AUTONOMOUS-ACCEPTANCE-v1.md) governs current work: independent automated review/adjudication, immutable references/results, explicit uncertainty and optional later attorney review. Historical human-hold records remain intact and are superseded for current completion.
+
 ## Latest Evidence
 
 - **User-directed structural repair while attorney review is unavailable (2026-10-31):** [comparison](history/2026-10-31-quantity-comparison.md) records **34/538 exact structures (6.32%)**, retaining all 31 previous passes with three gains and zero losses. Edge F1 rises to 29.5816%; 446 mismatches/58 input failures remain. Predicate/quantity-context fixes have three new regressions, 94 focused tests and all package verifications passing. Every reference label, prior result and review packet is intact. Existing allowed review/results remain v13 evidence; no v14 adjudicated FP estimate is claimed.

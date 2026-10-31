@@ -352,6 +352,13 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
       word
     )
   );
+  const quantifiedObject =
+    (O.contains(next, "at") &&
+      O.exists(A.get(tokens, index + 2), ({ text }) => Str.toLowerCase(text) === "least") &&
+      O.exists(A.get(tokens, index + 3), ({ text }) => Str.toLowerCase(text) === "one")) ||
+    (O.contains(next, "one") &&
+      O.exists(A.get(tokens, index + 2), ({ text }) => Str.toLowerCase(text) === "or") &&
+      O.exists(A.get(tokens, index + 3), ({ text }) => Str.toLowerCase(text) === "more"));
   const nominal = O.exists(previous, (word) =>
     HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word)
   );
@@ -364,12 +371,14 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
   const purposeParticiple =
     O.contains(next, "for") && (O.contains(current, "used") || (participle && O.contains(previous, "be")));
   const relational = O.contains(current, "responsive") && O.contains(next, "to");
+  const formingInfinitive = O.contains(previous, "to") && O.contains(current, "form");
   return (
     (O.exists(current, (word) => HashSet.has(predicateWords, word)) ||
       finite ||
       purposeParticiple ||
       relational ||
-      (participle && complement)) &&
+      formingInfinitive ||
+      (participle && (complement || quantifiedObject))) &&
     (!O.exists(next, (word) => HashSet.has(nominalFollowers, word)) || clauseVerb) &&
     !nominal
   );

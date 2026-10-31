@@ -136,9 +136,9 @@ Higher sources outrank lower sources when they conflict.
   PANORAMA are reference-only.
 - **Lawyer-facing text.** Findings read in plain lawyer language and quote the
   claim text.
-- **Appetite.** About five agent-days plus at most two attorney hours. If the
-  deterministic floor measures badly, stop at the measurement and report it; do
-  not expand scope.
+- **Appetite.** About five agent-days plus at most two attorney hours. A poor deterministic floor is retained and reported. User-directed
+  structural repairs may continue under the unchanged runtime scope and fixed
+  evaluation. Attorney availability is not an autonomous completion gate.
 
 ## Acceptance Criteria
 
@@ -172,8 +172,9 @@ Higher sources outrank lower sources when they conflict.
       - the claim text in force at the rejection.
 - [ ] **Labelled set.** About 60 independent-claim families (~500 claims) are
       element-labelled by a bounded extractor/critic agent loop with a
-      confidence threshold; unresolved items are flagged. About 10% are
-      spot-checked by the attorney, and the agreement is recorded. About 200
+      confidence threshold; unresolved items are flagged. About 10% receive independent source-grounded automated spot-checks under
+      research/AUTONOMOUS-ACCEPTANCE-v1.md, with agreement, disagreements and
+      unresolved items recorded. Attorney review is optional and separately attributed. About 200
       allowed claim sets (~3,000 claims) are fetched. Positives are claims that
       drew real §112(b) rejections. Each records the public office action, the
       claim number, the rejection's mail date and the claim text in force at
@@ -193,8 +194,9 @@ Higher sources outrank lower sources when they conflict.
 - [ ] **P3 evaluation.** A report in `history/` gives: strict structural
       equality (one node mapping, typed edges, exact spans) as the primary
       metric, overall and per rule; typed-edge F1 as a diagnostic only; the
-      false-positive rate on allowed claims with its interval, after an
-      adjudicated sample; and an IPRally training-sample smoke-test result
+      automated-adjudication erroneous-alert estimate or identification bounds
+      on allowed claims with an explicitly conditional interval/envelope, after an
+      independently reviewed sample; and an IPRally training-sample smoke-test result
       labelled non-US and non-gold.
 - [ ] No finding blocks a draft or a pipeline; nothing wires the checker into a
       gate.
@@ -327,3 +329,5 @@ there.
 | 2026-10-31 | Check in read-only validators for the original reference spot-check and addendum instead of relying on ignored scratch scripts. Preserve all packet/source hashes and the 50-claim denominator; separate actual submission authority from file validation. | The required human evidence must remain importable in a fresh checkout. Partial/uncertain results cannot become agreement or vanish from the denominator, and convention decisions cannot change it. The operator reports attorney review unavailable, so actual acceptance remains unfulfilled. | Restore the earlier scratch validators from retained history if a replacement is needed; retain every original packet/export/result and this authority boundary. |
 
 | 2026-10-31 | At the user’s explicit request, continue a bounded worktree structural repair while attorney review is unavailable, preserving every reference label/result and all 31 passing claims. Version predicate/quantity-context fixes and the same evaluation as v14. | The fixed replay reaches 34/538 with three gains and zero losses; all historical passing sets survive. Finite include/incorporate forms, responsive-to and passive purpose boundaries, and unique explicit number-of references repair source grammar without resolving held conventions. Old allowed review remains v13 evidence; no human acceptance is inferred. | Restore runtime source at bede3a848d for the 31-match baseline; retain every old/new measurement, source freeze and review packet. |
+
+| 2026-10-31 | At the user’s explicit instruction, replace mandatory attorney presence with independently criticized automated acceptance under research/AUTONOMOUS-ACCEPTANCE-v1.md. Attorney review becomes optional; all old labels/results and 34 passes remain protected. | The user requires completion without attorney presence. Automated judgments retain their own authority/model/source bindings, uncertainty and limitations; actual attorney fields remain false. This changes the acceptance standard rather than inventing human agreement. | Reinstate human gates in a new authority revision, retaining all original and automated evidence. |
