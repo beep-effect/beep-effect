@@ -7291,6 +7291,28 @@
       "reason": "Native filesystem behavior is the subject: materialized bytes, symlink and root-boundary protection, procfs fallback and atomic updates in the vault sync engine. Owner: @beep/documents-server. Exit: retire when MemoryFileSystem models symlinks and procfs and the engine cases move to it."
     },
     {
+      "id": "EV010:packages/documents/server/test/VaultSyncFileStoreFailures.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/VaultSyncFileStoreFailures.test.ts",
+      "line": 7,
+      "endLine": 7,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native filesystem identity, path containment, descriptor failures and real file preservation are the tested contract. Tests use it.layer with explicit acquisition budgets. Owner: @beep/documents-server. Exit: retire when an in-memory filesystem faithfully models inode/device identity and descriptor-to-path races."
+    },
+    {
       "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:22:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
