@@ -12,8 +12,8 @@
  *   with a trailing newline). Its encode failure is left on the error channel
  *   unmapped so each caller attaches its own tagged error.
  * - {@link readArtifact} reads a committed JSONC document and decodes it through
- *   {@link @beep/schema/Jsonc!decodeJsoncTextAs}, mapping the read and decode
- *   phases with the caller-supplied factories.
+ *   the `@beep/jsonc` codec bound to the caller's schema (`Jsonc.bind`), mapping
+ *   the read and decode phases with the caller-supplied factories.
  * - {@link writeArtifact} makes the parent directory and writes `header + body`
  *   verbatim; the trailing bytes (a `formatJsonc` result already ends with one
  *   newline) travel in `body` so each caller stays byte-identical to its
@@ -25,7 +25,7 @@
  * @since 0.0.0
  */
 
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { A, O, pipe, thunkEmptyStr } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -71,9 +71,10 @@ export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value:
  *
  * **Details**
  *
- * Standardizes reads on {@link @beep/schema/Jsonc!decodeJsoncTextAs}. The read
- * and decode phases are mapped separately so callers keep their existing
- * `Failed to read ...` / `Failed to decode ...` message pair.
+ * Standardizes reads on the `@beep/jsonc` codec bound to the target schema
+ * (`Jsonc.bind(schema).decode`). The read and decode phases are mapped separately
+ * so callers keep their existing `Failed to read ...` / `Failed to decode ...`
+ * message pair.
  *
  * **Example** (Read artifact with schema)
  *
@@ -107,7 +108,7 @@ export const readArtifact = Effect.fn("ArtifactIo.readArtifact")(function* <Sche
 }) {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(input.path).pipe(Effect.mapError(input.onReadError));
-  return yield* decodeJsoncTextAs(input.schema)(text).pipe(Effect.mapError(input.onDecodeError));
+  return yield* Jsonc.bind(input.schema).decode(text).pipe(Effect.mapError(input.onDecodeError));
 });
 
 /**
