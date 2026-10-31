@@ -937,7 +937,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
         );
-        const scan = A.findFirst(commands, (args) => A.contains(args, "semgrep/semgrep"));
+        const scan = A.findFirst(commands, (args) => A.contains(args, "scan"));
         scan.pipe(O.isSome, assertTrue);
         if (O.isSome(scan)) {
           expect(A.takeRight(scan.value, 5)).toEqual(["--include", `/${ignored}`, "--include", `/${changed}`, "."]);
@@ -947,6 +947,56 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           NodeURL.fileURLToPath(new URL("../../../../../.semgrepignore", import.meta.url))
         );
         expect(ignoreRules).toContain("goals/**/history/outputs/");
+      })
+    );
+
+    it.effect("runs the first-party Semgrep rule tests before the changed-file filter", () =>
+      Effect.gen(function* () {
+        const commands: Array<ReadonlyArray<string>> = [];
+        const spawner = ChildProcessSpawner.make((command) => {
+          if (!ChildProcess.isStandardCommand(command)) {
+            return Effect.die("SAST test requires a standard command");
+          }
+          A.appendInPlace(commands, [command.command, ...command.args]);
+          return Effect.succeed(qualityCommandHandle("", 0));
+        });
+        yield* runGithubChecks("sast").pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          Effect.provideServiceEffect(Console.Console, TestConsole.make),
+          TestClock.withLive
+        );
+        const ruleTests = A.findFirst(commands, (args) => A.contains(args, "--test"));
+        assertSome(O.map(ruleTests, A.takeRight(3)), [
+          "--config",
+          "/src/.semgrep/first-party.yml",
+          "/src/goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts",
+        ]);
+        // No changed JavaScript/TypeScript files: the scan is skipped, the rule tests are not.
+        expect(A.filter(commands, (args) => A.contains(args, "scan"))).toEqual([]);
+      })
+    );
+
+    it.effect("pairs every first-party Semgrep rule with ruleid and ok fixture cases", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const read = (relative: string) =>
+          fs.readFileString(NodeURL.fileURLToPath(new URL(`../../../../../${relative}`, import.meta.url)));
+        const rules = yield* read(".semgrep/first-party.yml");
+        const fixture = yield* read(
+          "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts"
+        );
+        const ruleIds = pipe(
+          Str.split(rules, "\n"),
+          A.map(Str.trim),
+          A.filter(Str.startsWith("- id: ")),
+          A.map(Str.slice(6))
+        );
+        expect(ruleIds).toContain("beep-no-eval");
+        const unpaired = A.filter(
+          ruleIds,
+          (id) => !Str.includes(`// ruleid: ${id}\n`)(fixture) || !Str.includes(`// ok: ${id}\n`)(fixture)
+        );
+        expect(unpaired).toEqual([]);
       })
     );
 
@@ -974,7 +1024,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
         );
-        const scan = A.findFirst(commands, (args) => A.contains(args, "semgrep/semgrep"));
+        const scan = A.findFirst(commands, (args) => A.contains(args, "scan"));
         scan.pipe(O.isSome, assertTrue);
         if (O.isSome(scan)) {
           expect(A.takeRight(scan.value, 9)).toEqual([
