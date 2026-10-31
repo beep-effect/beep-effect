@@ -21,7 +21,7 @@ import * as Str from "effect/String";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { HoldsError } from "./Holds.errors.ts";
 import { HoldId } from "./Holds.schemas.ts";
-import { HoldLedger, HoldProbe, makeHoldLedger, makeHoldProbe } from "./Holds.service.ts";
+import { HoldLedger, HoldProbe, HoldProbeRequest, makeHoldLedger, makeHoldProbe } from "./Holds.service.ts";
 import { confirmHoldRuns } from "./Holds.verdict.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 
@@ -60,6 +60,14 @@ const outcomeText = (outcome: { readonly _tag: string; readonly detail?: string 
 /**
  * `beep holds list`: current hold versions and their latest verdicts.
  *
+ * **Example** (Read the command name)
+ *
+ * ```ts
+ * import { holdsListCommand } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(holdsListCommand.name) // "list"
+ * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -94,6 +102,14 @@ export const holdsListCommand = Command.make(
 /**
  * `beep holds probe <hold-id>`: run a hold's control and candidate, record the run.
  *
+ * **Example** (Read the command name)
+ *
+ * ```ts
+ * import { holdsProbeCommand } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(holdsProbeCommand.name) // "probe"
+ * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */
@@ -125,7 +141,7 @@ export const holdsProbeCommand = Command.make(
           onSome: Effect.succeed,
         })
       );
-      const run = yield* probe.probe({ proposition: version.proposition, commitSha });
+      const run = yield* probe.probe(HoldProbeRequest.make({ proposition: version.proposition, commitSha }));
       yield* Console.log(
         A.join(
           [

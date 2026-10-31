@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion 4-A1, refactor/qas-discovery-workspace-kit)",
-      "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the QAS discovery adoption (map site #143); the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (hold-ledger, feat/hold-ledger)",
+      "reason": "Re-record the existing cache posture of @beep/repo-cli after its manifest gained the @beep/epistemics dependency and the ./commands/Holds export (goals/hold-ledger). Script words, tasks, inputs, outputs and cache flags are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-4-a1.md",
-        "sha256": "ed51615669ff4ed8d5bdfd8c573f66258580e94c115f6ddf7ac22d82c5aee297"
+        "path": "goals/hold-ledger/research/cache-baseline-review-2026-10-31.md",
+        "sha256": "a334758372c818a4a8c05752ea7ac00b1e756dfa1dfc21b4db9ea397aac8e6fb"
       }
     },
     "@beep/repo-configs": {
@@ -102335,6 +102335,7 @@
           "@beep/colors#audit",
           "@beep/config-file#audit",
           "@beep/duckdb#audit",
+          "@beep/epistemics#audit",
           "@beep/exiftool#audit",
           "@beep/fc-runs#audit",
           "@beep/ffmpeg#audit",
@@ -102455,6 +102456,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -102564,6 +102566,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -102660,6 +102663,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -102805,6 +102809,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -102946,6 +102951,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103205,6 +103211,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103304,6 +103311,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103427,6 +103435,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",

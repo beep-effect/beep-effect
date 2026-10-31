@@ -90,6 +90,14 @@ export const confirmHoldVerdict = (newestFirst: ReadonlyArray<ProbeRunVerdict>):
 /**
  * {@link confirmHoldVerdict} over recorded runs, newest first.
  *
+ * **Example** (No runs yet)
+ *
+ * ```ts
+ * import { confirmHoldRuns } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(confirmHoldRuns([])) // "Inconclusive"
+ * ```
+ *
  * @category policies
  * @since 0.0.0
  */

@@ -8,7 +8,7 @@ import {
   ProbeOutcome,
 } from "@beep/repo-cli/commands/Holds";
 import { describe, expect, it } from "@effect/vitest";
-import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -109,12 +109,12 @@ describe("hold schemas", () => {
         reviewer: { _tag: "Absent", reason: "not-assessed" },
       },
     };
-    expect(Result.isFailure(S.decodeUnknownResult(HoldClaimVersion)(version))).toBe(true);
-    expect(
-      Result.isSuccess(
-        S.decodeUnknownResult(HoldClaimVersion)({ ...version, logicalKey: "hold:jsdom-vitest-eventtarget" })
+    assertTrue(S.decodeUnknownResult(HoldClaimVersion)(version).pipe(Result.isFailure));
+    assertTrue(
+      S.decodeUnknownResult(HoldClaimVersion)({ ...version, logicalKey: "hold:jsdom-vitest-eventtarget" }).pipe(
+        Result.isSuccess
       )
-    ).toBe(true);
+    );
   });
 });
 

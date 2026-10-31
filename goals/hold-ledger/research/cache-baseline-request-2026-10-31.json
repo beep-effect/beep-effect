@@ -1,0 +1,20 @@
+{
+  "previous": "fc1afbb089bec054bc84f88cd61a5559e36f14c040817590944f97e0d3b47365",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (hold-ledger, feat/hold-ledger)",
+    "reason": "Re-record the existing cache posture of @beep/repo-cli after its manifest gained the @beep/epistemics dependency and the ./commands/Holds export (goals/hold-ledger). Script words, tasks, inputs, outputs and cache flags are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "goals/hold-ledger/research/cache-baseline-review-2026-10-31.md",
+      "sha256": "a334758372c818a4a8c05752ea7ac00b1e756dfa1dfc21b4db9ea397aac8e6fb"
+    }
+  },
+  "subjects": ["@beep/repo-cli"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

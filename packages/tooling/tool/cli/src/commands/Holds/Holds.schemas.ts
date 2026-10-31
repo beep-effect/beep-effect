@@ -70,6 +70,15 @@ export type HoldKind = typeof HoldKind.Type;
 /**
  * One place in a tracked config file that enforces the hold.
  *
+ * **Example** (Anchor a hold to a catalog key)
+ *
+ * ```ts
+ * import { HoldAnchor } from "@beep/repo-cli/commands/Holds"
+ *
+ * const anchor = HoldAnchor.make({ file: "package.json", key: "workspaces.catalog.statelyai" })
+ * console.log(anchor.file) // "package.json"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -87,6 +96,18 @@ export class HoldAnchor extends S.Opaque<HoldAnchor, { readonly brand: unique sy
 /**
  * What a hold governs: the packages held together and every anchor enforcing it.
  *
+ * **Example** (A single-package subject)
+ *
+ * ```ts
+ * import { HoldAnchor, HoldSubject } from "@beep/repo-cli/commands/Holds"
+ *
+ * const subject = HoldSubject.make({
+ *   packages: ["statelyai"],
+ *   anchors: [HoldAnchor.make({ file: "package.json", key: "workspaces.catalog.statelyai" })],
+ * })
+ * console.log(subject.packages[0]) // "statelyai"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -103,6 +124,14 @@ export class HoldSubject extends S.Opaque<HoldSubject, { readonly brand: unique 
 
 /**
  * The runtime a scripted probe must run under; a probe on the wrong runtime proves nothing.
+ *
+ * **Example** (Narrow a probe runtime)
+ *
+ * ```ts
+ * import { ProbeRuntime } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(ProbeRuntime.is["vitest-bun"]("vitest-bun")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -172,6 +201,15 @@ export type HoldFalsifier = typeof HoldFalsifier.Type;
 /**
  * An upstream signal that makes a hold worth re-checking before its deadline.
  *
+ * **Example** (Watch an npm dist-tag)
+ *
+ * ```ts
+ * import { HoldWatchTarget } from "@beep/repo-cli/commands/Holds"
+ *
+ * const target = HoldWatchTarget.cases.NpmVersion.make({ packageName: "statelyai", distTag: "latest" })
+ * console.log(target._tag) // "NpmVersion"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -192,6 +230,14 @@ export type HoldWatchTarget = typeof HoldWatchTarget.Type;
 /**
  * What a lane does when the hold's probe flips or its lifetime runs out.
  *
+ * **Example** (Unpin when the hold ends)
+ *
+ * ```ts
+ * import { HoldExitAction } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(HoldExitAction.cases.Unpin.make({})._tag) // "Unpin"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -211,6 +257,15 @@ export type HoldExitAction = typeof HoldExitAction.Type;
 
 /**
  * The proposition a hold claim asserts.
+ *
+ * **Example** (Reject an incomplete proposition)
+ *
+ * ```ts
+ * import { HoldProposition } from "@beep/repo-cli/commands/Holds"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HoldProposition)({ _tag: "Hold" })) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -240,6 +295,15 @@ export type HoldProposition = typeof HoldProposition.Type;
 /**
  * Identifier of one immutable hold claim version.
  *
+ * **Example** (Check a version id)
+ *
+ * ```ts
+ * import { HoldVersionId } from "@beep/repo-cli/commands/Holds"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HoldVersionId)("statelyai-model-testing-404@1")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -250,6 +314,15 @@ export const HoldVersionId = S.NonEmptyString.pipe(
 
 /**
  * Identifier of one recorded probe run, cited by a version's `supportedBy`.
+ *
+ * **Example** (Check a probe run id)
+ *
+ * ```ts
+ * import { ProbeRunId } from "@beep/repo-cli/commands/Holds"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ProbeRunId)("statelyai-model-testing-404@1793446502723")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -270,6 +343,15 @@ export type ProbeRunId = typeof ProbeRunId.Type;
 /**
  * Identifier of the activity that produced a version (an admit, a renewal, a sweep).
  *
+ * **Example** (Check an activity id)
+ *
+ * ```ts
+ * import { HoldActivityId } from "@beep/repo-cli/commands/Holds"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HoldActivityId)("admit-2026-10-31")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -280,6 +362,15 @@ export const HoldActivityId = S.NonEmptyString.pipe(
 
 /**
  * Identifier of the agent or person responsible for a version.
+ *
+ * **Example** (Check a principal id)
+ *
+ * ```ts
+ * import { HoldPrincipalId } from "@beep/repo-cli/commands/Holds"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HoldPrincipalId)("claude-opus-5-5")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -305,6 +396,15 @@ const HoldEnvelope = makeClaimEnvelope({
  * One immutable hold claim version. A renewal appends a new version whose
  * `supersedes` names the previous one; `validTime.validTo` is the lease end.
  *
+ * **Example** (Reject an empty row)
+ *
+ * ```ts
+ * import { HoldClaimVersion } from "@beep/repo-cli/commands/Holds"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HoldClaimVersion)({})) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -328,6 +428,14 @@ export type HoldClaimVersion = typeof HoldClaimVersion.Type;
  * non-zero exit without the signature, a timeout, an install failure). An
  * inconclusive run never counts as a pass.
  *
+ * **Example** (A passing run)
+ *
+ * ```ts
+ * import { ProbeOutcome } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(ProbeOutcome.cases.Passed.make({})._tag) // "Passed"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -348,6 +456,14 @@ export type ProbeOutcome = typeof ProbeOutcome.Type;
 /**
  * Verdict of a single probe run, before confirmation across runs.
  *
+ * **Example** (Narrow a run verdict)
+ *
+ * ```ts
+ * import { ProbeRunVerdict } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(ProbeRunVerdict.is["probe-broken"]("probe-broken")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -366,6 +482,15 @@ export type ProbeRunVerdict = typeof ProbeRunVerdict.Type;
 /**
  * One recorded probe run: the control and candidate outcomes and the verdict
  * they yield. Probe runs are the assertions a hold version is `supportedBy`.
+ *
+ * **Example** (Reject an empty run)
+ *
+ * ```ts
+ * import { ProbeRun } from "@beep/repo-cli/commands/Holds"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ProbeRun)({})) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -398,6 +523,14 @@ export class ProbeRun extends S.Opaque<ProbeRun, { readonly brand: unique symbol
  * `Flipped` needs the two most recent runs to both be `candidate-passed`. A
  * single passing run is `Unconfirmed`. Any `probe-broken` among the most recent
  * run escalates as `ProbeBroken` and never unpins.
+ *
+ * **Example** (Narrow a confirmed verdict)
+ *
+ * ```ts
+ * import { HoldVerdict } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(HoldVerdict.is.Flipped("Flipped")) // true
+ * ```
  *
  * @category models
  * @since 0.0.0

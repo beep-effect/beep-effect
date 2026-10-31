@@ -15,6 +15,14 @@ const $I = $RepoCliId.create("commands/Holds/Holds.errors");
 /**
  * Failure category for hold ledger operations.
  *
+ * **Example** (Narrow a failure category)
+ *
+ * ```ts
+ * import { HoldsErrorReason } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(HoldsErrorReason.is.usage("usage")) // true
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -56,6 +64,15 @@ export class HoldsError extends S.TaggedError<HoldsError, { readonly brand: uniq
 
 /**
  * Map a platform failure into a {@link HoldsError}.
+ *
+ * **Example** (Build a platform error mapper)
+ *
+ * ```ts
+ * import { holdsPlatformError } from "@beep/repo-cli/commands/Holds"
+ *
+ * const toHoldsError = holdsPlatformError("Could not read the ledger")
+ * console.log(typeof toHoldsError) // "function"
+ * ```
  *
  * @category errors
  * @since 0.0.0

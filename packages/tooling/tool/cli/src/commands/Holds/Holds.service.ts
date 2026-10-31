@@ -22,16 +22,24 @@ import { repoRunOutputBound, runCaptured } from "../../internal/process/StepExec
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
 import { HoldsError, holdsPlatformError } from "./Holds.errors.ts";
-import { HoldClaimVersion, ProbeOutcome, ProbeRun, ProbeRunId } from "./Holds.schemas.ts";
+import { HoldClaimVersion, HoldProposition, ProbeOutcome, ProbeRun, ProbeRunId } from "./Holds.schemas.ts";
 import { judgeProbeRun } from "./Holds.verdict.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { HoldId, HoldProposition } from "./Holds.schemas.ts";
+import type { HoldId } from "./Holds.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.service");
 
 /**
  * Repo-relative directory of the hold ledger.
+ *
+ * **Example** (Read the ledger directory)
+ *
+ * ```ts
+ * import { holdLedgerDirectory } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(holdLedgerDirectory) // "hold-ledger"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -43,6 +51,15 @@ const ProbeRunJson = JsonStringCodec(ProbeRun);
 
 /**
  * The in-repo hold ledger: append-only claim versions and probe runs.
+ *
+ * **Example** (Read current versions through the shape)
+ *
+ * ```ts
+ * import type { HoldLedgerShape } from "@beep/repo-cli/commands/Holds"
+ *
+ * const current = (ledger: HoldLedgerShape) => ledger.currentVersions
+ * console.log(typeof current) // "function"
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -59,6 +76,16 @@ export interface HoldLedgerShape {
 /**
  * Service tag for {@link HoldLedgerShape}.
  *
+ * **Example** (Use the ledger service)
+ *
+ * ```ts
+ * import { HoldLedger } from "@beep/repo-cli/commands/Holds"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.flatMap(HoldLedger.asEffect(), (ledger) => ledger.currentVersions)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -66,6 +93,15 @@ export class HoldLedger extends Context.Service<HoldLedger, HoldLedgerShape>()($
 
 /**
  * Build the file-backed ledger rooted at a repository checkout.
+ *
+ * **Example** (Build the ledger for a checkout)
+ *
+ * ```ts
+ * import { makeHoldLedger } from "@beep/repo-cli/commands/Holds"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(makeHoldLedger("."))) // true
+ * ```
  *
  * @category layers
  * @since 0.0.0
@@ -118,16 +154,43 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
 /**
  * Inputs for one probe run that the probe cannot discover itself.
  *
- * @category services
+ * **Example** (Request a probe of one hold at a commit)
+ *
+ * ```ts
+ * import { HoldProbeRequest } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(HoldProbeRequest.fields.commitSha !== undefined) // true
+ * ```
+ *
+ * @category models
  * @since 0.0.0
  */
-export interface HoldProbeRequest {
-  readonly commitSha: string;
-  readonly proposition: HoldProposition;
-}
+export class HoldProbeRequest extends S.Opaque<HoldProbeRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
+    commitSha: S.String.check(S.isPattern(/^[0-9a-f]{40}$/)),
+    proposition: HoldProposition,
+  }).pipe(
+    $I.annoteSchema("HoldProbeRequest", {
+      description: "The hold to probe and the commit the probe run is recorded against.",
+    })
+  )
+) {}
+
+const encodeProbeManifest = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+
+const decodeInstalledVersion = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ version: S.NonEmptyString })));
 
 /**
  * Runs a hold's scripted falsifier against its control and candidate versions.
+ *
+ * **Example** (Probe through the shape)
+ *
+ * ```ts
+ * import type { HoldProbeShape } from "@beep/repo-cli/commands/Holds"
+ *
+ * const probeOf = (probe: HoldProbeShape) => probe.probe
+ * console.log(typeof probeOf) // "function"
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -138,6 +201,16 @@ export interface HoldProbeShape {
 
 /**
  * Service tag for {@link HoldProbeShape}.
+ *
+ * **Example** (Use the probe service)
+ *
+ * ```ts
+ * import { HoldProbe } from "@beep/repo-cli/commands/Holds"
+ * import * as Effect from "effect/Effect"
+ *
+ * const probe = HoldProbe.asEffect()
+ * console.log(Effect.isEffect(probe)) // true
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -188,6 +261,15 @@ export const classifyProbeOutput =
  * `scratchRoot` whose `package.json` depends on every subject package at the
  * version under test.
  *
+ * **Example** (Build the probe for a scratch root)
+ *
+ * ```ts
+ * import { makeHoldProbe } from "@beep/repo-cli/commands/Holds"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(makeHoldProbe(".cache/holds"))) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -209,7 +291,7 @@ export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot:
       .makeDirectory(directory, { recursive: true })
       .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
     const dependencies = R.fromEntries(A.map(proposition.subject.packages, (name) => [name, version] as const));
-    const manifest = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({
+    const manifest = yield* encodeProbeManifest({
       name: `hold-probe-${proposition.holdId}-${side}`,
       private: true,
       dependencies,
@@ -242,7 +324,7 @@ export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot:
         path.join(directory, "node_modules", A.headNonEmpty(proposition.subject.packages), "package.json")
       )
       .pipe(
-        Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(S.Struct({ version: S.NonEmptyString })))),
+        Effect.flatMap(decodeInstalledVersion),
         Effect.map((pkg) => pkg.version),
         Effect.orElseSucceed(() => version)
       );
@@ -294,6 +376,15 @@ export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot:
 /**
  * Live ledger layer rooted at a repository checkout.
  *
+ * **Example** (Build the ledger layer)
+ *
+ * ```ts
+ * import { layerHoldLedger } from "@beep/repo-cli/commands/Holds"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(layerHoldLedger("."))) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -301,6 +392,15 @@ export const layerHoldLedger = (repoRoot: string) => Layer.effect(HoldLedger, ma
 
 /**
  * Live probe layer that installs into `scratchRoot`.
+ *
+ * **Example** (Build the probe layer)
+ *
+ * ```ts
+ * import { layerHoldProbe } from "@beep/repo-cli/commands/Holds"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(layerHoldProbe(".cache/holds"))) // true
+ * ```
  *
  * @category layers
  * @since 0.0.0
