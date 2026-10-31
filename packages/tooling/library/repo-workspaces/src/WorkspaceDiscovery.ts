@@ -470,6 +470,28 @@ export class WorkspaceDiscoveryOptions extends S.Opaque<WorkspaceDiscoveryOption
         description: "Optional pattern descent cap, defaulted on use.",
       })
     ),
+    /**
+     * Keep enumeration inside the workspace root's real path.
+     *
+     * **Details**
+     *
+     * Off by default: discovery follows links as the package managers do. On,
+     * a member directory, a wildcard base or a `**` descent whose real path
+     * (symlinks resolved) leaves the root's real path is skipped before its
+     * `package.json` is read and before the traversal descends into it, so a
+     * link to a directory outside the checkout can neither fail discovery with
+     * a manifest it holds nor walk a tree outside the root. A directory whose
+     * real path cannot be resolved is skipped the same way. A member reached
+     * through a link that stays inside the root is still discovered, at its
+     * link path.
+     *
+     * @defaultValue `false`.
+     */
+    containWithinRoot: S.optionalKey(S.Boolean).pipe(
+      $I.annoteKey("WorkspaceDiscoveryOptions.containWithinRoot", {
+        description: "Skip member directories whose real path leaves the workspace root, before reading them.",
+      })
+    ),
   }).pipe(
     $I.annoteSchema("WorkspaceDiscoveryOptions", {
       description: "Root resolution and pattern descent options, with defaults resolved lazily.",
@@ -777,7 +799,10 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
           )
         );
 
-        const directories = yield* enumerate(root, globs, { maxDepth: options?.maxDepth ?? 32 }).pipe(
+        const directories = yield* enumerate(root, globs, {
+          maxDepth: options?.maxDepth ?? 32,
+          ...O.getSomesStruct({ containWithinRoot: O.fromUndefinedOr(options?.containWithinRoot) }),
+        }).pipe(
           Effect.mapError((failure) =>
             WorkspacePatternError.make({
               root,
