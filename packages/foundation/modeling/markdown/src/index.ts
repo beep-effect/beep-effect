@@ -108,6 +108,8 @@ export {
   ThematicBreak,
   ThematicBreakChar,
 } from "./MarkdownNode.ts";
+export { HeadingSlug, MarkdownSlug } from "./MarkdownSlug.ts";
+export { MarkdownToc, TocEntry, TocOptions } from "./MarkdownToc.ts";
 export { MarkdownVisitor, MarkdownVisitorEvent } from "./MarkdownVisitor.ts";
 export { Mdast, MdastDecodeError, MdastNode } from "./Mdast.ts";
 export type { LinkBearingNode, SectionHeadingMatch } from "./MarkdownDocument.ts";

@@ -95,6 +95,27 @@ describe("Core", () =>
         ["Code block does not have a matching closing fence:\na\n\n~~~ts\nconst a = 1"]
       ));
 
+    describe("renderModuleToc", () => {
+      it.effect("renders the module table of contents with dash bullets", () =>
+        Effect.gen(function* () {
+          const toc = yield* Core.renderModuleToc(["src", "Shallow.ts"], "# Shallow\n\n## utils\n\n### run\n");
+          expect(toc).toBe("- [Shallow](#shallow)\n  - [utils](#utils)\n    - [run](#run)");
+        })
+      );
+
+      it.effect("attributes a nesting-depth parse failure to the module path", () =>
+        Effect.gen(function* () {
+          const tooDeep = `${Str.repeat(300)(">")} foo\n`;
+          const error = yield* Effect.flip(Core.renderModuleToc(["src", "Deep.ts"], tooDeep));
+          expect(error._tag).toBe("DocgenError");
+          expect(error.message).toContain(
+            "[Core.renderModuleToc] Failed to render the table of contents of 'src/Deep.ts'"
+          );
+          expect(error.message).toContain("NestingDepthExceeded");
+        })
+      );
+    });
+
     it.layer(BunServices.layer)("native compiler", (it) => {
       it.effect(
         "typechecks an Example section harvested from the description",

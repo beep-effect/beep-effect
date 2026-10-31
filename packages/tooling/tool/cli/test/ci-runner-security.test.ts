@@ -81,6 +81,9 @@ const WorkflowJobs = S.Record(
 type WorkflowJobs = typeof WorkflowJobs.Type;
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownEffect(WorkflowJobs);
+const decodeInspectionPolicy = S.decodeUnknownEffect(
+  S.Struct({ permissions: S.Record(S.String, S.String), on: S.Record(S.String, S.Unknown) })
+);
 const encodeJobsFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const workflowJobs = Effect.fnUntraced(function* (document: Document) {
@@ -1454,6 +1457,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Test Unit (${{ matrix.partition }})",
         "check.yml:Coverage Artifact Migration",
         "cache-warm.yml:Warm Turbo cache",
+        // Manual source inspection is operational evidence, not a required quality lane.
+        "cache-producer-inspect.yml:Inspect producer sources and tools",
         "data-sync.yml:Sync Official Data",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",
@@ -1496,6 +1501,52 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
     })
   );
+  it.effect("keeps protected source inspection credential-free and retains only its bounded report", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const text = yield* fs.readFileString(`${root}/.github/workflows/cache-producer-inspect.yml`);
+      const workflow = parseDocument(text);
+      const policy = yield* decodeInspectionPolicy(workflow.toJS());
+      expect(policy.permissions).toEqual({ contents: "read" });
+      expect(policy.on).toEqual({ workflow_dispatch: null });
+      expect(workflow.getIn(["jobs", "inspect", "if"])).toBe("github.ref == 'refs/heads/main'");
+      expect(workflow.getIn(["jobs", "inspect", "environment"])).toBe("turbo-cache-write");
+      expect(workflow.getIn(["jobs", "inspect", "timeout-minutes"])).toBe(10);
+      const steps = jobSteps(yield* workflowJobs(workflow), "inspect");
+      const setup = stepByName(steps, "Setup pinned toolchain without cache capabilities");
+      expect(setup.uses).toBe(SETUP_MONOREPO_ACTION);
+      expect(setup.with).toEqual({
+        "cache-turbo": "false",
+        "cache-write": "false",
+        "turbo-remote-cache": "false",
+        "r2-enabled": "false",
+        "app-secrets": "false",
+      });
+      const sandboxName = "Ensure native sandbox inspection dependency";
+      const sandbox = stepByName(steps, sandboxName);
+      expect(sandbox.run).toContain("dnf install -y bubblewrap");
+      expect(sandbox.run).toContain("apt-get install -y --no-install-recommends bubblewrap");
+      expect(sandbox.run).toContain("test -x /usr/bin/bwrap");
+      expect(sandbox.run).toContain("/usr/bin/bwrap --version");
+      expect(stepIndexByName(steps, sandboxName)).toBeLessThan(
+        stepIndexByName(steps, "Write bounded source inspection")
+      );
+      const inspect = stepByName(steps, "Write bounded source inspection");
+      expect(inspect.env).toEqual({ BEEP_TURBO_HOST_CACHE_DISABLED: "true" });
+      expect(inspect.run).toContain("bun --no-env-file run beep cache producer-inspect");
+      const retain = stepByName(steps, "Retain inspection for at most one day");
+      expect(retain.with).toEqual({
+        name: "cache-producer-inspection-${{ github.run_id }}-${{ github.run_attempt }}",
+        path: "${{ steps.inspection.outputs.report }}",
+        "if-no-files-found": "error",
+        "retention-days": 1,
+        "compression-level": 0,
+      });
+      expect(yield* workflowPolicyDiagnostics("cache-producer-inspect.yml", text)).toEqual([]);
+    })
+  );
+
   it.effect("keeps native Windows pipe verification read-only and bound to the collected scripts", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
