@@ -73,12 +73,14 @@ const program = Effect.gen(function* () {
   const journal = yield* makeTranscriptIntakeJournal(config).pipe(Effect.provideService(SqlClient.SqlClient, sql));
   const selected =
     mode === "reserve"
-      ? yield* journal.reserveSources(
-          TranscriptScheduleInput.make({
-            candidates: A.map(["a", "b", "c"], (value) => Sha256Hex.make(Str.repeat(64)(value))),
-            limit: 1,
-          })
-        )
+      ? yield* journal
+          .reserveSources(
+            TranscriptScheduleInput.make({
+              candidates: A.map(["a", "b", "c"], (value) => Sha256Hex.make(Str.repeat(64)(value))),
+              limit: 1,
+            })
+          )
+          .pipe(Effect.tap((ids) => Effect.forEach(ids, journal.recordAttempt)))
       : [];
   const page = yield* readTranscriptPage(
     TranscriptPageInput.make({

@@ -183,6 +183,7 @@ export const runTranscriptSweep = Effect.fn("AiMetrics.runTranscriptSweep")(func
       const source = A.findFirst(eligible, (source) => source.sourceId === sourceId);
       if (O.isNone(source)) return yield* TranscriptIntakeError.make({ reason: "configuration" });
       const processSource = Effect.gen(function* () {
+        yield* journal.recordAttempt(sourceId);
         const previous = yield* journal.readCursor(source.value.source, source.value.pathHash);
         const page = yield* readTranscriptPage(
           TranscriptPageInput.make({

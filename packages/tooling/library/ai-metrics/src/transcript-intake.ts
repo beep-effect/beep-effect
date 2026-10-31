@@ -593,14 +593,17 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
                   prior === undefined
                     ? candidates
                     : [...A.filter(candidates, (id) => id > prior), ...A.filter(candidates, (id) => id <= prior)];
-                const selected = A.take(ordered, input.limit);
-                const last = A.last(selected);
-                if (O.isSome(last))
-                  yield* sql`INSERT INTO observation_schedule_cursor(singleton,source_id) VALUES(1,${last.value})
-              ON CONFLICT(singleton) DO UPDATE SET source_id=excluded.source_id`;
-                return selected;
+                return A.take(ordered, input.limit);
               })
             )
+          )
+        );
+        // Advance the fair schedule only as each source is attempted, so an interrupted
+        // sweep resumes after the last attempted file instead of skipping untried ones.
+        const recordAttempt = Effect.fn("AiMetrics.intake.recordAttempt")((sourceId: Sha256Hex) =>
+          safe(
+            sql`INSERT INTO observation_schedule_cursor(singleton,source_id) VALUES(1,${sourceId})
+              ON CONFLICT(singleton) DO UPDATE SET source_id=excluded.source_id`.pipe(Effect.asVoid)
           )
         );
         return {
@@ -611,6 +614,7 @@ export const makeTranscriptIntakeJournal = Effect.fn("AiMetrics.makeTranscriptIn
           stats,
           reservedLaunchBytes,
           reserveSources,
+          recordAttempt,
         };
       })
     )

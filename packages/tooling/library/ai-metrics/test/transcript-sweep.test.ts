@@ -1,5 +1,9 @@
 import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
-import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
+import {
+  makeTranscriptIntakeJournal,
+  TranscriptIntakeConfig,
+  TranscriptScheduleInput,
+} from "@beep/repo-ai-metrics/transcript-intake";
 import {
   runTranscriptSweep,
   TranscriptSweepInput,
@@ -70,6 +74,24 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       expect(encoded).not.toContain("synthetic-private");
       expect(encoded).not.toContain("synthetic-sweep-salt");
       expect((yield* (yield* makeTranscriptIntakeJournal(config)).stats).pages).toBe(2);
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
+  it.effect("advances the fair schedule only past attempted sources", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const journal = yield* makeTranscriptIntakeJournal(f.config);
+      const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
+      const [a, b, c] = [id("a"), id("b"), id("c")];
+      const ids = [a, b, c];
+      const reserve = journal.reserveSources(TranscriptScheduleInput.make({ candidates: ids, limit: 3 }));
+      expect(yield* reserve).toEqual(ids);
+      // An interrupted sweep that never attempted a source leaves the schedule in place.
+      expect(yield* reserve).toEqual(ids);
+      yield* journal.recordAttempt(a);
+      expect(yield* reserve).toEqual([b, c, a]);
     })
   )
 );
