@@ -204,8 +204,9 @@ export const workspaceManifests = Effect.fn("RepoWorkspaces.workspaceManifests")
 > {
   const fs = yield* FileSystem.FileSystem;
   const members = yield* workspaceMembers(repoRoot);
-  const decoded = yield* Effect.forEach(members, (member) =>
-    Effect.gen(function* () {
+  const decoded = yield* Effect.forEach(
+    members,
+    Effect.fnUntraced(function* (member) {
       const dir = yield* fs.realPath(member.path);
       const manifest = yield* decodePackageJsonEffect(member.manifestRecord);
       return [member.name, DecodedWorkspaceMember.make({ dir, manifest })] as const;

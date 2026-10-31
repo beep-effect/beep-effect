@@ -217,7 +217,7 @@ const OrderRecord = S.Struct({
 });
 
 const Report = S.Struct({
-  schemaVersion: S.Literal(1),
+  schemaVersion: S.tag(1),
   tool: S.String,
   commit: S.optionalKey(S.String),
   members: S.Struct({
