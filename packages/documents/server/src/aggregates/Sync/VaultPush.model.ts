@@ -42,6 +42,7 @@ export const EchoClass = LiteralKit(["content", "moved", "renamed"]).pipe(
 /**
  * Runtime echo class represented by {@link EchoClass}.
  * @internal
+ * @category models
  * @since 0.0.0
  */
 export type EchoClass = typeof EchoClass.Type;
@@ -97,6 +98,15 @@ export const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> 
 /**
  * One successful push recorded during the current pass; polled events consume
  * these to suppress the provider echoing our own verbs.
+ *
+ * **Example** (Record a content push)
+ *
+ * ```ts
+ * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
+ * import { ContentPushRecord } from "./VaultPush.model.ts"
+ * ContentPushRecord.make({ remoteId: RemoteItemId.make("file-1") }).echoClass // "content"
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -114,6 +124,15 @@ export class ContentPushRecord extends S.Opaque<ContentPushRecord, { readonly br
 
 /**
  * Successful move whose provider echo is expected in this pass.
+ *
+ * **Example** (Record a move)
+ *
+ * ```ts
+ * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
+ * import { MovedPushRecord } from "./VaultPush.model.ts"
+ * MovedPushRecord.make({ remoteId: RemoteItemId.make("file-1") }).echoClass // "moved"
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -131,6 +150,15 @@ export class MovedPushRecord extends S.Opaque<MovedPushRecord, { readonly brand:
 
 /**
  * Successful rename whose provider echo is expected in this pass.
+ *
+ * **Example** (Record a rename)
+ *
+ * ```ts
+ * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
+ * import { RenamedPushRecord } from "./VaultPush.model.ts"
+ * RenamedPushRecord.make({ remoteId: RemoteItemId.make("file-1") }).echoClass // "renamed"
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -172,6 +200,7 @@ export const PushRecord = S.Union([ContentPushRecord, MovedPushRecord, RenamedPu
 /**
  * Runtime push observation represented by {@link PushRecord}.
  * @internal
+ * @category models
  * @since 0.0.0
  */
 export type PushRecord = typeof PushRecord.Type;

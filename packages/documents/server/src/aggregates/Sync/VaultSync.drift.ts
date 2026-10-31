@@ -33,6 +33,7 @@ import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { echoClassForEvent } from "./VaultPush.model.ts";
 import { VaultSyncConfig } from "./VaultSync.config.ts";
@@ -55,13 +56,16 @@ const SyncItemState = DomainSyncItem.SyncItemState;
  * carry arbitrarily large payloads, and conflict rows must stay bounded.
  */
 const PAYLOAD_SNAPSHOT_LIMIT = 8192;
+const encodePayload = S.encodeEffect(S.fromJsonString(S.Unknown));
 
-const truncatedPayload = (payload: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> => {
-  const encoded = JSON.stringify(payload);
-  return encoded.length <= PAYLOAD_SNAPSHOT_LIMIT
+const truncatedPayload = Effect.fn($I`truncatedPayload`)(function* (payload: Readonly<Record<string, unknown>>) {
+  // Provider payloads originate in JSON. An unserializable internal value is
+  // still a defect, as it was at the previous native serialization boundary.
+  const encoded = yield* encodePayload(payload).pipe(Effect.orDie);
+  return Str.length(encoded) <= PAYLOAD_SNAPSHOT_LIMIT
     ? payload
     : { head: Str.slice(0, PAYLOAD_SNAPSHOT_LIMIT)(encoded), truncated: true };
-};
+});
 
 const knownItemConflictKind = (eventType: DmsEventType): DomainSyncConflict.SyncConflictKind =>
   DmsEventType.match(eventType, {
@@ -145,23 +149,25 @@ export const makeVaultSyncDrift = Effect.fn($I`makeVaultSyncDrift`)(function* ()
   const availability = yield* DmsMirrorAvailability;
   const config = yield* VaultSyncConfig;
 
-  const conflictSeedFor = (
+  const conflictSeedFor = Effect.fn($I`conflictSeedFor`)(function* (
     workspaceId: WorkspaceIdentity.WorkspaceId,
     event: DmsRemoteEvent,
     conflictKind: DomainSyncConflict.SyncConflictKind,
     item: O.Option<DomainSyncItem.SyncItem>
-  ): SyncConflictSeed =>
-    SyncConflictSeed.make({
+  ) {
+    const remotePayload = yield* truncatedPayload(event.payload);
+    return SyncConflictSeed.make({
       conflictKind,
       localRelPath: O.map(item, (tracked) => tracked.localRelPath),
       provider: BOX_PROVIDER,
       remoteEventId: O.some(event.eventId),
       remoteId: event.remoteId,
-      remotePayload: truncatedPayload(event.payload),
+      remotePayload,
       resolutionStatus: "open",
       syncItemId: O.map(item, (tracked) => tracked.id),
       workspaceId,
     });
+  });
 
   /**
    * Consume one same-pass push record explaining this event as our own echo.
@@ -228,8 +234,8 @@ export const makeVaultSyncDrift = Effect.fn($I`makeVaultSyncDrift`)(function* ()
         );
         return;
       }
-      yield* conflictRepository.record(
-        conflictSeedFor(workspaceId, event, unknownItemConflictKind(event.eventType), O.none())
+      yield* conflictSeedFor(workspaceId, event, unknownItemConflictKind(event.eventType), O.none()).pipe(
+        Effect.flatMap(conflictRepository.record)
       );
       return;
     }
@@ -247,8 +253,8 @@ export const makeVaultSyncDrift = Effect.fn($I`makeVaultSyncDrift`)(function* ()
         return;
       }
     }
-    yield* conflictRepository.record(
-      conflictSeedFor(workspaceId, event, knownItemConflictKind(event.eventType), tracked)
+    yield* conflictSeedFor(workspaceId, event, knownItemConflictKind(event.eventType), tracked).pipe(
+      Effect.flatMap(conflictRepository.record)
     );
     yield* itemRepository.update(
       DomainSyncItem.SyncItem.make({
