@@ -38,6 +38,7 @@ import { deriveYeetMergeReady, mergeStateIsAcceptable, outstandingThreadCount } 
 
 export { deriveYeetMergeReady } from "./MergeReadiness.policy.ts";
 
+import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
 import { YEET_STATUS_CHECK_FIELDS } from "./Planner.ts";
@@ -974,7 +975,7 @@ export const summarizeRemoteChecksForTesting: {
  *
  * @param context - Repository context whose current branch identifies the pull request.
  * @param required - Restrict the read to required checks when true; otherwise read all checks.
- * @returns Decoded rows, or None when the response is unreadable or truncated.
+ * @returns Decoded rows (empty when gh reports no checks), or None when the response is unreadable or truncated.
  * @category getters
  * @since 0.0.0
  */
@@ -1012,6 +1013,11 @@ export const collectRemoteChecks: {
     );
     if (result.truncated) {
       return O.none();
+    }
+    // gh answers a head with no (required) checks yet in text with exit 1; that
+    // is a complete, empty census, not an unreadable one.
+    if (result.exitCode !== 0 && NO_CHECKS_REPORTED.test(result.output)) {
+      return O.some(A.empty<GhStatusCheck>());
     }
     return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
   })
