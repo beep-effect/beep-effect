@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T15:31:01.842Z",
+  "generatedAt": "2026-10-31T15:46:36.785Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
     "publicModules": 3581,
-    "publicExports": 25413,
+    "publicExports": 25417,
     "openModules": 166,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -457098,7 +457098,7 @@
         "srcDir": "src",
         "sourceFileCount": 492,
         "publicModuleCount": 490,
-        "publicExportCount": 4550
+        "publicExportCount": 4554
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -463592,7 +463592,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -529157,12 +529157,100 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "PolicyWorkspace",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-199-policyworkspace",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyCliLayout",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 232,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-232-policyclilayout",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyCommandNode",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-266-policycommandnode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PolicyClosure",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-schemas-ts-294-policyclosure",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "computePolicyFingerprint",
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 355,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-355-computepolicyfingerprint",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-327-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -529183,8 +529271,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 813,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-813-policytoolsfingerprintpolicy",
+          "line": 763,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-763-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -529205,8 +529293,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 891,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-891-lintpolicyfingerprintcommand",
+          "line": 838,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-838-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"

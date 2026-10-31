@@ -156,3 +156,17 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** modelling inputs outside the tree from the start: a `commits` atom
   kind for the commit metadata every new head adds, and an `external` flag on footprints of lanes
   that read feeds, the clock or the network (always selected). Both landed the same day.
+
+## 2026-10-31 — Six cheap gates catch new-export bookkeeping that package-verify and local lints did not
+
+- **Doing:** the first `yeet publish` of slice 1, after package-verify, check, tests, schema-first,
+  effect-vitest, jsdoc, laws and fallow had all passed locally.
+- **Evidence:** cheap gates failed six lanes: `observability:catalog-check` and `lint:schema-catalog`
+  (stale generated catalogs for the new spans and schemas), `quality:jsdoc-ratchet:regenerated`
+  (`missingExportExamples: 22 > 3`, `unsafeExampleFindings: 1 > 0`), `lint:schema-tag-idioms`
+  (`schemaVersion: S.Literal(...)` → `S.tag(...)`), and `fallow:audit`/`fallow:health` (a clone
+  re-introduced when inlining flags, a test helper at cyclomatic 11). `lint:jsdoc` passes while the
+  ratchet fails: the ratchet counts exports without an `**Example**`, the lint does not.
+- **Would have prevented it:** `package-verify` running the catalog checks, the JSDoc ratchet and
+  schema-tag-idioms for the package, or a `beep` preflight that lists the generated artifacts a new
+  export requires.
