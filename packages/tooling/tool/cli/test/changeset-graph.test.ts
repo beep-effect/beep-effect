@@ -397,6 +397,27 @@ Record a null bump.
       })
     );
 
+    // A `!pattern` workspace entry excludes members: it becomes a git exclude
+    // pathspec rather than a positive `:(glob)!...` pathspec git reads literally.
+    it.effect("drops members matched by a negated workspace pattern", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writePackageJson(tmpDir, "package.json", {
+          private: true,
+          workspaces: ["packages/*", "!packages/private-*"],
+        });
+        yield* writePackageJson(tmpDir, "packages/public/package.json", { name: "@beep/public", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "packages/private-a/package.json", {
+          name: "@beep/private-a",
+          version: "0.0.0",
+        });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["packages/public/package.json"]);
+      })
+    );
+
     it.effect("accepts tracked workspace changesets through the release-path check", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

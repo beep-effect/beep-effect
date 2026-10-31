@@ -168,8 +168,15 @@ const readWorkspacePatterns = Effect.fn("ChangesetGraph.readWorkspacePatterns")(
   );
 });
 
+const packageJsonPathspecGlob = (pattern: string): string =>
+  `${pipe(pattern, normalizePath, stripTrailingSlashes)}/package.json`;
+
+// A `!pattern` workspace entry excludes members, so it becomes a git exclude
+// pathspec; a leading `!` inside `:(glob)` magic would only match literally.
 const packageJsonPathspecForWorkspacePattern = (pattern: string): string =>
-  `:(glob)${pipe(pattern, normalizePath, stripTrailingSlashes)}/package.json`;
+  Str.startsWith("!")(pattern)
+    ? `:(exclude,glob)${packageJsonPathspecGlob(Str.slice(1)(pattern))}`
+    : `:(glob)${packageJsonPathspecGlob(pattern)}`;
 
 /**
  * Find the closing fence accepted by `@changesets/parse` in one forward line scan.

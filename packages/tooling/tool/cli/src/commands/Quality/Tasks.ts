@@ -6,8 +6,10 @@
  */
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
+import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -130,8 +132,10 @@ import {
   QualityTaskName,
   RootAuditMode,
 } from "./Quality.schemas.ts";
+import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
+import type { EnumerationFailure } from "@beep/repo-workspaces/internal/enumerate";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
@@ -453,6 +457,16 @@ const isSafeWorkspacePattern = (pattern: string): boolean =>
   !Str.startsWith("/")(pattern) &&
   !A.some(Str.split("/")(pattern), (segment) => segment === "..");
 
+const isWorkspaceExclusion = Str.startsWith("!");
+
+const invalidWorkspacePattern = (error: GlobPatternError): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(`Invalid workspace pattern "${error.pattern}": ${error.message}`);
+
+const unenumerableWorkspacePattern = (failure: EnumerationFailure): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(
+    `Failed to enumerate workspace pattern "${failure.pattern}" (${failure.kind}: ${failure.detail})`
+  );
+
 const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandidateDirsForPattern")(function* (
   repoRoot: string,
   pattern: string
@@ -466,7 +480,13 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
     );
   }
 
-  if (Str.endsWith("/*")(pattern)) {
+  const compiled = yield* GlobPattern.compile(pattern).pipe(Effect.mapError(invalidWorkspacePattern));
+  if (!compiled.hasMagic) {
+    return [path.join(repoRoot, pattern)];
+  }
+
+  // `dir/*` over a literal `dir` keeps its one-level read and its failure text.
+  if (Str.endsWith("/*")(pattern) && compiled.enumerationPrefix === Str.slice(0, -1)(pattern)) {
     const base = path.join(repoRoot, Str.slice(0, -2)(pattern));
     const entries = yield* fs
       .readDirectory(base)
@@ -479,7 +499,11 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
     return A.map(entries, (entry) => path.join(base, entry));
   }
 
-  return [path.join(repoRoot, pattern)];
+  // Any other glob (`packages/**`, `apps/*/web`, braces) walks through the
+  // workspace enumerator `WorkspaceDiscovery` uses, bounded and pruned.
+  const globs = yield* GlobSet.compile([pattern]).pipe(Effect.mapError(invalidWorkspacePattern));
+  const directories = yield* enumerate(repoRoot, globs).pipe(Effect.mapError(unenumerableWorkspacePattern));
+  return A.map(directories, (directory) => directory.path);
 });
 
 const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(function* (
@@ -494,14 +518,21 @@ const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(functi
   const patterns = yield* WorkspacePatterns.read(repoRoot).pipe(
     QualityTaskConfigurationError.mapError(`Failed to read workspace patterns under ${repoRoot}`)
   );
+  // A `!pattern` entry excludes, as pnpm and the package managers read it: it
+  // contributes no candidates and removes every candidate it matches.
+  const { excludes } = yield* GlobSet.compile(patterns).pipe(Effect.mapError(invalidWorkspacePattern));
+  const isExcludedDir = (packageDir: string): boolean => {
+    const relativeDir = path.relative(repoRoot, packageDir);
+    return A.some(excludes, (exclude) => exclude.matches(relativeDir));
+  };
   const candidateDirs = yield* Effect.forEach(
-    patterns,
+    A.filter(patterns, P.not(isWorkspaceExclusion)),
     (pattern) => workspaceCandidateDirsForPattern(repoRoot, pattern),
     { concurrency: 4 }
   );
 
   const owners = yield* Effect.forEach(
-    pipe(A.flatten(candidateDirs), A.dedupe, A.sort(Order.String)),
+    pipe(A.flatten(candidateDirs), A.filter(P.not(isExcludedDir)), A.dedupe, A.sort(Order.String)),
     Effect.fn(function* (packageDir) {
       const packageJsonPath = path.join(packageDir, "package.json");
       const exists = yield* fs.exists(packageJsonPath).pipe(Effect.orElseSucceed(thunkFalse));

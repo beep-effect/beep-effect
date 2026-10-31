@@ -325,6 +325,37 @@ const temporaryRepository = Effect.gen(function* () {
   return repositoryPath;
 });
 
+// A root declaring `workspaces`, plus one `test:integration`-owning package per
+// directory, named `@beep/<dir with "/" as "-">`.
+const writeIntegrationWorkspace = Effect.fnUntraced(function* (
+  repositoryPath: string,
+  workspaces: ReadonlyArray<string>,
+  packageDirs: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(
+    path.join(repositoryPath, "package.json"),
+    yield* encodeJson({ name: "@beep/test-root", private: true, workspaces })
+  );
+  yield* Effect.forEach(
+    packageDirs,
+    Effect.fnUntraced(function* (packageDir) {
+      const absoluteDir = path.join(repositoryPath, packageDir);
+      yield* fs.makeDirectory(absoluteDir, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(absoluteDir, "package.json"),
+        yield* encodeJson({
+          name: `@beep/${Str.replaceAll("/", "-")(packageDir)}`,
+          private: true,
+          scripts: { "test:integration": "vitest run test/integration" },
+        })
+      );
+    }),
+    { discard: true }
+  );
+});
+
 // The single coverage invocation for a `bun run coverage <argv>` shape; root
 // coverage itself plans at run time, so this is the unit the runtime composes.
 const coverageStepOf = (argv: ReadonlyArray<string>): QualityTaskStep =>
@@ -8734,6 +8765,54 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
 
           deepStrictEqual(filters, []);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    // pnpm `packages:` lists reach the owner scan through `WorkspacePatterns`, so
+    // a pattern other than a trailing `/*` must expand as a glob, not a literal.
+    it.effect("expands a recursive workspace pattern below its base", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(tmpDir, ["packages/**"], ["packages/top", "packages/group/nested"]);
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/packages-group-nested", "--filter=@beep/packages-top"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("expands a mid-path workspace wildcard to the matching directories only", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(tmpDir, ["apps/*/web"], ["apps/one/web", "apps/two/web", "apps/two/api"]);
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/apps-one-web", "--filter=@beep/apps-two-web"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("drops workspace candidates a negated pattern excludes", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(
+            tmpDir,
+            ["packages/*", "libs/**", "!packages/private-*", "!libs/**/internal"],
+            ["packages/public", "packages/private-a", "libs/core", "libs/core/internal"]
+          );
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/libs-core", "--filter=@beep/packages-public"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
