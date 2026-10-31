@@ -3,6 +3,7 @@ import {
   ChangesetGraphPackageReference,
   changesetPackageReferencesFromText,
   changesetsParseClosingFenceLine,
+  collectWorkspacePackageJsonFiles,
   findMissingChangesetPackageReferences,
   makeChangesetGraphSummary,
   runChangesetGraphCheck,
@@ -359,6 +360,102 @@ Record a null bump.
   });
 
   it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })((it) => {
+    // 4-A2: the root patterns come from `@beep/repo-workspaces` `WorkspacePatterns.read`;
+    // its typed read failure maps onto ChangesetGraphError with the failing file.
+    it.effect("reports an unreadable root manifest as a ChangesetGraphError naming the file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeRepoFile(tmpDir, "package.json", "{");
+        const error = yield* collectWorkspacePackageJsonFiles(tmpDir).pipe(Effect.flip);
+        expect(error._tag).toBe("ChangesetGraphError");
+        expect(error.file).toBe(path.join(tmpDir, "package.json"));
+        expect(error.message).toContain("invalidJson");
+      })
+    );
+
+    // Pinned shift (4-A2, SPEC W4-f): the retired reader took the root `package.json`
+    // `workspaces` alone; through the kit a non-empty `pnpm-workspace.yaml`
+    // `packages:` list wins, the precedence `WorkspaceDiscovery` always applied.
+    // The live repository has no `pnpm-workspace.yaml`, so this is the one place
+    // the divergent input is exercised.
+    it.effect("follows a non-empty pnpm-workspace.yaml over the root package.json workspaces field", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeRepoFile(tmpDir, "pnpm-workspace.yaml", "packages:\n  - 'a/*'\n");
+        yield* writePackageJson(tmpDir, "package.json", { private: true, workspaces: ["b/*"] });
+        yield* writePackageJson(tmpDir, "a/from-yaml/package.json", { name: "@beep/from-yaml", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "b/from-manifest/package.json", {
+          name: "@beep/from-manifest",
+          version: "0.0.0",
+        });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["a/from-yaml/package.json"]);
+      })
+    );
+
+    // A `!pattern` workspace entry excludes members: it becomes a git exclude
+    // pathspec rather than a positive `:(glob)!...` pathspec git reads literally.
+    it.effect("drops members matched by a negated workspace pattern", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writePackageJson(tmpDir, "package.json", {
+          private: true,
+          workspaces: ["packages/*", "!packages/private-*"],
+        });
+        yield* writePackageJson(tmpDir, "packages/public/package.json", { name: "@beep/public", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "packages/private-a/package.json", {
+          name: "@beep/private-a",
+          version: "0.0.0",
+        });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["packages/public/package.json"]);
+      })
+    );
+
+    // Git `:(glob)` pathspecs do not expand braces, so the tracked manifests are
+    // matched by the shared `GlobSet` instead.
+    it.effect("selects members through a brace workspace pattern with a trailing wildcard", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writePackageJson(tmpDir, "package.json", { private: true, workspaces: ["{apps,libs}/*"] });
+        yield* writePackageJson(tmpDir, "apps/web/package.json", { name: "@beep/web", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "libs/core/package.json", { name: "@beep/core", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "tools/cli/package.json", { name: "@beep/cli", version: "0.0.0" });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual([
+          "apps/web/package.json",
+          "libs/core/package.json",
+        ]);
+      })
+    );
+
+    it.effect("selects members through ./-prefixed and negated ./-prefixed workspace patterns", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writePackageJson(tmpDir, "package.json", {
+          private: true,
+          workspaces: ["./packages/*", "!./packages/private-*"],
+        });
+        yield* writePackageJson(tmpDir, "packages/demo/package.json", { name: "@beep/demo", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "packages/private-x/package.json", {
+          name: "@beep/private-x",
+          version: "0.0.0",
+        });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual(["packages/demo/package.json"]);
+      })
+    );
+
     it.effect("accepts tracked workspace changesets through the release-path check", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
