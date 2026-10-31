@@ -1,0 +1,71 @@
+name: Deploy beep-effect-web
+
+# Deploys the `prod` stage of the Alchemy stack in apps/beep-effect-web
+# (https://beep-effect.com). The Alchemy state store (`Cloudflare.state()`)
+# documents no stage lock, so the concurrency group serializes every prod
+# deploy and never cancels one mid-apply. With `CI=true` Alchemy resolves the
+# state-store credentials from Cloudflare Secrets Store and refuses to
+# bootstrap a missing store. Packet: goals/beep-effect-web-alchemy.
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/beep-effect-web/**
+      - packages/foundation/modeling/public-site/**
+      - packages/foundation/modeling/identity/**
+      - bun.lock
+      - .github/workflows/deploy-beep-effect-web.yml
+  workflow_dispatch:
+
+concurrency:
+  group: alchemy-beep-effect-web-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy beep-effect-web (prod)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: beep-effect-web-prod
+      url: https://beep-effect.com
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+
+      - name: Test app
+        working-directory: apps/beep-effect-web
+        shell: bash
+        run: bun run test
+
+      - name: Deploy prod stage
+        working-directory: apps/beep-effect-web
+        shell: bash
+        env:
+          CI: "true"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bunx alchemy deploy --stage prod --yes
+
+      - name: Smoke-check the public origin
+        shell: bash
+        run: |
+          set -euo pipefail
+          apex="$(curl -sS -o /dev/null -w '%{http_code}' --retry 5 --retry-delay 5 --retry-all-errors https://beep-effect.com/)"
+          www="$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' --retry 5 --retry-delay 5 --retry-all-errors https://www.beep-effect.com/)"
+          echo "apex=${apex} www=${www}"
+          [[ "$apex" == "200" ]]
+          [[ "$www" == "301 https://beep-effect.com/" ]]
