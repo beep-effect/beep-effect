@@ -59,6 +59,14 @@ the entry pattern rejects, such as `ops/my probe.ts`; rename it) and
 ops script in the same PR that adds it. Packets without the key are not
 checked.
 
+Every `goals/*/ops/**/*.ts` file, registered or not, is type-checked by
+`goals/tsconfig.ops.json` on the `repo-sanity:goals-ops-typecheck` lane
+(`bunx tsrs -p goals/tsconfig.ops.json --noEmit`). The project runs the
+compiler only, not the Effect style profile: ops scripts are frozen evidence,
+not product code. Ambient module types a script needs go in
+`goals/ops-ambient.d.ts`, never under `ops/`, which holds only registered
+scripts.
+
 ### Launcher Rule
 
 Every future execution-capable packet must include `GOAL.md`.

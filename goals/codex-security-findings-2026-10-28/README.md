@@ -84,7 +84,7 @@ five secret-scanning alerts. Their separate sanitized catalog is
 without accepted risk, before final completion. Preserve the original seven
 Cloud IDs and twenty dependency IDs.
 
-Final closeout also repairs bounded policy-tooling failures inherited from main
-#2390. These repairs are required by the strict readiness contract; they do not
-change the security finding inventories or weaken any check. See the decision
-log and the separate review addendum for the expanded scope.
+Final closeout depends on shared PR #2399 for inherited policy-tooling failures.
+This packet retains distinct test-only coverage repairs and consumes the shared
+implementation through main. The strict readiness contract and security
+finding inventories remain unchanged; see the decision and review records.

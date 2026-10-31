@@ -19,7 +19,7 @@ receipts remain required. See [current evidence](research/2026-10-31-closeout.md
 | P2 validate | complete | Reproduce each report at current HEAD. | Every item has strict verdict, disposition, rationale, and owner surface. |
 | P3 lane-partition | complete | Group shared root causes and disjoint paths. | Lanes recorded without overlapping file ownership. |
 | P4 remediate | complete | Fix all real findings with focused checks. | Changed files and passing targeted proof recorded per finding. |
-| P5 repo-proof | in-progress | Repair inherited policy-tooling blockers; run focused regressions, independent review, packet validation and Yeet proof. | No packet drift; scoped proof green; canonical generated outputs checked. |
+| P5 repo-proof | in-progress | Consume shared policy repairs from main; verify distinct coverage tests, independent review, packet validation and Yeet proof. | No packet drift; scoped proof green; canonical generated outputs checked. |
 | P6 publish | complete | Publish one intentional PR through Yeet. | Exact branch head pushed and PR opened. |
 | P7 monitor | in-progress | Close hosted checks and actionable reviews on the final repaired head. | Canonical strict readiness true, including Fallow and Lint Policy; review window elapsed. |
 | P8 merge-and-close | pending | Merge and close captured findings. | Final PR merged; all 7 Cloud IDs and 20 supplemental dependency IDs resolved. |

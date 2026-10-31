@@ -158,7 +158,7 @@ const makeRepository = Effect.fnUntraced(function* (root: string, name: string) 
   yield* write(path.join(cwd, "OWNERS"), "* @base\n");
   yield* write(path.join(cwd, "no-newline.txt"), "  padded text without newline  ");
   yield* write(path.join(cwd, "dir with space", "file name.md"), "unicode: ünïcödé ✓\n");
-  yield* write(path.join(cwd, "large.txt"), Str.repeat("0123456789abcdef\n", 65_536));
+  yield* write(path.join(cwd, "large.txt"), Str.repeat(65_536)("0123456789abcdef\n"));
   yield* git(cwd, ["add", "."]);
   yield* git(cwd, ["commit", "--quiet", "-m", "base"]);
   yield* git(cwd, ["switch", "--quiet", "-c", "feature"]);

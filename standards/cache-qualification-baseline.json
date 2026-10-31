@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.2",
-  "epoch": "qualification-v2",
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6.1-Sol medium independent dependency review",
-      "reason": "Preserve main retirement and reconcile six root seal closures with current helpers; retain existing cache posture and qualification.",
+      "reviewer": "Claude Opus 5.5 (G3 lane, claude/beep-lazy-dispatch-369e54)",
+      "reason": "Re-record the root subject after resealing seven policy-fingerprint seal tasks: the shared seal gains the lazy dispatch modules; six seals drop inputs that #2381 and #2376 deleted or moved after #2390 sealed; no qualification is granted.",
       "basis": {
-        "path": "goals/codex-security-findings-2026-10-28/research/2026-10-31-cache-baseline-main-merge-review.md",
-        "sha256": "1965fce8d84aef470a88805b8ff4e10a35f4edaa789433198ac3081ac3bce443"
+        "path": "goals/beep-cli-composition/research/g3-cache-baseline-review.md",
+        "sha256": "1e37f7e33e927e004b80ea5a215418a1bd9a1f78d0aed5fffd3fbef4eb9f4b00"
       }
     },
     "@beep/acp": {
@@ -6735,6 +6735,9 @@
             "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
             "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
             "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.ts",
             "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
@@ -133849,7 +133852,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "2ebdf15eb9d7965d5318c8e078ac9069c7e827a488d740de056868072a0c29b8"
+        "sha256": "bc2e6d19c56f42ff35fe68a5a5fc80ddb2fd6287bb61547db6ab07a06298a2ae"
       }
     ]
   }
