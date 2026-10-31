@@ -157,6 +157,8 @@ const DerivedSurfaces = S.Struct({
   createPackageCoverage: S.Struct({ dirs: S.Finite, covered: S.Finite, uncovered: S.Array(S.String) }),
 });
 const CliRun = S.Struct({ command: S.String, exitCode: S.Finite, stdoutSha256: S.String, stdoutLines: S.Finite });
+const Comparison = S.Struct({ baseline: S.String, identical: S.Boolean, differing: S.Array(S.String) });
+type Comparison = typeof Comparison.Type;
 const Report = S.Struct({
   schemaVersion: S.tag(1),
   tool: S.String,
@@ -171,7 +173,7 @@ const Report = S.Struct({
   derived: S.Struct({ legacy: DerivedSurfaces, kit: DerivedSurfaces, identical: S.Boolean }),
   syncpackConfigInSync: S.Boolean,
   cli: S.Array(CliRun),
-  comparison: S.optionalKey(S.Struct({ baseline: S.String, identical: S.Boolean, differing: S.Array(S.String) })),
+  comparison: S.optionalKey(Comparison),
 });
 type Report = typeof Report.Type;
 type DerivedSurfaces = typeof DerivedSurfaces.Type;
@@ -286,7 +288,7 @@ const program = Effect.gen(function* () {
   );
 
   const comparison = yield* O.match(flag("--before"), {
-    onNone: () => Effect.succeed(O.none<Report["comparison"]>()),
+    onNone: () => Effect.succeed(O.none<Comparison>()),
     onSome: (baseline) =>
       Effect.gen(function* () {
         const before = yield* decodeReport(yield* fs.readFileString(baseline));
