@@ -59,8 +59,14 @@ own tuples do not drift. No other workspace's dependencies change, and
 The root subject (`//`) drifts for one reason: `@effect/markdown-toc` leaves
 the root `package.json` devDependencies (and `bun.lock` loses its entry) now
 that `@beep/markdown` owns the slugger and table of contents. The root
-`turbo.json` task graph is unchanged by this PR; the manifest bytes are part of
-the root subject's identity, so the root tuple is re-recorded as is.
+manifest bytes are part of the root subject's identity, so the root tuple is
+re-recorded. The root `turbo.json` changes in one generated place:
+`bun run beep lint policy-fingerprint --write` adds the `@beep/markdown`
+sources (`package.json` and `src/**`) to the `inputs` of the seven
+`//#lint:policy-fingerprint:*` tasks (goals-doctor, goals-index, knowledge,
+laws, lint-deprecated-apis, lint-roadmap-refs, quality) and to
+`standards/policy-tools.fingerprint.json`, because the policy tools now reach
+`@beep/markdown` through `@beep/repo-docgen`. No other task key changes.
 
 Recording these three subjects accepts the existing posture for
 `@beep/repo-docgen` with its one new direct dependency, for
