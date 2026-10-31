@@ -207,7 +207,8 @@ const program = Effect.gen(function* () {
             determinerGroups: A.dedupe(
               A.flatMap(tree.elements, (element) => A.map(element.terms, (term) => term.determiner))
             ),
-            nested: A.some(tree.edges, (edge) => edge.kind === "part-of"),
+            // Nested means containment below a top-level limitation, not an ordinary root limitation.
+            nested: A.some(tree.edges, (edge) => edge.kind === "part-of" && edge.parent !== `${tree.claimNumber}`),
             functional: A.some(tree.edges, (edge) => edge.kind === "functional"),
             rules: A.dedupe(A.map(findings, (finding) => finding.rule)),
             findings: findings.length,

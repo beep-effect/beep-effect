@@ -26,9 +26,24 @@ def summarize(rows):
     }
 
 
+FIXTURES = pathlib.Path("packages/law-practice/domain/test/fixtures/claim-element/positive")
+
+
+def gold_nested(family_id):
+    """Claims whose gold tree nests an element below a top-level limitation (not merely under the root)."""
+    trees = json.loads((FIXTURES / family_id / "expected.json").read_text())
+    return {tree["claimNumber"] for tree in trees
+            if any(edge["kind"] == "part-of" and edge["parent"] != str(tree["claimNumber"]) for edge in tree["edges"])}
+
+
 def main(filename):
     result = json.loads(pathlib.Path(filename).read_text())
     families = result["families"]
+    # Recompute nesting from the frozen gold fixtures: retained results recorded any part-of edge as nested.
+    for family in families:
+        nested = gold_nested(family["familyId"])
+        for claim in family["claims"]:
+            claim["nested"] = claim["claimNumber"] in nested
     rows = [claim for family in families for claim in family["claims"]]
     assert len(families) == 60 and len(rows) == 538
     assert len({family["familyId"] for family in families}) == 60
@@ -38,7 +53,7 @@ def main(filename):
              "chain-through-undecomposed", "chain-unresolvable", "chain-work-limit"]
     determiner = ["a", "an", "the", "said", "at-least-one", "plurality-of", "bare"]
     output = {
-        "schemaVersion": "claim-antecedent-positive-summary/v1",
+        "schemaVersion": "claim-antecedent-positive-summary/v2",
         "provisional": True,
         "actualAttorneyAgreementRecorded": False,
         "familyCount": len(families),
