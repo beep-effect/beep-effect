@@ -266,13 +266,17 @@ const runCorpusReport = <A, Sch extends S.Top & { readonly Type: A; readonly Enc
     yield* routeFailure(program);
   });
 
+// The knowledge doctor resolves this identifier to its Flag initializer, so sharing it keeps the
+// command surface statically derivable.
+const corpusFlag = Flag.String("corpus").pipe(
+  Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
+  Flag.withDescription("Corpus receipt path, relative to the repository root")
+);
+
 const censusCommand = Command.make(
   "census",
   {
-    corpus: Flag.String("corpus").pipe(
-      Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
-      Flag.withDescription("Corpus receipt path, relative to the repository root")
-    ),
+    corpus: corpusFlag,
     json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the census as JSON")),
   },
   runCorpusReport((reader, loaded) => reader.census(loaded), RouteCensusSchema, renderCensus)
@@ -284,10 +288,7 @@ const censusCommand = Command.make(
 const replayCommand = Command.make(
   "replay",
   {
-    corpus: Flag.String("corpus").pipe(
-      Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
-      Flag.withDescription("Corpus receipt path, relative to the repository root")
-    ),
+    corpus: corpusFlag,
     json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the replay as JSON")),
   },
   runCorpusReport((reader, loaded) => reader.replay(loaded), RouteReplaySchema, renderReplay)

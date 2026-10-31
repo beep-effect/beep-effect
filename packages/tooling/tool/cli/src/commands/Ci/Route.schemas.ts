@@ -380,7 +380,7 @@ export class HostedRun extends S.Opaque<HostedRun, { readonly brand: unique symb
  */
 export class RouteCorpusReceipt extends S.Opaque<RouteCorpusReceipt, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.Literal("route-corpus/v1"),
+    schemaVersion: S.tag("route-corpus/v1"),
     capturedAt: S.NonEmptyString,
     since: S.NonEmptyString,
     until: S.NonEmptyString,
@@ -498,7 +498,7 @@ export class RouteCensusRow extends S.Opaque<RouteCensusRow, { readonly brand: u
  */
 export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.Literal("route-census/v1"),
+    schemaVersion: S.tag("route-census/v1"),
     corpusSha256: S.NonEmptyString,
     footprintDigest: S.NonEmptyString,
     heads: S.Int,
@@ -552,7 +552,7 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  */
 export class RouteReplay extends S.Opaque<RouteReplay, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.Literal("route-replay/v1"),
+    schemaVersion: S.tag("route-replay/v1"),
     corpusSha256: S.NonEmptyString,
     footprintDigest: S.NonEmptyString,
     heads: S.Int,
