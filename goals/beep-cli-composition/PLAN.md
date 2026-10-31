@@ -27,7 +27,7 @@ and rewrites JSDoc example imports in the same change.
 
 | Step | Content | Starts after |
 | --- | --- | --- |
-| G1 | Parallel vitest projects for repo-cli; the suites that need isolation (cwd changes, module mocks, global stubs) stay in a serial project. | now |
+| G1 | Done 2026-10-31: parallel vitest projects for repo-cli; the 85 suites that need isolation (cwd changes, module mocks, global stubs) keep a fresh worker per file (D21). Local Bun run 1,512 s to 183 to 502 s (`research/g1-parallel-vitest.md`). | now |
 | G2 | Done: four repo-cli coverage shards; merged map equals the unsharded run (`research/g2-coverage-shards.md`). | now |
 | G3 | Argv-first lazy dispatch with a static help manifest in `bin-main.ts` and `commands/Root.ts`, written so it moves to the composition app unchanged. | now |
 | G4 | Per-task policy fingerprint from each command's import graph instead of the repo-cli package closure. Done: one generated seal per command-path prefix; 0 stale-green replays over 400 commits; task-instance invalidations 145,200 to 71,391 (`research/g4-task-fingerprint.md`). | done |
