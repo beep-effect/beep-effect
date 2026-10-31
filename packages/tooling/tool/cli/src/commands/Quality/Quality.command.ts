@@ -57,7 +57,8 @@ import {
   setAdmissionEvictionProtocol,
   TmpfsReapReport,
 } from "../../internal/repo-run/index.ts";
-import { CacheQualificationLive, runCachePolicyAudit } from "../Cache/index.ts";
+import { runCachePolicyAudit } from "../Cache/Cache.command.ts";
+import { CacheQualificationLive } from "../Cache/Cache.service.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "../Worktree/Fleet.service.ts";
 import { WaveOrder } from "../Yeet/internal/WaveOrder.ts";
 import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts";

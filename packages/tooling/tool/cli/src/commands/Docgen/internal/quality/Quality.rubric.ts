@@ -11,6 +11,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Regex from "effect/RegExp";
 import { boundedText } from "../../../../internal/cli/Timing.ts";
 import { DocgenQualityFinding, DocgenQualityReview } from "./Quality.schemas.ts";
 import type { DocgenQualityFindingCode, DocgenQualitySubject, DocgenQualityTier } from "./Quality.schemas.ts";
@@ -46,8 +47,6 @@ const EXCESSIVE_EXAMPLE_BLANK_LINES_PATTERN = /(?:^|\r?\n)(?:[ \t]*\r?\n){3,}/m;
 const SYMBOL_HANDLE_METADATA_PROPERTIES_PATTERN =
   /(?:ast|Encoded|fields|identifier|Type|TypeId|annotations|annotationsFromSelf)/;
 
-const escapeRegExp = (value: string): string => Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")(value);
-
 const exampleOnlyVoidsResult = (example: string): boolean => {
   const code = exampleCodeText(example);
   return STANDALONE_VOID_DISCARD_PATTERN.test(code) && !OBSERVABLE_EXAMPLE_RESULT_PATTERN.test(code);
@@ -69,7 +68,7 @@ const exampleHasTypeEvidence = (example: string): boolean =>
   TYPE_EVIDENCE_EXAMPLE_PATTERN.test(exampleCodeText(example));
 
 const exampleLogsExportSymbolHandle = (subject: DocgenQualitySubject, example: string): boolean => {
-  const exportName = escapeRegExp(subject.exportName);
+  const exportName = Regex.escape(subject.exportName);
   const symbolHandlePattern = new RegExp(
     String.raw`\b(?:Console|console)\.(?:debug|dir|error|info|log|warn)\s*\(\s*${exportName}(?:\s*\.\s*${SYMBOL_HANDLE_METADATA_PROPERTIES_PATTERN.source})?\s*\)`,
     "m"

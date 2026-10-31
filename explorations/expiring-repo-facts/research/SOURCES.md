@@ -69,5 +69,8 @@ three files under [`notes/`](./notes/). The load-bearing ones:
 
 ## 5. Cross-links & provenance
 
-- This packet: [`../CAPTURE.md`](../CAPTURE.md), [`../RESEARCH.md`](../RESEARCH.md).
-- No goals yet.
+- This packet: [`../CAPTURE.md`](../CAPTURE.md), [`../RESEARCH.md`](../RESEARCH.md),
+  [`../DECISIONS.md`](../DECISIONS.md), [`../BRIEF.md`](../BRIEF.md), [`../MAP.md`](../MAP.md).
+- Graduated goals (2026-10-31): [`goals/hold-ledger`](../../../goals/hold-ledger/README.md)
+  and [`goals/wake-service`](../../../goals/wake-service/README.md). Each carries
+  its own `research/SOURCES.md` that links back here.
