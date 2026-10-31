@@ -347,90 +347,27 @@ const walkTree: {
   }
 });
 
-// A heading's content source with each continuation line's container prefix removed. The parser
-// strips that prefix (indentation, blockquote markers, list-item indentation) before inline parsing,
-// so the inline tree's positions say where each line's content begins: the first node starting on
-// the line, or, for a text-like leaf the line break falls inside, the alignment of that leaf's
-// value line with the end of the source line. Only a leaf whose value drops its line breaks (a code
-// span) falls back to skipping the leading space, tab and `>` characters.
-type ContentSpan = { readonly start: number; readonly end: number; readonly leaf: boolean; readonly value: string };
-
-const PREFIX_CHARACTER = /[ \t>]/;
-
-const leadingPrefixLength = (raw: string, firstContent: string): number => {
-  let index = 0;
-  while (index < raw.length && raw[index] !== firstContent && PREFIX_CHARACTER.test(raw[index] ?? "")) {
-    index++;
-  }
-  return index;
-};
-
-const continuationStart = (
-  source: string,
-  lineStart: number,
-  lineEnd: number,
-  spans: ReadonlyArray<ContentSpan>
-): number => {
-  const spanning = A.findFirst(spans, (span) => span.leaf && span.start < lineStart && lineStart < span.end);
-  if (O.isSome(spanning) && Str.includes("\n")(spanning.value.value)) {
-    const leaf = spanning.value;
-    const lineIndex = A.length(Str.split("\n")(Str.slice(leaf.start, lineStart)(source))) - 1;
-    const valueLine = Str.trimEnd(O.getOrElse(A.get(Str.split("\n")(leaf.value), lineIndex), () => ""));
-    const raw = Str.trimEnd(Str.slice(lineStart, Math.min(lineEnd, leaf.end))(source));
-    if (Str.isNonEmpty(valueLine)) {
-      // Escapes and entity references only lengthen the source, so the aligned start is an upper
-      // bound; the container prefix is the leading run of space, tab and `>` characters before it.
-      return Str.endsWith(valueLine)(raw)
-        ? lineStart + Math.min(raw.length - valueLine.length, leadingPrefixLength(raw, ""))
-        : lineStart +
-            leadingPrefixLength(
-              raw,
-              O.getOrElse(Str.charAt(0)(valueLine), () => "")
-            );
+// The inline text the block pass handed to the inline parser for each heading, keyed by the
+// heading's start offset. The block pass strips every continuation line's container prefix
+// (indentation, blockquote markers, list-item indentation) before inline parsing, so this is the
+// heading content exactly as the parser read it, still in source syntax. The document keeps only
+// the tree, so the pass runs again with the same dialect and frontmatter capture.
+const headingInlineTexts = (source: string, dialect: MarkdownDialect, root: Root): HashMap.HashMap<number, string> =>
+  Result.match(
+    parsePassResult(source, {
+      dialect,
+      frontmatter: A.some(root.children, (child) => child.type === "frontmatter"),
+    }),
+    {
+      onFailure: () => HashMap.empty<number, string>(),
+      onSuccess: (pass) =>
+        HashMap.fromIterable(
+          A.flatMap(pass.rawInlines, (slice) =>
+            slice.parent.type === "heading" ? [[slice.parent.position.start.offset, slice.text] as const] : []
+          )
+        ),
     }
-  }
-  const next = A.filter(spans, (span) => span.start >= lineStart && span.start <= lineEnd);
-  return A.match(next, {
-    onEmpty: () => lineStart + leadingPrefixLength(Str.slice(lineStart, lineEnd)(source), ""),
-    onNonEmpty: (starting) => A.reduce(starting, lineEnd, (min, span) => Math.min(min, span.start)),
-  });
-};
-
-const headingContentOf = (source: string, heading: Heading): string => {
-  const spans: Array<ContentSpan> = [];
-  for (const child of heading.children) {
-    walkTree(child, 1, (node) => {
-      if ("position" in node && node.position !== undefined) {
-        spans.push({
-          start: node.position.start.offset,
-          end: node.position.end.offset,
-          leaf: !("children" in node),
-          value: "value" in node && P.isString(node.value) ? node.value : "",
-        });
-      }
-    });
-  }
-  return A.match(heading.children, {
-    onEmpty: () => "",
-    onNonEmpty: (children) => {
-      const start = A.headNonEmpty(children).position.start.offset;
-      const end = A.lastNonEmpty(children).position.end.offset;
-      let out = "";
-      let cursor = start;
-      let lineEnd = Str.indexOf("\n")(Str.slice(start, end)(source));
-      while (O.isSome(lineEnd)) {
-        const breakAt = start + lineEnd.value;
-        const lineStart = breakAt + 1;
-        out += Str.slice(cursor, lineStart)(source);
-        const following = Str.indexOf("\n")(Str.slice(lineStart, end)(source));
-        const nextLineEnd = O.isSome(following) ? lineStart + following.value : end;
-        cursor = Math.min(Math.max(continuationStart(source, lineStart, nextLineEnd, spans), lineStart), nextLineEnd);
-        lineEnd = O.map(following, (offset) => lineStart + offset - start);
-      }
-      return out + Str.slice(cursor, end)(source);
-    },
-  });
-};
+  );
 
 // Depth-guarded pre-order search with early exit — `walkTree`'s visit callback
 // cannot stop the walk, and `find` should not pay for the rest of the tree
@@ -836,10 +773,12 @@ export class MarkdownDocument extends S.Class<MarkdownDocument, { readonly brand
    * A multi-line setext heading inside a blockquote or list item repeats
    * the container's prefix (indentation, `>` markers) on each continuation
    * line. {@link MarkdownDocument.headingSource} keeps those characters;
-   * this reading drops them, using the inline tree's positions for where
-   * each line's content begins, so a `>` that is literal text (indented four
-   * or more columns past its containers) stays. Line breaks are kept. A
-   * one-line heading reads the same as `headingSource`.
+   * this reading is the text the block pass handed to the inline parser,
+   * which has them stripped, so a `>` that is literal text (indented four or
+   * more columns past its containers) or escaped stays. Line breaks are kept,
+   * and a one-line heading reads the same as `headingSource`. Each call runs
+   * the parse pass again; read {@link MarkdownDocument.headingContents} for
+   * every heading at once.
    *
    * **Example** (A quoted multi-line heading)
    *
@@ -858,7 +797,34 @@ export class MarkdownDocument extends S.Class<MarkdownDocument, { readonly brand
    * @since 0.0.0
    */
   headingContent(heading: Heading): string {
-    return headingContentOf(this.source, heading);
+    return O.getOrElse(
+      HashMap.get(headingInlineTexts(this.source, this.dialect, this.root), heading.position.start.offset),
+      () => this.headingSource(heading)
+    );
+  }
+
+  /**
+   * {@link MarkdownDocument.headingContent} for every heading, in the order
+   * of {@link MarkdownDocument.headings}, from one parse pass.
+   *
+   * **Example** (Every heading's content)
+   *
+   * ```ts
+   * import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
+   * import * as Effect from "effect/Effect";
+   *
+   * const doc = Effect.runSync(MarkdownDocument.parse("# One\n\n> Two\n> lines\n> ===\n"));
+   * console.log(doc.headingContents) // ["One", "Two\nlines"]
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get headingContents(): ReadonlyArray<string> {
+    const texts = headingInlineTexts(this.source, this.dialect, this.root);
+    return A.map(this.headings, ({ node }) =>
+      O.getOrElse(HashMap.get(texts, node.position.start.offset), () => this.headingSource(node))
+    );
   }
 
   /**

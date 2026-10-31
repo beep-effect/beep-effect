@@ -275,8 +275,11 @@ export abstract class MarkdownToc {
       A.map(document.headings, (heading, index) => ({ heading, index })),
       ({ heading }) => O.isNone(boundary) || heading.node.position.start.line > boundary.value + 1
     );
+    const contents = document.headingContents;
     const [, entries] = A.mapAccum(listed, HashMap.empty<string, number>(), (seen, { heading, index }) => {
-      const text = MarkdownSlug.headingLine(document.headingContent(heading.node));
+      const text = MarkdownSlug.headingLine(
+        O.getOrElse(A.get(contents, index), () => document.headingSource(heading.node))
+      );
       const key = Str.toLowerCase(text);
       const occurrence = O.match(HashMap.get(seen, key), { onNone: () => 0, onSome: (count) => count + 1 });
       const entry = TocEntry.make({
