@@ -5,12 +5,12 @@
     "title": "Codex Security Findings (2026-10-20)",
     "status": "active",
     "created": "2026-10-20",
-    "updated": "2026-10-28",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-10-20",
   "lifecycle": "active",
-  "mission": "Retain merged proof for the eight original Cloud and 123 Dependabot IDs; remediate and close the seven linked October 28 Cloud findings in PR #2333.",
+  "mission": "Retain merged proof and verified closure for the eight original Cloud and 123 Dependabot IDs, with final reconciliation in PR #2389.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -21,7 +21,15 @@
     "grandfathered": false,
     "pullRequests": [
       {
+        "number": 1930,
+        "role": "supporting"
+      },
+      {
         "number": 2333,
+        "role": "supporting"
+      },
+      {
+        "number": 2389,
         "role": "final"
       }
     ],
@@ -33,12 +41,12 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/codex_security-findings-20261028-8caa64bef5f4/verdict.json",
+        "ref": ".beep/yeet/runs/codex_security-closeout-20261031-51a5fd9b0fd8/verdict.json",
         "gating": true
       }
     ]
   },
-  "branch": "codex/security-findings-2026-10-20",
+  "branch": "codex/security-closeout-20261031",
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
@@ -71,7 +79,8 @@
     "research/hub-native-crypto-proof.md",
     "research/docx-review-proof.md",
     "research/claim-index-review-proof.md",
-    "research/2026-10-28-cloud-refresh.md"
+    "research/2026-10-28-cloud-refresh.md",
+    "research/2026-10-31-revalidation.md"
   ],
   "agentLaunchers": [
     {
@@ -106,7 +115,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All eight full Cloud details are validated and implemented with scoped proof. Round-one review repairs passed focused checks and both global property-test gates; final publication, merge and exact-ID external closure remain pending."
+    "note": "All eight Cloud IDs verified Fixed; original dependency catalog has 121 fixed alerts and two explicitly withdrawn alerts (#426 and #431)."
   },
   "closeoutPolicy": {
     "fixed": "Fixed",
@@ -195,9 +204,9 @@
     "A remediation requires an architecture or product decision outside packet scope.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "PR #1930 is published at e3c548ea58. The three valid round-two compatibility findings now have parallel source repairs: selective bounded DOCX XML processing and indexed claim evaluation without a ceiling increase. DOCX44 and claim208 Node/V8 tests, unchanged coverage floors, package audits/docgen, strict/root lint and global schema/Effect test gates pass. Consolidated publication, exact-head hosted readiness/review, merge, merged-revision proof and exact-ID closure remain required.",
+  "statusNote": "Original findings resolved and revalidated on 2026-10-31; final packet reconciliation and supplemental dependency remediation are tracked in PR #2389.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2333
+    "finalPullRequest": 2389
   }
 }
