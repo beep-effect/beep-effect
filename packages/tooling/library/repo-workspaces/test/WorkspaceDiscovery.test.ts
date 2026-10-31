@@ -9,6 +9,7 @@ import {
   WorkspaceRoot,
   WorkspaceRootNotFoundError,
 } from "@beep/repo-workspaces";
+import { WorkspaceDiscoveryOptions } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -29,6 +30,7 @@ const discoveryOver = (
   tree: Tree,
   options?: {
     readonly maxDepth?: number;
+    readonly skipMissingBaseDirs?: boolean;
     readonly unreadable?: ReadonlyArray<string>;
     readonly unreadableFiles?: ReadonlyArray<string>;
   }
@@ -304,6 +306,39 @@ describe("WorkspaceDiscovery — a pattern naming a missing directory fails type
         assert.instanceOf(error, WorkspacePatternError);
         assert.strictEqual(error.kind, "missingBaseDir");
         assert.strictEqual(error.pattern, "apps/*");
+      })
+    );
+  });
+});
+
+describe("WorkspaceDiscovery — skipMissingBaseDirs lets a missing base select nothing", () => {
+  it("admits the option as an absent key or a boolean and rejects an explicit undefined (EF-40)", () => {
+    const is = S.is(WorkspaceDiscoveryOptions);
+    assert.isTrue(is({}));
+    assert.isTrue(is({ skipMissingBaseDirs: true }));
+    assert.isFalse(is({ skipMissingBaseDirs: undefined }));
+  });
+
+  layer(discoveryOver(missingBase, { skipMissingBaseDirs: false }), { timeout: "30 seconds" })((it) => {
+    it.effect("false fails typed, as when the option is absent", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const error = yield* Effect.flip(discovery.listPackages);
+        assert.instanceOf(error, WorkspacePatternError);
+        assert.strictEqual(error.kind, "missingBaseDir");
+      })
+    );
+  });
+
+  layer(discoveryOver(missingBase, { skipMissingBaseDirs: true }), { timeout: "30 seconds" })((it) => {
+    it.effect("true enumerates the other patterns and selects nothing for the missing base", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const packages = yield* discovery.listPackages;
+        assert.deepStrictEqual(
+          A.map(packages, (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@x/alpha=packages/alpha"]
+        );
       })
     );
   });

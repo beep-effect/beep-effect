@@ -492,6 +492,27 @@ export class WorkspaceDiscoveryOptions extends S.Opaque<WorkspaceDiscoveryOption
         description: "Skip member directories whose real path leaves the workspace root, before reading them.",
       })
     ),
+    /**
+     * Let a wildcard pattern whose base directory is absent select nothing.
+     *
+     * **Details**
+     *
+     * Off by default: a pattern such as `apps/*` whose `apps` directory does
+     * not exist fails discovery with a `missingBaseDir`
+     * {@link WorkspacePatternError}, which is what catches a typo in
+     * `packages:`. On, that pattern selects no member and the others are
+     * enumerated as usual, as a filesystem glob behaves. Git keeps no empty
+     * directory, so a checkout whose last member under a base was deleted has
+     * no such base at all; a caller that must keep working there opts in. The
+     * depth and visit bounds still fail typed.
+     *
+     * @defaultValue `false`.
+     */
+    skipMissingBaseDirs: S.optionalKey(S.Boolean).pipe(
+      $I.annoteKey("WorkspaceDiscoveryOptions.skipMissingBaseDirs", {
+        description: "Let a wildcard whose base directory is absent select nothing instead of failing.",
+      })
+    ),
   }).pipe(
     $I.annoteSchema("WorkspaceDiscoveryOptions", {
       description: "Root resolution and pattern descent options, with defaults resolved lazily.",
@@ -801,7 +822,10 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
         const directories = yield* enumerate(root, globs, {
           maxDepth: options?.maxDepth ?? 32,
-          ...O.getSomesStruct({ containWithinRoot: O.fromUndefinedOr(options?.containWithinRoot) }),
+          ...O.getSomesStruct({
+            containWithinRoot: O.fromUndefinedOr(options?.containWithinRoot),
+            skipMissingBaseDirs: O.fromUndefinedOr(options?.skipMissingBaseDirs),
+          }),
         }).pipe(
           Effect.mapError((failure) =>
             WorkspacePatternError.make({

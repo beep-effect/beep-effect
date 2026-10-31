@@ -173,7 +173,8 @@ export const EnumerationFailure = EnumerationFailureKind.mapMembers(
 export type EnumerationFailure = typeof EnumerationFailure.Type;
 
 /**
- * Controls the descent bound and root containment for {@link enumerate}.
+ * Controls the descent bound, root containment and missing-base tolerance for
+ * {@link enumerate}.
  *
  * **Example** (Leave enumeration defaults unresolved)
  *
@@ -199,6 +200,13 @@ export class EnumerateOptions extends S.Opaque<EnumerateOptions, { readonly bran
     containWithinRoot: S.optionalKey(S.Boolean).pipe(
       $I.annoteKey("EnumerateOptions.containWithinRoot", {
         description: "Whether directories whose real path leaves the root are skipped before they are read.",
+      })
+    ),
+    /** Let a wildcard whose enumeration base is absent select nothing instead of failing. Defaults to `false`. */
+    skipMissingBaseDirs: S.optionalKey(S.Boolean).pipe(
+      $I.annoteKey("EnumerateOptions.skipMissingBaseDirs", {
+        description:
+          "Whether a wildcard whose enumeration base directory is absent selects nothing instead of failing.",
       })
     ),
   }).pipe(
@@ -237,6 +245,7 @@ interface EnumerationScope {
   readonly maxDepth: number;
   readonly path: Path.Path;
   readonly root: string;
+  readonly skipMissingBaseDirs: boolean;
 }
 
 /** Whether `absolute` holds a `package.json`; an unreadable probe is `false`. */
@@ -399,12 +408,16 @@ const visitEntry = Effect.fnUntraced(function* (
  * **Details**
  *
  * A missing enumeration base fails: that is what catches a typo in
- * `packages:` instead of silently discovering nothing.
+ * `packages:` instead of silently discovering nothing. With
+ * `skipMissingBaseDirs` it selects nothing instead, as a filesystem glob
+ * does: git keeps no empty directory, so a base whose last member was
+ * deleted is absent from a fresh checkout.
  */
 const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, wildcard: GlobPattern) {
   const base = baseOf(wildcard);
   const absoluteBase = scope.path.join(scope.root, base);
   if (!(yield* isDirectoryAt(scope, absoluteBase))) {
+    if (scope.skipMissingBaseDirs) return;
     return yield* Effect.fail<EnumerationFailure>({
       kind: "missingBaseDir",
       pattern: wildcard.source,
@@ -435,7 +448,9 @@ const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, 
  * (literal or wildcard), and is rejected by no exclude. Results are sorted by
  * relative path. With `containWithinRoot`, a literal member, a wildcard base or
  * a listed directory whose real path leaves the root's real path is skipped
- * before it is probed for a `package.json` or descended into.
+ * before it is probed for a `package.json` or descended into. With
+ * `skipMissingBaseDirs`, a wildcard whose base directory is absent selects
+ * nothing instead of failing with `missingBaseDir`.
  *
  * **Gotchas**
  *
@@ -493,6 +508,7 @@ export const enumerate: {
       maxDepth,
       included: MutableHashMap.empty<string, string>(),
       isExcluded: excludedBy(globs.excludes),
+      skipMissingBaseDirs: options?.skipMissingBaseDirs ?? false,
     };
     yield* includeLiterals(scope, globs.literals);
     yield* Effect.forEach(globs.wildcards, (wildcard) => enumerateWildcard(scope, wildcard), { discard: true });
