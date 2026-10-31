@@ -153,6 +153,11 @@ explorations/beep-ci-operational-ontology/prose/pre-packet-transcript/
 explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/*/
 explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/gh-runs-*.json
 
+# Stale caches left by the retired graft code graph (retired 2026-10-28); kept
+# ignored so an existing checkout's graft/ and .graft/ directories cannot be staged.
+/graft/
+/.graft/
+
 # Python bytecode (packet research scripts)
 **/__pycache__/
 *.pyc

@@ -64,7 +64,15 @@ const provisionCommand = Command.make(
 
 const refreshCommand = Command.make(
   "refresh",
-  { root: rootFlag },
+  {
+    root: rootFlag,
+    // Timer units rendered before the 2026-10-28 graft retirement pass `--jobs 16`;
+    // accept and ignore it until `beep refs install-timer --refresh` re-renders them.
+    jobs: Flag.Int("jobs").pipe(
+      Flag.optional,
+      Flag.withDescription("Deprecated and ignored; accepted for timer units rendered before 2026-10-28")
+    ),
+  },
   Effect.fn("Refs.refresh")(function* ({ root }) {
     const home = yield* homeConfig;
     const workspace = yield* ReferenceWorkspace;
