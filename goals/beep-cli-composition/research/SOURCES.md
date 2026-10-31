@@ -12,6 +12,7 @@
 | Fleet Turbo task timings | Task share and cache-hit rates | beep-effect | `goals/quality-speedup/research/data/fleet-turbo-task-timings.tsv` | Gate cost | Cited |
 | Check census baseline | repo-cli type-check cost | beep-effect | `standards/check-census.regression-baseline.jsonc` | Gate cost | Cited |
 | Last 400 first-parent `main` commits | Invalidation simulation input | beep-effect | `git log --first-parent -400 --name-only` | Payoff | Summarized in `research/design-record.md` |
+| Local repo-cli vitest runs, 2026-10-31 | G1 before/after wall time and isolation census | beep-effect | `packages/tooling/tool/cli/vitest.config.ts` | Gate cost | Summarized in `research/g1-parallel-vitest.md` |
 
 ## 2. Upstream repositories & licenses
 

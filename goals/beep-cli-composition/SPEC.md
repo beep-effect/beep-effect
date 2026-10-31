@@ -54,7 +54,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Constraints
 
-- The Decision Log rows D1 to D20 are binding.
+- The Decision Log rows D1 to D21 are binding.
 - Every wave keeps `main` green and the `beep` surface byte-identical, except
   for the D11 retirements.
 - No command tool imports another tool. No library imports a tool or a policy
@@ -130,6 +130,7 @@ them and record each in the Decision Log.
 | 2026-10-28 | D18 Checkpoint after W7: re-measure with parallel tests and the per-task fingerprint before any package moves in W8 to W12. | The simulation shows the split pays off on affected-scope runs (about 37 to 51 percent less test CPU) but adds about 395 to 755 CPU-seconds per full gate run. Rejected: run all waves; stop at W7. | Skip the checkpoint. |
 | 2026-10-28 | D19 The instrumentation catalog (Observability group) goes to beep-quality, amending D7. | It generates the cheap gate `observability:catalog-check`. Rejected: keep it in beep-harness. | Move the group. |
 | 2026-10-28 | D20 The composition app ships both `beep` and `beep-cli` bins; `beep-cli` stays a permanent alias and the generated scripts do not change. | Rewriting 722 generated script strings drifts every package's cache baseline. Rejected: rename to `beep` in W12. | Regenerate the scripts and drop the alias. |
+| 2026-10-31 | D21 G1 runs the isolated repo-cli suites in parallel, one fresh worker per file, rather than serially, and caps workers at `min(8, cores - 1)`. | Forked workers keep a `chdir` or stub inside its own file, and hosted coverage already ran every file isolated with `--fileParallelism=true`; serial isolation would keep 83 files on one worker. The cap stops a 64-core host loading the whole graph per core (OOM at 32 GB). Rejected: a serial isolated project; the Vitest default worker count. | Set `fileParallelism: false` on the `isolated` project. |
 
 ## Exception Ledger
 
