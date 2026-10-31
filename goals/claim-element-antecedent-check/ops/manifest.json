@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Autonomous acceptance v1 applied: strict 37/538, all 34 protected passes retained; actual-attorney fields false. Accepted main #2399 and #2409 are consumed. Fresh fixed replay results/all 251 reports and all 20 runtime, 631 historical and 1,136 snapshot hashes match. Three current-base package audit/docgen verifications pass. The publication collector passed 24/25 checks in over ten minutes; its sole obsolete-inventory failure is corrected with accepted main and a passing standalone check. Hosted-first delivery remains in progress; P4 is active and P5 is pending."
+  "statusNote": "Primary draft PR #2411 is published. The current integration wave repairs app manifest/telemetry registration, extends the existing all-tools privacy canary, fixes the MCP pipe diagnostic and canonically refreshes the identity lint profile. Strict 37/538 and all 34 protected passes remain; all original references/results and runtime pins are preserved. Autonomous acceptance v1 applies with actual-attorney flags false. P4 hosted readiness remains active; P5 closeout is pending."
 }

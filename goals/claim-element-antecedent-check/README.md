@@ -63,6 +63,10 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [App integration repair and full package proofs](history/2026-10-31-delivery-integration-repair.json): preserves every assertion and extends the all-tools telemetry canary to the new tool. MCP and app audit/docgen pass; generated identity profile freshness and cache audit pass.
+
+- **Primary delivery PR:** [#2411](https://github.com/beep-effect/beep-effect/pull/2411) is published as a draft. Its first hosted checks exposed missing app tool metadata and telemetry registration, a pipe-style diagnostic in an MCP regression test, and a stale generated identity lint profile. The current delivery wave repairs those integration gaps while retaining the fixed 37/538 measurement and every protected pass. Hosted readiness and closeout remain pending; earlier unpublished checkpoints below are historical.
+
 - [Schema inventory reconciliation](history/2026-10-31-schema-inventory-refresh.json): the first publication collection passed 24/25 checks in over ten minutes. Accepted main #2409 removes its five obsolete inventory rows; the fresh standalone check passes with no new exceptions. Publication proceeds through the documented hosted-first route, retaining every failed and successful receipt.
 
 - [Accepted-main replay](history/2026-10-31-current-base-replay-2.json): consumes #2399 at f16d82e9f1, closes the competing #2402 unmerged with its recovery branch retained, and proves both full results and all 251 reports unchanged. All 34 protected passes and all prior evidence remain intact; all three current-base package verifications pass.

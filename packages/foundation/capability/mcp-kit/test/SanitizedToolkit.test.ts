@@ -644,7 +644,7 @@ describe("named template literal tool schemas", () => {
         const invalid = yield* Effect.exit(
           server.callTool({ name: "template_literal_tool", arguments: { id: "other:a:42" } })
         );
-        assertTrue(Exit.isFailure(invalid));
+        invalid.pipe(Exit.isFailure, assertTrue);
       })
     );
   });
