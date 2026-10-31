@@ -418,6 +418,25 @@ Record a null bump.
       })
     );
 
+    // Git `:(glob)` pathspecs do not expand braces, so the tracked manifests are
+    // matched by the shared `GlobSet` instead.
+    it.effect("selects members through a brace workspace pattern with a trailing wildcard", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writePackageJson(tmpDir, "package.json", { private: true, workspaces: ["{apps,libs}/*"] });
+        yield* writePackageJson(tmpDir, "apps/web/package.json", { name: "@beep/web", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "libs/core/package.json", { name: "@beep/core", version: "0.0.0" });
+        yield* writePackageJson(tmpDir, "tools/cli/package.json", { name: "@beep/cli", version: "0.0.0" });
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["add", "."]);
+        expect(yield* collectWorkspacePackageJsonFiles(tmpDir)).toEqual([
+          "apps/web/package.json",
+          "libs/core/package.json",
+        ]);
+      })
+    );
+
     it.effect("accepts tracked workspace changesets through the release-path check", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

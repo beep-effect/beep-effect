@@ -8849,6 +8849,26 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
+    // A brace list without wildcards has no glob magic yet names several paths,
+    // so it walks through the enumerator rather than a literal `{api,web}` join.
+    it.effect("expands a brace workspace pattern without wildcards to each alternative", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(
+            tmpDir,
+            ["packages/{api,web}"],
+            ["packages/api", "packages/web", "packages/other"]
+          );
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/packages-api", "--filter=@beep/packages-web"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
     it.effect("drops workspace candidates a negated pattern excludes", () =>
       Effect.andThen(
         temporaryRepository,

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
@@ -40,7 +41,7 @@ export { ChangesetGraphError } from "./Quality.errors.ts";
 const $I = $RepoCliId.create("commands/Quality/ChangesetGraph");
 
 const nulSeparator = "\u0000";
-const gitWorkspacePackageJsonPathspecs = ["package.json"] as const;
+const gitTrackedPackageJsonPathspecs = [":(glob)**/package.json"] as const;
 const retiredChangesetPackagesPath = "standards/changesets.retired-packages.json";
 
 class RetiredChangesetPackageRecord extends S.Opaque<
@@ -168,15 +169,14 @@ const readWorkspacePatterns = Effect.fn("ChangesetGraph.readWorkspacePatterns")(
   );
 });
 
-const packageJsonPathspecGlob = (pattern: string): string =>
+const packageJsonGlob = (pattern: string): string =>
   `${pipe(pattern, normalizePath, stripTrailingSlashes)}/package.json`;
 
-// A `!pattern` workspace entry excludes members, so it becomes a git exclude
-// pathspec; a leading `!` inside `:(glob)` magic would only match literally.
-const packageJsonPathspecForWorkspacePattern = (pattern: string): string =>
-  Str.startsWith("!")(pattern)
-    ? `:(exclude,glob)${packageJsonPathspecGlob(Str.slice(1)(pattern))}`
-    : `:(glob)${packageJsonPathspecGlob(pattern)}`;
+// `<pattern>/package.json` for one workspace entry; a `!pattern` keeps its bang,
+// so the set reads it as an exclusion. Git pathspecs expand neither braces nor
+// a leading `!`, so the tracked manifests are matched here, not by git.
+const packageJsonGlobForWorkspacePattern = (pattern: string): string =>
+  Str.startsWith("!")(pattern) ? `!${packageJsonGlob(Str.slice(1)(pattern))}` : packageJsonGlob(pattern);
 
 /**
  * Find the closing fence accepted by `@changesets/parse` in one forward line scan.
@@ -311,11 +311,13 @@ const readRetiredChangesetPackageNames = Effect.fn("ChangesetGraph.readRetiredCh
  *
  * **Details**
  *
- * The catalog is derived from the root `package.json` workspaces patterns via
- * `git ls-files` glob pathspecs, so it names exactly the tracked workspace
- * manifests — the same derivation the changeset graph guard uses. The
- * path-aware changeset status wrapper reuses it so both lanes agree on
- * workspace membership.
+ * The catalog is the tracked `package.json` files (`git ls-files`) that the
+ * root workspace patterns select, matched as `<pattern>/package.json` by a
+ * `@beep/glob` `GlobSet` with the defaults `WorkspaceDiscovery` compiles, so
+ * braces, globstars and `!` exclusions read as the package managers read them.
+ * It names exactly the tracked workspace manifests — the same derivation the
+ * changeset graph guard uses. The path-aware changeset status wrapper reuses
+ * it so both lanes agree on workspace membership.
  *
  * **Example** (Collect workspace manifests)
  *
@@ -338,18 +340,14 @@ export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collec
   ChangesetGraphError,
   FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const workspacePathspecs = A.map(yield* readWorkspacePatterns(repoRoot), packageJsonPathspecForWorkspacePattern);
-  const output = yield* collectGitOutput(repoRoot, [
-    "ls-files",
-    "-z",
-    "--",
-    ...gitWorkspacePackageJsonPathspecs,
-    ...workspacePathspecs,
-  ]);
+  const workspaceManifests = yield* GlobSet.compile(
+    A.map(yield* readWorkspacePatterns(repoRoot), packageJsonGlobForWorkspacePattern)
+  ).pipe(Effect.mapError((error) => ChangesetGraphError.new(error, error.message)));
+  const output = yield* collectGitOutput(repoRoot, ["ls-files", "-z", "--", ...gitTrackedPackageJsonPathspecs]);
 
   return pipe(
     toNulSeparatedLines(output),
-    A.filter((file) => file !== "package.json")
+    A.filter((file) => file !== "package.json" && workspaceManifests.matches(file))
   );
 });
 

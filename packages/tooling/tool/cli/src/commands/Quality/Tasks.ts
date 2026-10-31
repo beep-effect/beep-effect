@@ -481,8 +481,10 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
   }
 
   const compiled = yield* GlobPattern.compile(pattern).pipe(Effect.mapError(invalidWorkspacePattern));
-  if (!compiled.hasMagic) {
-    return [path.join(repoRoot, pattern)];
+  // Only a pattern naming exactly one path is a literal member; a brace list
+  // without wildcards (`packages/{api,web}`) has no magic but names several.
+  if (O.isSome(compiled.literalPath)) {
+    return [path.join(repoRoot, compiled.literalPath.value)];
   }
 
   // `dir/*` over a literal `dir` keeps its one-level read and its failure text.
@@ -499,7 +501,7 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
     return A.map(entries, (entry) => path.join(base, entry));
   }
 
-  // Any other glob (`packages/**`, `apps/*/web`, braces) walks through the
+  // Any other pattern (`packages/**`, `apps/*/web`, braces) walks through the
   // workspace enumerator `WorkspaceDiscovery` uses, bounded and pruned.
   const globs = yield* GlobSet.compile([pattern]).pipe(Effect.mapError(invalidWorkspacePattern));
   const directories = yield* enumerate(repoRoot, globs).pipe(Effect.mapError(unenumerableWorkspacePattern));
