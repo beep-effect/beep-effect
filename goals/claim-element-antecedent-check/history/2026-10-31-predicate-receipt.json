@@ -740,7 +740,7 @@
     },
     {
       "path": "goals/claim-element-antecedent-check/history/2026-10-31-predicate-remaining.json",
-      "sha256": "a0e325e8a1f2faa392f9c48278515cc8323701c1a82021c3fe993c75d460e52e"
+      "sha256": "f6b76d9041b057f23a1aefaba6c1ad8426c02e051abe1424b794a2c95d0d1d49"
     },
     {
       "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v11-evaluation.json",
@@ -752,7 +752,7 @@
     },
     {
       "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v12-evaluation.json",
-      "sha256": "0886780b225da5800dccf1f2593db75f185f1c6e9466fb7aa83d02928c76a30d"
+      "sha256": "4890e14ed898a27606e4561c648af4c5edf3c12d3b556a4edca694f73f5d5f00"
     },
     {
       "path": "goals/claim-element-antecedent-check/history/2026-10-31-repair-v12-summary.json",
