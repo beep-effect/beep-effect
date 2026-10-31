@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/jsonc-owner-switch-differential.ts",
-  "codeRev": "1d30fbd6178f701d25932b7763850cae4274fe0a",
-  "codeDirty": true,
+  "codeRev": "c25981bba415540aa1ba0f011b3b9924770516f9",
+  "codeDirty": false,
   "corpus": {
     "legacy": "jsonc-parser",
     "scope": "git ls-files: every *.jsonc, plus tsconfig*.json, turbo.json, biome.json, vercel.json, package.json and docgen.json",
@@ -25,6 +25,278 @@
       "failures": []
     },
     "differences": []
+  },
+  "edges": {
+    "legacy": "jsonc-parser",
+    "cases": 42,
+    "equal": 11,
+    "bothReject": 26,
+    "intended": 5,
+    "unclassified": 0,
+    "messageShape": {
+      "id": "trailing-content",
+      "legacy": "reject: Invalid JSONC input (InvalidSymbol@8:1).",
+      "kit": "reject: SchemaError(JSONC parse failed with 2 errors: InvalidSymbol at 1:9; EndOfFileExpected at 1:9)"
+    },
+    "records": [
+      {
+        "id": "empty",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ValueExpected@0:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ValueExpected at 1:1)"
+      },
+      {
+        "id": "whitespace-only",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ValueExpected@5:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ValueExpected at 2:3)"
+      },
+      {
+        "id": "bom-prefixed",
+        "outcome": "legacy-reject-kit-accept",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@0:1).",
+        "kit": "accept",
+        "intended": "BOM tolerance: the kit scanner treats U+FEFF as whitespace; jsonc-parser rejected it (InvalidSymbol@0:1). No tracked document carries a BOM (corpus leg)."
+      },
+      {
+        "id": "trailing-content",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@8:1).",
+        "kit": "reject: SchemaError(JSONC parse failed with 2 errors: InvalidSymbol at 1:9; EndOfFileExpected at 1:9)"
+      },
+      {
+        "id": "array-trailing-comma",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "array-leading-comma",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ValueExpected@1:1).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ValueExpected at 1:2)"
+      },
+      {
+        "id": "array-double-comma",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ValueExpected@3:1).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ValueExpected at 1:4)"
+      },
+      {
+        "id": "object-trailing-comma",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "nested-trailing-commas",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "unterminated-string",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (UnexpectedEndOfString@0:4).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: UnexpectedEndOfString at 1:1)"
+      },
+      {
+        "id": "unterminated-block-comment",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (UnexpectedEndOfComment@0:7, ValueExpected@7:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 2 errors: UnexpectedEndOfComment at 1:1; ValueExpected at 1:8)"
+      },
+      {
+        "id": "unterminated-object",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (CloseBraceExpected@6:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: CloseBraceExpected at 1:7)"
+      },
+      {
+        "id": "line-comment-only",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ValueExpected@17:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ValueExpected at 1:18)"
+      },
+      {
+        "id": "block-comment-only",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ValueExpected@7:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ValueExpected at 1:8)"
+      },
+      {
+        "id": "value-with-line-comment",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "crlf-around-object",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "nan",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@0:3, ValueExpected@3:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 3 errors: InvalidCharacter at 1:1; EndOfFileExpected at 1:1; ValueExpected at 1:1)"
+      },
+      {
+        "id": "infinity",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@0:8, ValueExpected@8:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 3 errors: InvalidCharacter at 1:1; EndOfFileExpected at 1:1; ValueExpected at 1:1)"
+      },
+      {
+        "id": "undefined-literal",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@0:9, ValueExpected@9:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 3 errors: InvalidSymbol at 1:1; EndOfFileExpected at 1:1; ValueExpected at 1:1)"
+      },
+      {
+        "id": "hex-number",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@1:3).",
+        "kit": "reject: SchemaError(JSONC parse failed with 2 errors: InvalidSymbol at 1:2; EndOfFileExpected at 1:2)"
+      },
+      {
+        "id": "leading-zero",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (EndOfFileExpected@1:1).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: EndOfFileExpected at 1:2)"
+      },
+      {
+        "id": "leading-plus",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@0:2, ValueExpected@2:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 3 errors: InvalidCharacter at 1:1; EndOfFileExpected at 1:1; ValueExpected at 1:1)"
+      },
+      {
+        "id": "leading-dot",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@0:2, ValueExpected@2:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 3 errors: InvalidCharacter at 1:1; EndOfFileExpected at 1:1; ValueExpected at 1:1)"
+      },
+      {
+        "id": "trailing-dot",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (UnexpectedEndOfNumber@0:2).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: InvalidNumberFormat at 1:1)"
+      },
+      {
+        "id": "depth-255",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "depth-256",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "depth-257",
+        "outcome": "legacy-accept-kit-reject",
+        "legacy": "accept",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: NestingDepthExceeded at 1:257)",
+        "intended": "Nesting cap: the kit rejects collections nested deeper than MAX_NESTING_DEPTH (256, internal/limits.ts) with NestingDepthExceeded instead of risking a RangeError defect; jsonc-parser recursed without a cap."
+      },
+      {
+        "id": "depth-300",
+        "outcome": "legacy-accept-kit-reject",
+        "legacy": "accept",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: NestingDepthExceeded at 1:257)",
+        "intended": "Nesting cap, as depth-257."
+      },
+      {
+        "id": "proto-key-object-value",
+        "outcome": "value-differs",
+        "legacy": "accept",
+        "kit": "accept",
+        "intended": "JSON.parse semantics: the kit defines `__proto__` as an own data property; jsonc-parser assigned it and so set the result's prototype and dropped the key. No @beep/jsonc consumer feeds a decoded object into a [[Set]] merge (Object.assign, R.union); spreads create own properties."
+      },
+      {
+        "id": "proto-key-primitive-value",
+        "outcome": "value-differs",
+        "legacy": "accept",
+        "kit": "accept",
+        "intended": "JSON.parse `__proto__` semantics, as proto-key-object-value (jsonc-parser dropped the key)."
+      },
+      {
+        "id": "control-char-in-string",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidCharacter@0:5).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: InvalidCharacter at 1:1)"
+      },
+      {
+        "id": "tab-in-string",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidCharacter@0:5).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: InvalidCharacter at 1:1)"
+      },
+      {
+        "id": "lone-surrogate-escape",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "bad-escape",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidEscapeCharacter@0:4).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: InvalidEscapeCharacter at 1:1)"
+      },
+      {
+        "id": "short-unicode-escape",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidUnicode@0:6).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: InvalidUnicode at 1:1)"
+      },
+      {
+        "id": "escaped-slash",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "single-quoted-string",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@0:3, ValueExpected@3:0).",
+        "kit": "reject: SchemaError(JSONC parse failed with 3 errors: InvalidCharacter at 1:1; EndOfFileExpected at 1:1; ValueExpected at 1:1)"
+      },
+      {
+        "id": "unquoted-key",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (InvalidSymbol@1:1, PropertyNameExpected@2:1, ValueExpected@4:1).",
+        "kit": "reject: SchemaError(JSONC parse failed with 2 errors: InvalidSymbol at 1:2; PropertyNameExpected at 1:2)"
+      },
+      {
+        "id": "missing-colon",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ColonExpected@5:1).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ColonExpected at 1:6)"
+      },
+      {
+        "id": "missing-value",
+        "outcome": "both-reject",
+        "legacy": "reject: Invalid JSONC input (ValueExpected@5:1).",
+        "kit": "reject: SchemaError(JSONC parse failed with 1 error: ValueExpected at 1:6)"
+      },
+      {
+        "id": "duplicate-keys",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      },
+      {
+        "id": "null",
+        "outcome": "equal",
+        "legacy": "accept",
+        "kit": "accept"
+      }
+    ]
   },
   "generators": {
     "inputsRev": "921b92fcd8c5b7a7eed793688542a47b153fcb7a",
