@@ -25,7 +25,7 @@ import { VerdictProjector, VerdictProjectorLive } from "@beep/law-practice-use-c
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -300,7 +300,7 @@ describe("ClaimSelfCheck read-only review items", () => {
           }),
           Effect.result
         );
-        assert.isTrue(Result.isFailure(result));
+        result.pipe(Result.isFailure, assertTrue);
         if (Result.isFailure(result)) {
           assert.strictEqual(result.failure.reason, "review-response-too-large");
           assert.isTrue(Str.includes("All supplied claims still require review")(result.failure.message));
