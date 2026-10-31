@@ -31,14 +31,14 @@ import * as NodeHttp from "node:http";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeStream from "node:stream";
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { A, O, P, R } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
 import * as MutableHashSet from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
-import picomatch from "picomatch";
-import * as Toml from "toml";
 
 // Node 26 exposes a configurable experimental `localStorage` getter even when
 // no `--localstorage-file` was supplied. Vitest consequently sees the property
@@ -140,9 +140,6 @@ type BunTestShim = {
       readonly values: ReadonlyArray<unknown>;
     };
   };
-  readonly TOML: {
-    readonly parse: (content: string) => unknown;
-  };
   readonly env: NodeJS.ProcessEnv;
   readonly file: (path: string | URL) => BunFileShim;
   readonly markdown: {
@@ -183,13 +180,12 @@ const isObject = (value: unknown): value is object => P.isObjectKeyword(value) &
 const hasFunctionProperty = (value: unknown, key: string): boolean =>
   isObject(value) && typeof Reflect.get(value, key) === "function";
 
-// fallow-ignore-next-line complexity -- CRAP finding comes from fallow's static coverage estimate; the probe is a flat 13-way conjunction of function-property checks over the Bun shim API with cognitive 1. Owner: repo root (vitest.setup.ts). Exit: remove once fallow health reads the measured coverage for this file (#1855 detector frontier) or the branches collapse.
+// fallow-ignore-next-line complexity -- CRAP finding comes from fallow's static coverage estimate; the probe is a flat 12-way conjunction of function-property checks over the Bun shim API with cognitive 1. Owner: repo root (vitest.setup.ts). Exit: remove once fallow health reads the measured coverage for this file (#1855 detector frontier) or the branches collapse.
 const isBunTestShim = (value: unknown): value is BunTestShim =>
   isObject(value) &&
   hasFunctionProperty(value, "CryptoHasher") &&
   P.hasProperty(value, "Glob") &&
   P.hasProperty(value, "JSONL") &&
-  P.hasProperty(value, "TOML") &&
   P.hasProperty(value, "env") &&
   hasFunctionProperty(value, "file") &&
   P.hasProperty(value, "markdown") &&
@@ -559,25 +555,6 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
   return handle;
 };
 
-const normalizeTomlValue = (value: unknown): unknown => {
-  if (A.isArray(value)) {
-    return A.map(value, normalizeTomlValue);
-  }
-  if (P.isObjectKeyword(value) && P.isNotNull(value)) {
-    return R.fromEntries(A.map(R.toEntries(value), ([key, item]) => [key, normalizeTomlValue(item)] as const));
-  }
-  return value;
-};
-
-const parseToml = (content: string): unknown => {
-  try {
-    return normalizeTomlValue(Toml.parse(content));
-  } catch (cause) {
-    const message = errorMessage(cause);
-    throw new Error(Str.includes('"=" found')(message) ? `Unexpected = (${message})` : message);
-  }
-};
-
 const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
   const values: Array<unknown> = [];
   let read = 0;
@@ -649,15 +626,25 @@ class CryptoHasherShim {
   }
 }
 
+// Bun.Glob.match admits dotfiles wherever a wildcard stands (the walker below applies
+// Bun.Glob.scanSync's own `dot` option before any path reaches the matcher) and reads a
+// leading `#` as a literal, not a comment; it negates a leading `!` as minimatch does.
+const globShimOptions = GlobPatternOptions.make({ dot: true, nocomment: true });
+
+// Bun.Glob over `@beep/glob`: the matcher is the kit's `GlobPattern`; the walker keeps Bun's
+// scanSync semantics for Node runs of Bun-targeted suites (effected-promotion W4-p).
 class GlobShim {
-  private readonly matcher: (value: string) => boolean;
+  private readonly matcher: GlobPattern;
 
   constructor(readonly pattern: string) {
-    this.matcher = picomatch(normalizeFilePath(pattern), { dot: true });
+    this.matcher = Result.getOrThrowWith(
+      GlobPattern.compileResult(normalizeFilePath(pattern), globShimOptions),
+      (error) => new Error(`Bun.Glob shim: ${error.message}`, { cause: error })
+    );
   }
 
   match(relativePath: string): boolean {
-    return this.matcher(normalizeFilePath(relativePath));
+    return this.matcher.matches(normalizeFilePath(relativePath));
   }
 
   scanSync(options?: BunGlobScanOptions): Iterable<string> {
@@ -667,7 +654,8 @@ class GlobShim {
     const patternDepth = Str.split("/")(normalizedPattern).length;
     const recursivePattern = Str.includes("**")(normalizedPattern);
     const scanRoot = scanRootForGlobPattern(normalizedPattern);
-    const includeDirectories = options?.onlyFiles !== true && !Str.endsWith("/**/*")(this.pattern);
+    // Bun.Glob.scanSync defaults `onlyFiles` to true: directories are listed only on request.
+    const includeDirectories = options?.onlyFiles === false;
     const outputPath = (relativePath: string, absolutePath: string): string =>
       options?.absolute === true ? normalizeFilePath(absolutePath) : relativePath;
 
@@ -749,9 +737,6 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
     Glob: GlobShim,
     JSONL: {
       parseChunk: parseJsonlChunk,
-    },
-    TOML: {
-      parse: parseToml,
     },
     env: process.env,
     file,
