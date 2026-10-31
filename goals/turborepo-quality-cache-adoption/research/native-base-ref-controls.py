@@ -136,17 +136,23 @@ for channel, binary in clients.items():
                 command += ["/tools/turbo", "--skip-infer", "--no-update-notifier", "run", "probe", "--affected", "--dry=json"]
                 started = time.monotonic()
                 code, stdout, stderr = invoke(command, root, environment)
-                assert code == 0, (channel, flag, case, code, stderr[:800])
-                plan = json.loads(stdout)
+                refused = case == "explicit-missing"
+                if refused:
+                    assert code == 1 and b"Unable to query SCM" in stderr and b"unavailable-explicit-ref" in stderr, (channel, flag, case, code, stderr[:800])
+                    plan = {"tasks": []}
+                else:
+                    assert code == 0, (channel, flag, case, code, stderr[:800])
+                    plan = json.loads(stdout)
                 tasks = sorted(task["taskId"] for task in plan["tasks"])
-                conservative = case in ["explicit-missing", "missing-both"] or (case == "implicit-remote-only" and not flag)
-                expected = ["a#probe", "b#probe"] if conservative else ["a#probe"]
+                conservative = case == "missing-both" or (case == "implicit-remote-only" and not flag)
+                expected = [] if refused else (["a#probe", "b#probe"] if conservative else ["a#probe"])
                 assert tasks == expected, (channel, flag, case, tasks, expected)
                 assert (b"unable to detect git range" in stderr) == conservative, (channel, flag, case, stderr[:800])
                 assert not list(root.glob("packages/*/execution.marker")), "Dry selection unexpectedly executed a task."
                 rows.append({
                     "channel": channel, "flag": flag, "case": case, "exitCode": code,
                     "selectedTasks": tasks, "conservativeAllTasks": conservative,
+                    "explicitBaseRefused": refused,
                     "elapsedSeconds": round(time.monotonic() - started, 6),
                     "stdoutSha256": hashlib.sha256(stdout).hexdigest(),
                     "stderrSha256": hashlib.sha256(stderr).hexdigest(),
@@ -159,7 +165,7 @@ revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=
 assert revision == source_revision, "Source revision changed during execution."
 for channel in clients:
     for flag in [False, True]:
-        assert len({row["taskHashes"]["a#probe"] for row in rows if row["channel"] == channel and row["flag"] == flag}) == 1, "Base selection changed an unchanged task hash."
+        assert len({row["taskHashes"]["a#probe"] for row in rows if row["channel"] == channel and row["flag"] == flag and not row["explicitBaseRefused"]}) == 1, "Base selection changed an unchanged task hash."
 report = {
     "schemaVersion": "cache-native-base-ref-controls/v1",
     "scope": "Synthetic native dry selection only; no task execution, hosted run, qualification or production timing claim.",
