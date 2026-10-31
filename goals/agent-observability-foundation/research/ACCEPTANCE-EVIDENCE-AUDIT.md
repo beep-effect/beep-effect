@@ -25,8 +25,9 @@ receipt. The later attempt passed without a resource stop. No memory limit was
 weakened, production collector configuration changed, historical data reingested
 or recovery hold released.
 
-Current source tests passed under Node22.23.4 and Bun1.4.4: 834 AI-metrics
-tests in74 files, five Phoenix readback tests and55 managed-provider tests.
+Current Node 22.23.4 suites passed 834 AI-metrics tests in 74 files, five
+Phoenix readback tests and 55 managed-provider tests, using Bun 1.4.4 for
+applicable subprocess fixtures.
 See `../ops/history/current-test-proof-20261031.json` for the split execution
 and controlled wrapper-bootstrap stop. Exact-head final-check and hosted/review/
 merge/lifecycle closure remain separate requirements.

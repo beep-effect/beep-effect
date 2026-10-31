@@ -107,38 +107,37 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
         Effect.flatMap((response) => response.text),
         Effect.provide(client)
       );
-      const serve = (text: string) =>
-        Effect.gen(function* () {
-          const context = yield* Layer.build(BunHttpServer.layer({ unix: socket }));
-          const server = Context.get(context, HttpServer.HttpServer);
-          assert.strictEqual(server.address._tag, "UnixPathAddress");
-          yield* server.serve(Effect.succeed(HttpServerResponse.text(text)));
-          assert.strictEqual((yield* fs.stat(socket)).type, "Socket");
-          assert.strictEqual(yield* get, text);
-          yield* server.serve(
-            Effect.gen(function* () {
-              const request = yield* HttpServerRequest.HttpServerRequest;
-              return HttpServerResponse.text(
-                request.method === "POST"
-                  ? yield* request.stream.pipe(
-                      Stream.runFold(
-                        () => "",
-                        (text, bytes) => text + new TextDecoder().decode(bytes)
-                      )
+      const serve = Effect.fnUntraced(function* (text: string) {
+        const context = yield* Layer.build(BunHttpServer.layer({ unix: socket }));
+        const server = Context.get(context, HttpServer.HttpServer);
+        assert.strictEqual(server.address._tag, "UnixPathAddress");
+        yield* server.serve(Effect.succeed(HttpServerResponse.text(text)));
+        assert.strictEqual((yield* fs.stat(socket)).type, "Socket");
+        assert.strictEqual(yield* get, text);
+        yield* server.serve(
+          Effect.gen(function* () {
+            const request = yield* HttpServerRequest.HttpServerRequest;
+            return HttpServerResponse.text(
+              request.method === "POST"
+                ? yield* request.stream.pipe(
+                    Stream.runFold(
+                      () => "",
+                      (text, bytes) => text + new TextDecoder().decode(bytes)
                     )
-                  : `${text}-reloaded`
-              );
-            })
-          );
-          assert.strictEqual(yield* get, `${text}-reloaded`);
-          const posted = yield* HttpClientRequest.post("http://localhost/").pipe(
-            HttpClientRequest.bodyText("synthetic-post"),
-            HttpClient.execute,
-            Effect.flatMap((response) => response.text),
-            Effect.provide(client)
-          );
-          assert.strictEqual(posted, "synthetic-post");
-        }).pipe(Effect.scoped);
+                  )
+                : `${text}-reloaded`
+            );
+          })
+        );
+        assert.strictEqual(yield* get, `${text}-reloaded`);
+        const posted = yield* HttpClientRequest.post("http://localhost/").pipe(
+          HttpClientRequest.bodyText("synthetic-post"),
+          HttpClient.execute,
+          Effect.flatMap((response) => response.text),
+          Effect.provide(client)
+        );
+        assert.strictEqual(posted, "synthetic-post");
+      }, Effect.scoped);
       yield* serve("first");
       assert.strictEqual(yield* fs.exists(socket), false);
       yield* serve("rebound");
@@ -161,9 +160,10 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
       }).pipe(Effect.scoped, Effect.exit);
       assert.strictEqual(duplicate._tag, "Failure");
       assert.deepStrictEqual((yield* fs.stat(socket)).ino, original.ino);
+      const client = yield* Layer.build(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket }));
       const response = yield* HttpClient.get("http://localhost/").pipe(
         Effect.flatMap((response) => response.text),
-        Effect.provide(NodeHttpClient.layerNodeHttpOptions({ socketPath: socket }))
+        Effect.provide(client)
       );
       assert.strictEqual(response, "owner");
     })

@@ -48,14 +48,16 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { QualityTaskName } from "../Quality/Quality.schemas.ts";
 import { OXLINT_CIRCULAR_CONFIG, OXLINT_DEPRECATED_APIS_CONFIG } from "./internal/LintPackage.ts";
-import { makePolicyGraph, renderClosureInputs } from "./internal/PolicyFingerprintGraph.ts";
-import { PolicyFingerprintEntry, PolicyFingerprintError, PolicyToolsFingerprint } from "./PolicyFingerprint.schemas.ts";
-import type {
+import {
+  makePolicyGraph,
   PolicyCliLayout,
-  PolicyCommandNode,
-  PolicySourceTree,
+  PolicyClosure,
+  PolicyGraphOptions,
   PolicyWorkspace,
+  renderClosureInputs,
 } from "./internal/PolicyFingerprintGraph.ts";
+import { PolicyFingerprintEntry, PolicyFingerprintError, PolicyToolsFingerprint } from "./PolicyFingerprint.schemas.ts";
+import type { PolicyCommandNode, PolicySourceTree } from "./internal/PolicyFingerprintGraph.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PolicyFingerprint");
 
@@ -218,10 +220,7 @@ const readSources = Effect.fnUntraced(function* (root: string) {
         Effect.mapError(decodeFailure(file))
       );
       return {
-        name,
-        directory: relative,
-        exports: manifest.exports,
-        imports: manifest.imports,
+        ...PolicyWorkspace.make({ name, directory: relative, exports: manifest.exports, imports: manifest.imports }),
         scripts: manifest.scripts ?? {},
       };
     })
@@ -358,14 +357,14 @@ interface PrefixSeal {
 const prefixKey = (command: ReadonlyArray<string>) => A.join(command, "-");
 
 const fingerprintFromSources = Effect.fnUntraced(function* (sources: FingerprintSources, tree: PolicySourceTree) {
-  const graph = makePolicyGraph({ tree, workspaces: sources.workspaces });
+  const graph = makePolicyGraph(PolicyGraphOptions.make({ tree, workspaces: sources.workspaces }));
   const cli = sources.cliDirectory;
-  const layout: PolicyCliLayout = {
+  const layout = PolicyCliLayout.make({
     shell: [`${cli}/src/bin.ts`, `${cli}/src/bin-main.ts`],
     rootModule: `${cli}/src/commands/Root.ts`,
     rootBinding: "rootCommand",
     commandsDirectory: `${cli}/src/commands`,
-  };
+  });
 
   let prefixes = HashMap.empty<string, PrefixSeal>();
   let manifests = HashSet.empty<string>();
@@ -420,15 +419,15 @@ const fingerprintFromSources = Effect.fnUntraced(function* (sources: Fingerprint
   const shell = yield* graph.shellClosure(layout);
   const rootClosure = O.isSome(rootNode)
     ? yield* graph.commandClosure([rootNode.value])
-    : { modules: HashSet.empty<string>(), opaqueWorkspaces: HashSet.empty<string>() };
+    : PolicyClosure.make({ modules: HashSet.empty<string>(), opaqueWorkspaces: HashSet.empty<string>() });
   const shared = sortedUnique([
     ...(yield* renderClosureInputs(
       tree,
       graph,
-      {
+      PolicyClosure.make({
         modules: HashSet.union(shell.modules, rootClosure.modules),
         opaqueWorkspaces: HashSet.union(shell.opaqueWorkspaces, rootClosure.opaqueWorkspaces),
-      },
+      }),
       HashSet.empty()
     )),
     ...ROOT_CONFIGS,

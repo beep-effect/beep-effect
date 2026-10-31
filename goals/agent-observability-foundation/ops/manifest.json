@@ -22,7 +22,25 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2364,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_agent-observability-foundation-delivery-bc5523c03660/verdict.json",
+        "gating": true
+      },
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -49,12 +67,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
@@ -69,7 +87,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -84,9 +102,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Delivery active: Dankserver PR3 and scanner correction PR2366 merged; PR2364 repair integrates current main, documentation and fixture ownership fixes. Historical synthetic proof scope remains; current hosted gates and closeout are pending. Recovery hold intact.",
+  "statusNote": "Source implementation and bounded synthetic qualification supported; PR2364 remains the final delivery gate. Prospective closeout is declared, operative lifecycle stays active, and only exact-head readiness plus merge-time required-check verification can derive completion. Recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
-  "dependencies": []
+  "dependencies": [],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2364
+  }
 }

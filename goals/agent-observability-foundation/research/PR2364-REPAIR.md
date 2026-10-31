@@ -166,3 +166,37 @@ rewrites and are not presented as final current-source complete package proof.
 The schema inventory refresh was stopped at the retained host reserve; its canonical
 refresh and hosted policy check remain open while the coherent source repair wave
 is published under the constrained-compute route.
+
+
+## Final policy and closeout alignment — October 31
+
+A collected local replay found five new exported data interfaces from incoming
+main's per-task fingerprint implementation. The repair models Workspace, CLI
+layout, closure, command node and graph options with annotated branded schemas,
+retaining the source-reading capability and all graph traversal/routing rules.
+No candidate was admitted as debt: the refreshed schema-first inventory remains
+272 live/tracked entries, with zero missing, stale or enforced candidates.
+The schema catalog adds exactly the five models. Existing closure and input
+regressions verify live seal freshness and import-driven invalidation.
+
+The full CLI typecheck also caught an Effect function-form diagnostic and a
+Layer-provision diagnostic in the new Unix-socket shim tests. Their repairs
+retain every assertion and each server's scope, using a built client context
+in the existing test scope. All three CLI typecheck configurations and 15 Node
+tests passed. The separate Bun run passed both UDS cases and skipped three
+Node-only reservation cases. Independent review accepted source semantics,
+lifetimes and the prospective completion declaration.
+
+The full canonical reflection/schema/catalog/JSDoc refresh passed without a
+protective stop; open JSDoc findings remain 97 across 183 packages. The earlier
+collected run remains a stopped diagnostic, not a complete gate pass.
+See `../ops/history/policy-closeout-proof-20261031.json`. Pipeline source hashes
+from the accepted 88/87 canary pair and 894 Node-run tests remain unchanged;
+the new quality-helper and shim-test proof is scoped separately.
+
+Current completion policy requires intent and reflection in the final delivery
+PR, while operative status stays active. The manifest now declares final PR #2364
+and a head-bound Yeet verdict reference. After merge, canonical completion
+refresh must verify accepted-head readiness and the full merge-time required
+check inventory. A proposal, stale verdict, structural mergeability or local
+receipt alone cannot establish achievement. The recovery hold remains intact.

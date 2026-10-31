@@ -4,7 +4,7 @@
 
 Lifecycle: `active`
 
-Explicitly launched by the operator on 2026-10-27. Source: [manifest](./ops/manifest.json). Implementation is in progress in the dedicated foundation worktree. The original forwarder service and timer remain masked and inactive.
+Explicitly launched by the operator on 2026-10-27. Source: [manifest](./ops/manifest.json). Source implementation and bounded synthetic proof are supported; repository delivery remains in progress in the dedicated foundation worktree. The original forwarder service and timer remain masked and inactive.
 
 ## Mission
 
@@ -28,37 +28,35 @@ Only on an explicit implementation launch, use:
 
 ## Current phase
 
-Implementation and synthetic/runtime verification have reached a reviewed checkpoint;
-repository delivery remains open. The runtime source checkpoint is
-`d3a33a8bc128b685e644b80f69e801ec82b3110a`, followed by the source-bound
-[hosted build repair](./research/HOSTED-BUILD-REPAIR.md) and fresh v3 route proofs.
-The foundation is published as [PR2364](https://github.com/beep-effect/beep-effect/pull/2364);
-its exact-value scanner dependency [PR2366](https://github.com/beep-effect/beep-effect/pull/2366)
-is merged at `4a71782090acac558412687d387de7996aec4073` and integrated.
-The October 31 repair also resolves generated-inventory merge drift, documentation
-lint, fixture configuration ownership and stale exploration references. Current
-hosted results remain required after publication. The subsequent discovery review
-fixes change runtime bytes; historical v3 canaries remain historical, with new
-regression and cross-runtime evidence tracked separately.
-The [independent acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) now
-supports all thirteen criteria at their specified scope. The final
-[declared repository proof](./research/DECLARED-ROUTE-PROOF.md) closes the missing
-association in both disposable and live synthetic routes, using the same positively
-identified root and independently declared event IDs before send.
-[Dankserver source delivery](./ops/dankserver-merge-verification.json) is merged
-as PR3 at `f6e2bae77d205f228c4ebf9e3e8adcebb4b94d45`, without production rollout.
-The corrective Beep PR2362 is merged at
-`70492533f20378d5cd9747f3fba62d13590ccf9f` after current-head final-check and hosted
-code gates passed. Foundation delivery still requires its own current-head repository gates. The
-[final named panel](./research/FINAL-PANEL-DISPOSITIONS.md) accepted the bounded
-source and the follow-up evidence/operator-documentation fixes.
-The [closeout reflection](./history/reflections/2026-10-29-codex.md) is prepared
-with delivery still pending. Lifecycle remains active; this page is not completion signoff.
+The foundation remains **active** until final [PR2364](https://github.com/beep-effect/beep-effect/pull/2364)
+has exact-head hosted readiness and merge evidence. The manifest declares a
+prospective `completed-retained` closeout; that proposal is not achievement.
+After merge, the canonical `beep goals completion refresh` writer must revalidate
+the accepted head, retained Yeet verdict and complete merge-time required checks.
+Do not close the goal or external execution ledger from a local pass or proposal.
 
-The old forwarder service/timer remain masked and inactive. Metadata plus curated,
-sanitized examples remains the approved collection policy. Real harness enrollment,
-all-harness coverage and release of the historical recovery hold are not implied by
-source merge, passing fixtures or a synthetic canary.
+The [acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) separates historical
+proof from the current source refresh. The fresh declared-root pair records
+88 disposable and 87 live source bindings, independently computed CLI/desktop
+fixture identities, two actual visibility receipts per stage, private metadata,
+local health/alert proof and rollback. The Node 22.23.4 runs passed all 834 AI-metrics tests, five Phoenix
+readback tests and 55 managed-provider tests, using Bun 1.4.4 for applicable
+subprocess fixtures;
+see [the scoped test receipt](./ops/history/current-test-proof-20261031.json).
+Real harness populations remain Unknown.
+
+[Dankserver source delivery](./ops/dankserver-merge-verification.json)
+is merged as PR3 without production collector deployment. Scanner corrections
+PR2366 and PR2393 are merged. Current-main policy-model repairs and Node/Bun shim
+test diagnostics are verified separately; exact-head hosted gates remain required.
+The [October 31 reflection](./history/reflections/2026-10-31-codex.md) prepares
+closeout; the [October 29 reflection](./history/reflections/2026-10-29-codex.md)
+retains its historical pending-delivery assessment.
+
+The original forwarder service and timer remain masked and inactive. Metadata plus
+curated sanitized examples remains the approved collection policy. Source merge,
+fixtures and synthetic canaries do not enroll real harnesses, establish exhaustive
+coverage, reingest historical archives or release the recovery hold.
 
 ## Current verification
 

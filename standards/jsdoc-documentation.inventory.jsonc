@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T11:35:21.350Z",
+  "generatedAt": "2026-10-31T12:27:31.150Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -536190,8 +536190,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 344,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-344-computepolicyfingerprint",
+          "line": 343,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-343-computepolicyfingerprint",
           "currentTags": [
             "@category",
             "@since"
@@ -536212,8 +536212,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 764,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-764-policytoolsfingerprintpolicy",
+          "line": 763,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-763-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -536234,8 +536234,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 842,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-842-lintpolicyfingerprintcommand",
+          "line": 841,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-841-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"
