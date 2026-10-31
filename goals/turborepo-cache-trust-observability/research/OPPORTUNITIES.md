@@ -221,7 +221,7 @@ the exact older block-buffer archive. Its source assessment has one expiring
 advisory exception, an archive/version-set guard and an exhaustive256-value
 caught-panic regression; changed or mixed locks get no exception. The configured
 scan and all32 final-binary process controls pass. Make this independent Cargo
-scan part of each candidate build. A first scan could not read a mode0600 public
+scan part of each candidate build. A first scan could not read a mode 0600 public
 lock through a capability-dropped container; copying only that public input to a
 mode0444 read-only bind preserved the private source cache permissions.
 
@@ -1266,3 +1266,377 @@ require a new complete final check for this source wave.
 A first coverage launch was refused by the shell's unmatched-glob rule before
 any test process started. Quoting the literal exclusion argument allowed the
 intended run; no test or coverage rule was changed.
+## Closed producer CLI and current canary evidence, 2026-10-30
+
+- Adding the operational producer caller exposed missing `HttpClient` and
+  `MemoryStats` requirements in the cache command's public Effect context.
+  Existing command-dispatch checks caught the regression. Providing the services
+  at the new command boundary restored the original context contract; do not
+  widen every caller or test to absorb the leak.
+- Sharing private record reads changed an existing approval-unavailable message.
+  The established disappearing-file control failed. Preserve the caller's record
+  description in the shared reader; keep the assertion intact.
+- A normal-source stable matrix passed, while the canonical canary invocation
+  refused with `Pilot dependency was unexpected or reused an unqualified artifact.`
+  The first bounded diagnostic confirmed that guard. Preserve the original
+  refusal while gathering actual task/cache-origin facts; a later diagnostic
+  passing its fresh executions does not retroactively explain the failure.
+- Two observational-helper defects were attributed separately: an extra closing
+  parenthesis, and an attempted summary-directory read during native dry planning.
+  Parse the helper first, observe only summary-producing executions and prevent
+  observer IO from changing a task result. These diagnostics alter an ephemeral
+  worker for observation and cannot establish qualification.
+- The canonical worktree helper defaults to `origin/main`. A dependent local
+  lane must name `--base` explicitly. The clean new lane was moved to the intended
+  parent without resetting, merging unaccepted branches or rewriting published
+  history; the empty initial branch had no unique commits.
+
+## Serial proof recovery and native resource judgment, 2026-10-30
+
+- Launching eight independent checks together produced terminated Node and
+  documentation processes and opaque Fallow child failures. No kernel or task
+  cgroup OOM evidence established one cause. A serial Fallow audit passed with
+  zero introduced findings. Serialize heavyweight replays and retain every
+  termination as failed proof rather than inferring source correctness.
+- The execution-profile suite requires actual filesystem ownership, mode, link
+  count and revocation semantics. Review the single EV010 provenance judgment
+  through the typed inventory writer, preserving existing rows; replacing the
+  physical filesystem would change the boundary tested. The default policy
+  replay must still pass after regeneration.
+
+
+### Distinguish source observation from hosted readiness, 2026-10-30
+
+The producer command requires independently provisioned approval, while no
+secret-free hosted source inspection caller existed. Expose the existing
+inspector with bounded file-only output and an exact-main workflow. Reuse the
+current model and report instead of adding another store. Record this as source
+and tool observation only: an installed `bwrap` digest is not proof that the
+AWS user manager, namespaces or cgroup controls actually work. The inspection
+workflow remains unpublished and has not run.
+
+
+### Same-file inherited duplication needs an actual disposition, 2026-10-30
+
+Fallow's changed-file audit passed but reported an inherited-adjacent clone
+between baseline and transition review readers in Cache.command.ts. Source
+inspection confirmed duplicated file-read/decode handling. Consolidate it in
+this component, preserving external request paths and exact typed failures.
+Reuse the existing FileSystem service and schema codecs; the contained local
+experiment reader intentionally has another policy. A dedicated regression and
+current 98-case suites pass on both runtimes; audit and health now report zero
+findings. No new helper module, model, policy exemption or evidence store.
+
+
+### Cross-host issuer material is a prerequisite, 2026-10-30
+
+The existing importer revalidates issuer MACs through independent private
+verification stores. A runner-generated unrelated key would therefore fail
+real cross-host acceptance despite locally valid reports. Add bounded explicit
+installation of already approved material, require it in the CI install caller,
+and prove a peer-issued bundle verifies in the original independent store.
+Keep real transport and workflow execution pending; local tests grant no trust.
+
+Quick checking also caught an introduced unit-result inference mismatch and
+formatter difference. Effect.asVoid preserves the public unit contract, and the
+canonical formatter fixes the fixture. Two new compound Option assertions were
+replaced with the existing assertSome/deepStrictEqual utilities; the full default
+Effect policy now reports zero introduced findings, without an inventory waiver.
+
+
+### Span changes require catalog regeneration, 2026-10-30
+
+The 938 normal publication passed all other cheap subgates but refused the
+observability catalog before push. Removing the singleton-tail helper also
+removed its named span; JSDoc inventory regeneration did not update this separate
+catalog. Use the canonical observability catalog writer and then its default
+check. It removes exactly the stale span in the producer lane and records the
+new provisioning spans in the unpublished dependent lane. Both checks report
+zero drift. Run this narrow check after changing named Effect functions before
+the next complete publication. Preserve the failed verdict; no gate is waived.
+
+
+### Test the private loader's approval boundary directly, 2026-10-30
+
+Focused coverage exposed a missing loader case for absent upload approval and
+a redundant optional-result error after a concrete capability was validated.
+Reuse the same owned-snapshot validator under the optional experiment wrapper
+and the private loader, preserving every target/key/adapter check. Add a
+real private-store case with a credential provider that defects if consulted;
+move lookup before approval as a causal ordering control.
+
+The first refactor used Effect.succeedNone as a callback. Local type checking
+and four None-path tests rejected that introduced API misuse. The installed
+Effect source defines it as a value, so the callback must return it; Effect.asSome
+is the canonical wrapping operator. Retain the failed receipts and require
+fresh current-source checks. No external credentials or runtime were involved.
+
+
+The extracted concrete validator triggered one introduced Fallow complexity
+finding: cyclomatic 15, CRAP 63.6 using estimated partial coverage. Its profile
+requirements form one conjunction. Express their positive checks as one Effect
+Array aggregate, retaining every constraint, the exact error and each existing
+negative case; do not change a threshold or add an exception. A nonquiet root
+lint also identified the old adapter fixture's process.platform warning. That
+line is inherited from the unpublished parent boundary and is already fixed
+in the owning producer PR; preserve it until the accepted-parent replay.
+
+### Wrapped export navigation, 2026-10-30
+
+- Doing: trace the hosted upload verifier before joining complete observations.
+- Evidence: `graft callers verifyCacheHostedProducerUpload --depth 2` returned
+  `no symbol`, while targeted `graft grep` located the Effect.fn-wrapped export
+  under its module node.
+- Prevention: use the exact grep result and live test barrel for wrapped exports
+  when the symbol graph cannot resolve the call edge. No graph upgrade, duplicate
+  index or alternate memory service is needed for this source inspection.
+
+### Run identity exists before artifact identity, 2026-10-30
+
+- Doing: connect the complete-report builder to the actual protected publisher.
+- Evidence: its first input used the artifact reference, which requires an ID
+  that GitHub returns only after the report is uploaded. Unit fixtures already
+  had an artifact ID and did not expose this integration mismatch.
+- Repair: derive the existing artifact reference from a separate run/attempt
+  schema and require only that earlier identity when building publication.
+  Keep the full artifact ID mandatory at authenticated verification.
+- Prevention: trace the real producer/consumer ordering before fixing an input
+  contract; never invent a placeholder artifact identifier.
+
+### Keep credential references intact across secret-runner boundaries, 2026-10-30
+
+- Doing: mark the passing conformance fixture repair ready for review.
+- Evidence: the GitHub identity path failed with `op did not return the GitHub
+  token (exit 1)`. Count-only probes showed the outer secret runner had resolved
+  `BEEP_GH_TOKEN_REF`, while the nested client still interpreted it as a reference.
+  The approved env-file read itself succeeded; this was an invocation-boundary
+  error, not evidence of desktop sign-in failure or missing operator consent.
+- Repair: restore the nonsecret reference after env resolution and remove all
+  `OP_*` credentials from the child environment. A second count-only probe
+  confirmed reference preservation, token availability and zero forwarded agent
+  credential variables. The canonical ready operation then passed. No token or
+  raw item data was written to evidence.
+- Prevention: credential consumers must distinguish references from resolved
+  values, especially when nested inside an existing secret runner. Preserve
+  the original failed result and never retry a malformed reference path.
+
+
+### Reuse recorded quality command arguments
+
+- Work: run the acceptance consumer's Fallow check.
+- Evidence: `beep quality fallow-audit` failed with `Unknown subcommand`;
+  the recorded `beep quality fallow audit --check` command passed without changes.
+- Prevention: inspect the prior successful command receipt or the command help
+  before guessing a nested quality command. This was an invocation error, not a
+  source or policy failure; no finding was waived.
+
+
+### Register operational workflow contexts with their policy proof
+
+- Work: verify the unpublished protected-producer component.
+- Evidence: the full package run reported `Inspect producer sources and tools`
+  as absent from the hosted job inventory; 8,264 other cases passed.
+- Prevention: add the exact operational context and the source/credential/retention
+  policy case in the same change that introduces a manual workflow. The checker
+  stays active; this introduced mapping failure is repaired, not waived.
+
+### Check Effect values and curated test exports before wiring publication
+
+- Work: connect the closed producer result to its existing complete report.
+- Evidence: initial Node/Bun tests and quick check caught `onNone is not a function`,
+  a fixture missing `backendResult`, and a request imported from the test facade
+  rather than its existing command facade. These were introduced implementation
+  and fixture errors, not environmental failures.
+- Repair: use explicit thunks for the Effect value, the existing allowed backend
+  result and the actual exported command schema. The current 71 cases pass on
+  both runtimes and package lint/check passes; no assertion or policy was waived.
+- Prevention: confirm value-versus-thunk APIs and curated barrel exports before
+  composing callbacks; keep producer byte binding and refusal cases in the same
+  focused run.
+
+### Use the current Effect collection contract during audit repairs
+
+- Work: remove repeated expected/actual severity calculations found beside the
+  publication wiring. The two raw clone fingerprints were already inherited.
+- Evidence: an Option-returning `Array.filterMap` callback failed quick typing
+  and the existing exact Drizzle diagnostic test. This Effect version expects
+  a Result there. The unchanged assertions correctly rejected that attempt.
+- Repair: use the existing Array.flatMap idiom already present in the same
+  module. All 96 selected cases now pass on Node and Bun; quick checking passes.
+  The separate file-existence idiom has no common policy to extract, so its
+  source-reviewed non-defect reason is recorded and its raw warning retained.
+- Prevention: read the current upstream collection API or reuse a verified local
+  idiom before applying an older-version combinator pattern.
+
+### Reformat rewritten JSON before recording passing receipts
+
+- Work: record the passing default package proof. A JSON serializer expanded
+  a command array that Biome keeps on one line; formatting-only checking held
+  the evidence commit. Run the canonical formatter after rewriting a receipt
+  and before checking/committing it. Runtime source and the passing proof were
+  unaffected; no check was bypassed.
+
+### Private output must not depend on the caller umask
+
+- Work: review the unpublished producer publication command. A controlled
+  CLI execution under a child-process umask of 022 wrote the supposedly private
+  observation as 0644; both observation-only and hosted-output cases failed
+  the physical mode assertion. No actual credential or signed trial was used.
+- Prevention: reuse the existing Effect filesystem exclusive-create pattern
+  with explicit mode 0600 for producer output files. Preserve existing files,
+  symlink targets and hardlink peers; keep ordinary report callers unchanged.
+- Evidence: the focused before-fix run fails on actual mode 420 versus 384.
+  Positive physical file/link controls and current package proof must pass
+  before this repair is published. No live R2 configuration changed.
+
+- Canonical tool gap: Graft does not index the generic `writeEncoded` Effect
+  definition as a symbol. Use its exact source span and direct caller inventory
+  rather than repeated graph rebuilds; current package checking covers the
+  shared writer environment. The initial quick replay found only introduced
+  help-text formatting; canonical formatting repairs it without weakening gates.
+
+### A conditional IO branch can widen an unrelated public Effect
+
+- Work: keep producer reports private in the shared encoded writer. Yielding
+  FileSystem in its optional branch changed the inferred warming environment
+  even for ordinary callers. The existing broad checks passed, but explicit
+  warming example types fail with TS2375 under that implementation.
+- Prevention: select the existing filesystem service at the producer boundary
+  and pass the concrete capability to the writer. Retain compile assertions
+  for the previous service-free public contract. The intended failing check
+  and repaired successful compile both use the real package example compiler.
+
+- Secret-scan friction: two public revision/digest fields whose names contained
+  API matched the generic-key rule. Verified their bytes against Git and the
+  prior SPEC, then named the fields for the writer service boundary. Values,
+  source evidence and scanner rules are preserved; no ignore or bypass is used.
+
+### 2026-10-30: complete producer package audit interrupted by earlyoom
+
+- Work: complete `quality package-verify @beep/repo-cli` at source revision
+  `f1ec51b74e51eb7da37626c4e265e3a75ac045b1`.
+- Evidence: package verification exited 1 after 1012.575 seconds. Audit ended
+  with exit 143 after 969.8 seconds; Docgen passed in 41.2 seconds. The system
+  earlyoom journal at 23:08:04 UTC records `sending SIGTERM` to this checkout's
+  Vitest process during memory and swap exhaustion. This is an interrupted
+  audit, not a test assertion failure or a passing package result.
+- Response: preserve the failing result and attribution; wait for current heavy
+  proofs to settle before one unchanged-implementation retry. No source fix,
+  quality floor, timeout relaxation or unrelated process termination is justified.
+- Prevention: serialize complete local package audits with other heavy proofs
+  when workstation memory is pressured, and retain hosted proof authority.
+
+- Unchanged-implementation retry completed: full package verification passed in
+  1068.313 seconds, with audit 1028.3 seconds and Docgen 38.4 seconds. The
+  interrupted attempt remains preserved as exit 143; no source fix, threshold
+  change or privileged operation was used to obtain the pass. This proves the
+  current unpublished package implementation, not the future accepted-parent
+  combination or real protected producer execution.
+
+### Recheck codec allocation after accepted-parent integration
+
+- Work: publish the protected producer's seventeen owned commits after replaying
+  them onto the accepted implementation. Current policy found seven inline
+  schema-compilation sites in four owned test/fixture files.
+- Response: stop the exact owned publisher and package-audit process trees before
+  editing; retain their interrupted results without claiming a combined pass.
+  Hoist the existing codecs to module scope and reuse them at each call site.
+- Prevention: run the current codec-allocation lint before the next complete
+  package proof. Original source patch equivalence proves replay integrity,
+  not compatibility with a newer policy or current whole-command success.
+
+### Run the required law gate separately from the package audit
+
+- Work: replay the protected producer's final checks after its complete package
+  audit passed. The required effect-fn law found one lazy material-generation
+  callback that directly returned Effect.gen.
+- Response: preserve the interrupted proof, merge the accepted Cargo review,
+  and express the unchanged lazy callback with Effect.fnUntraced. Targeted
+  producer/dispatch cases and scoped package checks pass.
+- Prevention: package audit success does not imply every hosted policy gate
+  passed. Keep those proof authorities separate and run the required package
+  law check before another expensive full replay.
+
+### Producer transport budgets and accepted-main replay, 2026-10-31
+
+- Review found that per-channel eight-MiB outputs could exceed the old aggregate
+  import bound. Storage had the same old limit. Share the derived twenty-MiB
+  import budget across command input, persistence and rereading; retain the
+  eight-MiB channel output budget and one-MiB publication ZIP bounds.
+- The dispatcher regression composes two maximal-size channel JSON texts plus
+  maximum publication transport, reaches trust lookup, and rejects input beyond
+  twenty MiB before configuration. Existing store-bound refusals now exercise
+  the shared aggregate limit; authentication and metadata checks remain intact.
+- Two unprefixed unused imports in JSDoc examples came from import insertion;
+  edit actual imports with syntax-aware scope. Both example bodies are repaired.
+- Accepted task-specific fingerprints and coverage sharding advanced main during
+  validation. Stop only the owned proof before merging; preserve its exit130
+  as interrupted, resolve leaf imports, and regenerate inventory artifacts.
+  One inventory attempt was stopped after the additional storage-bound defect;
+  the final canonical scan and one hundred focused tests passed.
+
+### Normal-source replay preflight friction, 2026-10-31
+
+- The activation preview requires the current configuration's exact bytes, not
+  equivalent parsed JSON. An initially reformatted private before-copy correctly
+  failed with "Qualification evidence digest mismatch" before task execution.
+  Copy the original bytes and derive only the proposed after-copy; do not relax
+  the guard or alter the frozen source.
+- The completed port-repair coverage log could not be read because GitHub
+  returned "API rate limit exceeded". Preserve the last known failure and its
+  unknown attribution, inspect quota reset metadata once, and continue isolated
+  local work. A failed read is neither a passing check nor an empty finding set.
+- Fresh exact-source stable and canary commands both failed at the signed fresh
+  pair validator after the setup checks passed. The normal command's generic
+  supervisor error hid that stage. A diagnostic-only completion observer retained
+  the existing static error label and source locations, without retaining raw
+  streams or changing launch options. Keep such diagnostic evidence separate
+  from normal-source qualification, and do not relax the fresh-pair validator.
+- The fresh-pair diagnostic found matching task/input/log identities and three
+  successful fresh dependencies, but exit one for identity lint in both roots.
+  The unchanged source passed native Biome. Read-only private overlays then
+  isolated a formatting-only defect in the proposed configuration: the initial
+  bytes failed with category `format`; native-formatted equivalent JSON passed.
+  Format proposal bytes with the pinned repository tool before building the
+  activation reference. Preserve the failed experiments and rebuild the preview.
+- Biome's stdin check refused both original and formatted input, so it was not
+  a valid negative/pass control. Use actual read-only file overlays for this
+  comparison; the successful control changes no tracked source or lint rule.
+- The actual CLI entry also completed its full stable matrix with a transparent
+  completion observer. Its output matched the captured worker report. Keep that
+  observer-enabled result distinct from the earlier uninstrumented failures;
+  those failures do not acquire a cause or become passes through a later run.
+- Post-merge retirement found a crash-test child left by the interrupted port
+  proof. Its fixture deliberately pauses for the parent's SIGKILL. Verify the
+  exact fixture, disposable target, private invocation markers and process start
+  identity before stopping that one orphan. Reap owned crash children after an
+  abnormal proof exit, then retry canonical retirement. Preserve the original
+  interrupted proof as unproven; cleanup is not verification.
+- Current-canary plans correctly refused a census collected with installed stable.
+  Read-only native controls isolated two symlink input hash differences: stable
+  hashes link text, canary hashes target bytes. Bind census and selection to the
+  already-verified requested client and disable launcher inference. Keep exact
+  input/configuration guards and retain the failed historical attempts.
+- The outer supervisor mapped execution deadline expiry to a generic admission
+  error. Preserve numeric execution bounds and return a dedicated safe timeout
+  message; verify the scoped worker directory is removed with a virtual clock.
+  Historical unknown causes remain unknown until independently established.
+- A broad package audit completed with 8,298 passes and one unchanged Models
+  check-only case exceeding its thirty-second test limit. Its exact isolated
+  replay passed in16.763 seconds. Preserve both scopes and the failed full audit;
+  use fresh combined hosted validation instead of inferring a complete pass.
+- A producer verifier import legitimately expanded the generated quality-seal
+  closure, but resealing alone left the reviewed cache baseline stale. Pair
+  canonical fingerprint regeneration with a root-scoped reviewed-baseline
+  compare-and-swap acknowledgement and inspect the exact projection delta.
+  Preserve all other reviews and the qualification ledger; do not exempt this
+  PR-owned cache-policy failure as inherited.
+
+- PR #2386 review found that protected source inspection requires `/usr/bin/bwrap`
+  while neither the fleet image nor shared setup guarantees it. Install and check
+  the exact executable before inspection; a credential-free workflow definition
+  alone does not establish installed-host readiness.
+- The same review found an installation rollback gap before the issuer initializer
+  returned. Attach cleanup to successful exclusive directory acquisition and mask
+  the handoff to profile rollback; interruption after writing the key and failed
+  reopening must revoke the new store while a refused existing store stays intact.

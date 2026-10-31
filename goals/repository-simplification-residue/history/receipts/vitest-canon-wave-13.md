@@ -1,6 +1,8 @@
 # #1875 Effect Vitest canon wave 13: record
 
-Branch `test/vitest-canon-wave13`, stacked on wave 12 (#2424, which is open as this is written).
+Branch `test/vitest-canon-wave13`, stacked on wave 12 (#2424, which is open as this is written). It was
+restacked after #2424's review rounds and main `480b302e42`: the 46 rows are unchanged. The two
+EV006 rows still listed are the open rows #2386 baselined, which #2432 migrates.
 Scope: every remaining EV006 `hand-rolled-data-assertion` exception (46 rows in 20 files across
 16 packages).
 

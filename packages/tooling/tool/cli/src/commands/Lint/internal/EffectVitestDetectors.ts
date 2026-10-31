@@ -3536,13 +3536,38 @@ const detectResourceWrapper = (context: ReturnType<typeof inspectContext>, state
   }
 };
 
-// Whether `node` runs an assertion itself, outside nested closures that may run later or never.
+// Value assertions that also observe state, beside `isAssertion`'s expect and Boolean forms.
+const VALUE_ASSERTIONS = [
+  "deepStrictEqual",
+  "notDeepStrictEqual",
+  "strictEqual",
+  "assertEquals",
+  "assertSome",
+  "assertNone",
+  "assertSuccess",
+  "assertFailure",
+  "assertExitSuccess",
+  "assertExitFailure",
+  "assertInclude",
+  "assertMatch",
+  "assertInstanceOf",
+  "assertDefined",
+  "assertUndefined",
+];
+
+const isObservation = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isAssertion(call, imports) ||
+  isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", VALUE_ASSERTIONS) ||
+  isProvenanceCall(call, imports, VITEST_MODULES, "assert", VALUE_ASSERTIONS);
+
+// Whether `node` runs an assertion itself, outside nested function, method, accessor and class bodies,
+// which may run later or never.
 const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean => {
   let asserts = false;
   node.forEachDescendant((child, traversal) => {
-    if (isFunctionValue(child) || Node.isFunctionDeclaration(child)) {
+    if (Node.isFunctionLikeDeclaration(child) || Node.isClassDeclaration(child) || Node.isClassExpression(child)) {
       traversal.skip();
-    } else if (Node.isCallExpression(child) && isAssertion(child, imports)) {
+    } else if (Node.isCallExpression(child) && isObservation(child, imports)) {
       asserts = true;
       traversal.stop();
     }
@@ -3550,51 +3575,91 @@ const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean
   return asserts;
 };
 
-// The operand an `Effect.scoped(operand)` call or `operand.pipe(..., Effect.scoped)` stage closes.
+// The operand an `Effect.scoped(operand)` call closes, or the pipe input when `Effect.scoped` is the
+// first stage. A later stage closes the earlier stages' output, so no operand is claimed for it.
 const scopedOperand = (call: CallExpression, stage: O.Option<MorphNode>): O.Option<MorphNode> => {
-  if (O.isNone(stage)) return O.fromUndefinedOr(call.getArguments()[0]);
+  const arguments_ = call.getArguments();
+  if (O.isNone(stage)) return O.fromUndefinedOr(arguments_[0]);
   const callee = call.getExpression();
-  return Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe"
-    ? O.some(callee.getExpression())
-    : O.fromUndefinedOr(call.getArguments()[0]);
+  if (Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe")
+    return arguments_[0] === stage.value ? O.some(callee.getExpression()) : O.none();
+  return arguments_[1] === stage.value ? O.fromUndefinedOr(arguments_[0]) : O.none();
 };
 
-// A shorter scope the test observes closing: a later statement of the same test or helper asserts
-// after the scoped effect has completed. The walk gives up at a closure that is not an executed
-// call argument, at a nested function declaration, and at a fork, whose scope can outlive the
-// statements after it. An operand built by `Effect.succeed` or `Effect.sync` acquires nothing.
-const assertsAfterScopeClose = (
-  call: CallExpression,
-  stage: O.Option<MorphNode>,
-  root: O.Option<EffectVitestFunctionNode>,
+// `Effect.succeed(...)` and `Effect.sync(...)` acquire nothing a scope could release.
+const closesPureOperand = (call: CallExpression, stage: O.Option<MorphNode>, imports: EffectVitestImports) =>
+  O.exists(
+    scopedOperand(call, stage),
+    (operand) =>
+      Node.isCallExpression(operand) &&
+      isProvenanceCall(operand, imports, EFFECT_MODULES, "Effect", ["succeed", "sync"])
+  );
+
+// A closure that may run later or never, a nested declaration, or a fork whose scope can outlive the
+// following statements ends the walk.
+// `pipe(effect, ..., Effect.forkChild)` from `effect/Function`, the free-function form `forkCall` leaves out.
+const functionPipeFork = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(call, imports, ["effect", "effect/Function"], "Function", ["pipe"]) &&
+  A.some(call.getArguments().slice(1), (argument) =>
+    Node.isCallExpression(argument)
+      ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
+      : Node.isExpression(argument) && isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
+  );
+
+const leavesExecution = (current: MorphNode, parent: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isFunctionDeclaration(current) ||
+  (Node.isCallExpression(current) && (forkCall(current, imports) || functionPipeFork(current, imports))) ||
+  (isFunctionValue(current) && !Node.isCallExpression(parent));
+
+// At a statement that ran the scoped effect: observed when a later sibling asserts, otherwise keep
+// climbing. A statement that only builds the effect (`const work = Effect.scoped(acquire)`) ends the
+// walk; a `return` hands the effect to the enclosing call, which the walk checks next.
+const statementVerdict = (statement: MorphNode, executed: boolean, imports: EffectVitestImports): O.Option<boolean> => {
+  if (executed && A.some(statement.getNextSiblings(), (sibling) => assertsDirectly(sibling, imports)))
+    return O.some(true);
+  return executed || Node.isReturnStatement(statement) ? O.none() : O.some(false);
+};
+
+type ScopeOwner = O.Option<{ readonly callback: EffectVitestFunctionNode }>;
+
+const atStatement = (
+  current: MorphNode,
+  parent: MorphNode,
+  executed: boolean,
+  imports: EffectVitestImports
+): O.Option<boolean> =>
+  Node.isBlock(parent) && Node.isStatement(current) ? statementVerdict(current, executed, imports) : O.none();
+
+// One ancestor step toward the test or helper callback. `executed` records a `yield*` passed since the
+// last function boundary, so only a statement that ran the scoped effect can observe its close.
+const scopeObservedFrom = (
+  current: MorphNode,
+  executed: boolean,
+  root: EffectVitestFunctionNode,
   imports: EffectVitestImports
 ): boolean => {
-  if (
-    O.isNone(root) ||
-    O.exists(
-      scopedOperand(call, stage),
-      (operand) =>
-        Node.isCallExpression(operand) &&
-        isProvenanceCall(operand, imports, EFFECT_MODULES, "Effect", ["succeed", "sync"])
-    )
-  )
-    return false;
-  let current: MorphNode = call;
-  while (current !== root.value) {
-    const parent = current.getParent();
-    if (parent === undefined || Node.isFunctionDeclaration(current)) return false;
-    if (Node.isCallExpression(current) && forkCall(current, imports)) return false;
-    if (isFunctionValue(current) && !Node.isCallExpression(parent)) return false;
-    if (
-      Node.isBlock(parent) &&
-      Node.isStatement(current) &&
-      A.some(current.getNextSiblings(), (statement) => assertsDirectly(statement, imports))
-    )
-      return true;
-    current = parent;
-  }
-  return false;
+  const parent = current.getParent();
+  if (current === root || parent === undefined || leavesExecution(current, parent, imports)) return false;
+  const ran = Node.isYieldExpression(current) || (executed && !isFunctionValue(current));
+  return O.getOrElse(atStatement(current, parent, ran, imports), () => scopeObservedFrom(parent, ran, root, imports));
 };
+
+// A shorter scope the test observes closing: a statement of the same test or helper yields the scoped
+// effect, and a later statement asserts after it has completed. Such a scope needs no review.
+const observedShorterScope = (
+  call: CallExpression,
+  stage: O.Option<MorphNode>,
+  test: ScopeOwner,
+  helper: ScopeOwner,
+  imports: EffectVitestImports
+): boolean =>
+  O.exists(
+    O.orElse(
+      O.map(test, ({ callback }) => callback),
+      () => O.map(helper, ({ callback }) => callback)
+    ),
+    (root) => !closesPureOperand(call, stage, imports) && scopeObservedFrom(call, false, root, imports)
+  );
 
 const scopeLifetimeClass = (
   call: CallExpression,
@@ -3622,11 +3687,7 @@ const detectScopeLifetime = (
     isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["scoped"])
   ) {
     const wholeBody = O.exists(test, ({ callback }) => isWholeBodyCall(call, callback));
-    const root = O.orElse(
-      O.map(test, ({ callback }) => callback),
-      () => O.map(helper, ({ callback }) => callback)
-    );
-    if (!wholeBody && assertsAfterScopeClose(call, O.none(), root, imports)) return;
+    if (!wholeBody && observedShorterScope(call, O.none(), test, helper, imports)) return;
     const scopeClass = scopeLifetimeClass(call, helper);
     findings.push(
       makeFinding({
@@ -4336,6 +4397,17 @@ const scopeReferenceWholeBody = (call: CallExpression, state: DetectorState): bo
   );
 };
 
+// An applied scope runs in an Effect test, a directly registered effect, or an effect helper.
+const appliedScopeRuns = (
+  call: CallExpression,
+  test: ReturnType<EffectVitestHarnessIndex["enclosingTest"]>,
+  helper: ReturnType<EffectVitestHarnessIndex["reachableHelper"]>,
+  imports: EffectVitestImports
+): boolean =>
+  O.exists(test, ({ mode }) => mode === "effect" || mode === "live") ||
+  directlyRegisteredEffect(call, imports) ||
+  O.exists(helper, ({ effect }) => effect);
+
 const detectAppliedScope = (
   call: CallExpression,
   stage: MorphNode,
@@ -4347,15 +4419,9 @@ const detectAppliedScope = (
     return;
   const test = harness.enclosingTest(call);
   const helper = harness.reachableHelper(call);
-  const inEffect =
-    O.exists(test, ({ mode }) => mode === "effect" || mode === "live") || directlyRegisteredEffect(call, imports);
-  if (!inEffect && !O.exists(helper, ({ effect }) => effect)) return;
+  if (!appliedScopeRuns(call, test, helper, imports)) return;
   const wholeBody = finalStage && scopeReferenceWholeBody(call, state);
-  const root = O.orElse(
-    O.map(test, ({ callback }) => callback),
-    () => O.map(helper, ({ callback }) => callback)
-  );
-  if (!wholeBody && assertsAfterScopeClose(call, O.some(stage), root, imports)) return;
+  if (!wholeBody && observedShorterScope(call, O.some(stage), test, helper, imports)) return;
   const scopeClass = scopeLifetimeClass(call, helper);
   findings.push(
     makeFinding({
