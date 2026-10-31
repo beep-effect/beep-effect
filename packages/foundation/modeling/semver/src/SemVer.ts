@@ -118,7 +118,7 @@ const nonNegativeInteger = S.Finite.check(
 // random strings against their predicate. The predicate stays the authority
 // (it also bounds components to safe integers).
 const versionCore = String.raw`(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)`;
-const prereleasePart = String.raw`(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)`;
+const prereleasePart = "(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)";
 const prereleaseSuffix = String.raw`(-${prereleasePart}(\.${prereleasePart})*)?`;
 const buildSuffix = String.raw`(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?`;
 const pinnableVersionPattern = new RegExp(`^${versionCore}${prereleaseSuffix}$`, "u");
