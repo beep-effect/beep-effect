@@ -139,7 +139,7 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
       expect(probe.process.exitCode).toBeNull();
       yield* Fiber.interrupt(fiber);
       const interrupted = yield* Fiber.await(fiber);
-      assertTrue(Exit.hasInterrupts(interrupted));
+      interrupted.pipe(Exit.hasInterrupts, assertTrue);
       expect(probe.process.signalCode).toBe("SIGKILL");
       const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output)).pipe(
         withSpan("EffectDrizzle.bundle.drain")

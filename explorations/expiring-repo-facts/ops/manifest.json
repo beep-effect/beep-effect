@@ -3,23 +3,16 @@
   "exploration": {
     "slug": "expiring-repo-facts",
     "title": "Expiring Repo Facts",
-    "status": "active",
-    "stage": "capture",
-    "openQuestions": [
-      "Is the unit a 'hold' (a falsifiable claim with probe, exit action and evidence) built on makeClaimEnvelope, or a new schema?",
-      "Where does the ledger live: in-repo append-only files (research ledger pattern), GitHub issues, or both with one as a projection?",
-      "Is the wake service a general Effect port of skulk that also serves yeet and orchestrator waits, or scoped to holds only?",
-      "How do delivery adapters launch Claude, Codex, Cursor, grok and Junie, and who owns the quota-only fallback decision?",
-      "What is wave 1 scope: dependency-shaped holds only (syncpack, pins, overrides, patches, OSV ignores), or test skips too?",
-      "How is renewal gated: re-arm by the woken agent with fresh probe evidence, a hard max lifetime, or both?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/hold-ledger", "goals/wake-service"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-28",
-    "updated": "2026-10-28"
+    "updated": "2026-10-31"
   }
 }

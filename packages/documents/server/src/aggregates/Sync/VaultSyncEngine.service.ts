@@ -20,7 +20,6 @@
  * @since 0.0.0
  */
 
-import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
@@ -71,12 +70,8 @@ import {
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { sha256 } from "@noble/hashes/sha2.js";
-import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
-import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
-import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import { identity, pipe } from "effect/Function";
@@ -84,13 +79,14 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import { VaultSyncConfig } from "./VaultSync.config.ts";
+import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
+import type { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import type {
   DmsRemoteEvent,
   DmsRemoteItem,
@@ -98,6 +94,7 @@ import type {
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import type * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import type { ObservedFile, ObservedFolder } from "./VaultScan.model.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncEngine.service");
 
@@ -109,9 +106,6 @@ const SyncOperationType = DomainSyncOperation.SyncOperationType;
 
 const ZERO = S.Natural.make(0);
 const GENERATION_ONE = S.Natural.make(1);
-
-const contentDigestOf = (bytes: Uint8Array): DocumentContentDigest =>
-  DocumentContentDigest.make(bytesToHex(sha256(bytes)));
 
 /**
  * Cap for stored drift payload snapshots: an account-wide provider event can
@@ -127,11 +121,6 @@ const truncatedPayload = (payload: Readonly<Record<string, unknown>>): Readonly<
 };
 
 const scanFailed = (reason: string): VaultScanFailed => VaultScanFailed.make({ reason });
-
-const isPathWithinRoot = (path: Path.Path, root: string, candidate: string): boolean => {
-  const relative = path.relative(root, candidate);
-  return !path.isAbsolute(relative) && !Str.startsWith("..")(relative);
-};
 
 const relPathSegments = (relPath: VaultRelPath): A.NonEmptyArray<string> => Str.split(relPath, "/");
 
@@ -159,21 +148,6 @@ const idempotencyKeyFor = (
 ): string =>
   `${item.provider}:${item.workspaceId}:${item.id}:${operationType}:${item.localRelPath}:${item.localGeneration}`;
 
-type ObservedFile = {
-  readonly digest: DocumentContentDigest;
-  readonly relPath: VaultRelPath;
-  readonly sizeBytes: number;
-};
-
-type ObservedFolder = {
-  readonly relPath: VaultRelPath;
-};
-
-type VaultScanObservation = {
-  readonly files: ReadonlyArray<ObservedFile>;
-  readonly folders: ReadonlyArray<ObservedFolder>;
-};
-
 /**
  * Threaded reconciliation state for the vault scan's file pass: the tracked
  * items keyed by local path, plus the still-missing file rows that remain
@@ -183,13 +157,6 @@ type ScanFileState = {
   readonly itemsByPath: HashMap.HashMap<string, DomainSyncItem.SyncItem>;
   readonly missingFileItems: ReadonlyArray<DomainSyncItem.SyncItem>;
 };
-
-const emptyObservation: VaultScanObservation = { files: [], folders: [] };
-
-const mergeObservations = (observations: ReadonlyArray<VaultScanObservation>): VaultScanObservation => ({
-  files: A.flatMap(observations, (observation) => observation.files),
-  folders: A.flatMap(observations, (observation) => observation.folders),
-});
 
 const folderDepthOrder: Order.Order<ObservedFolder> = Order.combine(
   Order.mapInput(Order.Number, (folder: ObservedFolder) => depthOf(folder.relPath)),
@@ -437,6 +404,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   const config = yield* VaultSyncConfig;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const files = yield* makeVaultSyncFileStore();
 
   // One sync pass per workspace at a time. Every pass opens by requeuing all
   // leased operations, so two overlapping passes hand each other's in-flight
@@ -457,123 +425,6 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         })
       )
     );
-
-  const readRegularFileWithinRoot = Effect.fn($I`readRegularFileWithinRoot`)(function* (
-    canonicalRoot: string,
-    candidatePath: string,
-    displayPath: string
-  ) {
-    const initialLink = yield* Effect.result(fs.readLink(candidatePath));
-    if (Result.isSuccess(initialLink)) {
-      return yield* scanFailed(`vault sync refused symbolic link ${displayPath}`);
-    }
-
-    return yield* Effect.scoped(
-      Effect.gen(function* () {
-        const file = yield* fs
-          .open(candidatePath, { flag: "r" })
-          .pipe(Effect.mapError(() => scanFailed(`vault sync could not open local file ${displayPath}`)));
-        const info = yield* file.stat.pipe(
-          Effect.mapError(() => scanFailed(`vault sync could not inspect open local file ${displayPath}`))
-        );
-        if (info.type !== "File") {
-          return yield* scanFailed(`vault sync refused non-regular file ${displayPath}`);
-        }
-
-        // `File` no longer exposes a descriptor, so the opened path cannot be read back
-        // from `/proc/self/fd`. Binding the canonical path to the open descriptor by
-        // device + inode is the portable equivalent and keeps the same TOCTOU guarantee.
-        const openedPath = yield* fs
-          .realPath(candidatePath)
-          .pipe(Effect.mapError(() => scanFailed(`vault sync could not resolve open local file ${displayPath}`)));
-        const candidateInfo = yield* fs
-          .stat(openedPath)
-          .pipe(Effect.mapError(() => scanFailed(`vault sync could not inspect local file ${displayPath}`)));
-        const inodeMatches = O.getOrElse(O.zipWith(info.ino, candidateInfo.ino, Eq.equals), F.constFalse);
-        if (!Eq.equals(info.dev, candidateInfo.dev) || !inodeMatches || candidateInfo.type !== "File") {
-          return yield* scanFailed(`vault sync refused changed local file ${displayPath}`);
-        }
-        if (!isPathWithinRoot(path, canonicalRoot, openedPath)) {
-          return yield* scanFailed(`vault sync refused file outside the configured vault ${displayPath}`);
-        }
-
-        const finalLink = yield* Effect.result(fs.readLink(candidatePath));
-        if (Result.isSuccess(finalLink)) {
-          return yield* scanFailed(`vault sync refused symbolic link ${displayPath}`);
-        }
-
-        const size = yield* ByteSize.toNumber(info.size).pipe(
-          O.match({
-            onNone: () => scanFailed(`vault sync could not safely allocate local file ${displayPath}`),
-            onSome: Effect.succeed,
-          })
-        );
-        const bytes = yield* file
-          .readAlloc(size)
-          .pipe(Effect.mapError(() => scanFailed(`vault sync could not read local file ${displayPath}`)));
-        return O.getOrElse(bytes, () => new Uint8Array());
-      })
-    );
-  });
-
-  const walkDirectory = (
-    canonicalRoot: string,
-    absolutePath: string,
-    relSegments: ReadonlyArray<string>
-  ): Effect.Effect<VaultScanObservation, VaultScanFailed> =>
-    Effect.gen(function* () {
-      const names = yield* fs
-        .readDirectory(absolutePath)
-        .pipe(Effect.mapError(() => scanFailed(`vault scan could not read directory ${absolutePath}`)));
-      const visible = pipe(names, A.filter(P.not(Str.startsWith("."))), A.sort(Order.String));
-      const observations = yield* Effect.forEach(
-        visible,
-        Effect.fnUntraced(function* (name) {
-          const childAbsolutePath = path.join(absolutePath, name);
-          const childSegments = A.append(relSegments, name);
-          // Symlinks are never followed: a link out of the vault must not leak
-          // into the mirror, and a dangling link must not abort the scan.
-          // `readLink` succeeds exactly when the entry is a symlink.
-          const symlinkTarget = yield* Effect.result(fs.readLink(childAbsolutePath));
-          if (Result.isSuccess(symlinkTarget)) {
-            yield* Effect.logDebug("Documents vault scan skipped a symlink").pipe(
-              Effect.annotateLogs({ path: childAbsolutePath })
-            );
-            return emptyObservation;
-          }
-          const canonicalChildPath = yield* fs
-            .realPath(childAbsolutePath)
-            .pipe(Effect.mapError(() => scanFailed(`vault scan could not resolve ${childAbsolutePath}`)));
-          if (!isPathWithinRoot(path, canonicalRoot, canonicalChildPath)) {
-            return yield* scanFailed(`vault scan refused path outside the configured vault ${childAbsolutePath}`);
-          }
-          const info = yield* fs
-            .stat(canonicalChildPath)
-            .pipe(Effect.mapError(() => scanFailed(`vault scan could not stat ${childAbsolutePath}`)));
-          if (info.type === "Directory") {
-            const nested = yield* walkDirectory(canonicalRoot, canonicalChildPath, childSegments);
-            const folder: ObservedFolder = { relPath: VaultRelPath.make(A.join(childSegments, "/")) };
-            return mergeObservations([{ files: [], folders: [folder] }, nested]);
-          }
-          if (info.type === "File") {
-            const bytes = yield* readRegularFileWithinRoot(
-              canonicalRoot,
-              childAbsolutePath,
-              A.join(childSegments, "/")
-            );
-            const file: ObservedFile = {
-              digest: contentDigestOf(bytes),
-              relPath: VaultRelPath.make(A.join(childSegments, "/")),
-              sizeBytes: S.Natural.make(bytes.byteLength),
-            };
-            return mergeObservations([{ files: [file], folders: [] }]);
-          }
-          return emptyObservation;
-        })
-      );
-
-      return mergeObservations(observations);
-    }).pipe(Effect.withSpan($I`walkDirectory`));
 
   const queuedOperationsFor = (item: DomainSyncItem.SyncItem) =>
     operationRepository.listQueuedForItem(
@@ -863,7 +714,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   });
 
   const scanVault = Effect.fn($I`scanVault`)(function* (input: SyncOnceInput) {
-    const observation = yield* walkDirectory(input.vaultRootPath, input.vaultRootPath, A.empty<string>());
+    const observation = yield* files.scan(input.vaultRootPath);
     const trackedItems = yield* itemRepository.listByWorkspace(
       ListSyncItemsByWorkspaceInput.make({
         provider: BOX_PROVIDER,
@@ -905,14 +756,6 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       itemsByPath = next.itemsByPath;
       missingFileItems = next.missingFileItems;
     }
-  });
-
-  const readVaultFileBytes = Effect.fn($I`readVaultFileBytes`)(function* (
-    vaultRootPath: string,
-    relPath: VaultRelPath
-  ) {
-    const absolutePath = path.join(vaultRootPath, ...relPathSegments(relPath));
-    return yield* readRegularFileWithinRoot(vaultRootPath, absolutePath, relPath);
   });
 
   /**
@@ -998,7 +841,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           )
         ),
       uploadFile: () =>
-        readVaultFileBytes(input.vaultRootPath, operation.targetRelPath).pipe(
+        files.read(input.vaultRootPath, operation.targetRelPath).pipe(
           Effect.flatMap((content) =>
             mirror.uploadFile(
               UploadFileInput.make({
@@ -1011,7 +854,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         ),
       uploadFileVersion: () =>
         withItemRemoteId(item, (remoteId) =>
-          readVaultFileBytes(input.vaultRootPath, operation.targetRelPath).pipe(
+          files.read(input.vaultRootPath, operation.targetRelPath).pipe(
             Effect.flatMap((content) =>
               mirror.uploadFileVersion(
                 UploadFileVersionInput.make({
