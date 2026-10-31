@@ -1565,8 +1565,6 @@
           "CODEX_SESSION_ID",
           "CODEX_THREAD_ID",
           "GITHUB_ACTIONS",
-          "GRAFT_CRUX_MODULE",
-          "GRAFT_EXTRACT_MODULE",
           "TURBO_CACHE",
           "TURBO_FORCE",
           "TURBO_TOKEN",
@@ -2690,7 +2688,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7027,7 +7024,6 @@
             "!.claude/worktrees/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7068,7 +7064,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7180,7 +7175,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7344,7 +7338,6 @@
             "!explorations/**",
             "!explorations/*/CAPTURE.md",
             "!goals/**",
-            "!graft/**",
             "!infra/ci-runners/sdks/**",
             "!node_modules/**",
             "!outputs/agent-reliability/**",
@@ -133858,7 +133851,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "979364fae7d4c7cf95500d7b058de37c58de36479aa3128cbce1259819858b8b"
+        "sha256": "038dbf3d92fdfe34f0263bbb8183ed4ebfe2085f49d8269b55cbbd95808a0b36"
       }
     ]
   }
