@@ -35,6 +35,7 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -119,26 +120,28 @@ const syntheticView = (runId: number, day: string): string =>
 // The recorded days plus two synthetic ones: 2026-10-29 holds DAY2_RUN, and
 // 2026-10-30 holds DAY3_RUN, whose view GitHub refuses while `refuseDay3` holds.
 // Synthetic answers are recorded like the fixture runner's.
+const syntheticKey = (args: ReadonlyArray<string>): string =>
+  args[0] === "api" ? "api" : args[1] === "list" ? `list ${args[3]} ${args[5]}` : `view ${args[2]}`;
+
+const syntheticAnswers = (
+  refuseDay3: boolean,
+  reset: string
+): Record<string, Effect.Effect<string, RouteGhRateLimited>> => ({
+  api: Effect.succeed(rateLimitPayload(reset)),
+  "list Check 2026-10-29": Effect.succeed(syntheticList(DAY2_RUN)),
+  "list Check 2026-10-30": Effect.succeed(syntheticList(DAY3_RUN)),
+  [`view ${DAY2_RUN}`]: Effect.succeed(syntheticView(DAY2_RUN, "2026-10-29")),
+  [`view ${DAY3_RUN}`]: refuseDay3
+    ? Effect.fail(refused(`gh run view ${DAY3_RUN}`))
+    : Effect.succeed(syntheticView(DAY3_RUN, "2026-10-30")),
+});
+
 const syntheticAnswer = (
   args: ReadonlyArray<string>,
   refuseDay3: boolean,
   reset: string
 ): O.Option<Effect.Effect<string, RouteGhRateLimited>> =>
-  args[0] === "api"
-    ? O.some(Effect.succeed(rateLimitPayload(reset)))
-    : args[1] === "list" && args[3] === "Check" && args[5] === "2026-10-29"
-      ? O.some(Effect.succeed(syntheticList(DAY2_RUN)))
-      : args[1] === "list" && args[3] === "Check" && args[5] === "2026-10-30"
-        ? O.some(Effect.succeed(syntheticList(DAY3_RUN)))
-        : args[2] === `${DAY2_RUN}`
-          ? O.some(Effect.succeed(syntheticView(DAY2_RUN, "2026-10-29")))
-          : args[2] === `${DAY3_RUN}`
-            ? O.some(
-                refuseDay3
-                  ? Effect.fail(refused(`gh run view ${DAY3_RUN}`))
-                  : Effect.succeed(syntheticView(DAY3_RUN, "2026-10-30"))
-              )
-            : O.none();
+  R.get(syntheticAnswers(refuseDay3, reset), syntheticKey(args));
 
 const extendedRunner =
   (calls: Calls, runGh: RouteGhRunner, refuseDay3: boolean, reset: string): RouteGhRunner =>
