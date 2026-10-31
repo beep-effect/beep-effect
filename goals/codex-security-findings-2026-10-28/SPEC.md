@@ -8,12 +8,12 @@ Remediate every open Codex Cloud security finding visible at
 the work through Yeet, reach mergeable hosted state, merge, then resolve the
 exact captured findings until no packet-applicable finding remains open.
 
-## Non-Goals
+The 2026-10-31 closeout adds all 20 newly observed Dependabot alerts in
+`ops/dependabot.json`. Preserve the seven Cloud bindings; dependency IDs remain
+a separate catalog. The prior session-only unmerged hold ended when #2333
+merged and the operator requested full closure.
 
-- 2026-10-29 takeover instruction: repair PR #2333 and leave it fully mergeable
-  and unmerged. Do not merge, enable auto-merge, close Cloud findings, or retire
-  the worktree. This instruction supersedes the original post-merge objective
-  and acceptance items below for this session.
+## Non-Goals
 
 - No accepted-risk or `Won't fix` disposition.
 - No raw report bodies, signed artifact URLs, auth headers, cookie values,
@@ -38,6 +38,10 @@ exact captured findings until no packet-applicable finding remains open.
 - `goals/codex-security-findings-2026-10-28/**`.
 - Gitignored raw evidence under `goals/codex-security-findings-2026-10-28/raw/**`.
 - Maintained repo paths named by `findings/INDEX.md` after current-HEAD validation.
+- Test-only restoration of inherited coverage gaps in
+  `test/effect-schema-inventory.test.ts`, `test/refs-refresh-plan.test.ts` and
+  `test/knowledge-doctor.test.ts`; production behavior and coverage floors stay
+  unchanged.
 
 ## Constraints
 
@@ -95,6 +99,22 @@ exact captured findings until no packet-applicable finding remains open.
 
 ## Decision Log
 
+- 2026-10-31: Strict completion requires the inherited Fallow and Lint Policy
+  failures to be repaired. Shared PR #2399 owns those fixes and was consumed
+  through main at `f16d82e9f16d72f64d42b40284bf2867566e796b`. A locally reviewed candidate is retained in branch
+  history but excluded from the final change to avoid duplicate implementation.
+  Keep the distinct test-only fixes for three inherited coverage gaps, with
+  measured coverage, independent review and unchanged production behavior and
+  floors. Require fresh final-head hosted readiness. Reversal is a reviewed
+  corrective PR retaining the strict completion contract.
+
+- 2026-10-31: Close the seven exact Cloud IDs after #2333 merge and current-main
+  source proof. Capture 20 newer dependency alerts and fix all four affected
+  libraries through upstream releases. Retain both packets and merge the
+  remediation and final closure documentation through normal PR gates. Reversal
+  is a reviewed follow-up PR; never restore a vulnerable dependency as rollback.
+
+
 - 2026-10-29: Register the artifact collection and native Windows pipe jobs as
   explicit hosted-job inventory exemptions because their platform and artifact
   handoff cannot be replayed by the local CLI dispatcher. Keep policy diagnostics
@@ -110,3 +130,12 @@ exact captured findings until no packet-applicable finding remains open.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+## Supplemental scanning acceptance — October 31
+
+The broader authenticated inventory also found four stale CodeQL alerts and
+five secret-scanning alerts. Their separate sanitized catalog is
+`ops/scanning.json`, with source validation and exact closure reasons in
+`research/2026-10-31-scanning.md`. All nine must be resolved with evidence,
+without accepted risk, before final completion. Preserve the original seven
+Cloud IDs and twenty dependency IDs.

@@ -778,6 +778,68 @@ describe("knowledge static option surface", () => {
     );
 
     it.effect(
+      "keeps command names usable while refusing dynamic, recursive, or untrusted flag declarations",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-opaque-option-surface-" });
+        const rootModule = path.join(tempRoot, ROOT_MODULE_PATH);
+        yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
+        const cases = [
+          ["dynamicName", "Flag.String(Date.now().toString())"],
+          ["missingName", "Flag.String()"],
+          ["missingParam", "Flag.optional()"],
+          ["emptyPipe", "pipe()"],
+          ["dynamicParam", 'true ? Flag.String("left") : Flag.String("right")'],
+          ["bareAlternative", 'Flag.String("value").pipe(Flag.orElse)'],
+          ["nonCallTransform", 'Flag.String("value").pipe(42)'],
+          ["untrustedTransform", 'Flag.String("value").pipe(identity())'],
+          ["untrustedConstructor", 'Foreign.String("value")'],
+          ["recursiveFactory", "recursive()"],
+          ["unboundFactory", "named()"],
+          ["recursiveConst", "cycle"],
+          ["methodConfig", '{ method() { return Flag.String("value") } }'],
+        ];
+        yield* fs.writeFileString(
+          rootModule,
+          doc(
+            'import * as Command from "effect/cli/Command"',
+            'import * as Flag from "effect/cli/Flag"',
+            'import { pipe } from "effect/Function"',
+            "const Foreign = { String: (name: string) => Flag.String(name) }",
+            "const identity = () => (value: unknown) => value",
+            "const recursive = () => recursive()",
+            'const named = (name = "default") => Flag.String(name)',
+            "const cycle = cycle",
+            ...A.map(
+              cases,
+              ([name, expression]) => `const ${name}Command = Command.make("${name}", { value: ${expression} })`
+            ),
+            `export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([${A.join(
+              A.map(cases, ([name]) => `${name}Command`),
+              ", "
+            )}]))`,
+            ""
+          )
+        );
+
+        const tree = yield* KnowledgeCommandSurface.buildStaticCommandTree(tempRoot);
+
+        assert.deepStrictEqual(
+          A.map(tree.children, (child) => child.name),
+          A.map(cases, ([name]) => name)
+        );
+        for (const child of tree.children) {
+          assert.isUndefined(child.options, child.name);
+          assert.deepStrictEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, [child.name]), [
+            "resolved",
+            [child.name],
+          ]);
+        }
+      })
+    );
+
+    it.effect(
       "matches the runtime flag declarations of every statically derivable command in this checkout",
       Effect.fnUntraced(function* () {
         const path = yield* Path.Path;

@@ -1005,6 +1005,37 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
     );
 
     it.effect(
+      "translates a git spawn failure into the inventory operation's typed error",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-schema-inventory-spawn-" });
+        yield* fs.makeDirectory(path.join(root, ".repos", "effect"), { recursive: true });
+        const unavailableGit = ChildProcessSpawner.make(() =>
+          Effect.fail(
+            PlatformError.badArgument({
+              description: "fixture git executable is unavailable",
+              method: "spawn",
+              module: "ChildProcess",
+            })
+          )
+        );
+        // The source captures its spawner when constructed, before either git operation runs.
+        const source = yield* EffectSchemaInventorySource.make(root).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, unavailableGit)
+        );
+        const verification = yield* Effect.flip(source.verifyPin(PIN));
+        strictEqual(verification._tag, "EffectSchemaInventoryReferenceMissingError");
+        assertInclude(verification.message, "is not a git checkout");
+        assertInclude(verification.message, "fixture git executable is unavailable");
+        const reading = yield* Effect.flip(source.readPinned(PIN, "packages/effect/src/Schema.ts"));
+        strictEqual(reading._tag, "EffectSchemaInventoryError");
+        assertInclude(reading.message, "Unable to read packages/effect/src/Schema.ts");
+        assertInclude(reading.message, "fixture git executable is unavailable");
+      })
+    );
+
+    it.effect(
       "live source reads an unstatable reference as missing",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
