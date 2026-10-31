@@ -11,6 +11,7 @@
     {"name":"ContradictionDetection.detect","owner":"@beep/epistemic-use-cases","family":"slice","conforms":true},
     {"name":"Retention.calibrate","owner":"@beep/epistemic-use-cases","family":"slice","conforms":true},
     {"name":"Retention.encodeReport","owner":"@beep/epistemic-use-cases","family":"slice","conforms":true},
+    {"name":"Retention.evaluateCandidate","owner":"@beep/epistemic-use-cases","family":"slice","conforms":true},
     {"name":"Retention.generateReport","owner":"@beep/epistemic-use-cases","family":"slice","conforms":true},
     {"name":"RetentionCalibrationRegistry.find","owner":"@beep/epistemic-use-cases","family":"slice","conforms":true},
     {"name":"epistemic.claim_disposition.resolve_gate_outcome","owner":"@beep/epistemic-use-cases","family":"slice","conforms":false},

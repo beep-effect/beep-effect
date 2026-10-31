@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "cache-persistent-service-source-review/v1",
+  "recordedAt": "2026-10-29T22:11:23.272061+00:00",
+  "authority": "Source-only whole-command exclusions; no runtime launch, qualification transition or cache flag mutation",
+  "sourceRevision": "72badf688b2f96bb489e944b0bd581909114a19f",
+  "populationBeforeReviewSha256": "9ce209d0bf0bc0b2f15f062a2a1425241923df0fdbc7426e5613f74cb7ce5c0a",
+  "configurationSourceBindingsRef": {
+    "path": "research/mutating-fixer-disposition-review.json",
+    "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+  },
+  "runtimeDeclarationSources": {
+    "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "bun.lock": "531032f89b78abd2ed9fdfcbc7e68ef535cdc9305825274be847f6ae4e92cf59",
+    ".bun-version": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35",
+    ".nvmrc": "d9f318747a126ce2247661af67852b185def7789492eabfad7bba322be087c33"
+  },
+  "rows": [
+    {
+      "computation": "@beep/oip-web#dev",
+      "manifest": "apps/oip-web/package.json",
+      "manifestSha256": "6ede713dab8b4c6d3f69521d7a4f36d8e44b081e52c3ab799189e0af34ed0dc4",
+      "scriptMapSha256": "bf5905267ea33acf55dff1740cbcc87a1434d511836d8bfd9ed9cdad85c00440",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "command": "NEXT_DISABLE_PWA=1 portless oip-web.beep next dev --turbopack",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The named Portless command starts a persistent development service. It has no finite cacheable task result, and its declared configuration already disables caching.",
+      "applicationBuild": {
+        "computation": "@beep/oip-web#build",
+        "command": "bun run beep:build",
+        "implementation": "NEXT_DISABLE_PWA=1 next build --turbopack",
+        "status": "Separate existing computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyBuilds": [
+        "@beep/hubspot#build",
+        "@beep/identity#build",
+        "@beep/repo-configs#build",
+        "@beep/repo-utils#build",
+        "@beep/sanity#build",
+        "@beep/schema#build",
+        "@beep/test-runner#build",
+        "@beep/test-utils#build",
+        "@beep/ui#build",
+        "@beep/utils#build"
+      ]
+    },
+    {
+      "computation": "@beep/todox#dev",
+      "manifest": "apps/todox/package.json",
+      "manifestSha256": "39c6157f07249aa14334f714e7aa68fdbdad3294c31d24f133d5cede0bf81110",
+      "scriptMapSha256": "416946856cbf8f388ef8b825025b8d2d0760e2342301bebf18f9f517adad75a4",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "command": "portless todox.beep next dev --turbopack",
+      "wholeTaskDisposition": "keep-fresh",
+      "reason": "The named Portless command starts a persistent development service. It has no finite cacheable task result, and its declared configuration already disables caching.",
+      "applicationBuild": {
+        "computation": "@beep/todox#build",
+        "command": "bun run beep:build",
+        "implementation": "next build --turbopack",
+        "status": "Separate existing computation; semantic review, qualification and adoption remain unfinished."
+      },
+      "dependencyBuilds": ["@beep/identity#build", "@beep/schema#build"]
+    }
+  ],
+  "counts": {
+    "persistentServicesRemainFresh": 2,
+    "totalSourceReviewedFreshDispositions": 138,
+    "remainingPopulationDispositionGaps": 2433
+  },
+  "limits": [
+    "Only these exact two current services are reviewed; other dev/watch/nested commands remain unfinished.",
+    "Existing application and dependency builds keep their separate qualification/adoption obligations.",
+    "Changes to manifest/script/configuration bindings invalidate this source review.",
+    "No server was started and no runtime/hosted/cache acceptance is inferred."
+  ],
+  "qualificationLedgerChanged": false,
+  "cacheFlagsChanged": false
+}

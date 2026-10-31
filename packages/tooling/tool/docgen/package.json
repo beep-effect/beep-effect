@@ -75,8 +75,10 @@
     "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/package-json": "workspace:^",
+    "@beep/repo-tsconfig": "workspace:^",
     "@beep/repo-utils": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/tsconfig": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/markdown-toc": "catalog:",
     "@effect/platform-bun": "catalog:",
@@ -85,6 +87,7 @@
     "ts-morph": "catalog:"
   },
   "devDependencies": {
+    "@beep/memfs": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",

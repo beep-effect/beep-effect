@@ -328,3 +328,37 @@ export class RetentionReport extends S.Opaque<RetentionReport, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Offline counterfactual over an inert report; never a report admission or approval receipt.
+ *
+ * **Details**
+ * Candidate rows are advisory calculations only. The original inert baseline is retained,
+ * with no approvedBy, validity period or registry membership. Useful-fact risk requires
+ * independent labels outside this mechanical result.
+ *
+ * **Example** (Inspect offline contract)
+ * ```ts
+ * import { RetentionEvaluation } from "@beep/epistemic-domain/values/Retention"
+ * console.log(RetentionEvaluation.fields.kind)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export class RetentionEvaluation extends S.Opaque<RetentionEvaluation, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("offline-retention-evaluation"),
+    mechanism: S.tag("retention-v1"),
+    baseline: RetentionReport,
+    policy: RetentionPolicy,
+    policyDigest: Sha256Hex,
+    rows: S.Array(RetentionRow),
+    tiers: S.Array(RetentionTierSummary),
+    payloadBytes: Count,
+    pressureRatio: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+  }).pipe(
+    $I.annoteSchema("RetentionEvaluation", {
+      description: "Offline counterfactual only; does not authenticate or enroll a production policy.",
+    })
+  )
+) {}

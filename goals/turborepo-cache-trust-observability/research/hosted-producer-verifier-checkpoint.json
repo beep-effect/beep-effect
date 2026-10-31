@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "cache-hosted-producer-verifier-checkpoint/v1",
+  "recordedAt": "2026-10-29T06:01:56.863349+00:00",
+  "authority": "verifier-component-observation-only",
+  "sourceHead": "28371502f422913192ef4f49a065c0e259350429",
+  "unpublishedParent": "e496c1943ef462a8523f6f1c8ce4f72bc2d37973",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts": "2de020afc59995ff8664d9cadf8701603643309d85657c422d0f6f82a4f48e3c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "4f94dac45281571432e49f1f4d22f5581866fdd1d8c9b4a0d62540a2f44a0756",
+    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "626b2e52ebfeb5d468f562f3ca6ac906e1d464575bb15faf9ab02399d73c453e",
+    "packages/drivers/github/src/GitHubContent.ts": "f14ae66e8fd141690ee39a45151fbf91c63aab2da630b76f74956fc8b8b35bcd"
+  },
+  "verification": {
+    "focused": {
+      "files": 6,
+      "passed": 101,
+      "seconds": 9.22
+    },
+    "postParentIntegration": {
+      "files": 16,
+      "passed": 341,
+      "seconds": 43.28
+    },
+    "packageQuick": {
+      "lintSeconds": 6.8,
+      "checkSeconds": 14.7,
+      "scope": "Current documentation-repaired source."
+    },
+    "fallow": {
+      "auditNewFindings": 0,
+      "healthNewFindings": 0
+    },
+    "effectVitestIntroducedFindings": 0,
+    "schemaCatalog": {
+      "entries": 9338,
+      "shards": 173
+    },
+    "counterfactuals": {
+      "sourceSha256": "47def165e5b12e2f04cf07af7ee25ff0248e2ce7ff6b9102b793d003e527b323",
+      "restoredSha256": "47def165e5b12e2f04cf07af7ee25ff0248e2ce7ff6b9102b793d003e527b323",
+      "results": [
+        {
+          "control": "immutable-zip-digest",
+          "test": "rejects a valid replacement ZIP whose digest was never published by GitHub",
+          "exit": 1,
+          "scope": "One actual ZIP or workflow-text verifier assertion fails under its removed guard."
+        },
+        {
+          "control": "zip-original-name",
+          "test": "rejects a ZIP member whose embedded NUL was normalized away by the standard parser",
+          "exit": 1,
+          "scope": "One actual ZIP or workflow-text verifier assertion fails under its removed guard."
+        },
+        {
+          "control": "workflow-ascii-profile",
+          "test": "refuses lossy or Unicode workflow text outside the declared ASCII profile",
+          "exit": 1,
+          "scope": "One actual ZIP or workflow-text verifier assertion fails under its removed guard."
+        }
+      ]
+    },
+    "fullPackageAudit": {
+      "state": "audit-passed-docgen-repaired-separately",
+      "originalUnitResult": "failed-docgen",
+      "sourceHead": "28371502f422913192ef4f49a065c0e259350429",
+      "sourcePackageTree": "96c8bfa05139fb9fecc2dc4346d9b9432e8ab359",
+      "auditSeconds": 1181.5,
+      "initialDocgen": {
+        "result": "failed",
+        "seconds": 4.6,
+        "attribution": "Introduced unsupported JSDoc category verification."
+      },
+      "currentDocgen": {
+        "result": "passed",
+        "route": "bun run docgen:local",
+        "turboSeconds": 40.411,
+        "wrapperExecutionSeconds": 41.334,
+        "cliExamples": 3551,
+        "packages": 2
+      },
+      "scope": "The original audit remains bound to its frozen source. The sole subsequent code-file change is a canonical JSDoc category, with identical comment-free TypeScript syntax and current docgen/lint/check proof. No claim that the original failed unit exited successfully."
+    }
+  },
+  "bounds": {
+    "compressedZipBytes": 1048576,
+    "reportJsonBytes": 65536,
+    "members": 1,
+    "uploads": 64,
+    "workflowAsciiBytes": 65536,
+    "artifactLifetimeHours": 24,
+    "parserSeconds": 10,
+    "archiveBytesPerUpload": 52428800
+  },
+  "productionChanges": false,
+  "notProven": [
+    "Actual closed protected workflow publication and upload join",
+    "Deployed credential and environment protection",
+    "Current semantic input closure and tuple qualification",
+    "Native signature validity for reported uploads",
+    "Signed production rollout, key/epoch rotation or rollback",
+    "Seven/seven/fourteen-day representative windows"
+  ],
+  "currentInventory": {
+    "authority": "inventory-only",
+    "workspaces": 190,
+    "executableComputations": 2571,
+    "censusSha256": "363a1f39391dff2260a5c05a56021ce42370746ed828fe4a87766f42feedb429",
+    "sourceCount": 429,
+    "allSourceHashesVerified": true
+  },
+  "sourceState": "uncommitted-documentation-repair-with-exact-current-source-hashes",
+  "specSha256": "4028ed9ad997496dcc3bf6dbd1db67327b3ece07fcdad06e17bc686e39e77e5d",
+  "documentationOnlyRepair": {
+    "sourceBase": "28371502f4",
+    "beforeSha256": "47def165e5b12e2f04cf07af7ee25ff0248e2ce7ff6b9102b793d003e527b323",
+    "afterSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+    "commentFreeSyntaxSha256": "5f81841a0c3e6d7b10d2ef00d19726951d7b1d2432bf0c3d7aea88222ba028ba",
+    "change": "Only JSDoc category verification to canonical validation",
+    "sameCommentFreeSyntax": true
+  }
+}

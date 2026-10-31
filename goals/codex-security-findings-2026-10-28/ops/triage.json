@@ -1,0 +1,234 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "codex/security-findings-20261028",
+    "expectedCount": 7,
+    "capturedCount": 7,
+    "capturedAt": "2026-10-28",
+    "captureMethod": "signed-in-csv-export",
+    "note": "All seven complete Cloud reports reviewed; source defects validated and controls implemented. Qualification, merge and exact-ID closure remain open."
+  },
+  "lanes": {
+    "pipe-owner": {
+      "status": "in-progress",
+      "findings": ["CSF-001"]
+    },
+    "skill-containment": {
+      "status": "in-progress",
+      "findings": ["CSF-002"]
+    },
+    "abandoned-backup": {
+      "status": "in-progress",
+      "findings": ["CSF-003"]
+    },
+    "link-scanner": {
+      "status": "in-progress",
+      "findings": ["CSF-004"]
+    },
+    "post-capture-walker": {
+      "status": "in-progress",
+      "findings": ["CSF-005"]
+    },
+    "stderr-redaction": {
+      "status": "in-progress",
+      "findings": ["CSF-006"]
+    },
+    "bridge-transport": {
+      "status": "in-progress",
+      "findings": ["CSF-007"]
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "commit:59dd726af40c8191ba736e49b5e42496",
+      "title": "Named-pipe replacement can expose the hub bearer token",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "6bc6201825dd6d186551e85eca29015eddf8e50b",
+      "disposition": "remediate",
+      "validation": {
+        "status": "validated",
+        "rationale": "All full Cloud report sections were reviewed. Baseline source at 2c59e073c8 contains the reported defect. The attack-path limitations are retained in the finding; suppression does not invalidate the control defect."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "apps/practice-review-hub/deploy/windows/send-token.ps1",
+          "apps/practice-review-hub/deploy/windows/receive-token.ps1",
+          "apps/practice-review-hub/deploy/windows/test-send-token.ps1",
+          ".github/workflows/hub-pipe-security.yml",
+          "docs/runbooks/practice-review-hub.md"
+        ],
+        "verificationCommands": [
+          "PowerShell parser over deploy/windows/*.ps1",
+          "bun run beep quality package-verify @beep/practice-review-hub"
+        ],
+        "summary": "Authenticate the owner SID of the connected pipe using the handle security descriptor before stdin is opened. Explicitly set the receiver owner, limit client impersonation, request ReadPermissions, and dispose on refusal. Windows runtime qualification is pending. See research/qualification.md. Merge and exact-ID Cloud closure are pending."
+      },
+      "lane": "pipe-owner",
+      "ownerArea": "pipe-owner"
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "commit:143ddd3db8048191b031587694523375",
+      "title": "Skill recovery follows symlinked parents outside the repository",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "f2c2f66805d10ffa9af84d0b4f82df50d099cd93",
+      "disposition": "remediate",
+      "validation": {
+        "status": "validated",
+        "rationale": "All full Cloud report sections were reviewed. Baseline source at 2c59e073c8 contains the reported defect. The attack-path limitations are retained in the finding; suppression does not invalidate the control defect."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Skills/SkillsPublication.service.ts",
+          "packages/tooling/tool/cli/test/skills-publication-recovery.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun --no-install vitest run test/skills-publication-recovery.test.ts (from packages/tooling/tool/cli)"
+        ],
+        "summary": "Reuse resolvePathWithinRoot for all journal-derived mutation paths, including absent leaves beneath symlinked ancestors. Capture existing service dependencies inside the publisher. The real recovery regression preserves unrelated external partial contents. See research/qualification.md. Merge and exact-ID Cloud closure are pending."
+      },
+      "lane": "skill-containment",
+      "ownerArea": "skill-containment"
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "commit:1730861e29908191a3fbef8477f9fb8f",
+      "title": "Abandoned recovery journals bypass backup path containment",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "ab606411ed2f842f1a06347d527b32d6a646df63",
+      "disposition": "remediate",
+      "validation": {
+        "status": "validated",
+        "rationale": "All full Cloud report sections were reviewed. Baseline source at 2c59e073c8 contains the reported defect. The attack-path limitations are retained in the finding; suppression does not invalidate the control defect."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Models/Models.apply.service.ts",
+          "packages/tooling/tool/cli/test/models-exchange-recovery.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun --no-install vitest run test/models-exchange-recovery.test.ts test/laws-retired-effect-paths.test.ts (from packages/tooling/tool/cli)"
+        ],
+        "summary": "Apply the existing artifact ownership guard before abandoned-journal backup cleanup. A foreign backup produces a refusal and remains intact. Existing legitimate abandoned-cleanup behavior remains covered. See research/qualification.md. Merge and exact-ID Cloud closure are pending."
+      },
+      "lane": "abandoned-backup",
+      "ownerArea": "abandoned-backup"
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "commit:450278cb94088191b04bd55569f7db6c",
+      "title": "Quadratic link-fragment scan enables repository-content DoS",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "2f7b99c93c0a12b68fc88aecedd0a20dac415bbb",
+      "disposition": "remediate",
+      "validation": {
+        "status": "validated",
+        "rationale": "All full Cloud report sections were reviewed. Baseline source at 2c59e073c8 contains the reported defect. The attack-path limitations are retained in the finding; suppression does not invalidate the control defect."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.ts",
+          "packages/tooling/tool/cli/test/laws-retired-effect-paths.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun --no-install vitest run test/models-exchange-recovery.test.ts test/laws-retired-effect-paths.test.ts (from packages/tooling/tool/cli)"
+        ],
+        "summary": "Consume malformed fragment candidates as disjoint spans instead of retrying the same suffix from each opener. Drop candidates without a fragment; retain valid IPv6 link syntax. Repeated opener and missing-fragment controls exercise the exported scanner. See research/qualification.md. Merge and exact-ID Cloud closure are pending."
+      },
+      "lane": "link-scanner",
+      "ownerArea": "link-scanner"
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "commit:8f3863d64f848191896127654ffb856c",
+      "title": "Post-capture settling can delete unarchived worktree changes",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "d3fe073a81fbdcd7b83621deb2b840285d3aa7c0",
+      "disposition": "remediate",
+      "validation": {
+        "status": "validated",
+        "rationale": "All full Cloud report sections were reviewed. Baseline source at 2c59e073c8 contains the reported defect. The attack-path limitations are retained in the finding; suppression does not invalidate the control defect."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+          "packages/tooling/tool/cli/test/worktree-remove-fence.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun --no-install vitest run test/worktree-remove-fence.test.ts (from packages/tooling/tool/cli)"
+        ],
+        "summary": "Settle walkers only before capture. After capture, refuse on the first observed walker and preserve the fenced directory. The process-table integration check injects a late write at the post-capture observation and verifies its survival. See research/qualification.md. Merge and exact-ID Cloud closure are pending."
+      },
+      "lane": "post-capture-walker",
+      "ownerArea": "post-capture-walker"
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "commit:e2b089fb69188191b8b5a8eb96c19fca",
+      "title": "Underscore-containing keys bypass new stderr redaction",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "f8a35b7d1339e2a70093d40b2df65d74b6314ff5",
+      "disposition": "remediate",
+      "validation": {
+        "status": "validated",
+        "rationale": "All full Cloud report sections were reviewed. Baseline source at 2c59e073c8 contains the reported defect. The attack-path limitations are retained in the finding; suppression does not invalidate the control defect."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/drivers/acp/src/AcpStderr.models.ts",
+          "packages/drivers/acp/test/stderr.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun --no-install vitest run test/stderr.test.ts (from packages/drivers/acp)",
+          "bun run beep quality package-verify @beep/acp"
+        ],
+        "summary": "Include underscores in the standalone provider credential alphabet. Assert the entire value is redacted for four provider prefixes, including the complete secret-bearing suffix. See research/qualification.md. Merge and exact-ID Cloud closure are pending."
+      },
+      "lane": "stderr-redaction",
+      "ownerArea": "stderr-redaction"
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "commit:e5e09e9134588191b573324f5328d292",
+      "title": "Bridge clients send bearer tokens over non-loopback plaintext",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "faba4396bd628eb2efa09ef2e1b1aa46ff7723b2",
+      "disposition": "remediate",
+      "validation": {
+        "status": "validated",
+        "rationale": "All full Cloud report sections were reviewed. Baseline source at 2c59e073c8 contains the reported defect. The attack-path limitations are retained in the finding; suppression does not invalidate the control defect."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "explorations/cross-provider-agent-communication/research/spike/codex-remote-bridge/codex-remote-ask.ts",
+          "explorations/cross-provider-agent-communication/research/spike/codex-remote-bridge/codex-ws.ts",
+          "explorations/cross-provider-agent-communication/research/spike/codex-remote-bridge/transport.ts",
+          "explorations/cross-provider-agent-communication/research/spike/codex-remote-bridge/transport.test.ts"
+        ],
+        "verificationCommands": [
+          "bun test explorations/cross-provider-agent-communication/research/spike/codex-remote-bridge/transport.test.ts"
+        ],
+        "summary": "Share one URL policy across both entrypoints. Accept remote TLS or loopback plaintext, reject credentials/fragments and deceptive hosts, and validate before reading the token environment. Reconnect reuses the already validated immutable URL. See research/qualification.md. Merge and exact-ID Cloud closure are pending."
+      },
+      "lane": "bridge-transport",
+      "ownerArea": "bridge-transport"
+    }
+  ]
+}

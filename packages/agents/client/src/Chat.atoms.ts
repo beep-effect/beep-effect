@@ -1,6 +1,8 @@
 /**
  * Desktop chat surface atoms.
  *
+ * **Details**
+ *
  * Ports the chat client state graph onto the {@link ChatRpcs} wire contract:
  * a thread list, per-thread timeline reads, thread creation, persisted composer
  * drafts, and a streaming assistant turn driver. The atoms are browser-targeted
@@ -696,7 +698,7 @@ export const reportDecodeFailureAtom = ChatClient.runtime.fn<void>()(
  *
  * ```ts
  * import { SendTurnRequest } from "@beep/agents-client"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
@@ -729,7 +731,7 @@ export class SendTurnRequest extends S.Opaque<SendTurnRequest, { readonly brand:
  *
  * ```ts
  * import { EditTurnRequest } from "@beep/agents-client"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
@@ -766,7 +768,7 @@ export class EditTurnRequest extends S.Opaque<EditTurnRequest, { readonly brand:
  *
  * ```ts
  * import { SendTurnRequest, TurnRequest } from "@beep/agents-client"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
@@ -798,7 +800,7 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
  * ```ts
  * import { SendTurnRequest } from "@beep/agents-client"
  * import type { TurnRequest } from "@beep/agents-client"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"
@@ -859,7 +861,7 @@ const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
  *
  * ```ts
  * import { runTurnAtom, SendTurnRequest, TurnRequest } from "@beep/agents-client"
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema"

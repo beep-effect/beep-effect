@@ -1,6 +1,8 @@
 /**
  * Anthropic streaming implementation of the {@link AgentTurnKernel} port.
  *
+ * **Details**
+ *
  * Rich md-aligned block scope (paragraph/heading/quote/list/code, mermaid as
  * code, table, and youtube) streams through the forced-tool surface.
  * The model is driven through the idiomatic forced-tool surface: a Toolkit with

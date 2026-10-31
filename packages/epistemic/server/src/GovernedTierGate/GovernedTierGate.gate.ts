@@ -2,6 +2,8 @@
  * Governed tier gate: the enforcement boundary between the MCP agent surface
  * and the execution ledger.
  *
+ * **Details**
+ *
  * Implements `@beep/mcp-kit`'s `TierGateShape` from the epistemic slice —
  * foundation-mediated port inversion: `ontology/server` keeps consuming
  * `TierGate`, this module implements it, and neither slice names the other.
@@ -95,6 +97,8 @@ const $I = $EpistemicServerId.create("GovernedTierGate/GovernedTierGate.gate");
 /**
  * Session-static inputs the composition root supplies to the governed gate.
  *
+ * **Details**
+ *
  * The gate cannot name the tools it governs — that would be a slice-to-slice
  * import — so the granted operations, the sink they all target, and the grant
  * metadata arrive as data from the app entrypoint that already imports both
@@ -165,6 +169,8 @@ const approvedGuidance = "Approved by a grant in the session's frozen grant set.
  * The one guidance string every governed refusal carries, whatever the bounded
  * denial reason was.
  *
+ * **Details**
+ *
  * A denial reaches the agent reason-free: differential refusal text is a
  * grant-set enumeration oracle, and it also tells an agent whether it hit a
  * policy denial or an infrastructure outage. The bounded reason goes to the
@@ -209,6 +215,8 @@ const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Eff
 
 /**
  * Build the governed tier gate service.
+ *
+ * **Details**
  *
  * Reads `EpistemicConfig` and `ExecutionLedger` once at construction, so both
  * gate methods stay total (`R = never`) as `TierGateShape` requires; the only

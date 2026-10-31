@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "cache-signed-adapter-launch-checkpoint/v1",
+  "recordedAt": "2026-10-30T01:59:05.555735+00:00",
+  "sourceBaseRevision": "11b8d8a6f84715a2d8d777290e85a213578d17f6",
+  "authority": "Source and actual process-boundary component proof. The selected executable in the new mode tests is inert; no signed R2 exchange or protected producer authority is established.",
+  "sourceFiles": {
+    "infra/r2-cache/adapter.sh": "2d22d7753469c531ed7100e9c3b110dad817dadca6448b9265bf7ab4640c4dba",
+    "infra/r2-cache/check.sh": "e8785aa1e2f6c9c56f62949cdb9067c5f849b42214cffa52e0040217d1ac4a50"
+  },
+  "behavior": [
+    "An explicit serve-signed entrypoint requires an absolute executable, exact SHA256 pin, namespace and reader/writer role.",
+    "Only the selected mode receives signed-v1 policy fields. Ordinary serve and CI startup retain their existing mode.",
+    "Storage credentials and bearer enter the backend only through its explicit environment. Artifact signing keys and unrelated parent environment are excluded.",
+    "The executable and pin come from independent owner approval; matching a supplied pin is not approval or proof of server policy support."
+  ],
+  "verification": {
+    "shellSyntax": "bash -n passed for both scripts",
+    "processAndLifecycle": {
+      "exit": 0,
+      "elapsedSeconds": 2.222,
+      "finishedAt": "2026-10-30T01:55:22.632709+00:00"
+    },
+    "newModeCases": {
+      "signedRoles": 2,
+      "invalidPinPathRoleOrMissingConfiguration": 7,
+      "nonExecutableRefusal": 1,
+      "ordinaryModePolicyIsolation": 1
+    },
+    "infraDefaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 28.785,
+      "finishedAt": "2026-10-30T01:55:48.703963+00:00",
+      "auditSeconds": 9.8,
+      "docgenSeconds": 17.3
+    },
+    "negativeSourceCopyControls": {
+      "schemaVersion": "cache-signed-launch-guard-controls/v1",
+      "recordedAt": "2026-10-30T01:57:14.217984+00:00",
+      "scope": "Actual exec-boundary semantic controls in private source copies with synthetic credentials. No real R2 operation, signing activation or checkout source mutation.",
+      "controls": [
+        {
+          "case": "checksum-refusal",
+          "sourceSha256": "2d22d7753469c531ed7100e9c3b110dad817dadca6448b9265bf7ab4640c4dba",
+          "mutantSha256": "dd51de6e1197ce1895aa10126e9ba6c62fa030b34543dfdd143f0f2a938d072e",
+          "exit": 1,
+          "expectedAssertion": "Invalid signed launch executed the candidate",
+          "assertionObserved": true,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "548301ba2ad1567470fd9737a5913b952cd02ebe94a63b59cf89699c7bfb7dca",
+          "seconds": 1.499
+        },
+        {
+          "case": "artifact-key-isolation",
+          "sourceSha256": "2d22d7753469c531ed7100e9c3b110dad817dadca6448b9265bf7ab4640c4dba",
+          "mutantSha256": "29cdbe347843fd6411da870e5158b4f2f193010e383d2afe6c97be6438840142",
+          "exit": 1,
+          "expectedAssertion": "Signed backend inherited unrelated environment",
+          "assertionObserved": true,
+          "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderrSha256": "4982b895f063de3ca8e3394948cf1746bcece9498f61bed7d3e7dad8587df629",
+          "seconds": 1.483
+        }
+      ],
+      "checkoutSourceUnchanged": true
+    }
+  },
+  "requiredParentBoundary": [
+    "Use an independently approved hardened build and role/grant/namespace receipt.",
+    "Own the actual adapter process and its listener; attest executable digest before and after the bounded operation.",
+    "Apply the existing runtime envelope: 256 MiB of memory, 200% CPU, 16 tasks, a 600-second lifetime and a 10-second stop timeout.",
+    "Keep launch state outside source input mounts and stop only the owned process/unit.",
+    "Begin real backend lifetime after long synthetic setup so the resource window covers the actual comparison."
+  ],
+  "limits": [
+    "The process boundary test does not establish native signature verification, strict server policy semantics or actual R2 capabilities.",
+    "Resource envelopes and PID/listener ownership belong to the still-pending parent supervisor; this exec mode does not claim them.",
+    "Current normal-source stable/canary qualification, immutable protected publication, rollout, rotation/rollback and real observation windows remain required."
+  ],
+  "activePosture": {
+    "ordinaryCacheConfigurationChanges": 0,
+    "signedTrialActivated": false,
+    "credentialChanges": 0,
+    "r2RequestsFromChecks": 0
+  },
+  "reversal": "Stop using the opt-in entrypoint and revert this additive source change. Existing services continue invoking ordinary serve; no live service or cloud setting is changed by this component."
+}

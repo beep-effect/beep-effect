@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "cache-signed-runtime-alias-checkpoint/v1",
+  "recordedAt": "2026-10-29T21:29:13.907972+00:00",
+  "authority": "Source-bound launcher repair and isolated runtime-discovery observations; no current qualification or production authority",
+  "sourceBaseRevision": "5621577626ca2f3229d1192e1c3b0b97131a6879",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "928e67360f04cb1229132ae509f679b38997e39281b0021e542bcfc6fa677d38",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "8a52c329141a2062d9f2afed661f104d40b39c22066e9014f6bdda9a45c0e430"
+  },
+  "problem": "Outer supervisor mounted a pinned bun.native file but tool discovery searched for bun.",
+  "repair": "Mount the exact selected runtime files at private /tools/bun and /tools/node and use fixed /tools:/usr/bin; retain original mounts and private namespace.",
+  "actualIsolatedProbe": {
+    "recordedAt": "2026-10-29T20:32:55.937830+00:00",
+    "authority": "Actual isolated runtime-discovery probe; no native task or qualification authority",
+    "bunBasename": "bun.native",
+    "bunSha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235",
+    "nodeSha256": "e32e2d16081cf644f88392934288086e7662529d0d43277c34f7aad2207cfafb",
+    "networkNamespace": "private in both cases",
+    "results": [
+      {
+        "topology": "original",
+        "exit": 127,
+        "recognizedVersions": [],
+        "stdoutBytes": 0,
+        "stderrBytes": 44,
+        "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrSha256": "29aeeafbac118fadb2cac5b400cb65f10c06d93a49cbefdc45ba769ebebc99e3"
+      },
+      {
+        "topology": "fixed",
+        "exit": 0,
+        "recognizedVersions": ["1.4.4", "v24.22.1"],
+        "stdoutBytes": 15,
+        "stderrBytes": 0,
+        "stdoutSha256": "36743d8aa7210313acd03e82c4a2774acc7734b23c35b2bb47f137cb0a728304",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "additionalHostToolsDirectoryShared": false,
+    "systemDirectoryMount": {
+      "path": "/usr",
+      "readOnly": true
+    }
+  },
+  "verification": {
+    "nodeTests": {
+      "exit": 0,
+      "tests": 18,
+      "seconds": 4.769
+    },
+    "bunTests": {
+      "exit": 0,
+      "tests": 18,
+      "seconds": 2.741
+    },
+    "quick": {
+      "exit": 0,
+      "seconds": 12.797
+    },
+    "fullPackage": {
+      "command": "bun run beep quality package-verify @beep/repo-cli",
+      "exit": 0,
+      "seconds": 1249.317,
+      "auditSeconds": 1212.2,
+      "docgenSeconds": 35.0,
+      "scope": "Historical complete package pass covers unchanged production launcher and earlier fixture version. Current test-only simplification has both18-test runtime passes, quick lint/check and Fallow audit/health passes; fresh committed final proof remains required."
+    },
+    "priorFullPackageSourceFiles": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "928e67360f04cb1229132ae509f679b38997e39281b0021e542bcfc6fa677d38",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "1da860eadf314708ab9f3ed6a68c9f234c464c636c2a6681c6242d343b02e86c"
+    },
+    "currentFixture": {
+      "node": {
+        "exit": 0,
+        "elapsedSeconds": 4.655,
+        "finishedAt": "2026-10-29T21:24:45.448157+00:00"
+      },
+      "bun": {
+        "exit": 0,
+        "elapsedSeconds": 5.529,
+        "finishedAt": "2026-10-29T21:24:48.392231+00:00"
+      },
+      "quick": {
+        "exit": 0,
+        "elapsedSeconds": 15.669,
+        "finishedAt": "2026-10-29T21:28:28.196063+00:00"
+      },
+      "fallowAudit": {
+        "exit": 0,
+        "elapsedSeconds": 11.371,
+        "finishedAt": "2026-10-29T21:28:20.043922+00:00"
+      },
+      "fallowHealth": {
+        "exit": 0,
+        "elapsedSeconds": 8.969,
+        "finishedAt": "2026-10-29T21:28:19.764799+00:00"
+      },
+      "scope": "Last formatter only changes layout; source semantics match these18-test runtime passes. Limited test-only delta uses quick package verification; default full package already passed unchanged production."
+    }
+  },
+  "retainedFailures": [
+    "Unchanged current signed pilot refused supervisor exit1 at Cache.fingerprint tool discovery. A private observer retained only class names/static errors/source positions.",
+    "The initial regression assertion referenced an unavailable Array helper. Current installed and canonical Effect source identify Array.window.",
+    "The fixture process spy shadowed the runtime process used by the new assertion; renaming the spy fixed the introduced test defect.",
+    "Publication v2 rejected increased fixture complexity from repeated optional-argument fallbacks. Decode required process arguments once through Option and reuse them; targeted Fallow audit/health pass without baseline changes."
+  ],
+  "remaining": [
+    "Current normal-source signed-pilot replay after this launcher lands; diagnostic changed-launch prototypes are not such proof.",
+    "Actual R2 producer integration and immutable protected publication, current qualification, rotation/rollback and representative windows."
+  ],
+  "activationChanged": false,
+  "qualificationChanged": false,
+  "priorSourceFilesBeforeFixtureSimplification": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "928e67360f04cb1229132ae509f679b38997e39281b0021e542bcfc6fa677d38",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "1da860eadf314708ab9f3ed6a68c9f234c464c636c2a6681c6242d343b02e86c"
+  }
+}

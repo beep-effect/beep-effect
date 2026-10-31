@@ -2,6 +2,8 @@
  * Execution ledger table metadata: the write-ahead decision chain and the
  * post-settlement outcome records.
  *
+ * **Details**
+ *
  * These are deliberately raw `pgTable` declarations, not ProductEntity
  * projections: the product kit includes `row_version`, `updated_at`,
  * and `updated_by_principal` — update vocabulary that would be a lie in the

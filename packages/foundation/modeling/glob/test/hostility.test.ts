@@ -169,6 +169,44 @@ describe("hostility: globstar backtracking", () => {
   });
 });
 
+describe("hostility: optimizer expansion", () => {
+  it("rejects the first optimizer-generated alternative above the shared expansion cap", () => {
+    try {
+      new Minimatch("a/**/../b/c", { optimizationLevel: 2, braceExpandMax: 1 });
+      assert.fail("expected a GuardExceeded throw");
+    } catch (error) {
+      assertInstanceOf(error, GuardExceeded);
+      assert.strictEqual(error.reason, "ExpansionBudgetExceeded");
+      assert.strictEqual(error.limit, 1);
+      assert.strictEqual(error.actual, 2);
+    }
+    const matcher = new Minimatch("a/**/../b/c", { optimizationLevel: 2, braceExpandMax: 2 });
+    assert.strictEqual(matcher.globParts.length, 2);
+    assert.isTrue(matcher.match("a/b/c"));
+  });
+
+  it("bounds an oversized direct preprocessing input before the pairwise phase", () => {
+    const matcher = new Minimatch("*", { braceExpandMax: 1 });
+    assert.strictEqual(
+      reasonOf(() => matcher.firstPhasePreProcess([["a"], ["b"]])),
+      "ExpansionBudgetExceeded"
+    );
+  });
+
+  it("deduplicates alternatives at the 1,000-pattern ceiling", () => {
+    const matcher = new Minimatch("literal");
+    assert.deepStrictEqual(matcher.secondPhasePreProcess(A.makeBy(1000, () => ["literal"])), [["literal"]]);
+  });
+
+  it("skips every pairwise comparison above the 1,000-pattern ceiling", () => {
+    const matcher = new Minimatch("literal");
+    matcher.partsMatch = () => assert.fail("large sets must not enter pairwise deduplication");
+    const parts = A.makeBy(1001, () => ["literal"]);
+    assert.strictEqual(matcher.secondPhasePreProcess(parts), parts);
+    assert.strictEqual(parts.length, 1001);
+  });
+});
+
 describe("hostility: internal cap wiring", () => {
   it("dies on NaN or non-integer caps everywhere they are accepted", () => {
     assert.throws(() => new Minimatch("a", { maxGlobstarRecursion: Number.NaN }), InvalidCap);
@@ -176,6 +214,7 @@ describe("hostility: internal cap wiring", () => {
     assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: Number.NaN }), InvalidCap);
     assert.throws(() => new Minimatch("{a,b}", { braceExpandMax: 0 }), InvalidCap);
     assert.throws(() => new Minimatch("+(a)", { maxExtglobRecursion: Number.NaN }), InvalidCap);
+    assert.throws(() => new Minimatch("a", { optimizationLevel: 2, braceExpandMax: Number.NaN }), InvalidCap);
   });
 });
 
@@ -198,6 +237,16 @@ const underWatchdog = Effect.fnUntraced(
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provide([FileSystem.layerNoop({}), Path.layer]));
 
 it.layer(SpawnerLayer, { timeout: "2 seconds" })((it) => {
+  it.effect("preserves 4,096 level-two alternatives under a subprocess watchdog", () =>
+    underWatchdog(`
+      import { Minimatch } from "@beep/glob/internal/minimatch";
+      const matcher = new Minimatch("{a,b}".repeat(12), { optimizationLevel: 2 });
+      if (matcher.globParts.length !== 4096) throw new Error("alternatives were lost");
+      if (!matcher.match("a".repeat(12)) || !matcher.match("b".repeat(12))) throw new Error("missing match");
+      if (matcher.match("x".repeat(12))) throw new Error("unexpected match");
+    `)
+  );
+
   it.effect("rejects a long ambiguous repetition without exponential backtracking under a subprocess watchdog", () =>
     underWatchdog(`
 			import { Minimatch } from "@beep/glob/internal/minimatch";
