@@ -213,7 +213,8 @@ export type PushRecord = typeof PushRecord.Type;
  * ```ts
  * import { RemoteItemId } from "@beep/documents-domain/values/Sync"
  * import { makePushRecord } from "./VaultPush.model.ts"
- * makePushRecord("content", RemoteItemId.make("remote-file"))
+ * const record = makePushRecord("content", RemoteItemId.make("remote-file"))
+ * console.log(record.echoClass) // "content"
  * ```
  *
  * @internal

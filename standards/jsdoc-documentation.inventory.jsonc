@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T21:27:14.045Z",
+  "generatedAt": "2026-10-31T21:39:16.766Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -583874,8 +583874,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/VaultPush.model.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/VaultPush.model.ts",
-          "line": 223,
-          "anchor": "packages-documents-server-src-aggregates-sync-vaultpush-model-ts-223-makepushrecord",
+          "line": 224,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultpush-model-ts-224-makepushrecord",
           "currentTags": [
             "@internal",
             "@category",
