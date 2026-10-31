@@ -1322,8 +1322,8 @@ const selectSourceFiles = Effect.fn("AiMetrics.forwarder.selectSourceFiles")(fun
   // root. Advance before content reads so an unreadable file cannot monopolize
   // every run. A crash can defer a file for one round; it does not acknowledge it.
   const includedFiles = yield* database
-    .withTransaction((transaction) =>
-      Effect.gen(function* () {
+    .withTransaction(
+      Effect.fnUntraced(function* (transaction) {
         yield* transaction.run(`CREATE TABLE IF NOT EXISTS ai_metrics_discovery_cursors (
       scope_id VARCHAR PRIMARY KEY,
       cursor_hash VARCHAR NOT NULL

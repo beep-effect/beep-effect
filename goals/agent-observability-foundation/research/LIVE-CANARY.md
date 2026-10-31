@@ -32,15 +32,15 @@ sets plus the worker's visibility receipts supply the stronger delivery evidence
 
 ## Evidence and failure retained
 
-- [Successful installed proof](../ops/live-canary-installed-verification.json):
+- [Successful installed proof](../ops/history/live-canary-installed-verification.json):
   two backend records, exact source nanoseconds, separate hashed sessions, matching
   event IDs and two worker visibility receipts. Synthetic private input/name text
   and original session strings are absent from the backend response.
-- [Initial failed canary](../ops/live-canary-dns-failure.json): the collector
+- [Initial failed canary](../ops/history/live-canary-dns-failure.json): the collector
   accepted two records but failed delivery; the project remained absent during
   bounded read-back. Preserve the journal and queue rather than claiming success
   or repeating the producer request.
-- [Private evidence archive manifest](../ops/live-canary-evidence-archive.json):
+- [Private evidence archive manifest](../ops/history/live-canary-evidence-archive.json):
   both runs copied outside temporary storage, every file hash compared, files and
   directories synced. This is a same-host retention copy, not off-device backup.
 

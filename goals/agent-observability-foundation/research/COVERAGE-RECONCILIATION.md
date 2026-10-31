@@ -93,7 +93,7 @@ repaired; no failed run is counted as a passing package gate.
 
 The actual human and JSON report commands passed against the independently
 prepared native fixture evidence. Final source and report fingerprints are in
-ops/coverage-reconciliation-verification.json. No OOM exercise was run.
+ops/history/coverage-reconciliation-verification.json. No OOM exercise was run.
 
 
 ## Managed-owner progress boundary

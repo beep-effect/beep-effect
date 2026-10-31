@@ -2,7 +2,7 @@
 
 The collected preflight on `98c762efbff9abfda6cee6383ced7a07ea50a514`
 completed all 25 lanes: 19 passed and six failed. The structured record in
-`ops/delivery-preflight-verification.json` is authoritative. Its generated
+`ops/history/delivery-preflight-verification.json` is authoritative. Its generated
 failure packet incorrectly blamed passing `goals:doctor`; the separate
 `fix/yeet-cheap-gate-attribution` lane is repairing result reporting and fallback
 attribution. That defect does not excuse any of the actual six failures.
@@ -23,7 +23,7 @@ attribution. That defect does not excuse any of the actual six failures.
 - Eleven focused tests, CLI quick lint/check, and the schema-tag law passed.
 
 Evidence and source hashes are in
-`ops/delivery-preflight-repair-verification.json`; the durable local archive is
+`ops/history/delivery-preflight-repair-verification.json`; the durable local archive is
 `~/.local/state/beep/observation-proof-archive/delivery-preflight-repair-mzkh40yc`.
 The catalog-profile verification exited successfully, peaked at 13,630,144,512
 bytes, and retained at least 26,558,013,440 available host bytes. It triggered

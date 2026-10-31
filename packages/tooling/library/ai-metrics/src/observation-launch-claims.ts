@@ -348,22 +348,21 @@ export const makeObservationClaims = Effect.fn("AiMetrics.makeObservationClaims"
       yield* inspect;
       const records = yield* Effect.forEach(
         A.range(0, policy.anchor.maxClaims - 1),
-        (index) =>
-          Effect.gen(function* () {
-            const text = yield* readSlot(slotPath(index), uid);
-            if (O.isNone(text)) return O.none<ObservationLaunchClaim>();
-            const value = yield* decodeEnvelope(text.value).pipe(Effect.mapError(() => fail("integrity")));
-            const claim = value.claim;
-            if (
-              claim.fenceId !== policy.anchor.fenceId ||
-              claim.submission.hostId !== policy.anchor.hostId ||
-              claim.submission.namespaceId !== policy.anchor.namespaceId ||
-              claim.submission.fact._tag !== "Prepared" ||
-              (yield* hashPublicTextSha256(yield* encodeClaim(claim))) !== value.digest
-            )
-              return yield* fail("integrity");
-            return O.some(claim);
-          }),
+        Effect.fnUntraced(function* (index) {
+          const text = yield* readSlot(slotPath(index), uid);
+          if (O.isNone(text)) return O.none<ObservationLaunchClaim>();
+          const value = yield* decodeEnvelope(text.value).pipe(Effect.mapError(() => fail("integrity")));
+          const claim = value.claim;
+          if (
+            claim.fenceId !== policy.anchor.fenceId ||
+            claim.submission.hostId !== policy.anchor.hostId ||
+            claim.submission.namespaceId !== policy.anchor.namespaceId ||
+            claim.submission.fact._tag !== "Prepared" ||
+            (yield* hashPublicTextSha256(yield* encodeClaim(claim))) !== value.digest
+          )
+            return yield* fail("integrity");
+          return O.some(claim);
+        }),
         { concurrency: 1 }
       );
       const launchIds = A.map(A.getSomes(records), (claim) => claim.submission.fact.launchId);

@@ -53,7 +53,7 @@ I did not find a concrete behavior change in the hoisted defaults on these paths
 ## Actionable holds
 
 1. Do not mark `agent-observability-foundation` complete. Every acceptance checkbox in `SPEC.md:33-45` is still open. The checkpoint says the whole-CLI Bun abort is unclosed and publication, hosted CI, final-check, and reflection have not passed.
-2. Do not treat `ops/retirement-live-verification.json`, `ops/epoch-backend-verification.json`, or the other installed receipts as proof of this dirty wave. A fresh installed proof is still pending.
+2. Do not treat `ops/history/retirement-live-verification.json`, `ops/epoch-backend-verification.json`, or the other installed receipts as proof of this dirty wave. A fresh installed proof is still pending.
 3. Before any production enrollment, keep the historical forwarder masked, leave metadata mode and the health probe opt-in, and keep the claim-store backup hold. This review did not check live mask state.
 
 ## Unverified

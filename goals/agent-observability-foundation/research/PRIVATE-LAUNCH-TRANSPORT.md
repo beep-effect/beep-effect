@@ -32,7 +32,7 @@ and returns the same eight receipts without adding rows. It preserves the privat
 canary boundary and all existing startup/ownership protections. These are supplied
 fixture facts, not actual Codex or ChatGPT Desktop launches.
 
-Verification is recorded in ops/launch-http-verification.json and the retained
+Verification is recorded in ops/history/launch-http-verification.json and the retained
 entrypoint receipt. No producer enrollment, production deployment, Phoenix write,
 raw transcript replay, historical store change or recovery-hold release occurs
 through this step. Next work connects a producer to actual spawn and verified
@@ -93,8 +93,8 @@ reads context while paused, submits eight synthetic facts, restarts the worker,
 constructs a new client and recovers the identical receipts. An independent raw
 HTTP retry agrees. The journal remains at eight records, and rejected private
 fields never enter it. All six proof services ended with MainPID=0; four are
-intentional startup refusal cases. See ops/launch-client-verification.json and
-ops/launch-client-entrypoint-verification.json. Package audit and docgen passed.
+intentional startup refusal cases. See ops/history/launch-client-verification.json and
+ops/history/launch-client-entrypoint-verification.json. Package audit and docgen passed.
 
 These are still supplied synthetic lifecycle facts. The real managed driver,
 independent launch denominator, durable producer intent/ownership, source-session

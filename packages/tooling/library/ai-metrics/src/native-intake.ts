@@ -307,8 +307,9 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
                   Effect.flatMap(decodeEventIdPayloadHashRecordRows)
                 );
               if (rows.length !== storedReceipt.value.newEvents) return yield* failure("storage");
-              const events = yield* Effect.forEach(rows, (row) =>
-                Effect.gen(function* () {
+              const events = yield* Effect.forEach(
+                rows,
+                Effect.fnUntraced(function* (row) {
                   const span = batch.value.spans[row.spanIndex];
                   if (span === undefined || span.eventId !== row.eventId) return yield* failure("storage");
                   const payload = yield* encodeNativeTraceMetadataJson(span);

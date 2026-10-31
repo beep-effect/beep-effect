@@ -2,14 +2,14 @@
 
 Current qualification is the explicitly new v3 pair documented in
 [hosted build repair](./HOSTED-BUILD-REPAIR.md), its
-[v3 preparation receipt](../ops/declared-canary-root-v3-preparation-verification.json),
-and [committed source binding](../ops/committed-source-binding-verification.json).
+[v3 preparation receipt](../ops/history/declared-canary-root-v3-preparation-verification.json),
+and [committed source binding](../ops/history/committed-source-binding-verification.json).
 The account below is retained historical v2 evidence and is not relabeled as v3.
 
 The disposable and live stages passed against the same retained v2 synthetic Git
 root. Both used the actual installed worker and frontend, the pinned collector and
 two explicit synthetic CLI/desktop records. See
-`../ops/declared-route-stages-verification.json` for exact digests, private archive
+`../ops/history/declared-route-stages-verification.json` for exact digests, private archive
 locations, event IDs and resource receipts.
 
 Before the single producer POST, each stage persisted a create-only plan binding

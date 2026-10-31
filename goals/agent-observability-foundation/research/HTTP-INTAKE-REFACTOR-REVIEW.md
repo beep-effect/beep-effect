@@ -14,7 +14,7 @@ Paths below are relative to `packages/tooling/library/ai-metrics/src`.
 | `observation-launch-http.ts` | `c173247d0ade3132c9a2a35cc3b433e6adbf94c21f06d3184d0817132059f2fe` | `5a698aa03cc5c0464484a9b3071c92d0589678bd43ba78d9ea5b61ae43004996` |
 
 Both original snapshots and intermediate accepted comparisons are archived with
-`ops/delivery-http-intake-verification.json`.
+`ops/history/delivery-http-intake-verification.json`.
 
 ## Bounded acceptance
 

@@ -77,8 +77,8 @@ explicit false default. JSON-only invocation had not exercised that failure.
 The corrected command is verified without `--json` as well as with it. Test-only
 error-channel, clock and diagnostic-style findings were repaired; failed runs are
 not counted as successful verification. Dedicated source-bound receipts are
-`ops/claim-population-verification.json` and
-`ops/claim-population-worker-verification.json`.
+`ops/history/claim-population-verification.json` and
+`ops/history/claim-population-worker-verification.json`.
 
 ## Remaining acceptance
 

@@ -123,8 +123,8 @@ const readSpanPage = Effect.fnUntraced(function* (response: HttpClientResponse.H
   let used = 0;
   yield* response.stream.pipe(
     Stream.mapError(() => fail("transport")),
-    Stream.runForEach((chunk) =>
-      Effect.gen(function* () {
+    Stream.runForEach(
+      Effect.fnUntraced(function* (chunk) {
         if (chunk.byteLength > bytes.byteLength - used) return yield* fail("oversize");
         bytes.set(chunk, used);
         used += chunk.byteLength;

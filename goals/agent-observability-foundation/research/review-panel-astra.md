@@ -81,11 +81,11 @@ Dankserver paths resolve in the sibling checkout.
 
 ### Current evidence and retirement qualification
 
-- `ops/retirement-package-verification.json`: all 167 source/test hashes remain
+- `ops/history/retirement-package-verification.json`: all 167 source/test hashes remain
   current. Full audit/docgen passed; the retained log digest was independently
   checked. The 42 final focused reclamation/retirement cases qualify the F11–F16
   fixes described in the preceding review. No already-fixed finding is reopened.
-- `ops/retirement-live-verification.json`: the actual installed worker/frontend
+- `ops/history/retirement-live-verification.json`: the actual installed worker/frontend
   proof passed, with source stability during its run. Its 1024-page journal uses
   an 8 MiB worker file ceiling. Private maintenance includes paused create-only
   backup, occupied-slot preservation, invalid destination/body/concurrency
@@ -106,11 +106,11 @@ Dankserver paths resolve in the sibling checkout.
   (`retirement-live-verification.json:9-117`). It does not establish real harness
   capture. Cleanup records both owned units removed with PID 0, the collector
   removed and the independent monitor stopped (`:115-117,219-248`).
-- All 24 files in `ops/retirement-proof-archive.json` were independently hashed
+- All 24 files in `ops/history/retirement-proof-archive.json` were independently hashed
   and size-checked: 53,745,965 bytes, no mismatch. This is a retained same-host
   archive. Do not execute its deliberately tampered bundle; it is neither an
   off-device backup nor authority to replay historical data.
-- `ops/driver-package-verification.json` has passing full package audit/docgen
+- `ops/history/driver-package-verification.json` has passing full package audit/docgen
   for `@beep/phoenix` and `@beep/ai-provider-cli`. Their 9 and 28 recorded source
   hashes and both log digests match. The separate whole-CLI failure is not
   concealed by these passes.
@@ -251,7 +251,7 @@ supersedes their open labels for the reviewed source/package scope.
 
 ### Final retained qualification
 
-`ops/retirement-package-verification.json` reports passed. All 167 source/test
+`ops/history/retirement-package-verification.json` reports passed. All 167 source/test
 hashes match the files inspected by this seat, and the retained full quality log
 hash matches. Audit completed in 131.1 seconds and docgen in 12.0 seconds, with
 exit 0 and no guard stop. The guard records 5,971,836,928 peak observed bytes and
@@ -438,7 +438,7 @@ single-event native pages with maxEvents=1. The first enrolls and expires after
 retaining its original payload and no disposition. The mapping to storage comes
 from the reclaimer's generic error wrapper (`src/payload-reclamation.ts:79-80`);
 it obscures a legitimate capacity refusal but preserves the data.
-`ops/retirement-capacity-characterization.json` records this undesired result as
+`ops/history/retirement-capacity-characterization.json` records this undesired result as
 `defect-reproduced`, `fixed: false`. Its four source/test hashes match current
 files. This seat inspected the 14-pass focused log; that passing characterization
 is evidence of the bug, not passing retirement acceptance.
@@ -630,7 +630,7 @@ package gate. The interruption test uses Effect interruption and scheduler
 reconstruction over the current SQL store; it is not a killed-process or
 power-loss proof specific to query reservations.
 
-`ops/query-backoff-package-verification.json` reports full package audit/docgen
+`ops/history/query-backoff-package-verification.json` reports full package audit/docgen
 success. All 165 listed source/test hashes match current files. Its quality log
 hash also matches the inspected terminal log: audit 121.1 seconds, docgen 12.1
 seconds, exit 0. The guard records no stop, 5,864,685,568 peak observed bytes and
@@ -638,7 +638,7 @@ seconds, exit 0. The guard records no stop, 5,864,685,568 peak observed bytes an
 20-pass/two-red regression and intermediate 22-pass result without calling
 those the final package result.
 
-Follow-up installed evidence: `ops/query-backoff-live-verification.json` reports
+Follow-up installed evidence: `ops/history/query-backoff-live-verification.json` reports
 passed and sourceStableDuringRun=true, and all 83 source hashes match the runtime
 files inspected during retirement adjudication. Its two labelled synthetic
 records in project `foundation-canary-303222edde9d` acquired two local visibility
@@ -791,7 +791,7 @@ retained current package/backend receipts below; it did not execute the tests.
   and 29 tests passed; all 11 listed hashes match. This is not the whole CLI
   package gate. The final state records inactive/PID 0/success.
 
-- `ops/surface-label-live-verification.json` is byte-identical to the retained
+- `ops/history/surface-label-live-verification.json` is byte-identical to the retained
   `/tmp/obs-deploy-n37n8w3m/evidence.json`, reports passed and
   `sourceStableDuringRun: true`, and all 83 source hashes match current files.
   Project `foundation-canary-c04d2cf89339` contains exactly two retained synthetic
@@ -912,7 +912,7 @@ The first maintenance installed receipt is an earlier snapshot. The observed
 strict-boolean diagnostic, not success. The owner corrected that expression and
 completed the subsequent gate. Final evidence inspected by this seat:
 
-- `ops/maintenance-installed-verification.json` is identical to
+- `ops/history/maintenance-installed-verification.json` is identical to
   `/tmp/obs-deploy-dnv_nm1d/evidence.json`, recorded 06:57:47 UTC. All 82 recorded
   source fingerprints match current files. It proves the actual private stalled
   body receives 408, concurrent POST receives 503, malformed/oversized input is
@@ -1040,7 +1040,7 @@ claimed by this review delta.
   secrets. Namespace validation occurs before opening the database. The direct
   process-fixture environment route remains explicitly separate. No new concrete
   credential privacy defect was found.
-- **Installed evidence and sizing:** `ops/credential-health-installed-verification.json`
+- **Installed evidence and sizing:** `ops/history/credential-health-installed-verification.json`
   records the 06:21:34 UTC installed run, exact allowed environment key sets,
   synthetic ambient secrets absent from main-process environment/argv/health,
   four malformed credentials refused before journal mutation, an optional query
@@ -1105,7 +1105,7 @@ real rule's one-minute hold, and checks receipt of the expected alert
 alert rule renders. The script and rule hashes are checked again before success.
 
 **Final source binding:** the v4 replay completed at 05:38:00 UTC and is retained
-as `ops/independent-health-verification.json`, identical to
+as `ops/history/independent-health-verification.json`, identical to
 `/tmp/obs-deploy-5kf8m3um/evidence.json`. This seat verified the final probe SHA256
 `0d00370d3e510cd9a18e8ad2b80422c5b2d82e30f8cc941f785dd9a66044ff6b`, final rule
 SHA256 `8391aa8164ea4f225f3604841dea4710cc7fb913382b9f06fc52653e8f6a5e56`, and all
@@ -1450,7 +1450,7 @@ sibling worktree named above.
 | 9. Queue bounds and complete health signals | Open: F2 and F3 | Collector queue is byte bounded with fsync, no silent recreation and a physical cap (`otel-config.yaml.j2:1-12,92-108`); queue crash/capacity tests exist. Collector unavailable/missing instrumentation/refusal/export/disk alerts are present (`prometheus-alerts.yml.j2:117-190`). Worker intake-refusal observation, measured event-age semantics and independent worker/source/alert-delivery evidence remain incomplete in this snapshot. |
 | 10. Health path, backup reporting and exact retention | Supported for source and synthetic qualification | Phoenix task uses the configured managed health URL (`ansible/roles/phoenix/tasks/main.yml:139-148`). `phoenix_backup/tests/test_backup_metrics.py:77-105` covers restart failure, stale healthy endpoint, publication failure and prior-success preservation. `phoenix/files/reconcile-retention.py:66-127` checks exact policy ID/name/schedule/type, complete bounded project enumeration and assignment, then fresh read-back; `phoenix/tests/test_retention.py:87-185` tests unrelated first policy, drift, partial/error replies and lost mutation acknowledgments. Live retention mutation is not inferred from these tests. |
 | 11. Preserve historical recovery hold | Supported by retained evidence; not live re-probed by this seat | The new installer/render path neither names nor starts old units; the worker is separately owned and starts paused. `research/LIVE-CANARY.md` records the old forwarder/timer as masked/inactive after bounded cleanup. No reviewed change performs raw archive reingestion or automatic release. The full resource-integrity investigation is not replaced by the canary; keep the hold. |
-| 12. CLI/desktop-marked fixture and bounded live canary with rollback | Supported for the exact limited route | `ops/live_canary_support.py:127-175` creates exactly two synthetic CLI/desktop-labelled sessions, POSTs once, checks two exact local/backend event sets and visibility facts; `:177-214` pauses, proves rejection, removes owned collector and verifies backend evidence survives. `ops/verify-observation-deployment.py:141-187` checks private route denial, actual PID/socket ownership, limits, dependent stop and tamper refusal. `ops/live-canary-installed-verification.json` contains two stored records and finite cleanup; its five direct source hashes matched during review. Disposable route/worker fixtures provide the earlier stage. These labels are explicitly not real application instrumentation. |
+| 12. CLI/desktop-marked fixture and bounded live canary with rollback | Supported for the exact limited route | `ops/live_canary_support.py:127-175` creates exactly two synthetic CLI/desktop-labelled sessions, POSTs once, checks two exact local/backend event sets and visibility facts; `:177-214` pauses, proves rejection, removes owned collector and verifies backend evidence survives. `ops/verify-observation-deployment.py:141-187` checks private route denial, actual PID/socket ownership, limits, dependent stop and tamper refusal. `ops/history/live-canary-installed-verification.json` contains two stored records and finite cleanup; its five direct source hashes matched during review. Disposable route/worker fixtures provide the earlier stage. These labels are explicitly not real application instrumentation. |
 | 13. Privacy/retention/dead-letter ownership, compatibility, producers and rollback | Partial: F4 | Positive projection, immutable dispositions, explicit epoch-limited dedupe and latest-retirement recovery are implemented. `test/observation-backup.test.ts:100-215` and process fixtures test independent restoration and foreign/damaged-state refusal. Claim storage remains separate from collector restore (`src/observation-launch-claims.ts:305-319,377-412`); `research/CLAIM-STORE-DISASTER-REHEARSAL.md:50-64` requires hold after its loss. `research/LIVE-PHOENIX-PROJECTS.md` names producer contracts and preserves legacy projects. Canary rollback is proven. Concrete ongoing ownership/disposition policy is still deferred. |
 
 ## Evidence limitations and closeout requirements

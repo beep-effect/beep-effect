@@ -10,7 +10,7 @@ be renewed. No corruption or synthetic forged metadata is required.
 
 The bounded characterization passes all 14 reclamation cases and asserts this
 undesired refusal explicitly; it is not a passing acceptance test for retirement.
-See ops/retirement-capacity-characterization.json. Production source remains at
+See ops/history/retirement-capacity-characterization.json. Production source remains at
 the query-backoff proof snapshot; the new characterization changes one test file
 after that full package gate. The next repair must rerun affected verification.
 
@@ -88,11 +88,11 @@ The original valid-input defect receipt remains preserved. Focused v4 tests pass
 mixed visible/unenrolled events, duplicate ownership, source-cursor preservation,
 terminal-slot refusal/reuse, corruption before and after disposal, legacy-summary
 holds, logical restore and bounded registration call count. Final full package audit/docgen pass with 167 source/test hashes unchanged:
-ops/retirement-package-verification.json. Installed proof also passes with 85
+ops/history/retirement-package-verification.json. Installed proof also passes with 85
 unchanged runtime inputs, two labelled synthetic records and two visibility
 receipts in project foundation-canary-d8b2289bc828. Owned worker/frontend PIDs
 are zero and their units removed; owned collector/health services are cleaned up.
-See ops/retirement-live-verification.json and retirement-proof-archive.json.
+See ops/history/retirement-live-verification.json and retirement-proof-archive.json.
 The latter preserves24files in the private same-host archive; retained bundles
 were deliberately tampered for integrity-refusal testing and must not be run.
 This live proof verifies installed normal operation and maintenance wiring; the

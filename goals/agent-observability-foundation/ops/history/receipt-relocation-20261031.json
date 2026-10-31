@@ -1,0 +1,546 @@
+{
+  "reason": "Immutable execution receipts belong to the archival surface; preserve machine-specific provenance without treating it as live operational guidance.",
+  "receipts": [
+    {
+      "from": "goals/agent-observability-foundation/ops/cache-baseline-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/cache-baseline-verification.json",
+      "sha256": "613716e313558950ce9839e1d5e881bce92ccbf7148dc370218893d65d33a75d",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/claim-population-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/claim-population-verification.json",
+      "sha256": "e75d089ccbbe9efd1c71832984fcfdb585dee4513ffdeb12d7cf36f6c79bdc23",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/claim-population-worker-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/claim-population-worker-verification.json",
+      "sha256": "6fee6cef3284c3446e47feefbe4213d5cac07e0578922b4c65a5a6b931e28d8e",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/claim-store-disaster-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/claim-store-disaster-verification.json",
+      "sha256": "cca48a6c0bc59a6e788fdba3c6f92dca679b5e1c3efbd0e288f3f01119dd5cdd",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/claim-store-disaster-worker-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/claim-store-disaster-worker-verification.json",
+      "sha256": "18c4c65c44c2a32aa3025d7f65bdea3f77b3ae78f88fe2dad4f1c06468c3f862",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/cli-audit-host-pressure-attribution.json",
+      "to": "goals/agent-observability-foundation/ops/history/cli-audit-host-pressure-attribution.json",
+      "sha256": "e22268093adb6f2d630cd79de56efe9ffc20a75a106fb513323ace14eee40a2b",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/committed-source-binding-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/committed-source-binding-verification.json",
+      "sha256": "8699a3ee936967fbfad3170eae6f7e0d441b55f89dd385beefb7fefe92a621c6",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/corrective-pr-merge-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/corrective-pr-merge-verification.json",
+      "sha256": "9e36a0c118d3853a952ab8fe21480129381590530175ac850a39dd0d7968e677",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/coverage-reconciliation-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/coverage-reconciliation-verification.json",
+      "sha256": "489c1036bc5b7619c643e423bfd1a4f26ae3dd31580f1f275887e9bcb5108051",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/credential-health-archive.json",
+      "to": "goals/agent-observability-foundation/ops/history/credential-health-archive.json",
+      "sha256": "692e8298b470874e9c2acad5c02d90b74aea6fc048cc56d07f09cd79d40c6d7f",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/credential-health-installed-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/credential-health-installed-verification.json",
+      "sha256": "5c8c3b8871996aad6401c5cd1e45e76df2b382ada9e70317e2bdb8d71a2e544c",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/declared-canary-root-v3-preparation-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/declared-canary-root-v3-preparation-verification.json",
+      "sha256": "9ec329286b73c3813d5a3bfdf47db63418f747d7b1a4e7f7f5b3fbbdd821d4d2",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/declared-route-stages-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/declared-route-stages-verification.json",
+      "sha256": "04ef3ad367713d1840fcb4a27b179b902343241a156e312ca1290902b442b60c",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-boundary-structure-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-boundary-structure-verification.json",
+      "sha256": "450fbc237e144cabb77569fc02112e1084aa93fad327d23e57526e6934e8ad63",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-cache-base-sync-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-cache-base-sync-verification.json",
+      "sha256": "42dd364f02e259b693924e6a4808cdb097e9bb8fd5b950ca5a164e0ae227e307",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-client-readback-structure-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-client-readback-structure-verification.json",
+      "sha256": "c8ce78c5e4a75ddda764f4f0204a25af8fd9f243ae173b7b5bd994447215a488",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-collected-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-collected-verification.json",
+      "sha256": "96023661126faeae73180646d46410f995eaf66c9b922040c00d08619dd6e6f8",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-discovery-structure-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-discovery-structure-verification.json",
+      "sha256": "56b3674798fb9ad8890eb65767278bffef2911cdd65f8a251f155b45019faac0",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-guard-correction.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-guard-correction.json",
+      "sha256": "5ed610ee005439652518018cbbcafcc15cb0160667156794d8f671aa49123212",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-guard-sibling-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-guard-sibling-verification.json",
+      "sha256": "5ae2917a74dc59365f44e0e191de7653006fb2595fc7465f71ab3d06d7406076",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-http-intake-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-http-intake-verification.json",
+      "sha256": "2a856d18fd2638232e0c5973c358ebc89d6b7e5d8ef80f957231bc3d2d00537c",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-intake-boundaries-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-intake-boundaries-verification.json",
+      "sha256": "516166a7ffa03c939652eaefdbb789e128944a0aa9cc7d28eed7c0c6fe62af63",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-ledger-launch-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-ledger-launch-verification.json",
+      "sha256": "b36912e3fc77a0c69a2d323a48cdd36490bdfc1a14e19db6847b2673045905e7",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-native-projection-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-native-projection-verification.json",
+      "sha256": "58520ef0f9651443e5ad9a92d00c249bcd988023ba5a6ed9eb0cd8bd91c3d4b0",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-owner-sentinel-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-owner-sentinel-verification.json",
+      "sha256": "cceb525701ffb114ef17425b3a493f1d16dca20111f2ab2e610e28e43675e9cf",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-payload-runtime-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-payload-runtime-verification.json",
+      "sha256": "6aa7f4001194725bf99d918229ba6634ebeecee89220c1167916921c27a77f9a",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-policy-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-policy-verification.json",
+      "sha256": "07a2c787ee5bb4cb0e7cd37cdfc871006797735ca3a3049c0d8f793523bb7027",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-preflight-repair-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-preflight-repair-verification.json",
+      "sha256": "d1bab429cab0ec9dd0734c2995413b675791ea40f04cd9c713972b3d7095dc52",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-preflight-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-preflight-verification.json",
+      "sha256": "b5c5cfdd424994541ef6f1a995e39b2a666f1a347b05786f8be9345996420eb4",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-reader-readback-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-reader-readback-verification.json",
+      "sha256": "e969f9026f239a96930296cf60a9e4951979e8ade9ebc438c1a94d0c4c62b7f4",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-recovery-scheduler-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-recovery-scheduler-verification.json",
+      "sha256": "9ec52db8eea4175447905c69147650aaee3fa875bb51d0a12f2c071edd284970",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-retirement-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-retirement-verification.json",
+      "sha256": "261921459871b5fb48b75607fab6acc94ba514605fab3654c0a2d12ce3d06407",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-schema-policy-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-schema-policy-verification.json",
+      "sha256": "e3d1a92bed845145d9480a8911e7cddd6e1defa62f22185ffc22c2079eba8527",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-transcript-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-transcript-verification.json",
+      "sha256": "cbd446b09bc251279e0393d9e1dfd0b81602fe6bb25a9bf9809c4f86beade7cf",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/delivery-worker-qualification-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/delivery-worker-qualification-verification.json",
+      "sha256": "350ddd7d04ea35b43019579a6554146d442c9983bb0487a74a1b0f49ea5615b9",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/deployment-autosave-repair.json",
+      "to": "goals/agent-observability-foundation/ops/history/deployment-autosave-repair.json",
+      "sha256": "431a4a2fb5fa6a2a68520d5b0186ea50087707c702c94d307a00eedc569a5067",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/driver-package-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/driver-package-verification.json",
+      "sha256": "a0dd40d2e89be685794ec14951b73a0ec40b130db906b0610ddacc8983d0da6b",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/forwarder-schema-compatibility.json",
+      "to": "goals/agent-observability-foundation/ops/history/forwarder-schema-compatibility.json",
+      "sha256": "65828e98b4ab1dda44179e487c032923f3a54c1ba97c293cb678f82fd2c25369",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/hosted-build-repair-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/hosted-build-repair-verification.json",
+      "sha256": "cb4a4d51817fa64ef49ca61a621cb929e8e96f43702dc01e97680ac8cd9fd262",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/implementation-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/implementation-verification.json",
+      "sha256": "82d9cf7df262f85fae791e100f71f5a9e54aa6c057805c6c244ea4e2e28152d1",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/independent-health-archive.json",
+      "to": "goals/agent-observability-foundation/ops/history/independent-health-archive.json",
+      "sha256": "5de71aa0dec1e772ce0a8e12ac1cb494da2430b66d9d03433abb6b5e6130b53c",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/independent-health-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/independent-health-verification.json",
+      "sha256": "0fd84f2ebeb3afb28349678e23a19376c03289f5a04dde9eb17dc35fdd0852bb",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/journal-ownership-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/journal-ownership-verification.json",
+      "sha256": "1cb1d64aab92d3a922bb73e300909ffdf275fa4ce165da2bf942e348dbe8f497",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/journal-sizing-installed-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/journal-sizing-installed-verification.json",
+      "sha256": "f54daf28ab4436a7b2322c4d9a8bda73f60aa5b233ea8c41dfffd73db6565f26",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-claims-entrypoint-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-claims-entrypoint-verification.json",
+      "sha256": "8882a8a4557f18e9f30330114f5f07ac8708a02a79c7b19c62d31d965e7f4a62",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-claims-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-claims-verification.json",
+      "sha256": "bcb5e0c969fc407515aa8b18a21e599d4ce81f34d74c0b1ebcf417e3a386b6eb",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-client-entrypoint-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-client-entrypoint-verification.json",
+      "sha256": "9f199446a31017db36394602db3124ad0a86609970c9a03b44f342bc5259a451",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-client-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-client-verification.json",
+      "sha256": "06bb1699e8e3a5cc6215c282f6420dcfae3f52c7212d6d30a73b63a52c05f6d9",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-facts-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-facts-verification.json",
+      "sha256": "aebac3331870221848927158cbed3581867710ed10001329bd49b5dea1fa9413",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-http-entrypoint-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-http-entrypoint-verification.json",
+      "sha256": "f6415ab19d6203ff2f2c25c327c38213042e9a62411ade59ed2f4bb018f75614",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-http-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-http-verification.json",
+      "sha256": "4a846d25c923d16df0397ccf02be412e28146e747f28358cb5da912440d765dd",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-outbox-entrypoint-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-outbox-entrypoint-verification.json",
+      "sha256": "d51d3821f77ceec433f47182ffdd44ed96ef1a7269cf27e12ef93856de9e727f",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/launch-outbox-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/launch-outbox-verification.json",
+      "sha256": "8d89ce552417a34242f03fc12d3ef64b52161ee6669b79178dc31c897f78471b",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/live-canary-dns-failure.json",
+      "to": "goals/agent-observability-foundation/ops/history/live-canary-dns-failure.json",
+      "sha256": "c854035ee8ae72ba4c6b13dcd9ffa54287111ea8ce89f74adcd4cb0c63338303",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/live-canary-evidence-archive.json",
+      "to": "goals/agent-observability-foundation/ops/history/live-canary-evidence-archive.json",
+      "sha256": "4deef6b3e94abd8ad98d5c19eed2a4c25d522e77be44abbd635bfd2937f45c90",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/live-canary-installed-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/live-canary-installed-verification.json",
+      "sha256": "e6b81438c0d4a9f0ff3407a59e71cc75af7c891f7aae48ed5d0aff81009694c7",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/maintenance-installed-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/maintenance-installed-verification.json",
+      "sha256": "3b199faf048190ec1cef3b81545a717bc67f7604c1fbb80065db044647b832c4",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-observer-entrypoint-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-observer-entrypoint-verification.json",
+      "sha256": "0dbcc8b7773798e3e392436c8563af63985369e1534075b53b4262b8246b043b",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-observer-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-observer-verification.json",
+      "sha256": "a2bc1a219996485ee916da87bc5b9e5999cc558fef15a8e957d28704141134d6",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-owner-command-worker-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-owner-command-worker-verification.json",
+      "sha256": "16f45d2b7b52ee5acd0406f5400f81714694cebf83d55fc0604234b8b869e37d",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-owner-provisioning-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-owner-provisioning-verification.json",
+      "sha256": "22fcde0a080b3049e04f76570f2ecc766ff4c8d22db6b20d058b9900f28e34ba",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-owner-provisioning-worker-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-owner-provisioning-worker-verification.json",
+      "sha256": "6f7aa83877e7330e5377b77885424bfea0c5b03dcd51c8112c50cf93c83a4da3",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-owner-recovery-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-owner-recovery-verification.json",
+      "sha256": "bf0aa24d1d5d596d04ec50d709731ef451b21577cfff02f526711de56b0de04c",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-owner-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-owner-verification.json",
+      "sha256": "7de569e090538f4633c0aff7d73e0d928bbc88bf53e99fbe2fdb1bdf38f7338e",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/managed-owner-worker-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/managed-owner-worker-verification.json",
+      "sha256": "46df9155e4e86e937c1c88d8b569840641fe08dfe988d69b05aa26fb23c84de1",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/memory-notification-followup-20261029-1315.json",
+      "to": "goals/agent-observability-foundation/ops/history/memory-notification-followup-20261029-1315.json",
+      "sha256": "9928e6c6cb38269fbd6f956c9ec37d5378572e2cce87ad0d5138c793affaea7d",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/memory-notification-followup-20261029-1552.json",
+      "to": "goals/agent-observability-foundation/ops/history/memory-notification-followup-20261029-1552.json",
+      "sha256": "8790defb1ae921628f1d1b1a63bc657002d8b59af2a78cb3363d2d5e8e890557",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/memory-notification-followup-20261029-late.json",
+      "to": "goals/agent-observability-foundation/ops/history/memory-notification-followup-20261029-late.json",
+      "sha256": "b5153e9c0d0085b03adce160d70730f1cd5a5c31ec0db30a37d2e225557ffce7",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/memory-pressure-cross-checkout-20261029.json",
+      "to": "goals/agent-observability-foundation/ops/history/memory-pressure-cross-checkout-20261029.json",
+      "sha256": "5dd08ecc42c17016b0c6427390d00a6085260e4192162576e62b4704ba814169",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/observation-deployment-installed-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/observation-deployment-installed-verification.json",
+      "sha256": "3ecdd6fb8513506a40db87160b5064f4c6d8baf3de0042b00705226165b3bf14",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/observation-deployment-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/observation-deployment-verification.json",
+      "sha256": "4a55df62e8c957b64d52fa68d17b8c1a92b35478e18eb57b0cfbd4a9a77a547d",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/phoenix-project-description-update.json",
+      "to": "goals/agent-observability-foundation/ops/history/phoenix-project-description-update.json",
+      "sha256": "249126ff8ccd2d9c16e283c0b86a264de687c1f1c47358374cbe7ed8b1449b7c",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/pr2364-repair-verification-20261031.json",
+      "to": "goals/agent-observability-foundation/ops/history/pr2364-repair-verification-20261031.json",
+      "sha256": "1a5eec8599794dfd6b37530055a801791c7c899f31637efa3a0019add899187e",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/publication-resource-fallback.json",
+      "to": "goals/agent-observability-foundation/ops/history/publication-resource-fallback.json",
+      "sha256": "fa84e6efa014dc07effd51b21750ccc66a7d507a4a72d18370eb0f23a6d3dca7",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/query-backoff-live-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/query-backoff-live-verification.json",
+      "sha256": "6c0c10d9d8e5c5f485ff1288c805ae0ccac305d48d15f63a8bc46022f07b6e3c",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/query-backoff-package-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/query-backoff-package-verification.json",
+      "sha256": "f0bffbc0916a44a855f2a38609d43f6b7f797fb27a06c92c2021f00fadbe7743",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/query-backoff-proof-archive.json",
+      "to": "goals/agent-observability-foundation/ops/history/query-backoff-proof-archive.json",
+      "sha256": "edfe408078cd9f51ed10c8b679c691537c2a3a354b571c19b852e6bee4ed9e0a",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/reconstructed-delivery-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/reconstructed-delivery-verification.json",
+      "sha256": "768b90a8ad7a5c23e6f81dc76ba985606213d92b5020045e3687a87e371ec02d",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/retirement-capacity-characterization.json",
+      "to": "goals/agent-observability-foundation/ops/history/retirement-capacity-characterization.json",
+      "sha256": "1d961b3cd59491f46ed27b617416228ddb2ba85c7c8eb296862e888080cfa3f6",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/retirement-live-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/retirement-live-verification.json",
+      "sha256": "9e0ac86b250ef9c64aec73cef0b2d8f9edad9d1b41be755cce54735655028459",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/retirement-package-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/retirement-package-verification.json",
+      "sha256": "3ff8410ea2ed68120428d9ecad0127bd6f05a8b74c7813295b582d8f6e2ec5ac",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/retirement-proof-archive.json",
+      "to": "goals/agent-observability-foundation/ops/history/retirement-proof-archive.json",
+      "sha256": "91b04c75917bb0c994c5a6b81d15b1f8aac762ac8c1f92c63b34fd5d512750f1",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/review-panel-launches.json",
+      "to": "goals/agent-observability-foundation/ops/history/review-panel-launches.json",
+      "sha256": "1d765504412142a9babad509ec3e2a89bb11578ba135f579e83d6fc3795370b5",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/surface-label-live-incomplete-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/surface-label-live-incomplete-verification.json",
+      "sha256": "4e077bf850ab938fb94e1fb1f859b7ddd460afbd448dd5e02f7fa7bbb37c35b9",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/surface-label-live-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/surface-label-live-verification.json",
+      "sha256": "3e28d22276134aa026a76ca9560507a343a261d1671018c7b9d2d4137bce0547",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/whole-cli-guard-race-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/whole-cli-guard-race-verification.json",
+      "sha256": "ff3534fedbb925c1a20c61bbcc1b1a0642a8a0f549e3e29536a0f8f0625163f1",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/whole-cli-timeout-attribution.json",
+      "to": "goals/agent-observability-foundation/ops/history/whole-cli-timeout-attribution.json",
+      "sha256": "2e6fb3e479713b3d1414e29e473be8532ea8d8bb44d504c0760a04686030ee7a",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/worker-resource-controlled-stop-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/worker-resource-controlled-stop-verification.json",
+      "sha256": "3e04791fc06770ab348a25eb616adeb0b6e831acf5a09a4ca3a69a623ba7aed2",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/worker-scheduled-resource-verification.json",
+      "to": "goals/agent-observability-foundation/ops/history/worker-scheduled-resource-verification.json",
+      "sha256": "b95c156531b66e0118b5365af5f2899dc4f350304257e30eb663df20aa1b4087",
+      "byteIdentical": true
+    },
+    {
+      "from": "goals/agent-observability-foundation/ops/yeet-attribution-delivery.json",
+      "to": "goals/agent-observability-foundation/ops/history/yeet-attribution-delivery.json",
+      "sha256": "8a41385248c2b735c3dfdb81fb0fdf46888bc6f2a6d3babe5fa77b888c31fc0a",
+      "byteIdentical": true
+    }
+  ],
+  "historicalInternalPaths": "Receipt payloads remain byte-identical; internal source paths retain their original observation meaning. Live document links point to the retained location."
+}

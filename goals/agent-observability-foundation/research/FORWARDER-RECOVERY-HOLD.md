@@ -14,7 +14,7 @@ file. The original implementation preserved the cursor table byte-for-byte at
 its row-value boundary and increased retained source rows from one to two.
 No historical store, real transcript or service was involved.
 
-Receipt: ops/forwarder-schema-compatibility.json. The old source's relative
+Receipt: ops/history/forwarder-schema-compatibility.json. The old source's relative
 imports were resolved to current dependency modules; original and rebased source
 hashes are retained. This proves rollback of the discovery implementation with
 current dependencies. It does not prove rollback of a complete historical

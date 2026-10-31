@@ -134,8 +134,9 @@ export const runTranscriptSweep = Effect.fn("AiMetrics.runTranscriptSweep")(func
   const hash = (value: string) => hashPrivateIdentifier(value, O.some(salt));
   if ((yield* hash("ai-metrics-hash-salt-namespace/v1")) !== config.namespaceId)
     return yield* TranscriptIntakeError.make({ reason: "namespace" });
-  const candidates = yield* Effect.forEach(input.sources, (source) =>
-    Effect.gen(function* () {
+  const candidates = yield* Effect.forEach(
+    input.sources,
+    Effect.fnUntraced(function* (source) {
       const resolvedPath = path.resolve(source.path);
       const pathHash = yield* hash(resolvedPath);
       return {
@@ -156,8 +157,9 @@ export const runTranscriptSweep = Effect.fn("AiMetrics.runTranscriptSweep")(func
       limit: input.maxSources,
     })
   );
-  const outcomes = yield* Effect.forEach(selected, (sourceId) =>
-    Effect.gen(function* () {
+  const outcomes = yield* Effect.forEach(
+    selected,
+    Effect.fnUntraced(function* (sourceId) {
       const source = A.findFirst(eligible, (source) => source.sourceId === sourceId);
       if (O.isNone(source)) return yield* TranscriptIntakeError.make({ reason: "configuration" });
       const processSource = Effect.gen(function* () {

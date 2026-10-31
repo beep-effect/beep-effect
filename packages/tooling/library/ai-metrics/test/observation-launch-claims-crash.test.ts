@@ -3,7 +3,6 @@ import { ObservationLaunchSubmission } from "@beep/repo-ai-metrics/observation-l
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -62,7 +61,7 @@ for (const mode of ["before-write", "after-sync", "after-operation", "after-obse
         expect(yield* f.fs.exists(output)).toBe(false);
         yield* child.kill({ killSignal: "SIGKILL" });
         const killed = yield* Effect.exit(child.exitCode);
-        assertTrue(killed._tag === "Failure");
+        expect(killed._tag).toBe("Failure");
         expect(yield* child.isRunning).toBe(false);
         expect(yield* f.fs.exists(operation)).toBe(mode === "after-operation" || mode === "after-observation");
         const retry = yield* run("retry");

@@ -142,13 +142,12 @@ const decodeWire = S.decodeUnknownEffect(wire);
 const expectedAttributes = Effect.fnUntraced(function* (expected: typeof expectedSpan.Type) {
   const entries = yield* Effect.forEach(
     A.filter(expected.attributes, (attr) => attr.key !== "openinference.span.kind"),
-    ({ key, value }) =>
-      Effect.gen(function* () {
-        const scalar = yield* decodeUnionValue(
-          value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
-        ).pipe(Effect.mapError(() => fail("encoding")));
-        return [key, scalar] satisfies readonly [string, string | number | boolean];
-      })
+    Effect.fnUntraced(function* ({ key, value }) {
+      const scalar = yield* decodeUnionValue(
+        value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
+      ).pipe(Effect.mapError(() => fail("encoding")));
+      return [key, scalar] satisfies readonly [string, string | number | boolean];
+    })
   );
   return R.fromEntries(entries);
 });

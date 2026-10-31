@@ -97,7 +97,7 @@ successful frontend run also revealed Caddy's default shared autosave behavior.
 That exact proof-generated file was preserved and removed after matching its
 owned socket path and bytes; no earlier preimage was available and none was
 invented. The renderer now disables persistence and isolates configuration paths.
-See `ops/deployment-autosave-repair.json`. Failed checks are retained and are not
+See `ops/history/deployment-autosave-repair.json`. Failed checks are retained and are not
 counted as passing proof.
 
 ## Remaining production proof

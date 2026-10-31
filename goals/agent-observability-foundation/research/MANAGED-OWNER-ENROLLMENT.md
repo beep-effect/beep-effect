@@ -71,7 +71,7 @@ supervised by an early-stop guard with a 12 GiB job threshold and 10 GiB host
 available-memory floor, below a 24 GiB emergency ceiling; its actual result is
 recorded separately rather than inferred from the focused suite.
 
-Current results and fingerprints belong in `ops/managed-owner-verification.json`.
+Current results and fingerprints belong in `ops/history/managed-owner-verification.json`.
 This is opt-in production code with synthetic qualification. No real provider
 session, live enrollment, desktop restart, historical forwarder or production
 collector configuration was changed. Provisioning and claim-store recovery ownership, independent population reporting,
@@ -125,8 +125,8 @@ The proof checks absence of raw synthetic owner/endpoint/repository/workspace,
 session ID and salt in the command report and collector journal. All ten owned
 service processes stop. This is synthetic protocol and collector-journal evidence:
 zero real provider requests and no new Phoenix backend-visibility claim. Exact
-fingerprints/results are in ops/managed-owner-recovery-verification.json and
-ops/managed-owner-command-worker-verification.json. The broader CLI gate remains
+fingerprints/results are in ops/history/managed-owner-recovery-verification.json and
+ops/history/managed-owner-command-worker-verification.json. The broader CLI gate remains
 unverified; this does not waive it or complete the packet.
 
 
@@ -190,4 +190,4 @@ The registered-command proof now invokes both setup operations before serve,
 checks their exact receipts and the installed enrollment against independently
 computed synthetic expectations, then performs the existing paused-capture,
 shutdown, restart and recovery proof. No real user owner was enrolled. See
-ops/managed-owner-provisioning-verification.json for this source revision.
+ops/history/managed-owner-provisioning-verification.json for this source revision.

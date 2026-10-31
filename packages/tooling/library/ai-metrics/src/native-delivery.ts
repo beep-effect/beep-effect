@@ -176,8 +176,8 @@ const boundedReply = Effect.fn("AiMetrics.nativeDelivery.boundedReply")(function
   const bytes = new Uint8Array(65536);
   let used = 0;
   yield* stream.pipe(
-    Stream.runForEach((chunk) =>
-      Effect.gen(function* () {
+    Stream.runForEach(
+      Effect.fnUntraced(function* (chunk) {
         if (chunk.byteLength > bytes.byteLength - used) return yield* Effect.fail(unknown("invalid-response"));
         bytes.set(chunk, used);
         used += chunk.byteLength;
@@ -216,8 +216,8 @@ export const makeNativeDelivery = Effect.fn("AiMetrics.makeNativeDelivery")(func
         if (input.offset >= pages.eventIds(page.value).length) return yield* failure("empty-selection");
         const encoded = yield* pages.prepare(input.receiptId, input.offset, input.limit, policy.project);
         yield* ledger.registerPage(input.receiptId);
-        return yield* Effect.uninterruptibleMask((restore) =>
-          Effect.gen(function* () {
+        return yield* Effect.uninterruptibleMask(
+          Effect.fnUntraced(function* (restore) {
             const reserved = yield* ledger.reserveSend(
               DeliveryAttempt.make({
                 attemptId: input.attemptId,

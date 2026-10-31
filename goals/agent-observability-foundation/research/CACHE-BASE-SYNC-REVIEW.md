@@ -18,7 +18,7 @@ The prior foundation basis is `CACHE-BASELINE-REVIEW.md` (SHA-256
 which reviews the JSONL policy-closure inputs and five ai-metrics task dependency
 changes. The prior canonical projection also carries the reviewed uncached audit,
 coverage and package-test-typecheck dependency rows, as qualified by
-`ops/cache-baseline-verification.json`: nine changed nodes total including root.
+`ops/history/cache-baseline-verification.json`: nine changed nodes total including root.
 These existing foundation rows are retained without changing their cache flags.
 Upstream basis is
 `goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-review.md`

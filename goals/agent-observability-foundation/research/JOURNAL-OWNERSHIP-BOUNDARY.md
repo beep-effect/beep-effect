@@ -30,7 +30,7 @@ snapshot bytes are expected, but does not override the current ownership boundar
   suites passed (`/tmp/foundation-ownership-boundary-green.log`): 6.387s service
   runtime, 518.9 MiB peak memory, zero additional swap.
 - Final package verification is recorded in
-  `ops/journal-ownership-verification.json`; do not infer its status from the
+  `ops/history/journal-ownership-verification.json`; do not infer its status from the
   focused suite alone.
 
 The capture check refuses before creating its backup destination. A restore that
@@ -72,4 +72,4 @@ a new table must not silently escape retention, backup or rollback checks.
 
 Final package verification passed: audit 112.5s, docgen 11.4s, total runtime
 130.755s, peak 5.7 GiB and zero additional swap. Source fingerprints and exact
-regression receipts are recorded in ops/journal-ownership-verification.json.
+regression receipts are recorded in ops/history/journal-ownership-verification.json.

@@ -61,7 +61,7 @@ four-computation scope, all 187 other reviews and byte-identical qualification
 ledger. Its projection exactly equals the previously reviewed foundation
 projection (nine changed nodes versus upstream). Cache audit passes with zero
 blocking findings; 1621 cached computations remain unassessed, not qualified.
-See `ops/delivery-cache-base-sync-verification.json` for archived inputs/results.
+See `ops/history/delivery-cache-base-sync-verification.json` for archived inputs/results.
 
 Final canonical catalogs, cheap publication preflight and merged-head checks are
 still needed. The full catalog profile requires at least 32 GiB initial host
@@ -83,7 +83,7 @@ and docgen pass (118.8/12.5 seconds); CLI quick lint/check pass (35.0/42.2 secon
 The quality guard peaked at 6,428,438,528 bytes, minimum host availability
 15,638,917,120 bytes, zero swap allowance, no stop/OOM. Exact before snapshots,
 failed regressions, successful runs, review and source hashes are retained in
-`ops/delivery-owner-sentinel-verification.json` and its private archive.
+`ops/history/delivery-owner-sentinel-verification.json` and its private archive.
 
 Upstream refresh finds one newer main commit (524a5fad6f). Incorporate it before
 publication and regenerate overlapping catalogs with canonical writers. Cheap
@@ -114,7 +114,7 @@ inherited adjacent duplication groups and zero dead-code findings. All three
 introduced duplication groups are cleared; no thresholds or allowances changed.
 The combined final exit 1 is the remaining repository complexity gate.
 
-`ops/delivery-intake-boundaries-verification.json` binds 25 raw artifacts and a
+`ops/history/delivery-intake-boundaries-verification.json` binds 25 raw artifacts and a
 344-file source/type hash manifest in
 `~/.local/state/beep/observation-proof-archive/delivery-intake-boundaries-rs_lurab`.
 Original snapshots and the shared codec source are retained. The first managed
@@ -147,7 +147,7 @@ Fallow v13 remains red with 31 introduced complexity findings, three introduced
 duplication groups, four inherited adjacent groups and zero dead-code findings.
 Maximum cyclomatic count is 15. No thresholds or allowances changed. The final
 combined command's exit 1 is the remaining repository audit, after package success.
-`ops/delivery-http-intake-verification.json` records 26 artifacts and a 342-file
+`ops/history/delivery-http-intake-verification.json` records 26 artifacts and a 342-file
 source hash manifest in private archive
 `~/.local/state/beep/observation-proof-archive/delivery-http-intake-pu2d88gb`.
 
@@ -179,7 +179,7 @@ Fallow v12 remains red with 34 introduced complexity findings, three introduced
 duplication groups, four inherited adjacent groups and zero dead-code findings;
 maximum cyclomatic count is 16. No thresholds, suppression or allowances changed.
 The final combined command exits 1 for these remaining repository findings.
-`ops/delivery-ledger-launch-verification.json` binds 26 retained artifacts and a
+`ops/history/delivery-ledger-launch-verification.json` binds 26 retained artifacts and a
 342-file source manifest to the source checks and review. Its private archive is
 `~/.local/state/beep/observation-proof-archive/delivery-ledger-launch-7bl332k4`.
 
@@ -210,7 +210,7 @@ adjacent groups and zero dead-code findings. Maximum remaining cyclomatic count 
 20. No thresholds or allowances changed. The combined final command exits 1 for
 that remaining repository audit, after successful focused/package checks.
 
-`ops/delivery-recovery-scheduler-verification.json` binds original source snapshots,
+`ops/history/delivery-recovery-scheduler-verification.json` binds original source snapshots,
 intermediate results, final reports, source hashes and private archive. The final
 verification observed a 5,359,046,656-byte peak and at least 11,843,493,888 bytes of
 available host RAM. No guard stop or OOM occurred; other host processes reduced
@@ -238,7 +238,7 @@ Native projection has zero complexity findings. Fresh Fallow v8 remains red with
 47 introduced complexity findings, three introduced duplication groups, four
 inherited adjacent groups and no dead-code findings; largest cyclomatic count is
 28. Exact worklist and private evidence archive are recorded in
-`ops/delivery-native-projection-verification.json`; review is in
+`ops/history/delivery-native-projection-verification.json`; review is in
 `NATIVE-PROJECTION-REVIEW.md`.
 
 No proof jobs remain running and no OOM was exercised in these waves. Current
@@ -266,7 +266,7 @@ services have exited. Recovery service/timer remain masked and inactive.
 Fallow v7 is still red: 48 introduced complexity, three introduced duplicate groups,
 four inherited adjacent groups and zero dead-code findings. No gate changed. The
 worker receipt binds 23 artifacts plus a source hash manifest in the private archive;
-see `ops/delivery-worker-qualification-verification.json` and
+see `ops/history/delivery-worker-qualification-verification.json` and
 `WORKER-QUALIFICATION-REVIEW.md`. The v4 combined command exits 1 solely because its
 final Fallow audit remains red; preceding CLI verification and entrypoint proof pass.
 
@@ -293,7 +293,7 @@ see `READER-READBACK-REFACTOR-REVIEW.md`. **71 focused tests**, full AI-metrics
 audit/docgen and scoped Oxlint passed. The verification observed a 5,320,736,768-byte
 peak and at least 44,215,922,688 bytes of available host RAM, without guard stop or
 OOM. Twenty-four artifacts, original source snapshots and source hashes are bound
-by `ops/delivery-reader-readback-verification.json`.
+by `ops/history/delivery-reader-readback-verification.json`.
 
 Fresh Fallow v6 still fails with **50 introduced complexity findings, six introduced
 duplication groups**, four inherited adjacent duplicate groups and zero dead-code
@@ -325,7 +325,7 @@ Current verification passed: **57 focused tests**, full AI-metrics audit and
 docgen, and scoped Oxlint (zero warnings/errors). The combined verification
 observed a 5,322,661,888-byte peak and at least 38,238,064,640 bytes of available
 host RAM, with no guard stop or OOM. Source hashes, intermediate failures and
-19 artifacts are bound by `ops/delivery-payload-runtime-verification.json`.
+19 artifacts are bound by `ops/history/delivery-payload-runtime-verification.json`.
 
 Fresh repository Fallow remains red: **52 introduced complexity findings and
 eight introduced duplication groups**, plus four inherited adjacent groups and
@@ -340,7 +340,7 @@ October 27. The new 10:56 CDT event belongs to a separate AI-hub 768 MiB
 qualification service; exact stress-case intent remains unconfirmed. The
 screenshot still maps to this packet's earlier deliberate 512 MiB proof. Routine
 proof uses controlled stop; the forwarder remains masked/inactive. See the updated
-memory investigation and `ops/memory-notification-followup-20261029-late.json`.
+memory investigation and `ops/history/memory-notification-followup-20261029-late.json`.
 
 ## Earlier retirement/export repair wave
 
@@ -368,7 +368,7 @@ groups and zero dead-code issues. No threshold or exception was broadened. The
 current `ops/delivery-fallow-worklist.json` contains the exact remaining locations;
 its previous version was archived before replacement.
 
-`ops/delivery-retirement-verification.json` binds the latest files and results to
+`ops/history/delivery-retirement-verification.json` binds the latest files and results to
 a private archive of 22 artifacts. The full CLI execution limitation, current-source
 installed/canary proof, remaining collected gates, Beep publication, hosted review,
 merge and reflection remain open. Dankserver remains draft PR #3 at `470ddf6`;
@@ -409,7 +409,7 @@ sections remain historical evidence. The recovery hold is still masked/inactive.
   `DELIVERY-OPERATIONAL-ADJUDICATION.md`. Cross-host enrollment and worst-case
   maintenance completion remain explicit production qualification limits.
 
-The current evidence manifest is `ops/delivery-transcript-verification.json`;
+The current evidence manifest is `ops/history/delivery-transcript-verification.json`;
 twenty raw artifacts and a 169-file source hash manifest are preserved in its
 private archive. Memory attribution and the fresh host sample are in
 `MEMORY-NOTIFICATION-INVESTIGATION.md` and the corresponding follow-up JSON.
@@ -441,13 +441,13 @@ Astra accepted the bounded source/canary/retirement/migration and final v5 epoch
 
 The static-codec wave hoisted all 306 flagged constructions, including the 12 in the managed CLI synthetic fixture. The canonical cache request is applied and independently verified; cache audit has zero blockers with scope/profile/epoch and cache qualifications unchanged. Test setup now has explicit time budgets, each platform layer remains per-test, redundant terminal scopes are removed, pure fixtures use Crypto or in-memory files with a hard-failing spawner, and mocked runtime time is deterministic. Full ai-metrics audit/docgen, Phoenix audit/docgen and provider-CLI audit/docgen pass. CLI-wide lint/type checks and all 18 focused CLI cases pass. The earlier whole-CLI Bun abort remains an unclosed full-suite limitation.
 
-Effect Vitest findings were reduced from 541 new candidates to 31 independently reviewed semantic exceptions. The full inventory was regenerated and each exception was matched to its actual detector occurrence, with one explicitly recorded unchanged-marker-loop context bridge. No unreviewed or blanket exception was introduced. Proof receipts and a durable 13-file external archive are recorded in ops/delivery-policy-verification.json. The collected cheap gates are running; publication/hosted review and exact-source installed verification remain open.
+Effect Vitest findings were reduced from 541 new candidates to 31 independently reviewed semantic exceptions. The full inventory was regenerated and each exception was matched to its actual detector occurrence, with one explicitly recorded unchanged-marker-loop context bridge. No unreviewed or blanket exception was introduced. Proof receipts and a durable 13-file external archive are recorded in ops/history/delivery-policy-verification.json. The collected cheap gates are running; publication/hosted review and exact-source installed verification remain open.
 
 ## Subsequent root-gate repairs and guard correction
 
 The collected cheap run passed root oxlint (zero errors) and the Effect Vitest ratchet, but exposed generated TypeScript/dependency/catalog drift, thirty fixed-literal fields and one unbranded ownership summary. Those source/generated repairs are applied. Seven schema-codec-count advisories were independently reviewed as intentional deterministic integration/regression coverage and given individual reasons. The latest bounded verification has passed full ai-metrics audit/docgen (119.0/11.7 seconds), CLI lint/type checks (25.1/34.4 seconds), and the schema-tag check with zero findings; schema-first ended with two additional SFV4-arbitrary-tests advisories in observation-launch-claims-crash.test.ts and observation-launch-http.test.ts. The combined job exited 1 (not OOM); independent adjudication is pending. No proof job remains running.
 
-The previous collected run was deliberately stopped while the regenerated JSDoc ratchet was still running. Its admitted sibling scope escaped the original outer-unit memory monitor and retained a 14.6 GiB peak. See ops/delivery-guard-correction.json: the next runner tracks ancestry-proven child scopes, caps them, aggregates their memory and pins BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1. This is an actual monitoring correction, not a passing aggregate qualification yet. Archived corrected runner: ~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job-v2.py; /tmp/foundation-bounded-job.py has the same revision. Do not use the old outer-only guard for further Yeet runs.
+The previous collected run was deliberately stopped while the regenerated JSDoc ratchet was still running. Its admitted sibling scope escaped the original outer-unit memory monitor and retained a 14.6 GiB peak. See ops/history/delivery-guard-correction.json: the next runner tracks ancestry-proven child scopes, caps them, aggregates their memory and pins BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1. This is an actual monitoring correction, not a passing aggregate qualification yet. Archived corrected runner: ~/.local/state/beep/observation-proof-archive/delivery-policy-brv5lg0f/foundation-bounded-job-v2.py; /tmp/foundation-bounded-job.py has the same revision. Do not use the old outer-only guard for further Yeet runs.
 
 Dankserver PR 3 remains draft at d319f846d6a81d0f5edef66b6b0fc0555307acac with no inline review threads. The only returned hosted check is CodeRabbit, skipped because it is draft; no passing hosted CI is claimed. Beep remains local at 1ed9704cc6 plus this dirty repair wave, with no PR/push. Required next work: finish current proof, qualify the revised guard in an admitted run, regenerate/repair JSDoc inventory as needed, refresh exact-source installed/synthetic canary proof, stage and scan owned changes, publish through Yeet, complete panel/hosted/final-check/merge/closeout. Preserve the original source worktree and its unrelated quality-tasks edit.
 
@@ -456,14 +456,14 @@ Dankserver PR 3 remains draft at d319f846d6a81d0f5edef66b6b0fc0555307acac with n
 The two additional schema advisories were independently adjudicated as exact
 crash/transport regression cases and documented individually. The fresh schema
 policy gate passed with approximately 6.4 GiB observed peak, over 41 GiB minimum
-host headroom, and no guard stop. Evidence: ops/delivery-schema-policy-verification.json.
+host headroom, and no guard stop. Evidence: ops/history/delivery-schema-policy-verification.json.
 No source changed after the preceding passing package audit/docgen and CLI quick
 checks; the policy exception metadata is the additional change.
 
 The revised guard passed a small synthetic sibling-scope proof: an ancestry-bound
 child independently observed the applied limits, and aggregate usage included its
 16 MiB allocation. No exhaustion or threshold stop was exercised. Evidence:
-ops/delivery-guard-sibling-verification.json. Full collected Yeet qualification
+ops/history/delivery-guard-sibling-verification.json. Full collected Yeet qualification
 remains pending. The notification investigation also identified an eighth retained
 OOM decision, from an AI hub restricted-runtime service at 07:54:53 on October 29;
 it reached a 768 MiB service ceiling. Its exact stress-case receipt was not found,

@@ -16,7 +16,7 @@ argv or health. Direct worker-process fixtures retain their older explicitly
 provided environment route; this change qualifies the generated installation,
 not every process launcher on the workstation.
 
-The final installed proof is `ops/credential-health-installed-verification.json`.
+The final installed proof is `ops/history/credential-health-installed-verification.json`.
 It injected unrelated synthetic secret variables into both owned units and
 verified their absence from the actual processes. It exercised the optional query
 credential, rejected empty/oversized/invalid-UTF8/newline credentials before any

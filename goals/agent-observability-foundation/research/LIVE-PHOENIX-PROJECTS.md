@@ -40,7 +40,7 @@ hold. Only description fields changed: no project deletion, trace mutation,
 retention adjustment or collection restart occurred.
 
 The prior values, intended values, per-project attempts and verified results are
-in `ops/phoenix-project-description-update.json`. Reversal is a description-only
+in `ops/history/phoenix-project-description-update.json`. Reversal is a description-only
 PUT with the recorded prior value followed by fresh read-back; it does not require
 restoring trace data. Do not replay a mutation blindly after an uncertain result.
 

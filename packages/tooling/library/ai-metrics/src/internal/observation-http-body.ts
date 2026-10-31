@@ -54,8 +54,8 @@ export const readObservationHttpBytes = Effect.fn("AiMetrics.readObservationHttp
   let offset = 0;
   yield* stream.pipe(
     Stream.mapError(() => observationHttpBodyFailure("malformed")),
-    Stream.runForEach((chunk) =>
-      Effect.gen(function* () {
+    Stream.runForEach(
+      Effect.fnUntraced(function* (chunk) {
         if (chunk.byteLength > byteLimit - offset) return yield* observationHttpBodyFailure("oversize");
         buffer.set(chunk, offset);
         offset += chunk.byteLength;

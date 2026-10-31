@@ -60,8 +60,8 @@ claim still refuses a second process. The worker remains at 12 lifecycle rows;
 all eight owned units stop. No provider executable or model request is involved.
 
 Source fingerprints and current package/entrypoint proof are in
-`ops/launch-outbox-verification.json` and
-`ops/launch-outbox-entrypoint-verification.json`.
+`ops/history/launch-outbox-verification.json` and
+`ops/history/launch-outbox-entrypoint-verification.json`.
 
 ## Next production integration
 

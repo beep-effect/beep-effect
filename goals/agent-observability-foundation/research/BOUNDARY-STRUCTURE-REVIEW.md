@@ -19,6 +19,6 @@ The remaining21 findings still fail the gate. No threshold or baseline changed.
 
 Both runs retained bounded memory, CPU, time and host headroom; no guard stop or
 process-limit rejection occurred. Logs, resource receipts, before snapshots and
-source hashes are retained by ops/delivery-boundary-structure-verification.json.
+source hashes are retained by ops/history/delivery-boundary-structure-verification.json.
 Full CLI, installed proof and delivery acceptance remain open. Historical data
 and the recovery hold are unchanged.

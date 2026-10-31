@@ -41,7 +41,7 @@ counts. No raw dead-letter store or replay permission is introduced.
 - Rendered service/timer verification exits zero. The local systemd verifier
   also reports an unrelated unreadable `semantica-secure.service`; this is not
   claimed as validation of that unrelated unit. Ansible task/settings YAML parses.
-- `ops/independent-health-verification.json`: fresh actual installed worker and
+- `ops/history/independent-health-verification.json`: fresh actual installed worker and
   frontend proof with the current bundled worker, independent Prometheus 3.15.1,
   an actual metrics scrape, controlled worker shutdown and receipt of
   `BeepObservationWorkerUnavailable` at a disposable local Alertmanager-v2 API
@@ -60,7 +60,7 @@ counts. No raw dead-letter store or replay permission is introduced.
 - `ops/review-health-cli-verification.json`: scoped tsgo and tsrs checks plus
   28 CLI tests pass with 2,530,803,712 bytes observed peak. This is not the broad
   CLI package gate.
-- `ops/independent-health-archive.json`: all 19 regular files from the final
+- `ops/history/independent-health-archive.json`: all 19 regular files from the final
   proof were copied, hash-compared and synced into the private same-host proof
   archive (53,484,755 bytes). This is not off-device recovery. The archived worker
   bundle was deliberately modified after shutdown for checksum-refusal proof
@@ -75,12 +75,12 @@ acceptance adjudication and repository delivery gates remain open.
 ## Credential and atomic-pause refresh — 2026-10-29
 
 The current installed entrypoint was rebuilt after the credential isolation and
-atomic-pause repairs. `ops/credential-health-installed-verification.json` proves
+atomic-pause repairs. `ops/history/credential-health-installed-verification.json` proves
 its actual private scrape and stopped-worker alert through the independent
 monitor, plus positive environment isolation, a non-minimum journal budget and
 four malformed-credential startup refusals. The monitor and worker/frontend
 processes were stopped and the exact owned service files removed. The retained
-same-host copy is described by `ops/credential-health-archive.json`; it is not
+same-host copy is described by `ops/history/credential-health-archive.json`; it is not
 an off-device backup, and its integrity-test-tampered bundle must never be run.
 The prior independent-health receipt remains historical evidence for its earlier
 source snapshot. Root timer/node_exporter enrollment and human notification

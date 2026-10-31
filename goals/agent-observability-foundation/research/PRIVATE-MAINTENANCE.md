@@ -59,7 +59,7 @@ fixed-clock expiry/retirement/exact restoration. Current evidence:
   permanent-refusal scheduler correction.
 - `ops/maintenance-cli-verification.json`: both scoped compilers and 29 CLI tests
   passed. This is not the still-required whole CLI package gate.
-- `ops/maintenance-installed-verification.json`: actual installed worker and
+- `ops/history/maintenance-installed-verification.json`: actual installed worker and
   frontend, 82 source hashes, public GET/POST denial, 4096-byte/UTF-8 refusal,
   stalled-body 408, concurrent-operation 503, paused backup, occupied slot
   preservation, and stale process context refusal after an actual restart.

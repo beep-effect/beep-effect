@@ -41,7 +41,7 @@ The snapshot contains zero claims; the later original contains one. This reprodu
 the recovery-point gap without installing the stale snapshot as writable authority.
 The proof retains sixteen collector facts, starts no real provider session and
 stops all thirteen owned service processes. See
-`ops/claim-store-disaster-worker-verification.json` and the scoped verification
+`ops/history/claim-store-disaster-worker-verification.json` and the scoped verification
 receipt. This is not proof of device loss, power-loss durability, off-device backup,
 or automatic safe reconstruction after a complete loss of independent claims.
 

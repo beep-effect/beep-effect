@@ -88,8 +88,8 @@ const openNative = Effect.fn("AiProviderCliSession.openNative")(function* (
 
 const open = Effect.fn("AiProviderCliSession.open")(
   (profile: ManagedLaunchProfile, observer?: ManagedSessionObserver) =>
-    Effect.uninterruptibleMask((restore) =>
-      Effect.gen(function* () {
+    Effect.uninterruptibleMask(
+      Effect.fnUntraced(function* (restore) {
         const scope = yield* Scope.fork(yield* Scope.Scope);
         const acquire = Effect.gen(function* () {
           const session = yield* openNative(profile, observer);

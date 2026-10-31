@@ -44,19 +44,19 @@ Verification: red regression run retained at
 `/tmp/foundation-review-query-backoff-red.log` (20 pass, two expected failures).
 The intermediate corrected scheduler suite passed all 22 cases. The final full package audit and docgen pass, including additional corruption
 and byte-preserving retirement/restore coverage. Receipt:
-`ops/query-backoff-package-verification.json`. The logical recovery fixture
+`ops/history/query-backoff-package-verification.json`. The logical recovery fixture
 proves exact reservation preservation and release, not execution after restore:
 payloads are already disposed before a seal is allowed. No new live
 backend or production rollout claim follows from this local delta.
 
 
-The refreshed installed proof passes at `ops/query-backoff-live-verification.json`
+The refreshed installed proof passes at `ops/history/query-backoff-live-verification.json`
 with `sourceStableDuringRun: true`: two explicitly synthetic CLI/desktop records
 in project `foundation-canary-303222edde9d`, both confirmed locally visible;
 owned services and collector removed after proof. Independent health and private
 maintenance checks also pass. This establishes installed wiring and normal
 visibility, not a deliberate missing-backend or hard-crash query-backoff test.
 All 24 retained proof files were copied, hashed and fsynced to the private
-same-host archive (ops/query-backoff-proof-archive.json). Archived bundles are
+same-host archive (ops/history/query-backoff-proof-archive.json). Archived bundles are
 not executable recovery candidates: the integrity test deliberately tampers with
 the bundle after stopping the worker. No production enrollment is inferred.

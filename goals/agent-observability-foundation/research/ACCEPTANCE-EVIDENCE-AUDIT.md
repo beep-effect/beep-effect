@@ -27,8 +27,8 @@ separate requirements. No completion or historical-hold release is certified.
 Source paths in the table are under `packages/tooling/library/ai-metrics`, unless
 they refer to the recorded Dankserver checkout; research and receipt names resolve
 under this packet's `research/` and `ops/`. The latest runtime source binding is
-`ops/committed-source-binding-verification.json`, covering the v3 stages in
-`ops/hosted-build-repair-verification.json` and its separately recorded preparation.
+`ops/history/committed-source-binding-verification.json`, covering the v3 stages in
+`ops/history/hosted-build-repair-verification.json` and its separately recorded preparation.
 Earlier terminal-classification and boundary receipts retain their historical scope. Earlier documents retain historical
 scope; their obsolete remaining-work paragraphs are not authoritative current status.
 
@@ -81,7 +81,7 @@ root above. All four final helper hashes match the reviewed bytes. Both guards
 exited zero, without a controlled stop or PID-limit event. Owned unit removal,
 collector rollback, retained queues, post-rollback backend readback and disposable
 backend/network cleanup are recorded. See `DECLARED-ROUTE-PROOF.md` and
-`../ops/declared-route-stages-verification.json` for durable archive paths/digests.
+`../ops/history/declared-route-stages-verification.json` for durable archive paths/digests.
 
 The final refusal check is bound to helper `bacdf231e46c75a6588948667ee8279d62ae5003d39e10c151f44924cd737f79`
 and qualifies changed Git-directory/common-directory and occupied-plan refusal.
@@ -93,7 +93,7 @@ scoped support; required repository gates, publication, merge and reflection rem
 ## Current-source refresh after hosted build diagnostics
 
 The source repair and dependency-catalog correction are documented in
-`HOSTED-BUILD-REPAIR.md` and `../ops/hosted-build-repair-verification.json`. After
+`HOSTED-BUILD-REPAIR.md` and `../ops/history/hosted-build-repair-verification.json`. After
 full package audit/docgen and 37 focused tests passed, an explicitly new v3 root
 was prepared with the current 82 source hashes; v2 was preserved. Independent
 Astra accepted both final v3 routes after checking all 87/86 current source hashes,

@@ -52,7 +52,7 @@ For the backup lane, the existing Effect Bun client offers whole-database export
 Routine verification now uses a controlled stop; only explicit `--exercise-oom`
 invokes deliberate memory exhaustion. The successful older OOM receipt remains
 separate. The latest routine evidence is
-`ops/worker-resource-controlled-stop-verification.json`.
+`ops/history/worker-resource-controlled-stop-verification.json`.
 
 An intermittent oversized declared upload previously produced Caddy 502 because
 the backend closed its unread upstream body. The proxy now rejects declared

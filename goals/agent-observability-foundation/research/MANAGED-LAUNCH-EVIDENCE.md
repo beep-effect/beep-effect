@@ -45,7 +45,7 @@ facts. A controlled worker restart and exact client/raw HTTP retries preserve al
 12 original receipts without new rows. All seven owned units have MainPID=0 after
 cleanup; four are deliberate startup-refusal cases. This proof is distinct from a
 live Codex session or an independent fleet launch denominator. Package results
-and source fingerprints are recorded in ops/managed-observer-verification.json.
+and source fingerprints are recorded in ops/history/managed-observer-verification.json.
 
 ## Launch claim follow-through
 

@@ -590,8 +590,8 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
     if (yield* Ref.getAndSet(transportFailed, false)) yield* Effect.logInfo("Agent observation delivery recovered.");
   }).pipe(
     Effect.scoped,
-    Effect.catch(() =>
-      Effect.gen(function* () {
+    Effect.catch(
+      Effect.fnUntraced(function* () {
         if (!(yield* Ref.getAndSet(transportFailed, true)))
           yield* Effect.logWarning(
             "Agent observation delivery unresolved; durable metadata retained for reconciliation."
@@ -599,8 +599,9 @@ export const openAgentMessageSession = Effect.fn("AgentObservation.open")(functi
       })
     )
   );
-  return yield* claims.runOnce(submission, () =>
-    Effect.gen(function* () {
+  return yield* claims.runOnce(
+    submission,
+    Effect.fnUntraced(function* () {
       const child = yield* Ref.make(O.none<ManagedSessionProcess>());
       const observeError = () =>
         ManagedSessionError.make({

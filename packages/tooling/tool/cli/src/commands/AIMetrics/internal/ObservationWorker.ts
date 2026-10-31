@@ -298,8 +298,9 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
     const handler = Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       return yield* Match.value({ method: request.method, url: request.url }).pipe(
-        Match.when({ method: "GET", url: "/health" }, () =>
-          Effect.gen(function* () {
+        Match.when(
+          { method: "GET", url: "/health" },
+          Effect.fnUntraced(function* () {
             const health = yield* runtime.health;
             return yield* HttpServerResponse.json(
               { control: yield* worker.status, runtime: health, intake: yield* worker.intakeHealth },
@@ -307,8 +308,9 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
             );
           })
         ),
-        Match.when({ method: "GET", url: "/metrics" }, () =>
-          Effect.gen(function* () {
+        Match.when(
+          { method: "GET", url: "/metrics" },
+          Effect.fnUntraced(function* () {
             return HttpServerResponse.text(
               renderObservationRuntimeMetrics(yield* runtime.health) +
                 renderNativeHttpMetrics(yield* worker.intakeHealth),

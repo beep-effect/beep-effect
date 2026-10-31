@@ -18,7 +18,7 @@ The fresh cross-boot query still has nine distinct OOM decisions, latest at
 has 37.2 GiB available RAM and only 0.05 GiB free swap at this snapshot. ComfyUI
 PID 537468 holds about 34.8 GiB resident and 14.1 GiB swapped. No unrelated
 application or swap setting changed. The held forwarder service and timer remain
-masked/inactive. Evidence: `../ops/memory-notification-followup-20261029-1552.json`.
+masked/inactive. Evidence: `../ops/history/memory-notification-followup-20261029-1552.json`.
 
 ## Process-limit follow-up — October 29, 14:35 CDT
 
@@ -59,7 +59,7 @@ No application was stopped. The active Dolphin operation remains unknown.
 is not a newly available fix or proof of the current memory-growth cause.
 
 The historical forwarder hold was refreshed. Raw evidence is in
-`../ops/memory-notification-followup-20261029-1315.json`. No heavy proof was
+`../ops/history/memory-notification-followup-20261029-1315.json`. No heavy proof was
 launched during the low-headroom inspection, and no notification or swap setting
 was changed.
 
@@ -167,7 +167,7 @@ The first routine proof after changing the OOM default encountered an independen
 ## Follow-up verification
 
 The subsequent default run completed successfully. Its receipt is preserved at
-`ops/worker-resource-controlled-stop-verification.json`: result `passed`,
+`ops/history/worker-resource-controlled-stop-verification.json`: result `passed`,
 `deliberateMemoryExhaustion=false`, `memoryLimitExercised=false`, restart cause
 `controlled-stop`, exact receipt replay after restart, and all four owned worker/proxy
 units inactive with MainPID=0. Twenty-four consecutive declared oversized requests
@@ -469,7 +469,7 @@ or desktop notification was changed.
 
 The collected Yeet cheap-gate run moved its admitted descendants into `agent-run-ea3f73ec-b7b9-430f-aed0-24b25a642629.scope`, a sibling of the outer proof service. The old outer-service monitor therefore did not measure aggregate proof memory. The admitted scope retained a peak of 15,691,333,632 bytes (about 14.6 GiB), with no own memory/swap limits; its observed current use was 4,510,527,488 bytes when this was discovered. The outer service reported only 605,114,368 bytes peak. Earlier outer-service Yeet peaks cannot establish aggregate bounds. This observation does not establish a new kernel OOM event.
 
-The exact owned scope was verified through live process ancestry, given runtime limits, and deliberately stopped together with the outer job after the collected checks had exposed repairable failures. The revised guard follows live descendants into admitted scopes, sums nonoverlapping owned cgroup usage, applies limits only to ancestry-proven owned scopes, and stops those scopes before the outer service on threshold breach. The supported `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1` setting now serializes the next collected run. No other agent's service or user application was stopped. The guard revision and before/after evidence are retained by `ops/delivery-guard-correction.json`; aggregate qualification remains pending its next admitted run.
+The exact owned scope was verified through live process ancestry, given runtime limits, and deliberately stopped together with the outer job after the collected checks had exposed repairable failures. The revised guard follows live descendants into admitted scopes, sums nonoverlapping owned cgroup usage, applies limits only to ancestry-proven owned scopes, and stops those scopes before the outer service on threshold breach. The supported `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY=1` setting now serializes the next collected run. No other agent's service or user application was stopped. The guard revision and before/after evidence are retained by `ops/history/delivery-guard-correction.json`; aggregate qualification remains pending its next admitted run.
 
 ## Refreshed cross-boot check — 2026-10-29 08:55 CDT
 
@@ -522,7 +522,7 @@ guard found its live ancestry and accounted about 26.8 MiB total while the
 outer service alone reported 2.4 MiB. Both processes exited normally. This
 qualifies the specific accounting/limit-application repair; it does not exercise
 threshold termination or establish full Yeet workload qualification. Evidence:
-`ops/delivery-guard-sibling-verification.json`.
+`ops/history/delivery-guard-sibling-verification.json`.
 
 ## Read-only follow-up on October 29 at 10:27 CDT
 
@@ -567,7 +567,7 @@ The host had about 40 GiB available RAM when first sampled in this continuation,
 and about 34 GiB of occupied swap. A later pressure sample reported zero
 10-second stalls, with small nonzero longer averages. Neither snapshot proves
 sustained health or a leak. Fresh raw attribution and host values are retained
-in `ops/memory-notification-followup-20261029-late.json`.
+in `ops/history/memory-notification-followup-20261029-late.json`.
 The historical forwarder is still masked/inactive. No unrelated workload,
 notification preference or swap setting was changed; foundation verification
 continues with the owned-job memory guard and controlled-stop default.
@@ -616,5 +616,5 @@ admission floor. No unrelated workload was stopped. The separately bounded
 installed worker proof passed with no deliberate OOM; temporary units and
 its independent monitor were stopped and removed as owned. All heavy proof
 paths need admission and per-job budgets, including commands launched by
-browser-hosted sessions. Evidence: `../ops/memory-pressure-cross-checkout-20261029.json`
+browser-hosted sessions. Evidence: `../ops/history/memory-pressure-cross-checkout-20261029.json`
 and `../ops/whole-cli-protective-stop-verification.json`.

@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T07:45:57.306Z",
+  "generatedAt": "2026-10-31T10:40:47.663Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -238281,8 +238281,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 118,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-118-generateretentionreport",
+          "line": 138,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-138-generateretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -238303,8 +238303,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 229,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-229-encoderetentionreport",
+          "line": 249,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-249-encoderetentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -238325,8 +238325,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 244,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-244-renderretentionreport",
+          "line": 264,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-264-renderretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -238347,8 +238347,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 291,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-291-evaluateretentioncandidate",
+          "line": 311,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-311-evaluateretentioncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -267261,8 +267261,8 @@
           "exportKind": "const",
           "filePath": "src/native-readback.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-readback.ts",
-          "line": 202,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-readback-ts-202-makenativereadback",
+          "line": 201,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-readback-ts-201-makenativereadback",
           "currentTags": [
             "@category",
             "@since"
@@ -267283,8 +267283,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 41,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-41-observationlagsummary",
+          "line": 42,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-42-observationlagsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -267305,8 +267305,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 89,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-89-idempotentreplaypolicy",
+          "line": 90,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-90-idempotentreplaypolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -267327,8 +267327,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 111,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-111-nativeschedulepolicy",
+          "line": 112,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-112-nativeschedulepolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -267349,8 +267349,8 @@
           "exportKind": "const",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 142,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-142-nativescheduleoutcome",
+          "line": 143,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-143-nativescheduleoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -267371,8 +267371,8 @@
           "exportKind": "const",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 169,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-169-nativescheduletick",
+          "line": 170,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-170-nativescheduletick",
           "currentTags": [
             "@category",
             "@since"
@@ -267393,8 +267393,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 187,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-187-nativescheduleerror",
+          "line": 188,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-188-nativescheduleerror",
           "currentTags": [
             "@category",
             "@since"
@@ -267415,8 +267415,8 @@
           "exportKind": "const",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 237,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-237-makenativedeliveryscheduler",
+          "line": 238,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-238-makenativedeliveryscheduler",
           "currentTags": [
             "@category",
             "@since"
@@ -267635,8 +267635,8 @@
           "exportKind": "const",
           "filePath": "src/observation-backup.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/observation-backup.ts",
-          "line": 212,
-          "anchor": "packages-tooling-library-ai-metrics-src-observation-backup-ts-212-captureobservationbackup",
+          "line": 211,
+          "anchor": "packages-tooling-library-ai-metrics-src-observation-backup-ts-211-captureobservationbackup",
           "currentTags": [
             "@category",
             "@since"
@@ -267657,8 +267657,8 @@
           "exportKind": "const",
           "filePath": "src/observation-backup.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/observation-backup.ts",
-          "line": 284,
-          "anchor": "packages-tooling-library-ai-metrics-src-observation-backup-ts-284-restoreobservationbackup",
+          "line": 283,
+          "anchor": "packages-tooling-library-ai-metrics-src-observation-backup-ts-283-restoreobservationbackup",
           "currentTags": [
             "@category",
             "@since"
@@ -273596,8 +273596,8 @@
           "exportKind": "class",
           "filePath": "src/transcript-discovery.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-          "line": 42,
-          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-42-transcriptdiscoveryinput",
+          "line": 43,
+          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-43-transcriptdiscoveryinput",
           "currentTags": [
             "@category",
             "@since"
@@ -273618,8 +273618,8 @@
           "exportKind": "class",
           "filePath": "src/transcript-discovery.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-          "line": 68,
-          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-68-transcriptdiscoveryerror",
+          "line": 69,
+          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-69-transcriptdiscoveryerror",
           "currentTags": [
             "@category",
             "@since"
@@ -273640,8 +273640,8 @@
           "exportKind": "class",
           "filePath": "src/transcript-discovery.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-          "line": 87,
-          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-87-transcriptdiscoveryreport",
+          "line": 88,
+          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-88-transcriptdiscoveryreport",
           "currentTags": [
             "@category",
             "@since"
@@ -273662,8 +273662,8 @@
           "exportKind": "const",
           "filePath": "src/transcript-discovery.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-          "line": 223,
-          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-223-maketranscriptdiscovery",
+          "line": 224,
+          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-224-maketranscriptdiscovery",
           "currentTags": [
             "@category",
             "@since"
@@ -273684,8 +273684,8 @@
           "exportKind": "type",
           "filePath": "src/transcript-discovery.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-          "line": 429,
-          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-429-transcriptdiscovery",
+          "line": 436,
+          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-436-transcriptdiscovery",
           "currentTags": [
             "@category",
             "@since"
@@ -273706,8 +273706,8 @@
           "exportKind": "class",
           "filePath": "src/transcript-discovery.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-          "line": 441,
-          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-441-transcriptdiscoveryreadpolicy",
+          "line": 448,
+          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-448-transcriptdiscoveryreadpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -273728,8 +273728,8 @@
           "exportKind": "const",
           "filePath": "src/transcript-discovery.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
-          "line": 472,
-          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-472-rundiscoveredtranscriptsweep",
+          "line": 479,
+          "anchor": "packages-tooling-library-ai-metrics-src-transcript-discovery-ts-479-rundiscoveredtranscriptsweep",
           "currentTags": [
             "@category",
             "@since"
@@ -526362,8 +526362,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 43,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-43-knowledge-doctor-leases-path",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-42-knowledge-doctor-leases-path",
           "currentTags": [
             "@category",
             "@since"
@@ -526384,8 +526384,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 59,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-59-knowledge-codeowners-path",
+          "line": 58,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-58-knowledge-codeowners-path",
           "currentTags": [
             "@category",
             "@since"
@@ -526406,8 +526406,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 76,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-76-knowledge-lease-max-lifetime",
+          "line": 75,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-75-knowledge-lease-max-lifetime",
           "currentTags": [
             "@category",
             "@since"
@@ -526428,8 +526428,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 93,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-93-knowledge-lease-warning-window",
+          "line": 92,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-92-knowledge-lease-warning-window",
           "currentTags": [
             "@category",
             "@since"
@@ -526450,8 +526450,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 109,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-109-knowledge-leases-per-document",
+          "line": 108,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-108-knowledge-leases-per-document",
           "currentTags": [
             "@category",
             "@since"
@@ -526472,8 +526472,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 125,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-125-knowledge-leases-per-repo",
+          "line": 124,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-124-knowledge-leases-per-repo",
           "currentTags": [
             "@category",
             "@since"
@@ -526494,8 +526494,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 159,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-159-knowledgedebtlease",
+          "line": 158,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-158-knowledgedebtlease",
           "currentTags": [
             "@category",
             "@since"
@@ -526516,8 +526516,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 189,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-189-knowledgedebtleases",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-188-knowledgedebtleases",
           "currentTags": [
             "@category",
             "@since"
@@ -526538,8 +526538,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 220,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-220-knowledgeleasestatus",
+          "line": 219,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-219-knowledgeleasestatus",
           "currentTags": [
             "@category",
             "@since"
@@ -526560,8 +526560,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 232,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-232-knowledgeleasestatus",
+          "line": 231,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-231-knowledgeleasestatus",
           "currentTags": [
             "@category",
             "@since"
@@ -526582,8 +526582,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 248,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-248-knowledgeleaseviolation",
+          "line": 247,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-247-knowledgeleaseviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -526604,8 +526604,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 265,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-265-knowledgeleaseviolation",
+          "line": 264,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-264-knowledgeleaseviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -526626,8 +526626,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 296,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-296-knowledgeleaserow",
+          "line": 295,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-295-knowledgeleaserow",
           "currentTags": [
             "@category",
             "@since"
@@ -526648,8 +526648,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 334,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-334-knowledgeleasesreport",
+          "line": 333,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-333-knowledgeleasesreport",
           "currentTags": [
             "@category",
             "@since"
@@ -526670,8 +526670,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 363,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-363-encodeknowledgeleasesreportjson",
+          "line": 362,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-362-encodeknowledgeleasesreportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -526692,8 +526692,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 383,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-383-decodeknowledgeleasesreportjson",
+          "line": 382,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-382-decodeknowledgeleasesreportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -526714,8 +526714,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 461,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-461-resolveknowledgecodeowners",
+          "line": 418,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-418-resolveknowledgecodeowners",
           "currentTags": [
             "@param",
             "@returns",
@@ -526738,8 +526738,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 506,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-506-knowledgeleaseevaluationinput",
+          "line": 460,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-460-knowledgeleaseevaluationinput",
           "currentTags": [
             "@category",
             "@since"
@@ -526760,8 +526760,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 670,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-670-evaluateknowledgeleases",
+          "line": 624,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-624-evaluateknowledgeleases",
           "currentTags": [
             "@param",
             "@returns",
@@ -526784,8 +526784,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 732,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-732-isknowledgeleaseeffective",
+          "line": 686,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-686-isknowledgeleaseeffective",
           "currentTags": [
             "@param",
             "@returns",
@@ -526808,8 +526808,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.leases.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.leases.ts",
-          "line": 762,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-762-knowledgeleasewarnings",
+          "line": 716,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-leases-ts-716-knowledgeleasewarnings",
           "currentTags": [
             "@param",
             "@returns",
@@ -563031,8 +563031,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/Skills.patches.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.patches.ts",
-          "line": 306,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-306-resolvecodeownersowner",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-266-resolvecodeownersowner",
           "currentTags": [
             "@param",
             "@returns",
@@ -563055,8 +563055,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Skills/Skills.patches.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.patches.ts",
-          "line": 324,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-324-skillpatchownersourceshape",
+          "line": 284,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-284-skillpatchownersourceshape",
           "currentTags": [
             "@see",
             "@category",
@@ -563078,8 +563078,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Skills/Skills.patches.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.patches.ts",
-          "line": 358,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-358-skillpatchownersource",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-318-skillpatchownersource",
           "currentTags": [
             "@see",
             "@category",
@@ -563101,8 +563101,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/Skills.patches.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.patches.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-391-skillpatchownersourcefromcodeowners",
+          "line": 351,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-351-skillpatchownersourcefromcodeowners",
           "currentTags": [
             "@param",
             "@returns",
@@ -563125,8 +563125,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Skills/Skills.patches.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Skills/Skills.patches.ts",
-          "line": 458,
-          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-458-skillpatchownersourcelive",
+          "line": 418,
+          "anchor": "packages-tooling-tool-cli-src-commands-skills-skills-patches-ts-418-skillpatchownersourcelive",
           "currentTags": [
             "@category",
             "@since"

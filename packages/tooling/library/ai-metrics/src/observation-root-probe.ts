@@ -218,30 +218,29 @@ export const probeObservationRoots = Effect.fn("AiMetrics.probeObservationRoots"
     });
     const rootReceipts = yield* Effect.forEach(
       declaration.roots,
-      (root) =>
-        Effect.gen(function* () {
-          const rootPath = path.resolve(root.path);
-          const rootId = `root-${yield* privateHash(rootPath)}`;
-          const present =
-            root.state === "inspect" &&
-            (yield* fs.stat(rootPath).pipe(
-              Effect.map((info) => info.type === "Directory"),
-              Effect.orElseSucceed(() => false)
-            ));
-          const git = present
-            ? yield* observeAiMetricsGitRoot(AiMetricsCanonicalRootInput.make({ rootPath, hashSalt: salt }))
-            : AiMetricsGitRootEvidence.cases.Unknown.make({ reason: "not-observed" });
-          const observation = ReceiptBody.make({
-            host,
-            rootId,
-            declaredState: root.state,
-            availability: root.state === "retired" ? "retired" : present ? "present" : "unreachable",
-            observedAt: yield* DateTime.now,
-            git,
-          });
-          const encoded = yield* encodeReceiptBodyJson(observation);
-          return ObservationRootReceipt.make({ evidenceId: yield* hashPublicTextSha256(encoded), observation });
-        }),
+      Effect.fnUntraced(function* (root) {
+        const rootPath = path.resolve(root.path);
+        const rootId = `root-${yield* privateHash(rootPath)}`;
+        const present =
+          root.state === "inspect" &&
+          (yield* fs.stat(rootPath).pipe(
+            Effect.map((info) => info.type === "Directory"),
+            Effect.orElseSucceed(() => false)
+          ));
+        const git = present
+          ? yield* observeAiMetricsGitRoot(AiMetricsCanonicalRootInput.make({ rootPath, hashSalt: salt }))
+          : AiMetricsGitRootEvidence.cases.Unknown.make({ reason: "not-observed" });
+        const observation = ReceiptBody.make({
+          host,
+          rootId,
+          declaredState: root.state,
+          availability: root.state === "retired" ? "retired" : present ? "present" : "unreachable",
+          observedAt: yield* DateTime.now,
+          git,
+        });
+        const encoded = yield* encodeReceiptBodyJson(observation);
+        return ObservationRootReceipt.make({ evidenceId: yield* hashPublicTextSha256(encoded), observation });
+      }),
       { concurrency: 4 }
     );
     const roots = A.map(rootReceipts, ({ evidenceId, observation }) => {
@@ -261,8 +260,9 @@ export const probeObservationRoots = Effect.fn("AiMetrics.probeObservationRoots"
         evidenceId,
       });
     });
-    const routes = yield* Effect.forEach(ObservationHarness.literals, (harness) =>
-      Effect.gen(function* () {
+    const routes = yield* Effect.forEach(
+      ObservationHarness.literals,
+      Effect.fnUntraced(function* (harness) {
         return ObservationRoute.make({
           routeId: yield* privateHash(`observation-unqualified-route/v1:${host.hostId}:${harness}`),
           hostId: host.hostId,

@@ -182,8 +182,9 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
   if (A.some(input.spans, (span) => span.namespaceId !== input.namespaceId))
     return yield* NativeExportError.make({ reason: "namespace" });
   const fallback = `${BigInt(input.acceptedAtMillis) * BigInt(1_000_000)}`;
-  const spans = yield* Effect.forEach(input.spans, (span) =>
-    Effect.gen(function* () {
+  const spans = yield* Effect.forEach(
+    input.spans,
+    Effect.fnUntraced(function* (span) {
       const point = O.getOrElse(
         O.orElse(span.startTimeUnixNano, () => span.endTimeUnixNano),
         () => fallback

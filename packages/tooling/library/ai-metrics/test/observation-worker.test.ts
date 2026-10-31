@@ -1,4 +1,3 @@
-import * as NodeHttp from "node:http";
 import { PhoenixConfigInput } from "@beep/phoenix";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import { EvidenceRetentionPolicy } from "@beep/repo-ai-metrics/evidence-retention";
@@ -41,6 +40,7 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpServer from "effect/http/HttpServer";
@@ -85,11 +85,13 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
       return original;
     },
   });
-  const backend = Context.get(
-    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })),
-    HttpServer.HttpServer
+  const backend = Context.get(yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest)), HttpServer.HttpServer);
+  // The factory-free test layer binds an ephemeral wildcard address; clients dial loopback.
+  const origin = pipe(
+    HttpServer.formatAddress(backend.address),
+    Str.replace("[::]", "[::1]"),
+    Str.replace("0.0.0.0", "127.0.0.1")
   );
-  const origin = HttpServer.formatAddress(backend.address);
   yield* backend.serve(
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
@@ -149,10 +151,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
     Effect.provideService(HttpClient.HttpClient, client),
     Effect.provideService(SqlClient.SqlClient, proxy)
   );
-  const intake = Context.get(
-    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })),
-    HttpServer.HttpServer
-  );
+  const intake = Context.get(yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest)), HttpServer.HttpServer);
   yield* intake.serve(worker.handler);
   const post = Effect.fn("ObservationWorkerTest.post")(function* (digit = "1", protobuf = false) {
     const body = yield* encodeJsonValue({
@@ -490,10 +489,7 @@ const maintenanceFixture = Effect.fn("ObservationWorkerTest.maintenanceFixture")
   const root = yield* fs.makeTempDirectoryScoped();
   yield* fs.chmod(root, 0o700);
   const maintenance = yield* makeObservationMaintenanceHttp(f.worker, f.config, root);
-  const server = Context.get(
-    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })),
-    HttpServer.HttpServer
-  );
+  const server = Context.get(yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest)), HttpServer.HttpServer);
   yield* server.serve(
     future === true
       ? maintenance.handler.pipe(Effect.provideService(Clock.Clock, yield* futureClock))

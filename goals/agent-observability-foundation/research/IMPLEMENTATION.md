@@ -22,7 +22,7 @@ Repair compares valid timestamps by instant while retaining their source represe
 
 Focused verification initially passed 3 tests (the two regression paths plus the existing Codex summary case). The real exporter test crosses 512-span boundaries with 1,200 synthetic records and equivalent UTC/offset timestamps. Assertions count all encoded start/end fields: 512, 512 and 176 per batch. Four additional cases cover nanosecond precision, malformed text, a missing value and a timezone-free value; only the first is labelled source event time.
 
-First complete `bun run beep quality package-verify @beep/repo-ai-metrics` exited 0: audit 34.2 seconds, docgen 8.1 seconds. The final repeat after strengthening and repairing edge cases also exited 0: audit 33.1 seconds, docgen 6.3 seconds. Source fingerprints are in `ops/implementation-verification.json`. A direct package check before dependency build failed with missing upstream declaration artifacts; the canonical verifier built dependencies and passed.
+First complete `bun run beep quality package-verify @beep/repo-ai-metrics` exited 0: audit 34.2 seconds, docgen 8.1 seconds. The final repeat after strengthening and repairing edge cases also exited 0: audit 33.1 seconds, docgen 6.3 seconds. Source fingerprints are in `ops/history/implementation-verification.json`. A direct package check before dependency build failed with missing upstream declaration artifacts; the canonical verifier built dependencies and passed.
 
 ## Discovery and attribution regressions
 
@@ -80,7 +80,7 @@ The full metrics package verifier passed the Git identity addition before the pr
 
 The result includes the typed inventory and content-addressed safe root receipts, so every asserted identity has inspectable evidence. All seven requested harnesses start with unknown transport, capability, heartbeat and launch/event populations. The route schema now admits unknown transport instead of forcing the producer to guess native OTLP. The metadata reader is shared with the existing bounded report path. The declaration contains private paths/host labels and must not be published; only the sanitized result is a candidate evidence artifact.
 
-Focused library tests passed 21 assertions across Git identity, root producer and inventory contracts. They use real temporary Git repositories and synthetic credentials, and exercise owning-clone/worktree distinctions, host separation, receipt digests, retirement without file access, permission denial, unsupported roots, privacy, invalid scope and byte/encoding limits. Full metrics-package verification passed (audit 36.3 seconds, docgen 9.3 seconds). All five CLI inventory tests passed; CLI type checks, lint and documentation generation (3,539 examples) passed. A real CLI invocation of the synthetic retired-root fixture produced one root receipt and seven unknown transport routes. Current fingerprints and the distinction from the outstanding full committed-source CLI gate are recorded in `ops/implementation-verification.json`. The recovery service and timer were again checked masked/inactive/dead during this work. No production root inventory or harness enrollment is claimed by these synthetic tests.
+Focused library tests passed 21 assertions across Git identity, root producer and inventory contracts. They use real temporary Git repositories and synthetic credentials, and exercise owning-clone/worktree distinctions, host separation, receipt digests, retirement without file access, permission denial, unsupported roots, privacy, invalid scope and byte/encoding limits. Full metrics-package verification passed (audit 36.3 seconds, docgen 9.3 seconds). All five CLI inventory tests passed; CLI type checks, lint and documentation generation (3,539 examples) passed. A real CLI invocation of the synthetic retired-root fixture produced one root receipt and seven unknown transport routes. Current fingerprints and the distinction from the outstanding full committed-source CLI gate are recorded in `ops/history/implementation-verification.json`. The recovery service and timer were again checked masked/inactive/dead during this work. No production root inventory or harness enrollment is claimed by these synthetic tests.
 
 ## Incremental metadata pages and atomic local intake
 
@@ -92,7 +92,7 @@ Ten source-reader fixtures cover UTF-8/CRLF/BOM byte offsets, partial tails and 
 
 `src/transcript-intake.ts` then adds a dedicated SQLite-backed local acceptance journal through the existing Effect SQL client. A page and its cursor compare-and-swap commit in one transaction. Exact page retries return the original receipt; stale cursors, namespace mismatch, queue capacity and storage refusal cannot advance progress. The journal stores metadata pages only, fixes host/namespace/limits as an immutable initialization profile, refuses foreign databases, and verifies its actual synchronization, journal mode, page size and database-page limit. This API does not mutate historical metrics stores, open source files, run a service, export spans or assert backend visibility.
 
-Six real temporary SQLite tests pass: page/cursor commit and exact replay; same-connection reinitialization; injected cursor-write failure rolling back both writes; logical queue exhaustion retaining the old cursor while allowing exact replay; stale-cursor refusal; verified storage settings and ownership/configuration refusal; and actual physical SQLite page-cap exhaustion rolling back a 4,096-frame page. The reinitialization case is deliberately not represented as process-restart evidence. Separate-process kill/restart and lost-ack proofs are the next required qualification. Full package verification with both components passed (audit 39.0 seconds, docgen 6.8 seconds); final verification after pinning the resolved source path passed again (audit 35.5 seconds, docgen 6.5 seconds). CLI source/script/test type checking also passed. Fingerprints are in `ops/implementation-verification.json`.
+Six real temporary SQLite tests pass: page/cursor commit and exact replay; same-connection reinitialization; injected cursor-write failure rolling back both writes; logical queue exhaustion retaining the old cursor while allowing exact replay; stale-cursor refusal; verified storage settings and ownership/configuration refusal; and actual physical SQLite page-cap exhaustion rolling back a 4,096-frame page. The reinitialization case is deliberately not represented as process-restart evidence. Separate-process kill/restart and lost-ack proofs are the next required qualification. Full package verification with both components passed (audit 39.0 seconds, docgen 6.8 seconds); final verification after pinning the resolved source path passed again (audit 35.5 seconds, docgen 6.5 seconds). CLI source/script/test type checking also passed. Fingerprints are in `ops/history/implementation-verification.json`.
 
 The reader and local journal are building blocks for the replacement worker; they are not wired into the held forwarder or a native HTTP receiver. The following proof extends local crash and scheduling behavior. Launch/source attribution, receipt-derived delivery state, reclamation and live route evidence remain open. Existing services and historical archives are unchanged.
 
@@ -126,7 +126,7 @@ Full/partial OTLP 200 responses are generated only after the native journal tran
 
 Six socket integration tests prove JSON/protobuf responses, gzip, partial rejection, exact retry at capacity, compressed expansion and streaming byte refusal, content-type/method/route handling, receipt-write rollback, immediate concurrent refusal, unfinished-upload expiry and permit recovery. These run through the repository's Vitest Bun compatibility surface. Three additional tests launch actual separate Bun workers on ephemeral `127.0.0.1` listeners: (1) kill after page/event INSERT but before receipt/COMMIT; (2) kill after commit but before the HTTP response is sent; (3) actual-runtime gzip, empty protobuf, compressed expansion refusal, malformed protobuf, concurrent refusal and unfinished-upload timeout. Fresh processes inspect SQLite integrity and counts. Precommit death leaves no accepted page/event/receipt; postcommit lost acknowledgment preserves them; network retry returns one unchanged durable page and receipt. Test children are scoped with forced-kill cleanup, and no fixture process remains.
 
-All nine transport/process tests pass. Final full metrics-package verification after retry-integrity hardening passed (audit 37.1 seconds, docgen 7.0 seconds); the preceding HTTP gate also passed (38.8/6.4 seconds). Source fingerprints and exact proof boundaries are recorded in `ops/implementation-verification.json`. The additional `@effect/platform-bun` dependency is test-only; the production module remains an injected HTTP/SQL library. Tests use synthetic requests and disposable journals exclusively.
+All nine transport/process tests pass. Final full metrics-package verification after retry-integrity hardening passed (audit 37.1 seconds, docgen 7.0 seconds); the preceding HTTP gate also passed (38.8/6.4 seconds). Source fingerprints and exact proof boundaries are recorded in `ops/history/implementation-verification.json`. The additional `@effect/platform-bun` dependency is test-only; the production module remains an injected HTTP/SQL library. Tests use synthetic requests and disposable journals exclusively.
 
 This proves bounded application-level trace-body admission and process-crash recovery on the tested filesystem. It does not prove power-loss durability, bounded listener connection/header allocation, hard worker CPU/RSS/deadlines, provider batching compatibility, metrics/log adapters, downstream delivery/visibility, or real harness enrollment. Deployment must compose the qualified handler with private authenticated routing and hard server/process bounds before canary use. SDK memory before intake remains an explicit loss window. No production listener was installed, no historical archive was read or migrated, and the original forwarder service/timer remain masked/inactive/dead.
 
@@ -142,7 +142,7 @@ The snapshot reader derives exactly one state for each enrolled event: pending, 
 
 Eight SQLite tests prove native/transcript reconciliation, exclusive state precedence, partial/unknown replies, restart, duplicate/conflicting facts, bounded populations, rollback at enrollment/attempt/result writes, integrity refusal and target/configuration drift. Three reply-decoder tests cover full/partial responses in both encodings, warning-only responses, invalid bodies/counts and status classification. Two additional tests kill actual Bun processes before a result write and after its commit, reopen independently, verify SQLite integrity and prove unchanged replay counts. Before-result death leaves the durable attempt unresolved; after-result death preserves accepted-unverified. These process fixtures deliberately perform no network send and do not establish delivery to Phoenix.
 
-All thirteen new tests pass in the full metrics-package verification (audit 53.8 seconds, docgen 8.3 seconds). The original native HTTP and transcript crash tests also remain in that package gate. Source fingerprints are recorded in `ops/implementation-verification.json`. Owned fixture processes have exited. The historical forwarder service and timer were rechecked masked/inactive/dead; no service or historical archive was mutated.
+All thirteen new tests pass in the full metrics-package verification (audit 53.8 seconds, docgen 8.3 seconds). The original native HTTP and transcript crash tests also remain in that package gate. Source fingerprints are recorded in `ops/history/implementation-verification.json`. Owned fixture processes have exited. The historical forwarder service and timer were rechecked masked/inactive/dead; no service or historical archive was mutated.
 
 Next integration must build the actual metadata-only outgoing projection, commit an attempt before sending, stream/decode its bounded reply, persist outcomes after interruption, and query expected backend identities rather than treating a callback or HTTP status as proof. Bounded reclamation still needs an explicit retention/disposition policy and failure/replay tests; no deletion policy is implied by this checkpoint. Resource-limited worker/listener composition, metrics/log adapters, Phoenix token reconciliation, real route qualification and repository delivery remain open.
 
@@ -180,7 +180,7 @@ A fresh exact-image Phoenix exposed eventual consistency: immediately after inta
 
 The corrected disposable proof sent complete Claude, complete OpenInference and incomplete Claude cases through the actual sender and reconciler. All three transitioned from accepted-unverified to visible only after expected metadata matched. The independent REST verification still reconciles usage and exact timestamp metadata. A separate read-only SQLite reopen verified three attempts, three results, three visibility facts, their payload digests and `integrity_check=ok`. `ops/phoenix-native-readback-verification.json` records the current proof; its browser observations are explicitly labelled as the preceding sender/UI checkpoint, not a repeated UI inspection.
 
-Full package verification passes for the Phoenix driver and metrics library; current source fingerprints and timings are in `ops/implementation-verification.json`. The temporary Phoenix container is removed after evidence capture. The hold and historical archives remain untouched. Native backend verification is implemented and qualified as an opt-in library route; host deployment, queue scheduling, bounded reclamation, hard worker limits and actual CLI/desktop qualification remain open.
+Full package verification passes for the Phoenix driver and metrics library; current source fingerprints and timings are in `ops/history/implementation-verification.json`. The temporary Phoenix container is removed after evidence capture. The hold and historical archives remain untouched. Native backend verification is implemented and qualified as an opt-in library route; host deployment, queue scheduling, bounded reclamation, hard worker limits and actual CLI/desktop qualification remain open.
 
 ## Remaining acceptance
 
@@ -201,7 +201,7 @@ No source publication, production rollout, recovery-hold release, fleet-coverage
 
 Implemented a bounded, separately configured verified-page reclaimer in the existing ai-metrics package. Payload deletion and checksummed disposition are atomic, while original acceptance, source progress, canonical identity and delivery facts survive. All accepted native occurrences, including duplicates referring to other pages, must resolve to verified event state. Pending or uncertain delivery is never promoted to success by reclamation. Replay and a new send are deliberately separate: the old receipt/attempt can be read idempotently, while a new send reservation for a reclaimed canonical page is refused.
 
-Seven focused SQLite scenarios and two real Bun process-kill scenarios qualify this path. Full touched-package verification passed: audit 75.6 seconds and docgen 13.2 seconds. The receipt and 59 source fingerprints are recorded in `ops/implementation-verification.json`. This checkpoint does not implement uncertain expiry, compact-ledger epoch transition, production worker resource bounds, enrollment, or the remaining full SPEC gates. The recovery hold remains in force.
+Seven focused SQLite scenarios and two real Bun process-kill scenarios qualify this path. Full touched-package verification passed: audit 75.6 seconds and docgen 13.2 seconds. The receipt and 59 source fingerprints are recorded in `ops/history/implementation-verification.json`. This checkpoint does not implement uncertain expiry, compact-ledger epoch transition, production worker resource bounds, enrollment, or the remaining full SPEC gates. The recovery hold remains in force.
 
 ## Explicit uncertain payload expiry checkpoint (2026-10-28)
 
@@ -217,7 +217,7 @@ Implemented explicit local evidence epochs, atomic retirement of a fully dispose
 
 Retirement scans fixed groups of 32 records under a configured population cap and deadline. It preserves pending/accepted-unverified/visible/rejected/unresolved counts as window observations, not lifetime unique-event totals. A failed checkpoint write, deadline interruption or process death before commit restores detailed facts. A committed retirement reopens at the new epoch with the uncertainty summary preserved. Exact replay of the latest seal is idempotent; stale/conflicting requests fail.
 
-Synthetic qualification adds eight retention scenarios, two real Bun process-kill scenarios, actual OTLP epoch-field decoding and an earlier-owned-table reopen/migration test. The migration test uses a fresh connection after constructing the older table; the fixture's DROP COLUMN operation had created a temporary schema that the ownership check correctly refused on the original connection. Production recovery data is untouched. The final package gate passed (audit 41.1 seconds, docgen 8.1 seconds); `ops/implementation-verification.json` records the evidence and 64 matching source fingerprints.
+Synthetic qualification adds eight retention scenarios, two real Bun process-kill scenarios, actual OTLP epoch-field decoding and an earlier-owned-table reopen/migration test. The migration test uses a fresh connection after constructing the older table; the fixture's DROP COLUMN operation had created a temporary schema that the ownership check correctly refused on the original connection. Production recovery data is untouched. The final package gate passed (audit 41.1 seconds, docgen 8.1 seconds); `ops/history/implementation-verification.json` records the evidence and 64 matching source fingerprints.
 
 Before production retirement, qualify a bounded pre-retirement snapshot and guarded restoration. A restore must not discard observations admitted after the snapshot; admission pause/drain/resume and hard worker resource controls remain required. Production retention settings have not been selected. Then finish health/queue/deployment parity, CLI/desktop qualification, live canary/rollback, and repository delivery against the complete SPEC. This is implementation progress, not rollout or goal completion.
 
@@ -227,7 +227,7 @@ Implemented a one-generation logical recovery copy for the nine compact-evidence
 
 Focused proof expanded from 8 to 16 SQLite scenarios and from 2 to 4 actual Bun SIGKILL scenarios (20 total). Added successful reopen/restore with original receipts, dispositions, outcomes, attempt membership and reservation sequences; bounded 33-source paging; refusal after later admission even with its rows removed; damaged-final-row rollback; row and byte exhaustion; preservation of the preceding recovery generation after a failed replacement; deadline interruption after partial restore; injected SQLite allocation exhaustion retaining all original evidence and integrity; and independent process death before/after restore commit with safe retry. Existing retirement-before/after-commit kill cases remain covered.
 
-The recovery hold was rechecked: forwarder service and timer remain masked/inactive/dead. No production route, historical journal or archive was modified. This milestone proves local logical rollback only. Independent database/disaster backup, paused/drained worker composition and hard CPU/RSS/disk/connection ceilings, CLI/desktop route proof, dankserver rollout and bounded live canary remain required. Full acceptance and repository delivery are still open. See `ops/implementation-verification.json` for final package verification and source fingerprints.
+The recovery hold was rechecked: forwarder service and timer remain masked/inactive/dead. No production route, historical journal or archive was modified. This milestone proves local logical rollback only. Independent database/disaster backup, paused/drained worker composition and hard CPU/RSS/disk/connection ceilings, CLI/desktop route proof, dankserver rollout and bounded live canary remain required. Full acceptance and repository delivery are still open. See `ops/history/implementation-verification.json` for final package verification and source fingerprints.
 
 ## Paused worker composition and maintenance coordination (2026-10-28)
 
@@ -235,7 +235,7 @@ Added schema-first control policy/state/errors and a scoped controller with nonq
 
 Five controller scenarios and three real local socket scenarios qualify the new boundary. Socket cases pause during an actual SQLite admission and an actual outbound HTTP exchange, verify retryable JSON/protobuf refusal without receipts, and complete the expiry/retirement/restore flow while retaining accepted-unverified uncertainty. Existing native HTTP/socket/Bun crash tests also pass after adding the shared control hook. The synthetic backend initially used a mismatched response encoding, which correctly remained unknown; correcting the fixture restored the intended accepted-unverified assertion. No decoder exception was added.
 
-This milestone is library composition, not a deployed daemon. It does not yet prove cross-process journal ownership, hard worker resources, listener limits, scheduling, independent physical backup or live source routes. The final package gate and current source fingerprints are recorded in `ops/implementation-verification.json`. The recovery hold and full remaining SPEC/delivery scope remain active.
+This milestone is library composition, not a deployed daemon. It does not yet prove cross-process journal ownership, hard worker resources, listener limits, scheduling, independent physical backup or live source routes. The final package gate and current source fingerprints are recorded in `ops/history/implementation-verification.json`. The recovery hold and full remaining SPEC/delivery scope remain active.
 
 ## Actual worker resource, ownership and restart proof (2026-10-28)
 
@@ -243,7 +243,7 @@ The actual composed Effect/Bun worker now has a reproducible synthetic process p
 
 The direct Bun idle-timeout and custom relay experiments failed actual sockets; the custom relay was removed. Normal signal-driven Effect shutdown exits 130, so the owned worker unit explicitly recognizes that exit code; the deliberately killed unit remains an OOM failure. All owned test processes are stopped. The forwarder service and timer remain masked/inactive/dead; no production source or historical archive was opened or modified for this proof.
 
-Full ai-metrics package verification passed (audit 53.9 seconds; docgen 10.6 seconds). The evidence and 72 source/artifact fingerprints are in `ops/implementation-verification.json` and `ops/worker-resource-verification.json`. [Worker resource notes](WORKER-RESOURCES.md) record limits, failed experiments, the acknowledgment boundary and reproduction dependencies. This qualifies the tested process arrangement only: aggregate storage quota, independent physical backup/restore, production launcher/scheduling, self-metrics, CLI/desktop/live-canary qualification, dankserver deployment and repository delivery remain open. Continue with independent bounded backup/recovery and runtime integration, preserving the recovery hold.
+Full ai-metrics package verification passed (audit 53.9 seconds; docgen 10.6 seconds). The evidence and 72 source/artifact fingerprints are in `ops/history/implementation-verification.json` and `ops/worker-resource-verification.json`. [Worker resource notes](WORKER-RESOURCES.md) record limits, failed experiments, the acknowledgment boundary and reproduction dependencies. This qualifies the tested process arrangement only: aggregate storage quota, independent physical backup/restore, production launcher/scheduling, self-metrics, CLI/desktop/live-canary qualification, dankserver deployment and repository delivery remain open. Continue with independent bounded backup/recovery and runtime integration, preserving the recovery hold.
 
 ## Independent physical backup and reboot continuation (2026-10-28)
 
@@ -414,7 +414,7 @@ restart, source-cursor persistence, private-canary absence and full owned-worker
 cleanup. The final ai-metrics gate passes: audit 121.6s, docgen 13.0s, with 5.5 GiB
 peak memory and zero additional swap in the bounded verification unit. Actual
 metrics pass promtool 3.15.1; the CLI source typecheck also passes. See research/RECONSTRUCTED-DELIVERY.md and
-ops/reconstructed-delivery-verification.json for exact scope and remaining gates.
+ops/history/reconstructed-delivery-verification.json for exact scope and remaining gates.
 
 The collector guard is still native-only. Actual reconstructed collector/Phoenix
 qualification is next, followed by the remaining identity/coverage, lag/alerts,
@@ -459,7 +459,7 @@ observations for three expected native IDs independently calculated from its fix
 request contract. The actual CLI report matches all three while retaining unknown
 launch counts and partial-query flags. This is a historical synthetic report, not
 actual agent-launch proof or live collection. See research/COVERAGE-RECONCILIATION.md
-and ops/coverage-reconciliation-verification.json for final verification status.
+and ops/history/coverage-reconciliation-verification.json for final verification status.
 
 The refreshed managed-driver source uses an explicit environment allowlist and
 verified session identity. Ambient OTEL inheritance cannot enroll it. Integrating
@@ -476,7 +476,7 @@ snapshot fixture separately reproduced incorrect restoration success. The checks
 now read the canonical allowed count plus one sentinel, and snapshot inspection
 applies the same boundary before publishing a restore marker. All 26 focused
 worker/intake/backup/crash tests pass. Final package status and fingerprints are
-recorded in ops/journal-ownership-verification.json; details are in
+recorded in ops/history/journal-ownership-verification.json; details are in
 research/JOURNAL-OWNERSHIP-BOUNDARY.md. No launch schema/table was added yet; its
 lifecycle, retention and identity integration remain the next implementation work.
 
@@ -500,7 +500,7 @@ The first focused run exposed shared SQL state across independent tests. Each
 case now gets a fresh layer; all 38 focused tests in four files pass (487.8 MiB
 peak, zero swap), and the package test typecheck passes (1.9 GiB peak, zero swap).
 The full package verification is recorded separately in
-ops/launch-facts-verification.json once terminal.
+ops/history/launch-facts-verification.json once terminal.
 
 No real harness has been connected to this writer. Producer verification, actual
 managed-launch/session joins, coverage query adapters, transport integration, and
@@ -515,7 +515,7 @@ owned journal process. It has explicit route enrollment, host/namespace/epoch
 binding, byte and deadline bounds, shared pause/admission, and receipts only after
 commit. The actual worker process exercised two synthetic CLI/desktop-marked
 lifecycles and exact replay after restart. See research/PRIVATE-LAUNCH-TRANSPORT.md
-and ops/launch-http-verification.json for tests and exact limitations. Actual
+and ops/history/launch-http-verification.json for tests and exact limitations. Actual
 managed driver integration and all production acceptance remain open.
 
 
@@ -526,7 +526,7 @@ receipt, reads paused destination context, and preserves ambiguity without autom
 resend or epoch replacement. The separate-process actual-worker proof submits eight
 synthetic lifecycle records and recovers identical receipts after a controlled
 restart. All 24 focused tests and the full package audit/docgen pass. Details and
-fingerprints are in ops/launch-client-verification.json. Actual managed producers,
+fingerprints are in ops/history/launch-client-verification.json. Actual managed producers,
 coverage joins and live deployment remain open; the recovery hold is intact.
 
 
@@ -537,7 +537,7 @@ explicit optional port, with bounded callbacks and cleanup before failed open
 returns. The driver suite passes 55 tests. The real worker proof now includes an
 actual synthetic Codex peer, hashed source-session agreement with native OTLP,
 12 exact receipts across restart and full owned-process cleanup. See
-research/MANAGED-LAUNCH-EVIDENCE.md and ops/managed-observer-verification.json.
+research/MANAGED-LAUNCH-EVIDENCE.md and ops/history/managed-observer-verification.json.
 Durable attempt claims, production producer reconciliation and live enrollment
 remain required; successful observation callbacks alone cannot prevent a caller
 from mistakenly launching a second process after a crash.
@@ -559,7 +559,7 @@ The claim owner now persists immutable lifecycle observations before transport a
 reconciles exact acknowledgments without process-launch authority. A killed producer
 retains Started metadata. The actual worker proof loses the final acknowledgment,
 then a new producer recovers it after restart without launching the child again.
-See research/LAUNCH-OUTBOX-RECOVERY.md and ops/launch-outbox-verification.json for
+See research/LAUNCH-OUTBOX-RECOVERY.md and ops/history/launch-outbox-verification.json for
 source-bound evidence. Real controller enrollment, conservative outcome closure,
 independent coverage populations and production/delivery gates remain open.
 
@@ -581,7 +581,7 @@ its actual synthetic child, and a fresh recovery-command process delivers the
 original four facts after collector restart without relaunch. The shared proof
 retains sixteen facts and stops all ten owned services. Each periodic flush now
 releases its HTTP client scope immediately. See MANAGED-OWNER-ENROLLMENT.md and
-ops/managed-owner-recovery-verification.json; broader CLI, real harness/canary,
+ops/history/managed-owner-recovery-verification.json; broader CLI, real harness/canary,
 production, independent population and repository-delivery gates remain open.
 
 
@@ -603,7 +603,7 @@ from the independent store, separating intentions, starts and acknowledgments.
 Two bounded agreeing scans reject concurrent disagreement and duplicate claim IDs;
 unknown starts, event populations and backend visibility remain explicit. Actual
 human/JSON command proof covers paused intake and recovery. See
-CLAIM-POPULATION-PUBLICATION.md and ops/claim-population-verification.json.
+CLAIM-POPULATION-PUBLICATION.md and ops/history/claim-population-verification.json.
 Operational claim-store recovery, broad CLI and live rollout/delivery remain open.
 
 

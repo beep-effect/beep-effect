@@ -26,7 +26,7 @@ observation helper. A compilable example was added without changing its implemen
 The full AI-metrics package audit passed in 148.1 seconds and documentation examples
 passed in 13.6 seconds. The complete bounded verification job exited zero, with no
 protective stop, PID-limit event or orphan. Its durable archive and exact commands
-are recorded in `../ops/pr2364-repair-verification-20261031.json`.
+are recorded in `../ops/history/pr2364-repair-verification-20261031.json`.
 
 Independent Astra accepted the narrow repair against the integration commit:
 the initial nine source edits are documentation only, both fixture configurations have
@@ -93,3 +93,76 @@ CI Node 22.23.4 (61.4 seconds) and Bun 1.4.4 (57.2 seconds), with no protective
 stop or PID-limit event. Astra accepted the final assertion/schema changes.
 Broader current-head hosted gates and runtime-canary requalification remain
 separate; the held services and archives were not restored or modified.
+
+## October 31 continuation: hosted failures and archival provenance
+
+The hosted run at `1d19d4c51896e4545311659414f7c7aa0ee0620e` passed the
+AI-metrics unit shard, build, integration, docgen and doctest. Its remaining
+code failures were the CLI deployment-plan console fixture, four native HTTP
+factory imports rejected by Effect diagnostics, and lint-policy findings.
+Coverage comparison did not run: its prerequisite unit aggregate failed. No
+coverage floor was lowered and no regression baseline was refreshed to hide it.
+
+The socket repair uses the public Node test-server layer for TCP fixtures and
+Bun's public adapter for Unix sockets. The test layer binds an ephemeral
+wildcard address; fixture backend clients explicitly dial loopback. This is a
+test-listener scope change, not a production listener change. The existing Node
+Bun compatibility shim now honors Unix paths without reserving a TCP port and
+provides the missing `ReadableStreamDefaultReader.readMany` API. The compatibility
+method wraps one original read in one batch, preserving cancellation, rejection,
+locking and terminal completion. Native Bun's implementation remains in place.
+No Effect diagnostic directive, exemption or severity changed.
+
+Node 22.23.4 passed all 34 tests across the five affected socket/crash modules,
+plus five shim tests. The shim regression consumes `request.stream`, rather than
+only `request.text`, and covers reload, shutdown, rebinding and occupied-path
+refusal. Network streaming deadlines remain covered by the real Node server
+suites; the Bun shim still buffers request bodies. Independent source review
+accepted the compatibility method and those proof boundaries.
+
+The deployment-plan test now installs its own console service around command
+execution and captured output. Twenty-two callback wrappers now use
+`Effect.fnUntraced` with unchanged arguments and bodies; source review retained
+transaction, interruption, permit and cleanup boundaries. Scheduler pass-local
+membership uses `MutableHashSet` with unchanged check/add ordering.
+
+The reference gate identified 90 immutable execution receipts stored in the live
+`ops` surface. They moved to `ops/history` byte-for-byte; the relocation index
+records original paths and SHA-256 values. Historical internal source locations
+retain their original meaning. Navigation links point to retained locations.
+The captured operator request is likewise retained verbatim in the exploration's
+research directory. The reference classifier and its zero-debt gate are unchanged.
+
+Three moved receipts require exact historical path aliases for full-tree Gitleaks
+scans. PR2393 preserves the old paths and exact source-key/digest constraints
+while admitting only their three new destinations. An additional two-commit
+experiment using the actual Git-history scanner confirmed that byte-identical
+R100 renames pass the existing base policy with zero findings, so this policy
+qualification need not hold the current repair push.
+Positive and negative scanner cases passed: base policy flags the three new
+paths, candidate policy accepts both locations, changed digests and unrelated
+paths still fail. The base-pinned CI policy remains authoritative.
+
+Current-source package/policy checks, canonical generated inventories, hosted
+checks, final-check and closeout remain required. Guard-stopped scans and denied
+admission are incomplete attempts. The historical canary source bindings remain
+historical after these runtime wrapper edits. The recovery hold remains intact.
+
+
+The canonical JSDoc inventory is regenerated through a source-reviewed bounded
+orchestration: 182 freshly analyzed package rows plus exactly one retained UI row.
+All 233 UI tracked files are byte-identical to the prior full canonical result;
+independent review accepted equivalence of the only shared RegExp escaping delta.
+The complete original UI row is retained unchanged. Current root policy, topology,
+totals and rendering use the canonical functions. Full input/index/helper/context
+hashes and per-record bindings were verified before output publication. The normal
+single-process command remains incomplete; its stopped attempts are retained.
+This orchestration does not replace hosted freshness or quality gates.
+
+After all 22 callback rewrites, package types passed for AI-metrics, CLI, Phoenix
+and the provider driver, and 11 focused CLI/deployment/managed-session tests passed
+under Node22.23.4. The earlier 34 socket/crash tests precede the last callback-only
+rewrites and are not presented as final current-source complete package proof.
+The schema inventory refresh was stopped at the retained host reserve; its canonical
+refresh and hosted policy check remain open while the coherent source repair wave
+is published under the constrained-compute route.

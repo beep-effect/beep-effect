@@ -88,8 +88,9 @@ export const encodeTranscriptTraceBatch = Effect.fn("AiMetrics.encodeTranscriptT
     `reconstructed-source/v1:${input.hostId}:${input.namespaceId}:${input.cursor.source}:${input.cursor.pathHash}`
   ).pipe(Effect.mapError(() => TranscriptExportError.make({ reason: "digest" })));
   const fallback = `${BigInt(input.acceptedAtMillis) * BigInt(1000000)}`;
-  const spans = yield* Effect.forEach(input.frames, (frame) =>
-    Effect.gen(function* () {
+  const spans = yield* Effect.forEach(
+    input.frames,
+    Effect.fnUntraced(function* (frame) {
       const trace = Str.slice(
         0,
         32

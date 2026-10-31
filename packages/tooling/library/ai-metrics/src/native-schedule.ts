@@ -8,6 +8,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -499,15 +500,15 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
         let outcomes: ReadonlyArray<typeof NativeScheduleOutcome.Type> = [];
         let ages: ReadonlyArray<typeof AgeSample.Type> = [];
         let wrapped = false;
-        const visited = new Set<string>();
+        const visited = MutableHashSet.empty<string>();
         for (let index = 0; index < policy.maxEvents; index++) {
           // Claim only the next event before I/O. Reserving a whole batch here
           // would repeatedly skip its tail when the first event times out.
           const selected = yield* select;
           wrapped = wrapped || selected.wrapped;
           const candidate = selected.candidates[0];
-          if (candidate === undefined || visited.has(candidate.eventId)) break;
-          visited.add(candidate.eventId);
+          if (candidate === undefined || MutableHashSet.has(visited, candidate.eventId)) break;
+          MutableHashSet.add(visited, candidate.eventId);
           const outcome = yield* visit(candidate, (sample) => {
             ages = A.append(ages, sample);
           }).pipe(

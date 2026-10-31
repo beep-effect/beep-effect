@@ -15,7 +15,7 @@ zero with no protective stop, task-limit event or orphan. Repo Sanity separately
 found that adding protobufjs to the catalog made its pre-existing literal override
 inconsistent. Changing that override to `catalog:` leaves protobufjs 7.6.6 and its
 lockfile integrity untouched; syncpack lint now passes. The entire lockfile delta
-is that override reference. Evidence: `../ops/hosted-build-repair-verification.json`.
+is that override reference. Evidence: `../ops/history/hosted-build-repair-verification.json`.
 
 The prior v2 root and route evidence remain unchanged and qualify their original
 source bytes. The preparation tool created an explicitly new v3 synthetic root for

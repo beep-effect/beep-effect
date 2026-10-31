@@ -13,6 +13,7 @@ import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -101,7 +102,7 @@ it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observatio
         },
       });
       expect(yield* fs.readDirectory(root)).toEqual(["request.json"]);
-    })
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("sizes the worker file ceiling from the declared non-minimal journal budget", () =>

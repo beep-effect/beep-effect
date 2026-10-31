@@ -57,7 +57,7 @@ are unchanged. Existing historical stores and the masked forwarder are untouched
 
 ## Proof and remaining work
 
-`ops/reconstructed-delivery-verification.json` records focused and package results
+`ops/history/reconstructed-delivery-verification.json` records focused and package results
 and the actual paused-entrypoint proof. That process proof uses only synthetic
 files and a bounded loopback receiver: one native and one reconstructed POST,
 distinct event identities, controlled restart, no resend despite missing backend

@@ -1,4 +1,3 @@
-import * as NodeHttp from "node:http";
 import * as Zlib from "node:zlib";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import { makeNativeHttpIntake, NativeHttpPolicy, renderNativeHttpMetrics } from "@beep/repo-ai-metrics/native-http";
@@ -50,9 +49,7 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
       bodyTimeoutMillis,
     })
   );
-  const context = yield* Layer.build(
-    NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })
-  );
+  const context = yield* Layer.build(Layer.fresh(NodeHttpServer.layerTest));
   const server = Context.get(context, HttpServer.HttpServer);
   const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
   yield* server.serve(intake.handler);

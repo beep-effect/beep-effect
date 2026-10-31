@@ -55,8 +55,8 @@ facts (eight earlier marked-fixture facts plus four actual-child facts). Native
 telemetry retains the matching source-session hash. All owned units are stopped.
 
 Exact source fingerprints and verification results are recorded in
-`ops/launch-claims-verification.json` and
-`ops/launch-claims-entrypoint-verification.json`.
+`ops/history/launch-claims-verification.json` and
+`ops/history/launch-claims-entrypoint-verification.json`.
 
 ## Lifecycle outbox follow-through
 

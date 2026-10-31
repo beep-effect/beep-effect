@@ -34,7 +34,7 @@ Recovery hold and full-goal delivery requirements remain open.
 ## Publication secret-scan adjudication
 
 The staged scanner found one generic-api-key match in
-`ops/delivery-policy-verification.json:136`. Both orchestrator and independent
+`ops/history/delivery-policy-verification.json:136`. Both orchestrator and independent
 Astra reviewer recomputed the working-tree and staged `CredentialBank.test.ts`
 SHA-256 and matched the recorded 64-hex digest exactly. The reviewer approved
 only the exact path/rule/line fingerprint in `.gitleaksignore`, with provenance

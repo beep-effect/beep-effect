@@ -165,28 +165,27 @@ const inspectSnapshot = Effect.fn("ObservationBackup.inspectSnapshot")(function*
 ) {
   yield* Effect.acquireUseRelease(
     connection.executeUnprepared("ATTACH DATABASE ? AS observation_snapshot", [file], undefined),
-    () =>
-      Effect.gen(function* () {
-        yield* verifyJournalTables(
-          connection,
-          "SELECT name FROM observation_snapshot.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' LIMIT ?",
-          "integrity"
-        );
-        yield* connection
-          .executeUnprepared("PRAGMA observation_snapshot.integrity_check(1)", [], undefined)
-          .pipe(Effect.flatMap(decodeArguments));
-        const rows = yield* connection
-          .executeUnprepared(
-            "SELECT substr(payload,1,4097) AS payload FROM observation_snapshot.observation_intake_config WHERE singleton=1",
-            [],
-            undefined
-          )
-          .pipe(Effect.flatMap(decodeArguments2));
-        const config = yield* decodeTranscriptIntakeConfigJson(rows[0].payload);
-        if (config.hostId !== hostId || config.namespaceId !== namespaceId) return yield* failure("integrity");
-        if ((yield* digest(new TextEncoder().encode(rows[0].payload))) !== configDigest)
-          return yield* failure("integrity");
-      }),
+    Effect.fnUntraced(function* () {
+      yield* verifyJournalTables(
+        connection,
+        "SELECT name FROM observation_snapshot.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*' LIMIT ?",
+        "integrity"
+      );
+      yield* connection
+        .executeUnprepared("PRAGMA observation_snapshot.integrity_check(1)", [], undefined)
+        .pipe(Effect.flatMap(decodeArguments));
+      const rows = yield* connection
+        .executeUnprepared(
+          "SELECT substr(payload,1,4097) AS payload FROM observation_snapshot.observation_intake_config WHERE singleton=1",
+          [],
+          undefined
+        )
+        .pipe(Effect.flatMap(decodeArguments2));
+      const config = yield* decodeTranscriptIntakeConfigJson(rows[0].payload);
+      if (config.hostId !== hostId || config.namespaceId !== namespaceId) return yield* failure("integrity");
+      if ((yield* digest(new TextEncoder().encode(rows[0].payload))) !== configDigest)
+        return yield* failure("integrity");
+    }),
     () => connection.executeUnprepared("DETACH DATABASE observation_snapshot", [], undefined).pipe(Effect.orDie)
   );
 });

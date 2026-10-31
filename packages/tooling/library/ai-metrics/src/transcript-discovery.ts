@@ -242,8 +242,9 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
     )
   )
     return yield* failure("configuration");
-  const roots: ReadonlyArray<RootRuntime> = yield* Effect.forEach(input.roots, (root) =>
-    Effect.gen(function* () {
+  const roots: ReadonlyArray<RootRuntime> = yield* Effect.forEach(
+    input.roots,
+    Effect.fnUntraced(function* (root) {
       const resolved = path.resolve(root.path);
       if (!root.retired) {
         const canonical = yield* fs.realPath(resolved).pipe(Effect.option);
@@ -278,8 +279,8 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
   );
   let cursor = 0;
   let closed = false;
-  yield* Effect.addFinalizer(() =>
-    Effect.gen(function* () {
+  yield* Effect.addFinalizer(
+    Effect.fnUntraced(function* () {
       closed = true;
       yield* Effect.forEach(roots, closeRoot, { discard: true }).pipe(Effect.orDie);
     })
