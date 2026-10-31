@@ -4,7 +4,7 @@
 
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownFence } from "@beep/markdown/MarkdownFence";
-import { Code } from "@beep/markdown/MarkdownNode";
+import { Code, Root } from "@beep/markdown/MarkdownNode";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import type { CodeFence } from "@beep/markdown/MarkdownFence";
 
 const fences = (source: string): ReadonlyArray<CodeFence> =>
@@ -117,6 +118,26 @@ describe("MarkdownFence.fences", () => {
   it.effect("does not open a fence on a backtick run inside prose or a code span", () =>
     Effect.sync(() => {
       assert.deepStrictEqual(fences(`Write \`${tick3}ts\` to open one.\n`), []);
+    })
+  );
+
+  it.effect("reads a constructed fence that records no marker length as a three-marker run", () =>
+    Effect.sync(() => {
+      const source = `${tick3}ts\na\n${tick3}\n`;
+      const parsed = Result.getOrThrow(MarkdownDocument.parseResult(source));
+      const code = A.getUnsafe(parsed.root.children, 0);
+      assertTrue(S.is(Code)(code));
+      const document = MarkdownDocument.make({
+        source,
+        root: Root.make({ ...parsed.root, children: [Code.make(Struct.omit(code, ["fenceLength"]))] }),
+        diagnostics: [],
+        definitions: parsed.definitions,
+        definitionOrder: parsed.definitionOrder,
+      });
+      const fence = A.getUnsafe(MarkdownFence.fences(document), 0);
+      assert.strictEqual(fence.fenceLength, 3);
+      assert.strictEqual(fence.infoString, "ts");
+      assert.strictEqual(fence.body, "a\n");
     })
   );
 });

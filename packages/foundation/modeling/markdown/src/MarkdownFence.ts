@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FenceChar } from "./MarkdownNode.ts";
 import type { MarkdownDocument } from "./MarkdownDocument.ts";
-import type { Code } from "./MarkdownNode.ts";
+import type { Code, MarkdownNode } from "./MarkdownNode.ts";
 
 const $I = $MarkdownId.create("MarkdownFence");
 
@@ -102,7 +102,11 @@ const lastLineStart = (source: string, from: number, to: number): number => {
   return from;
 };
 
-const toFence = (source: string, node: Code): CodeFence => {
+type FencedCode = Code & { readonly fenceChar: FenceChar };
+
+const isFencedCode = (node: MarkdownNode): node is FencedCode => node.type === "code" && node.fenceChar !== undefined;
+
+const toFence = (source: string, node: FencedCode): CodeFence => {
   const fenceStart = node.position.start.offset;
   const fenceEnd = node.position.end.offset;
   const fenceLength = node.fenceLength ?? 3;
@@ -113,7 +117,7 @@ const toFence = (source: string, node: Code): CodeFence => {
   const bodyStart = Math.min(infoEnd === fenceEnd ? fenceEnd : afterBreak, fenceEnd);
   const bodyEnd = unterminated ? fenceEnd : Math.max(bodyStart, lastLineStart(source, bodyStart, fenceEnd));
   return CodeFence.make({
-    fenceChar: node.fenceChar ?? "`",
+    fenceChar: node.fenceChar,
     fenceLength,
     infoString: Str.slice(infoStart, infoEnd)(source),
     body: Str.slice(bodyStart, bodyEnd)(source),
@@ -177,8 +181,5 @@ export abstract class MarkdownFence {
    * @since 0.0.0
    */
   static readonly fences = (document: MarkdownDocument): ReadonlyArray<CodeFence> =>
-    A.map(
-      document.findAll((node): node is Code => node.type === "code" && node.fenceChar !== undefined),
-      (node) => toFence(document.source, node)
-    );
+    A.map(document.findAll(isFencedCode), (node) => toFence(document.source, node));
 }
