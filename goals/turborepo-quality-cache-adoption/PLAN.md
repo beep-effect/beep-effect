@@ -368,3 +368,17 @@ commit, both retained source-review paths and the unique-computation counter
 check. All branch additions and prior SPEC provenance are retained; the same
 external audit remains one computation. Current combined proof and every
 qualification, rollout, observation and full-goal requirement remain unfinished.
+
+
+### Cargo discovery disposition, 2026-10-31
+
+The source-bound Cargo review retains the absent root discovery flag. Four
+current-source exact-client contrasts preserve the ninety-node prerequisite
+graph; eight synthetic graph cases and sixteen runtime controls pass. Both
+drivers refuse optimized Python that would remove assertions. See
+[the review](research/cargo-workspace-feature-review.json).
+
+Four feature decisions are now final current-tree no-change decisions; the other
+thirty-one feature reviews remain pending. The 199 fresh whole-command
+dispositions and 2,372 gaps are retained from their existing source snapshot,
+not refreshed or requalified here. No phase or whole-goal criterion is completed.

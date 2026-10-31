@@ -70,7 +70,12 @@
     "research/markdown-coverage-isolation-checkpoint.json",
     "research/external-verdict-source-review.json",
     "research/generator-boundary-source-review.json",
-    "research/accepted-feature-merge-checkpoint.json"
+    "research/accepted-feature-merge-checkpoint.json",
+    "research/cargo-workspace-feature-review.json",
+    "research/native-cargo-controls.py",
+    "research/native-cargo-controls.json",
+    "research/native-cargo-applicability.py",
+    "research/native-cargo-applicability.json"
   ],
   "agentLaunchers": [
     {
