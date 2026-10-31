@@ -98,3 +98,15 @@ session/machine ids, quote only the minimal identifying error text.
 - **Evidence:** the knowledge lint probes documented commands in markdown only; TS string
   literals are not probed, while the packet's SPEC/PLAN needed the `# …` comment annotation.
 - **Would have prevented it:** the same marker documented once, where both authors look.
+
+## 2026-10-31 — A 60-day hosted capture exhausts the GitHub core API limit, and an end-only write loses it all
+
+- **Doing:** `bun run beep ci route capture --since 2026-09-01` (two workflows, one `gh run view` per
+  kept run) for the first census.
+- **Evidence:** after 14 min: `gh run view … HTTP 403: API rate limit exceeded for user ID …`; no
+  corpus file or receipt existed because the service wrote both only after the whole window, so
+  resume-by-run-id had nothing to resume from. The token's 5,000/h core budget is shared by every
+  agent session on the workstation.
+- **Would have prevented it:** per-day checkpointing in the capture (write after each completed
+  UTC day; receipt `until` = last completed day), and a brief that names the API budget so the
+  first run is windowed.

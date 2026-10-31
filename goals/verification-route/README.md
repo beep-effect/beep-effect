@@ -37,9 +37,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Slice 1 (schemas, route, census) — not started. Next concrete action: the
-`ChangeAtom` / `CheckFootprint` / `Propagation` schemas and the total record
-at `unknown`, then `classify`, then the corpus fetch.
+P0 Slice 1 (schemas, route, census) — implemented 2026-10-31 in lane
+`verification-route-s1` (`beep ci route plan|capture|census|replay`); the census over the
+real corpus is the remaining P0 deliverable.
 
 ## Latest Evidence
 

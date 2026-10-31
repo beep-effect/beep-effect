@@ -14,6 +14,7 @@ import {
   ROUTE_CORPUS_LIST_CAP,
   ROUTE_CORPUS_RECEIPT_FILE,
   RouteCorpusLive,
+  RouteGhRateLimited,
 } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeServices } from "@effect/platform-node";
@@ -47,6 +48,8 @@ const PR_RUN = 18890000101;
 const MAIN_RUN = 18890000102;
 const RERUN = 18890000105;
 const HEAVY_RUN = 18890000201;
+const DAY2_RUN = 18890000107;
+const DAY3_RUN = 18890000108;
 const PR_HEAD = "a1e7f3c5b9d2e4f6a8c0b1d3e5f7a9c2b4d6e8f0";
 const MAIN_HEAD = "b2f8c4d6e8a0b1c3d5e7f9a2b4c6d8e0f1a3b5c7";
 const LIST_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,updatedAt,headBranch,headSha,attempt";
@@ -92,6 +95,58 @@ const viewedRunIds = (calls: ReadonlyArray<ReadonlyArray<string>>): ReadonlyArra
 
 const listCalls = (calls: ReadonlyArray<ReadonlyArray<string>>): number =>
   A.length(A.filter(calls, (call) => call[2] === "list"));
+
+const listedDays = (calls: ReadonlyArray<ReadonlyArray<string>>): ReadonlyArray<string> =>
+  pipe(
+    calls,
+    A.filter((call) => call[2] === "list"),
+    A.flatMap((call) => O.toArray(A.get(call, 6))),
+    A.dedupe
+  );
+
+const rateLimitPayload = (reset: string): string =>
+  `{"resources":{"core":{"limit":5000,"remaining":0,"reset":${DateTime.makeUnsafe(reset).pipe(DateTime.toEpochMillis) / 1000}}}}`;
+
+const refused = (command: string) =>
+  RouteGhRateLimited.make({ command, output: "HTTP 403: API rate limit exceeded for user ID 1." });
+
+const syntheticList = (runId: number): string =>
+  `[{"attempt":1,"databaseId":${runId},"event":"pull_request","headBranch":"feat/checkpoint","status":"completed"}]`;
+
+const syntheticView = (runId: number, day: string): string =>
+  `{"attempt":1,"conclusion":"success","createdAt":"${day}T08:00:00Z","databaseId":${runId},"event":"pull_request","headBranch":"feat/checkpoint","headSha":"f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9","jobs":[],"workflowName":"Check"}`;
+
+// The recorded days plus two synthetic ones: 2026-10-29 holds DAY2_RUN, and
+// 2026-10-30 holds DAY3_RUN, whose view GitHub refuses while `refuseDay3` holds.
+// Synthetic answers are recorded like the fixture runner's.
+const syntheticAnswer = (
+  args: ReadonlyArray<string>,
+  refuseDay3: boolean,
+  reset: string
+): O.Option<Effect.Effect<string, RouteGhRateLimited>> =>
+  args[0] === "api"
+    ? O.some(Effect.succeed(rateLimitPayload(reset)))
+    : args[1] === "list" && args[3] === "Check" && args[5] === "2026-10-29"
+      ? O.some(Effect.succeed(syntheticList(DAY2_RUN)))
+      : args[1] === "list" && args[3] === "Check" && args[5] === "2026-10-30"
+        ? O.some(Effect.succeed(syntheticList(DAY3_RUN)))
+        : args[2] === `${DAY2_RUN}`
+          ? O.some(Effect.succeed(syntheticView(DAY2_RUN, "2026-10-29")))
+          : args[2] === `${DAY3_RUN}`
+            ? O.some(
+                refuseDay3
+                  ? Effect.fail(refused(`gh run view ${DAY3_RUN}`))
+                  : Effect.succeed(syntheticView(DAY3_RUN, "2026-10-30"))
+              )
+            : O.none();
+
+const extendedRunner =
+  (calls: Calls, runGh: RouteGhRunner, refuseDay3: boolean, reset: string): RouteGhRunner =>
+  (args, cwd) =>
+    O.match(syntheticAnswer(args, refuseDay3, reset), {
+      onNone: () => runGh(args, cwd),
+      onSome: (answer) => Ref.update(calls, A.append([cwd, ...args])).pipe(Effect.andThen(answer)),
+    });
 
 const captureOptions = (
   repoRoot: string,
@@ -167,16 +222,16 @@ const captureLive = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]
     return yield* corpus.capture(options);
   }).pipe(provideScopedLayer(RouteCorpusLive), Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
 
-// The production runner retries twice with backoff. The capture does real I/O
-// between its sleeps, so keep advancing the test clock until it has finished.
-const failLive = Effect.fn("RouteCorpusTest.failLive")(function* (
-  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
-  options: RouteCorpusCaptureOptions
-) {
-  const fiber = yield* captureLive(spawner, options).pipe(Effect.flip, Effect.forkChild);
+// Retries and rate-limit waits sleep on the test clock. The capture does real
+// I/O between its sleeps, so keep advancing the clock until it has finished.
+const untilDone = Effect.fn("RouteCorpusTest.untilDone")(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+  const fiber = yield* Effect.forkChild(effect);
   yield* TestClock.adjust("1 second").pipe(Effect.repeat({ until: () => fiber.pollUnsafe() !== undefined }));
   return yield* Fiber.join(fiber);
 });
+
+const failLive = (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"], options: RouteCorpusCaptureOptions) =>
+  captureLive(spawner, options).pipe(Effect.flip, untilDone);
 
 // The corpus stores one encoded HostedRun per line and the receipt as JSON, so
 // every value the schemas admit must survive those exact codecs. Compare by
@@ -219,7 +274,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
           schemaVersion: "route-corpus/v1",
           capturedAt: "1970-01-01T00:00:00.000Z",
           since: "2026-10-27",
-          until: "2026-10-28",
+          // 2026-10-27 still has an unfinished run, so no day is fully captured yet.
+          until: "2026-10-26",
           workflows: ["Check", "Heavy"],
           runs: 4,
           heads: 3,
@@ -426,7 +482,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
     })
   );
 
-  it.effect("defaults until to today, widens an adjacent window and refuses a gap", () =>
+  it.effect("defaults until to today, continues after the receipt and refuses a gap", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -437,20 +493,44 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
 
       // No runs on 2026-10-29: the corpus is empty but still pinned and loadable.
       const today = yield* corpus.capture(captureOptions(root, { since: "2026-10-29", until: O.none() }));
-      expect(today.until).toBe("2026-10-29");
-      expect(today.runs).toBe(0);
-      expect(today.heads).toBe(0);
+      expect([today.since, today.until, today.runs, today.heads]).toEqual(["2026-10-29", "2026-10-29", 0, 0]);
       expect((yield* corpus.load(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE))).runs).toEqual([]);
 
-      // 2026-10-27..28 adjoins 2026-10-29: the receipt window grows to cover both.
-      const widened = yield* corpus.capture(captureOptions(root));
-      expect([widened.since, widened.until, widened.runs]).toEqual(["2026-10-27", "2026-10-29", 4]);
+      // An earlier since starts the window again at that day.
+      const backfill = yield* corpus.capture(
+        captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-28") })
+      );
+      expect([backfill.since, backfill.until, backfill.runs]).toEqual(["2026-10-28", "2026-10-28", 1]);
+
+      // The same since continues from the day after the receipt's until.
+      yield* Ref.set(calls, []);
+      const continued = yield* corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.none() }));
+      expect([continued.since, continued.until, continued.runs]).toEqual(["2026-10-28", "2026-10-29", 1]);
+      expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-29"]);
+
+      // Nothing left to list: the receipt keeps its window.
+      yield* Ref.set(calls, []);
+      const unchanged = yield* corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.none() }));
+      expect([unchanged.until, unchanged.sha256]).toEqual([continued.until, continued.sha256]);
+      expect(yield* Ref.get(calls)).toEqual([]);
 
       const gap = yield* Effect.flip(
         corpus.capture(captureOptions(root, { since: "2026-10-31", until: O.some("2026-11-01") }))
       );
       expect(gap.reason).toBe("corpus-fetch");
-      assertInclude(gap.message, "leaves a gap beside the captured 2026-10-27..2026-10-29");
+      assertInclude(gap.message, "since 2026-10-31 leaves a gap after the captured 2026-10-28..2026-10-29");
+
+      // Another set of workflows starts the window again.
+      const checkOnly = yield* corpus.capture(
+        RouteCorpusCaptureOptions.make({
+          repoRoot: root,
+          since: "2026-10-28",
+          until: O.some("2026-10-29"),
+          workflows: ["Check"],
+          outDir: "corpus",
+        })
+      );
+      expect([checkOnly.since, checkOnly.until, checkOnly.workflows]).toEqual(["2026-10-28", "2026-10-29", ["Check"]]);
 
       const backwards = yield* Effect.flip(
         corpus.capture(captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-27") }))
@@ -461,6 +541,79 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const impossible = yield* Effect.flip(corpus.capture(captureOptions(root, { since: "2026-02-30" })));
       expect(impossible.reason).toBe("corpus-fetch");
       assertInclude(impossible.message, `since "2026-02-30" is not a UTC date`);
+    })
+  );
+
+  it.effect("pins every finished day, so a failure on day 3 keeps days 1-2 and a rerun lists only day 3", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const runGh = yield* fixtureRunner(calls);
+      const options = captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-30") });
+      const receiptPath = path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE);
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-30T12:00:00Z").pipe(DateTime.toEpochMillis));
+
+      // The reset is two hours away, past the one-hour wait cap: fail at once.
+      const failed = yield* Effect.flip(
+        (yield* makeRouteCorpus(extendedRunner(calls, runGh, true, "2026-10-30T14:00:00Z"))).capture(options)
+      );
+      expect(failed.reason).toBe("corpus-fetch");
+      assertInclude(
+        failed.message,
+        `gh run view ${DAY3_RUN} hit the GitHub API rate limit; it resets at 2026-10-30T14:00:00.000Z.`
+      );
+
+      const corpus = yield* makeRouteCorpus(extendedRunner(calls, runGh, false, "2026-10-30T14:00:00Z"));
+      const pinned = yield* corpus.load(receiptPath);
+      expect([pinned.receipt.since, pinned.receipt.until]).toEqual(["2026-10-28", "2026-10-29"]);
+      expect(A.map(pinned.runs, (run) => run.runId)).toEqual([RERUN, DAY2_RUN]);
+
+      yield* Ref.set(calls, []);
+      const resumed = yield* corpus.capture(options);
+      expect([resumed.until, resumed.runs]).toEqual(["2026-10-30", 3]);
+      expect(listedDays(yield* Ref.get(calls))).toEqual(["2026-10-30"]);
+      expect(listCalls(yield* Ref.get(calls))).toBe(2);
+      expect(A.map((yield* corpus.load(receiptPath)).runs, (run) => run.runId)).toEqual([RERUN, DAY2_RUN, DAY3_RUN]);
+    })
+  );
+
+  it.effect("waits once for a reported reset and fails readably when the reset is unknown or refused again", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const runGh = yield* fixtureRunner(calls);
+      const options = captureOptions(root, { since: "2026-10-28", until: O.some("2026-10-28") });
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-28T23:00:00Z").pipe(DateTime.toEpochMillis));
+      const refusing =
+        (rateLimit: string): RouteGhRunner =>
+        (args, cwd) =>
+          args[0] === "api"
+            ? Ref.update(calls, A.append([cwd, ...args])).pipe(Effect.as(rateLimit))
+            : args[2] === `${RERUN}`
+              ? Ref.update(calls, A.append([cwd, ...args])).pipe(
+                  Effect.andThen(Effect.fail(refused(`gh run view ${RERUN}`)))
+                )
+              : runGh(args, cwd);
+
+      const unknown = yield* Effect.flip((yield* makeRouteCorpus(refusing("not json"))).capture(options));
+      assertInclude(unknown.message, "hit the GitHub API rate limit; gh did not report when it resets.");
+      expect(yield* fs.exists(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE))).toBe(false);
+
+      yield* Ref.set(calls, []);
+      const waiting = yield* makeRouteCorpus(refusing(rateLimitPayload("2026-10-28T23:00:30Z")));
+      const again = yield* waiting.capture(options).pipe(Effect.flip, untilDone);
+      expect(again.reason).toBe("corpus-fetch");
+      assertInclude(
+        again.message,
+        `gh run view ${RERUN} hit the GitHub API rate limit again after waiting for the reset; it resets at 2026-10-28T23:00:30.000Z.`
+      );
+      // One view, one reset lookup, one retry after the wait.
+      expect(viewedRunIds(yield* Ref.get(calls))).toEqual([`${RERUN}`, `${RERUN}`]);
+      expect(A.length(A.filter(yield* Ref.get(calls), (call) => call[1] === "api"))).toBe(1);
     })
   );
 
@@ -516,6 +669,51 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
           LIST_FIELDS,
         ],
         [root, "gh", "run", "view", `${RERUN}`, "--json", VIEW_FIELDS],
+      ]);
+    })
+  );
+
+  it.effect("waits for the rate-limit reset gh reports, then finishes the capture", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      const spawns = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const views = yield* Ref.make(0);
+      const list = yield* fixtureText("list.Check.2026-10-28.json");
+      const view = yield* fixtureText(`view.${RERUN}.json`);
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-28T23:00:00Z").pipe(DateTime.toEpochMillis));
+      const options = RouteCorpusCaptureOptions.make({
+        repoRoot: root,
+        since: "2026-10-28",
+        until: O.some("2026-10-28"),
+        workflows: ["Check"],
+        outDir: "corpus",
+      });
+
+      const receipt = yield* untilDone(
+        captureLive(
+          scriptedSpawner(spawns, (args) =>
+            args[0] === "api"
+              ? Effect.succeed(handle(0, rateLimitPayload("2026-10-28T23:00:30Z")))
+              : args[1] === "list"
+                ? Effect.succeed(handle(0, list))
+                : Ref.getAndUpdate(views, (count) => count + 1).pipe(
+                    Effect.map((count) =>
+                      count === 0 ? handle(1, "HTTP 403: API rate limit exceeded for user ID 1.") : handle(0, view)
+                    )
+                  )
+          ),
+          options
+        )
+      );
+
+      expect([receipt.until, receipt.runs]).toEqual(["2026-10-28", 1]);
+      // The refused view is not retried by the runner; the corpus waits, then retries it once.
+      expect(A.map(yield* Ref.get(spawns), (spawn) => A.join(A.take(A.drop(spawn, 1), 3), " "))).toEqual([
+        "gh run list",
+        "gh run view",
+        "gh api rate_limit",
+        "gh run view",
       ]);
     })
   );
