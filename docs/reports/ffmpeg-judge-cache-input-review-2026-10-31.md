@@ -4,7 +4,7 @@ PR #2396 extracts the FFmpeg command builders into `FFmpeg.command.ts`.
 The judge-rubric policy reaches that module through the FFmpeg driver.
 The canonical policy-fingerprint writer adds the new module to the generated input list.
 
-This review retains accepted main `0167e56db6e8debc692e8c26ab2c64ef245fb1cd`, including its cache baseline
+This review retains accepted main `d4e134f6729359661793dbf31802a8fab5226646`, including its cache baseline
 profile and epoch. The complete cache audit reports one blocking
 configuration drift, `//#lint:policy-fingerprint:lint-judge-rubric`, and one source-digest review, `turbo.json`.
 Its review subject is `//`, the root package. No other subject changed.
@@ -16,7 +16,7 @@ all other task configuration stay unchanged.
 
 | Input | SHA-256 |
 | --- | --- |
-| Accepted-main `turbo.json` | `5670b52eeaeddfbf74063354b8b61ccc2729f08d39eed60aae0fa0022046d793` |
+| Accepted-main `turbo.json` | `ff817251a8a5ca459e359bc7122b96a9796dd5d34bdaa86046fb855ec682be03` |
 | Current `turbo.json` | `41fbcdd6fbb4bf732c71a285bef180be9ffabf9d478a74e4e7d053211cd19fca` |
 | Accepted-main baseline text | `ffc8e3361326af0250356cc02ef72a504b9b322da6d2ede230179006c0143183` |
 | Qualification ledger | `13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb` |

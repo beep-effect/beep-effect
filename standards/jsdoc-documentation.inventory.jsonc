@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T20:39:41.926Z",
+  "generatedAt": "2026-10-31T21:34:08.758Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -544709,8 +544709,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 42,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-42-changesetgrapherror",
+          "line": 49,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-49-changesetgrapherror",
           "currentTags": [
             "@category",
             "@since"
@@ -544731,8 +544731,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 93,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-93-catalogusageerror",
+          "line": 100,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-100-catalogusageerror",
           "currentTags": [
             "@category",
             "@since"
@@ -544753,8 +544753,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-146-changesetstatuserror",
+          "line": 153,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-153-changesetstatuserror",
           "currentTags": [
             "@category",
             "@since"
@@ -544775,8 +544775,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-195-qualityscriptcommanderror",
+          "line": 202,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-202-qualityscriptcommanderror",
           "currentTags": [
             "@category",
             "@since"
@@ -544797,8 +544797,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 253,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-253-qualitytaskfailed",
+          "line": 260,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-260-qualitytaskfailed",
           "currentTags": [
             "@category",
             "@since"
@@ -544819,8 +544819,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-311-qualitytaskgroupfailed",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-318-qualitytaskgroupfailed",
           "currentTags": [
             "@category",
             "@since"
@@ -544841,8 +544841,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 362,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-362-qualitytaskconfigurationerror",
+          "line": 369,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-369-qualitytaskconfigurationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -544863,8 +544863,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-          "line": 397,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-397-unexpectedqualitytaskfailure",
+          "line": 404,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-errors-ts-404-unexpectedqualitytaskfailure",
           "currentTags": [
             "@category",
             "@since"

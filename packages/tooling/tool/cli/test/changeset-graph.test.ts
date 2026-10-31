@@ -83,7 +83,13 @@ const writeFixtureRepo = Effect.fn("ChangesetGraphTest.writeFixtureRepo")(functi
 describe("changeset graph", () => {
   it("keeps changeset graph error optional file context at the command boundary", () => {
     const emptyError = ChangesetGraphError.new(new Error("cause"), "failed");
+    expect(emptyError).toBeInstanceOf(ChangesetGraphError);
+    expect(emptyError.message).toBe("failed");
     expect(emptyError.file).toBeUndefined();
+
+    const curried = ChangesetGraphError.new("failed")(new Error("cause"));
+    expect(curried).toBeInstanceOf(ChangesetGraphError);
+    expect(curried.message).toBe("failed");
 
     const detailedError = ChangesetGraphError.new(new Error("cause"), "failed", ".changeset/demo.md");
     expect(detailedError.file).toBe(".changeset/demo.md");
@@ -434,6 +440,18 @@ Record a null bump.
           "apps/web/package.json",
           "libs/core/package.json",
         ]);
+      })
+    );
+
+    it.effect("fails typed when a workspace pattern exceeds the glob expansion budget", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        const pattern = "packages/{1..999999999999}";
+        yield* writePackageJson(tmpDir, "package.json", { private: true, workspaces: [pattern] });
+        const error = yield* Effect.flip(collectWorkspacePackageJsonFiles(tmpDir));
+        expect(error).toBeInstanceOf(ChangesetGraphError);
+        expect(error.message).toContain(pattern);
       })
     );
 
