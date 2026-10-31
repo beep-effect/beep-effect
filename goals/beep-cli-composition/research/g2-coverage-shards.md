@@ -102,4 +102,26 @@ quarters are uneven), not the hosted gain.
 
 ## After (hosted)
 
-PENDING
+Run 41191278261 on #2392 (attempt 1, full coverage fallback because this
+change edits global coverage inputs, so every package was measured):
+
+| Job | Wall |
+| --- | ---: |
+| Test Unit (repo-cli-1) | 1,034 s |
+| Test Unit (repo-cli-2) | 842 s |
+| Test Unit (repo-cli-3) | 1,194 s |
+| Test Unit (repo-cli-4) | 994 s |
+| Test Unit (unit-a) | 1,398 s |
+| Test Unit (unit-b) | 1,478 s |
+| Heavy / Coverage Regression | 570 s |
+
+The slowest repo-cli job fell from 1,669 to 2,073 s (the before rows) to
+1,194 s. On a full run the unit bins are now the Test Unit tail, as on the
+`main` pushes above; on a repo-cli-scoped pull request the tail is the
+slowest quarter, about 20 minutes instead of 28 to 35.
+
+Coverage Regression accepted the four-quarter merge for `@beep/repo-cli`
+and reported no repo-cli row. It failed on one inherited row:
+`packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts`
+reached `main` in #2388 without a baseline identity, and this branch touches
+no documents-server file.
