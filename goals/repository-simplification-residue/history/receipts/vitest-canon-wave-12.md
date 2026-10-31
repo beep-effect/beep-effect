@@ -19,29 +19,36 @@ exceptions. Most name a detector repair as their exit; the rest name a `src/` se
 | EV006, EV005, EV009 and EV010 detector repairs | about 70 |
 | `src/` seams (injected Clock, ConfigProvider, cwd, spawner, MemoryFileSystem) | the rest |
 
-## Detector repair
+## Detector repair (final rule)
 
-`assertsAfterScopeClose` in `EffectVitestDetectors.ts` accepts a non-whole-body `Effect.scoped`
-(call form or pipe stage) when a later statement of the same test or helper runs an assertion
-after the scoped effect completes. That is the canonical way to observe a release. The walk
-from the scope up to the test or helper callback gives up, and the row stays a judgment, when:
+`observedShorterScope` in `EffectVitestDetectors.ts` accepts a non-whole-body `Effect.scoped`
+(call form or pipe stage) only when both passes hold. That is the canonical way to observe a
+release.
 
-- the path crosses a closure that is not an executed call argument (a closure bound to a
-  variable may run later or never);
-- the path crosses a nested function declaration;
-- the path crosses a fork (`forkChild`, `forkScoped`, `forkDetach`), whose scope can outlive
-  the later statements;
-- the scoped operand is `Effect.succeed(...)` or `Effect.sync(...)`, which acquires nothing. The
-  operand is claimed only when `Effect.scoped` is the first pipe stage, because a later stage
-  closes the earlier stages' output;
-- no `yield*` runs the scoped effect at the statement (`const work = Effect.scoped(acquire)`
-  builds it without running it). A `return` passes the effect to the enclosing call, and the walk
-  checks that call next.
+- **`scopeRuns`**: every step from the scope up to the test or helper callback runs it. Each
+  enclosing body statement must `yield*` the scoped effect; `const work = Effect.scoped(acquire)`
+  only builds it. The one exception is the test callback's own `return`, which hands the effect
+  to the harness. The walk ends, and the row stays a judgment, at:
+  - a conditional (`if`, `switch`, loops, `try`, `?:`, `&&`, `||`, `??`);
+  - a fork, in method or free-function `pipe` form (`forkChild`, `forkScoped`, `forkDetach`),
+    whose scope can outlive the later statements;
+  - a nested function declaration;
+  - any callback other than an `Effect.gen` generator, which runs in place. This includes
+    `Effect.flatMap` and `acquireUseRelease` callbacks and uninvoked `Effect.fnUntraced` values.
+- **`observedAfterScope`**: a later statement asserts unconditionally. Nothing inside `if`/`else`,
+  `switch`, loops, `try`/`catch`, conditional expressions, short-circuits, nested blocks, or
+  function, method, accessor or class bodies counts. An observation is an applied `expect`
+  matcher (`expect(x).toBe(y)`, including `.not` and `.resolves` chains; a bare `expect(x)`
+  checks nothing), a Boolean assertion, or an `@effect/vitest/utils` or vitest `assert` value
+  assertion (`deepStrictEqual`, `strictEqual`, `assertSome`, `assertSuccess`, `assertFailure`,
+  and so on).
 
-An assertion counts only when it runs directly in the later statement, not inside a nested
-closure. An assertion inside the scope, or before it, does not count. Observations are the
-`expect` and Boolean forms plus the `@effect/vitest/utils` and vitest `assert` value assertions
-(`deepStrictEqual`, `strictEqual`, `assertSome`, `assertSuccess`, `assertFailure`, and so on).
+The scoped operand counts as pure, and the row stays a judgment, when it is `Effect.succeed(...)`
+or `Effect.sync(...)`. It is claimed only when `Effect.scoped` is the first pipe stage, because a
+later stage closes the earlier stages' output.
+
+The rule reached this form over four greptile review rounds, recorded below. Each round only
+narrowed it.
 
 ### Review round 1 (greptile on #2424)
 
@@ -59,30 +66,35 @@ closure. An assertion inside the scope, or before it, does not count. Observatio
   into `leavesExecution`, `statementVerdict`, `atStatement` and `scopeObservedFrom`, and by sharing
   `observedShorterScope` and `appliedScopeRuns` between the two call sites.
 
-Counterexamples added to `test/effect-vitest-detectors.test.ts`:
+Counterexamples in `test/effect-vitest-detectors.test.ts` (final set):
 
-- accepted: call form, pipe stage, a scope inside an `if` block, a scope inside an executed
-  `Effect.flatMap` callback, a scope in a same-file helper;
-- kept as judgment: assertion only before the scope, assertion only inside a later closure,
-  a deferred closure, a forked scope, a pure operand, an assertion only inside the scope.
+- accepted: call form, pipe stage, a scope in a same-file helper, an executed later stage, a
+  `deepStrictEqual` or `assert.strictEqual` observation, a negated matcher, the test callback's
+  own `return`, and an in-place `Effect.gen` generator;
+- kept as judgment: an assertion only before or inside the scope; an assertion inside a later
+  closure, method, accessor or class; a deferred or uninvoked closure; a forked scope in either
+  pipe form; a pure operand or pure first stage; a built-but-unyielded scope, in call and pipe
+  form; a scope inside an `if` or a non-`Effect.gen` callback; a later assertion inside `if`,
+  `if (false)`, `else`, `switch`, `for`, `for of`, `while`, `do`, `try`, `?:`, `&&`, `??` or a
+  nested block; a bare `expect(x)`; and an unapplied matcher.
 
 The existing "retains shorter or uncertain scope ownership" cases (no later assertion) still
 report a judgment.
 
-## Inventory, paired by `(ruleId, file, occurrence)` against the base
+## Inventory, paired by `(ruleId, file, occurrence)` against the merge base `4f9e3ef756`
 
 | | Rows | Exceptions | Open |
 | --- | ---: | ---: | ---: |
-| Before | 553 | 553 | 0 |
-| After | 486 | 486 | 0 |
+| Before | 555 | 555 | 0 |
+| After | 493 | 493 | 0 |
 
 | Change | Count |
 | --- | ---: |
-| Gone | 67, all EV004 (68 at first push; review round 1 restored `setup-effect-ref.test.ts:85`) |
+| Gone | 62, all EV004 (68 at first push; review rounds 1 and 3 restored 6 rows) |
 | New | 0 |
 | Status changed | 0 |
 | Reason changed | 0 |
-| Line-only drift already on `main` | 3 (`ci-lane`, `package-scripts.policy`, `lint-workers`) |
+| Line-only shifts | 2 (`SqlTest.offline.test.ts:178/193`, one line stale on `main`'s committed inventory; the file is unchanged here) |
 
 Of the 68 first retired, 55 carried the cohort exit. The other 13 described the same shape in their own
 words: cleanup-before-assertion scopes (4), assertions that read state finalizers wrote (2), a
@@ -162,3 +174,11 @@ exception and reason: `CosmosProjection.test.ts:190/194/237` (scopes inside `try
 `AgentMessage.runtime.test.ts:771` and `worktree-command.test.ts:2270`. The wave now retires
 **62** EV004 exceptions with none added. A plain rescan after merging main reports
 `introduced=0 resolved=0`, and Fallow passes after `isForkStage` was shared with `forkCall`.
+
+### Review round 4 (greptile and CodeRabbit on #2424)
+
+- A bare `expect(x)` counted as an observation. Only an applied matcher on an `expect(...)`
+  receiver counts now (`isExpectMatcher`). The `bare expect` and `unapplied matcher` cases stay
+  judgments, and `negated matcher` is accepted. A fresh `--write` scan after merging main
+  `4f9e3ef756` (with #2432) adds 0 rows against the branch, so all 62 retirements hold.
+- This receipt's rule and inventory sections were rewritten to the final state (CodeRabbit).
