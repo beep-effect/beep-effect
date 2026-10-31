@@ -77,8 +77,22 @@ install -d -m 0700 "${bootstrap_cache}"
 # this script also runs on session start and resume, and VM disk is finite.
 find "${bootstrap_cache}" -mindepth 1 -maxdepth 1 -name 'run.*' -mmin +60 -exec rm -rf -- {} + 2>/dev/null || true
 run_dir="$(mktemp -d "${bootstrap_cache}/run.XXXXXX")"
-cleanup_run_dir() { rm -rf -- "${run_dir}"; }
+pids=()
+cleanup_run_dir() {
+  local entry
+  trap '' INT TERM HUP
+  # Join every worker before removing its files, including fatal and signal exits.
+  # Waiting again for a worker already joined below returns its cached status.
+  for entry in "${pids[@]:-}"; do
+    [ -n "${entry}" ] || continue
+    wait "${entry%%:*}" || true
+  done
+  rm -rf -- "${run_dir}"
+}
 trap cleanup_run_dir EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
 
 # Symlink into /usr/local/bin when we can, so tools resolve for every shell the
 # vendor spawns (login, non-login, the agent's own exec daemon). Claude and
@@ -115,6 +129,8 @@ persist_path() {
 # ---------------------------------------------------------------------------
 # Claude caches a setup script only when it finishes in roughly five minutes,
 # so independent network fetches run concurrently and the install step waits.
+# Each transfer is bounded so failure cleanup cannot wait forever on a worker.
+download_limits=(--connect-timeout 15 --max-time 120)
 
 need_bun=0
 if ! command -v bun >/dev/null 2>&1 || [ "$(bun --version 2>/dev/null)" != "${BUN_VERSION}" ]; then
@@ -132,7 +148,7 @@ fetch_bun() {
   work="${run_dir}/bun"
   mkdir -p "${work}"
   archive="${work}/bun-linux-x64.zip"
-  curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
     --output "${archive}" \
     "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
   printf '%s  %s\n' "${sha}" "${archive}" | sha256sum --check --strict - >/dev/null
@@ -147,16 +163,16 @@ fetch_node() {
     return 0
   fi
   local index version work
-  index="$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+  index="$(curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
     "https://nodejs.org/dist/index.tab")" || return 1
   version="$(printf '%s\n' "${index}" | awk -v requested="v${NODE_VERSION}" '$1 == requested { print $1; exit }')"
   [ -n "${version}" ] || return 1
   work="${run_dir}/node"
   mkdir -p "${work}"
-  curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
     --output "${work}/node.tar.xz" \
     "https://nodejs.org/dist/${version}/node-${version}-linux-x64.tar.xz"
-  curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
     --output "${work}/SHASUMS256.txt" \
     "https://nodejs.org/dist/${version}/SHASUMS256.txt"
   (cd "${work}" && grep " node-${version}-linux-x64.tar.xz\$" SHASUMS256.txt | sed 's# .*# node.tar.xz#' | sha256sum --check --strict - >/dev/null)
@@ -175,12 +191,12 @@ fetch_op() {
   work="${run_dir}/op"
   mkdir -p "${work}"
   ver="v${OP_PINNED_VERSION}"
-  curl -fsSLo "${work}/op.zip" "https://cache.agilebits.com/dist/1P/op2/pkg/${ver}/op_linux_amd64_${ver}.zip" || return 1
+  curl "${download_limits[@]}" -fsSLo "${work}/op.zip" "https://cache.agilebits.com/dist/1P/op2/pkg/${ver}/op_linux_amd64_${ver}.zip" || return 1
   unzip -oq "${work}/op.zip" op op.sig -d "${work}" || return 1
   [ -f "${work}/op" ] && [ -f "${work}/op.sig" ] || return 1
   export GNUPGHOME="${work}/gnupg"
   mkdir -p "${GNUPGHOME}" && chmod 700 "${GNUPGHOME}"
-  curl -fsSL "${OP_GPG_KEY_URL}" | gpg --batch --import >/dev/null 2>&1 || return 1
+  curl "${download_limits[@]}" -fsSL "${OP_GPG_KEY_URL}" | gpg --batch --import >/dev/null 2>&1 || return 1
   gpg --batch --with-colons --fingerprint 2>/dev/null | grep -q "^fpr:::::::::${OP_GPG_FINGERPRINT}:" || return 1
   gpg --batch --status-fd=1 --verify "${work}/op.sig" "${work}/op" 2>/dev/null \
     | grep -q "^\[GNUPG:\] VALIDSIG ${OP_GPG_FINGERPRINT} " || return 1
@@ -188,7 +204,6 @@ fetch_op() {
   : > "${run_dir}/op.verified"
 }
 
-pids=()
 if [ "${need_bun}" = "1" ]; then
   log "fetching bun ${BUN_VERSION}"
   fetch_bun & pids+=("$!:bun")
@@ -202,7 +217,6 @@ if [ "${BEEP_CLOUD_SKIP_OP:-0}" != "1" ]; then
   fetch_op & pids+=("$!:op")
 fi
 
-bun_ok=1
 op_ok=1
 node_ok=1
 for entry in "${pids[@]:-}"; do
@@ -210,15 +224,12 @@ for entry in "${pids[@]:-}"; do
   pid="${entry%%:*}"; name="${entry##*:}"
   if ! wait "${pid}"; then
     case "${name}" in
-      bun) bun_ok=0 ;;
+      bun) die "bun ${BUN_VERSION} download or checksum failed." ;;
       node) node_ok=0; warn "Node ${NODE_VERSION} provisioning failed." ;;
       op) op_ok=0; warn "1Password CLI download or signature verification failed; skipping op (op-backed secret runs unavailable)." ;;
     esac
   fi
 done
-# Every started fetch must settle before EXIT removes their shared run directory.
-# A failed Bun fetch is fatal, but must not strand the parallel Node/op workers.
-[ "${bun_ok}" = "1" ] || die "bun ${BUN_VERSION} download or checksum failed."
 
 # ---------------------------------------------------------------------------
 # 2. Place the toolchain

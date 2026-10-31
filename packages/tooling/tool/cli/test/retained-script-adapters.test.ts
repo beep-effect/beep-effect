@@ -33,92 +33,117 @@ const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
 }, Effect.scoped);
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
-  it.effect(
-    "settles parallel cloud downloads before cleaning up a failed Bun bootstrap",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cloud-download-failure-" });
-      const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
-      const bin = path.join(root, "bin");
-      const home = path.join(root, "home");
-      yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
-      yield* fs.makeDirectory(bin);
-      yield* fs.makeDirectory(home);
-      for (const file of ["scripts/cloud/bootstrap.sh", ".bun-version", ".nvmrc", ".bun-linux-x64.sha256"]) {
-        yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
-      }
-      // The second wait releases Node. The old early-exit path instead releases
-      // it during cleanup, making the ordering observable without a timed race.
-      const bashEnv = path.join(root, "bash-env");
-      yield* fs.writeFileString(
-        bashEnv,
-        `wait_calls=0
+  for (const scenario of [
+    { signal: "", exitCode: 1, name: "failed Bun download" },
+    { signal: "TERM", exitCode: 143, name: "TERM interruption" },
+    { signal: "HUP", exitCode: 129, name: "HUP interruption" },
+    { signal: "INT", exitCode: 130, name: "INT interruption" },
+  ]) {
+    it.effect(
+      `settles parallel cloud downloads before cleanup after ${scenario.name}`,
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cloud-download-failure-" });
+        const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
+        const bin = path.join(root, "bin");
+        const home = path.join(root, "home");
+        yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
+        yield* fs.makeDirectory(bin);
+        yield* fs.makeDirectory(home);
+        for (const file of ["scripts/cloud/bootstrap.sh", ".bun-version", ".nvmrc", ".bun-linux-x64.sha256"]) {
+          yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
+        }
+        // Waiting for a PID other than Bun releases Node. Re-waiting Bun during
+        // cleanup does not release it; an early rm exposes the reversed ordering.
+        const bashEnv = path.join(root, "bash-env");
+        yield* fs.writeFileString(
+          bashEnv,
+          `first_wait_pid=""
+export BEEP_BOOTSTRAP_PARENT=$$
 wait() {
-  wait_calls=$((wait_calls + 1))
-  if [ "$wait_calls" -eq 2 ]; then : > "$BEEP_BOOTSTRAP_FIXTURE/release-node"; fi
+  [ "$#" -eq 1 ] || return 86
+  if [ -z "$first_wait_pid" ]; then
+    first_wait_pid="$1"
+  elif [ "$1" != "$first_wait_pid" ]; then
+    : > "$BEEP_BOOTSTRAP_FIXTURE/release-node"
+  fi
   builtin wait "$@"
 }
 `
-      );
-      for (const [name, source] of [
-        ["bun", '#!/bin/sh\nprintf "0.0.0\\n"\n'],
-        ["node", '#!/bin/sh\nprintf "v0.0.0\\n"\n'],
-        ["uname", '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n'],
-        [
-          "curl",
-          `#!/bin/sh
+        );
+        for (const [name, source] of [
+          ["bun", '#!/bin/sh\nprintf "0.0.0\\n"\n'],
+          ["node", '#!/bin/sh\nprintf "v0.0.0\\n"\n'],
+          ["sudo", "#!/bin/sh\nexit 1\n"],
+          ["uname", '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n'],
+          [
+            "curl",
+            `#!/bin/sh
 case "$*" in
+  *"--connect-timeout 15 --max-time 120"*) ;;
+  *) echo 'missing download bounds' >&2; exit 86;;
+esac
+case "$*" in
+  *bun-linux-x64.zip*)
+    if [ -n "$BEEP_BOOTSTRAP_SIGNAL" ]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$BEEP_BOOTSTRAP_PARENT"; fi
+    ;;
   *index.tab*)
-    until [ -f "$BEEP_BOOTSTRAP_FIXTURE/release-node" ]; do sleep 0.01; done
+    while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-node" ]; do sleep 0.01; done
+    [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] || exit 22
     printf 'node-finished\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
     ;;
 esac
 exit 22
 `,
-        ],
-        [
-          "rm",
-          `#!/bin/sh
+          ],
+          [
+            "rm",
+            `#!/bin/sh
 printf 'cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
 : > "$BEEP_BOOTSTRAP_FIXTURE/release-node"
 exec /bin/rm "$@"
 `,
-        ],
-      ] as const) {
-        const target = path.join(bin, name);
-        yield* fs.writeFileString(target, source);
-        yield* fs.chmod(target, 0o755);
-      }
-      const handle = yield* ChildProcess.make("bash", [path.join(root, "scripts/cloud/bootstrap.sh")], {
-        cwd: root,
-        env: {
-          BASH_ENV: bashEnv,
-          BEEP_BOOTSTRAP_FIXTURE: root,
-          BEEP_CLOUD_SKIP_OP: "1",
-          BEEP_CLOUD_VENDOR: "fixture",
-          HOME: home,
-          NVM_DIR: path.join(home, ".nvm"),
-          PATH: `${bin}:/usr/bin:/bin`,
-          XDG_CACHE_HOME: path.join(root, "cache"),
-        },
-        stdin: "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      // Finalizers run in reverse acquisition order: release the fixture worker
-      // before the child-process finalizer runs on an interrupted test.
-      yield* Effect.addFinalizer(() => fs.writeFileString(path.join(root, "release-node"), "").pipe(Effect.orDie));
-      const [exitCode, stderr] = yield* Effect.all(
-        [handle.exitCode, handle.stderr.pipe(Stream.decodeText, Stream.mkString), Stream.runDrain(handle.stdout)],
-        { concurrency: "unbounded" }
-      );
-      expect(exitCode).toBe(1);
-      expect(stderr).toContain("download or checksum failed");
-      expect(yield* fs.readFileString(path.join(root, "events"))).toBe("node-finished\ncleanup\n");
-      expect(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"))).toEqual([]);
-    })
-  );
+          ],
+        ] as const) {
+          const target = path.join(bin, name);
+          yield* fs.writeFileString(target, source);
+          yield* fs.chmod(target, 0o755);
+        }
+        const handle = yield* ChildProcess.make("bash", [path.join(root, "scripts/cloud/bootstrap.sh")], {
+          cwd: root,
+          env: {
+            BASH_ENV: bashEnv,
+            BEEP_BOOTSTRAP_FIXTURE: root,
+            BEEP_BOOTSTRAP_SIGNAL: scenario.signal,
+            BEEP_CLOUD_SKIP_OP: "1",
+            BEEP_CLOUD_VENDOR: "fixture",
+            HOME: home,
+            NVM_DIR: path.join(home, ".nvm"),
+            PATH: `${bin}:/usr/bin:/bin`,
+            XDG_CACHE_HOME: path.join(root, "cache"),
+          },
+          stdin: "ignore",
+          stdout: "pipe",
+          stderr: "pipe",
+        });
+        // Finalizers run in reverse acquisition order: release the fixture worker
+        // before the child-process finalizer runs on an interrupted test.
+        yield* Effect.addFinalizer(() => fs.writeFileString(path.join(root, "release-node"), "").pipe(Effect.orDie));
+        const [exitCode, stderr] = yield* Effect.all(
+          [handle.exitCode, handle.stderr.pipe(Stream.decodeText, Stream.mkString), Stream.runDrain(handle.stdout)],
+          { concurrency: "unbounded" }
+        );
+        expect(exitCode).toBe(scenario.exitCode);
+        if (scenario.signal === "") expect(stderr).toContain("download or checksum failed");
+        expect(stderr).not.toContain("missing download bounds");
+        expect(yield* fs.readFileString(path.join(root, "events"))).toBe("node-finished\ncleanup\n");
+        expect(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"))).toEqual([]);
+        expect(yield* fs.exists(path.join(home, ".bun"))).toBe(false);
+        expect(yield* fs.exists(path.join(root, "node_modules"))).toBe(false);
+      })
+    );
+  }
 
   it.effect("keeps compiler originals and unrelated files while removing only rotations and patched leftovers", () =>
     Effect.gen(function* () {
