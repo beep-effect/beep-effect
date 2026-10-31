@@ -164,8 +164,11 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
     yield* fs
       .makeDirectory(directory, { recursive: true })
       .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
+    // A hand-edited ledger may lack its trailing newline; start a new row instead of joining the last one.
+    const existing = yield* readLines(runsFile);
+    const separator = Str.isEmpty(existing) || Str.endsWith("\n")(existing) ? "" : "\n";
     yield* fs
-      .writeFileString(runsFile, `${line}\n`, { flag: "a" })
+      .writeFileString(runsFile, `${separator}${line}\n`, { flag: "a" })
       .pipe(Effect.mapError(holdsPlatformError(`Could not append to ${runsFile}`)));
   });
 

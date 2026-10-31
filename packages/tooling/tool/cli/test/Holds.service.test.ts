@@ -49,8 +49,8 @@ const judgement = '{"_tag":"Judgement","question":"Is the ADR still right?","rub
 const claimLine = (options: { readonly id: string; readonly expiredAt: string; readonly falsifier: string }) =>
   `{"id":"${options.id}","logicalKey":"hold:statelyai-model-testing-404","proposition":{"_tag":"Hold","holdId":"statelyai-model-testing-404","kind":"exact-pin","subject":{"packages":["statelyai"],"anchors":[{"file":"package.json","key":"workspaces.catalog.statelyai"}]},"assertion":"statelyai 0.15.0 depends on an unpublished package.","falsifier":${options.falsifier},"watch":[],"exitAction":{"_tag":"Unpin"}},"supportedBy":["manual"],"challengedBy":[],"validTime":{"_tag":"Interval","validFrom":0,"validTo":1000},"knowledge":{"recordedAt":0,"expiredAt":${options.expiredAt}},"supersedes":null,"review":{"_tag":"Proposed"},"signals":${signals}}`;
 
-const runLine = (id: string, holdVersionId: string) =>
-  `{"schemaVersion":"hold-probe-run/v1","id":"${id}","holdId":"statelyai-model-testing-404","holdVersionId":"${holdVersionId}","ranAt":1,"commitSha":"${commitSha}","runtime":"bun","controlVersion":"0.15.0","control":{"_tag":"Reproduced"},"candidateVersion":"0.19.0","candidate":{"_tag":"Passed"},"verdict":"candidate-passed"}`;
+const runLine = (id: string, holdVersionId: string, candidateVersion = "0.19.0") =>
+  `{"schemaVersion":"hold-probe-run/v1","id":"${id}","holdId":"statelyai-model-testing-404","holdVersionId":"${holdVersionId}","ranAt":1,"commitSha":"${commitSha}","runtime":"bun","controlVersion":"0.15.0","control":{"_tag":"Reproduced"},"candidateVersion":"${candidateVersion}","candidate":{"_tag":"Passed"},"verdict":"candidate-passed"}`;
 
 const currentClaim = claimLine({ id: "statelyai-model-testing-404@2", expiredAt: "null", falsifier: scripted });
 const expiredClaim = claimLine({ id: "statelyai-model-testing-404@1", expiredAt: "500", falsifier: scripted });
@@ -216,6 +216,45 @@ layer(
 )("a ledger with an undecodable run", (it) => {
   it.effect("fails instead of reading a short history", () =>
     Effect.map(Effect.flip(runHoldsList), (error) => expect(error.reason).toBe("decode"))
+  );
+});
+
+layer(
+  layerFor({
+    "hold-ledger/claims.jsonl": `${currentClaim}\n`,
+    "hold-ledger/runs.jsonl": A.join(
+      [
+        runLine("a", "statelyai-model-testing-404@2", "0.19.0"),
+        runLine("b", "statelyai-model-testing-404@2", "0.20.0"),
+      ],
+      "\n"
+    ),
+  }),
+  { timeout: "30 seconds" }
+)("two passes on different candidate releases", (it) => {
+  it.effect("do not confirm a flip", () =>
+    Effect.map(runHoldsList, (lines) =>
+      expect(lines).toEqual(["[holds] statelyai-model-testing-404 (exact-pin, statelyai): Unconfirmed after 2 run(s)"])
+    )
+  );
+});
+
+layer(
+  layerFor({
+    "hold-ledger/claims.jsonl": `${currentClaim}\n`,
+    "hold-ledger/runs.jsonl": runLine("a", "statelyai-model-testing-404@2", "latest"),
+  }),
+  { timeout: "30 seconds" }
+)("a runs file without a trailing newline", (it) => {
+  it.effect("keeps both rows readable after an append", () =>
+    Effect.gen(function* () {
+      expect(lastLine(yield* runHoldsProbe(probeInput("statelyai-model-testing-404", false)))).toContain(
+        "confirmed verdict: Flipped"
+      );
+      expect(yield* runHoldsList).toEqual([
+        "[holds] statelyai-model-testing-404 (exact-pin, statelyai): Flipped after 2 run(s)",
+      ]);
+    })
   );
 });
 

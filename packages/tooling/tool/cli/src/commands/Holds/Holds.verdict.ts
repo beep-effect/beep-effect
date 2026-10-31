@@ -86,7 +86,14 @@ export const confirmHoldVerdict = (newestFirst: ReadonlyArray<ProbeRunVerdict>):
   );
 
 /**
- * {@link confirmHoldVerdict} over recorded runs, newest first.
+ * {@link confirmHoldVerdict} over recorded runs, newest first, where a flip
+ * also needs the two passing runs to have installed the same candidate version.
+ *
+ * **Details**
+ *
+ * A moving candidate such as npm `latest` can resolve to a new release between
+ * probes. Two different releases passing once each confirm neither, so that
+ * history reads `Unconfirmed` until the newest release passes twice.
  *
  * **Example** (No runs yet)
  *
@@ -99,5 +106,13 @@ export const confirmHoldVerdict = (newestFirst: ReadonlyArray<ProbeRunVerdict>):
  * @category policies
  * @since 0.0.0
  */
-export const confirmHoldRuns = (newestFirst: ReadonlyArray<ProbeRun>): HoldVerdict =>
-  confirmHoldVerdict(A.map(newestFirst, verdictOf));
+export const confirmHoldRuns = (newestFirst: ReadonlyArray<ProbeRun>): HoldVerdict => {
+  const verdict = confirmHoldVerdict(A.map(newestFirst, verdictOf));
+  const sameCandidate = pipe(
+    A.take(newestFirst, 2),
+    A.map((run) => run.candidateVersion),
+    A.dedupe,
+    A.length
+  );
+  return verdict === "Flipped" && sameCandidate !== 1 ? "Unconfirmed" : verdict;
+};
