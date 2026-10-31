@@ -12,7 +12,7 @@ const leakPatterns = [
   /process\.chdir\(/,
   /\b(?:temporaryWorkingDirectory|withTempWorkingDirectory)\b/,
   // Any reassignment, anywhere on a line; `exitCode` only appears in child-process scripts.
-  /(?<![\w$.])process\.(?!exitCode\b|env\b)[A-Za-z_$][\w$]*\s*=(?!=)/,
+  /(?<![\w$.])process\.(?!exitCode\b)[A-Za-z_$][\w$]*\s*=(?!=)/,
   /(?<![\w$.])globalThis\.[A-Za-z_$][\w$]*\s*=(?!=)/,
   /\bObject\.defineProperty\(\s*(?:process|globalThis)\b/,
   /\bvi\.spyOn\(\s*process\s*,/,
