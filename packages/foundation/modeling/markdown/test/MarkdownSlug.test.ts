@@ -40,6 +40,9 @@ describe("MarkdownSlug", () => {
       assert.strictEqual(MarkdownSlug.slugify("one\r\ntwo\rthree"), "one-two-three");
       assert.isTrue(Result.isSuccess(decodeSlug(MarkdownSlug.slugify("a\nb"))));
       assert.isTrue(Result.isFailure(decodeSlug("a\nb")));
+      // JavaScript `$` without the m flag matches only at the end of input, so a trailing newline fails too.
+      assert.isTrue(Result.isFailure(decodeSlug("a\n")));
+      assert.isTrue(Result.isFailure(decodeSlug("a\r\n")));
     });
 
     it("folds each line break with the spaces and tabs around it, and reads a `>` as text", () => {
