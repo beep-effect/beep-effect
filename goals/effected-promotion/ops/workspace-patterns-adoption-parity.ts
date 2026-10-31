@@ -247,10 +247,12 @@ const runCli = Effect.fn("runCli")(function* (args: ReadonlyArray<string>) {
       );
       const exitCode = yield* handle.exitCode;
       const lines = A.filter(Str.split(stdout, "\n"), Str.isNonEmpty);
+      // Paths in the output name this checkout; fingerprint them repository-relative, like the derived lists.
+      const portable = Str.replaceAll(Str.slice(0, -1)(repoRoot), "<repo>")(stdout);
       return {
         command: `beep ${A.join(args, " ")}`,
         exitCode: Number(exitCode),
-        stdoutSha256: sha256(stdout),
+        stdoutSha256: sha256(portable),
         stdoutLines: A.length(lines),
       };
     })
