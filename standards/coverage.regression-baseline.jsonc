@@ -41714,30 +41714,6 @@
         "functions": 205
       },
       "files": {
-        "packages/tooling/library/repo-utils/src/Dependencies.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 87.5,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/tooling/library/repo-utils/src/DependencyIndex.ts": {
-          "lines": 88.46,
-          "statements": 88.46,
-          "branches": 50,
-          "functions": 100,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 3,
-            "functions": 0
-          }
-        },
         "packages/tooling/library/repo-utils/src/FsUtils.ts": {
           "lines": 93.26,
           "statements": 91.58,
@@ -42290,18 +42266,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/library/repo-utils/src/Workspaces.ts": {
-          "lines": 98.3,
-          "statements": 98.36,
-          "branches": 92.59,
-          "functions": 90,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 2,
-            "functions": 1
-          }
-        },
         "packages/tooling/library/repo-utils/src/errors/CyclicDependencyError.ts": {
           "lines": 100,
           "statements": 100,
@@ -42456,18 +42420,6 @@
             "statements": 9,
             "branches": 2,
             "functions": 4
-          }
-        },
-        "packages/tooling/library/repo-utils/src/schemas/WorkspaceDeps.ts": {
-          "lines": 75,
-          "statements": 75,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
           }
         },
         "packages/tooling/library/repo-utils/src/schemas/index.ts": {

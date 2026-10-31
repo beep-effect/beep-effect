@@ -8,11 +8,9 @@ import { it } from "@beep/test-runner";
  * counts that would break every time a workspace is added or removed.
  */
 
-import { buildRepoDependencyIndex } from "@beep/repo-utils/DependencyIndex";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { collectTsConfigPaths } from "@beep/repo-utils/TsConfig";
-import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -48,37 +46,25 @@ it.layer(TestLayer, { timeout: MONOREPO_INTEGRATION_TIMEOUT })("integration (rea
     );
   });
 
-  // ── resolveWorkspaceDirs ─────────────────────────────────────────────
-  describe("resolveWorkspaceDirs", () => {
-    it.effect(
-      "should discover @beep/repo-cli and @beep/repo-utils",
-      Effect.fn(function* () {
-        const root = yield* findRepoRoot();
-        const workspaces = yield* resolveWorkspaceDirs(root);
-
-        expect(HashMap.has(workspaces, "@beep/repo-cli")).toBe(true);
-        expect(HashMap.has(workspaces, "@beep/repo-utils")).toBe(true);
-
-        // At least 2 workspaces (could be more as repo grows)
-        expect(HashMap.size(workspaces)).toBeGreaterThanOrEqual(2);
-      }),
-      MONOREPO_INTEGRATION_TIMEOUT
-    );
-  });
-
   // ── collectTsConfigPaths ─────────────────────────────────────────────
   describe("collectTsConfigPaths", () => {
     it.effect(
       "should find tsconfig files in workspaces",
       Effect.fn(function* () {
         const root = yield* findRepoRoot();
-        const configs = yield* collectTsConfigPaths(root);
+        // Workspace discovery is `@beep/repo-workspaces`' job; the caller names the directories.
+        const configs = yield* collectTsConfigPaths(
+          root,
+          HashMap.make(["@beep/repo-utils", `${root}/packages/tooling/library/repo-utils`])
+        );
 
         // The root (@beep/root) must have at least one tsconfig
         expect(HashMap.has(configs, "@beep/root")).toBe(true);
 
         // @beep/repo-utils should have at least one tsconfig
         expect(HashMap.has(configs, "@beep/repo-utils")).toBe(true);
+
+        expect(HashMap.size(configs)).toBe(2);
 
         // Every entry should be a non-empty array of absolute paths
         for (const [_name, paths] of configs) {
@@ -87,31 +73,6 @@ it.layer(TestLayer, { timeout: MONOREPO_INTEGRATION_TIMEOUT })("integration (rea
             expect(Str.startsWith("/")(p)).toBe(true);
             expect(p).toMatch(/tsconfig.*\.json$/);
           }
-        }
-      }),
-      MONOREPO_INTEGRATION_TIMEOUT
-    );
-  });
-
-  // ── buildRepoDependencyIndex ─────────────────────────────────────────
-  describe("buildRepoDependencyIndex", () => {
-    it.effect(
-      "should build the dependency map for the monorepo",
-      Effect.fn(function* () {
-        const root = yield* findRepoRoot();
-        const index = yield* buildRepoDependencyIndex(root);
-
-        // Must contain root and at least @beep/repo-utils
-        expect(HashMap.has(index, "@beep/root")).toBe(true);
-        expect(HashMap.has(index, "@beep/repo-utils")).toBe(true);
-
-        // Each entry must have the workspace/npm structure
-        for (const [_name, deps] of index) {
-          expect(deps).toHaveProperty("workspace");
-          expect(deps).toHaveProperty("npm");
-          expect(deps.workspace).toHaveProperty("dependencies");
-          expect(deps.npm).toHaveProperty("dependencies");
-          expect(deps.npm).toHaveProperty("devDependencies");
         }
       }),
       MONOREPO_INTEGRATION_TIMEOUT

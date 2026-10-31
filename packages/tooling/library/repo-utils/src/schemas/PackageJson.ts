@@ -53,7 +53,7 @@ const exportConditionPattern = /^(?:[^.0-9]+|types@.+)$/;
 
 /**
  * Schema for package names used as dependency and catalog keys and in the
- * `WorkspaceDeps` and `DocgenConfig` package references.
+ * `DocgenConfig` package references.
  *
  * **Details**
  *
@@ -79,7 +79,7 @@ export const RepoPackageName = S.String.check(S.isMinLength(1))
     $I.annoteSchema("RepoPackageName", {
       title: "Repo Package Name",
       description:
-        "A package name used as a dependency or catalog key and in WorkspaceDeps and DocgenConfig references; it admits mixed case, while a manifest's own name follows the npm PackageName rules.",
+        "A package name used as a dependency or catalog key and in DocgenConfig references; it admits mixed case, while a manifest's own name follows the npm PackageName rules.",
     })
   );
 
@@ -194,8 +194,8 @@ const NonEmptyStringRecord = makeStrictStringKeyRecord(
 );
 
 /**
- * Render a string map field (`dependencies`, `scripts`, `engines`, a
- * `WorkspaceDeps` bucket) as a plain record with its keys in sorted order.
+ * Render a string map field (`dependencies`, `scripts`, `engines`) as a plain
+ * record with its keys in sorted order.
  *
  * **Details**
  *

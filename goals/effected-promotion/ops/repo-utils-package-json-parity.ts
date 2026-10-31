@@ -46,17 +46,16 @@
  */
 import * as NodeURL from "node:url";
 import {
-  buildRepoDependencyIndex,
+  DomainError,
   decodePackageJsonEffect,
   encodePackageJsonCanonicalPrettyEffect,
   encodePackageJsonEffect,
-  extractWorkspaceDependencies,
+  FsUtils,
+  GlobOptions,
   getPackageJsonSchemaIssues,
   normalizePackageJsonEffect,
   packageJsonJsonSchema,
-  resolveWorkspaceDirs,
-  sortWorkspacePackages,
-  workspaceGlobsFrom,
+  topologicalSort,
 } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
@@ -77,6 +76,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { PackageJson } from "@beep/repo-utils";
 
 const TOOL = "goals/effected-promotion/ops/repo-utils-package-json-parity.ts";
 const SCOPE = "git ls-files '*package.json' excluding **/test/fixtures/**";
@@ -90,6 +90,113 @@ const flagValue = (flag: string): O.Option<string> =>
   O.flatMap(
     A.findFirstIndex(process.argv, (arg) => arg === flag),
     (index) => A.get(process.argv, index + 1)
+  );
+
+// --- frozen retired readers ------------------------------------------------------
+
+// Frozen copies of repo-utils `Workspaces.ts` `workspaceGlobsFrom` and `resolveWorkspaceDirs`,
+// `Dependencies.ts` `extractWorkspaceDependencies` and `sortWorkspacePackages`, and `DependencyIndex.ts`
+// `buildRepoDependencyIndex` as they stood when this 3-A3 record was made. 4-A3 retired them when every
+// caller moved onto `@beep/repo-workspaces`; the parity record keeps the readers it measured.
+const ROOT_KEY = "@beep/root";
+const IGNORED_DIRS = ["**/node_modules/**", "**/dist/**", "**/build/**", "**/coverage/**", "**/.turbo/**"];
+const workspaceGlobsFrom = (workspaces: unknown): ReadonlyArray<string> => {
+  if (A.isArray(workspaces)) return A.filter(workspaces, P.isString);
+  if (P.isObject(workspaces) && P.hasProperty(workspaces, "packages") && A.isArray(workspaces.packages)) {
+    return A.filter(workspaces.packages, P.isString);
+  }
+  return [];
+};
+type LegacyBuckets = {
+  readonly dependencies: HashMap.HashMap<string, string>;
+  readonly devDependencies: HashMap.HashMap<string, string>;
+  readonly peerDependencies: HashMap.HashMap<string, string>;
+  readonly optionalDependencies: HashMap.HashMap<string, string>;
+};
+type LegacyWorkspaceDeps = {
+  readonly packageName: string;
+  readonly workspace: LegacyBuckets;
+  readonly npm: LegacyBuckets;
+};
+const extractWorkspaceDependencies = (
+  packageJson: PackageJson.Type,
+  workspaceNames: HashSet.HashSet<string>
+): LegacyWorkspaceDeps => {
+  const split = (dependencies: HashMap.HashMap<string, string>) => ({
+    workspace: HashMap.filter(dependencies, (_, name) => HashSet.has(workspaceNames, name)),
+    npm: HashMap.filter(dependencies, (_, name) => !HashSet.has(workspaceNames, name)),
+  });
+  const deps = split(packageJson.dependencies);
+  const devDeps = split(packageJson.devDependencies);
+  const peerDeps = split(packageJson.peerDependencies);
+  const optDeps = split(packageJson.optionalDependencies);
+  return {
+    packageName: `${packageJson.name}`,
+    workspace: {
+      dependencies: deps.workspace,
+      devDependencies: devDeps.workspace,
+      peerDependencies: peerDeps.workspace,
+      optionalDependencies: optDeps.workspace,
+    },
+    npm: {
+      dependencies: deps.npm,
+      devDependencies: devDeps.npm,
+      peerDependencies: peerDeps.npm,
+      optionalDependencies: optDeps.npm,
+    },
+  };
+};
+const resolveWorkspaceDirs = Effect.fn("frozen.resolveWorkspaceDirs")(function* (rootDir: string) {
+  const fsUtils = yield* FsUtils;
+  const rawRoot = yield* fsUtils.readJson(`${rootDir}/package.json`);
+  if (O.isNone(rawRoot)) return yield* DomainError.make({ message: "Failed to parse the root package.json" });
+  const rootPackage = yield* decodePackageJsonEffect(rawRoot.value);
+  const manifests = yield* fsUtils.globFiles(
+    A.map(workspaceGlobsFrom(rootPackage.workspaces), (glob) => `${Str.replace(/\/+$/, "")(glob)}/package.json`),
+    GlobOptions.make({ cwd: rootDir, absolute: true, followSymlinks: true, ignore: IGNORED_DIRS })
+  );
+  const entries = yield* Effect.forEach(manifests, (manifest) =>
+    Effect.gen(function* () {
+      const dir = yield* fsUtils.getParentDirectory(manifest);
+      const canonicalDir = yield* fsUtils.realPath(dir);
+      const raw = yield* fsUtils.readJson(`${dir}/package.json`);
+      if (O.isNone(raw)) return yield* DomainError.make({ message: `Failed to parse ${dir}/package.json` });
+      const pkg = yield* decodePackageJsonEffect(raw.value);
+      return [pkg.name, canonicalDir] as const;
+    })
+  );
+  return HashMap.fromIterable(entries);
+});
+const buildRepoDependencyIndex = Effect.fn("frozen.buildRepoDependencyIndex")(function* (rootDir: string) {
+  const fsUtils = yield* FsUtils;
+  const workspaces = yield* resolveWorkspaceDirs(rootDir);
+  const workspaceNames = HashSet.fromIterable(HashMap.keys(workspaces));
+  const readManifest = Effect.fnUntraced(function* (manifestPath: string) {
+    const raw = yield* fsUtils.readJson(manifestPath);
+    if (O.isNone(raw)) return yield* DomainError.make({ message: `Failed to parse JSON at "${manifestPath}"` });
+    return yield* decodePackageJsonEffect(raw.value);
+  });
+  const rootDeps = extractWorkspaceDependencies(yield* readManifest(`${rootDir}/package.json`), workspaceNames);
+  let result = HashMap.make<readonly [readonly [string, LegacyWorkspaceDeps]]>([
+    ROOT_KEY,
+    { ...rootDeps, packageName: ROOT_KEY },
+  ]);
+  for (const [name, dir] of workspaces) {
+    const manifest = yield* readManifest(`${dir}/package.json`);
+    result = HashMap.set(result, `${name}`, extractWorkspaceDependencies(manifest, workspaceNames));
+  }
+  return result;
+});
+const sortWorkspacePackages = (index: HashMap.HashMap<string, LegacyWorkspaceDeps>) =>
+  topologicalSort(
+    HashMap.map(index, (deps) =>
+      HashSet.fromIterable([
+        ...HashMap.keys(deps.workspace.dependencies),
+        ...HashMap.keys(deps.workspace.devDependencies),
+        ...HashMap.keys(deps.workspace.peerDependencies),
+        ...HashMap.keys(deps.workspace.optionalDependencies),
+      ])
+    )
   );
 
 // --- value rendering ------------------------------------------------------------
