@@ -1,0 +1,20 @@
+{
+  "previous": "5dcee18e8511c88f6324e26d0e87f7e51462daab16295f01024b8832e68dd8db",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (W0 lane, refactor/beep-cli-w0-retirements)",
+    "reason": "Re-record the cache posture of the root, repo-cli and repo-docgen subjects after the W0 retirements: the quality policy seal loses the JSDocMigrate inputs, repo-cli drops the runpod and codex-sdk dependencies, and the repo-docgen docs:aggregate script points at docgen aggregate; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/w0-cache-baseline-review.md",
+      "sha256": "a68dffb3991b610426c7ec34d0586a3bdd812abc98a1fbf2baa35f15375da706"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli", "@beep/repo-docgen"]
+}

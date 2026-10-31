@@ -1,11 +1,9 @@
 import * as NodeURL from "node:url";
 import { docgenCommand } from "@beep/repo-cli/commands/Docgen";
 import {
-  AnalyzeDocgenQualityWorkerEvalOptions,
   aggregateDocgenPackagesForTesting,
   aggregateGeneratedDocs,
   analyzeDocgenQuality,
-  analyzeDocgenQualityWorkerEval,
   analyzePackageDocumentation,
   analyzePackageQuality,
   buildDocgenLocalPlan,
@@ -15,8 +13,6 @@ import {
   DocgenExportAnalysis,
   DocgenLocalSelectedPackage,
   DocgenPackageAnalysis,
-  DocgenQualityWorkerEvalReport,
-  DocgenQualityWorkerEvalRunnerResult,
   DoctestReport,
   discoverDocgenWorkspacePackages,
   discoverOrphanDocgenConfigPaths,
@@ -26,19 +22,12 @@ import {
   generateAnalysisReport,
   generateQualityJson,
   generateQualityReport,
-  generateQualityWorkerEvalJson,
   getDeclaredJsDocs,
   isCanonicalDocgenAggregateConfigForTesting,
   loadDocgenConfigDocument,
-  makeQualityWorkerRunpodEvalPodCreateInput,
-  QualityWorkerRunpodEvalPodCreateInputOptions,
-  RunDocgenQualityWorkerRunpodEvalOptions,
-  requiredQualityWorkerRunpodEvalModel,
   runDocgenLocal,
-  runDocgenQualityWorkerRunpodEval,
   selectDirectDocgenPackagesForTesting,
   selectDocgenLocalPackagesForTesting,
-  selectQualityWorkerRunpodTemplate,
 } from "@beep/repo-cli/test/Docgen";
 import {
   isCiSync,
@@ -55,7 +44,6 @@ import {
 import { Process } from "@beep/repo-docgen/Domain";
 import { verifyDocgenProofManifest, writeDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
-import { Pod, Runpod, Template } from "@beep/runpod";
 import { fcRuns } from "@beep/test-utils";
 import { A, currentHostPlatform, HostProcessPlatform, O, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -72,29 +60,21 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
-import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Ref from "effect/Ref";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Project, SyntaxKind } from "ts-morph";
-import type {
-  DocgenQualityPackageReport,
-  DocgenQualityReview,
-  DocgenQualitySubject,
-  DocgenQualityWorkerEvalRunner,
-} from "@beep/repo-cli/test/Docgen";
+import type { DocgenQualityPackageReport, DocgenQualityReview, DocgenQualitySubject } from "@beep/repo-cli/test/Docgen";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-const encodeDocgenQualityWorkerEvalReportJsonEffect = S.encodeEffect(S.fromJsonString(DocgenQualityWorkerEvalReport));
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
@@ -107,7 +87,6 @@ const encodeJson = S.encodeUnknownEffect(UnknownJson);
 const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);
 const encodeDocgenConfigDocument = S.encodeEffect(DocgenConfigDocument);
 const decodeDocgenConfigDocument = S.decodeUnknownEffect(DocgenConfigDocument);
-const decodeWorkerEvalReportJson = S.decodeUnknownEffect(S.fromJsonString(DocgenQualityWorkerEvalReport));
 const isString = (value: unknown): value is string => typeof value === "string";
 const DOCGEN_COMMAND_TEST_TIMEOUT = 30_000;
 const DOCTEST_FIXTURE_DIR = NodeURL.fileURLToPath(new URL("./fixtures/doctest/", import.meta.url));
@@ -3476,196 +3455,6 @@ export const value${index} = ${index};
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
-  it.effect("evaluates worker packets with a fake Codex runner", () =>
-    Effect.gen(function* () {
-      yield* temporaryRepository;
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tmpDir = process.cwd();
-      yield* fs.writeFileString(
-        path.join(tmpDir, "package.json"),
-        yield* encodeJson({
-          name: "@beep/test-root",
-          private: true,
-          workspaces: ["packages/foundation/*/*"],
-        })
-      );
-
-      const schemaDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
-      const typesDir = path.join(tmpDir, "packages", "foundation", "primitive", "types");
-      yield* fs.makeDirectory(path.join(schemaDir, "src"), { recursive: true });
-      yield* fs.makeDirectory(path.join(typesDir, "src"), { recursive: true });
-      yield* fs.writeFileString(
-        path.join(schemaDir, "package.json"),
-        yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
-      );
-      yield* fs.writeFileString(
-        path.join(typesDir, "package.json"),
-        yield* encodeJson({ name: "@beep/types", version: "0.0.0" })
-      );
-      yield* fs.writeFileString(path.join(schemaDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
-      yield* fs.writeFileString(path.join(typesDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
-      yield* fs.writeFileString(
-        path.join(schemaDir, "src", "index.ts"),
-        `/**
- * Schema fixture without a useful example.
- *
- * @category parsing
- * @since 0.0.0
- */
-export const parseValue = (value: string): string => value.trim();
-`
-      );
-      yield* fs.writeFileString(
-        path.join(typesDir, "src", "index.ts"),
-        `/**
- * Type fixture without a useful example.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type TypeValue = string;
-`
-      );
-
-      const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
-      const targets = A.filter(packages, (pkg) => pkg.name === "@beep/schema" || pkg.name === "@beep/types");
-      const report = yield* analyzeDocgenQuality({
-        scope: "all",
-        scoreMode: "codex",
-        targets,
-      });
-      let observedWorkingDirectories = A.empty<string>();
-      const runner: DocgenQualityWorkerEvalRunner = Effect.fnUntraced(function* (input) {
-        observedWorkingDirectories = A.append(observedWorkingDirectories, input.workingDirectory);
-        return yield* Effect.succeed(
-          DocgenQualityWorkerEvalRunnerResult.make({
-            finalResponse: yield* encodeJson({
-              localScore: 8,
-              rationale: "The draft adds an observable example and keeps required tags.",
-              draftJsDoc: "/**\\n * Demonstrates the exported symbol.\\n */",
-              policyViolationCodes: [],
-              reviewDisposition: "candidate",
-            }).pipe(Effect.orDie),
-          })
-        );
-      });
-
-      const workerReport = yield* analyzeDocgenQualityWorkerEval(
-        AnalyzeDocgenQualityWorkerEvalOptions.make({
-          codexSdkVersion: "test-sdk",
-          model: "gpt-5.4-mini",
-          packetLimit: 2,
-          provider: "codex",
-          reasoningEffort: "low",
-          report,
-          runner,
-          scope: "input",
-          sourceQualityReport: "quality.json",
-        })
-      );
-      const json = yield* generateQualityWorkerEvalJson(workerReport);
-      const decoded = yield* decodeWorkerEvalReportJson(json);
-      const packetPackages = pipe(
-        decoded.packets,
-        A.map((packet) => packet.packageName),
-        A.dedupe
-      );
-
-      expect(decoded.schemaVersion).toBe(1);
-      expect(decoded.provider).toBe("codex");
-      expect(decoded.model).toBe("gpt-5.4-mini");
-      expect(decoded.reasoningEffort).toBe("low");
-      expect(decoded.codexSdkVersion).toBe("test-sdk");
-      expect(decoded.summary.sourcePackets).toBeGreaterThanOrEqual(2);
-      expect(decoded.summary.selectedPackets).toBe(2);
-      expect(decoded.summary.completed).toBe(2);
-      expect(decoded.summary.candidates).toBe(2);
-      expect(packetPackages).toEqual(["@beep/schema", "@beep/types"]);
-      expect(A.every(observedWorkingDirectories, (directory) => directory !== tmpDir)).toBe(true);
-
-      const localProviderReport = yield* analyzeDocgenQualityWorkerEval(
-        AnalyzeDocgenQualityWorkerEvalOptions.make({
-          codexSdkVersion: "test-sdk",
-          model: "qwen-test",
-          packetLimit: 0,
-          provider: "ollama",
-          report,
-          runner,
-          scope: "input",
-          sourceQualityReport: "quality.json",
-        })
-      );
-
-      expect(localProviderReport.reasoningEffort).toBeNull();
-
-      let observedBaseUrl = O.none<string>();
-      const baseUrlRunner: DocgenQualityWorkerEvalRunner = Effect.fnUntraced(function* (input) {
-        observedBaseUrl = O.fromUndefinedOr(input.baseUrl);
-        return yield* Effect.succeed(
-          DocgenQualityWorkerEvalRunnerResult.make({
-            finalResponse: yield* encodeJson({
-              localScore: 8,
-              rationale: "The draft adds an observable example and keeps required tags.",
-              draftJsDoc: "/**\\n * Demonstrates the exported symbol.\\n */",
-              policyViolationCodes: [],
-              reviewDisposition: "candidate",
-            }).pipe(Effect.orDie),
-          })
-        );
-      });
-      const baseUrlReport = yield* analyzeDocgenQualityWorkerEval(
-        AnalyzeDocgenQualityWorkerEvalOptions.make({
-          baseUrl: "  https://pod-11434.proxy.runpod.net/v1  ",
-          codexSdkVersion: "test-sdk",
-          model: "qwen3-coder:30b",
-          packetLimit: 1,
-          provider: "ollama",
-          report,
-          runner: baseUrlRunner,
-          scope: "input",
-          sourceQualityReport: "quality.json",
-        })
-      );
-
-      expect(baseUrlReport.summary.completed).toBe(1);
-      expect(O.getOrNull(observedBaseUrl)).toBe("https://pod-11434.proxy.runpod.net/v1");
-
-      const outOfRangeScoreRunner: DocgenQualityWorkerEvalRunner = Effect.fnUntraced(function* () {
-        return yield* Effect.succeed(
-          DocgenQualityWorkerEvalRunnerResult.make({
-            finalResponse: yield* encodeJson({
-              localScore: 11,
-              rationale: "The worker returned an out-of-range score.",
-              draftJsDoc: "/**\\n * Demonstrates the exported symbol.\\n */",
-              policyViolationCodes: [],
-              reviewDisposition: "candidate",
-            }).pipe(Effect.orDie),
-          })
-        );
-      });
-      const outOfRangeScoreReport = yield* analyzeDocgenQualityWorkerEval(
-        AnalyzeDocgenQualityWorkerEvalOptions.make({
-          codexSdkVersion: "test-sdk",
-          model: "gpt-5.4-mini",
-          packetLimit: 1,
-          provider: "codex",
-          reasoningEffort: "low",
-          report,
-          runner: outOfRangeScoreRunner,
-          scope: "input",
-          sourceQualityReport: "quality.json",
-        })
-      );
-      const failedPacket = outOfRangeScoreReport.packets[0];
-
-      expect(outOfRangeScoreReport.summary.failed).toBe(1);
-      expect(failedPacket?.status).toBe("failed");
-      expect(failedPacket?.localScore).toBeNull();
-      expect(failedPacket?.error).toContain("Worker returned invalid eval JSON");
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
   it.effect(
     "wires --packet-limit through the quality CLI",
     () =>
@@ -3736,270 +3525,6 @@ export const cliValue${index} = ${index};
         expect(decoded.remediationPackets).toHaveLength(2);
         expect(decoded.packages?.[0]?.summary?.remediationPackets).toBe(2);
         expect(decoded.packages?.[0]?.omittedPacketCount).toBe(3);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
-    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
-  );
-
-  it.effect(
-    "writes worker eval JSON from a saved quality report without requiring a live provider",
-    () =>
-      Effect.gen(function* () {
-        yield* temporaryRepository;
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const tmpDir = process.cwd();
-        yield* fs.writeFileString(
-          path.join(tmpDir, "package.json"),
-          yield* encodeJson({
-            name: "@beep/test-root",
-            private: true,
-            workspaces: ["packages/foundation/*/*"],
-          })
-        );
-
-        const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
-        const qualityPath = path.join(tmpDir, "quality.json");
-        const evalPath = path.join(tmpDir, "worker-eval.json");
-        yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-        yield* fs.writeFileString(
-          path.join(packageDir, "package.json"),
-          yield* encodeJson({
-            name: "@beep/schema",
-            version: "0.0.0",
-          })
-        );
-        yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
-        yield* fs.writeFileString(
-          path.join(packageDir, "src", "index.ts"),
-          `/**
- * Missing example worker eval fixture.
- *
- * @category parsing
- * @since 0.0.0
- */
-export const workerEvalValue = 1;
-`
-        );
-
-        const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
-        const target = O.getOrUndefined(A.findFirst(packages, (pkg) => pkg.name === "@beep/schema"));
-
-        expect(target).toBeDefined();
-
-        const qualityReport = yield* analyzeDocgenQuality({
-          scope: "package",
-          scoreMode: "codex",
-          targets: [target!],
-        });
-        yield* fs.writeFileString(qualityPath, yield* generateQualityJson(qualityReport));
-
-        yield* runDocgenCommand([
-          "quality-worker-eval",
-          "--input",
-          qualityPath,
-          "--provider",
-          "codex",
-          "--model",
-          "gpt-5.4-mini",
-          "--packet-limit",
-          "0",
-          "--output",
-          evalPath,
-        ]);
-
-        const decoded = yield* decodeWorkerEvalReportJson(yield* fs.readFileString(evalPath));
-        const logLines = A.filter(yield* TestConsole.logLines, isString);
-
-        expect(decoded.schemaVersion).toBe(1);
-        expect(decoded.scope).toBe("input");
-        expect(decoded.sourceQualityReport).toBe(qualityPath);
-        expect(decoded.provider).toBe("codex");
-        expect(decoded.model).toBe("gpt-5.4-mini");
-        expect(decoded.reasoningEffort).toBe("low");
-        expect(decoded.codexSdkVersion).toMatch(/^\d+\.\d+\.\d+/);
-        expect(decoded.summary.sourcePackets).toBeGreaterThan(0);
-        expect(decoded.summary.selectedPackets).toBe(0);
-        expect(decoded.packets).toHaveLength(0);
-        expect(A.join(logLines, "\n")).toContain(`docgen: wrote ${evalPath}`);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
-    {
-      timeout: DOCGEN_COMMAND_TEST_TIMEOUT,
-    }
-  );
-
-  it.effect("builds Runpod Ollama pod inputs without secrets", () =>
-    Effect.gen(function* () {
-      const selected = selectQualityWorkerRunpodTemplate([
-        Template.make({
-          id: "template-z",
-          imageName: "runpod/pytorch:latest",
-          name: "Plain PyTorch",
-        }),
-        Template.make({
-          id: "template-a",
-          imageName: "ollama/ollama:latest",
-          name: "Ollama CUDA",
-        }),
-      ]);
-
-      expect(O.isSome(selected)).toBe(true);
-      if (O.isNone(selected)) {
-        return;
-      }
-
-      expect(selected.value.id).toBe("template-a");
-
-      const body = makeQualityWorkerRunpodEvalPodCreateInput(
-        QualityWorkerRunpodEvalPodCreateInputOptions.make({
-          gpuTypeIds: ["NVIDIA RTX A6000"],
-          minRamPerGpuGb: 48,
-          model: requiredQualityWorkerRunpodEvalModel(),
-          podName: "beep-jsdoc-worker-eval-test",
-        })
-      );
-      const bootstrap = A.join(body.dockerStartCmd ?? [], "\n");
-
-      expect(body.computeType).toBe("GPU");
-      expect(body.globalNetworking).toBe(true);
-      expect(body.gpuTypeIds).toEqual(["NVIDIA RTX A6000"]);
-      expect(body.minRAMPerGPU).toBe(48);
-      expect(body.ports).toEqual(["11434/http"]);
-      expect(bootstrap).toContain("apt-get install -y curl ca-certificates zstd");
-      expect(bootstrap).toContain("sha256sum -c -");
-      expect(bootstrap).toContain("sh /tmp/ollama-install.sh");
-      expect(bootstrap).not.toMatch(/curl.*\|\s*sh/);
-      expect(bootstrap).toContain("http://127.0.0.1:11434/api/pull");
-      expect(bootstrap).toContain('-d \'{"name":"qwen3-coder:30b"}\'');
-      expect(bootstrap).not.toContain("RUNPOD_API_KEY");
-    })
-  );
-
-  it.effect("cleans up Runpod pods after recovering a missing createPod id", () =>
-    Effect.gen(function* () {
-      yield* temporaryRepository;
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tmpDir = process.cwd();
-      const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
-      yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-      yield* fs.writeFileString(
-        path.join(tmpDir, "package.json"),
-        yield* encodeJson({
-          name: "@beep/test-root",
-          private: true,
-          workspaces: ["packages/foundation/*/*"],
-        })
-      );
-      yield* fs.writeFileString(
-        path.join(packageDir, "package.json"),
-        yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
-      );
-      yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
-      yield* fs.writeFileString(
-        path.join(packageDir, "src", "index.ts"),
-        `/**
- * Schema fixture without a useful example.
- *
- * @category parsing
- * @since 0.0.0
- */
-export const parseValue = (value: string): string => value.trim();
-`
-      );
-
-      const [target] = yield* discoverDocgenWorkspacePackages(tmpDir);
-      const report = yield* analyzeDocgenQuality({
-        scope: "package",
-        scoreMode: "codex",
-        targets: [target!],
-      });
-      const stoppedPodIds = yield* Ref.make<ReadonlyArray<string>>([]);
-      const deletedPodIds = yield* Ref.make<ReadonlyArray<string>>([]);
-      const runpod = Runpod.of({
-        createPod: () => Effect.succeed(Pod.make({ name: "created-without-id" })),
-        deletePod: (request: { readonly podId: string }) => Ref.update(deletedPodIds, A.append(request.podId)),
-        getPod: (request: { readonly podId: string }) =>
-          Effect.succeed(Pod.make({ id: request.podId, name: "recovered-pod" })),
-        listTemplates: () => Effect.die("unexpected public template search"),
-        listPods: (request?: { readonly name?: string }) =>
-          Effect.succeed([
-            Pod.make(
-              request?.name === undefined ? { id: "pod-recovered" } : { id: "pod-recovered", name: request.name }
-            ),
-          ]),
-        stopPod: (request: { readonly podId: string }) => Ref.update(stoppedPodIds, A.append(request.podId)),
-      } as never);
-      const httpClient = HttpClient.make(() => Effect.die("unexpected docgen quality worker HTTP request"));
-
-      const exit = yield* runDocgenQualityWorkerRunpodEval(
-        RunDocgenQualityWorkerRunpodEvalOptions.make({
-          confirmRunpodEval: true,
-          model: requiredQualityWorkerRunpodEvalModel(),
-          provider: "ollama",
-          readinessTimeoutMs: 1,
-          report,
-          scope: "package",
-          sourceQualityReport: "quality.json",
-        })
-      ).pipe(
-        Effect.provideService(Runpod, runpod),
-        Effect.provideService(HttpClient.HttpClient, httpClient),
-        Effect.exit
-      );
-
-      assertTrue(exit._tag === "Failure");
-      expect(yield* Ref.get(stoppedPodIds)).toEqual(["pod-recovered"]);
-      expect(yield* Ref.get(deletedPodIds)).toEqual(["pod-recovered"]);
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
-  it.effect(
-    "guards Runpod worker eval behind explicit confirmation",
-    () =>
-      Effect.gen(function* () {
-        yield* temporaryRepository;
-        const exit = yield* Effect.exit(
-          runDocgenCommand([
-            "quality-worker-eval-runpod",
-            "--all",
-            "--provider",
-            "ollama",
-            "--model",
-            requiredQualityWorkerRunpodEvalModel(),
-            "--gpu-type",
-            "NVIDIA RTX A6000",
-            "--readiness-timeout-ms",
-            "1",
-          ])
-        );
-
-        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("--confirm-runpod-eval");
-        expectReportedExit(exit);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
-    { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
-  );
-
-  it.effect(
-    "rejects nonpositive Runpod readiness timeout values",
-    () =>
-      Effect.gen(function* () {
-        yield* temporaryRepository;
-        const exit = yield* Effect.exit(
-          runDocgenCommand([
-            "quality-worker-eval-runpod",
-            "--all",
-            "--provider",
-            "ollama",
-            "--model",
-            requiredQualityWorkerRunpodEvalModel(),
-            "--readiness-timeout-ms",
-            "0",
-            "--confirm-runpod-eval",
-          ])
-        );
-
-        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("--readiness-timeout-ms");
-        expectReportedExit(exit);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
     { timeout: DOCGEN_COMMAND_TEST_TIMEOUT }
   );
@@ -5327,26 +4852,6 @@ export const ValidExport = packageDocAnchor;
       expectReportedExit(exit);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
-});
-
-describe("DocgenQualityWorkerEvalReport schema", () => {
-  {
-    const arbitrary = Arbitrary.schema(DocgenQualityWorkerEvalReport);
-    const sameReport = S.toEquivalence(DocgenQualityWorkerEvalReport);
-    it.effect.prop(
-      "every schema-derived report round-trips through its JSON codec",
-      [arbitrary],
-      Effect.fnUntraced(function* ([report]) {
-        expect(
-          sameReport(
-            report,
-            yield* decodeWorkerEvalReportJson(yield* encodeDocgenQualityWorkerEvalReportJsonEffect(report))
-          )
-        ).toBe(true);
-      }),
-      { arbitrary: fcRuns(16) }
-    );
-  }
 });
 
 describe("getDeclaredJsDocs", () => {

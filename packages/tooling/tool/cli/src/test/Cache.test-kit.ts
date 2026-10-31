@@ -55,7 +55,6 @@ export {
 export {
   equivalentCacheFixtureRuns,
   inspectCacheFixtureCapture,
-  runCacheSyntheticForTesting,
 } from "../commands/Cache/Cache.experiment.ts";
 export {
   collectCacheGitExclusions,
