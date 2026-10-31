@@ -579,7 +579,7 @@
     {
       "command": "beep create-package parity-probe --type library --family tooling --kind library --description 4-A2 parity probe --dry-run --skip-lockfile",
       "exitCode": 0,
-      "stdoutSha256": "904fd1c82802b847940ba8acc2a4d36ecd4a34343cc4bc9d9fa6c474b3d70897",
+      "stdoutSha256": "99ec849a6d3f77d85a83e7cb730050b06071f7fef4880cc60df179add25742ad",
       "stdoutLines": 23
     }
   ]
