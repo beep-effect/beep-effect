@@ -1,8 +1,6 @@
 /**
- * Hold probe verdict rules.
- *
- * A probe is trusted only when its control still reproduces the recorded
- * failure, and a flip needs two consecutive passing runs.
+ * Hold probe verdict rules: a probe is trusted only when its control still
+ * reproduces the recorded failure, and a flip needs two consecutive passing runs.
  *
  * @packageDocumentation
  * @since 0.0.0
