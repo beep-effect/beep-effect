@@ -75,12 +75,16 @@
       "purpose": "4-A4 differential: runEcosystemPolarityCheck over the live repo and a synthetic ecosystem of import forms, recorded before the SourceBoundary.scan switch and compared at the head with every difference classified into an intended shift class."
     },
     {
+      "path": "ops/git-adoption-differential.ts",
+      "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+    },
+    {
       "path": "ops/github-reporting-gfm-differential.ts",
       "purpose": "Wave 3-1 oracle: GitHubMarkdown writer output rendered through micromark GFM and checked for the promised table and inline structure."
     },
     {
-      "path": "ops/git-adoption-differential.ts",
-      "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
+      "path": "ops/glob-shim-census.ts",
+      "purpose": "R2a parity: recomputes the Bun.Glob shim matcher census (every `new Bun.Glob` pattern, the vitest include globs and semantics probes over the tracked-path universe) with `@beep/glob` GlobPattern (dot: true) and compares it with the recorded `research/glob-shim-census-r2a.json`."
     },
     {
       "path": "ops/glob-adoption-parity.ts",
