@@ -39,14 +39,14 @@ const SCHEMA_PROTOCOL_KEYS: ReadonlyArray<PropertyKey> = [
  *
  * **Example** (Retain a static through the public annotation API)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Retain a static through the public annotation API"
  * import { $SchemaId } from "@beep/identity/packages"
  * import * as S from "effect/Schema"
  *
  * const source = S.String.annotate({})
  * Reflect.defineProperty(source, "empty", { value: "" })
  * const annotated = source.pipe($SchemaId.annoteSchema("StringWithEmpty"))
- * console.log(Reflect.get(annotated, "empty")) // ""
+ * Reflect.get(annotated, "empty") // => ""
  * ```
  *
  * @category combinators
