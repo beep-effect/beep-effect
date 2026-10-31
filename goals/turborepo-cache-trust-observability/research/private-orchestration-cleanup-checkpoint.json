@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "cache-private-orchestration-cleanup-checkpoint/v1",
+  "recordedAt": "2026-10-30T01:12:36.476924+00:00",
+  "sourceBaseRevision": "8d27c21545c0517d43f35160fdf46a8acf7a00c3",
+  "authority": "Source and local component proof only. The complete package, final, hosted, native/deployed and elapsed-window requirements remain unproven on this repair.",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "db98f7a514a87eb6bd508327d768847266e8dd97d7f06a01f4693ac92b9e5bf5"
+  },
+  "productionSourceUnchanged": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "0db66290385c73048895e9fb06c24822d248cf6d0e63abfa051e8b35928fdbe6",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "125553d2c5a2888cbe6f9672f1131a4b2ac5b17be700b083d6e7906cf7fa2a7f"
+  },
+  "attribution": {
+    "introduced": true,
+    "fullPackage": {
+      "exit": 1,
+      "elapsedSeconds": 1044.07,
+      "finishedAt": "2026-10-30T00:54:59.074783+00:00",
+      "passed": 8128,
+      "failed": 15,
+      "skipped": 3,
+      "failedFile": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts"
+    },
+    "hosted": {
+      "run": 40980601617,
+      "head": "8d27c21545c0517d43f35160fdf46a8acf7a00c3",
+      "propertyLaws": {
+        "job": 123819406921,
+        "failed": 15,
+        "cause": "The same obsolete source-contained directory assertions."
+      },
+      "unitShard": {
+        "job": 123819406786,
+        "failed": 15,
+        "passed": 3929,
+        "skipped": 8,
+        "cause": "The same obsolete source-contained directory assertions."
+      },
+      "unitAggregate": {
+        "job": 123831306365,
+        "cause": "Failed unit shard."
+      },
+      "coverageAggregate": {
+        "job": 123831337064,
+        "cause": "Refused UNIT_RESULT=failure before coverage assertions."
+      }
+    },
+    "rootCause": "The storage-isolation repair removed .beep/cache/experiments from source, but the old cleanup assertions still read that directory. The earlier focused suite omitted this orchestration file.",
+    "additionalLocalFailure": "The first filesystem observer needed a named Effect.fn; quick type checks caught and verified that repair."
+  },
+  "repair": [
+    "Observe every actual scoped temporary directory without hard-coding its new prefix.",
+    "Assert mode0700 and a location outside the source fixture while each directory exists.",
+    "Require allocation and confirm every observed directory is absent after success and execution faults.",
+    "Retain zero-allocation assertions for dependency-closure refusal."
+  ],
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 33.945,
+      "finishedAt": "2026-10-30T01:12:16.705708+00:00",
+      "tests": 101,
+      "files": 7
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 23.714,
+      "finishedAt": "2026-10-30T01:12:06.474339+00:00",
+      "tests": 101,
+      "files": 7
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 13.968,
+      "finishedAt": "2026-10-30T01:11:56.240788+00:00"
+    }
+  },
+  "cleanupScopeRemovalControl": {
+    "schemaVersion": "cache-orchestration-cleanup-control/v1",
+    "recordedAt": "2026-10-30T01:11:32.446380+00:00",
+    "source": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+    "sourceSha256": "0db66290385c73048895e9fb06c24822d248cf6d0e63abfa051e8b35928fdbe6",
+    "mutantSha256": "4ae27eed8ccfa42126d80810e01e1e01294f997f06406b90c7b201c9b2bc8a5f",
+    "testFile": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+    "testSha256": "db98f7a514a87eb6bd508327d768847266e8dd97d7f06a01f4693ac92b9e5bf5",
+    "test": "binds fresh/replay controls to native summaries, validates mutations and cleans overlays",
+    "removed": "runPilot Effect.scoped enclosure",
+    "exit": 1,
+    "failedTests": 1,
+    "cleanupAssertionFailedForIntendedReason": true,
+    "reportSha256": "4796aa5589de7ad20f20f8eb8bda986e57cf1a25c9d41a761772bec3f1f93bae",
+    "elapsedSeconds": 4.697,
+    "sourceRestoredExactly": true
+  },
+  "unchanged": {
+    "coverageFloors": true,
+    "qualificationLedger": true,
+    "ordinaryR2": true,
+    "signedTrialInactive": true
+  },
+  "remaining": [
+    "Fresh normal publication of the complete repair wave.",
+    "Complete package audit and documentation, current final and hosted acceptance.",
+    "Protected immutable publication, normal-source native qualification and actual representative windows."
+  ]
+}

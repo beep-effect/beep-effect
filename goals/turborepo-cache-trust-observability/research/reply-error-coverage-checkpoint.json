@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "cache-reply-error-coverage-checkpoint/v1",
+  "recordedAt": "2026-10-29T07:17:16.982380+00:00",
+  "authority": "source-bound-local-observation-only",
+  "headAtVerification": "1b8c3d3494a2f5fdf68c35ca4b80d064e86cfe42",
+  "sourceState": "working-tree-with-exact-file-digests",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.conformance.wire.ts": "81574a9d79d8abfc34fddcfdcb59ace459997b24c4c4d96b0ced958002d2bf2b",
+    "packages/tooling/tool/cli/test/cache-conformance.test.ts": "dba225be23e42b3362ab6dac241bae19755a80501a3fd0a6ff6d1ac925f9d4c9",
+    "vitest.shared.ts": "d92b05d47e02ebd0be774636928ff4d5ff4ed01f643e5833275724fd9bde36e4"
+  },
+  "hostedAttribution": {
+    "run": 40828512940,
+    "job": 123307545277,
+    "introduced": true,
+    "failure": "Conformance wire line/statement coverage dropped below the committed floors. All unit shards passed.",
+    "baselineChanged": false
+  },
+  "controls": [
+    "Unexpected delivered HTTP statuses stay distinct from a never-written 404.",
+    "Segmented complete bytes survive at the exact bound; an oversized reply fails without a partial success.",
+    "An absent body is empty; a failed stream propagates HttpClientError instead of a completed prefix."
+  ],
+  "verification": {
+    "bunTests": {
+      "passed": 19,
+      "files": 1,
+      "seconds": 1.96
+    },
+    "nodeV8Tests": {
+      "passed": 19,
+      "files": 1,
+      "seconds": 3.92
+    },
+    "packageQuick": {
+      "lintSeconds": 5.7,
+      "checkSeconds": 13.3
+    },
+    "fallowIntroducedFindings": 0,
+    "effectVitest": {
+      "retainedPlatformProvenanceJudgment": 1,
+      "scope": "Existing NodeServices import; new tests do not add a platform import or platform service.",
+      "files": 3009,
+      "retainedFindings": 546,
+      "introducedFindings": 0,
+      "resolvedFindings": 0,
+      "inventoryChanged": false
+    },
+    "supplementalCoverage": {
+      "authority": "local supplemental Node/V8 plus exact-head hosted shard observation; fresh hosted coverage still required",
+      "baseHostedHead": "1b8c3d3494a2f5fdf68c35ca4b80d064e86cfe42",
+      "sourceSha256": "81574a9d79d8abfc34fddcfdcb59ace459997b24c4c4d96b0ced958002d2bf2b",
+      "files": {
+        "lines": {
+          "total": 516,
+          "covered": 499,
+          "pct": 96.7
+        },
+        "statements": {
+          "total": 556,
+          "covered": 536,
+          "pct": 96.4
+        }
+      },
+      "formerlyUncoveredNewlyExercisedLines": [206, 401]
+    }
+  },
+  "priorCheckpointsRetained": [
+    "proxy-request-completion-checkpoint.json",
+    "proxy-node-runtime-checkpoint.json"
+  ],
+  "productionCodeChanged": false,
+  "productionChanges": false,
+  "notProven": [
+    "Fresh exact-head hosted coverage comparison",
+    "Whole-goal acceptance or deployed signing"
+  ]
+}

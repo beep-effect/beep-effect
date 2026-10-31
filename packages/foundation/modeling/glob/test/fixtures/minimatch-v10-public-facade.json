@@ -1,0 +1,6184 @@
+[
+  ["public-facade", "+(a|b)", "b", { "platform": "posix" }, true],
+  ["public-facade", ".hidden", "a/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "**", "abc", { "platform": "posix" }, true],
+  ["public-facade", "a", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/[abc]",
+    "b/abc/a/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/?/a*", "a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/*.js/x-y",
+    "abc/.hidden/b/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/a*/*.js/a",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", "a/x/abc/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/a*/.hidden/x-y",
+    ".hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/!x", "x/", { "platform": "posix" }, false],
+  ["public-facade", "*.js/.hidden", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/.hidden/*/!x",
+    "abc/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a*/!x", "", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "x-y/{a,b}/?/", "b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/a", "x", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/*.js", "b/a/b/x/x", { "platform": "posix" }, false],
+  ["public-facade", "a*/b", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/[abc]/[abc]/*.js",
+    "/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/**/*/",
+    "x/a//x/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/.hidden/b/b",
+    "a/a/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "!x/+(a|b)",
+    "b/abc/a/b/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "+(a|b)/a/?", "x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "b", { "platform": "posix" }, false],
+  ["public-facade", "x-y//*/a*", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/a.b+c/*",
+    "x/x/abc/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/[abc]/b/**", "b", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c//*.js/!x", "/a/b/x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", ".hidden/a/a/a", { "platform": "posix" }, false],
+  ["public-facade", "abc", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "a/b/a.b+c/a", "x/a", { "platform": "posix" }, false],
+  ["public-facade", "/a.b+c", "/x/b/b/abc", { "platform": "posix" }, false],
+  ["public-facade", "b/+(a|b)", "abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "b/a*/.hidden/", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/x-y/b/[abc]",
+    "b/abc//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/**//[abc]", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "", "b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/[abc]", "abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "x/a/abc", { "platform": "posix" }, false],
+  ["public-facade", "b/*.js", "/x", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "b/a/b/abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "*", "b/x/x/a/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/x-y/**",
+    "a/b/b/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/a*/+(a|b)", ".hidden/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/{a,b}/!x/",
+    "/a//abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/b", "b/x/x/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "b", "b/", { "platform": "posix" }, true],
+  ["public-facade", "b", ".hidden/b/b/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/[abc]",
+    ".hidden/abc/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/**/*",
+    ".hidden/abc//a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/**/a.b+c/{a,b}",
+    "/.hidden/x/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "x/b", { "platform": "posix" }, false],
+  ["public-facade", "*.js/[abc]", "a//abc", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/abc/{a,b}",
+    "abc/a///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/b",
+    ".hidden/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/x-y", "", { "platform": "posix" }, false],
+  ["public-facade", "//+(a|b)", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**",
+    "a//b/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/x-y",
+    "b//a/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/b", "abc/a/a", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c", "abc/x", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/b", "a/b/a/abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/+(a|b)/**", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/!x/a*/*.js",
+    "b/a/abc//x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc",
+    ".hidden/b/.hidden/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "*/?/.hidden", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/a/**/**",
+    ".hidden/x///x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/*/abc/a*",
+    "x/.hidden/b/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/x-y/.hidden/*.js",
+    "b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "a/.hidden/a/b", { "platform": "posix" }, false],
+  ["public-facade", "b/[abc]", "//a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/**/a/a",
+    "a//a/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "b", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "b/x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "a/.hidden//x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/b/a/abc",
+    "a/.hidden/a/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "b", { "platform": "posix" }, false],
+  ["public-facade", "a/*.js//a", "//x//", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/abc/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/!x/a/a*", "abc/abc/x/b", { "platform": "posix" }, false],
+  ["public-facade", "/*/abc/[abc]", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a/.hidden/*",
+    "x/a/.hidden/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/[abc]/b",
+    ".hidden/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/.hidden/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "abc/x/abc", { "platform": "posix" }, false],
+  ["public-facade", "/x-y", "x/abc/a/", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "a///.hidden/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/a/*.js/{a,b}",
+    "//.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "abc/abc/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js",
+    "x/b/.hidden/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "b", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a.b+c", "/", { "platform": "posix" }, false],
+  ["public-facade", "*", "a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "?",
+    ".hidden/.hidden//.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/.hidden/a",
+    "abc/.hidden/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/*.js", "b", { "platform": "posix" }, false],
+  ["public-facade", "!x/+(a|b)/", "x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "b/+(a|b)/!x/.hidden",
+    "b/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/**/abc/a.b+c",
+    "abc/a/b/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y//a*/a*",
+    "x//.hidden/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/+(a|b)/?/a", "abc/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/!x/x-y/x-y",
+    "abc/.hidden/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/a.b+c/**/b",
+    "b/a/.hidden/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/abc/abc/*",
+    "b/b/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/{a,b}/a.b+c/abc",
+    "b//abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/!x/*.js/{a,b}",
+    "b/.hidden///b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b//*/{a,b}",
+    "abc//x/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", "", { "platform": "posix" }, false],
+  ["public-facade", "a*", "a/a/abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "!x/x-y", "b//abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "**/[abc]/+(a|b)",
+    "a/x/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/*/+(a|b)", "/.hidden/", { "platform": "posix" }, false],
+  ["public-facade", "x-y/[abc]/*/*.js", "", { "platform": "posix" }, false],
+  ["public-facade", "*", "/a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "x/x/x/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "b", "/x/.hidden/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/[abc]/?/b",
+    "abc/x/a//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/x-y/{a,b}/[abc]",
+    ".hidden/.hidden/x/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/.hidden/a", "", { "platform": "posix" }, false],
+  ["public-facade", "b", "b//.hidden/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y",
+    ".hidden/abc/x/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/+(a|b)/+(a|b)/b",
+    "a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "!x/abc/?/x-y",
+    ".hidden/abc/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "a*/x-y/a", ".hidden//b/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/abc/a*/",
+    "abc/a/b/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/!x", "", { "platform": "posix" }, false],
+  ["public-facade", "x-y/**", "a/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "*//", "x/x/.hidden/x/x", { "platform": "posix" }, false],
+  ["public-facade", "/x-y", "/b/b", { "platform": "posix" }, false],
+  ["public-facade", "b/", "a/a/b/b/abc", { "platform": "posix" }, false],
+  ["public-facade", "", "a/abc/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js",
+    "abc//abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/a/*.js", "x", { "platform": "posix" }, false],
+  ["public-facade", "!x/[abc]/a.b+c", "a/a/x", { "platform": "posix" }, true],
+  ["public-facade", "+(a|b)", "abc/a/abc/abc/", { "platform": "posix" }, false],
+  ["public-facade", "**/b/*", "x/", { "platform": "posix" }, false],
+  ["public-facade", "!x/", "x/b", { "platform": "posix" }, true],
+  ["public-facade", ".hidden/a", "b/", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/a*/x-y", "/x/b", { "platform": "posix" }, false],
+  ["public-facade", "a/!x/[abc]/*", "b", { "platform": "posix" }, false],
+  ["public-facade", "*/.hidden/a*/**", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/a.b+c/.hidden",
+    "x/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "/b/b/abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x",
+    ".hidden//.hidden/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "*/+(a|b)", "x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/x-y/+(a|b)",
+    ".hidden/a/a/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/*/[abc]",
+    "b/abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/a*", "a", { "platform": "posix" }, false],
+  ["public-facade", "abc/a*", "a/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/!x", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/x-y/?/.hidden",
+    "abc///abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/a.b+c/?/", "a/abc/a", { "platform": "posix" }, false],
+  ["public-facade", "b", "a", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/+(a|b)/", "a/abc", { "platform": "posix" }, false],
+  ["public-facade", "x-y/a", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/{a,b}/.hidden/a",
+    "x/abc///a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/?/b/b", "abc/b//x/x", { "platform": "posix" }, false],
+  ["public-facade", "abc", ".hidden/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/a.b+c/?/*.js",
+    "/b/abc/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/**/x-y/", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/?/[abc]/+(a|b)",
+    "abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/x-y/a*/*",
+    "abc/.hidden/.hidden/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/x-y/+(a|b)/x-y",
+    "b/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/a", "x/b/b//", { "platform": "posix" }, false],
+  ["public-facade", "?", ".hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/{a,b}", "a/a/b/x", { "platform": "posix" }, false],
+  ["public-facade", "**/", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/b/+(a|b)/abc",
+    "/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/?/b/!x",
+    ".hidden/.hidden/.hidden//a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/{a,b}/x-y/[abc]",
+    ".hidden//b//x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/*.js/abc/a", "b//abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a.b+c/*",
+    ".hidden/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/[abc]/{a,b}", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/abc/b/{a,b}",
+    "b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "/x-y/a*/a",
+    "//.hidden//x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/b/+(a|b)/.hidden",
+    "/b//a/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/abc/{a,b}", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/{a,b}/*",
+    "b//a/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/a/+(a|b)/a",
+    "x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/[abc]", "b/b/x", { "platform": "posix" }, false],
+  ["public-facade", "abc", "x/a/a/x/abc", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "x/x/.hidden/", { "platform": "posix" }, false],
+  ["public-facade", "abc/abc/x-y/?", "x/", { "platform": "posix" }, false],
+  ["public-facade", "*.js/a*/*", "x/x", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "a", { "platform": "posix" }, true],
+  ["public-facade", "", ".hidden/x//b/", { "platform": "posix" }, false],
+  ["public-facade", "*/**/!x", "abc/x//x/abc", { "platform": "posix" }, false],
+  ["public-facade", "//b/*.js", ".hidden/b/b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "a/abc", { "platform": "posix" }, false],
+  ["public-facade", "**/.hidden", "b", { "platform": "posix" }, false],
+  ["public-facade", "b", "abc", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "b/abc/a/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "b", { "platform": "posix" }, true],
+  ["public-facade", "", "//a", { "platform": "posix" }, false],
+  ["public-facade", "a*/x-y/a.b+c", "b/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x//.hidden/.hidden",
+    "a///x/",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "abc/**//*", "/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/x-y/a.b+c/{a,b}",
+    "x/x/.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/x-y", "x/x/x//.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*/abc/{a,b}", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/+(a|b)/x-y/a",
+    "/abc/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/!x/a.b+c/x-y", "a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "abc/+(a|b)/[abc]",
+    ".hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/.hidden/*/a",
+    ".hidden/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/x-y", "a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/*.js",
+    "abc//x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/?/b",
+    "a/.hidden/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/!x", ".hidden/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/a.b+c/abc/a.b+c",
+    "b/abc/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/a*/{a,b}/a", "abc", { "platform": "posix" }, false],
+  ["public-facade", "/abc/*", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/a*/[abc]/+(a|b)",
+    "/abc//a/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "", { "platform": "posix" }, false],
+  ["public-facade", "*/!x/*", "x", { "platform": "posix" }, false],
+  ["public-facade", "abc", "/.hidden///abc", { "platform": "posix" }, false],
+  ["public-facade", "a", ".hidden/b/a//a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/abc/b",
+    ".hidden/abc/abc/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/a.b+c", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "b//abc/*", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/b/[abc]/a",
+    "a/x/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/+(a|b)/a.b+c/x-y",
+    "abc//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/*.js/a*", "a/", { "platform": "posix" }, true],
+  ["public-facade", "{a,b}", ".hidden///b/abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a*", "b/b/a/b/a", { "platform": "posix" }, false],
+  ["public-facade", "!x/[abc]/[abc]", "abc//", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a*/!x/*.js",
+    "b/.hidden//a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc//abc/", "a", { "platform": "posix" }, false],
+  ["public-facade", "a", "a/abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "abc/abc/x-y", "a/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/x-y/abc/.hidden",
+    "a/x/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/?", "b/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "b", { "platform": "posix" }, false],
+  ["public-facade", "abc", "", { "platform": "posix" }, false],
+  ["public-facade", "!x/x-y", "abc", { "platform": "posix" }, true],
+  ["public-facade", "abc", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/*/*.js/abc",
+    ".hidden/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "/x-y", "x///", { "platform": "posix" }, false],
+  ["public-facade", "x-y/*.js//a", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js",
+    "x/b/a/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/b/a.b+c",
+    "b/b/.hidden//x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/+(a|b)/",
+    "x/b/abc//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/*.js", "b///b/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/+(a|b)/.hidden/.hidden",
+    "abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/a.b+c/[abc]/**",
+    ".hidden/.hidden//x/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a",
+    ".hidden/b/.hidden/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/[abc]/a/b",
+    "/.hidden//x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/?/a*",
+    "abc/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/a*",
+    "x/b/.hidden/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/.hidden/{a,b}/",
+    ".hidden//a/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/*.js/x-y/a",
+    "abc/.hidden/b/x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/a/x-y/*", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "+(a|b)//b", "b/", { "platform": "posix" }, false],
+  ["public-facade", "x-y/x-y", "a/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a/{a,b}/{a,b}/!x", "b", { "platform": "posix" }, false],
+  ["public-facade", "a/[abc]//a", "b/abc/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/a.b+c/{a,b}/**",
+    "",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/abc/.hidden",
+    "b/b/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/{a,b}/a*",
+    ".hidden/x/abc/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "x/a/a", { "platform": "posix" }, false],
+  ["public-facade", "abc", "b/x", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "x/x/b/x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/**/!x/[abc]",
+    "b/x/b/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/abc/.hidden/{a,b}", "a", { "platform": "posix" }, false],
+  ["public-facade", "!x/abc", "b/.hidden/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "/*.js/abc",
+    "b/a/.hidden//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "abc//", { "platform": "posix" }, false],
+  ["public-facade", "x-y/b/**", "x", { "platform": "posix" }, false],
+  ["public-facade", "", "a/abc/a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/a/b/!x",
+    ".hidden/abc/.hidden/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/b/abc/a*", "b/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/.hidden/[abc]/a*",
+    "b/b/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "abc", { "platform": "posix" }, false],
+  ["public-facade", "**", "x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "{a,b}/+(a|b)",
+    "abc/b/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x//abc/b", "abc//a/b/a", { "platform": "posix" }, true],
+  ["public-facade", ".hidden", "/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a*/x-y/**",
+    ".hidden///a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "a/.hidden/x/a/a", { "platform": "posix" }, false],
+  ["public-facade", "b/x-y/a/!x", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/*/.hidden",
+    "x/b/x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/a*/a/!x",
+    "a/.hidden/a/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/**/.hidden/",
+    "a/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/**/.hidden",
+    ".hidden//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**",
+    "abc/x/abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/b/a", ".hidden/b/", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "a/.hidden/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/[abc]//[abc]",
+    "/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/!x/**/b", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/*/a/*.js",
+    "/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/a*/.hidden/*.js",
+    "b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/.hidden", "b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/+(a|b)/x-y/a*", "x", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "b/x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/a.b+c/!x/[abc]",
+    ".hidden/x/a//",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/?/{a,b}/*", "a/b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/{a,b}/b/abc",
+    ".hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/?/x-y/x-y",
+    ".hidden/a/.hidden/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/abc/x-y", "x", { "platform": "posix" }, false],
+  ["public-facade", "b", "abc/x", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/a*/*",
+    ".hidden/abc//b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/!x", "a", { "platform": "posix" }, false],
+  ["public-facade", "**/a.b+c", "/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/x-y/[abc]/*",
+    "b//b/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/abc/x-y/abc",
+    "/b/abc/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "",
+    ".hidden/abc/b/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/", "x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/.hidden/?/abc",
+    "abc/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/.hidden/", "b", { "platform": "posix" }, false],
+  ["public-facade", "*.js/a", "abc", { "platform": "posix" }, false],
+  ["public-facade", "!x/a.b+c/**", ".hidden/b", { "platform": "posix" }, true],
+  ["public-facade", "b/*.js", "/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "x", { "platform": "posix" }, false],
+  ["public-facade", "abc", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/.hidden/a.b+c/a.b+c",
+    "a/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "a", { "platform": "posix" }, true],
+  ["public-facade", "b", "/a/x/x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/b/[abc]/",
+    "/x/abc/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/b", "a/abc/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/+(a|b)",
+    "/.hidden/.hidden/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/a.b+c/x-y/[abc]",
+    "x//.hidden//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/?/a/", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "b/a/{a,b}/?", "/b/b//", { "platform": "posix" }, false],
+  ["public-facade", "b/*.js/!x", "b/.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/", "x/abc", { "platform": "posix" }, false],
+  ["public-facade", "a/?//", "/.hidden/a/b/a", { "platform": "posix" }, false],
+  ["public-facade", "a/{a,b}", ".hidden/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/+(a|b)",
+    ".hidden/abc/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/+(a|b)", "x/b/b/b", { "platform": "posix" }, false],
+  ["public-facade", "b/abc", "abc/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/+(a|b)",
+    "x/abc/a//",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/{a,b}/+(a|b)/", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/!x/.hidden",
+    "/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/a/*.js/*",
+    "b/x/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/*/*.js", "abc/b/b", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/[abc]", "a", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "b/x", { "platform": "posix" }, false],
+  ["public-facade", "/a.b+c", "", { "platform": "posix" }, false],
+  ["public-facade", "a/**", "abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "*/b/", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/x-y/*",
+    "abc/.hidden/b//",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/[abc]/**/.hidden",
+    "a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a*/[abc]/abc",
+    "//abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/**/+(a|b)",
+    "/b/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/*/{a,b}",
+    "b/a/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/b/.hidden/b", "/b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/!x/!x/+(a|b)",
+    "b/a/x/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", "/abc/", { "platform": "posix" }, false],
+  ["public-facade", "", "/.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "*", "a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a",
+    "abc/abc/abc/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/a.b+c/a.b+c/b",
+    "b/x/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/?/+(a|b)",
+    "a/abc/abc//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "b/x/b/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "abc/abc///x", { "platform": "posix" }, false],
+  ["public-facade", "b/abc/abc", "abc/a/b", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/[abc]/abc", "b/a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden",
+    "abc//.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/b/.hidden",
+    "a/.hidden/x/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/*.js//**", "x/", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/a.b+c/a*/.hidden",
+    "b////a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/?/abc/a.b+c",
+    ".hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden",
+    "a/.hidden/a/x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/.hidden", "//abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a/*.js", "x", { "platform": "posix" }, false],
+  ["public-facade", "**/!x", "a/x/a/a/b", { "platform": "posix" }, false],
+  ["public-facade", "/{a,b}", "b/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/+(a|b)/+(a|b)/b",
+    "abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/a", "x/", { "platform": "posix" }, false],
+  ["public-facade", "?/+(a|b)/a.b+c", "x/", { "platform": "posix" }, false],
+  ["public-facade", "a/a*/a", ".hidden//b", { "platform": "posix" }, false],
+  ["public-facade", "*", "/a", { "platform": "posix" }, false],
+  ["public-facade", "", ".hidden//abc/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?",
+    "b/.hidden/.hidden/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c", "a/b/b/a/a", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/?", "x", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "abc/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "?/a*/a/[abc]", "a", { "platform": "posix" }, false],
+  ["public-facade", "!x", "x/b//abc/.hidden", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a*/*.js/{a,b}",
+    "x/x/.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "/x//a", { "platform": "posix" }, false],
+  ["public-facade", "b/a", "abc/a/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "!x/!x/x-y", "a/abc/", { "platform": "posix" }, true],
+  ["public-facade", "{a,b}", "", { "platform": "posix" }, false],
+  ["public-facade", "*", ".hidden/.hidden/b/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/abc/*.js/{a,b}",
+    "x//b/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "/x/abc//a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/abc/a.b+c/a*", "", { "platform": "posix" }, false],
+  ["public-facade", "b", "/.hidden/abc/abc/", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "abc/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/x-y/a",
+    ".hidden/b/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/abc",
+    "b/.hidden/a/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "x//x/b/x", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "abc/x/a/abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "?/abc", "a/a", { "platform": "posix" }, false],
+  ["public-facade", "a/b", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*",
+    "/b/.hidden/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js//**", "b/x/abc", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "a", { "platform": "posix" }, true],
+  ["public-facade", "[abc]", ".hidden//b/a", { "platform": "posix" }, false],
+  ["public-facade", "x-y/+(a|b)/a", "a/a//a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "b", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)/abc",
+    "/abc/abc/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/.hidden/b/*", "/a/x", { "platform": "posix" }, false],
+  ["public-facade", "a*/a", "a/b/x/a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/a/*",
+    "a/x/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/?/**/?", "b/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js",
+    ".hidden/a/.hidden/a/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/**/?", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/{a,b}/a",
+    "a//.hidden/x/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c",
+    ".hidden//abc/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/**/.hidden", "/x/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/a/abc/abc",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/{a,b}/.hidden/",
+    ".hidden/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/a*", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/b/abc/+(a|b)", "b", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/a/x-y/", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/b/.hidden",
+    "/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/a/abc", "abc/b/a/b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/[abc]",
+    "x/abc/x/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/*.js/a.b+c",
+    ".hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/!x/!x/*.js", "abc", { "platform": "posix" }, false],
+  ["public-facade", "", ".hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "a/x-y", "a/abc//.hidden", { "platform": "posix" }, false],
+  ["public-facade", "/a*", "a/abc//a/", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/x-y/*/a.b+c", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/x-y/b",
+    "abc///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/**/x-y/!x", "x/abc/a", { "platform": "posix" }, false],
+  ["public-facade", "/a.b+c/x-y", "/abc/b/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/+(a|b)/a*",
+    ".hidden/x/a/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "?/", "b", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "x/a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/abc/{a,b}/{a,b}",
+    "//x/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/a/a.b+c", "abc", { "platform": "posix" }, false],
+  ["public-facade", "abc", "x//x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/x-y/b/a.b+c",
+    "/abc/b/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "a/a//x", { "platform": "posix" }, true],
+  ["public-facade", "b", "abc/b/b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/b", "b/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "?", "a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a/x-y/?",
+    "a/abc/.hidden/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", ".hidden/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/b/.hidden/a.b+c",
+    "a//abc/x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", "x/x/abc/a/abc", { "platform": "posix" }, false],
+  ["public-facade", "b/b/*", "x/b/abc/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "a*/[abc]/a.b+c/?", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/?/a*/**",
+    "b/abc/x/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/*/!x/a.b+c",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/?", "b/", { "platform": "posix" }, false],
+  ["public-facade", "*", ".hidden/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/[abc]/.hidden/!x",
+    "b/b/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/*.js/*/?",
+    "b/b/b/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/a/a/abc", "/x/abc/b/a", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/!x/!x/a.b+c", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?//*.js/[abc]",
+    "x/b/b/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}//b", "x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/*.js/.hidden",
+    "a/x/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/**", "x/x/b/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/.hidden/!x/*",
+    ".hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/abc/x-y/*.js",
+    "b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/[abc]//a.b+c",
+    "x/.hidden/abc//x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden",
+    "abc/a//.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "x", { "platform": "posix" }, false],
+  ["public-facade", "/!x/+(a|b)/b", "b/a/a", { "platform": "posix" }, false],
+  ["public-facade", "b/[abc]/a/", "", { "platform": "posix" }, false],
+  ["public-facade", "a", "abc/x//a/abc", { "platform": "posix" }, false],
+  ["public-facade", "b/b/!x/abc", "b", { "platform": "posix" }, false],
+  ["public-facade", "?", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/**/.hidden/.hidden",
+    "/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/+(a|b)/x-y/[abc]",
+    ".hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/[abc]", "/a//x", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "abc//a/abc/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a*",
+    "a/a/.hidden/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/a.b+c/+(a|b)/.hidden",
+    "/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/+(a|b)/b/[abc]",
+    "abc/.hidden/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "abc/x/", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/a/**/**", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/[abc]",
+    ".hidden/.hidden/x/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "a/b/x/a/abc", { "platform": "posix" }, false],
+  ["public-facade", "b", "/a/abc", { "platform": "posix" }, false],
+  ["public-facade", "!x", "/b//.hidden/b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "{a,b}/abc/a*",
+    "/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "*/x-y", ".hidden/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/.hidden",
+    ".hidden/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/b/b/*", "", { "platform": "posix" }, false],
+  ["public-facade", "a*/x-y", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/",
+    ".hidden/x/abc/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/[abc]/*/[abc]", "a/", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/**/*.js", "/x/b/x", { "platform": "posix" }, false],
+  ["public-facade", "/?", "x", { "platform": "posix" }, false],
+  ["public-facade", "b/*", "", { "platform": "posix" }, false],
+  ["public-facade", "x-y/*/a*", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/*.js/x-y/",
+    "a/abc/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden",
+    "abc/.hidden/abc/a/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", "x/.hidden", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "**/{a,b}",
+    ".hidden//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/{a,b}", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/{a,b}/.hidden/x-y",
+    "",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden//[abc]/a*",
+    "abc/x/a/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "x/abc/abc/b/b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "", { "platform": "posix" }, false],
+  ["public-facade", "?/a.b+c/x-y", "abc/x", { "platform": "posix" }, false],
+  ["public-facade", "?", "/b//.hidden/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/x-y/abc/",
+    ".hidden/abc/x//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/", "x/x/b", { "platform": "posix" }, true],
+  ["public-facade", "a//!x/x-y", "x/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "!x", "b", { "platform": "posix" }, true],
+  ["public-facade", ".hidden/a/?", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden",
+    "b/abc/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/b/a.b+c/a", "a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/{a,b}/abc/a",
+    "b/x/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/[abc]/*/{a,b}",
+    ".hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/[abc]/*.js", "a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/**/.hidden/a",
+    ".hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "x/b/x/abc/b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "b/x-y/{a,b}/*.js",
+    "b/x/a/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/", "b", { "platform": "posix" }, false],
+  ["public-facade", "**/[abc]", "", { "platform": "posix" }, false],
+  ["public-facade", "*/**/b", "a/x/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "*.js/a/+(a|b)", "abc", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "b/a/b/x/b", { "platform": "posix" }, false],
+  ["public-facade", "a/a*/a.b+c", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/*/**/*",
+    "/x/b/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}", "b/b/a/b/x", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "/a/x/.hidden/", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/**/?",
+    "b/b//.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/a/+(a|b)", "b/a/x", { "platform": "posix" }, false],
+  ["public-facade", "*", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "b/.hidden", "abc//", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/+(a|b)/{a,b}/+(a|b)",
+    "",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a/?",
+    ".hidden/.hidden/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/*.js/b",
+    "a/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "abc/x/.hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "*.js/abc/abc", "b/x", { "platform": "posix" }, false],
+  ["public-facade", "/.hidden", "abc", { "platform": "posix" }, false],
+  ["public-facade", "**/[abc]", "/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/a.b+c/x-y/.hidden",
+    "a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/a.b+c/abc/b",
+    ".hidden/abc/.hidden//",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/*.js/a*", "x/", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/*.js", "x//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/**/",
+    "x/abc/abc/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/?/x-y/{a,b}",
+    ".hidden//b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?", "a/a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/!x/?",
+    "/.hidden/b/.hidden/",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "!x/**", "abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "/!x/.hidden",
+    "/abc/x/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/[abc]/a*", "b", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/abc//a", "/b/", { "platform": "posix" }, false],
+  ["public-facade", "a/b", "x/.hidden/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "**/a", ".hidden/b/x/x/a", { "platform": "posix" }, false],
+  ["public-facade", "abc", "abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/a.b+c/.hidden/a*",
+    "a/x/.hidden/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c//.hidden",
+    "a/b/abc/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/*/!x/*.js",
+    "a/b/b/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/a*/**/[abc]", "b", { "platform": "posix" }, false],
+  ["public-facade", "abc", "abc/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/abc/abc/abc",
+    "a/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "b/b/abc//a", { "platform": "posix" }, false],
+  ["public-facade", "b", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "x", { "platform": "posix" }, false],
+  ["public-facade", "!x", "abc///.hidden/", { "platform": "posix" }, true],
+  ["public-facade", "a", "x/abc/a", { "platform": "posix" }, false],
+  ["public-facade", "a*/**", ".hidden/", { "platform": "posix" }, false],
+  ["public-facade", "abc/*.js/a/*", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/+(a|b)/**/b",
+    "x/abc/a/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", "x", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "abc///x", { "platform": "posix" }, false],
+  ["public-facade", "b/x-y", "abc/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/abc/?",
+    ".hidden/.hidden/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "//**/{a,b}",
+    "abc/x//b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "a/a/x/abc/", { "platform": "posix" }, false],
+  ["public-facade", "a//a.b+c", "x", { "platform": "posix" }, false],
+  ["public-facade", "?/a/{a,b}/abc", "abc/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/**/{a,b}/{a,b}",
+    "b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/?/*.js/abc", "abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "?/b/!x", "a/x/x/abc", { "platform": "posix" }, false],
+  ["public-facade", "b/b/.hidden", ".hidden/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/!x/a.b+c",
+    "abc/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/.hidden", "x", { "platform": "posix" }, false],
+  ["public-facade", "*.js/+(a|b)", "", { "platform": "posix" }, false],
+  ["public-facade", "a/a.b+c/+(a|b)/b", "abc", { "platform": "posix" }, false],
+  ["public-facade", "abc/**/abc/[abc]", "", { "platform": "posix" }, false],
+  ["public-facade", "**", "x//a/x/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "b/*.js/a/.hidden",
+    "a//x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/a/a/b", "//", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/abc//.hidden",
+    ".hidden/a/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/**", "", { "platform": "posix" }, true],
+  ["public-facade", "a/a/*", "a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/+(a|b)/[abc]/[abc]",
+    "abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a",
+    ".hidden/.hidden/a/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/*", "b", { "platform": "posix" }, false],
+  ["public-facade", "a/!x/b", "abc/b/x/abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/a.b+c/.hidden/x-y",
+    "abc/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "a/.hidden//.hidden/", { "platform": "posix" }, false],
+  ["public-facade", "/x-y/abc", "abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "!x/**/**", "abc/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "**/.hidden/*.js/**",
+    "/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/*/abc", "/a/abc//x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/.hidden/?/[abc]",
+    "b//.hidden/",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "?", "b", { "platform": "posix" }, true],
+  ["public-facade", "x-y", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "!x//abc", "b", { "platform": "posix" }, true],
+  ["public-facade", "b", "abc//a/x/b", { "platform": "posix" }, false],
+  ["public-facade", "", "x/b/abc", { "platform": "posix" }, false],
+  ["public-facade", "abc/!x/abc/.hidden", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/x-y/a/",
+    ".hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", "x/x//.hidden/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/.hidden/*.js/*",
+    "x/b/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "x/a/a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/a.b+c/", "a/b", { "platform": "posix" }, false],
+  ["public-facade", "*/x-y/.hidden/b", "b/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/?/a.b+c/**",
+    "x/.hidden///a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/",
+    "a/b/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/",
+    ".hidden/abc/b//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/a/+(a|b)/", "b/a/b/a/b", { "platform": "posix" }, false],
+  ["public-facade", "a*/+(a|b)", "/b/abc/b/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/?/abc/",
+    "x/x//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "a/x/.hidden/x/x", { "platform": "posix" }, false],
+  ["public-facade", "**", "b/x/b", { "platform": "posix" }, true],
+  ["public-facade", "a", "x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/x-y/{a,b}/.hidden",
+    "a//abc/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/.hidden/abc",
+    ".hidden/b/x/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/a/a.b+c",
+    "abc/.hidden/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/!x/*", ".hidden/abc", { "platform": "posix" }, true],
+  ["public-facade", "/abc/a/a", "x/b/x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", ".hidden//a", { "platform": "posix" }, false],
+  ["public-facade", "*/[abc]/**/[abc]", "/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/[abc]/a.b+c/x-y",
+    "x/x/abc/",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "*.js/.hidden",
+    ".hidden////a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", "/b/abc/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/a/[abc]",
+    "x/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}", ".hidden//b//", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "x//x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/{a,b}",
+    "/a/.hidden/abc/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "a/{a,b}//*.js",
+    ".hidden/a//.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "!x/a/b/",
+    "a/.hidden/abc/b/abc",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "abc//?/+(a|b)", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a*", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "!x//a.b+c/+(a|b)", "x/", { "platform": "posix" }, true],
+  ["public-facade", "x-y/*.js/a*/abc", "/a/x", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "a//", { "platform": "posix" }, true],
+  ["public-facade", "/a/x-y/+(a|b)", "abc/a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/!x/{a,b}",
+    "b/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/x-y/{a,b}", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/{a,b}/b",
+    "/abc/x/b/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "abc/!x",
+    "/b/.hidden/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/**", "x//abc//abc", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/", "b/x/.hidden/", { "platform": "posix" }, false],
+  ["public-facade", "*", ".hidden//abc/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "*", ".hidden/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/{a,b}",
+    ".hidden/abc/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/a.b+c/[abc]/", "b/abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/**/**", "/a/x/a/b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/b", "b", { "platform": "posix" }, false],
+  ["public-facade", "a*", "b", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/?/+(a|b)/!x", "abc", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "///x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/+(a|b)",
+    "x/abc/a/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/**", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/!x/",
+    "x/b/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/abc", "a//x/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/.hidden", "/abc/a", { "platform": "posix" }, false],
+  ["public-facade", "abc/a/?", "x//b/a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden",
+    "b/x/.hidden/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/a", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/[abc]",
+    ".hidden/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/!x", "a/b/b/x/b", { "platform": "posix" }, false],
+  ["public-facade", "a*//b", "b//b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "x-y/a/[abc]/a*", "b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/b", "x", { "platform": "posix" }, false],
+  ["public-facade", "!x", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c/x-y", "a", { "platform": "posix" }, false],
+  ["public-facade", "/{a,b}/b", "x", { "platform": "posix" }, false],
+  ["public-facade", "?", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "b/x-y/b/abc", "b/x/x/a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*",
+    "abc/abc/.hidden/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "b/abc/x/x/b", { "platform": "posix" }, false],
+  ["public-facade", "abc/!x", "/.hidden/a/", { "platform": "posix" }, false],
+  ["public-facade", "a/x-y", "b/abc/b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/**/*.js/abc",
+    "b//.hidden/x/x",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "/+(a|b)/a/[abc]", "b/", { "platform": "posix" }, false],
+  ["public-facade", "b/a*/+(a|b)/**", "x/b/a", { "platform": "posix" }, false],
+  ["public-facade", "", "a/x/.hidden/x/a", { "platform": "posix" }, false],
+  ["public-facade", "abc/?/?", "abc/x/", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/!x/x-y", "abc", { "platform": "posix" }, false],
+  ["public-facade", "/x-y/!x/a", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c",
+    "b/b/.hidden/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/a", "/abc/abc//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*//**",
+    "abc/x/.hidden/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?//*.js/b", ".hidden/abc", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/+(a|b)/!x", "x", { "platform": "posix" }, false],
+  ["public-facade", "a/a.b+c/a*", "b", { "platform": "posix" }, false],
+  ["public-facade", "abc", "abc/", { "platform": "posix" }, true],
+  ["public-facade", "[abc]", "x/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "**/*/*/b", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/.hidden",
+    ".hidden/.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/[abc]/a*",
+    "/x/.hidden/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "b", { "platform": "posix" }, false],
+  ["public-facade", "**/[abc]/{a,b}/?", "/x/x", { "platform": "posix" }, false],
+  ["public-facade", "a/*/a.b+c", "a/.hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "a*/", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/*/{a,b}",
+    ".hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "abc//abc", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", ".hidden/a/b", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "a//x", { "platform": "posix" }, false],
+  ["public-facade", "?/x-y/**/a", "x", { "platform": "posix" }, false],
+  ["public-facade", "*", "b/x/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/[abc]/a*/a*",
+    ".hidden/abc/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "x/b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/abc/**/", "a/a", { "platform": "posix" }, false],
+  ["public-facade", "x-y/!x/b/x-y", "x", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "x/b/abc", { "platform": "posix" }, false],
+  ["public-facade", "a", "a//x", { "platform": "posix" }, false],
+  ["public-facade", "a", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/b/{a,b}",
+    "a/abc/b/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/{a,b}/!x/",
+    "a/a/abc/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/x-y/a/!x", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/!x//*.js",
+    "a/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a.b+c/",
+    "b/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "a/a//a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/[abc]//a.b+c",
+    "a/abc/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/x-y/abc",
+    ".hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/*.js/a.b+c/x-y",
+    "x/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/*.js/**", "x//a", { "platform": "posix" }, false],
+  ["public-facade", "abc", "", { "platform": "posix" }, false],
+  ["public-facade", "", "", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c/b/a/a", "a/a/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "///+(a|b)", "/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/**/{a,b}/abc",
+    "b/x/x/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "abc/b", { "platform": "posix" }, false],
+  ["public-facade", "!x/?/*", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "a*", "x/b/x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/*/**/.hidden",
+    "//x//a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/[abc]/!x/",
+    "a/b/.hidden//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/?/a", "x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/+(a|b)/+(a|b)/!x",
+    ".hidden/abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "?", "/a/a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/**/+(a|b)",
+    ".hidden/.hidden/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/+(a|b)/?/", "abc", { "platform": "posix" }, false],
+  ["public-facade", "?", "x", { "platform": "posix" }, true],
+  ["public-facade", "x-y/a/+(a|b)", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/.hidden/", "/", { "platform": "posix" }, false],
+  ["public-facade", "a*", "x//", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/**/*.js/[abc]",
+    "b/b/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/**/*/+(a|b)",
+    "b/x/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/", "", { "platform": "posix" }, false],
+  ["public-facade", "**", "/", { "platform": "posix" }, true],
+  ["public-facade", "!x/abc/x-y/b", "b", { "platform": "posix" }, true],
+  ["public-facade", "x-y/*/?", ".hidden/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/.hidden/.hidden",
+    "/b/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "a/x/b/a", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/*", "abc", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/a/**", "a", { "platform": "posix" }, false],
+  ["public-facade", "b", "b/.hidden/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/a/a", "/x/abc/", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/x-y/x-y", "x", { "platform": "posix" }, false],
+  ["public-facade", "", "x//a/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "*.js/[abc]/a*", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "b/abc/a/a*", "x", { "platform": "posix" }, false],
+  ["public-facade", "!x/a*/**/a.b+c", "", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "abc/*/{a,b}/+(a|b)",
+    "/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/+(a|b)/a*/.hidden",
+    ".hidden/.hidden/b/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/{a,b}/*/a*",
+    "/x/abc//x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/!x/b", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/?//!x",
+    "x//x/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/!x/x-y/?", "x", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/a/a*/b", "b", { "platform": "posix" }, false],
+  ["public-facade", "**", "b/a/b", { "platform": "posix" }, true],
+  ["public-facade", "+(a|b)", "abc", { "platform": "posix" }, false],
+  ["public-facade", "**/x-y/+(a|b)/**", "a/x", { "platform": "posix" }, false],
+  ["public-facade", "a/", "a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/[abc]", "a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/[abc]/?/a.b+c",
+    "b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b//", ".hidden//x/abc", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", ".hidden/x/a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/.hidden",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/*.js/.hidden",
+    "/abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/.hidden/",
+    "/a/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", "/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden",
+    "b/.hidden/b/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/x-y/b/{a,b}", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/a.b+c/x-y/.hidden",
+    "b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "a//", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/b/[abc]/b",
+    "/b/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/!x", "/abc/.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "/b", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "x-y/a*/!x", "a/a", { "platform": "posix" }, false],
+  ["public-facade", "a/[abc]", ".hidden///x/a", { "platform": "posix" }, false],
+  ["public-facade", "x-y/a/b/+(a|b)", "abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden//x-y/!x",
+    "x/x//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/abc", "a/abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)/+(a|b)/abc/!x",
+    ".hidden/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/x-y/a/[abc]", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/**/**/!x",
+    "a/abc/.hidden/a/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/b",
+    ".hidden/x//.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden/!x/!x/b", "abc/b", { "platform": "posix" }, false],
+  ["public-facade", "?/a/?/[abc]", "a/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/!x/[abc]/!x",
+    "abc//abc",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "b", "b/abc/abc/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/a", "x", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "a//a/a", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a*/a", "/b/abc", { "platform": "posix" }, false],
+  ["public-facade", "abc", "x/abc/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "*.js/*.js/{a,b}", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a/?/a.b+c",
+    "abc/abc/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/abc", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/+(a|b)/a",
+    "x/abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/b/x-y",
+    "b/abc/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/", "/x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/abc/a.b+c/+(a|b)",
+    "a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]",
+    ".hidden/.hidden/.hidden/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/a/{a,b}/abc", "x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/?/{a,b}/?",
+    ".hidden/abc/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/a/x-y/*.js", "b", { "platform": "posix" }, false],
+  ["public-facade", "/a*/[abc]/", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/.hidden/x-y/[abc]",
+    "/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/x-y", "x", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/**/*/?", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/a*/.hidden/x-y",
+    "abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/a.b+c/",
+    "/x/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/{a,b}",
+    "/a/abc/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "/b", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "a", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a*", "b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "b//.hidden/b/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/.hidden/a/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/{a,b}/+(a|b)",
+    "a/b//x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/a.b+c/**/**", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/.hidden",
+    "abc/a/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/x-y/*", "/b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "!x/a/[abc]/**",
+    "b/a/.hidden/x",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "a.b+c/!x/*.js/.hidden",
+    ".hidden//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "x/a/abc/abc/x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "b/abc/b/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/!x",
+    ".hidden//abc/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/.hidden",
+    "x/b/abc/x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "*/abc/abc/abc", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c",
+    ".hidden/b/b/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a/[abc]/?/.hidden",
+    "b/x/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/!x/*.js", "/b//b/b", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "x/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/*.js/b/a*",
+    "a/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "b/abc//", { "platform": "posix" }, false],
+  ["public-facade", "", "x///b/abc", { "platform": "posix" }, false],
+  ["public-facade", "", "abc//x/a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/?/[abc]/x-y",
+    "x/b/b/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "b", { "platform": "posix" }, false],
+  ["public-facade", "a*", "/a/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/[abc]/a*/abc",
+    "a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "", { "platform": "posix" }, false],
+  ["public-facade", "/b/**", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*",
+    "b/.hidden/.hidden/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "abc/x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/*/abc/{a,b}",
+    ".hidden/x/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/*/.hidden/a", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/b/.hidden",
+    "abc/x//.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "b//x/", { "platform": "posix" }, false],
+  ["public-facade", "!x/b", "", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/!x/+(a|b)",
+    "abc//.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/a.b+c", "x/abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "b/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/?",
+    "a/x/x/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/a*/[abc]/[abc]", "x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "b/x", { "platform": "posix" }, false],
+  ["public-facade", "abc/[abc]/b/+(a|b)", "/x", { "platform": "posix" }, false],
+  ["public-facade", "b/[abc]/a/x-y", "/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/.hidden/?/[abc]",
+    "/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "/[abc]/a/abc",
+    "abc/a//b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/", "/b/x/x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/abc/*.js/.hidden",
+    "abc/x/b/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "b/x/x", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c", "x/a/a/a", { "platform": "posix" }, false],
+  ["public-facade", "b/b//!x", ".hidden/x/a", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/x-y", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "!x", "abc", { "platform": "posix" }, true],
+  ["public-facade", "[abc]/*", "b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a*", "/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a/x-y", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/*.js/a",
+    "abc/.hidden/a/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/**/!x", "", { "platform": "posix" }, false],
+  ["public-facade", "a*/+(a|b)//a*", "a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/x-y/a",
+    "b/x/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "abc/.hidden//b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/abc/!x/abc",
+    "abc//abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/*/*.js", "abc/abc/a/x", { "platform": "posix" }, false],
+  ["public-facade", "**/b", ".hidden/abc/x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "abc", { "platform": "posix" }, false],
+  ["public-facade", "?/a*/a*", "b/b/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/**/a.b+c/*", "a", { "platform": "posix" }, false],
+  ["public-facade", "b", "x/x/a/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "!x", "b/abc/b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a/a.b+c/a.b+c",
+    "x/.hidden/a/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/a/.hidden", "x/x/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/+(a|b)/abc/", "a", { "platform": "posix" }, false],
+  ["public-facade", "!x/b/a.b+c/a", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "a", "b/abc/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/a/*.js/+(a|b)",
+    "abc/abc/.hidden/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/a.b+c/b/[abc]", "x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/a",
+    ".hidden/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/b/*.js/?", "/a/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/a.b+c/.hidden/*.js",
+    "/",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "a.b+c/b",
+    "x/b/.hidden/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/*/{a,b}/*.js",
+    ".hidden/abc/x/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}",
+    "abc/abc/b/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/.hidden", ".hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "!x/abc/{a,b}", "", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a.b+c/abc/**/abc",
+    "abc/abc/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/*.js/x-y", "/", { "platform": "posix" }, false],
+  ["public-facade", "x-y/!x/*/abc", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/b/a/[abc]",
+    "abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/{a,b}/{a,b}",
+    "x/x/abc/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/.hidden/{a,b}/**",
+    "a/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/abc/*.js/a*",
+    "abc/abc/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/abc", "abc", { "platform": "posix" }, true],
+  ["public-facade", "*/x-y/*.js/b", "x/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/x-y/a*/.hidden",
+    "a/b/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "!x/a.b+c/.hidden",
+    "b/.hidden/x/abc/x",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "[abc]/{a,b}/.hidden/a",
+    "abc//",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", ".hidden/a//abc", { "platform": "posix" }, false],
+  ["public-facade", "b/{a,b}/?", "abc", { "platform": "posix" }, false],
+  ["public-facade", "abc", "a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/*.js", "", { "platform": "posix" }, false],
+  ["public-facade", "b", "//abc/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/*.js/a/a.b+c",
+    "b/abc/.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/a/a*/a*", "abc", { "platform": "posix" }, true],
+  ["public-facade", "+(a|b)/*.js/?", "b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "a/abc/b/a/b", { "platform": "posix" }, false],
+  ["public-facade", "", ".hidden//a/.hidden/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/a",
+    ".hidden/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/a.b+c/*.js/a*",
+    "/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/a*/x-y",
+    ".hidden/b//.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/?/a/a", "b/abc/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "x-y/*.js", "/a/x/b/b", { "platform": "posix" }, false],
+  ["public-facade", "", "a/abc//", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/x-y/a*/*", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/+(a|b)/*/a",
+    "a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/a*", ".hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "a", "a/a/x/x", { "platform": "posix" }, false],
+  ["public-facade", "!x", "abc/abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "b/.hidden/a/!x",
+    "/a/a/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/!x/[abc]/*.js", "x", { "platform": "posix" }, false],
+  ["public-facade", "!x/a.b+c/{a,b}", "a/abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/a.b+c/a*/*.js",
+    "a/.hidden/x/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a*/{a,b}/.hidden",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/a/b/{a,b}",
+    "x/.hidden/b/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/*.js/a.b+c/a",
+    "b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/a.b+c/a*/b", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/a*/a*/.hidden",
+    "x/abc/a/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/.hidden/*/abc",
+    "b/a/x/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/*.js/?/[abc]", "a", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/*/a/.hidden",
+    "a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/abc/.hidden/",
+    "abc/abc/abc//x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/.hidden/", "x/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/?/x-y/",
+    "abc//x/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/*.js/a*/x-y", "b", { "platform": "posix" }, false],
+  ["public-facade", "**/**//a", "b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/*/[abc]/*", "x/x/", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/?/*.js/a*", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a*/!x/!x/?", "abc/x", { "platform": "posix" }, false],
+  ["public-facade", "/abc/*/!x", "abc/x/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/+(a|b)/?", "abc", { "platform": "posix" }, false],
+  ["public-facade", "*/*.js/.hidden/!x", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/*/+(a|b)/*.js",
+    ".hidden/a/x/a/abc",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "!x/a*/**/abc",
+    "a/b/abc/abc",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "abc/**/[abc]",
+    "x/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/b/abc/x-y",
+    "abc/b/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/*.js/+(a|b)/.hidden",
+    "a///b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "b/b/abc/a/x", { "platform": "posix" }, false],
+  ["public-facade", "!x/abc", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "{a,b}/a.b+c", "//b/b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)//!x",
+    "b/.hidden/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", ".hidden//b/b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "*.js/+(a|b)",
+    "abc/b/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden//.hidden/b",
+    "abc//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/.hidden/abc/+(a|b)", "a", { "platform": "posix" }, false],
+  ["public-facade", "abc/a.b+c", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/a/[abc]/?",
+    ".hidden//abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden",
+    "/b//abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/?/**/*.js", "b/a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/?/+(a|b)/",
+    "b//abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/x-y/**/*.js",
+    "x/a/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/a/b/x-y", "x/x/a", { "platform": "posix" }, false],
+  ["public-facade", "?", "b/a/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "", "//b/a/", { "platform": "posix" }, false],
+  ["public-facade", "*/abc/abc", "a", { "platform": "posix" }, false],
+  ["public-facade", "a*", ".hidden/b//x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/*/?",
+    ".hidden/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "//.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/", "x/a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/abc", "b/abc", { "platform": "posix" }, true],
+  ["public-facade", ".hidden/x-y", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "a/?/abc/abc", "abc", { "platform": "posix" }, false],
+  ["public-facade", "**", "/b/x/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "?", "x/abc/b/a/", { "platform": "posix" }, false],
+  ["public-facade", "a*/{a,b}", "x", { "platform": "posix" }, false],
+  ["public-facade", "*/b", "b/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}",
+    "a/x/abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/*/{a,b}",
+    "b/.hidden/abc/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/a*/abc", "b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/x-y", "b/b", { "platform": "posix" }, false],
+  ["public-facade", "a/a*/.hidden", "/b//x/a", { "platform": "posix" }, false],
+  ["public-facade", "*/b/*.js/b", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a*/**/a.b+c", "a/", { "platform": "posix" }, false],
+  ["public-facade", "?/?", "x/b/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/+(a|b)",
+    "a/.hidden/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "abc/a/a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/+(a|b)/?/*",
+    "x/x/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/+(a|b)",
+    ".hidden//b//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/+(a|b)/?/.hidden",
+    "a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/!x", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/+(a|b)/a.b+c/?",
+    "b/abc/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "abc/x/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "**/a/abc/", "x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/b/[abc]/?",
+    "abc/x/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/a.b+c/a.b+c/a.b+c",
+    "x/b/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/**/!x", "//x/x", { "platform": "posix" }, false],
+  ["public-facade", "a/[abc]/?", "a/x", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/abc/b", "a/a", { "platform": "posix" }, false],
+  ["public-facade", "b/a/", ".hidden/abc/x/x", { "platform": "posix" }, false],
+  ["public-facade", "b", ".hidden/b/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x",
+    "abc//.hidden/b/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "*.js/+(a|b)/",
+    ".hidden/abc/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/{a,b}/?/x-y",
+    ".hidden/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/",
+    ".hidden/abc/abc/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/abc/?/*.js",
+    "x/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/[abc]", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c",
+    "/.hidden//abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/*", "abc/a/abc", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/[abc]/**", "//x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "x/a/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c",
+    "abc/.hidden/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/b/!x/a",
+    "/abc/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/", "x/abc/b/abc/", { "platform": "posix" }, false],
+  ["public-facade", "*", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/*", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/a*/+(a|b)/**",
+    "b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/a/abc", ".hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "a/.hidden/**/abc", "x", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "/abc", { "platform": "posix" }, false],
+  ["public-facade", "**/[abc]/abc", "x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/b/.hidden/a",
+    "/x///x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/b", "x/.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "*.js", ".hidden/abc/", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/!x/*", "x/", { "platform": "posix" }, false],
+  ["public-facade", "", "", { "platform": "posix" }, true],
+  ["public-facade", "abc", "b/b/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/abc",
+    "/.hidden/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "abc//.hidden", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "/a/b/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/.hidden/x-y/.hidden",
+    "x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/abc/.hidden/{a,b}",
+    "/.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/?/x-y/", "x//x//x", { "platform": "posix" }, false],
+  ["public-facade", "abc", "b", { "platform": "posix" }, false],
+  ["public-facade", "a/a*/b", "x/a/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "x-y/a.b+c/a*/a.b+c", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/.hidden",
+    "x/b//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "{a,b}/x-y/b/a",
+    ".hidden/a///abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/abc", "b", { "platform": "posix" }, false],
+  ["public-facade", "?/x-y", "abc/b/b", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/abc/*.js", "x/x//b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/[abc]",
+    "abc/a/a/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a/b/{a,b}",
+    "abc/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/!x/+(a|b)/b",
+    "b/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/**",
+    ".hidden/abc/.hidden/x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden/{a,b}", "b/b/x/b", { "platform": "posix" }, false],
+  ["public-facade", "x-y///a*", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b",
+    ".hidden/a/b/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/?", "a//", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c//?", "a/x/a/abc/a", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)//abc", "a/abc/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/a/b/x-y",
+    "b/.hidden/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/b/abc/a.b+c", "abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/x-y/+(a|b)",
+    "abc/x/abc/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/a", "abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", ".hidden//x", { "platform": "posix" }, false],
+  ["public-facade", "*/**/*.js/*", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b",
+    "b/.hidden/b/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/x-y/*.js", "abc/x/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/.hidden/a.b+c",
+    "abc/b/.hidden/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/*", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/?",
+    "x/.hidden/.hidden/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "abc", { "platform": "posix" }, false],
+  ["public-facade", "", "x/abc/.hidden/a/", { "platform": "posix" }, false],
+  ["public-facade", "a/a", "b/.hidden/abc", { "platform": "posix" }, false],
+  ["public-facade", "a/[abc]/abc/abc", "x/b/b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/a/b/*", "abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js",
+    ".hidden/b/abc/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", "abc/x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    ".hidden/a.b+c/?/**",
+    "b/b/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", "abc//abc/", { "platform": "posix" }, true],
+  ["public-facade", "abc/*", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/!x/.hidden/*.js",
+    "abc/a/x/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/x-y", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/*.js/.hidden/[abc]",
+    "a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/*.js/?",
+    "/.hidden/a/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "x//abc//abc", { "platform": "posix" }, false],
+  ["public-facade", "", "abc/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "", "x//.hidden/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/{a,b}",
+    ".hidden/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/a.b+c/[abc]/a*",
+    "a/x/.hidden/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "abc/abc/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/*.js/a*/*.js",
+    "/.hidden/a/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/!x", "x/b/x", { "platform": "posix" }, false],
+  ["public-facade", "x-y/**", "b/.hidden/x/", { "platform": "posix" }, false],
+  ["public-facade", "**", "", { "platform": "posix" }, true],
+  ["public-facade", "a/abc/!x/", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/x-y/*/{a,b}",
+    "a/x/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}", "/b", { "platform": "posix" }, false],
+  ["public-facade", "x-y/!x/?", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden",
+    ".hidden/b/a//x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/**", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*/a*/!x", "x//x", { "platform": "posix" }, false],
+  ["public-facade", "b/!x/{a,b}/a", "", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/abc/*", "b/x//a/", { "platform": "posix" }, false],
+  ["public-facade", "?/b/*/**", "a/abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/{a,b}/?/?",
+    "abc/x/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]",
+    ".hidden/.hidden/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "a/.hidden/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "", "x/x", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/[abc]/*", "x", { "platform": "posix" }, false],
+  ["public-facade", "/*.js/abc/**", "abc", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/*", "a/b", { "platform": "posix" }, false],
+  ["public-facade", "", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/a.b+c/x-y/x-y",
+    "abc/b//x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "/a/b/abc/a", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "/a*/a*/a", "abc/x/a//abc", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "/b/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a*",
+    "/.hidden/abc/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?", "b/abc//b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/{a,b}/x-y/x-y",
+    "a/.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/abc", "x", { "platform": "posix" }, false],
+  ["public-facade", "abc", "b/a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/abc/a*/abc", "", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "x/a/b//", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/a/a.b+c/?",
+    "a//x/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/a*/abc", "/b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/b", "abc//abc/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/*/?/.hidden",
+    "/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "b/b", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "b", { "platform": "posix" }, false],
+  ["public-facade", "/?", "b", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "abc", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "x/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "!x", "x/abc/", { "platform": "posix" }, true],
+  ["public-facade", "x-y/abc", "x//b/b/x", { "platform": "posix" }, false],
+  ["public-facade", "", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/*/{a,b}/a.b+c",
+    ".hidden/a/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/*", "x/", { "platform": "posix" }, true],
+  ["public-facade", "abc", "abc", { "platform": "posix" }, true],
+  ["public-facade", "!x", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y",
+    "b/a//.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "x//abc/", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/.hidden", "a/", { "platform": "posix" }, false],
+  ["public-facade", "**", "x//", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/{a,b}/*.js",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/abc//x/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/abc/**/x-y",
+    "a/.hidden//abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "b/abc/x/b", { "platform": "posix" }, false],
+  ["public-facade", "!x/*/a.b+c", "abc/b/b/b", { "platform": "posix" }, true],
+  ["public-facade", "+(a|b)/", "abc/x//a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/+(a|b)",
+    "b/.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "//*", "b/b", { "platform": "posix" }, false],
+  ["public-facade", "a", "///a/", { "platform": "posix" }, false],
+  ["public-facade", "*.js/abc/a.b+c", "a", { "platform": "posix" }, false],
+  ["public-facade", "x-y", ".hidden/abc/a/b/x", { "platform": "posix" }, false],
+  ["public-facade", "a/**", "b///abc", { "platform": "posix" }, false],
+  ["public-facade", "*.js//abc/*", "abc/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/?",
+    ".hidden/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/**/?/*",
+    "abc/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a.b+c/abc/[abc]",
+    "x/x/abc/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/b/?/", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/*.js/?",
+    "a/.hidden/a/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "!x/.hidden",
+    "/abc/abc/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "!x/abc/a*", "b//abc/x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a*/[abc]/*.js/!x",
+    "a//.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a.b+c/x-y/a.b+c",
+    "x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/a/abc",
+    "a/.hidden//.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden/a*/", "b/b/b", { "platform": "posix" }, false],
+  ["public-facade", "a/[abc]", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/[abc]/a.b+c/[abc]",
+    ".hidden/.hidden/x/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/.hidden/[abc]/[abc]",
+    "a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", "/x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/b", "x/abc/b/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/x-y/x-y",
+    "b/.hidden/b/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/!x/a.b+c/abc",
+    "x/b//x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/!x/**", "/b/x/b/", { "platform": "posix" }, false],
+  ["public-facade", "abc/x-y", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "*", "x/x/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/?/.hidden",
+    "abc/x/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "a*/a.b+c/a/+(a|b)",
+    "abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "a", { "platform": "posix" }, true],
+  ["public-facade", "", "a/b/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "abc//abc", { "platform": "posix" }, false],
+  ["public-facade", "b", "x", { "platform": "posix" }, false],
+  ["public-facade", "", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "x-y/.hidden/!x", "a/a", { "platform": "posix" }, false],
+  ["public-facade", "", "x//abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/{a,b}/x-y",
+    "/x/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/.hidden",
+    "x/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "b", { "platform": "posix" }, false],
+  ["public-facade", "x-y", ".hidden//x/b/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/+(a|b)",
+    "x/abc/.hidden/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "a/", { "platform": "posix" }, true],
+  ["public-facade", "*.js", "", { "platform": "posix" }, false],
+  ["public-facade", "b//a", "b//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/.hidden/.hidden/**",
+    ".hidden/a/x/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "b/abc/b/b", { "platform": "posix" }, false],
+  ["public-facade", "*/b/abc/?", "/a/", { "platform": "posix" }, false],
+  ["public-facade", "x-y/[abc]", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/!x/abc/a.b+c",
+    ".hidden/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/*.js/+(a|b)/",
+    "x/a/abc/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a*/abc", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "*//x-y/*", "b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/*/.hidden/abc",
+    "/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/!x", "b/a/a/b/abc", { "platform": "posix" }, false],
+  ["public-facade", "*/.hidden/*/b", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/.hidden/!x",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/{a,b}/*.js/a",
+    "abc/a/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/x-y/b",
+    "x//b/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/x-y", "abc/b", { "platform": "posix" }, false],
+  ["public-facade", "a*//a.b+c/abc", "b/a/", { "platform": "posix" }, false],
+  ["public-facade", "//", "a", { "platform": "posix" }, false],
+  ["public-facade", "*/x-y", "", { "platform": "posix" }, false],
+  ["public-facade", "", "x/.hidden/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "?/[abc]", "a/b/", { "platform": "posix" }, true],
+  ["public-facade", "**", "abc/a/a/x/abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "{a,b}/a.b+c",
+    "/x/.hidden/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/abc/a.b+c/x-y",
+    "b/abc///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/abc", "//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/.hidden/**/abc",
+    ".hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/abc/a",
+    "b/.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "/abc///abc", { "platform": "posix" }, false],
+  ["public-facade", "*/**", "x/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/x/.hidden/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/x-y/+(a|b)/.hidden",
+    "b/.hidden/a/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/{a,b}", "abc/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/{a,b}",
+    "abc/b/a//b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a*/b",
+    "b/abc/a/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/+(a|b)/a*/**",
+    ".hidden/.hidden/abc/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/*.js/", "abc/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/[abc]",
+    "b//abc/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/*/b/*", ".hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "b/a/a*", "abc", { "platform": "posix" }, false],
+  ["public-facade", "!x", "abc", { "platform": "posix" }, true],
+  ["public-facade", "/!x/a.b+c/a.b+c", "b/", { "platform": "posix" }, false],
+  ["public-facade", "*.js", ".hidden//b/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/.hidden",
+    "b/b/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/abc/b/*.js", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/a*/b",
+    "/abc/abc/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/+(a|b)/a*", "b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/.hidden/+(a|b)",
+    "/a/abc/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/?/x-y", "abc", { "platform": "posix" }, false],
+  ["public-facade", "?/**", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/*.js/a*/+(a|b)",
+    "a//a/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/x/x/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/.hidden", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "a/a/*.js", "x", { "platform": "posix" }, false],
+  ["public-facade", "?", "", { "platform": "posix" }, false],
+  ["public-facade", "*.js/*.js/a.b+c", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/*/a.b+c",
+    "abc/.hidden//b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", ".hidden/abc", { "platform": "posix" }, false],
+  ["public-facade", "a/a/?", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/+(a|b)/{a,b}",
+    "abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/+(a|b)", "/x/abc", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/**//", "a", { "platform": "posix" }, false],
+  ["public-facade", "/[abc]/*", "x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/+(a|b)/a.b+c/?",
+    ".hidden/x/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", ".hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "a*", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "/a*", "/b/", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "**/[abc]", "abc", { "platform": "posix" }, false],
+  ["public-facade", "", "/a", { "platform": "posix" }, false],
+  ["public-facade", "*", "/.hidden/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "*/?/**", "abc/a/x", { "platform": "posix" }, true],
+  ["public-facade", "a*/+(a|b)", ".hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "abc/*", "", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "x/a/abc/a/b", { "platform": "posix" }, false],
+  ["public-facade", "**/!x/a*/a*", "///x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/[abc]//+(a|b)",
+    "abc/x/x/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", ".hidden/a/.hidden/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/.hidden/x-y/.hidden",
+    "",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/a/?", "b/abc/x/b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/abc/[abc]/a.b+c",
+    "a//b/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/.hidden", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/?/a.b+c/.hidden",
+    "abc/b/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a/*", "x/x/x", { "platform": "posix" }, false],
+  ["public-facade", "/*//a.b+c", "/abc/", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "", { "platform": "posix" }, false],
+  ["public-facade", "?", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/a*/abc",
+    "a/b/b/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/**/*.js", "b", { "platform": "posix" }, false],
+  ["public-facade", "x-y/b", "abc/abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/+(a|b)/a/x-y",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "abc/a//b", { "platform": "posix" }, false],
+  ["public-facade", "/a", "abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "a/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a.b+c//+(a|b)/abc",
+    ".hidden/.hidden/x/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", "a", { "platform": "posix" }, true],
+  ["public-facade", "?/[abc]", "abc", { "platform": "posix" }, false],
+  ["public-facade", "*.js/!x/.hidden/*", "x/a", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/?/b/*.js", "", { "platform": "posix" }, false],
+  ["public-facade", "**/.hidden", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "[abc]/b/**/", "a/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "?/+(a|b)", "//a/abc", { "platform": "posix" }, false],
+  ["public-facade", "b", "a/.hidden/a/a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/*.js",
+    "/b/x/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/x-y/b/a", "/a/a", { "platform": "posix" }, false],
+  ["public-facade", "b", "b/x/x/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/+(a|b)/x-y/",
+    "/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/*/x-y", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}//{a,b}",
+    "a//a/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", "/", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/x-y/b", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/b/*.js/",
+    "/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/[abc]/abc/?", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/!x/+(a|b)/abc",
+    "b/b/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/.hidden/**/a.b+c",
+    "b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/?/a*/.hidden", "x/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c",
+    "b/abc/.hidden/x/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/{a,b}", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/*/abc",
+    "abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/?", "x/x/abc/a", { "platform": "posix" }, true],
+  ["public-facade", "abc/a/", "a//a//a", { "platform": "posix" }, false],
+  ["public-facade", "?/+(a|b)/?", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/{a,b}",
+    "a/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/*.js/*/b",
+    "abc/x/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "abc/a", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/abc/?/a*", "abc/x", { "platform": "posix" }, false],
+  ["public-facade", "*", "/.hidden", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/abc/**/a*", "b", { "platform": "posix" }, false],
+  ["public-facade", "a", "a/a/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "*/b/!x/?", "b", { "platform": "posix" }, false],
+  ["public-facade", "**/*.js/b/?", "a/a", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/!x/abc", "/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)//a/.hidden",
+    "b/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/a*", "abc/x/a/b/x", { "platform": "posix" }, false],
+  ["public-facade", "x-y/a", "/abc", { "platform": "posix" }, false],
+  ["public-facade", "*", "b", { "platform": "posix" }, true],
+  ["public-facade", "x-y", "a/abc/", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/{a,b}/{a,b}", "a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/a.b+c/+(a|b)",
+    "abc/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/x-y", "a/x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/*.js/[abc]/*.js",
+    "abc/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/x-y", "a/x/a/b/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/.hidden/+(a|b)",
+    ".hidden//.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/.hidden/a.b+c/?",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/a*//abc",
+    "a/x//abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/!x/a*/{a,b}", "x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/+(a|b)/b",
+    ".hidden/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden/!x/.hidden", "a", { "platform": "posix" }, false],
+  ["public-facade", "*.js/b", "//abc", { "platform": "posix" }, false],
+  ["public-facade", "**", "x/abc/b/", { "platform": "posix" }, true],
+  ["public-facade", "/", "x/x/.hidden/x/a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/**",
+    ".hidden/a//x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/+(a|b)/.hidden", "a//x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}",
+    "a/abc/.hidden/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y//abc",
+    "b/x/.hidden/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/*.js/a*/",
+    "x/b/x/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/x-y", "b", { "platform": "posix" }, true],
+  ["public-facade", "**/!x/a.b+c", "x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/?/.hidden",
+    "b/.hidden/x/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/?/a.b+c/b",
+    ".hidden/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/abc/**/b", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/abc/.hidden/**",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/x-y/*/b",
+    "abc/x/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/*.js/.hidden",
+    "x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/*/!x", "x/x/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/*/abc/a.b+c",
+    "a//b/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/abc/abc/a",
+    "b//abc//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "x", { "platform": "posix" }, false],
+  ["public-facade", "a*/b/[abc]/a", "x///b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/x-y/a/a",
+    "a/x/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden/b", "", { "platform": "posix" }, false],
+  ["public-facade", "x-y/**", ".hidden//abc", { "platform": "posix" }, false],
+  ["public-facade", "x-y/a*/a*/{a,b}", "x/", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/abc/abc", "a/x/a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "a/", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "/x", { "platform": "posix" }, false],
+  ["public-facade", "?", "abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "b/*.js/a", "x", { "platform": "posix" }, false],
+  ["public-facade", "x-y/**", "b/abc", { "platform": "posix" }, false],
+  ["public-facade", "*", "abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "/a/{a,b}/!x",
+    ".hidden/a///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "*.js", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*", "b/x/a/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/.hidden/**",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/a.b+c/a/[abc]",
+    "a/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/*/b", "b/abc/.hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/+(a|b)/*.js", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/*.js/+(a|b)",
+    "b/a/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/b/a", "a////x", { "platform": "posix" }, false],
+  ["public-facade", "*/a/a*", "a/x/a", { "platform": "posix" }, false],
+  ["public-facade", "a", "x/x//a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/x-y/a*",
+    ".hidden/b/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/abc/*/", "a/b/abc/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/.hidden/{a,b}/+(a|b)",
+    "b/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/abc/[abc]/.hidden",
+    "",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js//{a,b}/",
+    "x/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a.b+c", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a//!x", "x/abc/", { "platform": "posix" }, false],
+  ["public-facade", "*", "", { "platform": "posix" }, false],
+  ["public-facade", "a*", "x", { "platform": "posix" }, false],
+  ["public-facade", "", "b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/+(a|b)/.hidden/",
+    "a//abc/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?", "b", { "platform": "posix" }, true],
+  ["public-facade", "a/*", "b/x/a/abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/", "", { "platform": "posix" }, false],
+  ["public-facade", "**", "a/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)/+(a|b)/a",
+    "/a/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/abc/*/?",
+    ".hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}",
+    ".hidden/.hidden//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/*.js/?", "x/a/", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/?/a/a.b+c", "x/x", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/b/a.b+c/!x", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/a.b+c/**/*.js",
+    "a/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", "abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)/*.js/**",
+    "x/x///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/{a,b}/.hidden/.hidden",
+    "b/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "/x/b/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "b/[abc]", "", { "platform": "posix" }, false],
+  ["public-facade", "b/b", "/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/b/a/a",
+    "abc/x/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/?/{a,b}",
+    "x/x/a//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/*.js//.hidden", "x", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/a.b+c/!x/x-y",
+    "x/b/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "x/b/a/.hidden/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)",
+    ".hidden/.hidden/abc/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/a.b+c", "/x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/*/!x/x-y", "b/x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a*/x-y", "x", { "platform": "posix" }, false],
+  ["public-facade", "b/b/!x/.hidden", "b/b//b", { "platform": "posix" }, false],
+  ["public-facade", "x-y/**", "/b//", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/abc", "a/x", { "platform": "posix" }, false],
+  ["public-facade", "abc/+(a|b)/a*", "", { "platform": "posix" }, false],
+  ["public-facade", "*/[abc]", ".hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "abc", "abc/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y",
+    ".hidden//.hidden/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/x-y", "a/a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/.hidden",
+    "/.hidden/b/x/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden",
+    ".hidden//.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "/a.b+c/a*/*",
+    "a/a///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/b/*/a*", "x/b/a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "x//abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "x/", { "platform": "posix" }, false],
+  ["public-facade", "a", "b/a/.hidden/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a",
+    ".hidden//.hidden/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/x-y/?/abc",
+    "//b/b/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/{a,b}/[abc]",
+    "abc/.hidden/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/*/!x/abc", "/a/abc/abc", { "platform": "posix" }, true],
+  ["public-facade", "*", "b/abc/b/.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "!x", "/.hidden/b", { "platform": "posix" }, true],
+  ["public-facade", "b", "/abc/.hidden/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**",
+    ".hidden//b/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/!x/b",
+    "abc/b/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/a/a.b+c",
+    ".hidden/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?", "abc/abc/.hidden/b/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/a*/?/.hidden",
+    "a/.hidden/a//abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/!x",
+    "a//a/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc", "x", { "platform": "posix" }, false],
+  ["public-facade", "?/abc", "/a/b/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*/{a,b}/abc", "abc/a", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/!x/a.b+c/", "a/b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/*.js/*", "x/b/x", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "b/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/b/[abc]/a*",
+    ".hidden//a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/[abc]",
+    "x/abc/a/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", ".hidden/.hidden/", { "platform": "posix" }, false],
+  ["public-facade", "!x/x-y//**", "b/b/x/b", { "platform": "posix" }, true],
+  ["public-facade", "!x", "abc/abc/a/x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)/!x/?/*.js",
+    "abc/a/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/{a,b}",
+    "abc/a/x//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/abc/[abc]", "b/", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/*", ".hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/", "b", { "platform": "posix" }, false],
+  ["public-facade", "a/+(a|b)/?", "x/x/a", { "platform": "posix" }, false],
+  ["public-facade", "a*/**", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/+(a|b)/.hidden",
+    "x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/?/abc/!x",
+    ".hidden/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/?", "/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/abc/b/.hidden",
+    "a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/a*", "a/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "[abc]/a*/x-y",
+    "abc//.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/a.b+c", "abc", { "platform": "posix" }, false],
+  ["public-facade", "abc/?/a.b+c", "b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/*", "b/x/b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden///b", "abc//", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "abc/a/b/a/x", { "platform": "posix" }, false],
+  ["public-facade", "!x", "x/x/b", { "platform": "posix" }, true],
+  ["public-facade", "*.js", "a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/.hidden/b/b",
+    ".hidden//a/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/[abc]",
+    "x/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/a/?", "a/a", { "platform": "posix" }, false],
+  ["public-facade", "/**/a", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/x-y/a/*.js",
+    ".hidden//a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "/a/a/",
+    "b/b/abc/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/a.b+c",
+    "abc/b/x/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/b/+(a|b)/b", "a", { "platform": "posix" }, false],
+  ["public-facade", "*/!x/*.js/*", "b/b", { "platform": "posix" }, false],
+  ["public-facade", "*", "x/b/.hidden/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/a.b+c/abc/a.b+c",
+    ".hidden/b/.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden//",
+    ".hidden/a/abc//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/.hidden/abc/a.b+c",
+    "a/b///a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/a*/x-y/b",
+    "abc//abc/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]/x-y/abc/?",
+    "a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/**", "//a/b/b", { "platform": "posix" }, false],
+  ["public-facade", "**/a.b+c/**", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*/**/abc", "abc//abc/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "a.b+c/a.b+c/+(a|b)",
+    "abc//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "a/b/b/a/a", { "platform": "posix" }, false],
+  ["public-facade", "b", "a//.hidden/a/b", { "platform": "posix" }, false],
+  ["public-facade", "a//*.js/", "abc/b/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "abc/!x/", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/a/a*",
+    "a/abc/.hidden/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/*/?/[abc]", "a", { "platform": "posix" }, false],
+  ["public-facade", "**/a", "b/abc/", { "platform": "posix" }, false],
+  ["public-facade", "b", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "/*.js", "", { "platform": "posix" }, false],
+  ["public-facade", "*/a.b+c/*/.hidden", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/*/.hidden",
+    "/x/x/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/?/a*", "a", { "platform": "posix" }, false],
+  ["public-facade", "**", ".hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "b/b/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "", "a/a/b", { "platform": "posix" }, false],
+  ["public-facade", "/{a,b}/*.js", "a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "x/x/abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*/b/**/+(a|b)", "", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "b", { "platform": "posix" }, false],
+  ["public-facade", "abc/a*/a", "b/abc", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "x/abc/x/b/a", { "platform": "posix" }, false],
+  ["public-facade", "!x/a", "x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "+(a|b)/b/+(a|b)/[abc]",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "",
+    "/.hidden/.hidden/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/a*/*/[abc]", "x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/**/*.js",
+    "a/x/x/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/*.js", "a/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/*/b",
+    "a/x/abc/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a//{a,b}/x-y",
+    ".hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/{a,b}/!x/+(a|b)",
+    "/abc/.hidden/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/a/+(a|b)",
+    "abc/x/abc/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a//a/[abc]",
+    "a//.hidden/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/*/*.js/?", "/a/a/abc/a", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/!x/", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/abc",
+    "a/.hidden//x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/{a,b}", "x", { "platform": "posix" }, false],
+  ["public-facade", "*.js/?/{a,b}/?", "a/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/abc/.hidden/x-y",
+    ".hidden/a/b/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/.hidden",
+    "a/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "/abc//.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "b/{a,b}", "//x/b", { "platform": "posix" }, false],
+  ["public-facade", "abc", ".hidden//b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y//+(a|b)/.hidden",
+    "a/abc/a/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/x-y", "b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "a/a/b", { "platform": "posix" }, false],
+  ["public-facade", "/a/a.b+c/", "abc/x", { "platform": "posix" }, false],
+  ["public-facade", "a/.hidden/+(a|b)", "b", { "platform": "posix" }, false],
+  ["public-facade", "a/x-y/?/a*", "b/x/a", { "platform": "posix" }, false],
+  ["public-facade", "!x/{a,b}/*.js", "x/b/a//b", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c/**", "/x/.hidden/x", { "platform": "posix" }, false],
+  ["public-facade", "b", ".hidden/a/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/*.js/x-y", "a/x/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/.hidden/[abc]/[abc]",
+    "abc/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/*.js/abc/",
+    ".hidden/x//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/a*", "a/.hidden/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/.hidden",
+    ".hidden/x/b/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x//a", "b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    ".hidden/.hidden/[abc]",
+    "",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?//*", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/.hidden",
+    "x/x/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "/*/[abc]/.hidden",
+    "abc/a//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "!x/?/a*/.hidden",
+    "b/abc//",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "*/.hidden", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/*/a.b+c/**",
+    "b/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/a/**", "x", { "platform": "posix" }, false],
+  ["public-facade", "/?/abc/a.b+c", "a/x", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/b", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/?", "x//a/b", { "platform": "posix" }, false],
+  ["public-facade", "*.js/a*/?", "/.hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "*", "a", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c/*.js/{a,b}", "x/", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "abc/a/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/b/a",
+    ".hidden/abc/b/a/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/a.b+c/a*",
+    "abc/x/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/[abc]", "/abc/b/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/x-y/",
+    "abc//b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/?//",
+    "a/b/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/*/b/b",
+    "b/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/!x/b", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "/a*", "x", { "platform": "posix" }, false],
+  ["public-facade", "?/**/!x/!x", "b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "abc/a//.hidden", { "platform": "posix" }, false],
+  ["public-facade", "?/[abc]", "x", { "platform": "posix" }, false],
+  ["public-facade", "!x", "x/abc/abc/", { "platform": "posix" }, true],
+  ["public-facade", "*.js/a.b+c/x-y", "b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/a.b+c", "", { "platform": "posix" }, false],
+  ["public-facade", "*", "b/abc/abc/a/x", { "platform": "posix" }, false],
+  ["public-facade", "b/b/[abc]", "/a/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "!x/*/x-y", "b/.hidden", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "*.js/a/+(a|b)",
+    "a/abc/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/a.b+c/a.b+c",
+    ".hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/*.js/.hidden/!x",
+    "",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/abc/!x", "/abc/a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/+(a|b)/a.b+c/?",
+    "b/.hidden///abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/{a,b}/a*/.hidden",
+    "a/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y//**/x-y", "x/a/x/abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "a", { "platform": "posix" }, true],
+  ["public-facade", "?", "a//a//", { "platform": "posix" }, false],
+  ["public-facade", "*/abc", "a", { "platform": "posix" }, false],
+  ["public-facade", "x-y/**", "", { "platform": "posix" }, false],
+  ["public-facade", "abc", "b/a/abc/x/abc", { "platform": "posix" }, false],
+  ["public-facade", "/{a,b}/a", "a///abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/b", ".hidden/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/*.js/a/.hidden",
+    ".hidden/x//b/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/+(a|b)",
+    "abc///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "/x-y", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/a/*.js",
+    ".hidden/a/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/?", "", { "platform": "posix" }, false],
+  ["public-facade", "a*", ".hidden/x/b/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/.hidden",
+    ".hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", "abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/abc", "x/x/a/b", { "platform": "posix" }, false],
+  ["public-facade", "!x", "a/.hidden/abc", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    ".hidden/[abc]/x-y",
+    "a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]/abc/?", "a", { "platform": "posix" }, false],
+  ["public-facade", "b", ".hidden/", { "platform": "posix" }, false],
+  ["public-facade", "b/.hidden", "abc/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)//abc/x-y",
+    "abc/a/.hidden//abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/abc/a*/[abc]",
+    "abc/b/b/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden", "x/b/b/x", { "platform": "posix" }, false],
+  ["public-facade", "?/*", "/a/a/.hidden/a", { "platform": "posix" }, false],
+  ["public-facade", "a", ".hidden/b/", { "platform": "posix" }, false],
+  ["public-facade", "*.js/**", "x/a/x", { "platform": "posix" }, false],
+  ["public-facade", "a/", "a", { "platform": "posix" }, false],
+  ["public-facade", "?/a.b+c", "b/a/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/abc/**",
+    "x/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "/a.b+c//*",
+    "b/b/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", ".hidden//b", { "platform": "posix" }, false],
+  ["public-facade", "?", "x/a//.hidden", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/a*", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/x-y/+(a|b)",
+    "a//a/b/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "!x/!x/**/*", "a", { "platform": "posix" }, true],
+  ["public-facade", "a*/x-y/[abc]", "/a", { "platform": "posix" }, false],
+  ["public-facade", "?", "a/b", { "platform": "posix" }, false],
+  ["public-facade", "*", "b/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "abc", "b", { "platform": "posix" }, false],
+  ["public-facade", "?", "//a/", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/b", "b///a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/+(a|b)/abc/.hidden",
+    "b/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/abc/+(a|b)/x-y",
+    "abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/a.b+c/[abc]/x-y",
+    "x/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "!x/*.js/a.b+c/*",
+    "/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "[abc]/b/**/**", "a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/!x/**",
+    ".hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y",
+    "/.hidden/b/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/a*/{a,b}/?", "a/b", { "platform": "posix" }, false],
+  ["public-facade", "*/x-y/.hidden/a", "abc", { "platform": "posix" }, false],
+  ["public-facade", "", "x/abc/b//.hidden", { "platform": "posix" }, false],
+  ["public-facade", "b", "a", { "platform": "posix" }, false],
+  ["public-facade", "*", "a", { "platform": "posix" }, true],
+  ["public-facade", "**", "abc/b//abc/a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "{a,b}/.hidden/!x",
+    "a/x/abc/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/abc/a", "a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/{a,b}/abc/abc",
+    ".hidden/abc/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "a///a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/?",
+    ".hidden/x/.hidden/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js//a", "x/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/a*",
+    ".hidden/abc/a/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/x-y", "a/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/.hidden//",
+    "x/abc/b//abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/.hidden/?",
+    "x//b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/{a,b}/*",
+    "b/b/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "/b/", { "platform": "posix" }, false],
+  ["public-facade", "**/a/?", "b/abc//", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/*.js/b/a*",
+    ".hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "a/abc/x", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/!x", "a/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden",
+    "x//.hidden/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x//[abc]", "a/abc/", { "platform": "posix" }, true],
+  ["public-facade", "b/x-y", "abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "*", "a/abc/b/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/.hidden/*.js/*",
+    "a/b/abc/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?", "a/b/abc/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/x-y", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "x-y/x-y/{a,b}", "/b/a", { "platform": "posix" }, false],
+  ["public-facade", "*/b/b", "b", { "platform": "posix" }, false],
+  ["public-facade", "**/+(a|b)/a*", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/[abc]/+(a|b)/b",
+    "/.hidden/a/a/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/+(a|b)/b/a", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/+(a|b)/+(a|b)/b",
+    "a/.hidden/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/**/*.js/b",
+    "abc/b/a/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "!x/a.b+c/abc/a",
+    "abc//abc/.hidden/x",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "b", "", { "platform": "posix" }, false],
+  ["public-facade", "abc/*.js", "b/.hidden/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x/*.js/?/a.b+c",
+    ".hidden/.hidden/.hidden/abc",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "a.b+c//a*",
+    ".hidden/x/.hidden/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", "x/b/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "!x/a/+(a|b)/x-y",
+    ".hidden/abc/a/b/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "{a,b}/abc/a.b+c",
+    "a/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/!x/a.b+c/a", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/.hidden/x-y/a.b+c",
+    "x/abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/a*", "b", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/abc", "abc/x", { "platform": "posix" }, false],
+  ["public-facade", "!x/a*", "a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "*/**/a/*.js",
+    "a/abc/abc//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)", "x/a", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/a/{a,b}", "a/a/b", { "platform": "posix" }, false],
+  ["public-facade", "x-y/.hidden/a*", "a", { "platform": "posix" }, false],
+  ["public-facade", "", "b//x/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/x-y",
+    "abc/a/a/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)//{a,b}/abc",
+    "a/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "//b/b", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/b/a", ".hidden//", { "platform": "posix" }, false],
+  ["public-facade", "/?/a*", "b", { "platform": "posix" }, false],
+  ["public-facade", "a*", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "a/a/abc/a/b", { "platform": "posix" }, false],
+  ["public-facade", "abc", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/.hidden/abc/{a,b}",
+    "x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "abc/[abc]/x-y", "/b//abc", { "platform": "posix" }, false],
+  ["public-facade", "a/a.b+c/x-y/[abc]", "abc", { "platform": "posix" }, false],
+  ["public-facade", "*.js", "b/abc/x/x", { "platform": "posix" }, false],
+  ["public-facade", "*/!x/x-y/[abc]", "///b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/x-y/[abc]/.hidden",
+    "b//abc/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/a.b+c/[abc]/**",
+    ".hidden/abc//a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}", ".hidden/", { "platform": "posix" }, false],
+  ["public-facade", "/!x", "a", { "platform": "posix" }, false],
+  ["public-facade", "!x/abc/x-y", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", "x-y/a", ".hidden/abc", { "platform": "posix" }, false],
+  ["public-facade", "b", "/b/a/.hidden/abc", { "platform": "posix" }, false],
+  ["public-facade", "*/abc/+(a|b)", "abc/a", { "platform": "posix" }, false],
+  ["public-facade", "!x/[abc]/a", "b/a/b", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "[abc]/{a,b}/*.js",
+    ".hidden/.hidden/x/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b//.hidden/a.b+c",
+    "b//b/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "b/abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/{a,b}", ".hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "*/a.b+c/b", "b/a/x//b", { "platform": "posix" }, false],
+  ["public-facade", "**", "x//abc/a", { "platform": "posix" }, true],
+  ["public-facade", "[abc]/**", "/abc//", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "b", { "platform": "posix" }, false],
+  ["public-facade", "x-y/abc", "b//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/a.b+c",
+    ".hidden/abc/x/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c", "a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "b", { "platform": "posix" }, false],
+  ["public-facade", "x-y/abc/{a,b}/a*", "/a", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/a*", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*/a/*.js/a", "b/x//a", { "platform": "posix" }, false],
+  ["public-facade", "/?", "abc/x/a/.hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/b/**", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "/abc/", "x/a/x//abc", { "platform": "posix" }, false],
+  ["public-facade", "a*", "x/abc/b//abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/a*",
+    ".hidden/a/.hidden/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc",
+    "abc/.hidden/.hidden/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y", "x/b", { "platform": "posix" }, false],
+  ["public-facade", "[abc]/?/.hidden/b", "x/x", { "platform": "posix" }, false],
+  ["public-facade", "b/[abc]", "x/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/[abc]",
+    ".hidden//abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/b",
+    "abc/.hidden/abc/x/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x", "", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "x-y/+(a|b)/.hidden/+(a|b)",
+    "/abc/b/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/?", "x", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "abc/.hidden/abc/*.js",
+    "b/b//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/*/a*/{a,b}", ".hidden", { "platform": "posix" }, true],
+  ["public-facade", ".hidden/a.b+c/?/!x", "b", { "platform": "posix" }, false],
+  ["public-facade", "!x/abc", "b/x", { "platform": "posix" }, true],
+  ["public-facade", "?", ".hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "abc", "//x/", { "platform": "posix" }, false],
+  ["public-facade", "abc", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/abc/{a,b}/{a,b}",
+    "x//abc/abc/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/b/x-y/{a,b}",
+    ".hidden//b/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**/.hidden/[abc]/?",
+    "/abc/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/*/.hidden/x-y",
+    "a/abc/x/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "?/a/+(a|b)",
+    "a/b/a/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a.b+c/.hidden",
+    "abc/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/x-y//+(a|b)",
+    "abc/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/a*/**/x-y",
+    "b/abc/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/a.b+c//a",
+    "x/.hidden/b/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/.hidden",
+    "/a/.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "", "", { "platform": "posix" }, true],
+  ["public-facade", "x-y/?/.hidden", "b", { "platform": "posix" }, false],
+  ["public-facade", "a*/.hidden/", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a/a*/**", "/abc/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/a*/!x/b",
+    ".hidden/a/.hidden//x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "b/b/b/abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "[abc]", ".hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/.hidden",
+    "abc//a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/.hidden/*.js",
+    "a/x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js", "abc/a/abc/a/x", { "platform": "posix" }, false],
+  ["public-facade", "abc/*/a/!x", "", { "platform": "posix" }, false],
+  ["public-facade", "?/.hidden/b", "abc/a/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/.hidden/a.b+c/b",
+    "x/a/b/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/{a,b}", "/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "", "b/a/abc", { "platform": "posix" }, false],
+  ["public-facade", "!x", "/abc//abc", { "platform": "posix" }, true],
+  ["public-facade", "b/b/x-y/a*", "x/", { "platform": "posix" }, false],
+  ["public-facade", "!x", "", { "platform": "posix" }, true],
+  ["public-facade", "a*/abc/?/*", "abc", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/?/a/**", "a", { "platform": "posix" }, false],
+  ["public-facade", "**/b", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/a.b+c/{a,b}/?",
+    "abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/", "/b/a/", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/?/*.js/a", "abc/", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}/abc/a*/*.js", "x", { "platform": "posix" }, false],
+  ["public-facade", "a/a/**", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "+(a|b)/x-y/[abc]/*",
+    ".hidden/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "x-y/a/*.js/a.b+c",
+    "b/x/.hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a/*/a*", "a/a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/a*/x-y/[abc]",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "[abc]", "b/a/b/abc/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/a/a.b+c/+(a|b)",
+    "/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b/x-y/a/b", "x/b", { "platform": "posix" }, false],
+  ["public-facade", "!x/b/b", "abc/x/a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "/+(a|b)/+(a|b)",
+    "x//abc/.hidden/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?", "", { "platform": "posix" }, false],
+  ["public-facade", "b", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/a.b+c/**",
+    "/a/.hidden/b/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a.b+c", "x", { "platform": "posix" }, false],
+  ["public-facade", "**", "x/a", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "[abc]/*.js/abc/.hidden",
+    "b/x/x//x",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a.b+c/a/[abc]", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "!x",
+    "/.hidden/a/a/.hidden",
+    { "platform": "posix" },
+    true
+  ],
+  [
+    "public-facade",
+    "{a,b}/!x/!x/+(a|b)",
+    "/.hidden/.hidden/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a/?/.hidden",
+    ".hidden/b/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/a*/a.b+c/a",
+    "b/abc/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/*/.hidden/*.js",
+    "abc/b/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/b", "", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "b/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/{a,b}/x-y/a.b+c",
+    ".hidden/x/x/b/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*/abc/abc/{a,b}",
+    "a/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a", "b//x/b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "abc", "a", { "platform": "posix" }, false],
+  ["public-facade", "**//x-y", "/abc/b/x/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/[abc]/*",
+    "a/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "{a,b}/abc/*", "b", { "platform": "posix" }, false],
+  ["public-facade", "/*.js/!x/x-y", "abc/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "{a,b}/a.b+c/a.b+c/!x",
+    "abc/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden/a.b+c/{a,b}", "a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/**/+(a|b)/!x",
+    "b/a/a/x",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/[abc]",
+    "b/.hidden/x/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a//x-y", "abc/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "abc/a", "a", { "platform": "posix" }, false],
+  ["public-facade", "*/**/*.js", "b/abc", { "platform": "posix" }, false],
+  ["public-facade", "*", "a", { "platform": "posix" }, true],
+  ["public-facade", "*.js", "a//.hidden/abc/", { "platform": "posix" }, false],
+  ["public-facade", "!x/x-y/a.b+c", "/a/b", { "platform": "posix" }, true],
+  ["public-facade", "b", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/{a,b}/a*/+(a|b)",
+    "b/abc/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*", "abc", { "platform": "posix" }, true],
+  ["public-facade", "+(a|b)/a", "abc/b/abc/", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/!x/x-y/**",
+    "/.hidden/a/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "[abc]",
+    "b/a/.hidden/.hidden/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/", "a/abc", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/.hidden", "a", { "platform": "posix" }, false],
+  ["public-facade", "!x/**", "a", { "platform": "posix" }, true],
+  ["public-facade", "a.b+c/a", "abc/a/a/b/x", { "platform": "posix" }, false],
+  ["public-facade", "a*/[abc]/a.b+c/a", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*.js/[abc]/a",
+    "x/abc//abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "abc/+(a|b)",
+    ".hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "a*//a.b+c/a*",
+    "//.hidden/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/**/*.js/*.js", "", { "platform": "posix" }, false],
+  ["public-facade", "abc", "a/abc//a/.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a/.hidden/!x",
+    "/b///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js/a.b+c", "abc/abc", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/{a,b}/abc/**",
+    ".hidden/abc/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*/abc",
+    "/abc/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a*/b/*", "b//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "?/b/*/[abc]",
+    ".hidden/b/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?/b/+(a|b)", "abc/a/a/x/", { "platform": "posix" }, false],
+  ["public-facade", ".hidden/?/a*", "x", { "platform": "posix" }, false],
+  ["public-facade", "{a,b}", "/x", { "platform": "posix" }, false],
+  ["public-facade", "", "/x/x/.hidden/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "abc/a//abc",
+    "abc/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**/.hidden/.hidden", "", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "/[abc]/x-y",
+    ".hidden/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/.hidden/[abc]/x-y",
+    "abc/b///.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "!x/", "/x/x/", { "platform": "posix" }, true],
+  [
+    "public-facade",
+    "b/!x/{a,b}/[abc]",
+    "/abc/b",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/b/+(a|b)/*",
+    ".hidden",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*.js//x-y/[abc]", "x//x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "x/b/x//b", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c", "/a/x//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/.hidden/a.b+c/x-y",
+    "/abc/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "x-y/!x/a.b+c", "b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "**/.hidden/.hidden",
+    "x/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}/{a,b}//{a,b}",
+    "abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "a/b/{a,b}", "x/x/b/b", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*/a*/[abc]/{a,b}",
+    "a/b//.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "**",
+    ".hidden/.hidden/x/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "b", "", { "platform": "posix" }, false],
+  ["public-facade", "a*", "/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    ".hidden/x-y/a.b+c/a",
+    "b/.hidden/x/a/a",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "//a*/a.b+c", "x", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "abc/x/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "abc/abc//[abc]", "x", { "platform": "posix" }, false],
+  ["public-facade", ".hidden", "a/b/a/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "x-y/",
+    "//.hidden/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "{a,b}//abc/**",
+    "a/abc/abc/",
+    { "platform": "posix" },
+    true
+  ],
+  ["public-facade", "/?/**", "/x/b/b/", { "platform": "posix" }, true],
+  ["public-facade", ".hidden/abc", "b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)/a/a/", "abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "*//[abc]/abc",
+    ".hidden/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    ".hidden/x-y/.hidden",
+    "abc/abc/b/a/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*/*.js", "/.hidden/x", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a*/{a,b}/a.b+c",
+    "/x/a/b/a",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "*.js/!x/abc",
+    "abc/.hidden/.hidden",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "+(a|b)/!x",
+    "x/.hidden/.hidden/",
+    { "platform": "posix" },
+    false
+  ],
+  [
+    "public-facade",
+    "b/.hidden/+(a|b)/**",
+    "x/.hidden/b/x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "+(a|b)/a/!x", "abc", { "platform": "posix" }, false],
+  ["public-facade", "x-y", "/.hidden/b", { "platform": "posix" }, false],
+  ["public-facade", "a", "", { "platform": "posix" }, false],
+  ["public-facade", "a.b+c/[abc]/b", "/a//abc", { "platform": "posix" }, false],
+  ["public-facade", "+(a|b)", "b/a/abc//a", { "platform": "posix" }, false],
+  ["public-facade", "!x/a.b+c", "abc/x//x", { "platform": "posix" }, true],
+  ["public-facade", "*.js/*.js/{a,b}", "b/", { "platform": "posix" }, false],
+  ["public-facade", "*/abc/*.js", "a/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a*", "abc/abc/a/x", { "platform": "posix" }, false],
+  ["public-facade", "a*/+(a|b)", "b/.hidden", { "platform": "posix" }, false],
+  ["public-facade", "a/a*/a", "/a", { "platform": "posix" }, false],
+  ["public-facade", "*/*.js/", "x/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c",
+    ".hidden/.hidden//abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "**", "abc", { "platform": "posix" }, true],
+  ["public-facade", "?/*.js", "x/abc/b", { "platform": "posix" }, false],
+  ["public-facade", "a*", "b/a", { "platform": "posix" }, false],
+  ["public-facade", "*", "a", { "platform": "posix" }, true],
+  ["public-facade", "**/{a,b}/*/", "x", { "platform": "posix" }, false],
+  ["public-facade", "!x/[abc]", "x/.hidden/x", { "platform": "posix" }, true],
+  ["public-facade", "a/b", "///x/a", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "[abc]/b/a/{a,b}",
+    "abc//b/x/",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "*", "", { "platform": "posix" }, false],
+  ["public-facade", "abc/+(a|b)", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "abc", "a/b/", { "platform": "posix" }, false],
+  ["public-facade", "x-y/?/*", "abc//b", { "platform": "posix" }, false],
+  ["public-facade", "", ".hidden", { "platform": "posix" }, false],
+  ["public-facade", "", "/a/abc", { "platform": "posix" }, false],
+  ["public-facade", "**/b", "a/b/b//.hidden", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "b/[abc]",
+    "abc/abc/x/abc/abc",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", "?", "b/.hidden/abc", { "platform": "posix" }, false],
+  [
+    "public-facade",
+    "a.b+c/**/a/*.js",
+    "b/abc//x/b",
+    { "platform": "posix" },
+    false
+  ],
+  ["public-facade", ".hidden/{a,b}/*", "a/abc", { "platform": "posix" }, false]
+]

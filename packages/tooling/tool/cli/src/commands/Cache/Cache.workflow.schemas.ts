@@ -6,7 +6,10 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitObjectId } from "@beep/schema/Conformance";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
+import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { CacheProducerBundle, CacheProducerEnvelope } from "./Cache.producer.schemas.ts";
 import { CacheCensusSource, CacheLinkedFile, CacheToolchainSnapshot } from "./Cache.schemas.ts";
 
@@ -58,7 +61,7 @@ export class CacheProducerWorkflow extends S.Opaque<CacheProducerWorkflow, { rea
     revision: GitObjectId,
     files: S.Array(CacheProducerWorkflowFile).check(S.isMinLength(1), S.isMaxLength(20000)),
     toolchain: CacheToolchainSnapshot,
-    inspectionTools: S.Array(CacheLinkedFile).check(S.isMinLength(6), S.isMaxLength(6)),
+    inspectionTools: S.Array(CacheLinkedFile).check(S.isMinLength(6), S.isMaxLength(7)),
   }).pipe(
     $I.annoteSchema("CacheProducerWorkflow", {
       description:
@@ -89,6 +92,40 @@ export class CacheProducerObservation extends S.Opaque<CacheProducerObservation,
     $I.annoteSchema("CacheProducerObservation", {
       description:
         "Owned complete pilot and conformance execution authenticated by a pre-provisioned issuer; qualification evidence and profile closure remain separate gates.",
+    })
+  )
+) {}
+
+/**
+ * Supervisor-only target and credentials for an independently approved upload.
+ *
+ * **Details**
+ * Never serialize this runtime value. Only the target descriptor is hashed into
+ * independent approval; bearer and artifact-key values stay redacted and are
+ * delivered to the owned worker through its restricted environment.
+ *
+ * **Example** (Inspect the runtime boundary)
+ * ```ts
+ * import { CacheProducerUploadRuntime } from "@beep/repo-cli/test/Cache"
+ * console.assert("signing" in CacheProducerUploadRuntime.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProducerUploadRuntime extends S.Opaque<
+  CacheProducerUploadRuntime,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    target: CacheConformanceTarget,
+    bearers: CacheConformanceBearers,
+    signing: S.Redacted(S.NonEmptyString),
+    adapter: S.OptionFromOptionalKey(CacheProducerAdapterLaunch).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("CacheProducerUploadRuntime", {
+      description: "Unserialized parent-owned upload target, role bearers and native signing capability.",
     })
   )
 ) {}

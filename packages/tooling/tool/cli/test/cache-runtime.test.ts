@@ -3,10 +3,14 @@ import {
   CacheCensusNode,
   CacheCommandError,
   CacheExecutablePin,
+  CacheSigningKeyState,
+  CacheSigningRequest,
+  CacheSigningRole,
   CacheToolchainSnapshot,
   cacheRuntimeStep,
   cacheTaskSelectionArgs,
   hashCacheToolchain,
+  resolveCacheSigningPosture,
   runCacheRuntimeTasks,
 } from "@beep/repo-cli/commands/Cache";
 import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
@@ -22,7 +26,7 @@ import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -34,6 +38,46 @@ import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
+describe("artifact signing posture", () => {
+  it.effect("allows unsigned legacy configuration and requires keys independently of bearer roles", () =>
+    Effect.gen(function* () {
+      for (const role of CacheSigningRole.pick(["reader", "writer"]).literals) {
+        for (const key of CacheSigningKeyState.literals) {
+          expect(yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: false, role, key }))).toEqual({
+            _tag: "Disabled",
+          });
+        }
+        expect(
+          yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: true, role, key: "resolved" }))
+        ).toEqual({ _tag: "Ready" });
+      }
+      for (const key of CacheSigningKeyState.literals) {
+        const failure = yield* resolveCacheSigningPosture(
+          CacheSigningRequest.make({ required: false, role: "canary", key })
+        ).pipe(Effect.flip);
+        expect(failure.message).toBe("Signing canary requires native artifact verification to be enabled.");
+      }
+      expect(
+        yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: true, role: "canary", key: "resolved" }))
+      ).toEqual({ _tag: "Ready" });
+      for (const key of CacheSigningKeyState.pick(["missing", "unresolved"]).literals) {
+        expect(
+          yield* resolveCacheSigningPosture(CacheSigningRequest.make({ required: true, role: "reader", key }))
+        ).toEqual({ _tag: "LocalOnly", reason: key });
+        for (const role of CacheSigningRole.pick(["writer", "canary"]).literals) {
+          const failure = yield* resolveCacheSigningPosture(
+            CacheSigningRequest.make({ required: true, role, key })
+          ).pipe(Effect.flip);
+          assertInstanceOf(failure, CacheCommandError);
+          expect(failure.message).toContain(`Signed cache ${role} requires a resolved artifact signing key (${key})`);
+          expect(failure.cause).toBeUndefined();
+        }
+      }
+    })
+  );
+});
 
 describe("cache runtime identity input", () => {
   it.effect("rejects supplied values in either environment before planned Turbo execution", () =>
@@ -253,10 +297,141 @@ const runtimeLayer = FsUtilsLive.pipe(
 );
 
 it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) => {
+  beforeEach(() => {
+    vi.spyOn(Fingerprint, "readCacheSignatureRequired").mockReturnValue(Effect.succeed(false));
+  });
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
   });
+
+  it.effect("forces a reader without its required key to run locally without forwarding a reference", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Fingerprint, "readCacheSignatureRequired").mockReturnValue(Effect.succeed(true));
+      const select = vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([]));
+      vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+      vi.stubEnv("TURBO_CACHE", "local:rw,remote:r");
+      vi.stubEnv("TURBO_REMOTE_ONLY", "true");
+      vi.stubEnv("TURBO_REMOTE_CACHE_READ_ONLY", "true");
+      vi.stubEnv("BEEP_TURBO_TRUSTED_WRITER", "false");
+      vi.stubEnv("BEEP_TURBO_SIGNING_CANARY", "false");
+      const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
+      for (const key of [undefined, "", "op://fixture/cache/signing"]) {
+        vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", key);
+        yield* runCacheRuntimeTasks("/fixture", ["run", "lint", "--cache", "remote:r", "--", "--cache=remote:rw"]);
+        expect(select).toHaveBeenLastCalledWith("/fixture", [
+          "run",
+          "lint",
+          "--cache=local:rw",
+          "--",
+          "--cache=remote:rw",
+        ]);
+        expect(spawn).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            args: ["run", "lint", "--cache=local:rw", "--", "--cache=remote:rw"],
+            env: {
+              TURBO_CACHE: "local:rw",
+              TURBO_REMOTE_ONLY: undefined,
+              TURBO_REMOTE_CACHE_READ_ONLY: undefined,
+              TURBO_REMOTE_CACHE_SIGNATURE_KEY: undefined,
+            },
+          })
+        );
+      }
+    })
+  );
+
+  it.effect("uses a selection cache directive before an ambient upload mode", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Fingerprint, "readCacheSignatureRequired").mockReturnValue(Effect.succeed(true));
+      const select = vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([]));
+      vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+      vi.stubEnv("TURBO_CACHE", "local:rw,remote:rw");
+      vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+      vi.stubEnv("BEEP_TURBO_TRUSTED_WRITER", "false");
+      vi.stubEnv("BEEP_TURBO_SIGNING_CANARY", "false");
+      const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
+      for (const mode of [["--cache=local:rw"], ["--cache", "local:rw"], ["--cache=remote:r"]]) {
+        yield* runCacheRuntimeTasks("/fixture", ["run", "lint", ...mode, "--", "--cache=remote:rw"]);
+        expect(select).toHaveBeenLastCalledWith("/fixture", [
+          "run",
+          "lint",
+          "--cache=local:rw",
+          "--",
+          "--cache=remote:rw",
+        ]);
+        expect(spawn).toHaveBeenLastCalledWith(
+          expect.objectContaining({ args: ["run", "lint", "--cache=local:rw", "--", "--cache=remote:rw"] })
+        );
+      }
+    })
+  );
+
+  it.effect("preserves native execution when an upload-capable caller has its resolved key", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Fingerprint, "readCacheSignatureRequired").mockReturnValue(Effect.succeed(true));
+      vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([]));
+      vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+      vi.stubEnv("TURBO_CACHE", "local:rw,remote:rw");
+      vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", "synthetic-private-signing-value-for-native-control");
+      const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
+      const args = ["run", "lint", "--cache=remote:rw"];
+      yield* runCacheRuntimeTasks("/fixture", args);
+      expect(spawn).toHaveBeenCalledWith(expect.objectContaining({ args, env: {}, extendEnv: true }));
+    })
+  );
+
+  it.effect("refuses an unsigned signing canary even when a key is available", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("BEEP_TURBO_SIGNING_CANARY", "true");
+      vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", "synthetic-private-signing-value-for-native-control");
+      const select = vi.spyOn(Census, "collectCacheTaskSelection");
+      const spawn = vi.spyOn(StepExec, "runToExit");
+      const failure = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+      expect(failure.message).toContain("Signing canary requires native artifact verification");
+      expect(select).not.toHaveBeenCalled();
+      expect(spawn).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses missing writer and canary keys before native execution", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Fingerprint, "readCacheSignatureRequired").mockReturnValue(Effect.succeed(true));
+      vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([]));
+      const spawn = vi.spyOn(StepExec, "runToExit");
+      vi.stubEnv("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+      vi.stubEnv("TURBO_CACHE", "local:rw,remote:rw");
+      for (const canary of ["false", "true"]) {
+        vi.stubEnv("BEEP_TURBO_SIGNING_CANARY", canary);
+        const failure = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+        expect(failure.message).toContain("requires a resolved artifact signing key");
+        expect(failure.cause).toBeUndefined();
+      }
+      expect(spawn).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("rejects root-config overrides before selection but leaves forwarded values alone", () =>
+    Effect.gen(function* () {
+      const select = vi.spyOn(Census, "collectCacheTaskSelection");
+      for (const arg of ["--root-turbo-json", "--root-turbo-json=other.json", "--cwd", "--cwd=elsewhere"]) {
+        const failure = yield* runCacheRuntimeTasks("/fixture", ["run", "lint", arg]).pipe(Effect.flip);
+        expect(failure.message).toContain("overrides are not accepted");
+      }
+      vi.stubEnv("TURBO_ROOT_TURBO_JSON", "synthetic-private-root-path");
+      const environmentOverride = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+      expect(environmentOverride.message).toContain("overrides are not accepted");
+      expect(environmentOverride.message).not.toContain("synthetic-private-root-path");
+      vi.stubEnv("TURBO_ROOT_TURBO_JSON", undefined);
+      expect(select).not.toHaveBeenCalled();
+      select.mockReturnValue(Effect.succeed([]));
+      vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+      const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
+      const args = ["run", "lint", "--", "--root-turbo-json=task-input"];
+      yield* runCacheRuntimeTasks("/fixture", args);
+      expect(spawn).toHaveBeenCalledWith(expect.objectContaining({ args }));
+    })
+  );
 
   it.effect("injects the fixed profile for disabled caching and retains it alongside an observed cache key", () =>
     Effect.gen(function* () {
@@ -531,4 +706,66 @@ describe("runtime step routing", () => {
       expect(cacheRuntimeStep(step)).toBe(step);
     }
   });
+});
+
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("native signing configuration", (it) => {
+  it.effect("rejects missing, malformed UTF-8, oversized and symlinked root policies without raw causes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const file = path.join(root, "turbo.json");
+      const missing = yield* Fingerprint.readCacheSignatureRequired(root).pipe(Effect.flip);
+      expect(missing.cause).toBeUndefined();
+      yield* fs.writeFile(file, new Uint8Array([255]));
+      const malformed = yield* Fingerprint.readCacheSignatureRequired(root).pipe(Effect.flip);
+      expect(malformed.cause).toBeUndefined();
+      yield* fs.writeFileString(file, Str.repeat(1024 * 1024 + 1)(" "));
+      const oversized = yield* Fingerprint.readCacheSignatureRequired(root).pipe(Effect.flip);
+      expect(oversized.cause).toBeUndefined();
+      yield* fs.remove(file);
+      const target = path.join(root, "owned-policy.json");
+      yield* fs.writeFileString(target, '{"remoteCache":{"signature":true}}');
+      yield* fs.symlink(target, file);
+      const aliased = yield* Fingerprint.readCacheSignatureRequired(root).pipe(Effect.flip);
+      expect(aliased.cause).toBeUndefined();
+    })
+  );
+
+  it.effect("resolves root/global enablement and JSONC without reading any artifact key", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const file = path.join(root, "turbo.jsonc");
+      for (const row of [
+        { source: '{"tasks":{}}', expected: false },
+        { source: '{"remoteCache":{"signature":true}}', expected: true },
+        { source: '{"remoteCache":{"enabled":false,"signature":true}}', expected: false },
+        {
+          source: '{"futureFlags":{"globalConfiguration":true},"remoteCache":{"signature":true},"global":{}}',
+          expected: false,
+        },
+        {
+          source: '{"futureFlags":{"globalConfiguration":true},"global":{"remoteCache":{"signature":true}}}',
+          expected: true,
+        },
+        {
+          source: '{"futureFlags":{"globalConfiguration":false},"global":{"remoteCache":{"signature":true}}}',
+          expected: false,
+        },
+        { source: '{/* fixture */"remoteCache":{"signature":true}}', expected: true },
+      ]) {
+        yield* fs.writeFileString(file, row.source);
+        expect(yield* Fingerprint.readCacheSignatureRequired(root)).toBe(row.expected);
+      }
+      yield* fs.writeFileString(file, '{"remoteCache":{"signature":"synthetic-private-configuration"}}');
+      const invalid = yield* Fingerprint.readCacheSignatureRequired(root).pipe(Effect.flip);
+      expect(invalid.message).not.toContain("synthetic-private-configuration");
+      expect(invalid.cause).toBeUndefined();
+      yield* fs.writeFileString(path.join(root, "turbo.json"), "{}");
+      const ambiguous = yield* Fingerprint.readCacheSignatureRequired(root).pipe(Effect.flip);
+      expect(ambiguous.cause).toBeUndefined();
+    })
+  );
 });

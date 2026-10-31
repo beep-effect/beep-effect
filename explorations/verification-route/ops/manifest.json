@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "verification-route",
+    "title": "Verification Route",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [
+      "DEFERRED until the route lands: re-keying ProofFact on the footprint digest and dropping lockfileDigest from ProofEpoch (time-to-certainty C1/C4 territory)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/verification-route"],
+      "docs": [],
+      "supersededBy": null,
+      "related": [
+        "explorations/beep-ci-operational-ontology",
+        "goals/time-to-certainty",
+        "goals/ciops-ontology-pipeline"
+      ]
+    },
+    "created": "2026-10-27",
+    "updated": "2026-10-28"
+  }
+}

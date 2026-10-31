@@ -2,6 +2,8 @@
  * Full-citation-type value object: the discriminant literal identifying which
  * kind of legal authority a full (non-short-form) citation refers to.
  *
+ * **Details**
+ *
  * The literal domain (`case`, `statute`, `constitutional`, ...) selects which
  * component-span schema applies to a given full citation and how downstream
  * formatters render it.

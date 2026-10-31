@@ -367,7 +367,7 @@ interface FailureHintSlices {
 }
 
 const lineIndicatesFailure = (line: string): boolean => {
-  const normalized = Str.toLowerCase(line);
+  const normalized = pipe(line, Str.toLowerCase, Str.replace(/\b0 errors?\b/gu, ""));
   return (
     Str.includes("failed")(normalized) ||
     Str.includes("failure")(normalized) ||
@@ -413,28 +413,10 @@ const knownSubLaneHintFromFailureSlices = (slices: FailureHintSlices): O.Option<
   );
 };
 
-/**
- * Find the latest known sub-lane hint in raw command output.
- *
- * **Example** (Recognize a typos sub-lane)
- *
- * ```ts
- * import { strictEqual } from "node:assert"
- * import { knownSubLaneHintFromOutput } from "@beep/repo-cli/test/Yeet"
- * import * as O from "effect/Option"
- *
- * strictEqual(O.getOrThrow(knownSubLaneHintFromOutput("lint:typos failed")).subCategory, "typos")
- * ```
- *
- * @param output - Raw command output, usually the tail of a broad quality lane
- * failure.
- * @returns The latest matched sub-lane hint when a known failure signature is
- * present.
- * @category classification
- * @since 0.0.0
- */
-export const knownSubLaneHintFromOutput = (output: string | undefined): O.Option<KnownSubLaneHint> => {
-  const normalized = Str.toLowerCase(output ?? "");
+const EXPLICIT_LANE_FAILURE = /^\[beep-cli\]\s+([a-z0-9:_-]+): (?:failed(?: in\b| with exit code\b)|exit [1-9]\d*\b)/mu;
+
+// Lane-scoped diagnostics may use a command marker followed by an untagged error.
+const knownSubLaneHintFromSegment = (normalized: string): O.Option<KnownSubLaneHint> => {
   const tail = Str.slice(-KNOWN_SUB_LANE_TAIL_CHARS)(normalized);
   const failureSlices = outputFailureHintSlices(normalized);
   return pipe(
@@ -448,6 +430,47 @@ export const knownSubLaneHintFromOutput = (output: string | undefined): O.Option
         : O.none()
     )
   );
+};
+
+/**
+ * Find a known failed sub-lane in raw command output.
+ *
+ * **Example** (Recognize a typos sub-lane)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { knownSubLaneHintFromOutput } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * strictEqual(O.getOrThrow(knownSubLaneHintFromOutput("lint:typos failed")).subCategory, "typos")
+ * ```
+ *
+ * @param output - Raw command output, usually the tail of a broad quality lane
+ * failure.
+ * @returns The first explicit failed-lane hint for collected output, or a
+ * diagnostic hint for output without sibling outcomes.
+ * @category classification
+ * @since 0.0.0
+ */
+export const knownSubLaneHintFromOutput = (output: string | undefined): O.Option<KnownSubLaneHint> => {
+  const normalized = Str.toLowerCase(output ?? "");
+  // Collected wrappers interleave sibling output. Bind attribution to the lane
+  // named by an explicit failure outcome, never an adjacent successful marker
+  // or a JSON report that mentions both failed and successful siblings.
+  if (
+    EXPLICIT_LANE_FAILURE.test(normalized) ||
+    /^\[beep-cli\]\s+[a-z0-9:_-]+: (?:ok\b|exit \d+\b)|\b0 errors?\b/mu.test(normalized) ||
+    A.some(LANE_REPORT_PREFIXES, (prefix) => Str.includes(prefix)(normalized))
+  ) {
+    return pipe(
+      normalized,
+      Str.split("\n"),
+      A.findFirst(Str.match(EXPLICIT_LANE_FAILURE)),
+      O.flatMap((match) => O.fromUndefinedOr(match[1])),
+      O.flatMap(knownSubLaneHintForLaneId)
+    );
+  }
+  return knownSubLaneHintFromSegment(normalized);
 };
 
 /**
@@ -696,7 +719,11 @@ export const knownSubLaneHintFromLaneOutput: {
 } = dual(
   3,
   (output: string | undefined, laneLabel: string, siblingLabels: HashSet.HashSet<string>): O.Option<KnownSubLaneHint> =>
-    pipe(laneOutputSegment(output, laneLabel, siblingLabels), O.map(taggedLines), O.flatMap(knownSubLaneHintFromOutput))
+    pipe(
+      laneOutputSegment(output, laneLabel, siblingLabels),
+      O.map(flow(taggedLines, Str.toLowerCase)),
+      O.flatMap(knownSubLaneHintFromSegment)
+    )
 );
 
 /**

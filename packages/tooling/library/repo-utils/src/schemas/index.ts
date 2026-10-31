@@ -34,13 +34,6 @@ export * from "./PackageJson.ts";
  */
 export * from "./PackageJsonTools.ts";
 /**
- * The TSConfig module.
- *
- * @category utilities
- * @since 0.0.0
- */
-export * from "./TSConfig.ts";
-/**
  * The TypeScriptSourceExclusions module.
  *
  * @category utilities

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "cache-population-source-refresh/v1",
+  "recordedAt": "2026-10-29T07:33:19.688682+00:00",
+  "authority": "inventory-and-source-binding-only",
+  "sourceBaseRevision": "f8f6e6d79826642d522abc0bf682e2af444599ca",
+  "review": "https://github.com/beep-effect/beep-effect/pull/2352#discussion_r4409376959",
+  "route": [
+    "bun run beep cache census --output <ignored-census.json>",
+    "python3 goals/turborepo-quality-cache-adoption/research/refresh-current-population.py <ignored-census.json>"
+  ],
+  "counts": {
+    "workspaces": 190,
+    "rootScripts": 113,
+    "configuredGraphNodes": 4586,
+    "executableComputations": 2571,
+    "graphOnlyNodes": 2015,
+    "cacheEnabledExecutableComputations": 1621,
+    "newSinceRetainedHandoff": 638,
+    "retainedCommandTextUnchanged": 1923,
+    "retainedQualificationRecordStates": {
+      "excluded": 5
+    }
+  },
+  "censusSourcesVerified": 427,
+  "populationSha256": "d1d9ff964dbb09d56eac27dc86575151a3149eef30cb21570339d2747afd5ac5",
+  "censusSha256": "0261a15f33a9af835975fa1a7490196ee13edcd9967f4f51330e2e2d436a79f6",
+  "recipeSha256": "e0ae5adb9d1aed84dc64770825abd4eb67528d5326dd0c71fc8adee2cd1c3911",
+  "priorPopulationSha256": "5c85dab5585bd12a8f03f826c5b0a6cd8bc310a6bd3df5ab632727eb83141bd5",
+  "countsChanged": false,
+  "qualificationChanged": false,
+  "productionChanges": false
+}

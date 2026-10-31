@@ -1,6 +1,8 @@
 /**
  * Execution ledger row conversions.
  *
+ * **Details**
+ *
  * The PR 1 record schemas are their own row codecs: their encoded form is
  * already the flat wire projection these tables persist — digests as hex
  * strings, instants as epoch millis, `prevHash` as `null` at genesis — so the

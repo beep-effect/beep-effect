@@ -1284,7 +1284,12 @@ per-clone append-only ledger, and `yeet economics` becomes `yeet-economics/v2` t
   distinct head commits a submitted review names (`commit_id` of a REST `pulls/N/reviews` row, any
   state, body or no body) with `submitted_at` inside that window. A pull request with a flip and no
   merge-ready is open: counted, never sampled. A review GitHub pins to no commit is unassigned,
-  never a round. Percentiles are nearest rank over the closed pull requests (ruling 75's estimator).
+  never a round. A review the pull request author submitted is counted beside the rounds as
+  `authorReviews`, never as one: a reply on a thread is a review submission by its author, pinned
+  to the current head, and #2310's own ledger counted the author's replies as rounds (amended
+  2026-10-28). The author is the `flip` row's `author`, read once by `yeet ready` at flip time; a
+  flip without one excludes nothing. Percentiles are nearest rank over the closed pull requests
+  (ruling 75's estimator).
 - *Reviewer precision* is `fixed / (fixed + rejected + immaterial)` per reviewer kind
   (`beep-reviewer`, `greptile`, `coderabbit`, `human`, `bot`), over the latest disposition of every
   thread `yeet reply` answered; `intentional` and `unknown` are counted beside the ratio and enter
@@ -1308,7 +1313,9 @@ per-clone append-only ledger, and `yeet economics` becomes `yeet-economics/v2` t
   be correct without it. Must-fail fixtures locked with this ruling: an undeclared disposition stays
   `unknown` and only a later declaration on the same thread moves it; the same review rows recorded
   again (a v1→v2 watermark reseed re-emitting reviews, two monitors on one branch) change neither
-  the rounds nor the percentiles; a review pinned to no commit never becomes a round.
+  the rounds nor the percentiles; a review pinned to no commit never becomes a round; a review by
+  the flip's author on a fresh head never forms a round, and a flip without an author excludes
+  nothing (added 2026-10-28).
 - *The surface.* `yeet economics` carries a `reviewLane` section beside the wrapper and inner lane
   populations, with its own denominators (pull requests, threads) and never summed with them;
   `yeet-economics/v1` becomes `v2` by the added section alone (ruling 73's shape otherwise

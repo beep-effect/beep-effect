@@ -3,6 +3,9 @@
 //          [--until turn/completed] [--timeout-ms 90000] [--quiet-deltas] <json-request>...
 // Each <json-request> is {"method":..., "params":...}; ids are assigned 1..n and sent after
 // `initialize` succeeds, each one after the previous response arrives. Prints every message.
+import * as O from "effect/Option";
+import { protectedBridgeUrl } from "./transport.ts";
+
 const argv = Bun.argv.slice(2);
 const opt = (name: string, dflt?: string) => {
   const i = argv.indexOf(name);
@@ -12,6 +15,10 @@ const opt = (name: string, dflt?: string) => {
   return v;
 };
 const url = opt("--url", "ws://127.0.0.1:48123")!;
+if (O.isNone(protectedBridgeUrl(url))) {
+  console.error("--url requires wss:// remotely, or ws:// on a loopback SSH tunnel endpoint");
+  process.exit(2);
+}
 const tokenEnv = opt("--token-env", "CODEX_TOMPC_WS_TOKEN")!;
 const until = opt("--until");
 const timeoutMs = Number(opt("--timeout-ms", "90000"));

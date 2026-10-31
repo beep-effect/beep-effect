@@ -327,6 +327,33 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("executable cache census",
 });
 
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration fingerprint", (it) => {
+  it.effect("observes the current pinned Bun without inheriting historical profile qualification", () =>
+    Effect.gen(function* () {
+      const census = yield* fingerprintFixture();
+      const encoded = yield* S.encodeEffect(CacheToolchainSnapshot)(toolchain);
+      const current = yield* S.decodeEffect(CacheToolchainSnapshot)({
+        ...encoded,
+        profile: "local-linux-x64-bun1.4.4",
+        bun: { ...encoded.bun, version: "1.4.4", sha256: changedDigest },
+      });
+      const currentKey = CacheQualificationKey.make({ ...key, profile: current.profile });
+      const historical = yield* fingerprintCacheComputation(key, census, toolchain);
+      const observed = yield* fingerprintCacheComputation(currentKey, census, current);
+      expect(observed.configurationDigest).toBe(historical.configurationDigest);
+      expect(observed.toolchainDigest).not.toBe(historical.toolchainDigest);
+      (yield* fingerprintCacheComputation(key, census, current).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      const changedBinary = yield* fingerprintCacheComputation(
+        currentKey,
+        census,
+        CacheToolchainSnapshot.make({
+          ...current,
+          bun: CacheExecutablePin.make({ ...current.bun, sha256: digest }),
+        })
+      );
+      expect(changedBinary.toolchainDigest).not.toBe(observed.toolchainDigest);
+    })
+  );
+
   it.effect(
     "invalidates runtime identity for library bytes, alias targets, loader and selected client linkage",
     Effect.fnUntraced(function* () {
