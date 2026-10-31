@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Codex GPT-6.1-Sol medium (policy graph quality repair)",
-      "reason": "Review the six root generated policy-seal input changes after retired GlobPattern removal and live JsDocNodes discovery; commands/cache flags/outputs unchanged, no qualification granted.",
+      "reason": "Review six regenerated root seal input arrays after current-main graft retirement; only runtime module closure paths change, no commands/cache flags/outputs or qualification change.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/2026-10-31-policy-quality-cache-review.md",
-        "sha256": "bbe389dc6ed49bd38f15385473684f2ed9b2f5712b24439e21af6ece77782c2b"
+        "path": "goals/beep-cli-composition/research/2026-10-31-policy-quality-cache-review-2.md",
+        "sha256": "10f5e7367da460a480ef62a5b7718a1577c860459d8790875d698f9415cb6cd7"
       }
     },
     "@beep/acp": {
@@ -1565,8 +1565,6 @@
           "CODEX_SESSION_ID",
           "CODEX_THREAD_ID",
           "GITHUB_ACTIONS",
-          "GRAFT_CRUX_MODULE",
-          "GRAFT_EXTRACT_MODULE",
           "TURBO_CACHE",
           "TURBO_FORCE",
           "TURBO_TOKEN",
@@ -2690,7 +2688,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -5759,7 +5756,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5907,7 +5903,6 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -7027,7 +7022,6 @@
             "!.claude/worktrees/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7068,7 +7062,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7180,7 +7173,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7344,7 +7336,6 @@
             "!explorations/**",
             "!explorations/*/CAPTURE.md",
             "!goals/**",
-            "!graft/**",
             "!infra/ci-runners/sdks/**",
             "!node_modules/**",
             "!outputs/agent-reliability/**",
@@ -133858,7 +133849,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "979364fae7d4c7cf95500d7b058de37c58de36479aa3128cbce1259819858b8b"
+        "sha256": "2ebdf15eb9d7965d5318c8e078ac9069c7e827a488d740de056868072a0c29b8"
       }
     ]
   }
