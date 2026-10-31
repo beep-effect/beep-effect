@@ -65,3 +65,10 @@ merged tree reported the same kind of drift: configuration drift on `@beep/repo-
 `#lint:deprecated-apis`, `#test`, `#test:property`) and configuration-source drift on the root `turbo.json`.
 The reason and the manifests are unchanged from the first review, so the same subjects are re-recorded on
 top of `main`'s baseline. No qualification is granted.
+
+## Re-record after merging `origin/main` f16d82e9f1 (2026-10-31, review round 2)
+
+`origin/main` moved again during the round (4-A1 #2380, R2a #2401, #2399, #2403, #2408) and was merged too. The
+merge took `main`'s baseline; `cache-policy` reported the same drift (configuration drift on `@beep/repo-cli`
+`#doctest`, `#lint:deprecated-apis`, `#test`, `#test:property`, and configuration-source drift on the root
+`turbo.json`), so the same subjects are re-recorded with the same reason. No qualification is granted.

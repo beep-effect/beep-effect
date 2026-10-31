@@ -1,11 +1,11 @@
 {
-  "previous": "a15c868e15cdb02c9360a93f33f51bab7c8351a39d6fea4911ec39ca6ed0b875",
+  "previous": "988ed33bad5e93aade662229c2fdb56fad30059183afce7f1495a7966532e6d6",
   "review": {
     "reviewer": "Claude Fable 5.1 (effected-promotion R3a, effected-r3a)",
     "reason": "Record the dependency-only drift of @beep/repo-cli (regular dependency @beep/jsonc, already reached through @beep/repo-tsconfig: 144 tasks before and after) and @beep/lint-rules (devDependency @beep/jsonc for registry.test.ts: 19 -> 21 tasks, gaining exactly @beep/jsonc#build and #transit) from the R3a owner switch of every @beep/schema/Jsonc importer onto Jsonc.bind (map sites #1, #255); @beep/schema drops jsonc-parser without drift; no qualification is granted.",
     "basis": {
       "path": "goals/effected-promotion/research/cache-baseline-review-r3a.md",
-      "sha256": "0bd833c310dd7168af0827ab097130010e11e79e7dea6d8584f37c9994fcb4d5"
+      "sha256": "053533247f4683369733fc65c8b9b76c3413a79cc32b90fe14fc8d3c09d1c40c"
     }
   },
   "scope": [
