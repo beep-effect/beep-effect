@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-signed-worker-observation-checkpoint/v1",
-  "authority": "Accepted-source worker observed through a transparent outer capture diagnostic; ordinary CLI success and protected qualification are not established",
+  "authority": "Accepted-source worker and actual CLI observed through transparent outer capture diagnostics; uninstrumented CLI success and protected qualification are not established",
   "observedAt": "2026-10-31T13:04:25.715369+00:00",
   "sourceBaseRevision": "b30cd9e6dd96bcb7426a6a69c8f3be2c6f370c94",
   "sourceFiles": {
@@ -122,11 +122,10 @@
     "retainedInvalidControl": "Stdin check refused both candidates and is not used as negative/pass evidence"
   },
   "remaining": [
-    "Attribute the corrected ordinary CLI refusals using its actual service composition, then obtain uninstrumented stable and current-canary command receipts",
+    "Retain the corrected uninstrumented CLI refusals as unattributed; obtain fresh uninstrumented stable/current-canary receipts. Both explicit-layer and actual-CLI observer diagnostics passed without worker or native launch changes.",
     "Independently approved protected source/runtime/upload and issuer transport, actual R2 upload, immutable GitHub publication and off-runner acceptance",
     "Current tuple qualification, supported role/epoch/portability/rollback evidence, full feature and computation adoption, representative windows and final hosted closeout"
   ],
-  "ordinaryCliSuccess": false,
   "productionSigningChanged": false,
   "qualificationGranted": false,
   "fullGoalAcceptanceCompleted": false,
@@ -140,5 +139,33 @@
     "runtimeActivated": false,
     "ciSecretsChanged": false,
     "handsOnRequiredAtCheckpoint": false
-  }
+  },
+  "cliEntryObservation": {
+    "client": {
+      "version": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "result": {
+      "exit": 0,
+      "elapsedSeconds": 1200.642,
+      "finishedAt": "2026-10-31T13:22:38.838697+00:00"
+    },
+    "counts": {
+      "captureControls": 4,
+      "nonExecutions": 4,
+      "mutations": 7,
+      "shadows": 10,
+      "freshPairs": 3,
+      "pairs": 3
+    },
+    "captureObserver": true,
+    "serviceLayersOverridden": false,
+    "workerRewritten": false,
+    "nativeLaunchOptionsChanged": false,
+    "encodedObservationMatchesWorkerIgnoringFinalNewline": true,
+    "receiptBytes": 223582,
+    "receiptSha256": "3c7b15b648ba052d8a02cc25ea3ea082874a6a7bdfc082a906c28222a839258e",
+    "privateCaptureObserverSha256": "c0cc10e4af61be10ce392bd21f4ef6db046cac2ad0dcc4504e682e76760d5abe"
+  },
+  "uninstrumentedCliSuccess": false
 }

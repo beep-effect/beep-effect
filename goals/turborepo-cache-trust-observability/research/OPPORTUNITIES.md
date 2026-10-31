@@ -1602,3 +1602,13 @@ in the owning producer PR; preserve it until the accepted-parent replay.
 - Biome's stdin check refused both original and formatted input, so it was not
   a valid negative/pass control. Use actual read-only file overlays for this
   comparison; the successful control changes no tracked source or lint rule.
+- The actual CLI entry also completed its full stable matrix with a transparent
+  completion observer. Its output matched the captured worker report. Keep that
+  observer-enabled result distinct from the earlier uninstrumented failures;
+  those failures do not acquire a cause or become passes through a later run.
+- Post-merge retirement found a crash-test child left by the interrupted port
+  proof. Its fixture deliberately pauses for the parent's SIGKILL. Verify the
+  exact fixture, disposable target, private invocation markers and process start
+  identity before stopping that one orphan. Reap owned crash children after an
+  abnormal proof exit, then retry canonical retirement. Preserve the original
+  interrupted proof as unproven; cleanup is not verification.

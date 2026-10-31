@@ -958,3 +958,9 @@ The human credential bootstrap is complete: seven exact suppressed reads and
 four reference-file wrappers passed. No further human credential step remains
 at this checkpoint. Signing and CI secret settings were not activated by that
 verification. Preserve this completion when reading older pending-bootstrap notes.
+
+The actual CLI entry subsequently passed the same complete stable matrix with
+a completion-only observer and its normal service composition. Its encoded
+output matches the captured worker report apart from the final newline. This
+is a second observer-enabled witness, not an uninstrumented command pass or an
+attribution of earlier refusals. The fresh uninstrumented replay is in progress.
