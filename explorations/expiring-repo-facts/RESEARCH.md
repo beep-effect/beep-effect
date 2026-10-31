@@ -133,6 +133,38 @@ was read from the local reference checkout.
   - any agent wake service or event-trigger daemon;
   - any provider-agnostic agent launch adapter with quota fallback.
 
+## Gap Check Before Align (2026-10-31)
+
+Nothing on `main` mentions skulk, a wake service or a hold ledger outside this
+packet. The check corrected the delivery-adapter gap above. The adapters
+already exist; the launch and fallback policy does not.
+
+- **Provider session adapters exist.** `@beep/ai-provider-cli`
+  (`packages/drivers/ai-provider-cli/src/`) has managed session services for
+  Claude, Codex, Grok and Cursor (`AiProviderCliSession.{claude,codex,grok,cursor}.service.ts`).
+  `goals/agent-session-bridges` (completed-retained, #1571) proved owned
+  Codex, Claude and Grok sessions through the router. The Cursor adapter
+  classifies its generation route as blocked rather than faking success.
+- **A durable delivery store exists.** `goals/agent-message-router`
+  (completed-retained) has a transactional delivery store, per-session
+  capabilities, policy fingerprints and ambiguous-recovery handling. A wake is
+  a message, so this store could carry wakes instead of skulk's SQLite queue.
+- **Launch and fallback stay out of the router by decision.** The
+  agent-session-bridges Decision Log (2026-10-09) says message delivery is not
+  authority transfer and keeps the existing orchestrator and launch/fallback
+  policy. So the quota-only fallback chain still has no owner in code.
+- **Ordered fallback has a gated home.** `explorations/multi-provider-llm-dispatch-fallback`
+  (graduated) names `llm-runtime-dispatch` in its MAP, unscaffolded until a
+  consumer needs two compatible runtime targets. A hold that wakes an agent
+  through a fallback chain is a candidate for that consumer.
+- **Junie has no adapter.** No Junie session service exists in
+  `@beep/ai-provider-cli`.
+- **The hold register precedent.** `goals/repository-simplification-residue/history/receipts/hold-register.md`
+  shows the manual re-check this packet would automate. Its census helpers
+  (lockfile resolution, npm dist-tags, OSV `querybatch`) are the Tier 0 and
+  Tier 1 probes. They live as ignored scripts under `.beep/residue-hold-exits/`,
+  not as tracked commands.
+
 ## Constraints Discovered
 
 - The repo is public. Holds and probe output must not carry secrets, home

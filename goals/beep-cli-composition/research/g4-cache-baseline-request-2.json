@@ -1,0 +1,20 @@
+{
+  "previous": "6c237f0aec97e5e40b35ba73f06b73226d1f676707a3340034282aa41cbd9894",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
+    "reason": "Re-record the legacy cache posture of the root subject after a main merge added one generated input to the //#lint:policy-fingerprint:knowledge seal; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/g4-cache-baseline-review-2.md",
+      "sha256": "e2df2b079fa631d5eb0e43850e5802ff5ea5dda3b1f5301b3dfce3db6ba0809b"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
