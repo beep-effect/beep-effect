@@ -119,7 +119,13 @@
         "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.safety.ts",
         "packages/law-practice/use-cases/test/CitationSafetyFailure.test.ts",
         "packages/law-practice/server/src/internal/Citation/HtmlCompletion.ts",
-        "packages/law-practice/server/test/CitationHtmlCompletion.test.ts"
+        "packages/law-practice/server/test/CitationHtmlCompletion.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-html-input-preparation.md",
+        "goals/citation-extraction-engine/ops/probe-html-input.py",
+        "goals/citation-extraction-engine/ops/verify-html-input-controls.py",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/html-input.json",
+        "packages/law-practice/server/src/internal/Citation/HtmlInput.ts",
+        "packages/law-practice/server/test/CitationHtmlInput.test.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

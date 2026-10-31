@@ -1114,6 +1114,14 @@ instead of silently splitting delivery or weakening scope.
   explicitly approved safety contract exception, not a normalization law or
   a completed canonical capability row. The source-only audit remains frozen.
 
+- **2026-10-31 HTML input preparation:** the private factory reproduces the
+  pinned PEP-393 buffer selection and bytes, Python whitespace wrapper decisions
+  and Unicode encoding-declaration rejection across 1,075 source decisions.
+  Count ceilings, Clock capture and cooperative scans have focused proof.
+  Complete worker framing, shared operation deadlines, native parsing and
+  lifecycle qualification remain open. The lxml BSD notice is retained. No
+  canonical completion, normalization law or new safety exception follows.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

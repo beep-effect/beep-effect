@@ -105,6 +105,14 @@ observed depth-limit outcomes before reading partial text and preserves all
 The source audit is unchanged; native parser implementation, containment and
 qualification remain open. This does not promote a canonical completion row.
 
+Latest HTML input evidence (2026-10-31): the private preparation factory matches
+all 1,075 source decisions (837 prepared buffers and 238 declaration rejections).
+It captures limits and Clock, bounds allocation and yields during scans. The
+source report and twelve corruption controls retain source/license identity.
+Native worker framing, shared operation deadline and parser qualification remain
+open; no canonical completion row advances. See
+history/evidence/2026-10-31-html-input-preparation.md.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

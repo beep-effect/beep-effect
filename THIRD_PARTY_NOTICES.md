@@ -598,3 +598,49 @@ PERFORMANCE OF THIS SOFTWARE.
 
 <!-- cpython-3.11.15-license:end -->
 <!-- markdownlint-enable MD013 MD046 -->
+
+## lxml 5.1.0 — BSD 3-Clause material
+
+The private citation HTML input preparation adapts Unicode encoding selection
+from `parser.pxi`, the encoding-declaration detector from `apihelpers.pxi`, and
+full-document recognition from `html/__init__.py` in lxml 5.1.0. Its frozen
+source hashes and BSD notice hashes are recorded by the HTML input fixture
+producer. lxml.html is copyright Ian Bicking; the remaining adapted lxml
+material is copyright Infrae. The local implementation replaces the detector's
+regex execution with bounded cooperative scans. No lxml binary, Python runtime,
+libxml2 runtime asset or ElementTree implementation is incorporated by this
+adaptation.
+
+Upstream: <https://github.com/lxml/lxml/tree/lxml-5.1.0>
+
+Copyright Ian Bicking (lxml.html).
+
+Copyright (c) 2004 Infrae. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+  1. Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in
+     the documentation and/or other materials provided with the
+     distribution.
+
+  3. Neither the name of Infrae nor the names of its contributors may
+     be used to endorse or promote products derived from this software
+     without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL INFRAE OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

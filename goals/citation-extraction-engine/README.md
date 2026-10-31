@@ -10,6 +10,9 @@ returns CitationSafetyLimitExceeded without a partial value. The
 [previous hold](./history/evidence/2026-10-29-html-safety-hold.md). Other HTML
 behavior retains its parity obligations. The completion guard is implemented;
 the native parser backend and its full qualification remain open.
+Bounded [Unicode input preparation](./history/evidence/2026-10-31-html-input-preparation.md)
+now matches 1,075 source decisions, including exact buffer bytes and declaration
+rejection, with captured limits, Clock and cooperative interruption.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
