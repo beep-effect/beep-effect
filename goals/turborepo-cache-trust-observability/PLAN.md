@@ -964,3 +964,44 @@ a completion-only observer and its normal service composition. Its encoded
 output matches the captured worker report apart from the final newline. This
 is a second observer-enabled witness, not an uninstrumented command pass or an
 attribution of earlier refusals. The fresh uninstrumented replay is in progress.
+
+The later uninstrumented stable attempt exited one after 1,203.382 seconds
+with the generic admission/supervision error. No passing receipt was produced,
+and the nested cause remains unavailable. Retain this as failed evidence,
+not a pass inferred from the successful observer runs. The current-canary
+uninstrumented attempt is next; every protected and qualification gate stays open.
+
+### Exact-client census repair, 2026-10-31
+
+The current-canary diagnostic identified a live-census input mismatch. Native
+read-only plans independently prove that stable hashes the link text of two
+`CLAUDE.md` symlinks while canary hashes their target contents. Commands, task
+configurations, input paths and input counts are unchanged. The pilot now
+collects its census and profile selection with the requested executable after
+verifying its exact pin, and all native inspections disable launcher inference.
+The input/configuration equality guard remains intact.
+
+The changed collector passed real stable and current-canary read-only controls:
+each retained its expected version, discovered 4,620 census nodes and matched
+the four selected tasks to that client's census inputs. Both runtimes passed
+79 focused tests; package lint and checking passed after correcting a test-double
+readonly type. This source is not yet accepted and no full supervised post-fix
+receipt, protected publication or qualification is claimed.
+
+Restoring only the old installed-client census call makes the new regression
+test fail at the intended native input guard; the exact source was restored.
+Supervisor deadline expiry now produces a specific safe error, retaining the
+existing twenty-minute comparison and ten-minute upload limits. A virtual-clock
+control verifies refusal and removal of the scoped private worker directory.
+This improves future attribution; it does not assign an unexposed nested cause
+to the historical twenty-minute failure.
+
+The complete package attempt finished with 8,298 passing tests, one unchanged
+model-command case timing out at thirty seconds, and three skips; Docgen passed
+in53.8 seconds. The exact isolated case passed in16.763 seconds. The full audit
+remains failed and its local timeout attribution is recorded; no Models change
+was made. The final metadata guard now rejects wrong stable-version/channel
+requests before querying a native client. Current combined focused replay
+passes104 cases on Node and104 on Bun, and package quick checking passes.
+Accepted-main integration, current combined hosted proof and full supervised
+stable/current-canary receipts remain required.

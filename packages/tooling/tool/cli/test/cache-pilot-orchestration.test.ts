@@ -913,6 +913,27 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(failure.message).toContain("inputs or configuration differ from the live census");
     })
   );
+  it.effect("rejects stable-version and channel mismatches before querying the selected client", () =>
+    Effect.gen(function* () {
+      const { run, request } = yield* fixture("none", linker, true);
+      for (const invalid of [
+        CachePilotRequest.make({
+          ...request,
+          client: CacheClientPin.make({ ...request.client, version: "1.4.3" }),
+          selection: "controls",
+        }),
+        CachePilotRequest.make({ ...request, channel: "canary", selection: "controls" }),
+      ]) {
+        const failure = yield* run(invalid).pipe(Effect.flip);
+        expect([
+          "Stable pilot client differs from the reviewed toolchain.",
+          "Pilot client version and channel disagree.",
+        ]).toContain(failure.message);
+      }
+      expect(Census.collectCacheCensus).not.toHaveBeenCalled();
+      expect(Census.collectCacheTaskSelection).not.toHaveBeenCalled();
+    })
+  );
   it.effect("rejects an executable pin mismatch before collecting native observations", () =>
     Effect.gen(function* () {
       const { run, request } = yield* fixture();

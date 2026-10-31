@@ -1612,3 +1612,16 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   identity before stopping that one orphan. Reap owned crash children after an
   abnormal proof exit, then retry canonical retirement. Preserve the original
   interrupted proof as unproven; cleanup is not verification.
+- Current-canary plans correctly refused a census collected with installed stable.
+  Read-only native controls isolated two symlink input hash differences: stable
+  hashes link text, canary hashes target bytes. Bind census and selection to the
+  already-verified requested client and disable launcher inference. Keep exact
+  input/configuration guards and retain the failed historical attempts.
+- The outer supervisor mapped execution deadline expiry to a generic admission
+  error. Preserve numeric execution bounds and return a dedicated safe timeout
+  message; verify the scoped worker directory is removed with a virtual clock.
+  Historical unknown causes remain unknown until independently established.
+- A broad package audit completed with8,298 passes and one unchanged Models
+  check-only case exceeding its thirty-second test limit. Its exact isolated
+  replay passed in16.763 seconds. Preserve both scopes and the failed full audit;
+  use fresh combined hosted validation instead of inferring a complete pass.

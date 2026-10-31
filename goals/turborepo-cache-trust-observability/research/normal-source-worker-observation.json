@@ -108,6 +108,22 @@
       "exit": 1,
       "elapsedSeconds": 391.708,
       "finishedAt": "2026-10-31T12:38:56.707754+00:00"
+    },
+    {
+      "channel": "stable",
+      "candidate": "formatted-uninstrumented-late",
+      "exit": 1,
+      "elapsedSeconds": 1203.382,
+      "finishedAt": "2026-10-31T13:57:39.919126+00:00",
+      "diagnostic": "Generic admission/supervision failure after approximately twenty minutes; nested cause is not exposed. No passing receipt."
+    },
+    {
+      "channel": "canary",
+      "candidate": "formatted-uninstrumented-late",
+      "exit": 1,
+      "elapsedSeconds": 57.485,
+      "finishedAt": "2026-10-31T14:06:35.841010+00:00",
+      "diagnostic": "Later label-only CLI diagnostic attributes the initial native-plan refusal to stable-versus-canary symlink hashing semantics in the live census; no passing pilot receipt."
     }
   ],
   "firstFailureAttribution": {
@@ -122,7 +138,7 @@
     "retainedInvalidControl": "Stdin check refused both candidates and is not used as negative/pass evidence"
   },
   "remaining": [
-    "Retain the corrected uninstrumented CLI refusals as unattributed; obtain fresh uninstrumented stable/current-canary receipts. Both explicit-layer and actual-CLI observer diagnostics passed without worker or native launch changes.",
+    "Obtain fresh uninstrumented stable/current-canary supervised pilot receipts after the exact-client census repair; the later stable generic supervision failure still has no exposed nested cause. Observer witnesses and read-only native collector controls do not close that gate.",
     "Independently approved protected source/runtime/upload and issuer transport, actual R2 upload, immutable GitHub publication and off-runner acceptance",
     "Current tuple qualification, supported role/epoch/portability/rollback evidence, full feature and computation adoption, representative windows and final hosted closeout"
   ],
@@ -167,5 +183,175 @@
     "receiptSha256": "3c7b15b648ba052d8a02cc25ea3ea082874a6a7bdfc082a906c28222a839258e",
     "privateCaptureObserverSha256": "c0cc10e4af61be10ce392bd21f4ef6db046cac2ad0dcc4504e682e76760d5abe"
   },
-  "uninstrumentedCliSuccess": false
+  "uninstrumentedCliSuccess": false,
+  "clientSpecificCensusRepair": {
+    "implementationCommit": "0e7891f8379e6bf394946b470b96f5cd2187c720",
+    "cause": "Installed stable census hashed two CLAUDE.md symlink texts, while the requested canary native plan hashed their target contents. Commands, configurations, input counts and input paths matched.",
+    "changedDependencyInputs": [
+      "@beep/fc-runs#lint:CLAUDE.md",
+      "@beep/test-runner#lint:CLAUDE.md"
+    ],
+    "repair": "Collect native census and profile selection with the verified requested executable after issuer/worktree/pin checks; disable native launcher inference. Exact input/configuration comparison remains mandatory.",
+    "sourceCommitAccepted": false,
+    "nativeCollectorControl": {
+      "scope": "Real pinned stable/current-canary native census and selected read-only plans through the changed collector; not a supervised pilot or protected qualification",
+      "taskExecutionEnabled": false,
+      "rows": [
+        {
+          "version": "2.11.10",
+          "executablePinMatches": true,
+          "censusNodes": 4620,
+          "nodes": [
+            {
+              "id": "@beep/fc-runs#lint",
+              "inputsDigest": "5076175070fb7ddd1c4d560c80a36e8cfc4e3ee136a12ba96f65261b824d49b6",
+              "inputCount": 29,
+              "selectionMatchesCensus": true
+            },
+            {
+              "id": "@beep/identity#lint",
+              "inputsDigest": "66f0b375af89c4c83b7a02ece939c4118cfe21638e4b559cea86cfa73fe9ebce",
+              "inputCount": 1033,
+              "selectionMatchesCensus": true
+            },
+            {
+              "id": "@beep/test-runner#lint",
+              "inputsDigest": "2345642b156614f5a6eb68f701b42496218fa46f8d173c546c9ff0da820e03ff",
+              "inputCount": 36,
+              "selectionMatchesCensus": true
+            },
+            {
+              "id": "@beep/types#lint",
+              "inputsDigest": "1293056042621b8575b5c91134354ea266d13aff867f7e08f3d4c05fcb796fe5",
+              "inputCount": 32,
+              "selectionMatchesCensus": true
+            }
+          ]
+        },
+        {
+          "version": "2.11.11-canary.1",
+          "executablePinMatches": true,
+          "censusNodes": 4620,
+          "nodes": [
+            {
+              "id": "@beep/fc-runs#lint",
+              "inputsDigest": "cecd4eee1ce8e932d97388dcff1e58a37d71a41dc02bb9389b1a8addff2e8e10",
+              "inputCount": 29,
+              "selectionMatchesCensus": true
+            },
+            {
+              "id": "@beep/identity#lint",
+              "inputsDigest": "66f0b375af89c4c83b7a02ece939c4118cfe21638e4b559cea86cfa73fe9ebce",
+              "inputCount": 1033,
+              "selectionMatchesCensus": true
+            },
+            {
+              "id": "@beep/test-runner#lint",
+              "inputsDigest": "f2cf3010d4f62ab44bf306df960db3f9f2502d28dfc7a109b67a78c9b64cd04a",
+              "inputCount": 36,
+              "selectionMatchesCensus": true
+            },
+            {
+              "id": "@beep/types#lint",
+              "inputsDigest": "1293056042621b8575b5c91134354ea266d13aff867f7e08f3d4c05fcb796fe5",
+              "inputCount": 32,
+              "selectionMatchesCensus": true
+            }
+          ]
+        }
+      ],
+      "exit": 0,
+      "elapsedSeconds": 18.503,
+      "receiptSha256": "d17352e4d3d4647c7e9c374657dddd310e8d74c4c73ed9f5c85ebbc3f74311d7"
+    },
+    "focusedNode": {
+      "exit": 0,
+      "tests": 79,
+      "files": 3,
+      "elapsedSeconds": 20.968
+    },
+    "focusedBun": {
+      "exit": 0,
+      "tests": 79,
+      "files": 3,
+      "elapsedSeconds": 18.704
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 16.241
+    },
+    "fullSupervisedPostFixProof": false,
+    "counterfactual": {
+      "oldCollectorCallOnly": true,
+      "exit": 1,
+      "intendedInputGuardFailure": true,
+      "sourceRestoredExactly": true
+    },
+    "metadataGuardBeforeNativeQuery": true
+  },
+  "supervisorDeadlineRepair": {
+    "limitsChanged": false,
+    "comparisonLimitMinutes": 20,
+    "uploadLimitMinutes": 10,
+    "safeMessages": true,
+    "virtualClockRefusalAndPrivateDirectoryCleanupPassed": true,
+    "priorFailureRetrospectivelyAttributed": false
+  },
+  "finalFocusedRepairVerification": {
+    "sourceAccepted": false,
+    "node": {
+      "exit": 0,
+      "files": 4,
+      "tests": 104,
+      "elapsedSeconds": 30.488
+    },
+    "bun": {
+      "exit": 0,
+      "files": 4,
+      "tests": 104,
+      "elapsedSeconds": 21.472
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 20.159
+    },
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": "4605e3167ef50474a66bf743d3df586fc03e5e7ef0d2038b874a894380cf34e2",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "3442a6c4f18106477e60736136c890176e7baa0ed64869ea07f0d067dd7b8f6e",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "14bbbf4bc69b6db300ba18ffb2ef5cd349267ae99c47a36943c9a90231941de8",
+      "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts": "cbcff41f42433bdb124ab3c815f142a6276defbf5396a0bc1011e7b32d4dcd26",
+      "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "9d26b63f70aa21c6cc64d48e2066ae0266aeefcad8791c4bd53469b21214253d",
+      "packages/tooling/tool/cli/test/cache-runtime.test.ts": "8a208d28edf166eb2bd8ff18e784cfdbe57e131d27f21e3eb383c46495779dd9"
+    }
+  },
+  "completePackageAttemptBeforeMetadataGuard": {
+    "exit": 1,
+    "elapsedSeconds": 2208.207,
+    "finishedAt": "2026-10-31T15:14:56.134576+00:00",
+    "auditSeconds": 2151.6,
+    "docgen": {
+      "exit": 0,
+      "seconds": 53.8
+    },
+    "testFiles": {
+      "passed": 387,
+      "failed": 1,
+      "skipped": 1
+    },
+    "tests": {
+      "passed": 8298,
+      "failed": 1,
+      "skipped": 3
+    },
+    "failure": "Unchanged models-apply-command operator-adjacent check case exceeded its thirty-second test limit.",
+    "isolatedAttributionReplay": {
+      "exit": 0,
+      "passed": 1,
+      "otherTestsSkipped": 20,
+      "testSeconds": 16.763,
+      "commandElapsedSeconds": 17.994
+    },
+    "fullAuditRemainsFailed": true,
+    "currentCombinedHostedProofRequired": true
+  }
 }

@@ -392,6 +392,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       return Tuple.make(current, activationRequest);
     });
     const [current, activationRequest] = yield* resolveReviewedActivation();
+    yield* validatePilotClient(current, request);
     const dependencies = yield* readCacheDependencyMaterialization(root, request.dependencies);
     yield* verifyCacheDependencies(root, dependencies);
     const dependencyNodes = yield* validatePilotClosure(current, dependencies);
@@ -495,7 +496,6 @@ const runPilot = Effect.fn("CachePilot.run")(
       })
     );
     const runtimeKeyObservation = `BEEP_CACHE_TOOLCHAIN_DIGEST=${yield* hashText(runtimeIdentity.toolchainDigest)}`;
-    yield* validatePilotClient(current, request);
     const before = yield* readCacheEvidenceBytes(root, current.activation.before).pipe(Effect.flatMap(decodeText));
     const after = yield* readCacheEvidenceBytes(root, current.activation.after).pipe(Effect.flatMap(decodeText));
     const typesConfig = yield* readBytes(root, `${typesDirectory}/turbo.json`).pipe(Effect.flatMap(decodeText));
