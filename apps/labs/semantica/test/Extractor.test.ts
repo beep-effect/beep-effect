@@ -38,7 +38,7 @@ const decodeRelationExtractionCandidateResult = S.decodeResult(RelationExtractio
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { constant, pipe } from "effect/Function";
 import * as Str from "effect/String";
 import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
@@ -242,15 +242,14 @@ describe("C0 hosted extractor", () => {
           pipe(subject, O.isSome, assertTrue);
           pipe(object, O.isSome, assertTrue);
           expect(entities).toHaveLength(2);
-          expect(
+          deepStrictEqual(
             O.map(relation, (claim) =>
               ClaimBody.match(claim.body, {
                 Entity: () => O.none(),
                 Relation: (body) => O.some([body.subject, body.object]),
                 Structure: () => O.none(),
               })
-            )
-          ).toEqual(
+            ),
             O.all([O.map(subject, (claim) => claim.id), O.map(object, (claim) => claim.id)]).pipe(O.map(O.some))
           );
           expect(outcome.batch.degraded).toEqual([]);
