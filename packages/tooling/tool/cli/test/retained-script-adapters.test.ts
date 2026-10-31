@@ -34,107 +34,107 @@ const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
   return { exitCode, stdout, stderr };
 }, Effect.scoped);
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
-  for (const scenario of [
-    {
-      signal: "TERM",
-      phase: "escaped",
-      worker: "unzip",
-      exitCode: 143,
-      name: "negative control without worker TERM ownership",
-    },
-    {
-      signal: "TERM",
-      phase: "wait",
-      worker: "checksum",
-      exitCode: 143,
-      name: "TERM during unresponsive Node checksum",
-    },
-    {
-      signal: "",
-      phase: "deadline",
-      worker: "checksum",
-      exitCode: 1,
-      name: "timeout expiry during unresponsive Node checksum",
-    },
-    { signal: "TERM", phase: "wait", worker: "unzip", exitCode: 143, name: "TERM during unresponsive extraction" },
-    {
-      signal: "",
-      phase: "deadline",
-      worker: "unzip",
-      exitCode: 1,
-      name: "timeout expiry during unresponsive extraction",
-    },
-    { signal: "", phase: "wait", worker: "node", exitCode: 1, name: "failed Bun download" },
-    { signal: "", phase: "wait", worker: "op", exitCode: 1, name: "failed Bun with optional op still running" },
-    { signal: "TERM", phase: "wait", worker: "node", exitCode: 143, name: "TERM interruption" },
-    { signal: "TERM", phase: "register", worker: "bun", exitCode: 143, name: "TERM before PID registration" },
-    { signal: "TERM", phase: "cleanup", worker: "node", exitCode: 143, name: "repeated TERM at cleanup entry" },
-    {
-      signal: "TERM",
-      phase: "exit-cleanup",
-      worker: "node",
-      exitCode: 143,
-      name: "TERM at failed-download cleanup entry",
-    },
-    { signal: "HUP", phase: "wait", worker: "node", exitCode: 129, name: "HUP interruption" },
-    { signal: "HUP", phase: "register", worker: "bun", exitCode: 129, name: "HUP before PID registration" },
-    { signal: "HUP", phase: "cleanup", worker: "node", exitCode: 129, name: "repeated HUP at cleanup entry" },
-    { signal: "INT", phase: "wait", worker: "node", exitCode: 130, name: "INT interruption" },
-    { signal: "INT", phase: "register", worker: "bun", exitCode: 130, name: "INT before PID registration" },
-    { signal: "INT", phase: "cleanup", worker: "node", exitCode: 130, name: "repeated INT at cleanup entry" },
+const cloudDownloadScenarios = [
+  {
+    signal: "TERM",
+    phase: "escaped",
+    worker: "unzip",
+    exitCode: 143,
+    name: "negative control without worker TERM ownership",
+  },
+  {
+    signal: "TERM",
+    phase: "wait",
+    worker: "checksum",
+    exitCode: 143,
+    name: "TERM during unresponsive Node checksum",
+  },
+  {
+    signal: "",
+    phase: "deadline",
+    worker: "checksum",
+    exitCode: 1,
+    name: "timeout expiry during unresponsive Node checksum",
+  },
+  { signal: "TERM", phase: "wait", worker: "unzip", exitCode: 143, name: "TERM during unresponsive extraction" },
+  {
+    signal: "",
+    phase: "deadline",
+    worker: "unzip",
+    exitCode: 1,
+    name: "timeout expiry during unresponsive extraction",
+  },
+  { signal: "", phase: "wait", worker: "node", exitCode: 1, name: "failed Bun download" },
+  { signal: "", phase: "wait", worker: "op", exitCode: 1, name: "failed Bun with optional op still running" },
+  { signal: "TERM", phase: "wait", worker: "node", exitCode: 143, name: "TERM interruption" },
+  { signal: "TERM", phase: "register", worker: "bun", exitCode: 143, name: "TERM before PID registration" },
+  { signal: "TERM", phase: "cleanup", worker: "node", exitCode: 143, name: "repeated TERM at cleanup entry" },
+  {
+    signal: "TERM",
+    phase: "exit-cleanup",
+    worker: "node",
+    exitCode: 143,
+    name: "TERM at failed-download cleanup entry",
+  },
+  { signal: "HUP", phase: "wait", worker: "node", exitCode: 129, name: "HUP interruption" },
+  { signal: "HUP", phase: "register", worker: "bun", exitCode: 129, name: "HUP before PID registration" },
+  { signal: "HUP", phase: "cleanup", worker: "node", exitCode: 129, name: "repeated HUP at cleanup entry" },
+  { signal: "INT", phase: "wait", worker: "node", exitCode: 130, name: "INT interruption" },
+  { signal: "INT", phase: "register", worker: "bun", exitCode: 130, name: "INT before PID registration" },
+  { signal: "INT", phase: "cleanup", worker: "node", exitCode: 130, name: "repeated INT at cleanup entry" },
+];
+
+const prepareCloudDownloadFixture = Effect.fn("RetainedScriptAdaptersTest.prepareCloudDownloadFixture")(function* (
+  scenario: (typeof cloudDownloadScenarios)[number]
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "cloud-download-failure-" });
+  const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
+  const bin = path.join(root, "bin");
+  const home = path.join(root, "home");
+  yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
+  yield* fs.makeDirectory(bin);
+  yield* fs.makeDirectory(home);
+  for (const file of [
+    "scripts/cloud/bootstrap.sh",
+    "scripts/cloud/fetch.sh",
+    ".bun-version",
+    ".nvmrc",
+    ".bun-linux-x64.sha256",
   ]) {
-    it.effect(
-      `settles parallel cloud downloads before cleanup after ${scenario.name}`,
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cloud-download-failure-" });
-        const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
-        const bin = path.join(root, "bin");
-        const home = path.join(root, "home");
-        yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
-        yield* fs.makeDirectory(bin);
-        yield* fs.makeDirectory(home);
-        for (const file of [
-          "scripts/cloud/bootstrap.sh",
-          "scripts/cloud/fetch.sh",
-          ".bun-version",
-          ".nvmrc",
-          ".bun-linux-x64.sha256",
-        ]) {
-          yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
-        }
-        if (scenario.phase === "escaped") {
-          const workerPath = path.join(root, "scripts/cloud/fetch.sh");
-          const worker = yield* fs.readFileString(workerPath);
-          yield* fs.writeFileString(workerPath, Str.replace("trap 'exit 143' TERM", "")(worker));
-        }
-        if (scenario.phase === "cleanup" || scenario.phase === "exit-cleanup") {
-          const bootstrapPath = path.join(root, "scripts/cloud/bootstrap.sh");
-          const bootstrap = yield* fs.readFileString(bootstrapPath);
-          // Deliver the next signal at the copied function's entry, before its
-          // first mask. The marker prevents a recursive cleanup from reinjecting.
-          yield* fs.writeFileString(
-            bootstrapPath,
-            Str.replace(
-              "cleanup_run_dir() {",
-              `cleanup_run_dir() {
+    yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
+  }
+  if (scenario.phase === "escaped") {
+    const workerPath = path.join(root, "scripts/cloud/fetch.sh");
+    const worker = yield* fs.readFileString(workerPath);
+    yield* fs.writeFileString(workerPath, Str.replace("trap 'exit 143' TERM", "")(worker));
+  }
+  if (scenario.phase === "cleanup" || scenario.phase === "exit-cleanup") {
+    const bootstrapPath = path.join(root, "scripts/cloud/bootstrap.sh");
+    const bootstrap = yield* fs.readFileString(bootstrapPath);
+    // Deliver the next signal at the copied function's entry, before its
+    // first mask. The marker prevents a recursive cleanup from reinjecting.
+    yield* fs.writeFileString(
+      bootstrapPath,
+      Str.replace(
+        "cleanup_run_dir() {",
+        `cleanup_run_dir() {
   if [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/repeated-signal" ]; then
     : > "$BEEP_BOOTSTRAP_FIXTURE/repeated-signal"
     kill -"$BEEP_BOOTSTRAP_SIGNAL" "$BASHPID"
   fi`
-            )(bootstrap)
-          );
-        }
-        // Deliver signals only after the selected fake child is running. A DEBUG
-        // hook covers the gap between launch and PID registration without sleeps.
-        // Expiry cases deliver GNU timeout's ALRM event after child readiness,
-        // avoiding a deadline that expires before a loaded runner starts the child.
-        const bashEnv = path.join(root, "bash-env");
-        yield* fs.writeFileString(
-          bashEnv,
-          `signal_sent=0
+      )(bootstrap)
+    );
+  }
+  // Deliver signals only after the selected fake child is running. A DEBUG
+  // hook covers the gap between launch and PID registration without sleeps.
+  // Expiry cases deliver GNU timeout's ALRM event after child readiness,
+  // avoiding a deadline that expires before a loaded runner starts the child.
+  const bashEnv = path.join(root, "bash-env");
+  yield* fs.writeFileString(
+    bashEnv,
+    `signal_sent=0
 fixture_ready() {
   while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/worker-ready" ]; do
     kill -0 "$1" 2>/dev/null || return 1
@@ -152,19 +152,19 @@ wait() {
   builtin wait "$@"
 }
 `
-        );
-        for (const [name, source] of [
-          [
-            "bun",
-            `#!/bin/sh
+  );
+  for (const [name, source] of [
+    [
+      "bun",
+      `#!/bin/sh
 if [ "$BEEP_BOOTSTRAP_WORKER" = checksum ] && [ "$BEEP_BOOTSTRAP_PHASE" = deadline ]; then cat .bun-version; else printf '0.0.0\\n'; fi
 `,
-          ],
-          ["node", '#!/bin/sh\nprintf "v0.0.0\\n"\n'],
-          ["sudo", "#!/bin/sh\nexit 1\n"],
-          [
-            "sha256sum",
-            `#!/bin/sh
+    ],
+    ["node", '#!/bin/sh\nprintf "v0.0.0\\n"\n'],
+    ["sudo", "#!/bin/sh\nexit 1\n"],
+    [
+      "sha256sum",
+      `#!/bin/sh
 if [ "$BEEP_BOOTSTRAP_WORKER" = checksum ]; then
   trap '' TERM
   printf '%s\\n' "$$" > "$BEEP_BOOTSTRAP_FIXTURE/worker-pid"
@@ -181,10 +181,10 @@ fi
 cat >/dev/null
 exit 0
 `,
-          ],
-          [
-            "timeout",
-            `#!/bin/sh
+    ],
+    [
+      "timeout",
+      `#!/bin/sh
 if [ "$1" = --kill-after=5s ]; then
   [ "$2" = 240s ] || exit 86
   if [ "$BEEP_BOOTSTRAP_PHASE" = deadline ]; then
@@ -194,10 +194,10 @@ if [ "$1" = --kill-after=5s ]; then
 fi
 exec /usr/bin/timeout "$@"
 `,
-          ],
-          [
-            "unzip",
-            `#!/bin/sh
+    ],
+    [
+      "unzip",
+      `#!/bin/sh
 [ "$BEEP_BOOTSTRAP_WORKER" = unzip ] || exit 22
 trap '' TERM
 printf '%s\\n' "$$" > "$BEEP_BOOTSTRAP_FIXTURE/worker-pid"
@@ -211,11 +211,11 @@ while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/releas
   sleep 0.01
 done
 `,
-          ],
-          ["uname", '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n'],
-          [
-            "curl",
-            `#!/bin/sh
+    ],
+    ["uname", '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n'],
+    [
+      "curl",
+      `#!/bin/sh
 case "$*" in
   *"--connect-timeout 15 --max-time 120 --retry-max-time 120"*) ;;
   *) echo 'missing download bounds' >&2; exit 86;;
@@ -261,10 +261,10 @@ elif [ "$worker" = bun ]; then
 fi
 exit 22
 `,
-          ],
-          [
-            "rm",
-            `#!/bin/sh
+    ],
+    [
+      "rm",
+      `#!/bin/sh
 case "$*" in *run.orphan*) exec /bin/rm "$@" ;; esac
 : > "$BEEP_BOOTSTRAP_FIXTURE/cleanup-start"
 if [ -f "$BEEP_BOOTSTRAP_FIXTURE/worker-pid" ]; then
@@ -282,33 +282,67 @@ printf 'cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
 : > "$BEEP_BOOTSTRAP_FIXTURE/release-workers"
 exec /bin/rm "$@"
 `,
-          ],
-        ] as const) {
-          const target = path.join(bin, name);
-          yield* fs.writeFileString(target, source);
-          yield* fs.chmod(target, 0o755);
-        }
+    ],
+  ] as const) {
+    const target = path.join(bin, name);
+    yield* fs.writeFileString(target, source);
+    yield* fs.chmod(target, 0o755);
+  }
+  return { root, bin, home, bashEnv };
+});
+
+const holdStaleCloudRuns = Effect.fn("RetainedScriptAdaptersTest.holdStaleCloudRuns")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const cache = path.join(root, "cache/beep/cloud-bootstrap");
+  for (const name of ["run.active", "run.orphan", "run.legacy"]) {
+    const directory = path.join(cache, name);
+    yield* fs.makeDirectory(directory, { recursive: true });
+    if (name !== "run.legacy") yield* fs.writeFileString(path.join(directory, ".lock"), "");
+    const touch = yield* ChildProcess.make("touch", ["-d", "2 hours ago", directory], {
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    expect(yield* touch.exitCode).toBe(0);
+  }
+  const owner = yield* ChildProcess.make(
+    "flock",
+    ["--exclusive", path.join(cache, "run.active/.lock"), "sh", "-c", "printf 'locked\\n'; sleep 30"],
+    { stdin: "ignore", stdout: "pipe", stderr: "ignore" }
+  );
+  // The child prints only after acquiring the lock, before bootstrap sweeps.
+  yield* Stream.runHead(owner.stdout);
+});
+
+const assertCloudDownloadEvents = (
+  scenario: (typeof cloudDownloadScenarios)[number],
+  events: string,
+  stderr: string
+) => {
+  if (scenario.phase === "escaped") {
+    expect(events).toContain("worker-after-cleanup");
+    expect(events).toContain("worker-live");
+  } else {
+    expect(events, stderr).toBe(
+      scenario.worker === "unzip" || scenario.worker === "checksum"
+        ? "cleanup\n"
+        : `${scenario.worker}-finished\ncleanup\n`
+    );
+  }
+};
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
+  for (const scenario of cloudDownloadScenarios) {
+    it.effect(
+      `settles parallel cloud downloads before cleanup after ${scenario.name}`,
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { root, bin, home, bashEnv } = yield* prepareCloudDownloadFixture(scenario);
         const checkStaleRuns = scenario.name === "failed Bun download";
         if (checkStaleRuns) {
-          const cache = path.join(root, "cache/beep/cloud-bootstrap");
-          for (const name of ["run.active", "run.orphan", "run.legacy"]) {
-            const directory = path.join(cache, name);
-            yield* fs.makeDirectory(directory, { recursive: true });
-            if (name !== "run.legacy") yield* fs.writeFileString(path.join(directory, ".lock"), "");
-            const touch = yield* ChildProcess.make("touch", ["-d", "2 hours ago", directory], {
-              stdin: "ignore",
-              stdout: "ignore",
-              stderr: "ignore",
-            });
-            expect(yield* touch.exitCode).toBe(0);
-          }
-          const owner = yield* ChildProcess.make(
-            "flock",
-            ["--exclusive", path.join(cache, "run.active/.lock"), "sh", "-c", "printf 'locked\\n'; sleep 30"],
-            { stdin: "ignore", stdout: "pipe", stderr: "ignore" }
-          );
-          // The child prints only after acquiring the lock, before bootstrap sweeps.
-          yield* Stream.runHead(owner.stdout);
+          yield* holdStaleCloudRuns(root);
         }
         const handle = yield* ChildProcess.make("bash", [path.join(root, "scripts/cloud/bootstrap.sh")], {
           cwd: root,
@@ -348,16 +382,7 @@ exec /bin/rm "$@"
         }
         expect(stderr).not.toContain("missing download bounds");
         const events = yield* fs.readFileString(path.join(root, "events"));
-        if (scenario.phase === "escaped") {
-          expect(events).toContain("worker-after-cleanup");
-          expect(events).toContain("worker-live");
-        } else {
-          expect(events, stderr).toBe(
-            scenario.worker === "unzip" || scenario.worker === "checksum"
-              ? "cleanup\n"
-              : `${scenario.worker}-finished\ncleanup\n`
-          );
-        }
+        assertCloudDownloadEvents(scenario, events, stderr);
         expect(A.sort(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap")), Str.Order)).toEqual(
           checkStaleRuns ? ["run.active", "run.legacy"] : []
         );
