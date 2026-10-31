@@ -244,6 +244,11 @@ export class TranscriptIntakeError extends S.TaggedError<TranscriptIntakeError, 
   },
   $I.annote("TranscriptIntakeError", { description: "Payload-free intake refusal." })
 ) {
+  /**
+   * Content-free intake refusal description.
+   *
+   * @returns A fixed message containing only the enumerated refusal reason.
+   */
   override get message(): string {
     return `Transcript intake refused (${this.reason}).`;
   }
@@ -265,6 +270,8 @@ const singleStats = S.Tuple([TranscriptIntakeStats]);
  * ```
  * **Details** Native and reconstructed intake share this boundary. Unknown errors
  * become content-free storage refusals; known intake errors retain their identity.
+ * @param error - A typed refusal or untrusted storage error to sanitize.
+ * @returns The existing safe refusal, or a content-free storage refusal.
  * @category utilities
  * @since 0.0.0
  */

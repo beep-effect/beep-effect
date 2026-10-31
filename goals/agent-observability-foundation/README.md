@@ -33,7 +33,11 @@ repository delivery remains open. The runtime source checkpoint is
 `d3a33a8bc128b685e644b80f69e801ec82b3110a`, followed by the source-bound
 [hosted build repair](./research/HOSTED-BUILD-REPAIR.md) and fresh v3 route proofs.
 The foundation is published as [PR2364](https://github.com/beep-effect/beep-effect/pull/2364);
-its exact-value scanner dependency is [PR2366](https://github.com/beep-effect/beep-effect/pull/2366).
+its exact-value scanner dependency [PR2366](https://github.com/beep-effect/beep-effect/pull/2366)
+is merged at `4a71782090acac558412687d387de7996aec4073` and integrated.
+The October 31 repair also resolves generated-inventory merge drift, documentation
+lint, fixture configuration ownership and stale exploration references. Current
+hosted results remain required after publication.
 The [independent acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) now
 supports all thirteen criteria at their specified scope. The final
 [declared repository proof](./research/DECLARED-ROUTE-PROOF.md) closes the missing
@@ -55,6 +59,10 @@ all-harness coverage and release of the historical recovery hold are not implied
 source merge, passing fixtures or a synthetic canary.
 
 ## Current verification
+
+- [October 31 PR repair](./research/PR2364-REPAIR.md): current-main integration,
+  documentation and fixture-ownership corrections, passing package audit/docgen,
+  and explicit historical-proof boundaries.
 
 - [Boundary verification](./ops/boundary-predicates-verification.json): reviewed
   ownership, claim replay and discovery changes; 832 AI-metrics tests in 74 files,

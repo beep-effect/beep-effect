@@ -49,6 +49,13 @@ export interface ManagedSessionObserver {
 
 /**
  * Apply the fixed observation deadline without retrying an uncertain write.
+ * **Example** (Bound one lifecycle observation)
+ * ```ts
+ * import { observeManagedSession } from "@beep/ai-provider-cli/AiProviderCliSession.lifecycle"
+ * import * as Effect from "effect/Effect"
+ * const observation = observeManagedSession("observe-started", Effect.void)
+ * Effect.runPromise(observation)
+ * ```
  * @internal
  * @category resource-management
  * @since 0.0.0

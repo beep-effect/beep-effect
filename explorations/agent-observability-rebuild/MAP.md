@@ -1,12 +1,12 @@
 # Implementation map
 
-2026-10-27. Operator adopted the design and requested implementation packets. All three are **authored but not started**; preparation does not launch any goal or production changes.
+2026-10-27. Operator adopted the design and requested implementation packets. The foundation packet is active. The two downstream packet names below describe planned follow-up work; they are not tracked packet directories in this delivery. Foundation qualification does not launch production enrollment.
 
 | Order / packet | Mission | Dependencies | First deliverable |
 | --- | --- | --- | --- |
 | 1. `goals/agent-observability-foundation` | Establish trustworthy identity, source coverage, event-time semantics and bounded durable delivery; repair owned deployment drift | This audit, preserved recovery hold and privacy decision | Synthetic two-root, two-surface flow with complete expected-ID reconciliation through a disposable backend |
-| 2. `goals/harness-telemetry-enrollment` | Qualify every requested harness/surface and all declared hosts/clones/worktrees against the same contract | Foundation event/receipt schema and qualified intake | Seven-harness capability matrix with explicit supported/unsupported routes and per-route receipts |
-| 3. `goals/agent-outcome-experiments` | Make telemetry understandable through outcomes, annotations, curated datasets and controlled experiments | Foundation identity/coverage; enrollment proof for routes included in each comparison | Five curated task examples, versioned deterministic rubrics and a usable task-outcome view |
+| 2. `harness-telemetry-enrollment` (planned) | Qualify every requested harness/surface and all declared hosts/clones/worktrees against the same contract | Foundation event/receipt schema and qualified intake | Seven-harness capability matrix with explicit supported/unsupported routes and per-route receipts |
+| 3. `agent-outcome-experiments` (planned) | Make telemetry understandable through outcomes, annotations, curated datasets and controlled experiments | Foundation identity/coverage; enrollment proof for routes included in each comparison | Five curated task examples, versioned deterministic rubrics and a usable task-outcome view |
 
 Preparation can proceed in parallel. Production enrollment waits for foundation qualification. Comparative experiments wait for coverage/semantic qualification of their participant routes. No other goal packet is promised by this exploration; later expansion is work inside these packets, not a silent unbounded rollout.
 
@@ -17,7 +17,7 @@ Preparation can proceed in parallel. Production enrollment waits for foundation 
 | Root identity and config | `packages/tooling/library/ai-metrics/src/identity-registry.ts`, `forwarder.ts`; existing bounded snapshots and salt guards | Fleet inventory/leases and source-root provenance; NET-NEW expected-route/launch reconciliation |
 | Source ingestion | `internal/transcript-utils.ts`, `internal/jsonl-discovery.ts`, `ingest.ts`, `derived-storage.ts` | Fair persistent cursors, rotation/partial-line handling, error states; replace cwd attribution and newest-N starvation |
 | Delivery | `otlp.ts` stable IDs, chunk acknowledgments, pending watermarks | NET-NEW explicit receipt state projection and native durable intake; fix historical timing, tested replay bounds |
-| Hooks and managed harnesses | Existing hook-pulse evidence and `packages/drivers/ai-provider-cli/src/profile.service.ts` | Preserve intended telemetry in bounded child environments; missing provider/surface adapters NET-NEW |
+| Hooks and managed harnesses | Existing hook-pulse evidence and `packages/drivers/ai-provider-cli/src/AiProviderCliSession.profile.service.ts` | Preserve intended telemetry in bounded child environments; missing provider/surface adapters NET-NEW |
 | Phoenix access | `packages/drivers/phoenix/src/Phoenix.service.ts` and models/config | Versioned adapters for actual 20.23.0 operations; no new catch-all SDK wrapper |
 | Effectiveness semantics | `packages/tooling/library/ai-metrics/src/agent-effectiveness.ts` and existing goal `agent-effectiveness-loop` | Reconcile rather than duplicate its bundle/dataset/rubric concepts; NET-NEW task/outcome receipts where absent |
 | Host deployment | dankserver `ansible/roles/monitoring`, `phoenix`, backup roles and group vars | Restore deployed label-collision transform to source, durable spool, collector health, exact retention proof and canary routing |

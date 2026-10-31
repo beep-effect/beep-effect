@@ -116,6 +116,8 @@ export type ObservationSourceHealth = typeof ObservationSourceHealth.Type;
  * import { summarizeObservationSources } from "@beep/repo-ai-metrics/observation-source-health"
  * console.log(typeof summarizeObservationSources)
  * ```
+ * @param pass - One completed discovery and intake pass.
+ * @returns Counts for this pass without retaining private source declarations.
  * @category utilities
  * @since 0.0.0
  */
@@ -199,6 +201,8 @@ const completedSourceMetrics = (s: ObservationSourceSummary) => {
  * console.log(renderObservationSourceMetrics(ObservationSourceHealth.cases.NotConfigured.make({})))
  * ```
  * **Details** Never label paths, source IDs or content. Missing counts after failure/deadline remain omitted. Latest-pass gauges are not lifetime totals. Root state counts concern declared roots only.
+ * @param health - A source-health snapshot with explicit configuration and coverage state.
+ * @returns Prometheus gauges with fixed labels and unknown counts omitted.
  * @category utilities
  * @since 0.0.0
  */

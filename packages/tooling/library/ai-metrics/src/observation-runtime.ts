@@ -463,6 +463,8 @@ const completedCycleMetrics = ({ summary, retained }: typeof ObservationCycleRes
  * console.log(typeof renderObservationRuntimeMetrics)
  * ```
  * **Details** Names and phase labels are fixed; no host, route, event, model or private string becomes a label. Latest-pass counts are gauges, never cumulative counters. Missing retained/pass observations are omitted rather than reported as zero. An exporter must combine scrape availability with observation/cycle timestamp freshness; a preserved text file is not proof of a running process. This does not install an exporter or claim fleet coverage.
+ * @param health - A point-in-time runtime health observation.
+ * @returns Fixed-label Prometheus gauges preserving missing observations.
  * @category utilities
  * @since 0.0.0
  */

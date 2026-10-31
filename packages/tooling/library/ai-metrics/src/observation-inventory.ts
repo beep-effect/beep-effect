@@ -582,6 +582,8 @@ const populationIds = ObservationPopulation.match({
  * console.log(summarizeObservationInventory.length)
  * ```
  * **Details** The same known launch seen by two routes on one host counts once. Host-local ID collisions remain separate; unknown populations stay explicit.
+ * @param inventory - Declared routes and independently known populations.
+ * @returns Separate capability and population totals with unknown routes retained.
  * @category utilities
  * @since 0.0.0
  */

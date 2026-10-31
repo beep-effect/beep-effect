@@ -74,6 +74,8 @@ export class NativeHttpHealth extends S.Opaque<NativeHttpHealth, { readonly bran
  * ```
  * **Details** Start timestamp identifies process-lifetime resets. Saturation is
  * explicit. Collector counters cannot substitute for these pre-journal refusals.
+ * @param health - Process-lifetime response decisions and reset timestamps.
+ * @returns Prometheus counters with fixed labels and explicit saturation state.
  * @category utilities
  * @since 0.0.0
  */

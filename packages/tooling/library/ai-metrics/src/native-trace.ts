@@ -210,6 +210,11 @@ export class NativeTraceError extends S.TaggedError<NativeTraceError, { readonly
   { reason: S.Literals(["missing-salt", "oversize", "invalid-envelope", "too-many-spans", "hash-failure"]) },
   $I.annote("NativeTraceError", { description: "Safe native admission boundary refusal." })
 ) {
+  /**
+   * Content-free native projection refusal description.
+   *
+   * @returns A fixed message containing only the enumerated refusal reason.
+   */
   override get message(): string {
     return `Native trace request refused (${this.reason}).`;
   }

@@ -166,6 +166,8 @@ export class ObservationCoverageReport extends S.Opaque<ObservationCoverageRepor
  * console.log(typeof reconcileObservationCoverage)
  * ```
  * **Details** A duplicate ID on a different route does not satisfy this route's expectation. Missing observations remain unknown, including explicitly empty expectations.
+ * @param input - Declared expectations and observations for each route.
+ * @returns Route-scoped comparisons preserving absent observations as unknown.
  * @category utilities
  * @since 0.0.0
  */

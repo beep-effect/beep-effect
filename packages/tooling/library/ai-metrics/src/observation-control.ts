@@ -36,7 +36,7 @@ export class ObservationControlPolicy extends S.Opaque<ObservationControlPolicy,
  * import { ObservationControlState } from "@beep/repo-ai-metrics/observation-control"
  * console.log(typeof ObservationControlState.make)
  * ```
- * **Details** accepting=false with active>0 means draining. closed=true forbids reopening after scope release; active work may still be completing its finalizer.
+ * **Details** accepting=false with active greater than zero means draining. closed=true forbids reopening after scope release; active work may still be completing its finalizer.
  * @category models
  * @since 0.0.0
  */

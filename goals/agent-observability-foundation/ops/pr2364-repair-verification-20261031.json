@@ -1,0 +1,97 @@
+{
+  "observedAt": "2026-10-31T07:37:44.129043+00:00",
+  "baseIntegrationCommit": "fcb2c70946",
+  "scannerMerge": "4a71782090acac558412687d387de7996aec4073",
+  "archive": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o",
+  "checks": {
+    "schemaInventoryRefresh": "passed",
+    "jsdocLint": "passed-zero-warnings",
+    "deprecatedApisAiMetrics": "passed-zero-unmatched-TypeScript-files",
+    "deprecatedApisRepoCli": "passed-zero-unmatched-TypeScript-files",
+    "aiMetricsFixtureTypecheck": "passed",
+    "repoCliFixtureTypecheck": "passed",
+    "aiMetricsPackageAudit": "passed-148.1-seconds",
+    "aiMetricsDocgen": "passed-13.6-seconds",
+    "repositoryWideJsdocLint": "passed-zero-warnings",
+    "jsdocInventoryRefresh": "passed",
+    "providerDocgen": "passed-53-examples",
+    "providerDocumentationLint": "passed-zero-warnings",
+    "finalJsdocInventoryRefresh": "passed-after-provider-example"
+  },
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-resume-verify-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 88656814080,
+    "peakObservedBytes": 7941378048,
+    "minimumAvailableBytes": 50261475328,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 175,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "beep:build",
+        "observedAtEpochSeconds": 1793432075.6325412
+      },
+      {
+        "phase": "beep:check",
+        "observedAtEpochSeconds": 1793432086.5915034
+      },
+      {
+        "phase": "beep:test",
+        "observedAtEpochSeconds": 1793432088.1557717
+      },
+      {
+        "phase": "beep:lint",
+        "observedAtEpochSeconds": 1793432210.811915
+      },
+      {
+        "phase": "docgen",
+        "observedAtEpochSeconds": 1793432225.8153088
+      }
+    ],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "sourceChangeScope": "Nine AI-metrics files and one provider lifecycle file changed only documentation; emitted JavaScript equality is recorded separately. Historical canary receipts retain their original source hashes.",
+  "wholeRepoProof": "Not established by these package/fixture checks; publication and current-head hosted checks remain pending.",
+  "recoveryHold": "Both historical forwarder units freshly observed masked and inactive; service MainPID zero.",
+  "inventoryGuard": {
+    "ownedScopes": {},
+    "unit": "foundation-jsdoc-inventory-20261031.service",
+    "profile": "catalog",
+    "memoryStopBytes": 17179869184,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 59879804928,
+    "peakObservedBytes": 5453033472,
+    "minimumAvailableBytes": 24698744832,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 119,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "finalInventoryGuard": {
+    "ownedScopes": {},
+    "unit": "foundation-jsdoc-inventory-final-20261031.service",
+    "profile": "catalog",
+    "memoryStopBytes": 17179869184,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 60162469888,
+    "peakObservedBytes": 6118035456,
+    "minimumAvailableBytes": 20626767872,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 119,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "independentReview": "Astra accepted initial repair and final ten-file documentation equivalence receipt; source review only."
+}

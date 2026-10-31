@@ -5,7 +5,7 @@
     "title": "Trustworthy agent observability foundation",
     "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-10-29",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-observability-foundation",
@@ -84,7 +84,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Delivery active: Dankserver PR3 merged without rollout; Beep PR2364 draft with local hosted-build repair and current source binding; scanner correction PR2366 in hosted review. Synthetic scope accepted by named panel; final gates and closeout remain. Recovery hold intact.",
+  "statusNote": "Delivery active: Dankserver PR3 and scanner correction PR2366 merged; PR2364 repair integrates current main, documentation and fixture ownership fixes. Historical synthetic proof scope remains; current hosted gates and closeout are pending. Recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],

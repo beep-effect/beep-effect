@@ -248,6 +248,11 @@ export class TranscriptPageError extends S.TaggedError<TranscriptPageError, { re
   },
   $I.annote("TranscriptPageError", { description: "Safe failure of a bounded source read." })
 ) {
+  /**
+   * Content-free source read description.
+   *
+   * @returns A fixed message containing only the enumerated refusal reason.
+   */
   override get message(): string {
     return `Transcript page read failed (${this.reason}).`;
   }
