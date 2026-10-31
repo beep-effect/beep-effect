@@ -715,31 +715,330 @@ controls fail the intended assertions and restore exact source. See the
 Generated inventory/catalog, complete current package/final proof and hosted
 review remain required. This component activates no cache or credential.
 
-### Owned approval refusal coverage repair
-
-`research/producer-approval-refusal-checkpoint.json` binds the current test and
-private worker contract repair to the hosted gap and its immutable coverage
-artifacts. The admission-reordering control fails once for the intended reason;
-176 cases pass per local provider with full scoped runner-file coverage. Current
-full/hosted proof and all nine whole-goal criteria remain unproven.
-
-### Dependency security compatibility checkpoint, 2026-10-31 UTC
-
-The [compatibility checkpoint](research/dependency-security-compatibility-checkpoint.json)
-records the patched dependency and vendored optimizer repair that unblocks
-producer verification. Complete local package proof, 270 Node tests and both
-coverage providers pass; independent legacy vectors preserve the old dialect.
-Both deliberate negative controls fail and restore source exactly. The old
-published head passes Security but predates this compatibility wave; fresh
-hosted proof and review remain required. No qualification or rollout is granted.
 
 
-### Second-phase security review, 2026-10-31 UTC
+### Closed producer CLI follow-through, 2026-10-30
 
-The expansion cap and pairwise-work limit cover different costs. The current
-repair skips optional deduplication above 1,000 alternatives while preserving
-all alternatives. Complete package proof and 273 tests in each runtime pass;
-the exact-boundary, no-comparison and 4,096-alternative watchdog cases pass.
-All three deliberate fault controls fail as expected and restore source exactly.
-The older complete final proof remains historical; publish and prove this new
-wave through the full current-source and hosted/review gates before acceptance.
+- The isolated follow-through lane adds `producer-run`, private execution-profile
+  loading and explicit artifact/backend capability separation. Ninety focused
+  cases across both runtimes and quick lint/check passed before the final CLI
+  refusal cases were added; replay those cases and canonical policy/catalog/
+  documentation checks before publishing.
+- The parent producer component's complete repo-cli audit and Docgen passed on
+  its recorded committed source; its full final and hosted gates retain their
+  own authority. Consume that component through accepted main before publishing
+  this dependent follow-through.
+- Actual normal-source stable execution passed the full local-loopback matrix.
+  The first canonical canary attempt refused dependency freshness; bounded
+  diagnostics remain under investigation. Preserve that refusal and require an
+  unmodified normal CLI replay after attribution. Observational worker prefixes
+  do not grant qualification.
+- The command opens pre-provisioned approval only. A protected hosted caller,
+  explicit trusted provisioning, actual AWS capability preflight, durable
+  credentials, immutable producer publication and every rollout/window obligation
+  remain unfinished. All goal acceptance criteria stay unproven.
+
+
+The isolated closed-entrypoint component now passes 95 focused tests on each
+runtime, quick package checks, scoped Docgen, Fallow audit/health and the default
+Effect test policy. Removing only the artifact/backend key-separation guard
+causes all six intended assertions to fail; exact restoration and the full
+20-case runtime suite then pass. See
+[the entrypoint checkpoint](research/protected-producer-entrypoint-checkpoint.json).
+This unpublished dependent component still needs its accepted parent, complete
+package/final/hosted proof, independent provisioning and an actual protected
+workflow. It does not complete any full-goal criterion or activate the trial.
+
+
+### Protected source inspection preparation, 2026-10-30
+
+The dependent lane now exposes the existing clean-source/tool inspector through
+a credential-free command and prepares its main-only AWS inspection workflow.
+The report is bounded to four MiB, avoids stdout metadata, and does not grant
+producer approval or assert resource isolation. Ninety-seven focused cases pass
+on each runtime, including absent credential reads, source failure and
+before-write size refusal. Static workflow checks pass; no hosted invocation
+has occurred. Preserve the original 95-case checkpoint as historical proof.
+Finish policy/Docgen and accepted-parent replay, then complete package/final and
+hosted gates before publishing or dispatching the inspection workflow. Trusted
+provisioning and actual authenticated producer publication remain unfinished.
+
+
+The same-file Fallow audit also exposed one inherited-adjacent clone in the
+baseline/transition review readers. Consolidate it without borrowing the local
+experiment reader's different containment policy. A regression preserves
+external review paths and malformed/missing-input typed failures. The refreshed
+98-case Node and Bun suites, quick lint/check, Effect/inline policies, scoped Docgen
+and Fallow audit/health pass; both Fallow finding counts are zero. No threshold
+or policy exemption changes. Keep complete accepted-source proof pending.
+
+
+### Trusted execution provisioning component
+
+Prepare `producer-provision` and the material-required `producer-install` using
+the existing issuer/profile authority. Private inputs are bounded, owner-only
+and outside the supervisor source checkout. Material transfer preserves the
+independently approved issuer rather than generating a disconnected CI key.
+Source/target/executable checks precede installation; normal profile reopen,
+exact selection and source checks follow it, with revocation on error/interruption.
+
+The initial 126-case Node/Bun suites, quick lint/check, root rule/inline policies
+and Fallow audit/health pass; Effect policy introduces zero findings. Three
+guard-removal controls fail as intended and restore source exactly. These are
+local component results. After accepted-parent replay, full combined package,
+final, hosted/review proof and real protected workflow/material handoff remain.
+No secret bootstrap, signing activation, qualification or observation window
+is completed by these component controls.
+
+
+The concrete-runtime refinement now passes 127 cases on each runtime, quick
+lint/check, default Effect policy, root rule policy, Fallow audit/health and
+scoped Docgen. Four causal controls include denial before credential lookup.
+The same validator owns snapshots under both its optional API and concrete
+loader; every bounded profile requirement remains. Canonical instrumentation
+regeneration/check passes. One inherited adapter-test platform warning is fixed
+in the owning producer PR and will be consumed through accepted-parent replay.
+
+Refresh the canonical JSDoc anchor inventory after that replay, then run the
+complete combined package, final and hosted proof. This unpublished component
+is not final and grants no activation, qualification or whole-goal acceptance.
+
+### Complete-observation publication component, 2026-10-30
+
+The unpublished protected-producer continuation now prepares a versioned report
+for the complete canonical observation and exactly one owned upload. Its strict
+hosted verifier reuses the existing authenticated GitHub/ZIP boundary and checks
+the entire observation digest, independent binding and upload. Legacy upload-only
+reports remain readable but cannot satisfy the complete join. A private snapshot
+prevents caller mutation during metadata reads.
+
+All 32 focused tests pass under each runtime; removing the digest, upload or
+snapshot guard makes the intended case fail, with exact source restoration.
+Quick verification, Effect Vitest (zero introduced findings) and Fallow pass.
+[The source-bound checkpoint](research/complete-observation-publication-checkpoint.json)
+retains the exact limits and remaining work. No real protected publication or
+acceptance consumer is claimed: both must use this join, retain independent MAC
+verification, and pass fresh combined-source/hosted proof after the parent lands.
+
+The report builder now takes only run/attempt identity before upload; authenticated
+verification still requires the actual artifact ID returned afterward. The refined
+source again passes 32 cases per runtime and all three causal guard controls.
+Current source inspection confirms issuer exclusion already covers the actual
+worker mounts and `/usr`; the owned protected workflow must also stage and clear
+its temporary raw provisioning transfer before launching workers.
+
+
+### Acceptance publication consumer, 2026-10-30
+
+The unpublished continuation now joins protected publication into the existing
+issuer-authenticated acceptance, persistence and operational reads. Missing
+publication fails qualification; submitted ZIP bytes must match independently
+approved workflow/run/artifact metadata, the complete observation and its owned
+upload. Final reads cover changes across both channel verifications. Metadata
+credentials remain lazy and each verification scope releases its resources.
+
+The combined ten-file suite passes 222 cases under Node and Bun, with quick lint
+and check passing. Three removed-guard controls fail their selected assertions
+and restore the source exactly. Canonical Effect, JSDoc, instrumentation and schema writers pass; native resource
+judgments are reviewed. Default package and final/hosted proof remain required. See the source-bound
+[acceptance checkpoint](research/acceptance-publication-join-checkpoint.json).
+The local parent includes the committed lifecycle repair; publication remains
+held until that parent is accepted and only dependent commits are replayed.
+
+Actual protected publisher execution, independent publication-approval
+provisioning, successful human bootstrap, role/epoch/rollback qualification,
+all eligible computation and feature reviews, and real seven/seven/fourteen-day
+observations remain open. No acceptance criterion or phase is completed here.
+
+
+The component commit's hook requested explicit private-directory parameter and
+lazy-result tags. Those contracts are now documented. These comment-only anchor
+changes do not alter the compiled examples or runtime behavior; refresh the
+canonical inventories after accepted-parent replay before final publication.
+The default package proof runs on the updated source; no stale inventory is
+claimed as a passing combined final proof.
+
+
+### Inspection workflow policy repair, 2026-10-30
+
+The first default package proof passed 8,264 cases but exposed the introduced
+missing manual-inspection context mapping. The repair uses the existing explicit
+operational inventory and adds permission, protected-source, disabled capability
+and retention assertions. The current security/lane suite passes 127 cases per
+runtime; quick verification passes. See the
+[source-bound receipt](research/inspection-governance-checkpoint.json).
+Fresh default package and accepted-parent/final/hosted proof remain open; no
+inspection dispatch, credential activation or whole-goal acceptance is claimed.
+
+### Inspection governance default package result, 2026-10-30
+
+The repaired source at `c5ae8bf81934a7d62ffce440c88b2a8a2e3e80bc` passed the
+full default `@beep/repo-cli` package verification: audit 1,046.0 seconds and
+Docgen 38.4 seconds, 1,085.848 seconds total. The introduced unmapped inspection
+context failure is repaired; this source-bound result supersedes the pending
+retry statement above. Accepted-parent integration, current combined final and
+hosted proof, real protected execution and every full acceptance criterion remain
+open. No credential or production activation occurred.
+
+### Closed producer publication output, 2026-10-30
+
+The existing `producer-run` can write its compact complete-observation report
+with `--publication` beside a private `--output`. Run/attempt use workflow Config
+and the existing identifier schema; the closed execution supplies every report
+byte. The current 71-case command/archive suites pass on Node and Bun, with quick
+package lint/check passing. Controlled tests prove fail-before-capability and
+fail-before-overwrite behavior. The [source-bound checkpoint](research/producer-command-publication-checkpoint.json)
+records limits and the actual remaining protected publisher/provisioning work.
+Default package, accepted-parent combined final and real hosted execution remain
+open. This component advances publication without granting any full acceptance.
+
+The adjacent severity-calculation clone is now consolidated without changing
+its exact diagnostics. All 96 cases across four suites pass on each runtime,
+with quick package verification passing. The other six-line file-presence
+pattern has a source-backed non-defect judgment: its SAST and JSDoc policies
+and absence results differ. Its raw warning stays visible and unsuppressed.
+Canonical anchors and the default package result will be refreshed for this
+combined source before publication.
+
+### Publication command default package result, 2026-10-30
+
+The committed implementation at `1395a7aa8b6322d2a68b879d1ffd2aba6d13097e`
+passed complete default `@beep/repo-cli` verification: audit 1,019.9 seconds,
+Docgen 34.5 seconds, 1,055.828 seconds total. The source digests remain exact.
+This supersedes the pending default result above; accepted-parent combined
+final/hosted proof and actual protected publication remain open. Every full
+trust and adoption acceptance criterion remains unproven.
+
+### Private producer output repair, 2026-10-30
+
+The [file-output checkpoint](research/producer-private-output-checkpoint.json)
+records a real 0644 creation failure under a child-only 022 umask and an intended
+exclusivity-removal failure with exact source restoration. Producer file outputs
+now use existing Effect exclusive creation with mode 0600; physical file, symlink
+and hardlink controls preserve prior data. The output pair remains sequential,
+so fresh per-run private paths are required. Final formatted-source Node/Bun replay passes 96 cases per runtime and quick
+checking passes. Canonical metadata and Fallow pass with zero introduced
+findings. The new complete default package proof remains pending.
+No protected run, R2 activation, credential or qualification change occurred.
+
+The first private-output implementation at `c99a60cb49` passed the complete
+default audit and Docgen in1068.659 seconds. A subsequent explicit type-contract
+check exposed an unintended filesystem dependency on public warming. The
+producer now selects that capability at its own boundary; both typed warming
+examples compile again. The refined source passes the current 96-case Node/Bun replay, quick checking,
+canonical metadata and the repeated exclusivity control. Its complete package
+evidence remains pending; the earlier pass retains its exact source scope.
+
+### Private-output complete package verification
+
+The current unpublished implementation passed the complete package audit and
+Docgen after its separately attributed earlyoom interruption. The checkpoint
+retains both attempts and exact source hashes. After the producer-execution
+parent accepts, replay only this lane's own commits after its recorded boundary
+and obtain fresh combined local/hosted proof; no live producer grant is implied.
+
+
+### Accepted-source worker observation, 2026-10-31
+
+The [worker checkpoint](research/normal-source-worker-observation.json) records
+a full stable-client matrix on accepted source with an outer capture observer:
+three fresh pairs, three signed replay pairs, ten shadows, seven mutations,
+four capture controls and four non-execution cases. Worker code and native
+launch options were unchanged. Its private receipt is retained by digest;
+the three source trees stayed clean.
+
+This is a diagnostic caller using explicit platform layers. Four ordinary CLI
+attempts still failed; the initial pair was traced to an unformatted proposal
+and corrected through a native file-overlay control. The corrected CLI refusals
+remain unattributed. Trace the actual CLI composition and obtain uninstrumented
+stable/current-canary receipts before closing that gate. Protected publication,
+R2 signing, qualification and every full-goal acceptance criterion remain open.
+
+The human credential bootstrap is complete: seven exact suppressed reads and
+four reference-file wrappers passed. No further human credential step remains
+at this checkpoint. Signing and CI secret settings were not activated by that
+verification. Preserve this completion when reading older pending-bootstrap notes.
+
+The actual CLI entry subsequently passed the same complete stable matrix with
+a completion-only observer and its normal service composition. Its encoded
+output matches the captured worker report apart from the final newline. This
+is a second observer-enabled witness, not an uninstrumented command pass or an
+attribution of earlier refusals. The fresh uninstrumented replay is in progress.
+
+The later uninstrumented stable attempt exited one after 1,203.382 seconds
+with the generic admission/supervision error. No passing receipt was produced,
+and the nested cause remains unavailable. Retain this as failed evidence,
+not a pass inferred from the successful observer runs. The current-canary
+uninstrumented attempt is next; every protected and qualification gate stays open.
+
+### Exact-client census repair, 2026-10-31
+
+The current-canary diagnostic identified a live-census input mismatch. Native
+read-only plans independently prove that stable hashes the link text of two
+`CLAUDE.md` symlinks while canary hashes their target contents. Commands, task
+configurations, input paths and input counts are unchanged. The pilot now
+collects its census and profile selection with the requested executable after
+verifying its exact pin, and all native inspections disable launcher inference.
+The input/configuration equality guard remains intact.
+
+The changed collector passed real stable and current-canary read-only controls:
+each retained its expected version, discovered 4,620 census nodes and matched
+the four selected tasks to that client's census inputs. Both runtimes passed
+79 focused tests; package lint and checking passed after correcting a test-double
+readonly type. This source is not yet accepted and no full supervised post-fix
+receipt, protected publication or qualification is claimed.
+
+Restoring only the old installed-client census call makes the new regression
+test fail at the intended native input guard; the exact source was restored.
+Supervisor deadline expiry now produces a specific safe error, retaining the
+existing twenty-minute comparison and ten-minute upload limits. A virtual-clock
+control verifies refusal and removal of the scoped private worker directory.
+This improves future attribution; it does not assign an unexposed nested cause
+to the historical twenty-minute failure.
+
+The complete package attempt finished with 8,298 passing tests, one unchanged
+model-command case timing out at thirty seconds, and three skips; Docgen passed
+in 53.8 seconds. The exact isolated case passed in 16.763 seconds. The full audit
+remains failed and its local timeout attribution is recorded; no Models change
+was made. The final metadata guard now rejects wrong stable-version/channel
+requests before querying a native client. Current combined focused replay
+passes 104 cases on Node and 104 on Bun, and package quick checking passes.
+Accepted-main integration, current combined hosted proof and full supervised
+stable/current-canary receipts remain required.
+
+### Producer quality-seal baseline acknowledgement
+
+Fresh hosted Repo Sanity found a PR-owned cache-policy drift after the producer
+verifier expanded the canonical quality-seal input closure by four files. The
+[review](research/producer-quality-closure-baseline-review-2026-10-31.md) and
+[request](research/producer-quality-closure-baseline-request-2026-10-31.json)
+restrict the compare-and-swap write to root subject `//`. The writer carried all
+188 other subject reviews and dropped none. Direct before/after comparison
+confirms exactly one changed task (the quality seal), only `turbo.json` as a
+changed source, no added/removed nodes, unchanged global configuration, scope,
+historical profile/epoch, and a byte-identical qualification ledger. No cache
+enablement, disposition or qualification was granted. Hosted validation of the
+corrected pushed head remains required.
+
+### Inspection dependency and installation rollback review
+
+The protected inspection workflow now installs `bubblewrap` through the runner's
+supported package manager when `/usr/bin/bwrap` is absent, then checks that exact
+executable before source inspection. No cache capability is added to this job.
+Issuer creation now brackets exclusive directory acquisition and initialization;
+failed or interrupted key installation and final reopening revoke only that new
+store. The execution-profile handoff is interrupt-masked until its own rollback
+is installed. Existing stores are still refused without revocation or overwrite.
+
+All 152 focused producer, workflow, deadline and CI-security cases passed. They
+include interruption immediately after key creation, failed private-key reopening,
+preservation of an already installed store, both virtual-clock execution bounds,
+and the inspection dependency ordering. The added clock adjustment is a reviewed
+informational judgment: the nested clock layer runs serially, the worker belongs
+to its test scope, and the test joins that worker before returning. It is distinct
+from the existing eleven-minute admission-wait control. The narrower runner
+coverage replay was 100 percent across statements, branches and functions. These controls are not a
+protected inspection run, full supervised pilot, upload, or task qualification.
+All whole-goal acceptance criteria and observation windows remain open.
+
+Accepted-main R5b integration uses the [root-scoped review](research/producer-accepted-r5b-baseline-review-2026-10-31.md) and [CAS request](research/producer-accepted-r5b-baseline-request-2026-10-31.json). The accepted current-runtime v3 profile and all non-root reviews are preserved; no qualification or rollout is granted.
