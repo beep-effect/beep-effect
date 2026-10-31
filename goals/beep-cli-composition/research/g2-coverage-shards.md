@@ -115,10 +115,13 @@ change edits global coverage inputs, so every package was measured):
 | Test Unit (unit-b) | 1,478 s |
 | Heavy / Coverage Regression | 570 s |
 
-The slowest repo-cli job fell from 1,669 to 2,073 s (the before rows) to
-1,194 s. On a full run the unit bins are now the Test Unit tail, as on the
-`main` pushes above; on a repo-cli-scoped pull request the tail is the
-slowest quarter, about 20 minutes instead of 28 to 35.
+A full-fallback run measures every package, so the comparable before rows
+are the two `main` pushes: the slower repo-cli half took 1,381 s and
+1,669 s there, and the slowest quarter now takes 1,194 s. The unit bins
+remain the Test Unit tail on such runs. On a repo-cli-scoped pull request
+the slower half took 2,066 to 2,073 s; the expected tail there is the
+slowest quarter, about 20 minutes instead of 28 to 35, which a scoped run
+has yet to confirm.
 
 Coverage Regression accepted the four-quarter merge for `@beep/repo-cli`
 and reported no repo-cli row. It failed on one inherited row:
