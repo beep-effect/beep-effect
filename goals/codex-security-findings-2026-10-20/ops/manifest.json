@@ -10,14 +10,14 @@
   },
   "packetPath": "goals/codex-security-findings-2026-10-20",
   "lifecycle": "active",
-  "mission": "Retain merged proof and verified closure for the eight original Cloud and 123 Dependabot IDs, with final reconciliation in PR #2389.",
+  "mission": "Retain merged proof and verified closure for the eight original Cloud and 123 Dependabot IDs, with final reconciliation in PR #2416, retaining merged implementation PR #2389.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "One combined Yeet PR merged through repository gates; exact eight Cloud IDs and 123 Dependabot alert IDs resolved with merged-revision evidence.",
+    "statement": "Final reconciliation PR #2416 merged through repository gates with genuine final-head canonical readiness; exact eight Cloud IDs and 123 Dependabot alert IDs resolved with merged-revision evidence, retaining implementation PRs #1930, #2333 and #2389.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -30,6 +30,10 @@
       },
       {
         "number": 2389,
+        "role": "supporting"
+      },
+      {
+        "number": 2416,
         "role": "final"
       }
     ],
@@ -41,12 +45,12 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/codex_security-closeout-20261031-51a5fd9b0fd8/verdict.json",
+        "ref": ".beep/yeet/runs/codex_security-closeout-receipts-20261031-51040364d53a/verdict.json",
         "gating": true
       }
     ]
   },
-  "branch": "codex/security-closeout-20261031",
+  "branch": "codex/security-closeout-receipts-20261031",
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
@@ -204,9 +208,9 @@
     "A remediation requires an architecture or product decision outside packet scope.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Original findings resolved and revalidated on 2026-10-31; final packet reconciliation and supplemental dependency remediation are tracked in PR #2389.",
+  "statusNote": "Implementation PR #2389 is merged and its 35 hosted checks pass. Final closeout PR #2416 must preserve genuine pre-merge canonical readiness; external dependency-alert closure and verified completion receipts remain required. Original Cloud findings and scanning dispositions are retained.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2389
+    "finalPullRequest": 2416
   }
 }

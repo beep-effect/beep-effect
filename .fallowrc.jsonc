@@ -197,7 +197,10 @@
     // Keep this package-specific so no authored source path is excluded.
     "packages/drivers/ecfr/src/_generated/**",
     "packages/drivers/govinfo/src/_generated/**",
-    "packages/drivers/runpod/src/_generated/**"
+    "packages/drivers/runpod/src/_generated/**",
+    // @beep/beep-effect-web: TanStack Router's generated route tree exports
+    // module-augmentation types the app never imports by name.
+    "apps/beep-effect-web/generated/**"
   ],
   // Exact compatibility list for authored `.ts` specifiers whose source file
   // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep

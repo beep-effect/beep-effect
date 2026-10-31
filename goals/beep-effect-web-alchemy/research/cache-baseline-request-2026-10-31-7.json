@@ -1,0 +1,20 @@
+{
+  "previous": "ffc8e3361326af0250356cc02ef72a504b9b322da6d2ede230179006c0143183",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy-v2)",
+    "reason": "Re-record //#lint:policy-fingerprint (new app manifest input) and the seven @beep/beep-effect-web scaffold tasks after taking main baseline at 0167e56db6. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-7.md",
+      "sha256": "9824030ee6270cb5d871303d4a3ac6c8bf367bf91afc45407fee7161aad36819"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/beep-effect-web"]
+}
