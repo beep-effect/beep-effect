@@ -95,7 +95,6 @@ const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
   "Bash(git checkout -- .)",
   "Bash(gh pr merge --admin:*)",
   "Bash(gh repo delete:*)",
-  "Edit(**/.github/workflows/**)",
   "Edit(**/docs/_internal/**)",
   "Edit(**/.claude/settings.json)",
   "Bash(bun run beep refs refresh:*)",
