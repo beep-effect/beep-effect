@@ -14,7 +14,7 @@
       "reason": "Record the root subject drift from the generated policy-fingerprint task inputs: all seven gain the @beep/markdown MarkdownFence module, and the five that reached docgen only through repo-cli JSDocSections drop the docgen closure now that the fence extractors read @beep/markdown directly; no manifest changes; the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
         "path": "goals/effected-promotion/research/cache-baseline-review-r6.md",
-        "sha256": "edcfaa2b3d8b50490ee0b2c3bc2222e9bc46a29e1e501c679082d39a65b22e61"
+        "sha256": "768c579ad761773b576cb8fdcfef3762d29d0754eddcc0913388a9fe01c044e7"
       }
     },
     "@beep/acp": {
@@ -5946,6 +5946,7 @@
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
+            "packages/drivers/github/src/GitHubContent.ts",
             "packages/drivers/github/src/GitHubError.ts",
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
@@ -6250,7 +6251,10 @@
             "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts",
             "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
@@ -134235,7 +134239,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "d692a768f7bb249c127c66ceabb3b8b54364ed15bf7a614435e688486f74ec7c"
+        "sha256": "e06394bd2fee9475e90ddd34e99268920c58266e0afd94de54ac030178a6e69f"
       }
     ]
   }
