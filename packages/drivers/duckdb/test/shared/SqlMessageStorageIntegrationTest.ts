@@ -17,6 +17,7 @@ import * as EntityAddress from "effect/cluster/EntityAddress";
 import * as EntityId from "effect/cluster/EntityId";
 import * as EntityType from "effect/cluster/EntityType";
 import * as Envelope from "effect/cluster/Envelope";
+import * as Message from "effect/cluster/Message";
 import * as MessageStorage from "effect/cluster/MessageStorage";
 import * as RunnerHealth from "effect/cluster/RunnerHealth";
 import * as RunnerStorage from "effect/cluster/RunnerStorage";
@@ -27,6 +28,7 @@ import * as ShardingConfig from "effect/cluster/ShardingConfig";
 import * as Snowflake from "effect/cluster/Snowflake";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -42,7 +44,6 @@ import {
   PrimaryKeyTest,
   StreamRpc,
 } from "./MessageStorageTest.ts";
-import type * as Message from "effect/cluster/Message";
 import type * as Rpc from "effect/rpc/Rpc";
 
 const TestEntity = Entity.make("test", [GetUserRpc]);
@@ -569,6 +570,8 @@ describe("SqlMessageStorage", () => {
       "keeps held messages readable while entity layers build",
       () =>
         Effect.gen(function* () {
+          const building = yield* Latch.make();
+          const replied = yield* Latch.make();
           const config = ShardingConfig.layer({
             entityRegistrationTimeout: 6000,
             entityTerminationTimeout: 0,
@@ -576,7 +579,7 @@ describe("SqlMessageStorage", () => {
             refreshAssignmentsInterval: 0,
           });
           const delayedEnv = TestEntityLayer.pipe(
-            Layer.provide(Layer.effectDiscard(Effect.sleep(10_000))),
+            Layer.provide(Layer.effectDiscard(building.open.pipe(Effect.andThen(Effect.sleep(10_000))))),
             Layer.provideMerge(Sharding.layer),
             Layer.provide(RunnerStorage.layerMemory),
             Layer.provide(RunnerHealth.layerNoop),
@@ -587,6 +590,11 @@ describe("SqlMessageStorage", () => {
           const request = yield* makeRequest();
           yield* storage.saveRequest(request);
 
+          // beep: The existing reply callback runs after native storage commits the reply.
+          const replyReader = yield* storage
+            .registerReplyHandler(new Message.OutgoingRequest({ ...request, respond: () => replied.open }))
+            .pipe(Effect.forkChild({ startImmediately: true }));
+
           // beep: Layer.build inside the forked scope replaces upstream's Effect.provide(delayedEnv).
           const fiber = yield* Layer.build(delayedEnv).pipe(
             Effect.andThen(Effect.never),
@@ -594,12 +602,17 @@ describe("SqlMessageStorage", () => {
             Effect.forkChild({ startImmediately: true })
           );
 
+          // beep: Anchor the virtual timeline to the delayed entity layer's actual start.
+          yield* building.await;
           yield* TestClock.adjust(7500);
           expect(yield* storage.repliesFor([request])).toHaveLength(0);
 
           yield* TestClock.adjust(2500);
           yield* TestClock.adjust(100);
+          // beep: Virtual time does not flush DuckDB's native asynchronous work.
+          yield* replied.await;
           expect(yield* storage.repliesFor([request])).toHaveLength(1);
+          yield* Fiber.await(replyReader);
           yield* Fiber.interrupt(fiber);
         }),
       { timeout: 15_000 }
