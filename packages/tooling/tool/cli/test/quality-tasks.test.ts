@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -158,7 +159,6 @@ import {
 } from "@beep/repo-cli/test/SharedInternals";
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Percentage } from "@beep/schema/Percentage";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -227,8 +227,8 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
-const decodeCoverageRegressionBaselineJsoncForTesting = decodeJsoncTextAs(CoverageRegressionBaseline);
+const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = Jsonc.bind(GithubChecksFallowFeatureMatrix).decode;
+const decodeCoverageRegressionBaselineJsoncForTesting = Jsonc.bind(CoverageRegressionBaseline).decode;
 const isDomainError = S.is(DomainError);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
@@ -50,7 +50,7 @@ const profilePath = "biome.identity.jsonc";
  * @since 0.0.0
  */
 export const renderCacheIdentityLintProfile = Effect.fn("CacheProfile.render")(function* (source: string) {
-  const config = yield* decodeJsoncTextAs(S.JsonObject)(source);
+  const config = yield* Jsonc.bind(S.JsonObject).decode(source);
   yield* decodeRoot(config.root);
   if (R.has(config, "extends"))
     return yield* CacheCommandError.new("Identity lint profile cannot inherit another config.");

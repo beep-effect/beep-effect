@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtils, GlobOptions, readPackageJsonFile, resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -503,7 +503,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   const rootJson = yield* fs
     .readFileString(paths.join(root, "turbo.json"))
     .pipe(
-      Effect.flatMap(decodeJsoncTextAs(S.JsonObject)),
+      Effect.flatMap(Jsonc.bind(S.JsonObject).decode),
       CacheCommandError.mapError("Invalid root Turbo configuration.")
     );
   const rootConfig = yield* decodeTurboConfiguration(rootJson).pipe(
@@ -524,7 +524,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
         const child = yield* fs
           .readFileString(paths.join(root, childPath))
           .pipe(
-            Effect.flatMap(decodeJsoncTextAs(TurboConfiguration)),
+            Effect.flatMap(Jsonc.bind(TurboConfiguration).decode),
             CacheCommandError.mapError("Invalid child Turbo configuration.")
           );
         tasks = A.appendAll(

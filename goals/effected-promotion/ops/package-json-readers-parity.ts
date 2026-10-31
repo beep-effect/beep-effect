@@ -26,6 +26,7 @@
  *   bun goals/effected-promotion/ops/package-json-readers-parity.ts [--out <report.json>]
  */
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import {
   EffectSchemaInventoryPin,
@@ -54,7 +55,6 @@ import {
 } from "@beep/repo-cli/test/VersionSync";
 import { readPackageJson as readDocgenPackageJson } from "@beep/repo-docgen/Configuration";
 import { readManifestVersion as readDocgenManifestVersion } from "@beep/repo-docgen/Version";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -171,7 +171,7 @@ const decodePackageVerifyOracle = S.decodeUnknownEffect(
 );
 
 // QualityArtifactSupport `PackageJson` over its JSONC record read.
-const decodeQualityArtifactOracle = decodeJsoncTextAs(
+const decodeQualityArtifactOracle = Jsonc.bind(
   S.Struct({
     name: S.String,
     scripts: S.optionalKey(StringRecord),
@@ -182,7 +182,7 @@ const decodeQualityArtifactOracle = decodeJsoncTextAs(
     peerDependencies: S.optionalKey(StringRecord),
     optionalDependencies: S.optionalKey(StringRecord),
   })
-);
+).decode;
 
 // Quality.schemas `PackageJsonDocument` (Tasks).
 const decodeTasksOracle = S.decodeUnknownEffect(
@@ -196,26 +196,26 @@ const decodeTasksOracle = S.decodeUnknownEffect(
 );
 
 // CatalogUsage.schemas `CatalogUsageManifestDependencies` (JSONC, defaulted).
-const decodeCatalogUsageOracle = decodeJsoncTextAs(
+const decodeCatalogUsageOracle = Jsonc.bind(
   S.Struct(R.fromEntries(A.map(DependencyBuckets, (bucket) => [bucket, S.optionalKey(StringRecord)] as const)))
-);
+).decode;
 
 // CatalogUsage root: the unchanged `CatalogUsageRootManifest` over the old JSONC read.
-const decodeCatalogUsageRootOracle = decodeJsoncTextAs(CatalogUsageRootManifest);
+const decodeCatalogUsageRootOracle = Jsonc.bind(CatalogUsageRootManifest).decode;
 const catalogUsageRootProjection = (root: CatalogUsageRootManifest) => [root.catalog, root.catalogs, root.overrides];
 
 // BunResolver `BunPackageJsonDocument` (JSONC, `packageManager` defaults to "").
-const decodeBunResolverOracle = decodeJsoncTextAs(S.Struct({ packageManager: S.optionalKey(S.String) }));
+const decodeBunResolverOracle = Jsonc.bind(S.Struct({ packageManager: S.optionalKey(S.String) })).decode;
 
 // RootCatalog `RootPackageJsonDocument` (JSONC, both records default to {}).
-const decodeRootCatalogOracle = decodeJsoncTextAs(
+const decodeRootCatalogOracle = Jsonc.bind(
   S.Struct({ catalog: S.optionalKey(StringRecord), devDependencies: S.optionalKey(StringRecord) })
-);
+).decode;
 
 // PackageTestTypecheck `PackageManifestDocument` (JSONC; an unreadable manifest is no package).
-const decodePackageTestTypecheckOracle = decodeJsoncTextAs(
+const decodePackageTestTypecheckOracle = Jsonc.bind(
   S.Struct({ name: S.String, scripts: S.optionalKey(StringRecord) })
-);
+).decode;
 const testTypecheckProjection = (name: O.Option<string>, scripts: Readonly<Record<string, string>> | undefined) =>
   O.match(O.filter(name, Str.isNonEmpty), { onNone: () => NOT_APPLICABLE, onSome: (value) => [value, scripts ?? {}] });
 
@@ -272,7 +272,7 @@ const inventoryPinOracle = (text: string) =>
   });
 
 // docgen `Configuration.ts` `PackageJsonSchema` (JSONC through config-file).
-const decodeDocgenConfigurationOracle = decodeJsoncTextAs(S.Struct({ homepage: S.String, name: S.String }));
+const decodeDocgenConfigurationOracle = Jsonc.bind(S.Struct({ homepage: S.String, name: S.String })).decode;
 
 // docgen `Version.ts` `PackageManifestVersion`.
 const decodeDocgenVersionOracle = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ version: S.String })));

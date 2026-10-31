@@ -3046,6 +3046,7 @@
         "from": "@beep/lint-rules",
         "allow": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/lint-rules",
           "@beep/schema",
           "@beep/test-runner",
@@ -3054,6 +3055,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/lint-rules",
           "@beep/schema",
           "@beep/test-runner",
@@ -4401,6 +4403,7 @@
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",
@@ -4463,6 +4466,7 @@
           "@beep/github-reporting",
           "@beep/glob",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/libpff",
           "@beep/lockfiles",
           "@beep/m365",

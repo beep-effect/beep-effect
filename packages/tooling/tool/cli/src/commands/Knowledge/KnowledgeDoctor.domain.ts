@@ -8,7 +8,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -466,8 +466,8 @@ class TsconfigPathsJson extends S.Opaque<TsconfigPathsJson, { readonly brand: un
   )
 ) {}
 
-const decodePackageManifest = decodeJsoncTextAs(PackageManifestJson);
-const decodeTsconfigPaths = decodeJsoncTextAs(TsconfigPathsJson);
+const decodePackageManifest = Jsonc.bind(PackageManifestJson).decode;
+const decodeTsconfigPaths = Jsonc.bind(TsconfigPathsJson).decode;
 
 const CONDITION_ORDER = ["bun", "import", "default", "types", "require", "node"] as const;
 

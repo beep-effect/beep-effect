@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { StringListField, WorkspacesField } from "@beep/package-json/ManifestFields";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -41,7 +42,6 @@ import {
   turboEnvOverrides,
   turboSecretSessionStep,
 } from "../../internal/cli/EnvConfig.ts";
-import { decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   hasRemoteTurboCacheArgs,
@@ -2930,7 +2930,7 @@ const policyLintTurboStep = (
 const deprecatedApisTurboStep = (repoRoot: string, base?: string): QualityTaskStep =>
   policyLintTurboStep(repoRoot, "lint:deprecated-apis", ["lint:deprecated-apis"], base);
 
-const decodeLintPolicySweeps = decodeJsoncTextAs(LintPolicySweeps);
+const decodeLintPolicySweeps = Jsonc.bind(LintPolicySweeps).decode;
 const oxlintPolicySweeps = LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis: "oxlint" });
 
 /**

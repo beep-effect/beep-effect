@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "tool": "goals/effected-promotion/ops/jsonc-owner-switch-differential.ts",
+  "codeRev": "1d30fbd6178f701d25932b7763850cae4274fe0a",
+  "codeDirty": true,
+  "corpus": {
+    "legacy": "jsonc-parser",
+    "scope": "git ls-files: every *.jsonc, plus tsconfig*.json, turbo.json, biome.json, vercel.json, package.json and docgen.json",
+    "files": 1438,
+    "byKind": {
+      "jsonc": 372,
+      "docgen.json": 170,
+      "package.json": 200,
+      "tsconfig": 670,
+      "turbo.json": 23,
+      "vercel.json": 3
+    },
+    "equal": 1438,
+    "bothReject": 0,
+    "unclassified": 0,
+    "encode": {
+      "legacy": "legacy-encode-unsupported",
+      "kitEncoded": 1438,
+      "roundTrip": 1438,
+      "failures": []
+    },
+    "differences": []
+  },
+  "generators": {
+    "inputsRev": "921b92fcd8c5b7a7eed793688542a47b153fcb7a",
+    "runs": [
+      {
+        "id": "tsconfig-sync-check",
+        "argv": ["tsconfig-sync", "--check", "--verbose"],
+        "exitCode": 0,
+        "stdoutSha256": "f733383951eab9d2e3759662cfb22cc3176547608b60ec985e5a6193046ce16b",
+        "stdoutBytes": 33,
+        "stdoutHead": "tsconfig-sync: no drift detected\n",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "tsconfig-sync-dry-run",
+        "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+        "exitCode": 0,
+        "stdoutSha256": "2f664ded609e6ab46a6a6e403f34b741597ea0a24a65de33e0d48c1865f3760c",
+        "stdoutBytes": 40,
+        "stdoutHead": "tsconfig-sync: dry-run found no changes\n",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "version-sync-report",
+        "argv": ["version-sync", "--skip-network"],
+        "exitCode": 0,
+        "stdoutSha256": "eee3d7739b38ea59ea5aa4603096f3381407615f1528462eab8caf79942d29d7",
+        "stdoutBytes": 365,
+        "stdoutHead": "\nVersion Sync Report (Check)\n===================\n\nBun Runtime:\n  Status: OK (no drift)\n\nNode.js Runtime:\n  Status: OK (no drift)\n\nDocker Images:\n  Status: OK (no drift)\n\nBiome Schema:\n  Latest: 2.5.6\n  Status: OK (no drift)\n\nEffect Catalog:",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "version-sync-dry-run",
+        "argv": ["version-sync", "--skip-network", "--dry-run"],
+        "exitCode": 0,
+        "stdoutSha256": "eee3d7739b38ea59ea5aa4603096f3381407615f1528462eab8caf79942d29d7",
+        "stdoutBytes": 365,
+        "stdoutHead": "\nVersion Sync Report (Check)\n===================\n\nBun Runtime:\n  Status: OK (no drift)\n\nNode.js Runtime:\n  Status: OK (no drift)\n\nDocker Images:\n  Status: OK (no drift)\n\nBiome Schema:\n  Latest: 2.5.6\n  Status: OK (no drift)\n\nEffect Catalog:",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "lint-tsconfig-overlay",
+        "argv": ["lint", "tsconfig-overlay"],
+        "exitCode": 0,
+        "stdoutSha256": "c16990dfd06c55dcdb70f25c29490ecbe57378b77433620f5af3b3a7e14330a6",
+        "stdoutBytes": 54,
+        "stdoutHead": "[tsconfig-overlay] ok: 186 overlay(s), 0 violation(s)\n",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "cache-census-json",
+        "argv": ["cache", "census", "--json"],
+        "exitCode": 0,
+        "stdoutSha256": "da2305fd5f6610d274c1a9022b788c6c28b16bef913ff661fa151986fc31ca00",
+        "stdoutBytes": 5077890,
+        "stdoutHead": "{\"schemaVersion\":\"cache-executable-census/v1\",\"revision\":\"921b92fcd8c5b7a7eed793688542a47b153fcb7a\",\"turboVersion\":\"2.11.10\",\"rootScripts\":{\"ai-sync\":\"bun run --cwd packages/tooling/library/ai-sync ai-sync\",\"audit\":\"beep-cli audit packages\"",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "cache-profile-check",
+        "argv": ["cache", "profile"],
+        "exitCode": 0,
+        "stdoutSha256": "a073f5de016b6c1203e10003df7f5b6290c38f184ee6d6ac03815f6f8ed86a34",
+        "stdoutBytes": 44,
+        "stdoutHead": "Identity lint candidate profile is current.\n",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "quality-jsdoc-ratchet",
+        "argv": ["quality", "jsdoc-ratchet"],
+        "exitCode": 0,
+        "stdoutSha256": "93745ee9157f929b74562f8c21f6250043b4975c8cc8aedf4844b471798a4dbb",
+        "stdoutBytes": 568,
+        "stdoutHead": "[jsdoc-ratchet] ok: tracked=21 increased=0 current_totals=32\n[jsdoc-ratchet] tighten-baseline: 5 tracked total(s) decreased\n  - missingExportExamples: 3 < 6 (-3)\n  - multiple-description-paragraphs: 163 < 232 (-69)\n  - no-root-package-impor",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "lint-schema-first",
+        "argv": ["lint", "schema-first"],
+        "exitCode": 0,
+        "stdoutSha256": "4daa06875c17297b653f26c44e1cd07961a9673ead955e7f44933fead472a553",
+        "stdoutBytes": 1095,
+        "stdoutHead": "[schema-first] live_entries=263\n[schema-first] tracked_entries=263\n[schema-first] missing_entries=0\n[schema-first] stale_entries=0\n[schema-first] enforced_candidates=0\n[schema-first] literal_kit_const_assertions=0\n[schema-first] sfv4_bounda",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "lint-effect-vitest",
+        "argv": ["lint", "effect-vitest"],
+        "exitCode": 0,
+        "stdoutSha256": "05cee1d7130dee0ec7006efc31b4c9e084bbf935348ee643808ab7c539cfa3c8",
+        "stdoutBytes": 293,
+        "stdoutHead": "[effect-vitest:phase] discoveryMs=<duration> files=2983\n[effect-vitest:phase] projectMs=<duration>\n[effect-vitest:phase] detectMs=<duration> findings=554\n[effect-vitest:phase] mergeMs=<duration>\n[effect-vitest] files=2983 findings=554 scanM",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "knowledge-doctor-report",
+        "argv": ["knowledge", "doctor", "--report", "--json"],
+        "exitCode": 0,
+        "stdoutSha256": "4c3aa9967bc210ffdb7c557cf68632120bee8dc1e8451fa7717734f402f23857",
+        "stdoutBytes": 37752335,
+        "stdoutHead": "{\"schemaVersion\":\"knowledge-doctor/v1\",\"treeish\":\"HEAD\",\"tree\":\"921b92fcd8c5b7a7eed793688542a47b153fcb7a\",\"mode\":\"report\",\"spanCounts\":{\"verified\":20949,\"generated-example\":0,\"historical-with-commit\":0,\"unclassified\":36903},\"uncheckedOption",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      },
+      {
+        "id": "create-package-dry-run",
+        "argv": [
+          "create-package",
+          "--dry-run",
+          "--skip-lockfile",
+          "--type",
+          "library",
+          "--family",
+          "foundation",
+          "--kind",
+          "modeling",
+          "--description",
+          "R3a JSONC parity probe",
+          "r3a-jsonc-parity-probe"
+        ],
+        "exitCode": 0,
+        "stdoutSha256": "76395788893b4b7b3448863a00e810ffcc6bbf286fcd83a5233ed8e7bb20b730",
+        "stdoutBytes": 898,
+        "stdoutHead": "[dry-run] Would create package @beep/r3a-jsonc-parity-probe (type: library)\n[dry-run] Family: foundation\n[dry-run] Kind: modeling\n[dry-run] Directory: <inputs>/packages/foundation/modeling/r3a-jsonc-parity-probe\n[dry-run] Files:\n  - package",
+        "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderrBytes": 0,
+        "stderrHead": "",
+        "treeClean": true
+      }
+    ]
+  },
+  "comparedWith": "goals/effected-promotion/research/jsonc-owner-switch-differential-r3a-before.json",
+  "differences": []
+}

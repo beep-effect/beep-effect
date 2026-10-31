@@ -6,9 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -105,7 +105,7 @@ export const readCacheSignatureRequired = Effect.fn("CacheFingerprint.readSignat
       Effect.fromOption(() => CacheCommandError.new("Root Turbo configuration is unavailable."))
     );
     const source = yield* decodeCacheExperimentText(bytes);
-    const document = yield* decodeJsoncTextAs(NativeSigningRoot)(source);
+    const document = yield* Jsonc.bind(NativeSigningRoot).decode(source);
     const remote = O.exists(document.futureFlags, (flags) => flags.globalConfiguration)
       ? O.flatMap(document.global, (global) => global.remoteCache)
       : document.remoteCache;
@@ -417,7 +417,7 @@ const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
  * @since 0.0.0
  */
 export const projectCacheSignedRoot = Effect.fn("CacheFingerprint.projectSignedRoot")(function* (source: string) {
-  const rootConfig = yield* decodeJsoncTextAs(S.JsonObject)(source);
+  const rootConfig = yield* Jsonc.bind(S.JsonObject).decode(source);
   const flags = yield* O.match(R.get(rootConfig, "futureFlags"), {
     onNone: () => Effect.succeed({}),
     onSome: decodeJsonObject,
@@ -477,8 +477,8 @@ export const projectCacheActivation = Effect.fn("CacheFingerprint.projectActivat
       "Activation must target the selected workspace's inheriting Turbo configuration."
     );
   yield* validateActivationArtifacts(census, activation, before, after);
-  const disabled = yield* decodeJsoncTextAs(S.JsonObject)(before);
-  const enabled = yield* decodeJsoncTextAs(S.JsonObject)(after);
+  const disabled = yield* Jsonc.bind(S.JsonObject).decode(before);
+  const enabled = yield* Jsonc.bind(S.JsonObject).decode(after);
   yield* decodeRootInheritance(disabled.extends);
   const tasks = yield* decodeJsonObject(disabled.tasks);
   const definition = yield* decodeJsonObject(tasks[taskName]);
@@ -540,7 +540,7 @@ export const projectCacheSignedActivation = Effect.fn("CacheFingerprint.projectS
 ) {
   const rootDigest = yield* hashBytes(new TextEncoder().encode(rootBefore));
   const roots = A.filter(census.sources, (source) => source.path === "turbo.json");
-  const root = yield* decodeJsoncTextAs(S.JsonObject)(rootBefore);
+  const root = yield* Jsonc.bind(S.JsonObject).decode(rootBefore);
   const globalConfiguration = R.filter(root, (_, name) => name !== "tasks" && name !== "$schema");
   if (
     roots.length !== 1 ||
@@ -551,7 +551,7 @@ export const projectCacheSignedActivation = Effect.fn("CacheFingerprint.projectS
   if ((yield* projectCacheSignedRoot(rootBefore)) !== rootSigned)
     return yield* CacheCommandError.new("Signed root bytes differ from the exact reviewed projection.");
   const activated = yield* projectCacheActivation(key, census, toolchain, activation, before, after);
-  const signed = yield* decodeJsoncTextAs(S.JsonObject)(rootSigned);
+  const signed = yield* Jsonc.bind(S.JsonObject).decode(rootSigned);
   const signedDigest = yield* hashBytes(new TextEncoder().encode(rootSigned));
   const configuration = CacheComputationConfiguration.make({
     ...activated.configuration,

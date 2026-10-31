@@ -12,7 +12,7 @@
  *
  * 1. Corpus: every git-tracked file whose basename matches `tsconfig*.json` decodes through
  *    `TsconfigJson` on the same JSONC path the command uses
- *    (`decodeJsoncTextAs`). The gate is zero failures (wave-4 ruling 4: a
+ *    (`Jsonc.bind(TsconfigJson).decode`, the R3a owner). The gate is zero failures (wave-4 ruling 4: a
  *    failure means the adoption takes the kit-derived pick, never a looser kit).
  * 2. Runs: the files tsconfig-sync reads (every `package.json`,
  *    `tsconfig*.json` and `docgen.json`, plus the root syncpack, fallow,
@@ -38,8 +38,8 @@
  *   bun goals/effected-promotion/ops/tsconfig-sync-parity.ts --compare <baseline.json> [--out <report.json>]
  */
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { applyJsoncModification, JsoncModification } from "@beep/repo-cli/test/SharedInternals";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { TsconfigJson } from "@beep/tsconfig/TsconfigJson";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
@@ -240,7 +240,7 @@ interface Mutation {
 }
 
 const ReferenceList = S.Struct({ references: S.Array(S.Struct({ path: S.String })) });
-const decodeReferenceList = decodeJsoncTextAs(ReferenceList);
+const decodeReferenceList = Jsonc.bind(ReferenceList).decode;
 
 const editFile = Effect.fn("TsconfigSyncParity.editFile")(function* (
   root: string,
@@ -443,7 +443,7 @@ const runMutation = Effect.fn("TsconfigSyncParity.runMutation")(function* (
 
 // --- corpus ---------------------------------------------------------------------
 
-const decodeTsconfigJson = decodeJsoncTextAs(TsconfigJson);
+const decodeTsconfigJson = Jsonc.bind(TsconfigJson).decode;
 
 const runCorpus = Effect.fn("TsconfigSyncParity.runCorpus")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -460,7 +460,7 @@ const runCorpus = Effect.fn("TsconfigSyncParity.runCorpus")(function* () {
   );
   const rows = A.getSomes(failures);
   return {
-    scope: "git ls-files whose basename matches tsconfig*.json, decoded with decodeJsoncTextAs(TsconfigJson)",
+    scope: "git ls-files whose basename matches tsconfig*.json, decoded with Jsonc.bind(TsconfigJson).decode",
     files: A.length(paths),
     decoded: A.length(paths) - A.length(rows),
     failures: rows,

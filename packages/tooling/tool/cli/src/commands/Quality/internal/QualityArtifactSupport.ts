@@ -1,8 +1,8 @@
 import * as NodeURL from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -136,7 +136,7 @@ const parsePackageJson = manifestParser([
   "peerDependencies",
   "optionalDependencies",
 ]);
-const decodeJsoncRecord = decodeJsoncTextAs(JsonRecord);
+const decodeJsoncRecord = Jsonc.bind(JsonRecord).decode;
 
 /**
  * Repository root resolved relative to the Quality command internals.
