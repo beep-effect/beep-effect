@@ -131,7 +131,7 @@ const program = Effect.gen(function* () {
       return { family, source, gold, canonical, xml };
     })
   );
-  if (yield* fs.exists(`${output}/results.json`))
+  if (yield* fs.exists(output))
     return yield* StructuralEvaluationError.make({
       message: "Evaluation output already exists; choose a new directory to retain prior evidence.",
     });
