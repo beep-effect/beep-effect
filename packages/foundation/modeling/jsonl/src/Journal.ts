@@ -1383,8 +1383,12 @@ const makeEngine: {
 
     const watchForCreation = Effect.gen(function* () {
       const ready = yield* Deferred.make<void>();
+      const stop = yield* Deferred.make<void>();
       const armed = yield* Effect.forkChild(
         fs.watch(directory, { onReady: () => Deferred.doneUnsafe(ready, Effect.void) }).pipe(
+          // Stop only upstream pulls. A downstream ingest may already have
+          // advanced the cursor and must finish publishing before handoff.
+          Stream.interruptWhen(Deferred.await(stop)),
           Stream.filter((event) => basenameOf(event.path) === basename),
           // End on activation so the supervisor can follow the file itself.
           Stream.takeUntilEffect(() => exists),
@@ -1398,7 +1402,8 @@ const makeEngine: {
       // event to activate us. Re-stat only after it can buffer later events.
       if (yield* exists) {
         yield* ingest;
-        yield* Fiber.interrupt(armed);
+        yield* Deferred.succeed(stop, undefined);
+        yield* Fiber.join(armed);
       } else {
         yield* Fiber.join(armed);
       }

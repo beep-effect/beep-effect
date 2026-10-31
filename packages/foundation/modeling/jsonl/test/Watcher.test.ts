@@ -8,6 +8,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as PubSub from "effect/PubSub";
 import * as Queue from "effect/Queue";
 import * as Result from "effect/Result";
 import * as Scope from "effect/Scope";
@@ -234,5 +235,62 @@ it.effect("closing the journal cancels watch acquisition before readiness", () =
     yield* Deferred.await(acquiring);
     yield* Scope.close(scope, Exit.void);
     assert.isTrue(yield* Deferred.isDone(cancelled));
+  })
+);
+
+it.effect("activation handoff drains an ingest staged behind a backpressured catch-up", () =>
+  Effect.gen(function* () {
+    const fs = yield* memory();
+    const acquiring = yield* Deferred.make<void>();
+    const install = yield* Deferred.make<void>();
+    const fileArmed = yield* Deferred.make<void>();
+    const directoryEvents = yield* Queue.unbounded<FileSystem.WatchEvent>();
+    const decorated: FileSystem.FileSystem = {
+      ...fs,
+      watch: (target, options) =>
+        target === path
+          ? Stream.never.pipe(
+              Stream.onStart(
+                Effect.sync(() => options?.onReady?.()).pipe(Effect.andThen(Deferred.succeed(fileArmed, undefined)))
+              )
+            )
+          : Stream.fromQueue(directoryEvents).pipe(
+              Stream.onStart(
+                Deferred.succeed(acquiring, undefined).pipe(
+                  Effect.andThen(Deferred.await(install)),
+                  Effect.andThen(Effect.sync(() => options?.onReady?.()))
+                )
+              )
+            ),
+    };
+    const journal = yield* open(decorated, { path, capacity: 1 });
+    const subscription = yield* PubSub.subscribe(journal.hub);
+    yield* Deferred.await(acquiring);
+    yield* externalAppend(fs, `${line(1)}${line(2)}`);
+    yield* Deferred.succeed(install, undefined);
+    yield* SubscriptionRef.changes(journal.latest).pipe(
+      Stream.filter((value) => O.exists(value, (row) => row.event === "noted" && row.data.round === 2)),
+      Stream.runHead
+    );
+    // Catch-up A has advanced through two rows but capacity one blocks its
+    // second publication. A directory poke now stages B behind A's baton.
+    yield* externalAppend(fs, line(3));
+    yield* Queue.offer(directoryEvents, { _tag: "Create", path });
+    yield* SubscriptionRef.changes(journal.latest).pipe(
+      Stream.filter((value) => O.exists(value, (row) => row.event === "noted" && row.data.round === 3)),
+      Stream.runHead
+    );
+    const first = yield* PubSub.take(subscription);
+    const second = yield* PubSub.take(subscription);
+    yield* Deferred.await(fileArmed);
+    assert.strictEqual(yield* PubSub.size(journal.hub), 1, "handoff must retain B's staged publication");
+    const third = yield* PubSub.take(subscription);
+    assert.deepStrictEqual(
+      A.flatMap([first, second, third], (take) =>
+        Exit.isExit(take) ? [] : A.map(take, (row) => (row.event === "noted" ? row.data.round : -1))
+      ),
+      [1, 2, 3]
+    );
+    assert.strictEqual(yield* PubSub.size(journal.hub), 0);
   })
 );
