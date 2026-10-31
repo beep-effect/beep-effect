@@ -226,6 +226,23 @@ do not purge a shared cache or relax inputs to conceal a regression.
 | 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
 
 
+### Native storage test readiness and reply correctness, 2026-10-31 UTC
+
+- Repair the inherited CI held-message test in its focused test-only PR2374.
+  Reuse the existing layer-start and storage reply-notification boundaries;
+  retain the virtual-clock timeline, both count assertions and 15-second limit.
+  Require a successful WithExit response and join the reply reader so a failure
+  response or listener failure cannot satisfy the regression assertion.
+- The actual CI zero-reply failure and the review's count-only false-success
+  case justify this change. Keep its current-source package/runtime checks and
+  bounded decoded-reply fault controls separate from cache qualification. The
+  first handler-defect control restarted the entity and timed out; it proves
+  nothing about the success assertion and remains retained as a failed approach.
+- Reversal is a reviewed Git revert of the scoped test repair. No production
+  storage behavior, cache policy, credential, runtime budget or proof floor
+  changes. Fresh complete and hosted/review gates precede acceptance.
+
+
 ### Current pinned runtime observation, 2026-10-29
 
 Admit Bun1.4.4 as an observed Linux x64 toolchain identity because it is the
@@ -480,3 +497,22 @@ whole-command fresh dispositions and 2,372 final-disposition gaps. Branch-local
 SPEC digests remain preserved as historical provenance, while the current audit
 binds this merged SPEC. The preceding producer commit is the reversal point;
 this documentation join deploys nothing and satisfies no whole-goal criterion.
+
+
+### Standalone Cargo workspace feature decision, 2026-10-31
+
+- Retain the absent experimental Cargo discovery flag. The two Tauri crates are
+  standalone and the repository has no root Cargo workspace. Both exact native
+  clients produce the same complete ninety-node Bun build graph with the flag
+  disabled and enabled. Rust work remains owned by its existing native and
+  sidecar commands; it is neither absent nor already cache-qualified.
+- Preserve the positive synthetic root-workspace discovery and exact executable
+  restoration controls. Explicit cache/output configuration is required in this
+  fixture. The undeclared external-input negative case reproduces stale reuse;
+  declaring the input restores invalidation. Do not generalize that fixture to
+  Tauri build scripts, system libraries, signing or shared target directories.
+- Reopen for a proposed root Cargo workspace, a direct Turbo Rust consumer or
+  changed client/native ownership. Before adoption, review all actual toolchain,
+  target, source, lockfile, vendored ABI patch, C/sidecar and external inputs.
+  Reverse this decision by returning its matrix row to pending and removing the
+  report links together. Runtime settings and qualification state are unchanged.

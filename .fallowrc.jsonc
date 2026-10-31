@@ -479,7 +479,6 @@
         ],
         "functions": ["LiveWaveform"],
         "maxCognitive": 40,
-        "maxCrap": 31,
         "maxUnitSize": 465,
         "reason": "The component is the cohesive owner of its hook bindings and public waveform props; the microphone teardown and animation seams are extracted separately without fragmenting hook ownership. Review by 2026-12-03: re-measure after those extracted seams settle and lower this ceiling to the observed boundary."
       },
@@ -533,13 +532,6 @@
         "maxCognitive": 24,
         "maxUnitSize": 152,
         "reason": "The public prop surface and hook integration account for the measured boundary; changing the prop contract is out of scope and helper extraction cannot reduce it honestly. Review by 2026-12-03: re-measure after any public component API redesign and remove the exception when the boundary naturally shrinks."
-      },
-      {
-        "files": ["packages/tooling/library/repo-utils/src/FsUtils.ts"],
-        "functions": ["visit"],
-        "maxCognitive": 22,
-        "maxCrap": 32,
-        "reason": "Symlink policy, cycle protection, directory exclusion, and recursion are one filesystem-safety transaction. Review by 2026-12-03: re-audit the safety invariants and lower or remove this ceiling only when an equivalent simpler transaction is proven."
       },
       {
         "files": [
