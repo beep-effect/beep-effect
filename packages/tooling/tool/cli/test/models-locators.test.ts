@@ -299,7 +299,7 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
           _tag: "env-key",
           binding: binding("model"),
           render: verbatim,
-          key: "GRAFT_MODEL",
+          key: "PROXY_MODEL",
         } as Locator),
         "Unsupported shell form"
       );

@@ -125,9 +125,6 @@ extend-exclude = [
   # Licensed GLib source is retained from the upstream crate for a safety backport.
   # Preserve upstream spellings; authored maintenance docs live in vendor/rust/README.md.
   "vendor/rust/glib-0.18.5/**",
-  # graft per-file wiring cards mirror every source file (including excluded
-  # trees such as scratchpad/); graft .ignore re-admits them to ignore-aware tools.
-  "graft/**",
   # Vendored upstream API documents drivers generate from (OpenAPI / JSON Schema);
   # kept byte-faithful to upstream, so their spelling is not ours to fix.
   "packages/drivers/*/openapi.json",

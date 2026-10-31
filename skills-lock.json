@@ -65,14 +65,6 @@
       ],
       "installedTreeHash": "5c9be0bc9e03ad6572ec45537163331194896c91310b0835b3933fc4a3a7e8c6"
     },
-    "graft": {
-      "_tag": "local",
-      "installedTargets": [
-        ".claude/skills/graft",
-        ".agents/skills/graft"
-      ],
-      "installedTreeHash": "29fb832863ed616988037c294d37d1f869f69bd12bb825c44bdd8480329dfdd8"
-    },
     "grill-me": {
       "_tag": "vendored",
       "sourceType": "github",
@@ -423,7 +415,7 @@
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
       ],
-      "installedTreeHash": "9a0d1310679bad3817a42fcd632679165c0f8f398e11481279f2cfa14571e961"
+      "installedTreeHash": "a7b5c5c12544ce5c473c3466602254bbe6d3e996f0f4feadabcd60d7ce2b50f2"
     },
     "schema-first-development": {
       "_tag": "local",
@@ -753,7 +745,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "c3df65c22da6174aaa36c97c9fe8d055ed42d793c72323078839d1f4136fa977"
+      "installedTreeHash": "4f0ca0f38e5cf26eca08d41e02158bffe8d8a0856c88a8a9ac69437db2328ddc"
     }
   }
 }
