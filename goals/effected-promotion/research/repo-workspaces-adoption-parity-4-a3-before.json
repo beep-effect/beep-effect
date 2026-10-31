@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/repo-workspaces-adoption-parity.ts",
-  "commit": "f9b40dbb3b4c43d86c6e48843ba066f58b022c3c",
+  "commit": "900023804b88135345880f1dca3c9f92b8308043",
   "members": {
     "count": 189,
     "legacySha256": "6943951e5d1582538f61880a478748421e8ea3c7f54cd0ef067b2fb1fe805b22",
