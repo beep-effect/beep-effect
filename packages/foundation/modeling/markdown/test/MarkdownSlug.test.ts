@@ -6,7 +6,7 @@
 
 import { HeadingSlug, MarkdownSlug } from "@beep/markdown/MarkdownSlug";
 import { assert, describe, it } from "@effect/vitest";
-import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -38,11 +38,11 @@ describe("MarkdownSlug", () => {
     it("reads each line break of a multi-line heading as one space (a kit departure from markdown-toc)", () => {
       assert.strictEqual(MarkdownSlug.slugify("Goal *Title*\nsecond line"), "goal-title-second-line");
       assert.strictEqual(MarkdownSlug.slugify("one\r\ntwo\rthree"), "one-two-three");
-      assert.isTrue(Result.isSuccess(decodeSlug(MarkdownSlug.slugify("a\nb"))));
-      assert.isTrue(Result.isFailure(decodeSlug("a\nb")));
+      assertSuccess(decodeSlug(MarkdownSlug.slugify("a\nb")), "a-b");
+      decodeSlug("a\nb").pipe(Result.isFailure, assertTrue);
       // JavaScript `$` without the m flag matches only at the end of input, so a trailing newline fails too.
-      assert.isTrue(Result.isFailure(decodeSlug("a\n")));
-      assert.isTrue(Result.isFailure(decodeSlug("a\r\n")));
+      decodeSlug("a\n").pipe(Result.isFailure, assertTrue);
+      decodeSlug("a\r\n").pipe(Result.isFailure, assertTrue);
     });
 
     it("folds each line break with the spaces and tabs around it, and reads a `>` as text", () => {

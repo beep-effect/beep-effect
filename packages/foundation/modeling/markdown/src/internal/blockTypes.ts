@@ -471,6 +471,8 @@ export class BlockData {
   /** A split-out link reference definition (see {@link BlockType}). */
   declare definition?: DefinitionData;
   declare fenceChar?: FenceChar;
+  /** Fenced code: set when a closing fence ended the block; absent on an unterminated one. */
+  declare fenceClosed?: boolean;
   declare fenceLength?: number;
   declare fenceOffset?: number;
   /** A GFM footnote definition's label, set by the footnote block start. */
