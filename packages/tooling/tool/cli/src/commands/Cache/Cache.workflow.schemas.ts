@@ -129,3 +129,33 @@ export class CacheProducerUploadRuntime extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Nonsecret execution settings installed beside a pre-provisioned issuer.
+ *
+ * **Details**
+ * The supervisor selects this private record independently of experiment
+ * requests. Its target must match the destination digest fixed in the issuer's
+ * approval. Credentials are loaded separately and never belong in this record.
+ *
+ * **Example** (Require an approved destination)
+ * ```ts
+ * import { CacheProducerExecutionProfile } from "@beep/repo-cli/test/Cache"
+ * import * as S from "effect/Schema"
+ * console.assert(!S.is(CacheProducerExecutionProfile)({ adapterExecutable: "/adapter" }))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export class CacheProducerExecutionProfile extends S.Opaque<
+  CacheProducerExecutionProfile,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ target: CacheConformanceTarget, adapterExecutable: S.NonEmptyString }).pipe(
+    $I.annoteSchema("CacheProducerExecutionProfile", {
+      description: "Private nonsecret destination and executable selection for an independently approved producer.",
+    })
+  )
+) {}
