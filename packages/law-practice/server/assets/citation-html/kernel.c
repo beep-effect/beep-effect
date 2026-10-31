@@ -81,7 +81,7 @@ void html_release(void) {
 }
 int html_clean(const char *input, int length, int kind, int ceiling, int full_html) {
     html_release(); resource_exhausted = 0;
-    if (!input || kind < 0 || kind > 3 || length < 0 || length > 4000000 ||
+    if (!input || kind < 0 || kind > 3 || length < 0 || length > 32000000 ||
         ceiling < 0 || ceiling > 8000000 || (full_html != 0 && full_html != 1)) return INVALID_INPUT;
     const char *encodings[] = {"UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE"};
     xmlSetGenericErrorFunc(NULL, ignore_error);

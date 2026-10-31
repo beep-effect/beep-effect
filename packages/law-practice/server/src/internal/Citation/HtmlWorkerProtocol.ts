@@ -17,7 +17,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { CitationHtmlCompletionFailure } from "./HtmlCompletion.ts";
-import { CitationHtmlInput } from "./HtmlInput.ts";
+import { CitationHtmlInput, CitationHtmlInputLayout } from "./HtmlInput.ts";
 import { CitationHtmlKernelFailure } from "./HtmlKernel.ts";
 import type * as PlatformError from "effect/PlatformError";
 
@@ -53,7 +53,7 @@ export class CitationHtmlWorkerFailure extends S.TaggedError<
 ) {}
 const invalid = () => CitationHtmlWorkerFailure.make({ reason: "invalid-frame" });
 const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "clean", limit: "processMessageBytes" });
-const inputMax = 4 * CitationEngineAbsoluteMaxima.sourceUtf16;
+const inputMax = 4 * CitationEngineAbsoluteMaxima.producedTextUtf16;
 const base64Max = 4 * ((inputMax + 2 - ((inputMax + 2) % 3)) / 3);
 const Bytes = S.String.check(
   S.isMaxLength(base64Max),
@@ -199,23 +199,40 @@ export const citationHtmlJsonBodyBytes = Effect.fn("Citation.htmlJsonBodyBytes")
   }
   return bytes;
 });
-/** @internal @category operations @since 0.0.0 */
-export const encodeCitationHtmlJob = Effect.fn("Citation.encodeHtmlJob")(function* (
-  job: CitationHtmlWorkerJob,
+/**
+ * Check the exact complete job size using metadata before input buffer or base64
+ * allocation. The small encoded header uses the same codec as the final frame.
+ * @internal @category operations @since 0.0.0
+ */
+export const preflightCitationHtmlJob = Effect.fn("Citation.preflightHtmlJob")(function* (
+  layout: CitationHtmlInputLayout,
+  outputUtf16: number,
   maximum: number
 ) {
   const limit = yield* S.decodeEffect(Limit)(maximum).pipe(Effect.mapError(invalid));
   const header = yield* S.encodeEffect(JobCodec)(
     CitationHtmlWorkerJob.make({
-      encoding: job.encoding,
-      fullHtml: job.fullHtml,
-      outputUtf16: job.outputUtf16,
+      encoding: layout.encoding,
+      fullHtml: layout.fullHtml,
+      outputUtf16,
       bytes: new Uint8Array(0),
     })
   ).pipe(Effect.mapError(invalid));
   const count =
-    encoder.encode(header).byteLength + 1 + 4 * ((job.bytes.byteLength + 2 - ((job.bytes.byteLength + 2) % 3)) / 3);
+    encoder.encode(header).byteLength + 1 + 4 * ((layout.byteLength + 2 - ((layout.byteLength + 2) % 3)) / 3);
   if (count > limit) return yield* exceeded();
+  return count;
+});
+/** @internal @category operations @since 0.0.0 */
+export const encodeCitationHtmlJob = Effect.fn("Citation.encodeHtmlJob")(function* (
+  job: CitationHtmlWorkerJob,
+  maximum: number
+) {
+  const count = yield* preflightCitationHtmlJob(
+    CitationHtmlInputLayout.make({ encoding: job.encoding, fullHtml: job.fullHtml, byteLength: job.bytes.byteLength }),
+    job.outputUtf16,
+    maximum
+  );
   const encoded = line(yield* S.encodeEffect(JobCodec)(job).pipe(Effect.mapError(invalid)));
   if (encoded.byteLength !== count) return yield* invalid();
   return encoded;

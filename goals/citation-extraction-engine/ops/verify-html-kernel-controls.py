@@ -13,7 +13,7 @@ import tempfile
 REPO = Path(__file__).resolve().parents[3]
 ASSETS = REPO / 'packages/law-practice/server/assets/citation-html'
 FIXTURES = REPO / 'packages/law-practice/use-cases/test/fixtures/eyecite'
-BINARY_SHA = 'd1e18b69da6dd62f7807f4204946aec2a73302df23ede8e3ac7b262688c569a5'
+BINARY_SHA = '33773ce285d42dd42f7147f595bd45e97d621c0bba3c3b1e8207cf6b9216e76d'
 IMPORTS = ['environ_get', 'environ_sizes_get', 'clock_time_get', 'fd_close', 'fd_fdstat_get', 'fd_fdstat_set_flags', 'fd_prestat_get', 'fd_prestat_dir_name', 'fd_read', 'fd_seek', 'fd_write', 'path_filestat_get', 'path_open', 'proc_exit']
 
 
@@ -73,7 +73,7 @@ def canonical(data):
 
 
 def check_asset(raw, receipt, notices):
-    assert canonical(receipt) == '7f8b7961d4ca878fab1e3bfbd0920bb10d1c1f08bc3ae2a82d10d2770fa62885'
+    assert canonical(receipt) == 'c1e99f1fb3c3c1b690ebdf71b4fb32cb74401a661bf63d1226a29e3d59dc59bb'
     assert canonical(notices) == '674d981d39f33753f4a08a243dce2d9638f031e5361fd88f319d61670b9824e8'
     assert hashlib.sha256(raw).hexdigest() == BINARY_SHA and len(raw) == 980822
     abi(raw)

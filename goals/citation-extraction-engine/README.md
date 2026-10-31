@@ -35,8 +35,10 @@ now captures runtime/Clock, preserves host values and shares nested text
 reservations. All 440 primitive text vectors pass through reserved literal
 stages. The [exclusive output allowance](./history/evidence/2026-10-31-cleaner-capacity.md)
 now serializes native-sized production against ordinary reservations, including
-zero-capacity empty output and cleanup on cancellation. Global admission, the
-native stage adapter and full host/registry replay remain open.
+zero-capacity empty output and cleanup on cancellation. The
+[native HTML stage](./history/evidence/2026-10-31-html-cleaner-stage.md) now uses
+that allowance, accepts intermediate text and preflights complete framing before
+payload allocation. Global admission and full host/registry replay remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

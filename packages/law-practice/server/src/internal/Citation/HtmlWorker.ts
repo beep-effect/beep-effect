@@ -29,6 +29,7 @@ import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { CitationCleanerProduced } from "./CleanerPipeline.ts";
 import { CitationHtmlInputFailure, makeCitationHtmlInput } from "./HtmlInput.ts";
 import {
   CitationHtmlWorkerFailure,
@@ -37,9 +38,11 @@ import {
   decodeCitationHtmlReply,
   encodeCitationHtmlJob,
   preflightCitationHtmlControlFrames,
+  preflightCitationHtmlJob,
   readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
+import type { CitationCleanerWork } from "./CleanerPipeline.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorker");
 const RuntimePath = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
@@ -72,6 +75,21 @@ export class CitationHtmlWorkerSnapshot extends S.Opaque<
     })
   )
 ) {}
+/**
+ * Complete native stage text and original operation-owned charge tickets.
+ * The charge fields preserve live issuance; decoding cannot mint authority.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationHtmlCleanerStage extends S.Opaque<CitationHtmlCleanerStage, { readonly brand: unique symbol }>()(
+  S.Struct({
+    text: S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16)),
+    charges: CitationCleanerProduced.fields.charges,
+  }).pipe(
+    $I.annoteSchema("CitationHtmlCleanerStage", {
+      description: "Complete bounded HTML text plus live text reservations, pending runtime value issuance.",
+    })
+  )
+) {}
 const Phase = LiteralKit(["starting", "running", "stopping", "quarantined"]).pipe(
   $I.annoteSchema("Phase", { description: "Private live process ownership phase, never a success receipt." })
 );
@@ -88,6 +106,8 @@ const failure = (reason: CitationHtmlWorkerFailure["reason"]) => CitationHtmlWor
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "clean", limit });
 const Text = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16));
+const StageText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16));
+const Output = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16));
 /**
  * Capture Clock, process spawner and owning Scope. Returned methods have
  * R = never. Admission includes preparation; one clean timer covers preparation,
@@ -181,174 +201,187 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
       );
     })
   );
+  const clean = Effect.fn("Citation.cleanHtmlProcess")(
+    function* (input: unknown, remaining: number, staged: boolean) {
+      const text = yield* S.decodeUnknownEffect(staged ? StageText : Text)(input).pipe(
+        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+      );
+      if (!staged && Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
+      const outputUtf16 = yield* S.decodeEffect(Output)(remaining).pipe(
+        Effect.mapError(() => failure("invalid-runtime"))
+      );
+      if (outputUtf16 > limits.producedTextUtf16) return yield* safety("producedTextUtf16");
+      yield* preflightCitationHtmlControlFrames(limits.processMessageBytes);
+      return yield* Effect.uninterruptibleMask((restore) =>
+        Effect.gen(function* () {
+          yield* ensureOpen;
+          if (!(yield* slots.takeIfAvailable(1))) {
+            if (!(yield* queueSlots.takeIfAvailable(1))) return yield* safety("queuedOperations");
+            yield* Ref.update(queued, (value) => value + 1);
+            yield* restore(
+              slots.take(1).pipe(
+                Effect.timeoutOrElse({
+                  duration: limits.queueDeadline,
+                  orElse: () => Effect.fail(safety("queueDeadline")),
+                })
+              )
+            ).pipe(
+              Effect.ensuring(
+                Effect.gen(function* () {
+                  yield* Ref.update(queued, (value) => value - 1);
+                  yield* queueSlots.release(1);
+                })
+              )
+            );
+          }
+          yield* Ref.update(active, (value) => value + 1);
+          const released = yield* Ref.make(false);
+          const release = Effect.gen(function* () {
+            if (!(yield* Ref.getAndSet(released, true))) {
+              yield* Ref.update(active, (value) => value - 1);
+              yield* slots.release(1);
+            }
+          });
+          let lease = O.none<OwnedProcess>();
+          const body = Effect.gen(function* () {
+            yield* ensureOpen;
+            const prepared = yield* preparation.prepareStage(text, (layout) =>
+              preflightCitationHtmlJob(layout, outputUtf16, limits.processMessageBytes).pipe(Effect.asVoid)
+            );
+            const frame = yield* encodeCitationHtmlJob(
+              CitationHtmlWorkerJob.make({
+                encoding: prepared.encoding,
+                bytes: prepared.bytes,
+                fullHtml: prepared.fullHtml,
+                outputUtf16,
+              }),
+              limits.processMessageBytes
+            );
+            const argument = yield* S.encodeEffect(S.fromJsonString(S.Natural))(limits.processMessageBytes).pipe(
+              Effect.mapError(() => failure("invalid-runtime"))
+            );
+            const resource = yield* birthLock
+              .withPermit(
+                Effect.gen(function* () {
+                  // Do not interrupt the ownership transfer between OS spawn and the
+                  // spawner's registered handle. No request bytes are sent in it.
+                  yield* Effect.interruptible(Effect.void);
+                  yield* ensureOpen;
+                  const scope = yield* Scope.make();
+                  const handle = yield* Ref.make(O.none<ChildProcessHandle>());
+                  const phase = yield* Ref.make<typeof Phase.Type>("starting");
+                  const retirement = yield* Ref.make(O.none<Fiber.Fiber<boolean>>());
+                  const retirementLock = yield* Semaphore.make(1);
+                  const resource: OwnedProcess = {
+                    scope,
+                    handle,
+                    phase,
+                    retirement,
+                    retirementLock,
+                    retire: Effect.gen(function* () {
+                      const child = yield* Ref.get(handle);
+                      if (O.isSome(child)) {
+                        const running = yield* child.value.isRunning.pipe(Effect.orElseSucceed(() => true));
+                        if (running)
+                          yield* Effect.exit(
+                            child.value.kill({ killSignal: "SIGKILL", forceKillAfter: Duration.zero })
+                          );
+                        if (yield* child.value.isRunning.pipe(Effect.orElseSucceed(() => true))) return false;
+                      }
+                      const finalized = yield* Effect.exit(Scope.close(scope, Exit.void));
+                      if (Exit.isFailure(finalized)) return false;
+                      yield* Ref.update(owned, (records) => A.filter(records, (entry) => entry !== resource));
+                      yield* release;
+                      return true;
+                    }).pipe(Effect.withSpan("Citation.retireHtmlProcess")),
+                  };
+                  lease = O.some(resource);
+                  yield* Ref.update(owned, (records) => A.append(records, resource));
+                  const child = yield* spawner
+                    .spawn(
+                      ChildProcess.make(
+                        runtime.executable,
+                        ["--no-env-file", "--no-install", runtime.workerFile, argument],
+                        {
+                          cwd: runtime.cwd,
+                          env: {},
+                          extendEnv: false,
+                          shell: false,
+                          detached: false,
+                          stdin: "pipe",
+                          stdout: "pipe",
+                          stderr: "ignore",
+                          killSignal: "SIGKILL",
+                          forceKillAfter: Duration.zero,
+                        }
+                      )
+                    )
+                    .pipe(
+                      Effect.provideService(Scope.Scope, scope),
+                      Effect.mapError(() => failure("spawn-failed"))
+                    );
+                  yield* Ref.set(handle, O.some(child));
+                  yield* Ref.set(phase, "running");
+                  return child;
+                })
+              )
+              .pipe(Effect.uninterruptible);
+            let step = 0;
+            let reply = O.none<CitationHtmlWorkerReply>();
+            const receive = readCitationHtmlFrames(resource.stdout, limits.processMessageBytes, 3, (bytes) =>
+              Effect.gen(function* () {
+                const message = yield* decodeCitationHtmlReply(bytes);
+                if (
+                  (step === 0 && !CitationHtmlWorkerReply.guards.Ready(message)) ||
+                  (step === 1 && !CitationHtmlWorkerReply.guards.Started(message)) ||
+                  (step === 2 && !CitationHtmlWorkerReply.isAnyOf(["Success", "Failure"])(message))
+                )
+                  return yield* failure("invalid-frame");
+                if (step === 2) reply = O.some(message);
+                step++;
+              })
+            );
+            const send = Stream.run(Stream.make(frame), resource.stdin).pipe(
+              Effect.mapError(() => failure("channel-failed"))
+            );
+            yield* Effect.all([receive, send], { concurrency: 2, discard: true });
+            const message = yield* Effect.fromOption(reply).pipe(Effect.mapError(() => failure("invalid-frame")));
+            if (CitationHtmlWorkerReply.guards.Success(message)) return message.text;
+            if (CitationHtmlWorkerReply.guards.Failure(message)) return yield* message.failure;
+            return yield* failure("invalid-frame");
+          });
+          const outcome = yield* Effect.exit(
+            restore(
+              body.pipe(
+                Effect.timeoutOrElse({
+                  duration: limits.cleanDeadline,
+                  orElse: () => Effect.fail(safety("cleanDeadline")),
+                })
+              )
+            )
+          );
+          if (O.isSome(lease)) yield* awaitRetirement(lease.value, false);
+          else yield* release;
+          return yield* outcome;
+        })
+      ).pipe(
+        Effect.timeoutOrElse({
+          duration: limits.operationDeadline,
+          orElse: () => Effect.fail(safety("operationDeadline")),
+        })
+      );
+    },
+    Effect.provideService(Clock.Clock, clock)
+  );
   return {
     snapshot,
     reap,
-    clean: Effect.fn("Citation.cleanHtmlProcess")(
-      function* (input: unknown) {
-        const text = yield* S.decodeUnknownEffect(Text)(input).pipe(
-          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-        );
-        if (Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
-        yield* preflightCitationHtmlControlFrames(limits.processMessageBytes);
-        return yield* Effect.uninterruptibleMask((restore) =>
-          Effect.gen(function* () {
-            yield* ensureOpen;
-            if (!(yield* slots.takeIfAvailable(1))) {
-              if (!(yield* queueSlots.takeIfAvailable(1))) return yield* safety("queuedOperations");
-              yield* Ref.update(queued, (value) => value + 1);
-              yield* restore(
-                slots.take(1).pipe(
-                  Effect.timeoutOrElse({
-                    duration: limits.queueDeadline,
-                    orElse: () => Effect.fail(safety("queueDeadline")),
-                  })
-                )
-              ).pipe(
-                Effect.ensuring(
-                  Effect.gen(function* () {
-                    yield* Ref.update(queued, (value) => value - 1);
-                    yield* queueSlots.release(1);
-                  })
-                )
-              );
-            }
-            yield* Ref.update(active, (value) => value + 1);
-            const released = yield* Ref.make(false);
-            const release = Effect.gen(function* () {
-              if (!(yield* Ref.getAndSet(released, true))) {
-                yield* Ref.update(active, (value) => value - 1);
-                yield* slots.release(1);
-              }
-            });
-            let lease = O.none<OwnedProcess>();
-            const body = Effect.gen(function* () {
-              yield* ensureOpen;
-              const prepared = yield* preparation.prepare(text);
-              const frame = yield* encodeCitationHtmlJob(
-                CitationHtmlWorkerJob.make({
-                  encoding: prepared.encoding,
-                  bytes: prepared.bytes,
-                  fullHtml: prepared.fullHtml,
-                  outputUtf16: limits.producedTextUtf16,
-                }),
-                limits.processMessageBytes
-              );
-              const argument = yield* S.encodeEffect(S.fromJsonString(S.Natural))(limits.processMessageBytes).pipe(
-                Effect.mapError(() => failure("invalid-runtime"))
-              );
-              const resource = yield* birthLock
-                .withPermit(
-                  Effect.gen(function* () {
-                    // Do not interrupt the ownership transfer between OS spawn and the
-                    // spawner's registered handle. No request bytes are sent in it.
-                    yield* Effect.interruptible(Effect.void);
-                    yield* ensureOpen;
-                    const scope = yield* Scope.make();
-                    const handle = yield* Ref.make(O.none<ChildProcessHandle>());
-                    const phase = yield* Ref.make<typeof Phase.Type>("starting");
-                    const retirement = yield* Ref.make(O.none<Fiber.Fiber<boolean>>());
-                    const retirementLock = yield* Semaphore.make(1);
-                    const resource: OwnedProcess = {
-                      scope,
-                      handle,
-                      phase,
-                      retirement,
-                      retirementLock,
-                      retire: Effect.gen(function* () {
-                        const child = yield* Ref.get(handle);
-                        if (O.isSome(child)) {
-                          const running = yield* child.value.isRunning.pipe(Effect.orElseSucceed(() => true));
-                          if (running)
-                            yield* Effect.exit(
-                              child.value.kill({ killSignal: "SIGKILL", forceKillAfter: Duration.zero })
-                            );
-                          if (yield* child.value.isRunning.pipe(Effect.orElseSucceed(() => true))) return false;
-                        }
-                        const finalized = yield* Effect.exit(Scope.close(scope, Exit.void));
-                        if (Exit.isFailure(finalized)) return false;
-                        yield* Ref.update(owned, (records) => A.filter(records, (entry) => entry !== resource));
-                        yield* release;
-                        return true;
-                      }).pipe(Effect.withSpan("Citation.retireHtmlProcess")),
-                    };
-                    lease = O.some(resource);
-                    yield* Ref.update(owned, (records) => A.append(records, resource));
-                    const child = yield* spawner
-                      .spawn(
-                        ChildProcess.make(
-                          runtime.executable,
-                          ["--no-env-file", "--no-install", runtime.workerFile, argument],
-                          {
-                            cwd: runtime.cwd,
-                            env: {},
-                            extendEnv: false,
-                            shell: false,
-                            detached: false,
-                            stdin: "pipe",
-                            stdout: "pipe",
-                            stderr: "ignore",
-                            killSignal: "SIGKILL",
-                            forceKillAfter: Duration.zero,
-                          }
-                        )
-                      )
-                      .pipe(
-                        Effect.provideService(Scope.Scope, scope),
-                        Effect.mapError(() => failure("spawn-failed"))
-                      );
-                    yield* Ref.set(handle, O.some(child));
-                    yield* Ref.set(phase, "running");
-                    return child;
-                  })
-                )
-                .pipe(Effect.uninterruptible);
-              let step = 0;
-              let reply = O.none<CitationHtmlWorkerReply>();
-              const receive = readCitationHtmlFrames(resource.stdout, limits.processMessageBytes, 3, (bytes) =>
-                Effect.gen(function* () {
-                  const message = yield* decodeCitationHtmlReply(bytes);
-                  if (
-                    (step === 0 && !CitationHtmlWorkerReply.guards.Ready(message)) ||
-                    (step === 1 && !CitationHtmlWorkerReply.guards.Started(message)) ||
-                    (step === 2 && !CitationHtmlWorkerReply.isAnyOf(["Success", "Failure"])(message))
-                  )
-                    return yield* failure("invalid-frame");
-                  if (step === 2) reply = O.some(message);
-                  step++;
-                })
-              );
-              const send = Stream.run(Stream.make(frame), resource.stdin).pipe(
-                Effect.mapError(() => failure("channel-failed"))
-              );
-              yield* Effect.all([receive, send], { concurrency: 2, discard: true });
-              const message = yield* Effect.fromOption(reply).pipe(Effect.mapError(() => failure("invalid-frame")));
-              if (CitationHtmlWorkerReply.guards.Success(message)) return message.text;
-              if (CitationHtmlWorkerReply.guards.Failure(message)) return yield* message.failure;
-              return yield* failure("invalid-frame");
-            });
-            const outcome = yield* Effect.exit(
-              restore(
-                body.pipe(
-                  Effect.timeoutOrElse({
-                    duration: limits.cleanDeadline,
-                    orElse: () => Effect.fail(safety("cleanDeadline")),
-                  })
-                )
-              )
-            );
-            if (O.isSome(lease)) yield* awaitRetirement(lease.value, false);
-            else yield* release;
-            return yield* outcome;
-          })
-        ).pipe(
-          Effect.timeoutOrElse({
-            duration: limits.operationDeadline,
-            orElse: () => Effect.fail(safety("operationDeadline")),
-          })
-        );
-      },
-      Effect.provideService(Clock.Clock, clock)
-    ),
+    clean: (input: unknown) => clean(input, limits.producedTextUtf16, false),
+    stage: (input: unknown, work: CitationCleanerWork) =>
+      work
+        .withTextCapacity((remaining) =>
+          clean(input, remaining, true).pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
+        )
+        .pipe(Effect.map(({ value, charges }) => CitationHtmlCleanerStage.make({ text: value, charges }))),
   };
 });

@@ -1182,6 +1182,14 @@ zero remaining capacity. This does not complete native stage integration or
 global process ownership. See
 [capacity evidence](./history/evidence/2026-10-31-cleaner-capacity.md).
 
+- **2026-10-31 native cleaner stage:** the captured HTML worker now borrows the
+  shared remaining production allowance, including zero, and returns schema-owned
+  stage text with original live tickets. Intermediate preparation preflights the
+  complete encoded job before payload allocation; native/host/protocol input
+  bounds agree on four times the existing produced-text maximum. Two clean
+  native builds match. Full cleaner ownership/replay, global admission, maps
+  and the public service/Layer remain open. See the native stage evidence.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

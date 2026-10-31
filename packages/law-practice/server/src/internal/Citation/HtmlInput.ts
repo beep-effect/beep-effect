@@ -41,6 +41,22 @@ export class CitationHtmlInput extends S.Opaque<CitationHtmlInput, { readonly br
     })
   )
 ) {}
+/**
+ * Parser layout computed before byte allocation. Captured transport adapters
+ * use it to reject a complete encoded job before materializing its payload.
+ * @internal @category models @since 0.0.0
+ */
+export class CitationHtmlInputLayout extends S.Opaque<CitationHtmlInputLayout, { readonly brand: unique symbol }>()(
+  S.Struct({
+    encoding: Encoding,
+    fullHtml: S.Boolean,
+    byteLength: S.Natural.check(S.isLessThanOrEqualTo(4 * CitationEngineAbsoluteMaxima.producedTextUtf16)),
+  }).pipe(
+    $I.annoteSchema("CitationHtmlInputLayout", {
+      description: "Exact native encoding, wrapper mode and payload byte count before buffer allocation.",
+    })
+  )
+) {}
 const Reason = LiteralKit(["invalid-input", "unicode-encoding-declaration"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed private request or lxml Unicode declaration rejection." })
 );
@@ -94,13 +110,16 @@ const hasDeclaration = Effect.fnUntraced(function* (text: string) {
   return false;
 });
 const rawText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16));
+const stageText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16));
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "clean", limit });
 /**
  * Capture limits and Clock. Prepare owns a byte buffer, yields during each
  * unbounded scan and has R = never. No native regex or HTML parser runs here.
- * This enforces the payload ceiling; the future worker must also charge its
- * framing bytes and share the enclosing clean operation's remaining deadline.
+ * Raw prepare retains its original input/payload ceilings. Internal prepareStage
+ * accepts already-owned intermediate text and calls a captured transport check
+ * with exact layout before allocating its byte buffer. This callback is a server
+ * capability, never request data. The enclosing worker owns total timing.
  * @internal
  * @category operations
  * @since 0.0.0
@@ -110,60 +129,71 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
   );
   const clock = yield* Clock.Clock;
+  const prepare = Effect.fn("Citation.prepareHtmlBuffer")(
+    function* <E>(
+      input: unknown,
+      schema: typeof rawText,
+      maximumInput: number,
+      beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>
+    ) {
+      const text = yield* S.decodeUnknownEffect(schema)(input).pipe(
+        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+      );
+      const length = Str.length(text);
+      if (length > maximumInput) return yield* safety("sourceUtf16");
+      return yield* Effect.gen(function* () {
+        if (yield* hasDeclaration(text))
+          return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
+        const start = yield* skipSpace(text, 0);
+        const prefix = Str.toLowerCase(Str.slice(start, start + 9)(text));
+        const fullHtml = Str.startsWith("<html")(prefix) || Str.startsWith("<!doctype")(prefix);
+        let maximum = 0;
+        let points = 0;
+        let nextYield = 0;
+        for (let index = 0; index < length; ) {
+          if (index >= nextYield) {
+            yield* Effect.yieldNow;
+            nextYield = index + 4096;
+          }
+          const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+          if (point > maximum) maximum = point;
+          points++;
+          index += point > 0xffff ? 2 : 1;
+        }
+        const encoding =
+          maximum <= 0x7f ? "UTF-8" : maximum <= 0xff ? "ISO-8859-1" : maximum <= 0xffff ? "UTF-16LE" : "UTF-32LE";
+        const width = maximum <= 0xff ? 1 : maximum <= 0xffff ? 2 : 4;
+        const size = width === 4 ? points * 4 : length * width;
+        if (size > limits.processMessageBytes) return yield* safety("processMessageBytes");
+        yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
+        const bytes = new Uint8Array(size);
+        const view = new DataView(bytes.buffer);
+        let offset = 0;
+        nextYield = 0;
+        for (let index = 0; index < length; ) {
+          if (index >= nextYield) {
+            yield* Effect.yieldNow;
+            nextYield = index + 4096;
+          }
+          const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+          if (width === 1) view.setUint8(offset, point);
+          else if (width === 2) view.setUint16(offset, point, true);
+          else view.setUint32(offset, point, true);
+          offset += width;
+          index += point > 0xffff ? 2 : 1;
+        }
+        return CitationHtmlInput.make({ encoding, bytes, fullHtml });
+      }).pipe(
+        Effect.timeoutOrElse({ duration: limits.cleanDeadline, orElse: () => Effect.fail(safety("cleanDeadline")) })
+      );
+    },
+    Effect.provideService(Clock.Clock, clock)
+  );
   return {
-    prepare: Effect.fn("Citation.prepareHtmlInput")(
-      function* (input: unknown) {
-        const text = yield* S.decodeUnknownEffect(rawText)(input).pipe(
-          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-        );
-        const length = Str.length(text);
-        if (length > limits.sourceUtf16) return yield* safety("sourceUtf16");
-        return yield* Effect.gen(function* () {
-          if (yield* hasDeclaration(text))
-            return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
-          const start = yield* skipSpace(text, 0);
-          const prefix = Str.toLowerCase(Str.slice(start, start + 9)(text));
-          const fullHtml = Str.startsWith("<html")(prefix) || Str.startsWith("<!doctype")(prefix);
-          let maximum = 0;
-          let points = 0;
-          let nextYield = 0;
-          for (let index = 0; index < length; ) {
-            if (index >= nextYield) {
-              yield* Effect.yieldNow;
-              nextYield = index + 4096;
-            }
-            const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-            if (point > maximum) maximum = point;
-            points++;
-            index += point > 0xffff ? 2 : 1;
-          }
-          const encoding =
-            maximum <= 0x7f ? "UTF-8" : maximum <= 0xff ? "ISO-8859-1" : maximum <= 0xffff ? "UTF-16LE" : "UTF-32LE";
-          const width = maximum <= 0xff ? 1 : maximum <= 0xffff ? 2 : 4;
-          const size = width === 4 ? points * 4 : length * width;
-          if (size > limits.processMessageBytes) return yield* safety("processMessageBytes");
-          const bytes = new Uint8Array(size);
-          const view = new DataView(bytes.buffer);
-          let offset = 0;
-          nextYield = 0;
-          for (let index = 0; index < length; ) {
-            if (index >= nextYield) {
-              yield* Effect.yieldNow;
-              nextYield = index + 4096;
-            }
-            const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-            if (width === 1) view.setUint8(offset, point);
-            else if (width === 2) view.setUint16(offset, point, true);
-            else view.setUint32(offset, point, true);
-            offset += width;
-            index += point > 0xffff ? 2 : 1;
-          }
-          return CitationHtmlInput.make({ encoding, bytes, fullHtml });
-        }).pipe(
-          Effect.timeoutOrElse({ duration: limits.cleanDeadline, orElse: () => Effect.fail(safety("cleanDeadline")) })
-        );
-      },
-      Effect.provideService(Clock.Clock, clock)
+    prepare: Effect.fn("Citation.prepareHtmlInput")((input: unknown) =>
+      prepare(input, rawText, limits.sourceUtf16, () => Effect.void)
     ),
+    prepareStage: <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) =>
+      prepare(input, stageText, CitationEngineAbsoluteMaxima.producedTextUtf16, beforeAllocate),
   };
 });

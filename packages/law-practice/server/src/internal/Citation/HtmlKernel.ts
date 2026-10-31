@@ -101,7 +101,7 @@ const Request = S.Struct({
   outputUtf16: S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16)),
 }).pipe($I.annoteSchema("Request", { description: "Private prepared input plus effective produced-text ceiling." }));
 const Asset = S.Uint8Array.check(S.isMinLength(980822), S.isMaxLength(980822));
-const boundedBytes = S.is(S.Uint8Array.check(S.isMaxLength(4 * CitationEngineAbsoluteMaxima.sourceUtf16)));
+const boundedBytes = S.is(S.Uint8Array.check(S.isMaxLength(4 * CitationEngineAbsoluteMaxima.producedTextUtf16)));
 const natural = S.is(S.Natural);
 const decodeText = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const nativeResource = () =>
@@ -172,7 +172,7 @@ export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(funct
   const asset = yield* S.decodeUnknownEffect(Asset)(input).pipe(Effect.mapError(() => fail("invalid-asset")));
   const snapshot = new Uint8Array(asset);
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(snapshot).pipe(Effect.mapError(() => fail("invalid-asset")));
-  if (digest !== "d1e18b69da6dd62f7807f4204946aec2a73302df23ede8e3ac7b262688c569a5")
+  if (digest !== "33773ce285d42dd42f7147f595bd45e97d621c0bba3c3b1e8207cf6b9216e76d")
     return yield* fail("invalid-asset");
   const runtime = yield* S.decodeUnknownEffect(Runtime)(globalThis).pipe(Effect.mapError(() => fail("invalid-asset")));
   const module = yield* Effect.try({

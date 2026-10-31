@@ -1,5 +1,10 @@
 import { fileURLToPath } from "node:url";
 import { makeCitationHtmlInput } from "@beep/law-practice-server/_test/Citation/HtmlInput";
+import {
+  CitationHtmlWorkerJob,
+  encodeCitationHtmlJob,
+  preflightCitationHtmlJob,
+} from "@beep/law-practice-server/_test/Citation/HtmlWorkerProtocol";
 import { citationPythonTextData } from "@beep/law-practice-server/_test/Citation/PythonTextData";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -9,6 +14,7 @@ import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
@@ -136,3 +142,59 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HT
     })
   );
 });
+
+it.effect(
+  "preflights exact intermediate layout and complete framing before materializing the payload",
+  () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const preparation = yield* makeCitationHtmlInput({
+        ...limits,
+        sourceUtf16: 1,
+        processMessageBytes: 32_000_000,
+        cleanDeadline: Duration.seconds(30),
+      });
+      let checked = false;
+      const prepared = yield* preparation.prepareStage("AB😀", (layout) =>
+        Effect.sync(() => {
+          checked = true;
+          expect(layout).toEqual({ encoding: "UTF-32LE", fullHtml: false, byteLength: 12 });
+        })
+      );
+      expect(checked).toBe(true);
+      expect(prepared.bytes.byteLength).toBe(12);
+      expect(yield* Effect.flip(preparation.prepare("AB"))).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        limit: "sourceUtf16",
+      });
+      const frame = yield* encodeCitationHtmlJob(
+        CitationHtmlWorkerJob.make({ ...prepared, outputUtf16: 0 }),
+        limits.processMessageBytes
+      );
+      const exact = yield* preparation.prepareStage("AB😀", (layout) =>
+        preflightCitationHtmlJob(layout, 0, frame.byteLength).pipe(Effect.asVoid)
+      );
+      expect(exact.bytes).toEqual(prepared.bytes);
+      expect(
+        yield* Effect.flip(
+          preparation.prepareStage("AB😀", (layout) =>
+            preflightCitationHtmlJob(layout, 0, frame.byteLength - 1).pipe(Effect.asVoid)
+          )
+        )
+      ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+      // Every ASCII point uses four native bytes when one supplementary point is present.
+      // Layout is 31,999,996 bytes; base64 plus framing exceeds the frozen 32 MB channel.
+      let oversizedLayout = false;
+      expect(
+        yield* Effect.flip(
+          preparation.prepareStage(`${Str.repeat(7_999_998)("A")}😀`, (layout) => {
+            oversizedLayout = true;
+            expect(layout.byteLength).toBe(31_999_996);
+            return preflightCitationHtmlJob(layout, 0, 32_000_000).pipe(Effect.asVoid);
+          })
+        )
+      ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+      expect(oversizedLayout).toBe(true);
+    }),
+  { timeout: 60_000 }
+);

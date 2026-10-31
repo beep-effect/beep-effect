@@ -159,15 +159,25 @@ runtime/Clock, keeps membership and value lookup separate, preserves host values
 and shares reentrant text reservations/deadlines. Forged/restored/reused charges
 fail closed. All 440 primitive text outputs pass through actual reserved stages;
 raw-source and intermediate bounds remain distinct. See
-history/evidence/2026-10-31-cleaner-execution-core.md. Global admission/native
-adapters, full custom host/registry proof, maps and public Layer remain open.
+history/evidence/2026-10-31-cleaner-execution-core.md. Global admission,
+full custom host/registry proof, maps and public Layer remain open.
 
 The private cleaner ledger now lends exclusive remaining output capacity to
 captured bounded producers and settles original live charge tickets. Ordinary
 reservations wait until producer cleanup completes; empty output is allowed at
-zero remaining capacity. This does not complete native stage integration or
-global process ownership. See
+zero remaining capacity. The HTML stage uses this capability as described below;
+global process ownership remains open. See
 [capacity evidence](./history/evidence/2026-10-31-cleaner-capacity.md).
+
+The native HTML stage now borrows this remaining capacity, including zero,
+and accepts already-owned intermediate text. Complete job framing is checked
+before payload allocation; ABI/host/protocol input bounds agree on the derived
+32-million-byte maximum. Exact output settlement and composed cancellation are
+covered in [native stage evidence](./history/evidence/2026-10-31-html-cleaner-stage.md).
+Full live ownership, sequence replay and global admission remain open. A pinned
+source probe also confirms callback-returned bytes before html are valid; the
+current Unicode stage does not cover that protocol. Capture/support non-text
+builtin paths before claiming exhaustive cleaner parity.
 
 ## Delivery Rule
 

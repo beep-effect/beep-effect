@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "b8c9f92330d7f22017ada7f04b9c0fdfc80bfe6aef92c28d1f0736916c591061",
+  "planSha256": "86dc370dddc417962ed300b9ec489e8637bcb223213140e1abfa9c18431f48a7",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -357,11 +357,11 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlInput.ts",
-          "sha256": "1aa5e9c5875fc64d9a37ed838650b72db22c1a02e34582073c5e598119a3d74c"
+          "sha256": "a5c45567a4ed6c4ff2bd3c6841750802a7a6a4560a56d40b4a014f3f58c07fd2"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlInput.test.ts",
-          "sha256": "549a2165db93181edcd606c7b5f9a131bec23e80fd2d4a9929c0f6ee905505b8"
+          "sha256": "68fde1b3d860fc0c78a23cc8a7b7317e6e4a44fbec0d5a1b1c8854d5da6ce316"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-html-kernel.md",
@@ -381,19 +381,19 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/verify-html-kernel-controls.py",
-          "sha256": "933bdce2b3227f71a9fc09a8cec4a043a7e950e701fc78aab1d6b8f6a2e29d8b"
+          "sha256": "e853ba0a512dac4727fe11ae7ba2e981de8e577ef5ff8cab4e85ef5636234c59"
         },
         {
           "path": "packages/law-practice/server/assets/citation-html/kernel.c",
-          "sha256": "29aa5da6b49471d9c5b852e6e655a270063f137a9c392c2bdb9373fd8edc92b4"
+          "sha256": "0983e9130c13d4db9ccb8fbeebe9b6e593bebed96cf72ad085ffa62491689f10"
         },
         {
           "path": "packages/law-practice/server/assets/citation-html/kernel.wasm",
-          "sha256": "d1e18b69da6dd62f7807f4204946aec2a73302df23ede8e3ac7b262688c569a5"
+          "sha256": "33773ce285d42dd42f7147f595bd45e97d621c0bba3c3b1e8207cf6b9216e76d"
         },
         {
           "path": "packages/law-practice/server/assets/citation-html/build-receipt.json",
-          "sha256": "6d20bfaac4ec9cf0c032182dd88a93cef096a4b4b35f5fd13231844e9fd60b10"
+          "sha256": "fdff943c5a0b4efeecea8ecb1243f6a19e37aac3d8210d5726668c31ba2391da"
         },
         {
           "path": "packages/law-practice/server/assets/citation-html/notices.json",
@@ -401,7 +401,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlKernel.ts",
-          "sha256": "f7b80e675f196356f44adcc4b5e177c205d18a753e16e024527f1b55e5bb2bb0"
+          "sha256": "b58fb98463115527616f73caeaa4530c641c9dc0fd15402f3c457f22149df0d3"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlKernel.test.ts",
@@ -413,7 +413,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProtocol.ts",
-          "sha256": "cc4192cc73dece3d891c1b044a2640d17dc130b9421a28cd81582beb5b03cdbe"
+          "sha256": "a6a1530347fa95ef5e80cc323ea5fd64e620bcb28eda8f577f8ad5e3eb4e2af8"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts",
@@ -425,7 +425,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
-          "sha256": "bcad678c6b97e9f4980eb23962d92f89fc48d87629506345abc529acb9b8c722"
+          "sha256": "828a159eb691def659d9bec539cdd614454a1f3e4ff5b4224038eda600481f53"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
@@ -502,6 +502,14 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-capacity.md",
           "sha256": "5716f80c91c3769ed2def79ab173ac6442a903c5ff8fbdcf2dda191bfb174558"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-html-cleaner-stage.md",
+          "sha256": "e4690a46d6ec3e68c291676a9e3a0f66b090aee00fa3ac4184450f4dfa1917f2"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHtmlCleanerStage.test.ts",
+          "sha256": "700d7eb24fc24882e9d763ff6c81abc8435714646764cf349a7e921889cd3e6b"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
