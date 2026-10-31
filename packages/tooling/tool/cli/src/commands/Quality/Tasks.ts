@@ -6,10 +6,12 @@
  */
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
+import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
-import { StringListField, WorkspacesField } from "@beep/package-json/ManifestFields";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
+import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -130,8 +132,10 @@ import {
   QualityTaskName,
   RootAuditMode,
 } from "./Quality.schemas.ts";
+import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
+import type { EnumerationFailure } from "@beep/repo-workspaces/internal/enumerate";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
@@ -372,60 +376,17 @@ const parseRootAuditSelection = (args: ReadonlyArray<string>): RootAuditSelectio
     },
   });
 
-const parsePackageJson = manifestParser(["name", "scripts", "workspaces"]);
-const decodeWorkspaces = S.decodeUnknownEffect(WorkspacesField);
-const isWorkspacePatternList = S.is(StringListField);
+const parsePackageJson = manifestParser(["name", "scripts"]);
 
 /**
- * Read the workspace glob patterns a quality-task root manifest declares.
+ * Read a quality-task `package.json` text: its `name` and `scripts`, each of
+ * which must keep its JSON shape when present.
  *
  * **Details**
  *
- * A string array is the pattern list. The object form's `packages` is optional:
- * Bun accepts a `workspaces` object that carries only `catalog`/`catalogs`, and
- * such a root declares no workspace packages, so it reads as an empty list
- * rather than failing. A present `workspaces` of any other shape fails.
- *
- * **Example** (Read a catalog-only object form as no workspaces)
- *
- * ```ts
- * import { readQualityTaskManifest, workspacePatternsFromPackageJson } from "@beep/repo-cli/test/Quality"
- * import * as Effect from "effect/Effect"
- *
- * const patterns = Effect.runSync(
- *   Effect.flatMap(readQualityTaskManifest('{"workspaces":{"catalog":{}}}', "package.json"), (manifest) =>
- *     workspacePatternsFromPackageJson(manifest, "package.json")
- *   )
- * )
- * console.log(patterns) // []
- * ```
- *
- * @param packageJson - Root manifest read by {@link readQualityTaskManifest}.
- * @param filePath - Path named in a failure.
- * @returns The declared workspace patterns.
- * @category parsing
- * @since 0.0.0
- */
-export const workspacePatternsFromPackageJson = Effect.fn("QualityTasks.workspacePatternsFromPackageJson")(function* (
-  packageJson: LenientManifest,
-  filePath: string
-): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError> {
-  if (packageJson.workspaces === undefined) {
-    return A.empty<string>();
-  }
-  const workspaces = yield* decodeWorkspaces(packageJson.workspaces).pipe(
-    QualityTaskConfigurationError.mapError(`Failed to parse ${filePath}`)
-  );
-  return isWorkspacePatternList(workspaces) ? workspaces : (workspaces.packages ?? A.empty());
-});
-
-/**
- * Read a quality-task `package.json` text: its `name`, `scripts` and
- * `workspaces`, each of which must keep its JSON shape when present.
- *
- * **Details**
- *
- * Strict JSON only: JSONC text fails.
+ * Strict JSON only: JSONC text fails. The root's workspace patterns are not
+ * read here: `workspaceTaskOwners` takes them from `@beep/repo-workspaces`
+ * `WorkspacePatterns` (4-A2).
  *
  * **Example** (Read a package's scripts)
  *
@@ -496,6 +457,16 @@ const isSafeWorkspacePattern = (pattern: string): boolean =>
   !Str.startsWith("/")(pattern) &&
   !A.some(Str.split("/")(pattern), (segment) => segment === "..");
 
+const isWorkspaceExclusion = Str.startsWith("!");
+
+const invalidWorkspacePattern = (error: GlobPatternError): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(`Invalid workspace pattern "${error.pattern}": ${error.message}`);
+
+const unenumerableWorkspacePattern = (failure: EnumerationFailure): QualityTaskConfigurationError =>
+  QualityTaskConfigurationError.new(
+    `Failed to enumerate workspace pattern "${failure.pattern}" (${failure.kind}: ${failure.detail})`
+  );
+
 const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandidateDirsForPattern")(function* (
   repoRoot: string,
   pattern: string
@@ -509,7 +480,15 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
     );
   }
 
-  if (Str.endsWith("/*")(pattern)) {
+  const compiled = yield* GlobPattern.compile(pattern).pipe(Effect.mapError(invalidWorkspacePattern));
+  // Only a pattern naming exactly one path is a literal member; a brace list
+  // without wildcards (`packages/{api,web}`) has no magic but names several.
+  if (O.isSome(compiled.literalPath)) {
+    return [path.join(repoRoot, compiled.literalPath.value)];
+  }
+
+  // `dir/*` over a literal `dir` keeps its one-level read and its failure text.
+  if (Str.endsWith("/*")(pattern) && compiled.enumerationPrefix === Str.slice(0, -1)(pattern)) {
     const base = path.join(repoRoot, Str.slice(0, -2)(pattern));
     const entries = yield* fs
       .readDirectory(base)
@@ -522,7 +501,11 @@ const workspaceCandidateDirsForPattern = Effect.fn("QualityTasks.workspaceCandid
     return A.map(entries, (entry) => path.join(base, entry));
   }
 
-  return [path.join(repoRoot, pattern)];
+  // Any other pattern (`packages/**`, `apps/*/web`, braces) walks through the
+  // workspace enumerator `WorkspaceDiscovery` uses, bounded and pruned.
+  const globs = yield* GlobSet.compile([pattern]).pipe(Effect.mapError(invalidWorkspacePattern));
+  const directories = yield* enumerate(repoRoot, globs).pipe(Effect.mapError(unenumerableWorkspacePattern));
+  return A.map(directories, (directory) => directory.path);
 });
 
 const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(function* (
@@ -534,16 +517,24 @@ const workspaceTaskOwners = Effect.fn("QualityTasks.workspaceTaskOwners")(functi
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const rootPackageJsonPath = path.join(repoRoot, "package.json");
-  const rootPackageJson = yield* readPackageJsonFile(rootPackageJsonPath);
+  const patterns = yield* WorkspacePatterns.read(repoRoot).pipe(
+    QualityTaskConfigurationError.mapError(`Failed to read workspace patterns under ${repoRoot}`)
+  );
+  // A `!pattern` entry excludes, as pnpm and the package managers read it: it
+  // contributes no candidates and removes every candidate it matches.
+  const { excludes } = yield* GlobSet.compile(patterns).pipe(Effect.mapError(invalidWorkspacePattern));
+  const isExcludedDir = (packageDir: string): boolean => {
+    const relativeDir = path.relative(repoRoot, packageDir);
+    return A.some(excludes, (exclude) => exclude.matches(relativeDir));
+  };
   const candidateDirs = yield* Effect.forEach(
-    yield* workspacePatternsFromPackageJson(rootPackageJson, rootPackageJsonPath),
+    A.filter(patterns, P.not(isWorkspaceExclusion)),
     (pattern) => workspaceCandidateDirsForPattern(repoRoot, pattern),
     { concurrency: 4 }
   );
 
   const owners = yield* Effect.forEach(
-    pipe(A.flatten(candidateDirs), A.dedupe, A.sort(Order.String)),
+    pipe(A.flatten(candidateDirs), A.filter(P.not(isExcludedDir)), A.dedupe, A.sort(Order.String)),
     Effect.fn(function* (packageDir) {
       const packageJsonPath = path.join(packageDir, "package.json");
       const exists = yield* fs.exists(packageJsonPath).pipe(Effect.orElseSucceed(thunkFalse));

@@ -263,11 +263,10 @@ describe("reconciliation anchor review regressions", () => {
     const declarations = A.map(["one", "two", "three", "four"], (key) => section(key, key));
     const foreign = block("foreign", "  unchanged  ");
     for (const source of ["", lines("header  ", foreign, "footer", "")]) {
-      const expected =
-        A.join(
-          A.map(declarations, (value) => block(value.key, value.content)),
-          "\n\n"
-        ) + "\n";
+      const expected = `${A.join(
+        A.map(declarations, (value) => block(value.key, value.content)),
+        "\n\n"
+      )}\n`;
       const result = run(source, declarations);
       assert.strictEqual(result.text, source === "" ? expected : lines("header  ", foreign, "footer", "", expected));
       assert.deepStrictEqual(tags(result), ["Created", "Created", "Created", "Created"]);
