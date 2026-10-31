@@ -120,7 +120,7 @@ it.layer(NodeServices.layer)("Bun shim exit cleanup", (it) => {
           expect(child.status, output).toBe(0);
           expect(output).toContain("listener-delta=1");
           expect(output).not.toContain("MaxListenersExceededWarning");
-        }).pipe(Effect.scoped)
+        })
     );
   }
 });
