@@ -216,17 +216,23 @@ const locateParts = ({
   claimText,
   preamble,
   body,
+  claimType,
+  transition,
 }: PatentClaim): O.Option<{ readonly preamble: Span; readonly body: Span }> =>
   O.flatMap(indexFrom(claimText, preamble, 0), (preambleStart) =>
     pipe(
       O.some(preambleStart + Str.length(preamble)),
       O.flatMap((preambleEnd) => indexFrom(claimText, body, preambleEnd)),
-      O.filter((bodyStart) =>
-        O.isSome(
-          Str.match(
-            /\b(?:consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/iu
-          )(Str.slice(preambleStart + Str.length(preamble), bodyStart)(claimText))
-        )
+      O.filter(
+        (bodyStart) =>
+          O.isSome(
+            Str.match(
+              /\b(?:consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/iu
+            )(Str.slice(preambleStart + Str.length(preamble), bodyStart)(claimText))
+          ) ||
+          (claimType === "dependent" &&
+            transition === "wherein" &&
+            O.isSome(Str.match(/^\s*,\s*$/u)(Str.slice(preambleStart + Str.length(preamble), bodyStart)(claimText))))
       ),
       O.map((bodyStart) => ({
         preamble: { start: preambleStart, text: preamble },

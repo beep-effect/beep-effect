@@ -1,6 +1,6 @@
 """Build a version-bound, blank attorney review packet from an already frozen replay.
 
-Usage: python3 .../build-allowed-review.py REPLAY_DIRECTORY NEW_PACKET_DIRECTORY
+Usage: python3 .../build-allowed-review.py REPLAY_DIRECTORY NEW_PACKET_DIRECTORY [SAMPLE_FREEZE_JSON]
 Never changes labels, predictions, existing packets or human verdicts.
 """
 import collections
@@ -12,11 +12,11 @@ import sys
 import xml.etree.ElementTree as ET
 
 packet = pathlib.Path('goals/claim-element-antecedent-check')
-replay, output = map(pathlib.Path, sys.argv[1:])
+replay, output = map(pathlib.Path, sys.argv[1:3])
 assert not (output / 'packet.json').exists(), 'Existing review packet is immutable; choose a new directory.'
 read = lambda p: json.loads(p.read_text())
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
-sampling_file = packet / 'research/allowed-adjudication-v1-freeze.json'
+sampling_file = pathlib.Path(sys.argv[3]) if len(sys.argv) > 3 else packet / 'research/allowed-adjudication-v1-freeze.json'
 sampling = read(sampling_file)
 manifest_file = packet / 'research/allowed-sampling.json'
 assert sha(manifest_file) == sampling['manifestSha256']

@@ -331,6 +331,9 @@ const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
   Str.replace(/^(?:(?:(?:is|being)\s+)?characteri[sz]ed .+|in which(?: method)?|where)$/u, "wherein"),
   Str.replace(/^(?:comprises|comprised of)$/u, "comprising"),
   Str.replace(/^includes$/u, "including"),
+  // A source comma can introduce an implicit dependent limitation; the source
+  // remains unchanged while the existing transition field records its role.
+  Str.replace(/^,$/u, "wherein"),
   S.decodeUnknownOption(PatentClaimTransition),
   O.getOrThrow
 );
@@ -344,7 +347,23 @@ const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> 
       O.isNone(Str.match(ambiguousTransitionPrefixPattern)(Str.slice(0, index)(claimText)))
     );
   });
-  const first = A.head(matches);
+  const implicit = () =>
+    A.findFirst(A.fromIterable(Str.matchAll(/,(?=\s+(?:the|said|each|an?|operating)\b)/giu)(claimText)), (match) => {
+      const index = O.getOrElse(O.fromUndefinedOr(match.index), () => 0);
+      return (
+        O.isSome(
+          Str.match(/\bclaims?\s+\d+(?:(?:\s*,\s*|\s+(?:and|or|to|through)\s+)\d+)*\s*$/iu)(
+            Str.slice(0, index)(claimText)
+          )
+        ) &&
+        O.isSome(
+          Str.match(/\b(?:being|is|are|operating|operative|corresponding|performing)\b/iu)(
+            Str.slice(index + 1)(claimText)
+          )
+        )
+      );
+    });
+  const first = A.head(matches).pipe(O.orElse(implicit));
   const defining = A.findFirst(matches, (match) =>
     O.isSome(Str.match(/^(?:(?:is|being)\s+)?characteri[sz]ed\b/iu)(match[0]))
   );
