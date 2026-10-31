@@ -3,6 +3,7 @@ import { computePolicyFingerprint } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -59,24 +60,23 @@ describe("policy fingerprint import graph", () => {
       "./barrel.ts",
       "./Lazy.ts",
     ]);
-    expect(syntax.edges[0]?.bindings).toEqual(O.some(["lawsCommand"]));
+    assertSome(O.getOrThrow(A.get(syntax.edges, 0)).bindings, ["lawsCommand"]);
     expect(syntax.opaqueDynamicImport).toBe(false);
     const lint = O.getOrThrow(HashMap.get(syntax.commands, "lintCommand"));
-    expect(lint.name).toEqual(O.some("lint"));
-    expect(lint.subcommands).toEqual([O.some("lawsCommand"), O.none()]);
+    assertSome(lint.name, "lint");
+    expect(A.map(lint.subcommands, O.getOrUndefined)).toEqual(["lawsCommand", undefined]);
     expect(moduleSyntax("a.ts", "const load = (name: string) => import(name);").opaqueDynamicImport).toBe(true);
   });
 
   it("resolves exports subpaths with wildcards and runtime conditions", () => {
-    expect(resolvePackageSubpath({ ".": "./src/index.ts" }, ".")).toEqual(O.some("./src/index.ts"));
-    expect(resolvePackageSubpath({ "./*": "./src/*.ts" }, "./A/B")).toEqual(O.some("./src/A/B.ts"));
-    expect(
-      resolvePackageSubpath({ "./*": "./src/*.ts", "./internal/*": "./src/internal/*.ts" }, "./internal/x")
-    ).toEqual(O.some("./src/internal/x.ts"));
-    expect(resolvePackageSubpath({ ".": { types: "./a.d.ts", import: "./src/a.ts" } }, ".")).toEqual(
-      O.some("./src/a.ts")
+    assertSome(resolvePackageSubpath({ ".": "./src/index.ts" }, "."), "./src/index.ts");
+    assertSome(resolvePackageSubpath({ "./*": "./src/*.ts" }, "./A/B"), "./src/A/B.ts");
+    assertSome(
+      resolvePackageSubpath({ "./*": "./src/*.ts", "./internal/*": "./src/internal/*.ts" }, "./internal/x"),
+      "./src/internal/x.ts"
     );
-    expect(resolvePackageSubpath({ "./hidden": null }, "./hidden")).toEqual(O.none());
+    assertSome(resolvePackageSubpath({ ".": { types: "./a.d.ts", import: "./src/a.ts" } }, "."), "./src/a.ts");
+    assertNone(resolvePackageSubpath({ "./hidden": null }, "./hidden"));
   });
 });
 
