@@ -716,10 +716,9 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
     if (item.transitive) MutableHashSet.add(state.expanded, item.module);
   };
 
-  // One breadth walk shared by the shell and command closures: entries follow
+  // One walk shared by the shell and command closures: entries follow
   // their own edge filter, every module reached through them follows
   // `transitive`. A module reached both ways is expanded fully.
-  // /
   const walk = Effect.fnUntraced(function* (
     entries: ReadonlyArray<WalkItem>,
     transitive: EdgeFilter,
@@ -748,8 +747,9 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
   // of a command module from any other shell module would run that module for
   // every command, so it fails the computation. A shell entry's computed
   // dynamic import (`bin.ts` loading `bin-main.js` by URL) targets another
-  // shell entry, so it is not treated as opaque.
-  // /
+  // shell entry, so it is not treated as opaque. Like the command walk, an
+  // unresolvable relative import fails the computation instead of being
+  // skipped: the import graph would otherwise silently lose a module.
   const shellClosure = (layout: PolicyCliLayout) => {
     const entries = HashSet.fromIterable(layout.shell);
     const insideCommands = Str.startsWith(`${layout.commandsDirectory}/`);
@@ -812,7 +812,7 @@ const workspaceInputs = Effect.fnUntraced(function* (tree: PolicySourceTree, dir
 
 /**
  * Render a closure as Turbo inputs: every reached module, each reached
- * workspace manifest, one `<src>/**` glob per non-TypeScript asset extension
+ * workspace manifest, one glob per non-TypeScript asset extension matching `*.<ext>` at any depth
  * under each reached `src` (assets are read at runtime, not imported), and
  * the whole `src` of a workspace with an opaque dynamic import.
  *
