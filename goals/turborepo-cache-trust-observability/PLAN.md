@@ -1019,3 +1019,24 @@ changed source, no added/removed nodes, unchanged global configuration, scope,
 historical profile/epoch, and a byte-identical qualification ledger. No cache
 enablement, disposition or qualification was granted. Hosted validation of the
 corrected pushed head remains required.
+
+### Inspection dependency and installation rollback review
+
+The protected inspection workflow now installs `bubblewrap` through the runner's
+supported package manager when `/usr/bin/bwrap` is absent, then checks that exact
+executable before source inspection. No cache capability is added to this job.
+Issuer creation now brackets exclusive directory acquisition and initialization;
+failed or interrupted key installation and final reopening revoke only that new
+store. The execution-profile handoff is interrupt-masked until its own rollback
+is installed. Existing stores are still refused without revocation or overwrite.
+
+All 152 focused producer, workflow, deadline and CI-security cases passed. They
+include interruption immediately after key creation, failed private-key reopening,
+preservation of an already installed store, both virtual-clock execution bounds,
+and the inspection dependency ordering. The added clock adjustment is a reviewed
+informational judgment: the nested clock layer runs serially, the worker belongs
+to its test scope, and the test joins that worker before returning. It is distinct
+from the existing eleven-minute admission-wait control. The narrower runner
+coverage replay was 100 percent across statements, branches and functions. These controls are not a
+protected inspection run, full supervised pilot, upload, or task qualification.
+All whole-goal acceptance criteria and observation windows remain open.

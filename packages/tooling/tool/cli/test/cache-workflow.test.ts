@@ -345,6 +345,8 @@ it.layer(
       const material = yield* f.fs.readFile(key);
       expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
       expect(yield* f.fs.readFile(key)).toEqual(material);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(false);
+      expect(yield* readCacheProducerExecutionProfile(f.destination)).toEqual([binding, profile]);
     })
   );
   it.effect("installs the separately approved issuer into execution without replacing its material", () =>
@@ -465,6 +467,45 @@ it.layer(
         );
       expect(yield* f.provision().pipe(Effect.isFailure)).toBe(true);
       expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      expect(yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure)).toBe(true);
+    })
+  );
+  it.effect("revokes an issuer interrupted immediately after writing its private material", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const key = f.path.join(f.destination, "issuer.key");
+      const exit = yield* initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...f.observedFs,
+          writeFile: (file, body, options) =>
+            f.fs.writeFile(file, body, options).pipe(Effect.andThen(file === key ? Effect.interrupt : Effect.void)),
+        }),
+        Effect.exit
+      );
+      if (Exit.isFailure(exit)) expect(Cause.hasInterrupts(exit.cause)).toBe(true);
+      else expect.unreachable("Interrupted issuer installation completed successfully.");
+      expect(yield* f.fs.exists(key)).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "runtime.json"))).toBe(false);
+      expect(yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure)).toBe(true);
+    })
+  );
+  it.effect("revokes an issuer whose private material fails its final reopen", () =>
+    Effect.gen(function* () {
+      const f = yield* provisioningFixture();
+      const key = f.path.join(f.destination, "issuer.key");
+      const installation = initializeCacheProducerExecution(f.root, f.destination, f.approval, f.profile).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...f.observedFs,
+          writeFile: (file, body, options) =>
+            f.fs
+              .writeFile(file, body, options)
+              .pipe(Effect.andThen(file === key ? f.fs.chmod(key, 0o644) : Effect.void)),
+        })
+      );
+      expect(yield* installation.pipe(Effect.isFailure)).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "revoked"))).toBe(true);
+      expect(yield* f.fs.exists(f.path.join(f.destination, "runtime.json"))).toBe(false);
       expect(yield* readCacheProducerExecutionProfile(f.destination).pipe(Effect.isFailure)).toBe(true);
     })
   );

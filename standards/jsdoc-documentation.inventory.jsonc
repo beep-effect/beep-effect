@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T15:23:42.244Z",
+  "generatedAt": "2026-10-31T16:30:49.345Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -479131,8 +479131,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 77,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-77-hashcacheproducercontract",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-78-hashcacheproducercontract",
           "currentTags": [
             "@category",
             "@since"
@@ -479153,8 +479153,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 119,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-119-validatecacheproducerapproval",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-120-validatecacheproducerapproval",
           "currentTags": [
             "@category",
             "@since"
@@ -479175,8 +479175,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 166,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-166-validatecacheproducerbundle",
+          "line": 167,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-167-validatecacheproducerbundle",
           "currentTags": [
             "@category",
             "@since"
@@ -479197,8 +479197,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-204-validatecacheproducerbinding",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-205-validatecacheproducerbinding",
           "currentTags": [
             "@category",
             "@since"
@@ -479219,8 +479219,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-343-makecacheproducerissuer",
+          "line": 344,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-344-makecacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -479242,8 +479242,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 363,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-363-inspectcacheproducerdirectory",
+          "line": 364,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-364-inspectcacheproducerdirectory",
           "currentTags": [
             "@internal",
             "@category",
@@ -479265,8 +479265,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 399,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-399-assertcacheproducerprivatelocation",
+          "line": 400,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-400-assertcacheproducerprivatelocation",
           "currentTags": [
             "@internal",
             "@category",
@@ -479288,8 +479288,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 427,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-427-inspectcacheproducerfile",
+          "line": 428,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-428-inspectcacheproducerfile",
           "currentTags": [
             "@category",
             "@since"
@@ -479310,8 +479310,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 491,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-491-opencacheproducerissuer",
+          "line": 492,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-492-opencacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -479333,8 +479333,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 574,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-574-readcacheproducerhostedapproval",
+          "line": 575,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-575-readcacheproducerhostedapproval",
           "currentTags": [
             "@param",
             "@returns",
@@ -479358,8 +479358,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 610,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-610-readcacheproducerprovisioning",
+          "line": 611,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-611-readcacheproducerprovisioning",
           "currentTags": [
             "@internal",
             "@category",
@@ -479381,8 +479381,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 653,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-653-readcacheproducerexecutionprofile",
+          "line": 654,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-654-readcacheproducerexecutionprofile",
           "currentTags": [
             "@internal",
             "@category",
@@ -479404,8 +479404,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 690,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-690-opencacheproducerverifier",
+          "line": 691,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-691-opencacheproducerverifier",
           "currentTags": [
             "@internal",
             "@category",
@@ -479427,8 +479427,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 732,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-732-initializecacheproducerissuer",
+          "line": 733,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-733-initializecacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -479450,8 +479450,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.producer.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.producer.ts",
-          "line": 797,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-797-revokecacheproducerissuer",
+          "line": 807,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-producer-ts-807-revokecacheproducerissuer",
           "currentTags": [
             "@internal",
             "@category",
@@ -481797,8 +481797,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
-          "line": 593,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-593-runcacheproducerworkflow",
+          "line": 601,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-ts-601-runcacheproducerworkflow",
           "currentTags": [
             "@internal",
             "@category",

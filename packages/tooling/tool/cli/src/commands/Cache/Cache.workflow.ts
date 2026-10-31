@@ -557,14 +557,22 @@ export const initializeCacheProducerExecution = Effect.fn("CacheWorkflow.initial
     if (executable.sha256 !== selected.target.backend.digest)
       return yield* CacheCommandError.new("Producer provisioning executable differs from its approved digest.");
     yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
-    yield* initializeCacheProducerIssuer(directory, trusted.binding, trusted.contract, material);
-    yield* Effect.gen(function* () {
-      yield* fs.writeFileString(path.join(directory, "runtime.json"), profileText, { flag: "wx", mode: 0o600 });
-      const [, installed] = yield* readCacheProducerExecutionProfile(directory);
-      if ((yield* executionProfileCodec.encode(installed)) !== profileText)
-        return yield* CacheCommandError.new("Installed producer execution profile differs from independent selection.");
-      yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
-    }).pipe(Effect.onError(() => revokeCacheProducerIssuer(directory).pipe(Effect.orDie)));
+    yield* Effect.uninterruptibleMask((restore) =>
+      Effect.gen(function* () {
+        yield* initializeCacheProducerIssuer(directory, trusted.binding, trusted.contract, material);
+        yield* restore(
+          Effect.gen(function* () {
+            yield* fs.writeFileString(path.join(directory, "runtime.json"), profileText, { flag: "wx", mode: 0o600 });
+            const [, installed] = yield* readCacheProducerExecutionProfile(directory);
+            if ((yield* executionProfileCodec.encode(installed)) !== profileText)
+              return yield* CacheCommandError.new(
+                "Installed producer execution profile differs from independent selection."
+              );
+            yield* assertWorkflowIdentity(yield* inspectCacheProducerWorkflow(root), trusted.binding);
+          })
+        ).pipe(Effect.onError(() => revokeCacheProducerIssuer(directory).pipe(Effect.orDie)));
+      })
+    );
   },
   Effect.asVoid,
   CacheCommandError.mapError("Cannot exclusively provision independently approved producer execution.")

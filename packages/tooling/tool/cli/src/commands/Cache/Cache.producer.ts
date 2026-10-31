@@ -11,6 +11,7 @@ import * as Clock from "effect/Clock";
 import * as Crypto from "effect/Crypto";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -709,7 +710,7 @@ export const openCacheProducerVerifier = Effect.fn("Producer.openCacheProducerVe
  *
  * **Details**
  * The parent must already exist. Failed initialization leaves the reserved
- * directory for operator inspection and never silently recreates a lost key.
+ * directory revoked for operator inspection and never silently recreates a lost key.
  * Provisioning fixes the approved workflow/computation binding in the private
  * material and writes the complete reviewed contract to its private approval
  * record. It is an explicit trusted-supervisor action, never an observation
@@ -759,26 +760,35 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
     return yield* CacheCommandError.new(
       "Transferred producer material differs from its independently approved binding."
     );
-  yield* fs.makeDirectory(directory, { mode: 0o700 });
-  yield* inspectCacheProducerDirectory(directory);
-  yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
-    flag: "wx",
-    mode: 0o600,
-  });
-  const material = yield* supplied.pipe(
-    O.map(Effect.succeed),
-    O.getOrElse(
-      Effect.fnUntraced(function* () {
-        const approved = yield* decodeBindingBytes(approvedHex);
-        const bytes = new Uint8Array(persistedMaterialBytes);
-        bytes.set(yield* crypto.randomBytes(64));
-        bytes.set(approved, 64);
-        return Redacted.make(bytes);
-      })
-    )
+  return yield* Effect.acquireUseRelease(
+    fs.makeDirectory(directory, { mode: 0o700 }),
+    () =>
+      Effect.gen(function* () {
+        yield* inspectCacheProducerDirectory(directory);
+        yield* fs.writeFileString(path.join(directory, "approval.json"), yield* encodeApproval(approval), {
+          flag: "wx",
+          mode: 0o600,
+        });
+        const material = yield* supplied.pipe(
+          O.map(Effect.succeed),
+          O.getOrElse(
+            Effect.fnUntraced(function* () {
+              const approved = yield* decodeBindingBytes(approvedHex);
+              const bytes = new Uint8Array(persistedMaterialBytes);
+              bytes.set(yield* crypto.randomBytes(64));
+              bytes.set(approved, 64);
+              return Redacted.make(bytes);
+            })
+          )
+        );
+        yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), {
+          flag: "wx",
+          mode: 0o600,
+        });
+        return yield* openCacheProducerIssuer(directory, trusted);
+      }),
+    (_, exit) => (Exit.isFailure(exit) ? revokeCacheProducerIssuer(directory).pipe(Effect.orDie) : Effect.void)
   );
-  yield* fs.writeFile(path.join(directory, "issuer.key"), Redacted.value(material), { flag: "wx", mode: 0o600 });
-  return yield* openCacheProducerIssuer(directory, trusted);
 }, CacheCommandError.mapError("Cannot exclusively provision producer store."));
 
 /**

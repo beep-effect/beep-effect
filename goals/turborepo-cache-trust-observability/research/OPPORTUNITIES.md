@@ -1631,3 +1631,12 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   compare-and-swap acknowledgement and inspect the exact projection delta.
   Preserve all other reviews and the qualification ledger; do not exempt this
   PR-owned cache-policy failure as inherited.
+
+- PR #2386 review found that protected source inspection requires `/usr/bin/bwrap`
+  while neither the fleet image nor shared setup guarantees it. Install and check
+  the exact executable before inspection; a credential-free workflow definition
+  alone does not establish installed-host readiness.
+- The same review found an installation rollback gap before the issuer initializer
+  returned. Attach cleanup to successful exclusive directory acquisition and mask
+  the handoff to profile rollback; interruption after writing the key and failed
+  reopening must revoke the new store while a refused existing store stays intact.

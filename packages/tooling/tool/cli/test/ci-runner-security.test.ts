@@ -1523,6 +1523,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "r2-enabled": "false",
         "app-secrets": "false",
       });
+      const sandboxName = "Ensure native sandbox inspection dependency";
+      const sandbox = stepByName(steps, sandboxName);
+      expect(sandbox.run).toContain("dnf install -y bubblewrap");
+      expect(sandbox.run).toContain("apt-get install -y --no-install-recommends bubblewrap");
+      expect(sandbox.run).toContain("test -x /usr/bin/bwrap");
+      expect(sandbox.run).toContain("/usr/bin/bwrap --version");
+      expect(stepIndexByName(steps, sandboxName)).toBeLessThan(
+        stepIndexByName(steps, "Write bounded source inspection")
+      );
       const inspect = stepByName(steps, "Write bounded source inspection");
       expect(inspect.env).toEqual({ BEEP_TURBO_HOST_CACHE_DISABLED: "true" });
       expect(inspect.run).toContain("bun --no-env-file run beep cache producer-inspect");
