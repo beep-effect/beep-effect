@@ -50,13 +50,13 @@ describe("MessageStorage", () => {
   // beep: Pin valid fixture RPCs and rejected payload/chunk combinations in the package typecheck.
   it.effect("fixture request type contracts", () =>
     Effect.sync(() => {
-      expectTypeOf(makeRequest({ rpc: LongKeyRpc, payload: { id: "key" } })).toMatchTypeOf<
+      expectTypeOf(makeRequest({ rpc: LongKeyRpc, payload: { id: "key" } })).toExtend<
         Effect.Effect<Message.OutgoingRequest<typeof LongKeyRpc>, never, Snowflake.Generator>
       >();
-      expectTypeOf(makeRequest({ rpc: PrimaryKeyTest, payload: { id: 123 } })).toMatchTypeOf<
+      expectTypeOf(makeRequest({ rpc: PrimaryKeyTest, payload: { id: 123 } })).toExtend<
         Effect.Effect<Message.OutgoingRequest<typeof PrimaryKeyTest>, never, Snowflake.Generator>
       >();
-      expectTypeOf(Effect.flatMap(makeRequest({ rpc: StreamRpc, payload: { id: 123 } }), makeChunkReply)).toMatchTypeOf<
+      expectTypeOf(Effect.flatMap(makeRequest({ rpc: StreamRpc, payload: { id: 123 } }), makeChunkReply)).toExtend<
         Effect.Effect<Reply.ReplyWithContext<typeof StreamRpc>, never, Snowflake.Generator>
       >();
       // @ts-expect-error -- LongKeyRpc requires a string id. Owner: @beep/duckdb. Exit: change only with its payload schema.
