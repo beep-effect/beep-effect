@@ -1,6 +1,6 @@
 # @beep/git
 
-Typed git introspection as an Effect service. A read tier answers the questions monorepo tooling actually asks — `Git.show` reads a file's content at any ref without checking it out, `Git.nameStatus` types each changed path as added, renamed, deleted and so on, `Git.workingChanges` gathers the full working-tree delta, `Git.commitInfo` returns a commit's sha, signature verdict and raw message — and a clearly-marked mutating tier (`checkout`, `fetch`, the submodule pair, `sparseCheckoutSet`, `configSet`, `add`) changes repository state on purpose. Subprocesses run through Effect core's `ChildProcessSpawner` contract, required in `R` and provided once at your application's edge, so this package has zero runtime dependencies and zero `node:` imports.
+Typed git introspection as an Effect service. A read tier answers the questions monorepo tooling actually asks — `Git.show` reads a file's content at any ref without checking it out, `Git.nameStatus` types each changed path as added, renamed, deleted and so on, `Git.workingChanges` gathers the full working-tree delta, `Git.commitInfo` returns a commit's sha, signature verdict and raw message — and a clearly-marked mutating tier (`checkout`, `fetch`, the submodule pair, `sparseCheckoutSet`, `configSet`, `add`) changes repository state on purpose. Subprocesses run through Effect core's `ChildProcessSpawner` contract, required in `R` and provided once at your application's edge, so the service has no `node:` imports and the application selects its process runtime.
 
 ## Usage
 
@@ -144,8 +144,12 @@ point into the upstream checkout.
 
 ## Runtime implementation map
 
-- [`Git.ts`](src/Git.ts) owns the public service, parsed models,
-  repository-specific SSH config resolution, and service/test-double construction.
+- [`Git.ts`](src/Git.ts) owns the public service, repository-specific SSH config
+  resolution, and service/test-double construction. It re-exports the model contracts.
+- [`Git.models.ts`](src/Git.models.ts) owns parsed repository models and their pure
+  formatting helpers, retaining the original Git schema identity scope.
+- [`internal/parsers.ts`](src/internal/parsers.ts) decodes command output using each
+  command's framing rules. It imports models directly and never imports the service.
 - [`Git.errors.ts`](src/Git.errors.ts) owns the failure contracts. The service module
   re-exports the same constructors, with their original schema identifiers.
 - [`internal/classification.ts`](src/internal/classification.ts) applies the ordered
