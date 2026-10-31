@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "cache-inspection-governance-checkpoint/v1",
+  "recordedAt": "2026-10-30T19:22:30.248538+00:00",
+  "authority": "Unpublished source/workflow policy repair and local tests; no protected workflow execution, qualification or production activation.",
+  "sourceParent": "46c9202bac2dc9866fa9c64fb71c14e849d09852",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/test/ci-runner-security.test.ts": "2faf4b81b1bda1b97a188caf225146b51716c396328786afe04748c1960f2975",
+    ".github/workflows/cache-producer-inspect.yml": "615ba5efd494764b8bfdbdf3adeb97c1b308a73fa970819d6dd4593c6c655de9"
+  },
+  "attribution": {
+    "kind": "introduced",
+    "defaultPackageBefore": {
+      "exit": 1,
+      "elapsedSeconds": 1071.466,
+      "finishedAt": "2026-10-30T18:38:06.776639+00:00"
+    },
+    "failedTest": "maps every hosted job to a descriptor or explicit orchestration exemption",
+    "missingContext": "Inspect producer sources and tools",
+    "passedBefore": 8264,
+    "skippedBefore": 3
+  },
+  "repair": "Classify the manual source-inspection context as explicit operational orchestration, not a required or runnable quality verdict. Preserve the independent workflow policy checker and test its full credential-free/protected/retention contract.",
+  "policyAssertions": [
+    "Only workflow_dispatch; only contents:read.",
+    "Only protected main, existing writer environment and ten-minute deadline.",
+    "All five setup/cache/application capability switches explicitly false.",
+    "Host-cache inheritance disabled for source inspection.",
+    "Existing inspection command without env-file loading; fail on absent artifact; one-day retention."
+  ],
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 40.464,
+      "finishedAt": "2026-10-30T18:54:33.874609+00:00"
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 37.592,
+      "finishedAt": "2026-10-30T18:54:30.545953+00:00"
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 12.363,
+      "finishedAt": "2026-10-30T18:54:04.777572+00:00"
+    },
+    "defaultPackage": {
+      "exit": 0,
+      "elapsedSeconds": 1085.848,
+      "finishedAt": "2026-10-30T19:18:09.552875+00:00",
+      "sourceRevision": "c5ae8bf81934a7d62ffce440c88b2a8a2e3e80bc",
+      "auditSeconds": 1046.0,
+      "docgenSeconds": 38.4,
+      "command": "bun --no-env-file run beep quality package-verify @beep/repo-cli"
+    }
+  },
+  "testsPerRuntime": 127,
+  "remaining": [
+    "Complete fresh accepted-parent combined final and hosted proof; this source revision passed the default package audit and Docgen.",
+    "Regenerate canonical inventories after accepted-parent replay.",
+    "Execute actual protected source inspection and real producer publication before qualification.",
+    "Preserve every full trust/adoption acceptance and real observation requirement."
+  ],
+  "allAcceptanceUnproven": true,
+  "workflowOrCredentialChanges": false,
+  "requiredStatusChanges": false
+}
