@@ -24,7 +24,6 @@ import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -86,14 +85,6 @@ import {
   JSDocDocumentationInventoryOptions,
   writeJSDocDocumentationInventory,
 } from "./internal/JSDocDocumentationInventory.ts";
-import {
-  RunJSDocMigrateApplyOptions,
-  RunJSDocMigrateVerifyOptions,
-  runJSDocMigrateApply,
-  runJSDocMigrateVerify,
-} from "./internal/JSDocMigrateApply.ts";
-import { RunJSDocMigrateExtractOptions, runJSDocMigrateExtract } from "./internal/JSDocMigrateExtract.ts";
-import { RunJSDocMigrateTitlesOptions, runJSDocMigrateTitles } from "./internal/JSDocMigrateTitles.ts";
 import {
   defaultJSDocInventoryPath,
   defaultJSDocTotalsBaselinePath,
@@ -3582,119 +3573,6 @@ const jsdocRatchetCommand = Command.make(
     )
 ).pipe(Command.withDescription("Run JSDoc inventory totals as a fail-on-growth regression-baseline gate"));
 
-const jsdocMigrateExtractCommand = Command.make(
-  "extract",
-  {
-    output: Flag.String("output").pipe(
-      Flag.withDescription("extract.jsonl output path; defaults to the goal packet data directory"),
-      Flag.optional
-    ),
-  },
-  ({ output }) =>
-    runQualityProgram(
-      runJSDocMigrateExtract(RunJSDocMigrateExtractOptions.make({ ...OptionUtils.getSomesStruct({ output }) }))
-    )
-).pipe(Command.withDescription("Scan the corpus and emit one extract.jsonl record per legacy doc block"));
-
-const jsdocMigrateTitlesCommand = Command.make(
-  "titles",
-  {
-    extract: Flag.String("extract").pipe(Flag.withDescription("extract.jsonl input path"), Flag.optional),
-    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl append path"), Flag.optional),
-    proxyUrl: Flag.String("proxy-url").pipe(
-      Flag.withDescription("Local CLIProxyAPI base URL; never the xAI API"),
-      Flag.optional
-    ),
-    model: Flag.String("model").pipe(Flag.withDescription("Proxy model id"), Flag.optional),
-    limitFiles: Flag.Int("limit-files").pipe(
-      Flag.withDescription("Process at most this many pending files this run"),
-      Flag.optional
-    ),
-    concurrency: Flag.Int("concurrency").pipe(
-      Flag.withDescription("Concurrent proxy requests (one per file); default 12"),
-      Flag.optional
-    ),
-  },
-  ({ concurrency, extract, limitFiles, model, proxyUrl, titles }) =>
-    FetchHttpClient.layer.pipe(
-      Layer.build,
-      Effect.flatMap((context) =>
-        Effect.provideContext(
-          runJSDocMigrateTitles(
-            RunJSDocMigrateTitlesOptions.make({
-              ...OptionUtils.getSomesStruct({ extract, titles, proxyUrl, model, limitFiles, concurrency }),
-            })
-          ),
-          context
-        )
-      ),
-      Effect.scoped,
-      runQualityProgram
-    )
-).pipe(Command.withDescription("Append per-anchor title records from the local model proxy (data only)"));
-
-const jsdocMigrateApplyCommand = Command.make(
-  "apply",
-  {
-    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
-    overrides: Flag.String("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
-    manifest: Flag.String("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
-    dryRun: Flag.Boolean("dry-run").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Report outcomes without writing any file")
-    ),
-    syntheticTitles: Flag.Boolean("synthetic-titles").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Generate in-memory placeholder titles for the residue measurement")
-    ),
-  },
-  ({ dryRun, manifest, overrides, syntheticTitles, titles }) =>
-    runQualityProgram(
-      runJSDocMigrateApply(
-        RunJSDocMigrateApplyOptions.make({
-          dryRun,
-          syntheticTitles,
-          ...OptionUtils.getSomesStruct({ titles, overrides, manifest }),
-        })
-      )
-    )
-).pipe(Command.withDescription("Rewrite affected blocks text-surgically; fail closed on binding doubt"));
-
-const jsdocMigrateVerifyCommand = Command.make(
-  "verify",
-  {
-    extract: Flag.String("extract").pipe(Flag.withDescription("Frozen extract.jsonl input path"), Flag.optional),
-    titles: Flag.String("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
-    overrides: Flag.String("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
-    manifest: Flag.String("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
-  },
-  ({ extract, manifest, overrides, titles }) =>
-    runQualityProgram(
-      runJSDocMigrateVerify(
-        RunJSDocMigrateVerifyOptions.make({ ...OptionUtils.getSomesStruct({ extract, titles, overrides, manifest }) })
-      )
-    )
-).pipe(Command.withDescription("Prove conservation between frozen originals and the current tree"));
-
-const jsdocMigrateCommand = Command.make("jsdoc-migrate", {}, () =>
-  printLines([
-    "JSDoc carrier-migration commands:",
-    "- bun run beep quality jsdoc-migrate extract",
-    "- bun run beep quality jsdoc-migrate titles --limit-files 5",
-    "- bun run beep quality jsdoc-migrate apply --dry-run --synthetic-titles",
-    "- bun run beep quality jsdoc-migrate apply",
-    "- bun run beep quality jsdoc-migrate verify",
-  ])
-).pipe(
-  Command.withDescription("JSDoc legacy-carrier migration pipeline (extract, titles, apply, verify)"),
-  Command.withSubcommands([
-    jsdocMigrateExtractCommand,
-    jsdocMigrateTitlesCommand,
-    jsdocMigrateApplyCommand,
-    jsdocMigrateVerifyCommand,
-  ])
-);
-
 const cachePolicyCommand = Command.make("cache-policy", {}, () =>
   findRepoRoot().pipe(Effect.flatMap((root) => runCachePolicyAudit(root, false)))
 ).pipe(
@@ -4388,8 +4266,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality jsdoc-quality",
     "- bun run beep quality jsdoc-ratchet",
     "- bun run beep quality jsdoc-ratchet --write-baseline",
-    "- bun run beep quality jsdoc-migrate extract",
-    "- bun run beep quality jsdoc-migrate apply --dry-run --synthetic-titles",
     "- bun run beep quality turbo-config-proof --base origin/main --head HEAD",
     "- bun run beep quality profile detect",
     "- bun run beep quality tmpfs-reap [--apply] [--json]",
@@ -4414,7 +4290,6 @@ export const qualityCommand = Command.make("quality", {}, () =>
     jsdocInventoryCommand,
     jsdocQualityCommand,
     jsdocRatchetCommand,
-    jsdocMigrateCommand,
     turboConfigProofCommand,
     cachePolicyCommand,
     qualityProfileCommand,

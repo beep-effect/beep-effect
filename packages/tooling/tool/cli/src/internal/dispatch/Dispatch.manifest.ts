@@ -139,8 +139,7 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
   groupRoute(
     {
       name: "goals",
-      description:
-        "Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption, convention migration)",
+      description: "Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption)",
     },
     []
   )(() => import("../../commands/Goals/index.ts").then((module) => module.goalsCommand)),

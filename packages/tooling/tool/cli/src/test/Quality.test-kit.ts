@@ -81,10 +81,7 @@ export {
 } from "../commands/Quality/internal/GithubChecks.ts";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
 export * from "../commands/Quality/internal/JSDocMigrate.schemas.ts";
-export * from "../commands/Quality/internal/JSDocMigrateApply.ts";
-export * from "../commands/Quality/internal/JSDocMigrateExtract.ts";
 export * from "../commands/Quality/internal/JSDocMigrateRewrite.ts";
-export * from "../commands/Quality/internal/JSDocMigrateTitles.ts";
 export * from "../commands/Quality/internal/JSDocRatchet.ts";
 export * from "../commands/Quality/internal/LaneProofReuse.ts";
 export * from "../commands/Quality/internal/PackageVerify.ts";

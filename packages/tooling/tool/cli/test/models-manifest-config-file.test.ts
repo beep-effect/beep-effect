@@ -121,6 +121,30 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
       })
     );
 
+    it.effect("drops a retired target id whose role stays active", () =>
+      Effect.gen(function* () {
+        const store = yield* ModelsManifestStore;
+        const seed = yield* encodeManifest(seedModelsManifest);
+        const retiredTarget = {
+          id: "repo.examples.docgen-worker",
+          root: "repo",
+          path: "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+          optional: false,
+          locators: [
+            {
+              _tag: "ts-literal",
+              binding: { role: "codex.heavy", surface: "codex-plugin", field: "model" },
+              render: { _tag: "verbatim" },
+              symbol: "retiredExampleModel",
+            },
+          ],
+        };
+        const legacy = { ...seed, targets: [...seed.targets, retiredTarget] };
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", stringify(legacy)));
+        expect(yield* encodeManifest(loaded)).toEqual(seed);
+      })
+    );
+
     it.effect("reports a YAML syntax error as a typed parse failure", () =>
       Effect.gen(function* () {
         const store = yield* ModelsManifestStore;

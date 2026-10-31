@@ -53,7 +53,6 @@ const RoutingRoleKit = LiteralKit([
   "fallback.grok",
   "qa.judge",
   "research.routine",
-  "jsdoc.migrate-titles",
   "deprecated.routable",
   "review.panel",
   "muse.opt-in",
@@ -1017,8 +1016,14 @@ export class SupersededModel extends S.Opaque<SupersededModel, { readonly brand:
 // Roles removed from the vocabulary. A manifest written before a retirement
 // still names them, so its bindings and targets for them decode and are
 // dropped instead of failing the whole manifest (graft.deep: graft retired
-// 2026-10-28).
-const RetiredRoutingRole = LiteralKit(["graft.deep"]);
+// 2026-10-28; jsdoc.migrate-titles: `quality jsdoc-migrate` retired
+// 2026-10-31).
+const RetiredRoutingRole = LiteralKit(["graft.deep", "jsdoc.migrate-titles"]);
+// Targets whose projected file was deleted while their role stays active. A
+// manifest written before the deletion still lists them; they are dropped on
+// decode (repo.examples.docgen-worker: `docgen quality-worker-eval` retired
+// 2026-10-31).
+const RetiredTargetId = LiteralKit(["repo.examples.docgen-worker"]);
 const RetiredBindingRef = S.Struct({ role: RetiredRoutingRole });
 const RetiredBinding = S.Struct({ role: RetiredRoutingRole, surface: S.String, modelId: S.String });
 const RetiredLocator = S.Union([
@@ -1043,7 +1048,10 @@ const ActiveTargets = S.Array(S.Union([ModelSyncTarget, RetiredTarget])).pipe(
     ModelSyncTarget.pipe(S.toType, S.Array),
     SchemaTransformation.transform({
       decode: (entries: ReadonlyArray<ModelSyncTarget | typeof RetiredTarget.Type>): ReadonlyArray<ModelSyncTarget> =>
-        A.filter(entries, S.is(ModelSyncTarget)),
+        A.filter(
+          entries,
+          (entry): entry is ModelSyncTarget => S.is(ModelSyncTarget)(entry) && !S.is(RetiredTargetId)(entry.id)
+        ),
       encode: (targets: ReadonlyArray<ModelSyncTarget>): ReadonlyArray<ModelSyncTarget | typeof RetiredTarget.Type> =>
         targets,
     })

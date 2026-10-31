@@ -201,28 +201,17 @@ export {
  */
 export { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 /**
- * Synthetic experiment requests and local observation receipts.
+ * Local fixture observation records shared by the pilot and conformance runners.
  *
  * @category schemas
  * @since 0.0.0
  */
 export {
   CacheCaptureViolation,
-  CacheFixtureRuntime,
   CacheLocalOrigin,
   CacheSyntheticCheck,
-  CacheSyntheticNonExecution,
-  CacheSyntheticReceipt,
-  CacheSyntheticRequest,
   CacheSyntheticRun,
 } from "./Cache.experiment.schemas.ts";
-/**
- * Run admitted synthetic cache comparisons.
- *
- * @category cli-commands
- * @since 0.0.0
- */
-export { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
 /**
  * Runtime identity input validation.
  *

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { CacheClientChannel, CachePolicyAuditReport, CacheQualificationStore } from "@beep/repo-configs/cache";
+import { CacheClientChannel, CachePolicyAuditReport } from "@beep/repo-configs/cache";
 import { A, Str, thunk0 } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
@@ -52,8 +52,6 @@ import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts"
 import { materializeCacheDependencies } from "./Cache.dependencies.ts";
 import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 import { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
-import { CacheSyntheticReceipt, CacheSyntheticRequest } from "./Cache.experiment.schemas.ts";
-import { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
 import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
 import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
 import { CacheSignedPilotReceipt, CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
@@ -688,18 +686,6 @@ const cacheAuditCommand = Command.make(
   ({ json }) => runCachePolicyAudit(process.cwd(), json)
 ).pipe(Command.withDescription("Check effective cache settings against the reviewed baseline and tuple ledger"));
 
-const cacheInspectCommand = Command.make("inspect", {}, () =>
-  Effect.gen(function* () {
-    const cache = yield* CacheQualificationService;
-    const store = yield* cache.inspect(process.cwd());
-    yield* Console.log(
-      yield* JsonStringCodec(CacheQualificationStore)
-        .encode(store)
-        .pipe(CacheCommandError.mapError("Cannot encode qualification ledger."))
-    );
-  }).pipe(renderCacheFailure)
-).pipe(Command.withDescription("Read explicit qualification states; absent tuples are unassessed"));
-
 const requestFlag = Flag.Path("request", { pathType: "file" }).pipe(
   Flag.withDescription("Schema-validated reviewed request JSON")
 );
@@ -804,22 +790,6 @@ const cacheActivationCommand = Command.make(
       yield* writeEncoded(report, JsonStringCodec(CacheActivationPreview), output);
     }).pipe(renderCacheFailure)
 ).pipe(Command.withDescription("Preview an exact reviewed single-task cache activation without enabling reuse"));
-
-const cacheSyntheticCommand = Command.make(
-  "synthetic",
-  { request: Flag.File("request"), output: outputFlag },
-  ({ request, output }) =>
-    Effect.gen(function* () {
-      const input = yield* readCacheRequest(request, CacheSyntheticRequest);
-      const report = yield* runCacheSyntheticExperiment(process.cwd(), CacheSyntheticRequest.make(input));
-      yield* writeEncoded(report, JsonStringCodec(CacheSyntheticReceipt), output);
-      if (A.some(report.checks, (check) => !check.passed))
-        return yield* CacheCommandError.new("The local synthetic experiment reported a failed assertion.");
-    }).pipe(renderCacheFailure)
-).pipe(
-  Command.withDescription("Run a bounded, network-isolated local fixture with an exactly pinned native client"),
-  Command.provide(MemoryStatsLive)
-);
 
 const cacheDependenciesCommand = Command.make("dependencies", { output: outputFlag }, ({ output }) =>
   Effect.gen(function* () {
@@ -1108,7 +1078,7 @@ const cacheRemoteReadsCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, pilot-signed, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
+    "cache commands: census, audit, baseline, fingerprint, profile, activation, transition, dependencies, pilot, pilot-signed, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -1117,13 +1087,11 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheExecuteCommand,
     cacheCensusCommand,
     cacheAuditCommand,
-    cacheInspectCommand,
     cacheBaselineCommand,
     cacheFingerprintCommand,
     cacheActivationCommand,
     cacheProfileCommand,
     cacheTransitionCommand,
-    cacheSyntheticCommand,
     cacheDependenciesCommand,
     cachePilotCommand,
     cacheSignedPilotCommand,
