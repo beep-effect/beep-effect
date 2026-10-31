@@ -10,7 +10,7 @@ import { ConfigCodecError } from "@beep/config-file/ConfigCodec";
 
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   it.effect.prop(
-    name + ": decoding an encoded value succeeds and recovers the value",
+    `${name}: decoding an encoded value succeeds and recovers the value`,
     [Arbitrary.schema(schema)],
     ([value]) =>
       Effect.gen(function* () {
