@@ -8,6 +8,7 @@
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $FfmpegId } from "@beep/identity/packages";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
+import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -823,7 +824,7 @@ const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* 
         FFmpegError.fromUnknown(operation, `Failed to inspect previous manifest: "${manifestPath}"`, { cause })
       )
     );
-  if (!exists) return Effect.void;
+  if (!exists) return Effect.failCause;
   yield* ensureFile(fs, manifestPath, "previous manifest", operation);
 
   const backupPath = path.join(tempDir, "previous-manifest.json");
@@ -834,16 +835,21 @@ const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* 
         FFmpegError.fromUnknown(operation, `Failed to park previous manifest: "${manifestPath}"`, { cause })
       )
     );
-  return fs.rename(backupPath, manifestPath).pipe(
-    Effect.tapError(() => preserveStaging),
-    Effect.mapError((cause) =>
-      FFmpegError.fromUnknown(
-        operation,
-        `Failed to restore previous manifest: "${manifestPath}". Recovery copy retained at "${backupPath}".`,
-        { cause }
-      )
-    )
-  );
+  return (cause: Cause.Cause<FFmpegError>) =>
+    fs.rename(backupPath, manifestPath).pipe(
+      Effect.tapError(() => preserveStaging),
+      Effect.mapError((restoreCause) =>
+        FFmpegError.fromUnknown(
+          operation,
+          `Failed to restore previous manifest: "${manifestPath}". Recovery copy retained at "${backupPath}".`,
+          { cause: restoreCause }
+        )
+      ),
+      Effect.matchCauseEffect({
+        onFailure: (restoreCause) => Effect.failCause(Cause.combine(cause, restoreCause)),
+        onSuccess: () => Effect.failCause(cause),
+      })
+    );
 });
 
 const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
@@ -894,7 +900,7 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
       Effect.mapError((cause) =>
         FFmpegError.fromUnknown("extractFrames", `Failed to commit frame output: "${frame.targetPath}"`, { cause })
       ),
-      Effect.onError(() => (A.isArrayEmpty(committed) ? restoreManifest : Effect.void))
+      Effect.catchCause((cause) => (A.isArrayEmpty(committed) ? restoreManifest(cause) : Effect.failCause(cause)))
     );
     committed = A.append(
       committed,
@@ -1126,7 +1132,7 @@ const commitTimestampedFrames = Effect.fn("FFmpeg.commitTimestampedFrames")(func
       Effect.mapError((cause) =>
         FFmpegError.fromUnknown("extractFramesAt", `Failed to commit frame output: "${targetPath}"`, { cause })
       ),
-      Effect.onError(() => (A.isArrayEmpty(committed) ? restoreManifest : Effect.void))
+      Effect.catchCause((cause) => (A.isArrayEmpty(committed) ? restoreManifest(cause) : Effect.failCause(cause)))
     );
     committed = A.append(
       committed,
