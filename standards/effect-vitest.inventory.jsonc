@@ -2987,7 +2987,7 @@
       "line": 672,
       "endLine": 690,
       "symbol": "scoped",
-      "occurrence": "v2:dcb7e681da001b636238a7a40615e2ee4163185e4fc5a73497714d41e0ec66ba",
+      "occurrence": "v2:1088417ca3c3b6a12233e643ccacaef093098736676b8b1ba289455bb62db2f6",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const child = yield* ChildProcess.make(process.execPath, [\"-e\", \"setInterval(() => {}, 1000)\"], { stdout: \"ignore\", stderr: \"inherit\", }); yield* Deferred.succ",
       "replacement": {
