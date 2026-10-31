@@ -98,7 +98,8 @@ const flagValue = (flag: string): O.Option<string> =>
 // `Dependencies.ts` `extractWorkspaceDependencies` and `sortWorkspacePackages`, and `DependencyIndex.ts`
 // `buildRepoDependencyIndex`, written when 4-A3 retired those modules (every caller moved onto
 // `@beep/repo-workspaces`). They are NOT the readers the 3-A3 record measured: `workspaceGlobsFrom` reads the
-// field as `unknown` instead of the strict `WorkspacesField`, and `resolveWorkspaceDirs` omits the retired
+// field as `unknown` instead of the strict `WorkspacesField` (equivalent here, since it only ever receives the
+// strictly decoded root field), and `resolveWorkspaceDirs` omits the retired
 // `isSafeWorkspacePattern` refusal (empty, absolute and `..` globs), the canonical-root containment check on each
 // member's real path and the tolerance of a manifest that vanished mid-scan. None of those checks fires on the
 // live repository (no unsafe glob, no escaping member), so a re-run reproduces the record; the faithful frozen

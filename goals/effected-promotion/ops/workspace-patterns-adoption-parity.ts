@@ -79,7 +79,8 @@ const legacyStrictPatterns = Effect.fn("legacyStrictPatterns")(function* (text: 
 });
 
 // CreatePackage / TsconfigSync: `readPackageJsonFile` then `workspaceGlobsFrom(packageJson.workspaces)`. 4-A3 retired
-// repo-utils `workspaceGlobsFrom`; this frozen copy keeps the reader the 4-A2 record measured.
+// repo-utils `workspaceGlobsFrom`; this copy reads the field as `unknown` instead of the strict `WorkspacesField`,
+// which is equivalent here because it only receives the field `readPackageJsonFile` already decoded strictly.
 const workspaceGlobsFrom = (workspaces: unknown): ReadonlyArray<string> => {
   if (A.isArray(workspaces)) return A.filter(workspaces, P.isString);
   if (P.isObject(workspaces) && P.hasProperty(workspaces, "packages") && A.isArray(workspaces.packages)) {
