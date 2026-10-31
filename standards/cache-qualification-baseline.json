@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (G4 follow-up, claude/g4-fingerprint-lint-fixes)",
-      "reason": "Re-record the legacy cache posture of the root subject after regenerating six policy fingerprint seals whose inputs moved when later merges changed their command closures; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (G3 lane, claude/beep-lazy-dispatch-369e54)",
+      "reason": "Re-record the root subject after resealing seven policy-fingerprint seal tasks: the shared seal gains the lazy dispatch modules; six seals drop inputs that #2381 and #2376 deleted or moved after #2390 sealed; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review-3.md",
-        "sha256": "40065ce4e31162554b9db6f556ccf340ed12fa721bfe672a40a2c5e47e3f0510"
+        "path": "goals/beep-cli-composition/research/g3-cache-baseline-review.md",
+        "sha256": "1e37f7e33e927e004b80ea5a215418a1bd9a1f78d0aed5fffd3fbef4eb9f4b00"
       }
     },
     "@beep/acp": {
@@ -1565,8 +1565,6 @@
           "CODEX_SESSION_ID",
           "CODEX_THREAD_ID",
           "GITHUB_ACTIONS",
-          "GRAFT_CRUX_MODULE",
-          "GRAFT_EXTRACT_MODULE",
           "TURBO_CACHE",
           "TURBO_FORCE",
           "TURBO_TOKEN",
@@ -2690,7 +2688,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -5759,7 +5756,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5907,7 +5903,6 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -6740,6 +6735,9 @@
             "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
             "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
             "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.ts",
             "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
@@ -7027,7 +7025,6 @@
             "!.claude/worktrees/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7068,7 +7065,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7180,7 +7176,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7344,7 +7339,6 @@
             "!explorations/**",
             "!explorations/*/CAPTURE.md",
             "!goals/**",
-            "!graft/**",
             "!infra/ci-runners/sdks/**",
             "!node_modules/**",
             "!outputs/agent-reliability/**",
@@ -133858,7 +133852,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "979364fae7d4c7cf95500d7b058de37c58de36479aa3128cbce1259819858b8b"
+        "sha256": "bc2e6d19c56f42ff35fe68a5a5fc80ddb2fd6287bb61547db6ab07a06298a2ae"
       }
     ]
   }

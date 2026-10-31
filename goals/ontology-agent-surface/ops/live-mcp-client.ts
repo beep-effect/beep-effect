@@ -20,10 +20,10 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as S from "effect/Schema";
 import { rpcSessionAuthorizationHeader } from "../../../apps/professional-desktop/server/RpcSessionAuth.ts";
 
-const url = Effect.runSync(Config.string("ONTOLOGY_MCP_URL"));
-const origin = Effect.runSync(Config.string("ONTOLOGY_MCP_ORIGIN"));
-const token = Effect.runSync(Config.redacted("BEEP_DESKTOP_RPC_SESSION_TOKEN"));
-const ontologyPath = Effect.runSync(Config.string("ONTOLOGY_MCP_ONTOLOGY_PATH"));
+const url = Effect.runSync(Config.String("ONTOLOGY_MCP_URL"));
+const origin = Effect.runSync(Config.String("ONTOLOGY_MCP_ORIGIN"));
+const token = Effect.runSync(Config.Redacted("BEEP_DESKTOP_RPC_SESSION_TOKEN"));
+const ontologyPath = Effect.runSync(Config.String("ONTOLOGY_MCP_ONTOLOGY_PATH"));
 
 let sessionId: string | null = null;
 function sessionFetch(
@@ -43,7 +43,11 @@ function sessionFetch(
   });
 }
 
-const HttpLive = FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, sessionFetch)));
+const HttpLive = FetchHttpClient.layer.pipe(
+  Layer.provide(
+    Layer.succeed(FetchHttpClient.Fetch, Object.assign(sessionFetch, { preconnect: globalThis.fetch.preconnect }))
+  )
+);
 const ClientLive = RpcClient.layerProtocolHttp({
   url,
   transformClient: HttpClient.mapRequest(

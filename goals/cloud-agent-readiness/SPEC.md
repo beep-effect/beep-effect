@@ -47,7 +47,7 @@ Higher sources outrank lower sources when they conflict.
 
 - `scripts/cloud-session-setup.sh` (new): toolchain bootstrap and preflight.
 - `.bun-version`, `.bun-linux-x64.sha256`: read only; never edited here.
-- `.claude/settings.json`, `.claude/hooks/*`, `.claude/helpers/graft-hooks.cjs`:
+- `.claude/settings.json`, `.claude/hooks/*`, the graft hook helper (retired 2026-10-28):
   host-aware guards.
 - `.mcp.json`: unchanged unless a host-scoped enable/disable mechanism exists;
   otherwise the runbook records which servers are workstation-only.
