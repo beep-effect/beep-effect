@@ -31,13 +31,8 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import {
-  BrowserQaLens,
-  DRAWING_JUDGE_PROMPT_TEMPLATE,
-  DrawingQaLens,
-  JUDGE_PROMPT_TEMPLATE,
-  QaLens,
-} from "../Qa/index.ts";
+import { BrowserQaLens, DrawingQaLens, QaLens } from "../Qa/Inventory.schemas.ts";
+import { DRAWING_JUDGE_PROMPT_TEMPLATE, JUDGE_PROMPT_TEMPLATE } from "../Qa/JudgePack.ts";
 
 const $I = $RepoCliId.create("commands/Lint/JudgeRubric");
 

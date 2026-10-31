@@ -118,12 +118,12 @@ Options:
 const textDecoder = new TextDecoder();
 
 const parseArgs = (argv: ReadonlyArray<string>): CliOptions => {
-  let account = defaults.account;
+  let account: string = defaults.account;
   let deleteSource = false;
   let dryRun = false;
-  let region = defaults.region;
-  let source = defaults.source;
-  let target = defaults.target;
+  let region: string = defaults.region;
+  let source: string = defaults.source;
+  let target: string = defaults.target;
   let yes = false;
 
   for (let index = 0; index < argv.length; index += 1) {

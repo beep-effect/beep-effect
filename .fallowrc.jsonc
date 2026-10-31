@@ -123,9 +123,6 @@
     // Vendored upstream skill tree (shadcn showcase assets and scripts) pinned by
     // skills-lock.json; beep skills update rewrites it byte-for-byte from upstream.
     ".claude/skills/shadcn/**",
-    // Claude Code launches these by path from .claude/settings.json (the two
-    // graft shims and the repo-owned loader); no import graph reaches them.
-    ".claude/helpers/**",
     // Browser QA operators copy this documented harness template beside the app
     // under test; it is a distributed resource, not workspace-owned source.
     ".claude/skills/browser-qa-loop/resources/qa-capture-template.mjs",
@@ -346,8 +343,7 @@
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
   "duplicates": {
-    // The two graft shims are one-line delegations to the repo-owned loader.
-    "ignore": [".claude/skills/shadcn/**", ".claude/helpers/**"]
+    "ignore": [".claude/skills/shadcn/**"]
   },
   "health": {
     // Complexity ceilings — ratified 2026-07-30 (law in standards/effect-laws-v1.md;
@@ -360,14 +356,11 @@
     "maxCyclomatic": 20,
     "maxCrap": 30,
     "maxUnitSize": 60,
-    // The graft shims are generated; the loader's platform trust checks are
-    // security-boundary code kept whole rather than split for a ceiling.
     // The manual TS6-bridge tools (goal codemod, JSDoc census) entered discovery
     // only so dead-code analysis sees the bridge's consumers; complexity scope
     // stays as on main, where both paths were never health-scored.
     "ignore": [
       ".claude/skills/shadcn/**",
-      ".claude/helpers/**",
       "goals/schema-opaque-default/ops/codemod/**",
       "scratchpad/.jsdoc-loop/census.ts"
     ],
@@ -479,7 +472,6 @@
         ],
         "functions": ["LiveWaveform"],
         "maxCognitive": 40,
-        "maxCrap": 31,
         "maxUnitSize": 465,
         "reason": "The component is the cohesive owner of its hook bindings and public waveform props; the microphone teardown and animation seams are extracted separately without fragmenting hook ownership. Review by 2026-12-03: re-measure after those extracted seams settle and lower this ceiling to the observed boundary."
       },
@@ -533,13 +525,6 @@
         "maxCognitive": 24,
         "maxUnitSize": 152,
         "reason": "The public prop surface and hook integration account for the measured boundary; changing the prop contract is out of scope and helper extraction cannot reduce it honestly. Review by 2026-12-03: re-measure after any public component API redesign and remove the exception when the boundary naturally shrinks."
-      },
-      {
-        "files": ["packages/tooling/library/repo-utils/src/FsUtils.ts"],
-        "functions": ["visit"],
-        "maxCognitive": 22,
-        "maxCrap": 32,
-        "reason": "Symlink policy, cycle protection, directory exclusion, and recursion are one filesystem-safety transaction. Review by 2026-12-03: re-audit the safety invariants and lower or remove this ceiling only when an equivalent simpler transaction is proven."
       },
       {
         "files": [

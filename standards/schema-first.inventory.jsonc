@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-30",
+  "generatedOn": "2026-10-31",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -1804,6 +1804,46 @@
       "reason": "Per-source compiler operation context: ts-morph node identities, WeakMap and MutableHashMap caches, and a lexical binding resolver closure are live handles created by collectEffectVitestImports. They are neither decoded nor persisted and must retain identity for one immutable parse-tree pass; the emitted finding, census and graph data have annotated schemas."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "symbol": "PolicyCliLayout",
+      "kind": "exported-interface",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Exported pure-data interface should be modeled as an annotated schema."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "symbol": "PolicyClosure",
+      "kind": "exported-interface",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Exported pure-data interface should be modeled as an annotated schema."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "symbol": "PolicyCommandNode",
+      "kind": "exported-interface",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Exported pure-data interface should be modeled as an annotated schema."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "symbol": "PolicyGraphOptions",
+      "kind": "exported-interface",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Exported pure-data interface should be modeled as an annotated schema."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "symbol": "PolicyWorkspace",
+      "kind": "exported-interface",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Exported pure-data interface should be modeled as an annotated schema."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
       "symbol": "CodexCacheEntry",
       "kind": "object-struct-schema",
@@ -1899,7 +1939,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 437,
+      "line": 438,
       "owner": "@beep/repo-cli",
       "reason": "Inline input pairs in-memory block bytes with token allowances the rewriter computed in the same call; nothing crosses an IO boundary and the findings are transient strings consumed by quarantine reporting."
     },

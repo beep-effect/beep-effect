@@ -6,7 +6,7 @@
     "title": "beep CLI composition",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-28",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/beep-cli-composition",
@@ -30,9 +30,15 @@
     "goals/beep-cli-composition/GOAL.md",
     "goals/beep-cli-composition/research/SOURCES.md",
     "goals/beep-cli-composition/research/design-record.md",
+    "goals/beep-cli-composition/research/g3-lazy-dispatch.md",
     "standards/architecture/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/design-record.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/design-record.md",
+    "research/g3-lazy-dispatch.md",
+    "research/g4-task-fingerprint.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

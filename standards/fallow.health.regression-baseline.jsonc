@@ -588,11 +588,6 @@
         "count": 2
       }
     },
-    "packages/tooling/tool/cli/src/internal/GlobPattern.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/test/files-command.test.ts": {
       "complexity_moderate": {
         "count": 1

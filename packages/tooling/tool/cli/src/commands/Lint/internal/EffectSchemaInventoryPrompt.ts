@@ -39,8 +39,6 @@ import { EffectSchemaInventorySource } from "./EffectSchemaInventorySource.ts";
 import { readEffectSchemaInventoryModuleRows } from "./EffectSchemaInventoryStore.ts";
 import type {
   EffectSchemaInventoryDrift,
-  EffectSchemaInventoryGraftContext,
-  EffectSchemaInventoryGraftEntry,
   EffectSchemaInventoryModule,
   EffectSchemaInventoryModuleRows,
   EffectSchemaInventoryPin,
@@ -205,43 +203,13 @@ const renderBlock = (source: ts.SourceFile, text: string, block: DeclarationBloc
   );
 };
 
-/** The four inputs every prompt is rendered from; graft context is supplied separately. */
+/** The four inputs every prompt is rendered from. */
 type PromptInput = {
   readonly module: EffectSchemaInventoryModule;
   readonly pin: EffectSchemaInventoryPin;
   readonly rows: ReadonlyArray<EffectSchemaInventoryRow>;
   readonly source: string;
 };
-
-const graftAlignment = (workingTreeMatchesPin: boolean): string =>
-  workingTreeMatchesPin
-    ? "The working-tree module file hashes to the same blob as the pin, so the spans line up with the inlined source."
-    : "The working-tree module file differs from the pin, so treat this section as working-tree context whose spans and summaries may drift; the inlined source below is authoritative.";
-
-const graftRow = (entry: EffectSchemaInventoryGraftEntry): string =>
-  `| ${entry.span} | ${cell(entry.kind)} | \`${cell(entry.name)}\` | ${cell(O.getOrElse(entry.summary, () => ""))} |`;
-
-const renderGraftSection = (context: EffectSchemaInventoryGraftContext): string =>
-  A.join(
-    [
-      `Graft skeleton of the reference working tree (HEAD \`${context.head}\`), read as-is with \`--no-refresh\`. ${graftAlignment(context.workingTreeMatchesPin)} Summaries are graft's, not Effect's documentation.`,
-      "",
-      "| Span | Kind | Name | Summary |",
-      "| --- | --- | --- | --- |",
-      ...A.map(context.entries, graftRow),
-      "",
-    ],
-    "\n"
-  );
-
-const GRAFT_SECTION = /\n## Graft context\n\n([\s\S]*?)\n## Declarations\n/u;
-
-const committedGraftSection = (prompt: string): string =>
-  pipe(
-    Str.match(GRAFT_SECTION)(prompt),
-    O.flatMap((match) => O.fromUndefinedOr(match[1])),
-    O.getOrElse(() => "")
-  );
 
 const failForeignRows = (input: PromptInput): Effect.Effect<void, EffectSchemaInventoryError> => {
   const foreign = A.filter(input.rows, (row) => row.file !== input.module.file || row.sha !== input.pin);
@@ -346,12 +314,7 @@ const declarationBlocks = Effect.fnUntraced(function* (input: PromptInput, sourc
   );
 });
 
-const assemblePrompt = (
-  input: PromptInput,
-  blockCount: number,
-  blocksText: ReadonlyArray<string>,
-  graftSection: string
-): string =>
+const assemblePrompt = (input: PromptInput, blockCount: number, blocksText: ReadonlyArray<string>): string =>
   A.join(
     [
       `# Lane prompt: \`${input.module.module}\``,
@@ -376,9 +339,6 @@ const assemblePrompt = (
       "- Judge coverage facet by facet. Only a public symbol covers a facet: a row marked `@internal`, or a row of a module that is not importable, is provenance and never a coverage target.",
       "- Cite upstream evidence as `<file>:<line>` at the pin, using the line numbers in the tables.",
       "",
-      "## Graft context",
-      "",
-      graftSection,
       "## Declarations",
       "",
       ...blocksText,
@@ -386,23 +346,8 @@ const assemblePrompt = (
     "\n"
   );
 
-const renderPromptWith = Effect.fnUntraced(function* (input: PromptInput, graftSection: string) {
-  yield* failForeignRows(input);
-  const source = ts.createSourceFile(input.module.file, input.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const blocks = yield* declarationBlocks(input, source);
-  const rendered = A.map(blocks, (block) => ({ block, text: renderBlock(source, input.source, block) }));
-  yield* failMissingExamples(rendered);
-  return assemblePrompt(
-    input,
-    blocks.length,
-    A.map(rendered, ({ text }) => text),
-    graftSection
-  );
-});
-
 /**
- * Render the lane prompt for one module from its committed rows, pinned source text, and graft
- * context.
+ * Render the lane prompt for one module from its committed rows and pinned source text.
  *
  * **Details**
  *
@@ -416,7 +361,6 @@ const renderPromptWith = Effect.fnUntraced(function* (input: PromptInput, graftS
  *
  * ```ts
  * import {
- *   EffectSchemaInventoryGraftContext,
  *   EffectSchemaInventoryModule,
  *   EffectSchemaInventoryRow,
  *   renderEffectSchemaInventoryPrompt
@@ -437,8 +381,7 @@ const renderPromptWith = Effect.fnUntraced(function* (input: PromptInput, graftS
  *   module,
  *   pin,
  *   rows: [row],
- *   source: "/** Says hi. *\/\nexport function hi(): string {\n  return \"hi\"\n}\n",
- *   graft: EffectSchemaInventoryGraftContext.make({ head: pin, workingTreeMatchesPin: true, entries: [] })
+ *   source: "/** Says hi. *\/\nexport function hi(): string {\n  return \"hi\"\n}\n"
  * })
  * Effect.runPromise(program).then((prompt) => console.log(prompt.includes("return \"hi\""))) // true
  * ```
@@ -447,9 +390,18 @@ const renderPromptWith = Effect.fnUntraced(function* (input: PromptInput, graftS
  * @since 0.0.0
  */
 export const renderEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInventoryPrompt.render")(function* (
-  input: PromptInput & { readonly graft: EffectSchemaInventoryGraftContext }
+  input: PromptInput
 ) {
-  return yield* renderPromptWith(input, renderGraftSection(input.graft));
+  yield* failForeignRows(input);
+  const source = ts.createSourceFile(input.module.file, input.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const blocks = yield* declarationBlocks(input, source);
+  const rendered = A.map(blocks, (block) => ({ block, text: renderBlock(source, input.source, block) }));
+  yield* failMissingExamples(rendered);
+  return assemblePrompt(
+    input,
+    blocks.length,
+    A.map(rendered, ({ text }) => text)
+  );
 });
 
 const isPromptFor =
@@ -463,9 +415,8 @@ const isPromptFor =
  * **Details**
  *
  * A prompt is owned when its file name under the prompt root is a module slug plus `.md`; any
- * other file there is left alone. The graft section is the one part that depends on local graft,
- * so the committed graft section is spliced into the re-rendered prompt and every other byte must
- * match. This needs the pinned sources, so it runs in local `--check` only; hosted CI has no
+ * other file there is left alone. Every byte of the re-rendered prompt must match the committed
+ * file. This needs the pinned sources, so it runs in local `--check` only; hosted CI has no
  * Effect checkout and cannot verify prompts.
  *
  * **Example** (Build a prompt check)
@@ -524,10 +475,12 @@ export const checkEffectSchemaInventoryPrompts = Effect.fn("EffectSchemaInventor
         ),
         () => EffectSchemaInventoryError.new(`No pinned source was read for ${entry.module.module}.`)
       );
-      const expected = yield* renderPromptWith(
-        { module: entry.module, pin, rows: entry.rows, source },
-        committedGraftSection(committed)
-      );
+      const expected = yield* renderEffectSchemaInventoryPrompt({
+        module: entry.module,
+        pin,
+        rows: entry.rows,
+        source,
+      });
       return diffEffectSchemaInventoryFiles(
         [EffectSchemaInventoryFile.make({ name: file, content: expected })],
         HashMap.make([file, committed])
@@ -544,8 +497,7 @@ export const checkEffectSchemaInventoryPrompts = Effect.fn("EffectSchemaInventor
  *
  * Fails loud on the same inputs as `--check`: an unreadable catalog pin, a missing reference
  * clone, or a pin absent from it. It also fails when the module's committed rows carry a sha
- * other than the catalog pin (regenerate with `--write` first), and when graft context cannot be
- * read ({@link EffectSchemaInventoryGraftUnavailableError}). The prompt defaults to
+ * other than the catalog pin (regenerate with `--write` first). The prompt defaults to
  * `<promptRoot>/<slug>.md`; a relative `out` resolves against the repository root and may not
  * escape it, while an absolute `out` is written as given.
  *
@@ -586,8 +538,7 @@ export const generateEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInvent
       `${EffectSchemaInventoryFixturePath}/${effectSchemaInventoryJsonlName(module.slug)} is not at inventoryPin ${pin}; run lint effect-schema-inventory --write first.`
     );
   const text = yield* source.readPinned(pin, module.file);
-  const graft = yield* source.graftContext(pin, module.file);
-  const prompt = yield* renderEffectSchemaInventoryPrompt({ module, pin, rows, source: text, graft });
+  const prompt = yield* renderEffectSchemaInventoryPrompt({ module, pin, rows, source: text });
   yield* writeArtifact({
     path: target,
     body: prompt,
@@ -598,6 +549,5 @@ export const generateEffectSchemaInventoryPrompt = Effect.fn("EffectSchemaInvent
     module: module.module,
     target: pipe(path.relative(root, target), (relative) => (Str.startsWith("..")(relative) ? target : relative)),
     rows: rows.length,
-    workingTreeMatchesPin: graft.workingTreeMatchesPin,
   });
 });

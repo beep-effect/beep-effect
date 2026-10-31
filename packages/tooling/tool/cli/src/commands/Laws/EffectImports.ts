@@ -6,6 +6,7 @@
  */
 
 import * as NodeURL from "node:url";
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
 import { jsonParse } from "@beep/repo-utils/JsonUtils";
@@ -14,6 +15,7 @@ import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty, BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A, Str } from "@beep/utils";
+import { compileAndExpand } from "@beep/walker/Expand";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constant, pipe } from "effect/Function";
@@ -26,7 +28,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { glob } from "tinyglobby";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
@@ -339,16 +340,10 @@ const CODE_GLOBS = [
   "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
 ] as const;
 
-const MARKDOWN_GLOBS = [
-  "**/*.{md,mdx}",
-  "*.{md,mdx}",
-  ".changeset/**/*.{md,mdx}",
-  ".claude/**/*.{md,mdx}",
-  ".github/**/*.{md,mdx}",
-  ".junie/**/*.{md,mdx}",
-  ".patterns/**/*.{md,mdx}",
-  "scratchpad/**/*.{md,mdx}",
-] as const;
+// One walk: under the dot dialect `**` enters every directory, so the dot-leading
+// roots (`.claude`, `.github`, `.changeset`, ...) that used to be listed beside it
+// are already covered and would only be walked a second time.
+const MARKDOWN_GLOBS = ["**/*.{md,mdx}"] as const;
 
 const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
 const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/vendor/"] as const;
@@ -367,6 +362,12 @@ const MARKDOWN_EXCLUSION_GLOBS = A.appendAll(
     `${directory}/**`,
   ])
 );
+// The name-shaped exclusions above, which the walk never enters at any depth, plus
+// `worktrees`: a populated `.claude/worktrees/<lane>` is a whole checkout that the
+// `**/.claude/worktrees` exclusion would otherwise walk before discarding. The
+// repository tracks no other directory of that name (`git ls-files | grep -c
+// '/worktrees/'` is 0), so the pruned set equals the excluded set over the tree.
+const PRUNED_DIRECTORY_NAMES = [".repos", "node_modules", "dist", "vendor", ".git", ".beep", "worktrees"] as const;
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
   filePath === prefix || Str.startsWith(Str.endsWith("/")(prefix) ? prefix : `${prefix}/`)(filePath);
@@ -1628,6 +1629,155 @@ const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> 
   return pipe(options.includePaths ?? A.empty<string>(), A.appendAll(prefixGlobs), A.dedupe);
 };
 
+const FOUNDATION_SOURCE_GLOB = "packages/foundation/**/src/**/*.{ts,tsx}";
+const READLINK_CONCURRENCY = 16;
+
+const toCwdRelativePosixPath = (path: Path.Path, file: string): string =>
+  toPosixPath(path.isAbsolute(file) ? path.relative(process.cwd(), file) : file);
+
+// Each include pattern is expanded by `@beep/walker` from the working directory
+// (unreadable entries skipped); the walk never enters the name-shaped exclusions,
+// and the path-shaped ones (`.claude/worktrees`, `docs/modules`, ...) are matched
+// on the result through `@beep/glob` under the same dot dialect as the include
+// patterns. Symbolic links are dropped, directories and files alike, as the
+// previous walker did: the repository's `CLAUDE.md` links resolve to `AGENTS.md`
+// files the walk already reads, and a link scanned through its own path would
+// double every finding and write. The walker skips linked directories itself but
+// lists a linked file (its `stat` follows the link), so the file-level drop is a
+// `readLink` probe per candidate, run concurrently: it is one syscall each over
+// thousands of files, and order is restored by the sort before it.
+const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(function* (
+  patterns: ReadonlyArray<string>,
+  exclusions: ReadonlyArray<string>,
+  dot: boolean,
+  failure: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const cwd = process.cwd();
+  const globOptions = GlobPatternOptions.make({ dot });
+  const excluded = yield* Effect.forEach(exclusions, GlobPattern.compile(globOptions)).pipe(
+    Effect.mapError(() => EffectImportRulesConfigurationError.new(failure))
+  );
+  const files = yield* Effect.forEach(
+    patterns,
+    compileAndExpand({
+      cwd,
+      glob: { dot },
+      prune: PRUNED_DIRECTORY_NAMES,
+      followSymlinks: false,
+      onUnreadable: "skip",
+    })
+  ).pipe(Effect.mapError(() => EffectImportRulesConfigurationError.new(failure)));
+  const candidates = pipe(
+    A.flatten(files),
+    A.filter((file) => !A.some(excluded, (exclusion) => exclusion.matches(file))),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  return yield* Effect.filter(
+    candidates,
+    (file) =>
+      fs.readLink(path.join(cwd, file)).pipe(
+        Effect.as(false),
+        Effect.orElseSucceed(() => true)
+      ),
+    { concurrency: READLINK_CONCURRENCY }
+  );
+});
+
+/**
+ * Discover the executable sources one `effect-imports` run reads, relative to
+ * the working directory.
+ *
+ * **Details**
+ *
+ * The set is the code corpus for the run's scope (every repository source
+ * family by default, or the explicit paths and prefixes) plus the foundation
+ * `src` files the mapping phase resolves exports from; in `markdown` mode only
+ * the foundation files remain. Generated and vendored directories
+ * (`.repos`, `node_modules`, `dist`, `vendor`, any `worktrees` directory, so
+ * nested `.claude/worktrees` checkouts above all) are excluded, dot directories
+ * are not entered, symbolic links are skipped and an unreadable entry is skipped. Paths are POSIX, deduplicated and sorted;
+ * the per-run scope filter (`excludePaths`, deliberate exclusions, prefixes)
+ * is applied by the runner, not here.
+ *
+ * **Example** (Reference the source discovery step)
+ *
+ * ```ts
+ * import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "@beep/repo-cli/commands/Laws/EffectImports"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = discoverEffectImportSourceFiles(EffectImportRulesOptions.make({ excludePaths: [] }))
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @param options - The run options whose mode, include paths and prefixes bound the corpus.
+ * @returns Sorted working-directory-relative POSIX paths of the sources the run reads.
+ * @category queries
+ * @since 0.0.0
+ */
+export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discoverEffectImportSourceFiles")(function* (
+  options: EffectImportRulesOptions
+) {
+  return yield* discoverFilesWithGlob(
+    A.append(options.mode === "markdown" ? A.empty<string>() : codeGlobsFor(options), FOUNDATION_SOURCE_GLOB),
+    CODE_EXCLUSION_GLOBS,
+    false,
+    "Could not discover source files."
+  );
+});
+
+/**
+ * Discover the Markdown documents a `markdown` mode `effect-imports` run
+ * reads, relative to the working directory.
+ *
+ * **Details**
+ *
+ * Explicit `includePaths` are taken as given; otherwise every `.md` and `.mdx`
+ * file below the working directory is listed, dot directories included, except
+ * the generated and vendored directories the source corpus excludes (any
+ * `worktrees` directory among them) plus `.git`, `.beep`, `docs/modules`,
+ * `docs/generated` and `docs/_internal`.
+ * Symbolic links and unreadable entries are skipped. Paths are
+ * POSIX, deduplicated and sorted; the per-run scope filter is applied by the
+ * runner, not here.
+ *
+ * **Example** (Reference the Markdown discovery step)
+ *
+ * ```ts
+ * import { discoverEffectImportMarkdownFiles, EffectImportRulesOptions } from "@beep/repo-cli/commands/Laws/EffectImports"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = discoverEffectImportMarkdownFiles(EffectImportRulesOptions.make({ mode: "markdown", excludePaths: [] }))
+ * console.log(Effect.isEffect(program))
+ * ```
+ *
+ * @param options - The run options whose explicit include paths, when present, replace the walk.
+ * @returns Sorted working-directory-relative POSIX paths of the Markdown documents the run reads.
+ * @category queries
+ * @since 0.0.0
+ */
+export const discoverEffectImportMarkdownFiles = Effect.fn("EffectImports.discoverEffectImportMarkdownFiles")(
+  function* (options: EffectImportRulesOptions) {
+    if (P.isNotUndefined(options.includePaths)) {
+      const path = yield* Path.Path;
+      return pipe(
+        options.includePaths,
+        A.map((file) => toCwdRelativePosixPath(path, file)),
+        A.dedupe,
+        A.sort(Order.String)
+      );
+    }
+    return yield* discoverFilesWithGlob(
+      MARKDOWN_GLOBS,
+      MARKDOWN_EXCLUSION_GLOBS,
+      true,
+      "Could not discover Markdown source files."
+    );
+  }
+);
+
 /**
  * Run per-module import migration/check logic.
  *
@@ -1681,19 +1831,10 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     MutableHashSet.add(excludePaths, toPosixPath(excludePath));
   }
 
-  // Prune ignored directories and suppress inaccessible-entry errors during discovery.
   // Load only matches to avoid ts-morph recursively registering excluded directories.
-  const discoveredSourceFiles = yield* Effect.tryPromise({
-    try: () =>
-      glob(
-        A.append(
-          options.mode === "markdown" ? A.empty<string>() : codeGlobsFor(options),
-          "packages/foundation/**/src/**/*.{ts,tsx}"
-        ),
-        { cwd: process.cwd(), absolute: true, ignore: CODE_EXCLUSION_GLOBS, followSymbolicLinks: false }
-      ),
-    catch: () => EffectImportRulesConfigurationError.new("Could not discover source files."),
-  });
+  const discoveredSourceFiles = yield* discoverEffectImportSourceFiles(options).pipe(
+    Effect.map(A.map((relativePath) => path.join(process.cwd(), relativePath)))
+  );
   const project = createRepoTsMorphProject({
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
     sourceFileGlobs: [],
@@ -1717,24 +1858,8 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
 
   if (options.mode === "markdown") {
     const fs = yield* FileSystem.FileSystem;
-    const discoveredFiles = P.isUndefined(options.includePaths)
-      ? yield* Effect.tryPromise({
-          try: () =>
-            glob(A.fromIterable(MARKDOWN_GLOBS), {
-              cwd: process.cwd(),
-              dot: true,
-              ignore: MARKDOWN_EXCLUSION_GLOBS,
-              followSymbolicLinks: false,
-            }),
-          catch: () => EffectImportRulesConfigurationError.new("Could not discover Markdown source files."),
-        })
-      : options.includePaths;
-    const markdownFiles = pipe(
-      discoveredFiles,
-      A.map((file) => toPosixPath(path.isAbsolute(file) ? path.relative(process.cwd(), file) : file)),
-      A.filter((file) => isPathInActiveScope(options, excludePaths, file)),
-      A.dedupe,
-      A.sort(Order.String)
+    const markdownFiles = yield* discoverEffectImportMarkdownFiles(options).pipe(
+      Effect.map(A.filter((file) => isPathInActiveScope(options, excludePaths, file)))
     );
     for (const relativePath of markdownFiles) {
       const absolutePath = path.join(process.cwd(), relativePath);
