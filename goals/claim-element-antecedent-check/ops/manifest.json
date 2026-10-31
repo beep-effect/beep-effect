@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Autonomous acceptance v1 applied: strict 37/538, all 34 protected passes retained; actual-attorney fields false. References and previous results unchanged. Fleet coordination designates shared repair #2399 to land first; overlapping #2402 work is retained locally at 42ddc80058 with 174 tests and type checks passing, not pushed or called final. Await accepted main, reconcile distinct changes, then publish the claim PR. P4 in progress; P5 pending."
+  "statusNote": "Autonomous acceptance v1 applied: strict 37/538, all 34 protected passes retained; actual-attorney fields false. Accepted main #2399/f16d82e9f1 is merged locally at 11b3cd715c. Fresh positive/allowed replay results and all 251 successful reports are byte-identical; all 20 runtime, 631 historical and 1,136 snapshot hashes match. Alternative #2402 is closed unmerged, with recovery commit42ddc80058 retained. All three current-base package audit/docgen verifications and cache policy pass. The primary claim PR remains unpublished; P4 is in progress and P5 is pending."
 }

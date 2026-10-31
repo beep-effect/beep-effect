@@ -63,6 +63,8 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [Accepted-main replay](history/2026-10-31-current-base-replay-2.json): consumes #2399 at f16d82e9f1, closes the competing #2402 unmerged with its recovery branch retained, and proves both full results and all 251 reports unchanged. All 34 protected passes and all prior evidence remain intact; all three current-base package verifications pass.
+
 - [Shared delivery repair coordination](history/2026-10-31-delivery-coordination.json): #2399 is the designated repair to land first. The tested alternative is retained locally; claim publication waits for accepted main. Strict37/538 and all34 protected passes remain unchanged.
 
 - [Isolated repository repair ready for review](history/2026-10-31-delivery-unblocker-ready.json): upstream PR #2402 has a passing content-final receipt with explicit local skips and an identical-tree review-trigger head. Hosted checks, its review window and merge remain pending; the claim delivery PR is still unpublished.

@@ -40,7 +40,7 @@ are fixed, never before.
 
 ## Current Blockers
 
-No attorney attendance dependency remains. P2/P3 measurements and independent automated reviews are recorded in [the current report](history/2026-10-31-autonomous-evaluation.md), including all unresolved outcomes and high alert noise. P4 requires base synchronization, Yeet publication, required hosted checks and review readiness. P5 requires the final reflection and packet closure. These delivery gates remain active.
+No attorney attendance dependency remains. P2/P3 measurements and independent automated reviews are recorded in [the current report](history/2026-10-31-autonomous-evaluation.md), including all unresolved outcomes and high alert noise. Accepted main #2399 is synchronized; the new replay preserves both full results and all 251 prediction reports. All three current-base package verifications pass. P4 still requires Yeet publication, required hosted checks and review readiness. P5 requires the final reflection and packet closure. These delivery gates remain active.
 
 ## Historical checkpoints and superseded holds
 

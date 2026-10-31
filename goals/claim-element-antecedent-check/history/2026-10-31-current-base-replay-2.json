@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "claim-base-dependency-replay/v2",
+  "date": "2026-10-31",
+  "featureParent": "6a6459ef90e2e2f358374009470f8756721b3ca4",
+  "mergedMainCommit": "f16d82e9f16d72f64d42b40284bf2867566e796b",
+  "mergeCommit": "11b3cd715c3e92ad2a9e599735006e9115350250",
+  "acceptedSharedRepair": "https://github.com/beep-effect/beep-effect/pull/2399",
+  "supersededAlternative": "https://github.com/beep-effect/beep-effect/pull/2402",
+  "alternativeStatus": "closed-unmerged-superseded",
+  "alternativeRecoveryCommit": "42ddc80058",
+  "competingImplementationMerged": false,
+  "runtimeFreeze": "research/implementation-repair-v19-freeze.json",
+  "implementationDigest": "12c49d54d2734330e1dbe580e15a8c8f598696b952c13958dbe142fdc82a5263",
+  "lockfileSha256": "980e07d2b061f3a517d56e572599a48927b907c53156412dbe34efebdfab10a5",
+  "transport": "Offline recorded native XML with explicit synthetic metadata aliases; no live fetch",
+  "strictMatches": 37,
+  "selectedPositiveClaims": 538,
+  "all34ProtectedPassesRetained": true,
+  "lostProtectedPasses": 0,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "preservation": [
+    {
+      "manifest": "research/implementation-repair-v19-freeze.json",
+      "checked": 20,
+      "mismatches": []
+    },
+    {
+      "manifest": "history/autonomous-review-v1/preservation.json",
+      "checked": 631,
+      "mismatches": []
+    },
+    {
+      "manifest": "pre-landed-sync-evidence-f2cd",
+      "checked": 1136,
+      "mismatches": []
+    }
+  ],
+  "runs": [
+    {
+      "lane": "positive",
+      "fullResultsByteIdentical": true,
+      "predictionsByteIdentical": 55,
+      "resultsSha256": "2d4f12fdd4839802436c0ac1a70a51b1cc00338936ffbe7c8f2006cd75543d42"
+    },
+    {
+      "lane": "allowed",
+      "fullResultsByteIdentical": true,
+      "predictionsByteIdentical": 196,
+      "resultsSha256": "481c4afe47d3a3bc2e10968cb9423811db1c18c285325812c703b8f0a7e22fa5"
+    }
+  ],
+  "durableRawReplayCopyVerified": true,
+  "frozenInstall": "pass",
+  "canonicalDocumentationInventory": {
+    "packages": 183,
+    "openPackages": 17,
+    "openExports": 99,
+    "openModules": 166,
+    "rootPolicyOpen": 0
+  },
+  "documentationBaselineTotalsUnchanged": true,
+  "cacheBlockingFindings": 0,
+  "packageVerification": {
+    "law-practice-domain": {
+      "audit": "pass",
+      "docgen": "pass",
+      "logSha256": "f0d782fb7e142e63c114b40fe726649a49f89a474f726571f3827e21be8c88e7"
+    },
+    "law-practice-use-cases": {
+      "audit": "pass",
+      "docgen": "pass",
+      "logSha256": "7c20bebee702a0730e6465510485164acc9e3480f0819ee8ea67e145626474a3"
+    },
+    "law-practice-server": {
+      "audit": "pass",
+      "docgen": "pass",
+      "logSha256": "b07ea007d9297c04337725ca46c7eb4b88c8292640aa099921479c9af73632a7"
+    }
+  },
+  "upstreamHostedChecksAllGreen": false,
+  "upstreamAcceptedInheritedReds": {
+    "Repo Sanity": "Old check imports removed workspacePatternsFrom; fixed on accepted main by #2408/c8516c5c80 before #2399 merged.",
+    "Coverage Regression": "Measured decreases in three CLI files changed by tooling retirement; retained exact failure, owner assigned, distinct coverage tests are being restored by #2389."
+  },
+  "primaryPullRequestPublished": false,
+  "phases": "P4 in progress; P5 pending",
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "freshFixedEvaluationReplay": true,
+  "newAccuracyGain": false,
+  "newHeldOutValidation": false
+}
