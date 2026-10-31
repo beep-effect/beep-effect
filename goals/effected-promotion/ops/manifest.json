@@ -161,6 +161,10 @@
     {
       "path": "ops/xdg-systemd-differential.ts",
       "purpose": "Wave 4-X differential: @beep/xdg base and search directories against systemd-path over an environment matrix."
+    },
+    {
+      "path": "ops/markdown-toc-differential.ts",
+      "purpose": "Roadmap R5b differential: @beep/markdown MarkdownToc against a disposable @effect/markdown-toc 0.1.0 install over every tracked Markdown file and every generated docgen page, with the page's embedded TOC compared to the oracle."
     }
   ],
   "provides": [],
