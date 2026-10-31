@@ -271,15 +271,17 @@ export abstract class MarkdownToc {
    */
   static readonly entries = (document: MarkdownDocument): ReadonlyArray<TocEntry> => {
     const boundary = markerBoundary(document);
+    // `headingContents` maps `headings` one to one, so zipping them pairs every heading with its content.
     const listed = A.filter(
-      A.map(document.headings, (heading, index) => ({ heading, index })),
+      A.map(A.zip(document.headings, document.headingContents), ([heading, content], index) => ({
+        heading,
+        content,
+        index,
+      })),
       ({ heading }) => O.isNone(boundary) || heading.node.position.start.line > boundary.value + 1
     );
-    const contents = document.headingContents;
-    const [, entries] = A.mapAccum(listed, HashMap.empty<string, number>(), (seen, { heading, index }) => {
-      const text = MarkdownSlug.headingLine(
-        O.getOrElse(A.get(contents, index), () => document.headingSource(heading.node))
-      );
+    const [, entries] = A.mapAccum(listed, HashMap.empty<string, number>(), (seen, { heading, content, index }) => {
+      const text = MarkdownSlug.headingLine(content);
       const key = Str.toLowerCase(text);
       const occurrence = O.match(HashMap.get(seen, key), { onNone: () => 0, onSome: (count) => count + 1 });
       const entry = TocEntry.make({

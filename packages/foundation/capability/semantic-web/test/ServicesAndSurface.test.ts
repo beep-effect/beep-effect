@@ -23,7 +23,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, R } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -140,11 +140,12 @@ describe("Services and Surface", () => {
 
       for (const [name, schema] of schemaEntries) {
         const metadata = getSemanticSchemaMetadata(schema);
-        expect(O.isSome(metadata), `${moduleAudit.name}.${name}`).toBe(true);
-        expect(
+        assertTrue(O.isSome(metadata), `${moduleAudit.name}.${name}`);
+        deepStrictEqual(
           O.map(metadata, (m) => m.canonicalName),
+          O.some(name),
           `${moduleAudit.name}.${name}`
-        ).toEqual(O.some(name));
+        );
       }
     }
   });

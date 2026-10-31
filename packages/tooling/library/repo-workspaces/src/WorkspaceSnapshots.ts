@@ -43,9 +43,9 @@ import { ConfigDependencyHooks } from "./ConfigDependencyHooks.ts";
 import { importerVersionsOf } from "./internal/importerVersions.ts";
 import { findLayerRoot } from "./internal/layerRoot.ts";
 import { dependencyBlocksOf } from "./internal/manifestFields.ts";
-import { manifestPatternsOf, pnpmPatternsOf } from "./internal/patterns.ts";
 import { CatalogSet, ImporterVersions, injectFromDocument, WorkspaceCatalogs } from "./WorkspaceCatalogs.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
+import { WorkspacePatterns } from "./WorkspacePatterns.ts";
 import { WorkspaceRoot } from "./WorkspaceRoot.ts";
 import { PackageStateSnapshot, WorkspaceStateSnapshot } from "./WorkspaceStateSnapshot.ts";
 import type { GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git";
@@ -558,7 +558,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
           CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause })
         )
       );
-      const pnpmPatterns = pnpmPatternsOf(document);
+      const pnpmPatterns = WorkspacePatterns.fromPnpmWorkspace(document);
       const inline = yield* CatalogSet.fromWorkspaceYaml(text);
       // Replay the ref's config-dependency hooks at the versions the ref's
       // OWN `configDependencies` declare, seeded by the ref's inline
@@ -578,8 +578,8 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
       const recorded = yield* lockfileRecord(lockfile, "pnpm");
       return {
         // A `pnpm-workspace.yaml` with no `packages:` falls back to the root
-        // manifest's `workspaces` field, matching live `readPatterns`.
-        patterns: pnpmPatterns.length > 0 ? pnpmPatterns : manifestPatternsOf(rootManifest),
+        // manifest's `workspaces` field, matching live `WorkspacePatterns.read`.
+        patterns: pnpmPatterns.length > 0 ? pnpmPatterns : WorkspacePatterns.fromManifest(rootManifest),
         inline,
         injected: replayed.injected,
         hookReplays: replayed.injection.replays,
@@ -614,7 +614,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
     ) {
       const recorded = yield* lockfileRecord(yield* lockfileText(root, ref, "bun"), "bun");
       return {
-        patterns: manifestPatternsOf(rootManifest),
+        patterns: WorkspacePatterns.fromManifest(rootManifest),
         inline: bunInlineCatalogs(rootManifest),
         injected: CatalogSet.empty(),
         hookReplays: {},

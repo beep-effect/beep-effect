@@ -36,14 +36,12 @@ import {
 import {
   CatalogUsageRootManifest,
   readCatalogUsageManifest,
-  readChangesetGraphRootPatterns,
   readChangesetGraphWorkspaceManifest,
   readChangesetStatusWorkspacePackage,
   readPackageVerifyWorkspace,
   readQualityTaskManifest,
   readRootCatalogs,
   readWorkspacePackageText,
-  workspacePatternsFromPackageJson,
 } from "@beep/repo-cli/test/Quality";
 import { applyJsoncModification, JsoncModification } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -163,12 +161,6 @@ const ChangesetGraphOracle = S.Struct({
   ),
 });
 const decodeChangesetGraphOracle = S.decodeUnknownEffect(S.fromJsonString(ChangesetGraphOracle));
-const changesetGraphOraclePatterns = (document: typeof ChangesetGraphOracle.Type): ReadonlyArray<string> =>
-  P.isUndefined(document.workspaces)
-    ? A.empty()
-    : A.isArray(document.workspaces)
-      ? (document.workspaces as ReadonlyArray<string>)
-      : ((document.workspaces as { readonly packages?: ReadonlyArray<string> }).packages ?? A.empty());
 
 // ChangesetStatus `ChangesetStatusPackageJson`, then the site's name check.
 const decodeChangesetStatusOracle = S.decodeUnknownEffect(
@@ -327,11 +319,9 @@ const updatedBytes = <E>(
   }).pipe(Effect.orElseSucceed(() => REJECTED));
 
 const SITES: ReadonlyArray<Site> = [
-  {
-    site: "repo-cli Quality/ChangesetGraph.ts root (workspace patterns)",
-    oracle: ({ text }) => verdictOf(decodeChangesetGraphOracle(text), changesetGraphOraclePatterns),
-    adopted: ({ text, path }) => verdictOf(readChangesetGraphRootPatterns(text, path), (patterns) => patterns),
-  },
+  // The ChangesetGraph root (workspace patterns) site recorded in the 3-A4 run
+  // left this script in 4-A2: the reader moved onto `@beep/repo-workspaces`
+  // `WorkspacePatterns` (ops/workspace-patterns-adoption-parity.ts).
   {
     site: "repo-cli Quality/ChangesetGraph.ts member (name, private)",
     oracle: ({ text }) => verdictOf(decodeChangesetGraphOracle(text), (d) => [d.name ?? null, d.private === true]),
@@ -376,24 +366,13 @@ const SITES: ReadonlyArray<Site> = [
       ]),
   },
   {
-    site: "repo-cli Quality/Tasks.ts (name, scripts, workspace patterns)",
-    oracle: ({ text }) =>
-      verdictOf(decodeTasksOracle(text), (d) => [
-        d.name ?? null,
-        d.scripts ?? {},
-        P.isUndefined(d.workspaces)
-          ? []
-          : A.isArray(d.workspaces)
-            ? d.workspaces
-            : (d.workspaces as { readonly packages: ReadonlyArray<string> }).packages,
-      ]),
+    // The workspace-pattern third of this site left in 4-A2 (the root patterns
+    // come from `@beep/repo-workspaces` `WorkspacePatterns` now); the 3-A4
+    // run recorded all three.
+    site: "repo-cli Quality/Tasks.ts (name, scripts)",
+    oracle: ({ text }) => verdictOf(decodeTasksOracle(text), (d) => [d.name ?? null, d.scripts ?? {}]),
     adopted: ({ text, path }) =>
-      verdictOf(
-        Effect.flatMap(readQualityTaskManifest(text, path), (m) =>
-          Effect.map(workspacePatternsFromPackageJson(m, path), (patterns) => [m, patterns] as const)
-        ),
-        ([m, patterns]) => [m.name ?? null, m.scripts ?? {}, patterns]
-      ),
+      verdictOf(readQualityTaskManifest(text, path), (m) => [m.name ?? null, m.scripts ?? {}]),
   },
   {
     site: "repo-cli Quality/CatalogUsage.ts root (catalog, catalogs, overrides)",
