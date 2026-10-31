@@ -110,9 +110,9 @@ const requireInheritedLock = Effect.fnUntraced(function* (directory: string, uid
   return yield* failure("ownership");
 });
 const ProcessPopulationLimits = S.Struct({
-  memory: S.Number.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(2147483648)),
+  memory: S.Finite.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(2147483648)),
   swap: S.tag(0),
-  pids: S.Number.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(128)),
+  pids: S.Finite.check(S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(128)),
 }).pipe(
   $I.annoteSchema("ProcessPopulationLimits", {
     description: "Observed cgroup memory, zero swap and task ceilings required before opening the journal.",

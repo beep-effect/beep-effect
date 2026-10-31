@@ -1,3 +1,4 @@
+import * as NodeHttp from "node:http";
 import { PhoenixConfigInput } from "@beep/phoenix";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import { EvidenceRetentionPolicy } from "@beep/repo-ai-metrics/evidence-retention";
@@ -27,11 +28,11 @@ import {
 import { TranscriptSweepInput } from "@beep/repo-ai-metrics/transcript-sweep";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
-import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
+import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import { expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Clock from "effect/Clock";
@@ -55,7 +56,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
 import type * as Statement from "effect/sql/Statement";
 
-const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
+const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const isStringRows = S.is(S.Array(S.String));
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -85,7 +86,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
     },
   });
   const backend = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 })),
+    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })),
     HttpServer.HttpServer
   );
   const origin = HttpServer.formatAddress(backend.address);
@@ -149,7 +150,7 @@ const fixture = Effect.fn("ObservationWorkerTest.fixture")(function* (blockBacke
     Effect.provideService(SqlClient.SqlClient, proxy)
   );
   const intake = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 })),
+    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })),
     HttpServer.HttpServer
   );
   yield* intake.serve(worker.handler);
@@ -490,7 +491,7 @@ const maintenanceFixture = Effect.fn("ObservationWorkerTest.maintenanceFixture")
   yield* fs.chmod(root, 0o700);
   const maintenance = yield* makeObservationMaintenanceHttp(f.worker, f.config, root);
   const server = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 })),
+    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })),
     HttpServer.HttpServer
   );
   yield* server.serve(

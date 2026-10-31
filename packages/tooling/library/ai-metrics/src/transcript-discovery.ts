@@ -8,6 +8,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -224,6 +225,7 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
   input: TranscriptDiscoveryInput
 ) {
   const path = yield* Path.Path;
+  const fs = yield* FileSystem.FileSystem;
   const ownerScope = yield* Scope.Scope;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const salt = Redacted.value(input.hashSalt);
@@ -243,6 +245,10 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
   const roots: ReadonlyArray<RootRuntime> = yield* Effect.forEach(input.roots, (root) =>
     Effect.gen(function* () {
       const resolved = path.resolve(root.path);
+      if (!root.retired) {
+        const canonical = yield* fs.realPath(resolved).pipe(Effect.option);
+        if (O.isSome(canonical) && canonical.value !== resolved) return yield* failure("configuration");
+      }
       return {
         path: resolved,
         source: root.source,

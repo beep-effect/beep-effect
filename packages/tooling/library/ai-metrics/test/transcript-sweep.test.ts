@@ -8,7 +8,7 @@ import {
 } from "@beep/repo-ai-metrics/transcript-sweep";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -20,7 +20,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const line = '{"type":"response_item","payload":{"type":"message","content":"synthetic-private-sweep-content"}}\n';
 const fixture = Effect.fn("TranscriptSweepTest.fixture")(function* (maxPages = 16) {
   const fs = yield* FileSystem.FileSystem;

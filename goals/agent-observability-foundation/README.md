@@ -37,7 +37,9 @@ its exact-value scanner dependency [PR2366](https://github.com/beep-effect/beep-
 is merged at `4a71782090acac558412687d387de7996aec4073` and integrated.
 The October 31 repair also resolves generated-inventory merge drift, documentation
 lint, fixture configuration ownership and stale exploration references. Current
-hosted results remain required after publication.
+hosted results remain required after publication. The subsequent discovery review
+fixes change runtime bytes; historical v3 canaries remain historical, with new
+regression and cross-runtime evidence tracked separately.
 The [independent acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) now
 supports all thirteen criteria at their specified scope. The final
 [declared repository proof](./research/DECLARED-ROUTE-PROOF.md) closes the missing

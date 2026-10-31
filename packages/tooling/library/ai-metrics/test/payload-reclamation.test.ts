@@ -18,7 +18,7 @@ import {
 } from "@beep/repo-ai-metrics/transcript-page";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -32,7 +32,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 

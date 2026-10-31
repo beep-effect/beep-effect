@@ -9,7 +9,7 @@ import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake"
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
+import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

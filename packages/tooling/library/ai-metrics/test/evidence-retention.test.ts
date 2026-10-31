@@ -14,7 +14,7 @@ import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-
 import { readTranscriptPage, TranscriptPageInput } from "@beep/repo-ai-metrics/transcript-page";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -30,7 +30,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 
@@ -181,9 +181,9 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         yield* TestClock.adjust("60 seconds");
         yield* f.reclaimer.reclaim(observedAgain.page.receiptId);
         const next = yield* f.retention.seal(1);
-        assertTrue(O.isSome(next));
+        assertTrue(next._tag === "Some");
         expect(next.value.record.epoch).toBe(1);
-        assertTrue(O.isSome(sealed));
+        assertTrue(sealed._tag === "Some");
         assertSome(next.value.record.previousDigest, sealed.value.digest);
         expect(yield* f.retention.window).toMatchObject({
           epoch: 2,

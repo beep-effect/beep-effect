@@ -47,7 +47,15 @@ try:
             continue
         count += 1
         relative = os.path.relpath(entry.path, root)
-        if count > max_entries or len(entry.path.encode("utf-8", errors="strict")) > 4096 or len(relative) > 4096:
+        if count > max_entries:
+            emit("overflow")
+            break
+        try:
+            path_bytes = entry.path.encode("utf-8", errors="strict")
+        except UnicodeEncodeError:
+            emit("other")
+            continue
+        if len(path_bytes) > 4096 or len(relative) > 4096:
             emit("overflow")
             break
         if entry.is_symlink():

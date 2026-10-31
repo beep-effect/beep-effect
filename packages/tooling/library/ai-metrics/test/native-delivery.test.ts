@@ -11,7 +11,7 @@ import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
@@ -33,7 +33,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
-const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
+const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 

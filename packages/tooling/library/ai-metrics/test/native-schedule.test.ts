@@ -19,7 +19,7 @@ import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-
 import { readTranscriptPage, TranscriptPageInput } from "@beep/repo-ai-metrics/transcript-page";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
@@ -45,7 +45,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
-const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
+const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const schedulePolicy = NativeSchedulePolicy.make({
   maxEvents: 1,
@@ -321,7 +321,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const scheduler = yield* f.reopen();
       const tick = yield* scheduler.tick;
       assertTrue(tick._tag === "Complete");
-      assertTrue(O.isSome(tick.lag));
+      assertTrue(tick.lag._tag === "Some");
       expect(tick.lag.value).toMatchObject({ sampledEvents: 1, unknownSourceTimes: 1 });
       assertNone(tick.lag.value.maxSourceAgeMillis);
       expect(O.getOrElse(tick.lag.value.maxAcceptedAgeMillis, () => -1)).toBeGreaterThanOrEqual(0);
@@ -350,7 +350,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture(1, O.some(`${now + 60000}000000`));
       const tick = yield* (yield* f.reopen()).tick;
       assertTrue(tick._tag === "Complete");
-      assertTrue(O.isSome(tick.lag));
+      assertTrue(tick.lag._tag === "Some");
       expect(tick.lag.value).toMatchObject({ sourceClockRegressions: 1, unknownSourceTimes: 0 });
       assertNone(tick.lag.value.maxSourceAgeMillis);
     })
@@ -377,7 +377,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         })
       );
       assertTrue(tick._tag === "Complete");
-      assertTrue(O.isSome(tick.lag));
+      assertTrue(tick.lag._tag === "Some");
       expect(tick.lag.value).toMatchObject({ sampledEvents: 1, unknownSourceTimes: 0 });
       assertSome(tick.lag.value.maxSourceAgeMillis, 1);
     })

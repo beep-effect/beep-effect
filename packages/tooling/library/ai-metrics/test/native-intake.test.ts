@@ -11,8 +11,8 @@ import { readTranscriptPage, TranscriptPageInput } from "@beep/repo-ai-metrics/t
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
-import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
+import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -25,7 +25,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const salt = "synthetic-native-intake-salt";
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 

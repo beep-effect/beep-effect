@@ -1,3 +1,4 @@
+import * as NodeHttp from "node:http";
 import * as Zlib from "node:zlib";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import { makeNativeHttpIntake, NativeHttpPolicy, renderNativeHttpMetrics } from "@beep/repo-ai-metrics/native-http";
@@ -6,9 +7,9 @@ import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
-import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
+import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -29,7 +30,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bodyTimeoutMillis = 2000) {
   const salt = "synthetic-native-http-salt";
   const config = TranscriptIntakeConfig.make({
@@ -49,7 +50,9 @@ const fixture = Effect.fn("NativeHttpTest.fixture")(function* (maxPages = 16, bo
       bodyTimeoutMillis,
     })
   );
-  const context = yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 }));
+  const context = yield* Layer.build(
+    NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })
+  );
   const server = Context.get(context, HttpServer.HttpServer);
   const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
   yield* server.serve(intake.handler);

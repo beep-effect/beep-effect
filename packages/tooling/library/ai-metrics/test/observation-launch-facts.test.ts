@@ -9,18 +9,17 @@ import {
 import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import { expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
 const known = (digit: string) => ObservationIdentity.cases.Verified.make({ id: id(digit), evidenceId: id("e") });
 const identity = ObservationLaunchIdentity.make({
@@ -136,7 +135,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) => {
       yield* f.facts.record(bind, 0);
       yield* f.facts.record(finish(), 0);
       const sealed = yield* f.retention.seal(0);
-      assertTrue(O.isSome(sealed));
+      assertTrue(sealed._tag === "Some");
       expect(sealed.value.record.totals).toMatchObject({
         pages: 0,
         eventObservations: 0,

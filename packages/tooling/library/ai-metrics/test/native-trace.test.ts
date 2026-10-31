@@ -177,7 +177,7 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
       assertNone(observedSpan.usage.output);
       assertNone(observedSpan.usage.cacheRead);
       assertNone(observedSpan.usage.cacheWrite);
-      assertTrue(O.isSome(batch.spans[0]?.modelHash ?? O.none()));
+      expect((batch.spans[0]?.modelHash ?? O.none())._tag).toBe("Some");
       expect(yield* encodeNativeTraceBatchJson(batch)).not.toContain("private-");
     })
   );

@@ -1,3 +1,4 @@
+import * as NodeHttp from "node:http";
 import { makeObservationControl, ObservationControlPolicy } from "@beep/repo-ai-metrics/observation-control";
 import {
   makeObservationLaunchClient,
@@ -17,9 +18,9 @@ import {
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
-import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
+import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import { expect } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -33,7 +34,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
 const prepare = ObservationLaunchFact.cases.Prepared.make({
   launchId: id("1"),
@@ -78,7 +79,7 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
   const mode = yield* Ref.make("normal");
   const posts = yield* Ref.make(0);
   const server = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ unix: `${directory}/worker.sock` })),
+    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { path: `${directory}/worker.sock` })),
     HttpServer.HttpServer
   );
   yield* fs.chmod(`${directory}/worker.sock`, 0o600);
@@ -198,7 +199,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.fs.chmod(`${f.directory}/worker.sock`, 0o600);
       yield* f.fs.rename(`${f.directory}/worker.sock`, `${f.directory}/retired.sock`);
       const replacement = Context.get(
-        yield* Layer.build(BunHttpServer.layer({ unix: `${f.directory}/worker.sock` })),
+        yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { path: `${f.directory}/worker.sock` })),
         HttpServer.HttpServer
       );
       yield* replacement.serve(Effect.succeed(HttpServerResponse.text("synthetic replacement")));

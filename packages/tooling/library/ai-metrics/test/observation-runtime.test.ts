@@ -21,7 +21,6 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
@@ -188,7 +187,8 @@ it.effect("requires a freshness bound longer than cadence plus deadline", () =>
       cycleTimeoutMillis: 200,
       staleAfterMillis: 300,
     }).pipe(Effect.flip);
-    assertTrue(S.isSchemaError(error));
+    const schemaError = S.isSchemaError(error);
+    assertTrue(schemaError);
     const accepted = yield* S.decodeEffect(ObservationRuntimePolicy)({
       intervalMillis: 100,
       cycleTimeoutMillis: 200,
@@ -255,7 +255,8 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       expect(before).not.toContain("beep_observation_delivery_pass_examined");
       expect(before).toContain("beep_observation_source_coverage_known 0");
       yield* Ref.set(f.crash, true);
-      assertTrue(Exit.isFailure(yield* Effect.exit(f.runtime.run)));
+      const crashed = yield* Effect.exit(f.runtime.run);
+      assertTrue(crashed._tag === "Failure");
       expect(yield* f.runtime.health).toMatchObject({ phase: "stopped", running: false, lastCycle: { _tag: "None" } });
       expect(yield* Ref.get(f.control)).toMatchObject({ accepting: false });
       expect(yield* Ref.get(f.pauses)).toBe(1);

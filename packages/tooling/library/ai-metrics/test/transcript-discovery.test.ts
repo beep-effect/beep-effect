@@ -9,7 +9,7 @@ import {
 import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -19,6 +19,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
@@ -26,7 +27,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-const layer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeServices.layer);
+const layer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeServices.layer);
 const line = '{"type":"response_item","payload":{"type":"message","content":"synthetic-private-discovery"}}\n';
 const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
 const fixture = Effect.fn("TranscriptDiscoveryTest.fixture")(function* () {
@@ -137,7 +138,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
   )
 );
 it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
-  it.effect("reports depth and entry overflow, excludes symlinks, and never follows a symlink root", () =>
+  it.effect("reports depth and entry overflow and excludes symlinks", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
       yield* f.fs.makeDirectory(`${f.dir}/deep/a/b`, { recursive: true });
@@ -149,7 +150,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       yield* f.fs.symlink(`${f.dir}/wide/rollout-1.jsonl`, `${f.dir}/links/rollout-link.jsonl`);
       const d = yield* makeTranscriptDiscovery(
         TranscriptDiscoveryInput.make({
-          ...f.input([`${f.dir}/deep`, `${f.dir}/wide`, `${f.dir}/links`, `${f.dir}/linked-root`]),
+          ...f.input([`${f.dir}/deep`, `${f.dir}/wide`, `${f.dir}/links`]),
           maxDepth: 2,
           maxEntries: 64,
           maxFiles: 32,
@@ -157,9 +158,56 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         })
       );
       const result = yield* d.next;
-      expect(A.map(result.report.roots, (r) => r.state)).toEqual(["overflow", "overflow", "complete", "changed"]);
+      expect(A.map(result.report.roots, (r) => r.state)).toEqual(["overflow", "overflow", "complete"]);
       expect(result.report.roots[2]?.excludedLinks).toBe(1);
       expect(result.sources).toHaveLength(2);
+      expect(result.report.activeHelpers).toBe(0);
+    })
+  )
+);
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("rejects symlink roots and ancestors as configuration without accessing retired roots", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* f.fs.makeDirectory(`${f.dir}/actual/nested`, { recursive: true });
+      yield* f.fs.symlink(`${f.dir}/actual`, `${f.dir}/alias`);
+      for (const path of [`${f.dir}/alias`, `${f.dir}/alias/nested`]) {
+        expect(yield* makeTranscriptDiscovery(f.input([path])).pipe(Effect.flip)).toMatchObject({
+          reason: "configuration",
+        });
+      }
+      const fs = yield* FileSystem.FileSystem;
+      const d = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          ...f.input([`${f.dir}/alias/nested`]),
+          roots: [{ path: `${f.dir}/alias/nested`, source: "codex", retired: true }],
+        })
+      ).pipe(
+        Effect.provideService(FileSystem.FileSystem, { ...fs, realPath: () => Effect.die("Retired root accessed") })
+      );
+      expect((yield* d.next).report.roots[0]?.state).toBe("retired");
+    })
+  )
+);
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("counts non-UTF-8 names as excluded entries and completes discovery of valid siblings", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const setup = yield* ChildProcess.make("/usr/bin/python3", [
+        "-I",
+        "-c",
+        "import os,sys; root=os.fsencode(sys.argv[1]); open(root+b'/invalid-'+bytes([255]),'wb').close(); os.mkdir(root+b'/directory-'+bytes([254]))",
+        f.dir,
+      ]);
+      expect(yield* setup.exitCode).toBe(0);
+      yield* f.fs.writeFileString(`${f.dir}/rollout-valid.jsonl`, line);
+      const d = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({ ...f.input([f.dir]), maxEntries: 64, maxFiles: 32 })
+      );
+      const result = yield* d.next;
+      expect(result.report.roots[0]).toMatchObject({ state: "complete", entries: 3, candidates: 1 });
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources[0]?.path).toBe(`${f.dir}/rollout-valid.jsonl`);
       expect(result.report.activeHelpers).toBe(0);
     })
   )

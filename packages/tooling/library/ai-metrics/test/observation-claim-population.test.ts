@@ -9,7 +9,7 @@ import { ObservationLaunchSubmission } from "@beep/repo-ai-metrics/observation-l
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
+import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

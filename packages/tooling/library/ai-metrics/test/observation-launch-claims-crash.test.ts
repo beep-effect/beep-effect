@@ -7,7 +7,6 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import { claimFixture, claimSubmission } from "./fixtures/observation-claims.ts";
@@ -62,7 +61,8 @@ for (const mode of ["before-write", "after-sync", "after-operation", "after-obse
         expect(yield* f.fs.readFileString(marker)).toBe(mode);
         expect(yield* f.fs.exists(output)).toBe(false);
         yield* child.kill({ killSignal: "SIGKILL" });
-        assertTrue(Exit.isFailure(yield* Effect.exit(child.exitCode)));
+        const killed = yield* Effect.exit(child.exitCode);
+        assertTrue(killed._tag === "Failure");
         expect(yield* child.isRunning).toBe(false);
         expect(yield* f.fs.exists(operation)).toBe(mode === "after-operation" || mode === "after-observation");
         const retry = yield* run("retry");

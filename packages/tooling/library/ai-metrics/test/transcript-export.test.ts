@@ -19,12 +19,12 @@ import {
 } from "@beep/repo-ai-metrics/transcript-page";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -45,7 +45,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
 import type { NativeEncodedBatch } from "@beep/repo-ai-metrics/native-export";
 
-const layer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
+const layer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const wire = Protobuf.parse(`syntax="proto3";
 message Value {string string_value=1; bool bool_value=2; int64 int_value=3;}
@@ -280,7 +280,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         assertSome(attr(first, "ai_metrics.usage.cache_read"), { intValue: "8" });
         assertNone(attr(first, "llm.token_count.total"));
         expect(attr(first, "session.id")).toEqual(attr(second, "session.id"));
-        assertTrue(O.isSome(attr(first, "session.id")));
+        expect(attr(first, "session.id")._tag).toBe("Some");
         expect(encoded.eventIds).toEqual(A.map(f.frames, (frame) => frame.occurrenceId));
         expect(
           yield* encodeTranscriptTraceBatch(TranscriptExportInput.make({ ...f.input, namespaceId: id("f") })).pipe(

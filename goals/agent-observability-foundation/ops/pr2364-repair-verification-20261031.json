@@ -93,5 +93,56 @@
     "exitCode": 0,
     "orphanCleanup": []
   },
-  "independentReview": "Astra accepted initial repair and final ten-file documentation equivalence receipt; source review only."
+  "independentReview": "Astra accepted initial repair and final ten-file documentation equivalence receipt; source review only.",
+  "catalogFollowup": {
+    "hostedHead": "b4afdb0059ac771f6dda6baea46dfcfb0b450e47",
+    "failure": "Only repo-ai-metrics schema shard stale",
+    "method": "Canonical exported generator and renderer; original complete glob results filtered to AI-metrics package; other glob calls and ownership unchanged",
+    "inputFiles": 250,
+    "changes": "Removed three obsolete static codec entries after function-wrapper build repair",
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-schema-shard-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 54009069568,
+      "peakObservedBytes": 1241571328,
+      "minimumAvailableBytes": 53392187392,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 8,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "scriptArchive": "/home/elpresidank/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/pr2364-schema-shard.ts",
+    "scriptSha256": "88764460d2892fabd1b8774ca5db87f7d4138da0f8a73ae7d2c5982bde5c8c1c",
+    "fullCheck": "Requires current-head hosted verification",
+    "repeatabilityCheck": "Passed: 250 input files, changed false, exit zero, no protective stop"
+  },
+  "reviewFollowup": {
+    "discoveryTests": "11 passed",
+    "review": "Astra accepted canonical shard generation, discovery fixes and test adapter scope at source level",
+    "runtimeChangeScope": [
+      "transcript-discovery.ts",
+      "internal/transcript-directory-helper.ts",
+      "repo-cli ObservationWorker resource-number schemas"
+    ],
+    "canaryScope": "Historical v3 source bindings preserved; no fresh canary claim for runtime follow-up",
+    "nodeAdapterTests": "186 passed in 21 modules under local Node24 before final style fixes",
+    "staticChecks": "AI-metrics beep:check and CLI production build passed",
+    "stoppedPackageAudit": "Host-reserve stopped after entering tests; exit zero wrapper does not make it a pass",
+    "freshnessDisposition": "Keep fair selection; optional hot-file priority requires reserved fair capacity and cap-one policy",
+    "currentHeadHosted": "pending after follow-up publication",
+    "pinnedNodeTests": "Node 22.23.4: 211 tests passed in 24 changed modules; 61.4s; no protective stop",
+    "runtimeSourceHashes": {
+      "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "2d94618c0e13b92f423d13c9df5e7d9bcc7521e4cb4f7e42dab77bd8dc0c0af3",
+      "packages/tooling/library/ai-metrics/src/internal/transcript-directory-helper.ts": "dee3dc0fc1de41b5975c68f16d1c2cc2abd7cb9c8bca57cb70eac550cc41b688",
+      "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "6590a9ca0a0ad391ead0d13b3a5ed33f8d33a9180c187c1f0c5d75e12b2906e6"
+    },
+    "bunTests": "Bun 1.4.4: 211 tests passed in same 24 modules; 57.2s; no protective stop",
+    "finalSourceReview": "Astra accepted discovery, catalog, test adapters, equivalent assertion rewrites and finite-number bounds; source review only"
+  }
 }

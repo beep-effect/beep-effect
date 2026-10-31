@@ -13,7 +13,7 @@ import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
@@ -36,7 +36,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Protobuf from "protobufjs";
 
-const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver }), NodeCrypto.layer);
+const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const proto = Protobuf.parse(
   `syntax="proto3"; message Value { string string_value=1; bool bool_value=2; int64 int_value=3; } message Attr { string key=1; Value value=2; } message Span { repeated Attr attributes=9; } message Scope { repeated Span spans=2; } message Resource { repeated Scope scope_spans=2; } message Request { repeated Resource resource_spans=1; }`

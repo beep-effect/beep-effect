@@ -1,3 +1,4 @@
+import * as NodeHttp from "node:http";
 import { makeObservationControl, ObservationControlPolicy } from "@beep/repo-ai-metrics/observation-control";
 import {
   makeObservationLaunchFacts,
@@ -13,9 +14,9 @@ import {
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { BunSqliteTestDriver, makeSqlTestLayer } from "@beep/test-utils/SqlTest";
-import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
+import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
+import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import { expect } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -29,7 +30,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
-const sqlLayer = makeSqlTestLayer({ config: undefined, driver: BunSqliteTestDriver });
+const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
 const identity = ObservationLaunchIdentity.make({
   routeId: id("c"),
@@ -64,7 +65,7 @@ const fixture = Effect.fn("LaunchHttpTest.fixture")(function* (enabled = true) {
   const intake = yield* makeObservationLaunchHttp(config, policy, control);
   const facts = yield* makeObservationLaunchFacts(config);
   const server = Context.get(
-    yield* Layer.build(BunHttpServer.layer({ hostname: "127.0.0.1", port: 0 })),
+    yield* Layer.build(NodeHttpServer.layer(() => NodeHttp.createServer(), { host: "127.0.0.1", port: 0 })),
     HttpServer.HttpServer
   );
   const client = Context.get(yield* Layer.build(NodeHttpClient.layerNodeHttp), HttpClient.HttpClient);
