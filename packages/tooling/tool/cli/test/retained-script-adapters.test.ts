@@ -6,6 +6,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 
 const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
   executable: string,
@@ -34,13 +35,34 @@ const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
   for (const scenario of [
+    {
+      signal: "TERM",
+      phase: "escaped",
+      worker: "unzip",
+      exitCode: 143,
+      name: "negative control without worker TERM ownership",
+    },
+    {
+      signal: "TERM",
+      phase: "wait",
+      worker: "checksum",
+      exitCode: 143,
+      name: "TERM during unresponsive Node checksum",
+    },
+    {
+      signal: "",
+      phase: "deadline",
+      worker: "checksum",
+      exitCode: 1,
+      name: "timeout expiry during unresponsive Node checksum",
+    },
     { signal: "TERM", phase: "wait", worker: "unzip", exitCode: 143, name: "TERM during unresponsive extraction" },
     {
       signal: "",
       phase: "deadline",
       worker: "unzip",
       exitCode: 1,
-      name: "whole-worker deadline during unresponsive extraction",
+      name: "timeout expiry during unresponsive extraction",
     },
     { signal: "", phase: "wait", worker: "node", exitCode: 1, name: "failed Bun download" },
     { signal: "", phase: "wait", worker: "op", exitCode: 1, name: "failed Bun with optional op still running" },
@@ -72,31 +94,66 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
         ]) {
           yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
         }
+        if (scenario.phase === "escaped") {
+          const workerPath = path.join(root, "scripts/cloud/fetch.sh");
+          const worker = yield* fs.readFileString(workerPath);
+          yield* fs.writeFileString(workerPath, Str.replace("trap 'exit 143' TERM", "")(worker));
+        }
         // Deliver signals only after the selected fake child is running. A DEBUG
         // hook covers the gap between launch and PID registration without sleeps.
+        // Expiry cases deliver GNU timeout's ALRM event after child readiness,
+        // avoiding a deadline that expires before a loaded runner starts the child.
         const bashEnv = path.join(root, "bash-env");
         yield* fs.writeFileString(
           bashEnv,
           `signal_sent=0
 fixture_ready() {
-  while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/worker-ready" ]; do sleep 0.01; done
+  while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/worker-ready" ]; do
+    kill -0 "$1" 2>/dev/null || return 1
+    sleep 0.01
+  done
 }
-trap 'if [[ "$BEEP_BOOTSTRAP_PHASE" == register && "$BASH_COMMAND" == pids+=* && "$signal_sent" == 0 ]]; then signal_sent=1; fixture_ready; kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi' DEBUG
+trap 'if [[ "$BEEP_BOOTSTRAP_PHASE" == register && "$BASH_COMMAND" == pids+=* && "$signal_sent" == 0 ]]; then signal_sent=1; fixture_ready "$!"; kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi' DEBUG
 wait() {
   if [ "$#" -eq 1 ] && [ "$signal_sent" = 0 ]; then
-    fixture_ready
+    fixture_ready "$1"
     signal_sent=1
-    if [ "$BEEP_BOOTSTRAP_PHASE" = wait ] && [ -n "$BEEP_BOOTSTRAP_SIGNAL" ]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi
+    if [ "$BEEP_BOOTSTRAP_PHASE" = deadline ]; then kill -ALRM "$1"; fi
+    if [ "$BEEP_BOOTSTRAP_PHASE" != deadline ] && [ -n "$BEEP_BOOTSTRAP_SIGNAL" ]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi
   fi
   builtin wait "$@"
 }
 `
         );
         for (const [name, source] of [
-          ["bun", '#!/bin/sh\nprintf "0.0.0\\n"\n'],
+          [
+            "bun",
+            `#!/bin/sh
+if [ "$BEEP_BOOTSTRAP_WORKER" = checksum ] && [ "$BEEP_BOOTSTRAP_PHASE" = deadline ]; then cat .bun-version; else printf '0.0.0\\n'; fi
+`,
+          ],
           ["node", '#!/bin/sh\nprintf "v0.0.0\\n"\n'],
           ["sudo", "#!/bin/sh\nexit 1\n"],
-          ["sha256sum", "#!/bin/sh\ncat >/dev/null\nexit 0\n"],
+          [
+            "sha256sum",
+            `#!/bin/sh
+if [ "$BEEP_BOOTSTRAP_WORKER" = checksum ]; then
+  trap '' TERM
+  printf '%s\\n' "$$" > "$BEEP_BOOTSTRAP_FIXTURE/worker-pid"
+  : > "$BEEP_BOOTSTRAP_FIXTURE/worker-ready"
+  reported=0
+while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-workers" ]; do
+  if [ "$reported" = 0 ] && [ -f "$BEEP_BOOTSTRAP_FIXTURE/cleanup-start" ]; then
+    printf 'worker-after-cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
+    reported=1
+  fi
+  sleep 0.01
+done
+fi
+cat >/dev/null
+exit 0
+`,
+          ],
           [
             "timeout",
             `#!/bin/sh
@@ -104,7 +161,7 @@ if [ "$1" = --kill-after=5s ]; then
   [ "$2" = 240s ] || exit 86
   if [ "$BEEP_BOOTSTRAP_PHASE" = deadline ]; then
     shift 2
-    exec /usr/bin/timeout --kill-after=0.1s 1s "$@"
+    exec /usr/bin/timeout --kill-after=0.1s 240s "$@"
   fi
 fi
 exec /usr/bin/timeout "$@"
@@ -117,7 +174,14 @@ exec /usr/bin/timeout "$@"
 trap '' TERM
 printf '%s\\n' "$$" > "$BEEP_BOOTSTRAP_FIXTURE/worker-pid"
 : > "$BEEP_BOOTSTRAP_FIXTURE/worker-ready"
-while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-workers" ]; do sleep 0.01; done
+reported=0
+while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-workers" ]; do
+  if [ "$reported" = 0 ] && [ -f "$BEEP_BOOTSTRAP_FIXTURE/cleanup-start" ]; then
+    printf 'worker-after-cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
+    reported=1
+  fi
+  sleep 0.01
+done
 `,
           ],
           ["uname", '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n'],
@@ -128,6 +192,24 @@ case "$*" in
   *"--connect-timeout 15 --max-time 120 --retry-max-time 120"*) ;;
   *) echo 'missing download bounds' >&2; exit 86;;
 esac
+if [ "$BEEP_BOOTSTRAP_WORKER" = checksum ]; then
+  case "$*" in
+    *index.tab*|*SHASUMS256.txt*)
+      url="$*"
+      while [ "$#" -gt 0 ]; do
+        if [ "$1" = --output ]; then shift; output="$1"; break; fi
+        shift
+      done
+      version=$(cat .nvmrc)
+      case "$url" in
+        *index.tab*) printf 'v%s\\n' "$version" > "$output" ;;
+        *) printf '00 node-v%s-linux-x64.tar.xz\\n' "$version" > "$output" ;;
+      esac
+      exit 0
+      ;;
+    *node-*.tar.xz*) exit 0 ;;
+  esac
+fi
 worker=""
 case "$*" in
   *bun-linux-x64.zip*) worker=bun ;;
@@ -138,7 +220,14 @@ if [ "$worker" = bun ] && [ "$BEEP_BOOTSTRAP_WORKER" = unzip ]; then exit 0; fi
 if [ "$worker" = "$BEEP_BOOTSTRAP_WORKER" ]; then
   trap 'printf "%s-finished\\n" "$worker" >> "$BEEP_BOOTSTRAP_FIXTURE/events"; exit 22' TERM
   : > "$BEEP_BOOTSTRAP_FIXTURE/worker-ready"
-  while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-workers" ]; do sleep 0.01; done
+  reported=0
+while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-workers" ]; do
+  if [ "$reported" = 0 ] && [ -f "$BEEP_BOOTSTRAP_FIXTURE/cleanup-start" ]; then
+    printf 'worker-after-cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
+    reported=1
+  fi
+  sleep 0.01
+done
 elif [ "$worker" = bun ]; then
   while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/worker-ready" ]; do sleep 0.01; done
 fi
@@ -148,10 +237,18 @@ exit 22
           [
             "rm",
             `#!/bin/sh
+case "$*" in *run.orphan*) exec /bin/rm "$@" ;; esac
+: > "$BEEP_BOOTSTRAP_FIXTURE/cleanup-start"
 if [ -f "$BEEP_BOOTSTRAP_FIXTURE/worker-pid" ]; then
   pid=$(cat "$BEEP_BOOTSTRAP_FIXTURE/worker-pid")
-  state=$(awk '{print $3}' "/proc/$pid/stat" 2>/dev/null || true)
-  case "$state" in ''|Z|X) ;; *) printf 'worker-live\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events" ;; esac
+  attempt=0
+  while [ "$attempt" -lt 100 ]; do
+    state=$(awk '{print $3}' "/proc/$pid/stat" 2>/dev/null || true)
+    case "$state" in ''|Z|X) break ;; esac
+    attempt=$((attempt + 1))
+    sleep 0.01
+  done
+  case "$state" in ''|Z|X) ;; *) printf 'worker-live\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"; cat "/proc/$pid/status" >&2 ;; esac
 fi
 printf 'cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
 : > "$BEEP_BOOTSTRAP_FIXTURE/release-workers"
@@ -162,6 +259,28 @@ exec /bin/rm "$@"
           const target = path.join(bin, name);
           yield* fs.writeFileString(target, source);
           yield* fs.chmod(target, 0o755);
+        }
+        const checkStaleRuns = scenario.name === "failed Bun download";
+        if (checkStaleRuns) {
+          const cache = path.join(root, "cache/beep/cloud-bootstrap");
+          for (const name of ["run.active", "run.orphan", "run.legacy"]) {
+            const directory = path.join(cache, name);
+            yield* fs.makeDirectory(directory, { recursive: true });
+            if (name !== "run.legacy") yield* fs.writeFileString(path.join(directory, ".lock"), "");
+            const touch = yield* ChildProcess.make("touch", ["-d", "2 hours ago", directory], {
+              stdin: "ignore",
+              stdout: "ignore",
+              stderr: "ignore",
+            });
+            expect(yield* touch.exitCode).toBe(0);
+          }
+          const owner = yield* ChildProcess.make(
+            "flock",
+            ["--exclusive", path.join(cache, "run.active/.lock"), "sh", "-c", "printf 'locked\\n'; sleep 30"],
+            { stdin: "ignore", stdout: "pipe", stderr: "ignore" }
+          );
+          // The child prints only after acquiring the lock, before bootstrap sweeps.
+          yield* Stream.runHead(owner.stdout);
         }
         const handle = yield* ChildProcess.make("bash", [path.join(root, "scripts/cloud/bootstrap.sh")], {
           cwd: root,
@@ -190,13 +309,27 @@ exec /bin/rm "$@"
           { concurrency: "unbounded" }
         );
         expect(exitCode).toBe(scenario.exitCode);
-        expect(yield* fs.exists(path.join(root, "worker-ready"))).toBe(true);
-        if (scenario.signal === "") expect(stderr).toContain("download or checksum failed");
+        expect(yield* fs.exists(path.join(root, "worker-ready")), stderr).toBe(true);
+        if (scenario.signal === "") {
+          expect(stderr).toContain(
+            scenario.worker === "checksum" ? "provisioning failed" : "download or checksum failed"
+          );
+        }
         expect(stderr).not.toContain("missing download bounds");
-        expect(yield* fs.readFileString(path.join(root, "events"))).toBe(
-          scenario.worker === "unzip" ? "cleanup\n" : `${scenario.worker}-finished\ncleanup\n`
+        const events = yield* fs.readFileString(path.join(root, "events"));
+        if (scenario.phase === "escaped") {
+          expect(events).toContain("worker-after-cleanup");
+          expect(events).toContain("worker-live");
+        } else {
+          expect(events, stderr).toBe(
+            scenario.worker === "unzip" || scenario.worker === "checksum"
+              ? "cleanup\n"
+              : `${scenario.worker}-finished\ncleanup\n`
+          );
+        }
+        expect(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"))).toEqual(
+          checkStaleRuns ? ["run.active", "run.legacy"] : []
         );
-        expect(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"))).toEqual([]);
         expect(yield* fs.exists(path.join(home, ".bun"))).toBe(false);
         expect(yield* fs.exists(path.join(root, "node_modules"))).toBe(false);
       })

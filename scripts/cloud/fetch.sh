@@ -15,7 +15,8 @@ download_limits=(--connect-timeout 15 --max-time 120 --retry-max-time 120)
 
 fetch_bun() {
   local sha work archive
-  sha="$(tr -d '[:space:]' < .bun-linux-x64.sha256)"
+  IFS= read -r sha < .bun-linux-x64.sha256 || [ -n "${sha}" ]
+  sha="${sha//[[:space:]]/}"
   work="${run_dir}/bun"
   mkdir -p "${work}"
   archive="${work}/bun-linux-x64.zip"
@@ -33,20 +34,23 @@ fetch_node() {
     printf 'nvm' > "${run_dir}/node.mode"
     return 0
   fi
-  local index version work
-  index="$(curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    "https://nodejs.org/dist/index.tab")" || return 1
-  version="$(printf '%s\n' "${index}" | awk -v requested="v${NODE_VERSION}" '$1 == requested { print $1; exit }')"
-  [ -n "${version}" ] || return 1
+  local version work
   work="${run_dir}/node"
   mkdir -p "${work}"
+  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+    --output "${work}/index.tab" "https://nodejs.org/dist/index.tab" || return 1
+  awk -v requested="v${NODE_VERSION}" '$1 == requested { print $1; exit }' "${work}/index.tab" > "${work}/version"
+  IFS= read -r version < "${work}/version" || return 1
+  [ -n "${version}" ] || return 1
   curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
     --output "${work}/node.tar.xz" \
     "https://nodejs.org/dist/${version}/node-${version}-linux-x64.tar.xz"
   curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
     --output "${work}/SHASUMS256.txt" \
     "https://nodejs.org/dist/${version}/SHASUMS256.txt"
-  (cd "${work}" && grep " node-${version}-linux-x64.tar.xz\$" SHASUMS256.txt | sed 's# .*# node.tar.xz#' | sha256sum --check --strict - >/dev/null)
+  pushd "${work}" >/dev/null
+  grep " node-${version}-linux-x64.tar.xz\$" SHASUMS256.txt | sed 's# .*# node.tar.xz#' | sha256sum --check --strict - >/dev/null
+  popd >/dev/null
   printf 'tarball' > "${run_dir}/node.mode"
 }
 

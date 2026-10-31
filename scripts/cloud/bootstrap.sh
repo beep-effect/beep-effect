@@ -70,13 +70,16 @@ export PATH="${BUN_INSTALL}/bin:${NODE_BIN_DIR}:${PATH}"
 
 bootstrap_cache="${XDG_CACHE_HOME:-${HOME}/.cache}/beep/cloud-bootstrap"
 install -d -m 0700 "${bootstrap_cache}"
-# Every download lands in one per-run directory created here, in the parent
-# shell, so the EXIT trap removes it on success and on every failure path (the
-# fetches run in background subshells and could not register their own
-# cleanup). Leftovers from a run that was killed outright are swept first:
-# this script also runs on session start and resume, and VM disk is finite.
-find "${bootstrap_cache}" -mindepth 1 -maxdepth 1 -name 'run.*' -mmin +60 -exec rm -rf -- {} + 2>/dev/null || true
+# Each run holds a lock for its whole lifetime. Sweep only old runs whose
+# recorded lock can be acquired; age alone does not prove a run is abandoned.
+# Legacy runs without a lock are retained because their ownership is unknown.
+while IFS= read -r -d '' stale_run; do
+  [ -f "${stale_run}/.lock" ] || continue
+  flock --exclusive --nonblock "${stale_run}/.lock" rm -rf -- "${stale_run}" 2>/dev/null || true
+done < <(find "${bootstrap_cache}" -mindepth 1 -maxdepth 1 -type d -name 'run.*' -mmin +60 -print0)
 run_dir="$(mktemp -d "${bootstrap_cache}/run.XXXXXX")"
+exec {run_lock}> "${run_dir}/.lock"
+flock --exclusive "${run_lock}"
 pids=()
 cleanup_run_dir() {
   local pid
