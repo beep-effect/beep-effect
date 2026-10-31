@@ -75,7 +75,14 @@
     "research/native-cargo-controls.py",
     "research/native-cargo-controls.json",
     "research/native-cargo-applicability.py",
-    "research/native-cargo-applicability.json"
+    "research/native-cargo-applicability.json",
+    "research/errors-only-client-pins.json",
+    "research/errors-only-schema-observation.json",
+    "research/native-log-presentation-controls.py",
+    "research/native-log-cache-controls.py",
+    "research/native-log-controls.json",
+    "research/errors-only-feature-review.json",
+    "research/native-log-controls-before-pin-default-fix.json"
   ],
   "agentLaunchers": [
     {

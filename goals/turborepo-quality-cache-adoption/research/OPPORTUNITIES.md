@@ -483,3 +483,29 @@ assertion rejects failure, and removing only that assertion lets the former
 count-only behavior pass. Both bounded cases restore the source exactly. This
 is synthetic decoded-reply fault injection, not a reproduced registration-timeout
 defect. Publish/prove the new source and answer the review before acceptance.
+
+### Quiet-log probe portability, 2026-10-31
+
+- Preparing the pinned native output-log controls exposed a report-directory
+  variable colliding with the existing command-list variable (`TypeError`).
+  The first presentation pass and failed cache attempt remain private; the
+  shared invocation helper and native semantics were unchanged. Rename only
+  the report directory and rerun both drivers before retaining accepted evidence.
+- A registry refresh used the wrong package-relative `dist-tags` endpoint and
+  returned HTTP404. Use the registry package-tag endpoint; the failed request
+  establishes no version freshness. Exact executable digest checks still ran
+  before each attempted native control.
+- The successful registry refresh found canary 2.11.11-canary.1 while the
+  retained baseline is 2.11.9-canary.1; stable remains 2.11.10. Preserve those
+  historical receipts. Freeze separate feature-local pins for the fresh replay;
+  this does not upgrade a repository consumer or grant current protected
+  producer authority to the older canary.
+- The fresh canary archive uses `turbo-linux-x64/`, rather than the assumed
+  `package/` prefix. The first member lookup failed before writing an executable.
+  Inspect the exact integrity-verified archive; validate package name/version
+  and read only the named regular executable. No broad extraction is needed.
+- Committing before this fresh worktree installed its dependencies printed
+  `Can’t find lefthook in PATH`; that commit is not a hook pass. The frozen
+  install completed, an explicit scan of the committed change found no secrets,
+  and commit-message validation passed. Install before committing a new lane.
+  The source-only follow-up uses the installed normal hooks.

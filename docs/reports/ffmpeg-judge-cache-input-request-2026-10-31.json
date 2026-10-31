@@ -1,11 +1,11 @@
 {
-  "previous": "988ed33bad5e93aade662229c2fdb56fad30059183afce7f1495a7966532e6d6",
+  "previous": "921f97055f51a6e6117576e7929b872b7f1de1122ed7315b2083352a7aa7a119",
   "review": {
     "reviewer": "Codex native reviewer /root/policy_pr (gpt-6.1-sol, medium)",
-    "reason": "Record only the root judge-rubric policy fingerprint task adding FFmpeg.command.ts to generated inputs after the command-builder extraction; no command/cache/qualification change.",
+    "reason": "Record only the root judge-rubric policy fingerprint task adding FFmpeg.command.ts to generated inputs after the command-builder extraction, retaining accepted main qualification-v3/profile state; no command/cache/qualification change.",
     "basis": {
       "path": "docs/reports/ffmpeg-judge-cache-input-review-2026-10-31.md",
-      "sha256": "58cd400cbaae5669382e8c97c16c12a9c8abd2fcd877a813938bbe6021b8297b"
+      "sha256": "67cff9301248465230f76141ccf20fdc5caa7f5e2d982d73fd67339580080dc9"
     }
   },
   "subjects": ["//"],
@@ -15,6 +15,6 @@
     "@beep/fc-runs#lint",
     "@beep/test-runner#lint"
   ],
-  "profile": "local-linux-x64-bun1.4.2",
-  "epoch": "qualification-v2"
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
 }
