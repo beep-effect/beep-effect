@@ -42,12 +42,11 @@ describe("MarkdownSlug", () => {
       assert.isTrue(Result.isFailure(decodeSlug("a\nb")));
     });
 
-    it("drops a continuation line's indentation and blockquote markers with its line break", () => {
-      assert.strictEqual(MarkdownSlug.headingLine("Foo\n> bar"), "Foo bar");
-      assert.strictEqual(MarkdownSlug.headingLine("Foo  \n  > >  bar\n   baz"), "Foo bar baz");
+    it("folds each line break with the spaces and tabs around it, and reads a `>` as text", () => {
+      assert.strictEqual(MarkdownSlug.headingLine("Foo  \n \t bar\r\nbaz"), "Foo bar baz");
       assert.strictEqual(MarkdownSlug.headingLine("Use  `pipe`"), "Use  `pipe`");
-      assert.strictEqual(MarkdownSlug.slugify("Foo\n> bar"), "foo-bar");
-      assert.strictEqual(MarkdownSlug.titleize("Foo\n> bar"), "Foo bar");
+      assert.strictEqual(MarkdownSlug.headingLine("Foo\n> bar"), "Foo > bar");
+      assert.strictEqual(MarkdownSlug.slugify("Foo\n> bar"), "foo--bar");
     });
 
     it("deletes HTML tags and the fixed ASCII and CJK punctuation lists", () => {

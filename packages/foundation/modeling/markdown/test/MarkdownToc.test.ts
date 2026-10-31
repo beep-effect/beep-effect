@@ -206,6 +206,22 @@ describe("MarkdownToc", () => {
       assert.strictEqual(MarkdownToc.renderEntries(entries), "- [Foo bar](#foo-bar)");
     });
 
+    it("keeps a `>` that is literal text on an indented continuation line", () => {
+      const entries = MarkdownToc.entries(parse(lines("Foo", "    > bar", "===", "")));
+      assert.deepStrictEqual(
+        A.map(entries, (entry) => [entry.text, entry.slug]),
+        [["Foo > bar", "foo--bar"]]
+      );
+    });
+
+    it("strips list-item indentation and quote markers past three columns", () => {
+      const entries = MarkdownToc.entries(parse(lines("   - > Foo", "     > *bar* `c`", "     > ===", "")));
+      assert.deepStrictEqual(
+        A.map(entries, (entry) => [entry.text, entry.slug]),
+        [["Foo *bar* `c`", "foo-bar-c"]]
+      );
+    });
+
     it("counts a multi-line heading and its one-line twin as duplicates", () => {
       const entries = MarkdownToc.entries(parse(lines("Foo", "bar", "===", "", "## Foo bar", "")));
       assert.deepStrictEqual(

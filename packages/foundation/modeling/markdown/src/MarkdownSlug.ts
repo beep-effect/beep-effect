@@ -76,10 +76,8 @@ export type HeadingSlug = typeof HeadingSlug.Type;
 const LEADING_LINK = /^\[([^\]]+)\]\(/;
 const HTML_TAG = /<\/?[^>]+>/g;
 const SPACE_RUN = /[ \t]+/g;
-// A multi-line setext heading's soft line break, with the spaces before it and the continuation line's
-// container prefix (indentation and blockquote markers) after it. CommonMark strips that prefix, and a
-// continuation line cannot open with `>` past its containers' markers (that would open a blockquote).
-const LINE_BREAK = /[ \t]*(?:\r\n?|\n)[ \t]*(?:>[ \t]*)*/g;
+// A multi-line setext heading's soft line break with the spaces and tabs around it.
+const LINE_BREAK = /[ \t]*(?:\r\n?|\n)[ \t]*/g;
 // `markdown-toc`'s two deletion lists, verbatim (the ASCII list names `=` twice; the CJK list carries an ASCII space).
 const ASCII_PUNCTUATION = /[|$&`~=\\/@+*!?({[\]})<>=.,;:'"^]/g;
 const CJK_PUNCTUATION = /[。？！，、；：“”【】（）〔〕［］﹃﹄“ ”‘’﹁﹂—…－～《》〈〉「」]/g;
@@ -143,23 +141,23 @@ const foldDiacritics = (text: string): string => A.join(A.map(A.fromIterable(tex
 export abstract class MarkdownSlug {
   /**
    * A heading's content on one line: each line break of a multi-line setext
-   * heading, with the spaces before it and the continuation line's
-   * indentation and blockquote markers after it, becomes one space.
+   * heading, with the spaces and tabs around it, becomes one space.
    *
    * **Details**
    *
-   * CommonMark renders a soft line break as one space and strips each
-   * continuation line's container prefix, so this is the heading as a reader
-   * sees it, still in source syntax. A one-line heading comes back unchanged.
-   * This is the kit's one departure from `markdown-toc`, which kept the raw
-   * newline in slugs and titles.
+   * CommonMark renders a soft line break as one space, so this is the heading
+   * as a reader sees it, still in source syntax. Give it the content without
+   * container prefixes (`MarkdownDocument.headingContent`): a `>` here is
+   * text. A one-line heading comes back unchanged. This is the kit's one
+   * departure from `markdown-toc`, which kept the raw newline in slugs and
+   * titles.
    *
-   * **Example** (A quoted multi-line heading)
+   * **Example** (A multi-line heading)
    *
    * ```ts
    * import { MarkdownSlug } from "@beep/markdown/MarkdownSlug";
    *
-   * console.log(MarkdownSlug.headingLine("Foo\n> bar")) // Foo bar
+   * console.log(MarkdownSlug.headingLine("Foo  \n  bar")) // Foo bar
    * console.log(MarkdownSlug.headingLine("Use  `pipe`")) // Use  `pipe`
    * ```
    *

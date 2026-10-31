@@ -76,7 +76,8 @@ export class TocEntry extends S.Opaque<TocEntry, { readonly brand: unique symbol
   S.Struct({
     text: S.String.pipe(
       $I.annoteKey("TocEntry.text", {
-        description: "The heading content as written in the source, its lines joined by MarkdownSlug.headingLine",
+        description:
+          "The heading content as written, without continuation-line container prefixes, its lines joined by one space",
       })
     ),
     slug: HeadingSlug.pipe($I.annoteKey("TocEntry.slug", { description: "The anchor slug the entry links to" })),
@@ -244,8 +245,10 @@ export abstract class MarkdownToc {
    * `index` counts all headings in the document, listed or not, so an entry
    * can be traced back to `document.headings`. `occurrence` counts earlier
    * listed headings with the same lower-cased text. The text is the heading
-   * as written with its lines joined (`MarkdownSlug.headingLine`), so a
-   * multi-line setext heading counts with its one-line twin. The slug is
+   * as written without its continuation lines' container prefixes
+   * (`MarkdownDocument.headingContent`), lines joined by one space
+   * (`MarkdownSlug.headingLine`), so a multi-line setext heading counts with
+   * its one-line twin. The slug is
    * `MarkdownSlug.slugify` of that text, so a heading opening with a
    * `[text](` link slugs its link text.
    *
@@ -273,7 +276,7 @@ export abstract class MarkdownToc {
       ({ heading }) => O.isNone(boundary) || heading.node.position.start.line > boundary.value + 1
     );
     const [, entries] = A.mapAccum(listed, HashMap.empty<string, number>(), (seen, { heading, index }) => {
-      const text = MarkdownSlug.headingLine(document.headingSource(heading.node));
+      const text = MarkdownSlug.headingLine(document.headingContent(heading.node));
       const key = Str.toLowerCase(text);
       const occurrence = O.match(HashMap.get(seen, key), { onNone: () => 0, onSome: (count) => count + 1 });
       const entry = TocEntry.make({

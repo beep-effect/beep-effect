@@ -518,6 +518,21 @@ describe("MarkdownDocument.headingSource", () => {
     assert.strictEqual(document.headingSource(heading.node), "Goal *Title*\nsecond line");
   });
 
+  it("reads a heading's content without its continuation lines' container prefixes", () => {
+    const content = (source: string): string => {
+      const document = parseDocument(source);
+      const [heading] = document.headings;
+      return heading === undefined ? "" : document.headingContent(heading.node);
+    };
+    assert.strictEqual(content("> Foo\n> bar\n> ===\n"), "Foo\nbar");
+    assert.strictEqual(content("Foo\n    > bar\n===\n"), "Foo\n> bar");
+    assert.strictEqual(content("- > Foo\n  > *bar* `c`\n  > ===\n"), "Foo\n*bar* `c`");
+    assert.strictEqual(content("> Foo\n  bar &amp; baz\n> ===\n"), "Foo\nbar &amp; baz");
+    assert.strictEqual(content("> Foo\n> \\> bar\n> ===\n"), "Foo\n\\> bar");
+    assert.strictEqual(content("# Use `Effect.gen` <b>now</b>\n"), "Use `Effect.gen` <b>now</b>");
+    assert.strictEqual(content("#\n"), "");
+  });
+
   it("reads nested headings and reads an empty heading as the empty string", () => {
     const document = parseDocument("> ## <Goal Title>\n\n#\n");
     assert.deepStrictEqual(
