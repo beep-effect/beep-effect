@@ -202,11 +202,17 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     })
   );
   const clean = Effect.fn("Citation.cleanHtmlProcess")(
-    function* (input: unknown, remaining: number, staged: boolean) {
-      const text = yield* S.decodeUnknownEffect(staged ? StageText : Text)(input).pipe(
-        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
-      );
-      if (!staged && Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
+    function* (input: unknown, remaining: number, kind: "raw" | "text" | "bytes") {
+      if (kind === "bytes") {
+        yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
+          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+        );
+      } else {
+        const text = yield* S.decodeUnknownEffect(kind === "text" ? StageText : Text)(input).pipe(
+          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+        );
+        if (kind === "raw" && Str.length(text) > limits.sourceUtf16) return yield* safety("sourceUtf16");
+      }
       const outputUtf16 = yield* S.decodeEffect(Output)(remaining).pipe(
         Effect.mapError(() => failure("invalid-runtime"))
       );
@@ -245,7 +251,8 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
           let lease = O.none<OwnedProcess>();
           const body = Effect.gen(function* () {
             yield* ensureOpen;
-            const prepared = yield* preparation.prepareStage(text, (layout) =>
+            const prepare = kind === "bytes" ? preparation.prepareBytes : preparation.prepareStage;
+            const prepared = yield* prepare(input, (layout) =>
               preflightCitationHtmlJob(layout, outputUtf16, limits.processMessageBytes).pipe(Effect.asVoid)
             );
             const frame = yield* encodeCitationHtmlJob(
@@ -376,11 +383,18 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   return {
     snapshot,
     reap,
-    clean: (input: unknown) => clean(input, limits.producedTextUtf16, false),
+    clean: (input: unknown) => clean(input, limits.producedTextUtf16, "raw"),
+    cleanBytes: (input: unknown) => clean(input, limits.producedTextUtf16, "bytes"),
+    stageBytes: (input: unknown, work: CitationCleanerWork) =>
+      work
+        .withTextCapacity((remaining) =>
+          clean(input, remaining, "bytes").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
+        )
+        .pipe(Effect.map(({ value, charges }) => CitationHtmlCleanerStage.make({ text: value, charges }))),
     stage: (input: unknown, work: CitationCleanerWork) =>
       work
         .withTextCapacity((remaining) =>
-          clean(input, remaining, true).pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
+          clean(input, remaining, "text").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
         )
         .pipe(Effect.map(({ value, charges }) => CitationHtmlCleanerStage.make({ text: value, charges }))),
   };

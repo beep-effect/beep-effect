@@ -3,18 +3,24 @@
 import argparse
 import copy
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import tarfile
 
 REPO = Path(__file__).resolve().parents[3]
 ASSETS = REPO / 'packages/law-practice/server/assets/citation-html'
 FIXTURES = REPO / 'packages/law-practice/use-cases/test/fixtures/eyecite'
-BINARY_SHA = '33773ce285d42dd42f7147f595bd45e97d621c0bba3c3b1e8207cf6b9216e76d'
+BINARY_SHA = '99e76b7cdfe01e574886d7b93b685174cbe7cb5944f8ba964c97019d8f53156a'
 IMPORTS = ['environ_get', 'environ_sizes_get', 'clock_time_get', 'fd_close', 'fd_fdstat_get', 'fd_fdstat_set_flags', 'fd_prestat_get', 'fd_prestat_dir_name', 'fd_read', 'fd_seek', 'fd_write', 'path_filestat_get', 'path_open', 'proc_exit']
+
+
+def sha_bytes(raw):
+    return hashlib.sha256(raw).hexdigest()
 
 
 def sha(path):
@@ -63,7 +69,7 @@ def abi(raw):
         _, index = uleb(section, index + 1)
         assert field not in exports; exports[field] = kind
     assert index == len(section)
-    expected = ['html_clean', 'html_output', 'html_output_length', 'html_output_units', 'html_release', 'html_version', 'malloc', 'free', '_initialize']
+    expected = ['html_clean', 'html_output', 'html_output_length', 'html_output_units', 'html_release', 'html_version', 'html_iconv_version', 'html_iconv_inventory', 'html_iconv_inventory_length', 'malloc', 'free', '_initialize']
     assert exports == {**{key: 0 for key in expected}, 'memory': 2}
     return initial, maximum
 
@@ -72,10 +78,10 @@ def canonical(data):
     return hashlib.sha256(json.dumps(data, ensure_ascii=True, sort_keys=True, separators=(',', ':')).encode('ascii')).hexdigest()
 
 
-def check_asset(raw, receipt, notices):
-    assert canonical(receipt) == 'c1e99f1fb3c3c1b690ebdf71b4fb32cb74401a661bf63d1226a29e3d59dc59bb'
-    assert canonical(notices) == '674d981d39f33753f4a08a243dce2d9638f031e5361fd88f319d61670b9824e8'
-    assert hashlib.sha256(raw).hexdigest() == BINARY_SHA and len(raw) == 980822
+def check_asset(raw, receipt, notices, converter_source, relink):
+    assert canonical(receipt) == 'b651a197b4e33c5deb9eff46ba80250d2467b9115c91ae5737da3e465c2bab3e'
+    assert canonical(notices) == '2f114a1070248da013fa45642723c15d102635848fa4d24dce46176e2ed899c9'
+    assert hashlib.sha256(raw).hexdigest() == BINARY_SHA and len(raw) == 1753104
     abi(raw)
     assert b'/home/' not in raw
     assert receipt['schemaVersion'] == 'citation-html-kernel-build/v1'
@@ -91,13 +97,28 @@ def check_asset(raw, receipt, notices):
     assert notices['schemaVersion'] == 'citation-html-kernel-notices/v1'
     assert notices['upstreamRefs'] == {'WebAssembly/wasi-libc': '2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13', 'llvm/llvm-project': '895aa2c896ada719451be2e3673c83da8ddf1141'}
     files = {row['notice'] for row in notices['notices']}
-    assert len(files) == len(notices['notices']) == 14
+    assert len(files) == len(notices['notices']) == 16
     assert files == {p.name for p in (ASSETS / 'licenses').iterdir() if p.is_file()}
     for row in notices['notices']:
         assert row['noticeSha256'] == sha(ASSETS / 'licenses' / row['notice'])
     assert 'dlmalloc.c.obj' in notices['runtimeObjects']
-    assert 'iconv.c.obj' in notices['runtimeObjects']
+    assert 'iconv.c.obj' not in notices['runtimeObjects']
+    assert notices['converterObjects'] == ['iconv.o']
     assert not any('emmalloc' in value or 'fts' in value for value in notices['runtimeObjects'])
+    assert sha_bytes(converter_source) == receipt['iconvArchive']['sha256'] == '8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313'
+    assert receipt['relinkArchiveSha256'] == sha_bytes(relink)
+    assert receipt['relinkedWasmSha256'] == BINARY_SHA
+    with tarfile.open(fileobj=io.BytesIO(converter_source), mode='r:gz') as source:
+        assert source.extractfile('libiconv-1.17/COPYING.LIB').read() == (ASSETS / 'licenses/gnu-libiconv-COPYING.LIB').read_bytes()
+        assert source.getmember('libiconv-1.17/lib/iconv.c').isfile()
+    with tarfile.open(fileobj=io.BytesIO(relink), mode='r:xz') as bundle:
+        members = {member.name: member for member in bundle.getmembers()}
+        expected = {'kernel.o', 'libxml2.a', 'libiconv.a', 'libc.a', 'libclang_rt.builtins.a', 'crt1-reactor.o', 'README.txt', 'link.sh'} | {'licenses/' + name for name in files}
+        assert set(members) == expected and all(member.isfile() for member in members.values())
+        assert all(member.mtime == member.uid == member.gid == 0 for member in members.values())
+        for name in files:
+            assert bundle.extractfile('licenses/' + name).read() == (ASSETS / 'licenses' / name).read_bytes()
+
 
 
 def check_cases(data):
@@ -145,10 +166,12 @@ def main():
     parser.add_argument('--oracle-root', type=Path)
     args = parser.parse_args()
     raw = (ASSETS / 'kernel.wasm').read_bytes()
+    converter_source = (ASSETS / 'sources/libiconv-1.17.tar.gz').read_bytes()
+    relink = (ASSETS / 'kernel-relink.tar.xz').read_bytes()
     receipt = json.loads((ASSETS / 'build-receipt.json').read_bytes())
     notices = json.loads((ASSETS / 'notices.json').read_bytes())
     data = json.loads((FIXTURES / 'html-kernel-cases.json').read_bytes())
-    check_asset(raw, receipt, notices); check_cases(data)
+    check_asset(raw, receipt, notices, converter_source, relink); check_cases(data)
     mutations = [lambda d: d['cases'].pop(), lambda d: d['cases'].append(copy.deepcopy(d['cases'][0])), lambda d: d.update(oracleCommit='a' * 40), lambda d: d['artifacts'][0].update(value='corrupt'), lambda d: d['cases'][0].update(text='a' * 64), lambda d: d['cases'][0].update(outcome={'kind': 'success', 'value': 'a' * 64}), lambda d: d.update(scope='worker qualified'), lambda d: d.update(libxmlRuntime=[2, 15, 4])]
     for mutate in mutations:
         broken = copy.deepcopy(data); mutate(broken)
@@ -156,28 +179,32 @@ def main():
         except AssertionError: continue
         raise AssertionError('corrupt source evidence accepted')
     broken = bytearray(raw); broken[0] = 1
-    try: check_asset(broken, receipt, notices)
+    try: check_asset(broken, receipt, notices, converter_source, relink)
     except AssertionError: pass
     else: raise AssertionError('corrupt binary accepted')
     for key, value in [('memoryMaximumBytes', 1073741824), ('kernelSourceSha256', 'a' * 64), ('producerSha256', 'a' * 64)]:
         broken = copy.deepcopy(receipt); broken[key] = value
-        try: check_asset(raw, broken, notices)
+        try: check_asset(raw, broken, notices, converter_source, relink)
         except AssertionError: continue
         raise AssertionError('corrupt build receipt accepted')
     altered = copy.deepcopy(notices); altered['notices'][0]['sha256'] = 'a' * 64
-    try: check_asset(raw, receipt, altered)
+    try: check_asset(raw, receipt, altered, converter_source, relink)
     except AssertionError: pass
     else: raise AssertionError('changed upstream notice identity accepted')
     altered = copy.deepcopy(receipt); altered['features']['DEBUG'] = not altered['features']['DEBUG']
-    try: check_asset(raw, altered, notices)
+    try: check_asset(raw, altered, notices, converter_source, relink)
     except AssertionError: pass
     else: raise AssertionError('changed build feature receipt accepted')
+    for source_value, relink_value in [(b'corrupt', relink), (converter_source, b'corrupt')]:
+        try: check_asset(raw, receipt, notices, source_value, relink_value)
+        except AssertionError: continue
+        raise AssertionError('corrupt source/relink material accepted')
     if args.oracle_root:
         with tempfile.TemporaryDirectory(prefix='citation-html-kernel-') as folder:
             output = Path(folder) / 'cases.json'
             subprocess.run([sys.executable, str(Path(__file__).with_name('probe-html-kernel.py')), '--oracle-root', str(args.oracle_root), '--output', str(output)], env={**os.environ, 'PYTHONHASHSEED': '0'}, check=True)
             assert json.loads(output.read_bytes()) == data
-    print('PASS 1097 source outcomes / 14 retained notices / closed 14-import ABI / 512 MiB unshared memory maximum / 14 corruption controls; owned worker remains pending')
+    print('PASS 1097 source outcomes / 16 retained notices / closed 14-import ABI / 512 MiB unshared memory maximum / 16 corruption controls; worker qualification is separate')
 
 
 if __name__ == '__main__':

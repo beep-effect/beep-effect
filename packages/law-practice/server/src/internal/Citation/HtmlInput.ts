@@ -1,5 +1,5 @@
 /**
- * Bounded HTML Unicode input preparation adapted from lxml 5.1.0
+ * Bounded HTML Unicode/byte input preparation adapted from lxml 5.1.0
  * parser.pxi, apihelpers.pxi and html/__init__.py.
  * Copyright Infrae and Ian Bicking, BSD-3-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal
@@ -16,15 +16,16 @@ import { LiteralKit } from "@beep/schema";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { citationPythonTextData } from "./PythonTextData.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlInput");
-const Encoding = LiteralKit(["UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE"]).pipe(
+const Encoding = LiteralKit(["UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE", "AUTO"]).pipe(
   $I.annoteSchema("Encoding", {
-    description: "Pinned little-endian CPython PEP-393 buffer encoding, including lone surrogate units.",
+    description: "Pinned Unicode buffer encoding or native byte-stream encoding detection.",
   })
 );
 /**
@@ -37,7 +38,7 @@ const Encoding = LiteralKit(["UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE"]).pip
 export class CitationHtmlInput extends S.Opaque<CitationHtmlInput, { readonly brand: unique symbol }>()(
   S.Struct({ encoding: Encoding, bytes: S.Uint8Array, fullHtml: S.Boolean }).pipe(
     $I.annoteSchema("CitationHtmlInput", {
-      description: "Bounded Unicode parser payload and exact source wrapper classification.",
+      description: "Bounded Unicode or byte parser payload and exact source wrapper classification.",
     })
   )
 ) {}
@@ -189,10 +190,51 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     },
     Effect.provideService(Clock.Clock, clock)
   );
+  const prepareBytes = Effect.fn("Citation.prepareHtmlBytes")(
+    function* <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) {
+      // This private port receives an immutable, adapter-owned Python byte value.
+      // The snapshot owns transport memory; callers must not mutate their value
+      // while preparation runs. No raw byte field is added to public requests.
+      const source = yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
+        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+      );
+      const size = source.byteLength;
+      if (size > limits.processMessageBytes) return yield* safety("processMessageBytes");
+      let start = 0;
+      while (start < size) {
+        if (start % 4096 === 0) yield* Effect.yieldNow;
+        const byte = source[start];
+        if (byte !== 32 && (byte === undefined || byte < 9 || byte > 13)) break;
+        start++;
+      }
+      const matches = (prefix: ReadonlyArray<number>) => {
+        for (let index = 0; index < prefix.length; index++) {
+          const byte = source[start + index];
+          if (byte === undefined || (byte >= 65 && byte <= 90 ? byte + 32 : byte) !== prefix[index]) return false;
+        }
+        return true;
+      };
+      const fullHtml = matches([60, 104, 116, 109, 108]) || matches([60, 33, 100, 111, 99, 116, 121, 112, 101]);
+      yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding: "AUTO", fullHtml, byteLength: size }));
+      const bytes = new Uint8Array(size);
+      for (let offset = 0; offset < size; offset += 4096) {
+        yield* Effect.yieldNow;
+        if (source.byteLength !== size) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+        bytes.set(source.subarray(offset, Num.min(offset + 4096, size)), offset);
+      }
+      return CitationHtmlInput.make({ encoding: "AUTO", fullHtml, bytes });
+    },
+    (body) =>
+      body.pipe(
+        Effect.timeoutOrElse({ duration: limits.cleanDeadline, orElse: () => Effect.fail(safety("cleanDeadline")) })
+      ),
+    Effect.provideService(Clock.Clock, clock)
+  );
   return {
     prepare: Effect.fn("Citation.prepareHtmlInput")((input: unknown) =>
       prepare(input, rawText, limits.sourceUtf16, () => Effect.void)
     ),
+    prepareBytes,
     prepareStage: <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) =>
       prepare(input, stageText, CitationEngineAbsoluteMaxima.producedTextUtf16, beforeAllocate),
   };

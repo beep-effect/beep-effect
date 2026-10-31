@@ -60,11 +60,11 @@ export const citationHtmlWorkerProgram = Effect.gen(function* () {
   const assetPath = yield* (yield* Path.Path)
     .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
     .pipe(Effect.mapError(badRuntime));
-  const chunks = yield* Stream.runCollect(fs.stream(assetPath, { bytesToRead: 980823 })).pipe(
+  const chunks = yield* Stream.runCollect(fs.stream(assetPath, { bytesToRead: 1753105 })).pipe(
     Effect.mapError(badRuntime)
   );
   const length = A.reduce(chunks, 0, (size, bytes) => size + bytes.byteLength);
-  if (length !== 980822) return yield* badRuntime();
+  if (length !== 1753104) return yield* badRuntime();
   const asset = new Uint8Array(length);
   let offset = 0;
   for (const bytes of chunks) {

@@ -1,6 +1,7 @@
 /*
  * Citation HTML kernel linked against the pinned libxml2 2.12.3.
- * Wrapper merging adapts lxml.html.fromstring (Ian Bicking, BSD-3-Clause).
+ * Wrapper merging and byte encoding selection adapt lxml.html.fromstring
+ * and parser.pxi (Ian Bicking and Infrae, BSD-3-Clause).
  * Text selection adapts eyecite 2.7.6 clean.py (Free Law Project, BSD-2-Clause).
  * See THIRD_PARTY_NOTICES.md and licenses/. This adapter is authored here;
  * upstream library sources are unchanged. No HTML_PARSE_HUGE is enabled.
@@ -8,12 +9,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iconv.h>
+#include <locale.h>
 #include <libxml/HTMLparser.h>
+#include <libxml/encoding.h>
 #include <libxml/xpath.h>
 #include <libxml/xmlerror.h>
 
 enum { OK = 0, PARSE_ERROR = 1, INTERNAL_ERROR = 2, MEMORY_LIMIT = 3,
-       OUTPUT_LIMIT = 4, INVALID_INPUT = 5, NATIVE_RESOURCE = 6 };
+       OUTPUT_LIMIT = 4, INVALID_INPUT = 5, NATIVE_RESOURCE = 6, DECODE_ERROR = 7 };
 static char *result = NULL;
 static int result_length = 0;
 static int result_units = 0;
@@ -72,6 +76,30 @@ static void merge_containers(xmlDocPtr doc, const char *name, int discard_initia
         node = next;
     }
 }
+/* The pinned Python oracle reports C.UTF-8 / locale_charset() == UTF-8.
+ * Keep converter defaults independent of host files and environment. */
+const char *locale_charset(void) { return "UTF-8"; }
+static char encoding_inventory[32768];
+static int inventory_length = 0;
+static int inventory_entry(unsigned int count, const char *const *names, void *unused) {
+    (void)unused;
+    for (unsigned int i = 0; i < count; i++) {
+        size_t size = strlen(names[i]) + 1;
+        if (size >= sizeof encoding_inventory - (size_t)inventory_length) return 1;
+        memcpy(encoding_inventory + inventory_length, names[i], size);
+        inventory_length += (int)size;
+    }
+    if ((size_t)inventory_length >= sizeof encoding_inventory) return 1;
+    encoding_inventory[inventory_length++] = 0;
+    return 0;
+}
+int html_iconv_version(void) { return _libiconv_version; }
+char *html_iconv_inventory(void) {
+    inventory_length = 0;
+    iconvlist(inventory_entry, NULL);
+    return encoding_inventory;
+}
+int html_iconv_inventory_length(void) { return inventory_length; }
 int html_version(void) { return LIBXML_VERSION; }
 char *html_output(void) { return result; }
 int html_output_length(void) { return result_length; }
@@ -79,16 +107,62 @@ int html_output_units(void) { return result_units; }
 void html_release(void) {
     free(result); result = NULL; result_length = 0; result_units = 0;
 }
+/* Strict scalar UTF-8, matching Python's xpath text decoding. Validate before
+ * output allocation: byte-parser recovery can retain invalid source bytes. */
+static int text_size(const unsigned char *text, uint64_t *bytes, uint64_t *units) {
+    for (size_t i = 0; text && text[i];) {
+        unsigned char a = text[i];
+        size_t width = 1;
+        if (a < 0x80) {}
+        else if (a >= 0xc2 && a <= 0xdf) {
+            unsigned char b = text[i + 1];
+            if (b < 0x80 || b > 0xbf) return 0;
+            width = 2;
+        } else if (a >= 0xe0 && a <= 0xef) {
+            unsigned char b = text[i + 1];
+            if (b < (a == 0xe0 ? 0xa0 : 0x80) || b > (a == 0xed ? 0x9f : 0xbf)) return 0;
+            unsigned char c = text[i + 2];
+            if (c < 0x80 || c > 0xbf) return 0;
+            width = 3;
+        } else if (a >= 0xf0 && a <= 0xf4) {
+            unsigned char b = text[i + 1];
+            if (b < (a == 0xf0 ? 0x90 : 0x80) || b > (a == 0xf4 ? 0x8f : 0xbf)) return 0;
+            unsigned char c = text[i + 2];
+            if (c < 0x80 || c > 0xbf) return 0;
+            unsigned char d = text[i + 3];
+            if (d < 0x80 || d > 0xbf) return 0;
+            width = 4;
+        } else return 0;
+        *bytes += width;
+        *units += width == 4 ? 2 : 1;
+        i += width;
+    }
+    return 1;
+}
 int html_clean(const char *input, int length, int kind, int ceiling, int full_html) {
     html_release(); resource_exhausted = 0;
-    if (!input || kind < 0 || kind > 3 || length < 0 || length > 32000000 ||
+    if (!setlocale(LC_CTYPE, "C.UTF-8")) return INTERNAL_ERROR;
+    if (!input || kind < 0 || kind > 4 || length < 0 || length > 32000000 ||
         ceiling < 0 || ceiling > 8000000 || (full_html != 0 && full_html != 1)) return INVALID_INPUT;
-    const char *encodings[] = {"UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE"};
+    const char *encodings[] = {"UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE", NULL};
     xmlSetGenericErrorFunc(NULL, ignore_error);
     xmlSetStructuredErrorFunc(NULL, structured_error);
     htmlParserCtxtPtr parser = htmlNewParserCtxt();
     if (!parser) return MEMORY_LIMIT;
-    htmlDocPtr doc = htmlCtxtReadMemory(parser, input, length, NULL, encodings[kind],
+    const char *encoding = encodings[kind];
+    if (kind == 4) {
+        const unsigned char *raw = (const unsigned char *)input;
+        if (length >= 4 && raw[0] == 0xff && raw[1] == 0xfe && raw[2] == 0 && raw[3] == 0) {
+            encoding = "UTF-32LE"; input += 4; length -= 4;
+        } else if (length >= 4 && raw[0] == 0 && raw[1] == 0 && raw[2] == 0xfe && raw[3] == 0xff) {
+            encoding = "UTF-32BE"; input += 4; length -= 4;
+        } else {
+            xmlCharEncoding detected = xmlDetectCharEncoding(raw, length);
+            if (detected == XML_CHAR_ENCODING_UCS4LE) encoding = "UTF-32LE";
+            else if (detected == XML_CHAR_ENCODING_UCS4BE) encoding = "UTF-32BE";
+        }
+    }
+    htmlDocPtr doc = htmlCtxtReadMemory(parser, input, length, NULL, encoding,
         HTML_PARSE_RECOVER | HTML_PARSE_NONET | HTML_PARSE_COMPACT);
     int status = OK;
     xmlXPathContextPtr context = NULL;
@@ -113,11 +187,7 @@ int html_clean(const char *input, int length, int kind, int ceiling, int full_ht
     for (int i = 0; i < count; i++) {
         const unsigned char *text = selected->nodesetval->nodeTab[i]->content;
         if (i) { bytes++; units++; }
-        for (size_t j = 0; text && text[j]; j++) {
-            bytes++;
-            if ((text[j] & 0xc0) != 0x80) units += text[j] >= 0xf0 ? 2 : 1;
-            if (units > (uint64_t)ceiling) { status = OUTPUT_LIMIT; goto done; }
-        }
+        if (!text_size(text, &bytes, &units)) { status = DECODE_ERROR; goto done; }
         if (units > (uint64_t)ceiling) { status = OUTPUT_LIMIT; goto done; }
     }
     /* Every UTF-8 byte sequence above is parser-owned and bounded by ceiling. */

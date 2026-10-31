@@ -76,6 +76,8 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
       // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
+      // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",

@@ -648,8 +648,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## Citation HTML WebAssembly runtime
 
 The private `packages/law-practice/server/assets/citation-html/kernel.wasm`
-links unchanged libxml2 2.12.3 with the WASI SDK 34 runtime. The authored C
-adapter implements eyecite text selection and adapts lxml wrapper merging;
+links unchanged libxml2 2.12.3, GNU libiconv 1.17 and the WASI SDK 34 runtime.
+The authored C adapter implements eyecite text selection and adapts lxml wrapper
+merging and byte encoding detection;
 the Free Law Project and lxml notices above apply to those adaptations.
 
 The packaged [notice inventory](packages/law-practice/server/assets/citation-html/notices.json)
@@ -664,7 +665,18 @@ names. Complete runtime license texts and retained source notices ship in
 - wasi-libc: the upstream aggregate license and Apache 2.0, Apache 2.0 with LLVM
   Exceptions, and MIT alternatives; the musl COPYRIGHT and cloudlibc BSD notice
   are retained separately. The linked dlmalloc public-domain notice names Doug
-  Lea and CC0. Unlinked emmalloc and fts implementations are not incorporated.
+  Lea and CC0. emmalloc and fts are not linked into the runtime kernel. The
+  complete libc archive in the relinking bundle additionally carries the fts
+  object, whose BSD-3-Clause COPYING notice is included separately.
+- GNU libiconv 1.17: LGPL-2.1-or-later, with its complete COPYING.LIB text in
+  gnu-libiconv-COPYING.LIB. The unmodified complete source archive is shipped in
+  assets/citation-html/sources/libiconv-1.17.tar.gz. The converter's fixed UTF-8
+  locale adapter is authored in kernel.c and records the pinned Python locale.
+  kernel-relink.tar.xz supplies the complete original object archives, kernel
+  object, retained licenses and replacement-library linking script. The build
+  recipe verifies that this material reproduces the exact original WASM. Users
+  may rebuild or replace the library and update the engine's source hash guard;
+  no secret key is required. Original author notices remain in the source.
 - LLVM compiler runtime: the complete compiler-rt LICENSE.TXT, including LLVM
   Exceptions and legacy license terms, is retained.
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "citation-html-kernel-notices/v1",
-  "scope": "linked runtime notices; lxml and eyecite adaptation notices remain in root THIRD_PARTY_NOTICES.md",
+  "scope": "runtime and relink distribution notices; lxml and eyecite adaptation notices remain in root THIRD_PARTY_NOTICES.md",
   "upstreamRefs": {
     "WebAssembly/wasi-libc": "2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13",
     "llvm/llvm-project": "895aa2c896ada719451be2e3673c83da8ddf1141"
@@ -34,6 +34,7 @@
   ],
   "runtimeObjects": [
     "_Exit.c.obj",
+    "__ctype_get_mb_cur_max.c.obj",
     "__fdopen.c.obj",
     "__fmodeflags.c.obj",
     "__init_tls.c.obj",
@@ -43,6 +44,7 @@
     "__math_oflow.c.obj",
     "__math_uflow.c.obj",
     "__math_xflow.c.obj",
+    "__mo_lookup.c.obj",
     "__overflow.c.obj",
     "__stdio_close.c.obj",
     "__stdio_exit.c.obj",
@@ -83,12 +85,11 @@
     "fwrite.c.obj",
     "getcwd.c.obj",
     "getenv.c.obj",
-    "iconv.c.obj",
-    "iconv_close.c.obj",
     "internal.c.obj",
     "intscan.c.obj",
     "isatty.c.obj",
     "libc.c.obj",
+    "locale_map.c.obj",
     "log10.c.obj",
     "lseek.c.obj",
     "mbrtowc.c.obj",
@@ -105,10 +106,13 @@
     "preopens.c.obj",
     "pthread_self.c.obj",
     "puts.c.obj",
+    "qsort.c.obj",
+    "qsort_nr.c.obj",
     "read.c.obj",
     "readv.c.obj",
     "sbrk.c.obj",
     "scalbn.c.obj",
+    "setlocale.c.obj",
     "shgetc.c.obj",
     "snprintf.c.obj",
     "sscanf.c.obj",
@@ -279,6 +283,35 @@
       "notice": "libxml2-triostr.txt",
       "noticeSha256": "a579d67a30da83f1e0dfcb135f601bde3216f3312ef724ca87c4c5415f50e8c6",
       "selection": "first complete comment"
+    },
+    {
+      "repository": "GNU libiconv",
+      "release": "1.17",
+      "sourceArchiveSha256": "8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313",
+      "path": "COPYING.LIB",
+      "sha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "notice": "gnu-libiconv-COPYING.LIB",
+      "noticeSha256": "dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551",
+      "selection": "complete file"
+    },
+    {
+      "repository": "WebAssembly/wasi-libc",
+      "commit": "2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13",
+      "path": "fts/musl-fts/COPYING",
+      "url": "https://raw.githubusercontent.com/WebAssembly/wasi-libc/2e6fb9d8ee0cdf9e431fbcabe8af3115de000a13/fts/musl-fts/COPYING",
+      "sha256": "55af87e4017668f54467a3380e7ebbac5e672d8c763bfe95e6fc882a6fdc4046",
+      "notice": "wasi-libc-fts-COPYING",
+      "noticeSha256": "55af87e4017668f54467a3380e7ebbac5e672d8c763bfe95e6fc882a6fdc4046",
+      "selection": "complete file"
     }
-  ]
+  ],
+  "converterObjects": ["iconv.o"],
+  "converter": {
+    "name": "GNU libiconv",
+    "release": "1.17",
+    "sourceArchive": "sources/libiconv-1.17.tar.gz",
+    "sourceArchiveSha256": "8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313",
+    "license": "LGPL-2.1-or-later",
+    "relinkArchive": "kernel-relink.tar.xz"
+  }
 }

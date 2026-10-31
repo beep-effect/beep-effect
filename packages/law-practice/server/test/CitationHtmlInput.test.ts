@@ -198,3 +198,47 @@ it.effect(
     }),
   { timeout: 60_000 }
 );
+
+it.effect("preflights owned byte jobs before snapshot allocation and keeps the transport copy independent", () =>
+  Effect.gen(function* () {
+    const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 1 };
+    const prep = yield* makeCitationHtmlInput(limits);
+    const original = new TextEncoder().encode(" <html>A</html>");
+    const prepared = yield* prep.prepareBytes(original, (layout) =>
+      Effect.sync(() => {
+        expect(layout).toEqual({ encoding: "AUTO", fullHtml: true, byteLength: original.byteLength });
+      })
+    );
+    original[0] = 0;
+    expect(prepared.bytes[0]).toBe(32);
+    const frame = yield* encodeCitationHtmlJob(
+      CitationHtmlWorkerJob.make({ ...prepared, outputUtf16: 0 }),
+      limits.processMessageBytes
+    );
+    yield* prep.prepareBytes(prepared.bytes, (layout) =>
+      preflightCitationHtmlJob(layout, 0, frame.byteLength).pipe(Effect.asVoid)
+    );
+    expect(
+      yield* Effect.flip(
+        prep.prepareBytes(prepared.bytes, (layout) =>
+          preflightCitationHtmlJob(layout, 0, frame.byteLength - 1).pipe(Effect.asVoid)
+        )
+      )
+    ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "processMessageBytes" });
+    const small = yield* makeCitationHtmlInput({ ...limits, processMessageBytes: 1 });
+    expect(yield* Effect.flip(small.prepareBytes(new Uint8Array(2), () => Effect.void))).toMatchObject({
+      _tag: "CitationSafetyLimitExceeded",
+      limit: "processMessageBytes",
+    });
+    expect(yield* Effect.flip(prep.prepareBytes("not a byte value", () => Effect.void))).toMatchObject({
+      _tag: "CitationHtmlInputFailure",
+      reason: "invalid-input",
+    });
+    const running = yield* prep
+      .prepareBytes(new Uint8Array(100_000).fill(32), () => Effect.void)
+      .pipe(Effect.forkChild);
+    yield* Effect.yieldNow;
+    yield* Fiber.interrupt(running);
+    expect(Exit.hasInterrupts(yield* Fiber.await(running))).toBe(true);
+  })
+);

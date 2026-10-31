@@ -26,20 +26,23 @@ const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
 const owned = (
   worker: Effect.Success<ReturnType<typeof makeCitationHtmlWorker>>,
   units: number,
-  build: () => string
+  build: () => string | Uint8Array
 ) => {
-  const values = new WeakMap<CitationCleanerObject, string>();
+  const values = new WeakMap<CitationCleanerObject, string | Uint8Array>();
   let slot = 0;
   let lastWork = O.none<CitationCleanerWork>();
-  const own = (text: string) => {
+  const own = (text: string | Uint8Array) => {
     const ref = CitationCleanerObject.make({ slot: slot++ });
     values.set(ref, text);
     return ref;
   };
   const expand = CitationCleanerObject.make({ slot: slot++ });
   const html = CitationCleanerObject.make({ slot: slot++ });
-  const read = Effect.fn("HtmlStageTest.read")((ref: CitationCleanerObject) =>
+  const readAny = Effect.fn("HtmlStageTest.readAny")((ref: CitationCleanerObject) =>
     Effect.fromOption(O.fromUndefinedOr(values.get(ref)), fail)
+  );
+  const read = Effect.fn("HtmlStageTest.read")((ref: CitationCleanerObject) =>
+    readAny(ref).pipe(Effect.filterOrFail((value): value is string => typeof value === "string", fail))
   );
   const runtime = CitationCleanerRuntime.of({
     fromText: Effect.fn("HtmlStageTest.fromText")((text) => Effect.sync(() => own(text))),
@@ -48,7 +51,7 @@ const owned = (
         values.has(ref) || ref === expand || ref === html ? Effect.void : Effect.fail(fail())
     ),
     textUnits: Effect.fn("HtmlStageTest.textUnits")((ref) =>
-      read(ref).pipe(Effect.map((text) => O.some(Str.length(text))))
+      readAny(ref).pipe(Effect.map((value) => (typeof value === "string" ? O.some(Str.length(value)) : O.none())))
     ),
     open: Effect.fn("HtmlStageTest.open")((_plan, _initial, work) =>
       Effect.sync(() => {
@@ -64,11 +67,13 @@ const owned = (
     invoke: Effect.fn("HtmlStageTest.invoke")((step, ref, work: CitationCleanerWork) =>
       step === expand
         ? Effect.gen(function* () {
-            const charge = yield* work.reserveText(units);
-            return CitationCleanerProduced.make({ value: own(build()), charges: [charge] });
+            const charges = units === 0 ? [] : [yield* work.reserveText(units)];
+            return CitationCleanerProduced.make({ value: own(build()), charges });
           })
-        : read(ref).pipe(
-            Effect.flatMap((text) => worker.stage(text, work)),
+        : readAny(ref).pipe(
+            Effect.flatMap((value) =>
+              typeof value === "string" ? worker.stage(value, work) : worker.stageBytes(value, work)
+            ),
             Effect.map(({ text, charges }) => CitationCleanerProduced.make({ value: own(text), charges })),
             Effect.mapError((error) => (error._tag === "CitationSafetyLimitExceeded" ? error : fail()))
           )
@@ -218,5 +223,34 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         expect(() => process.kill(pid, 0)).toThrow();
       }),
     { timeout: 60_000 }
+  );
+  it.effect(
+    "passes owned callback bytes through native detection and charges only produced Unicode text",
+    () =>
+      Effect.gen(function* () {
+        const limits = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 1, producedTextUtf16: 1 };
+        const worker = yield* makeCitationHtmlWorker(limits, {
+          executable: process.execPath,
+          cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-byte-stage-" }),
+          workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+        });
+        const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
+        const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
+          Effect.provideService(CitationCleanerRuntime, h.runtime)
+        );
+        const result = yield* pipeline.run({ text: "x", plan: "bytes-html" });
+        expect(yield* h.read(result.value)).toBe("A");
+        expect(result.producedTextUtf16).toBe(1);
+        const wide = owned(worker, 0, () => new TextEncoder().encode('<meta charset="utf-8"><div>😀</div>'));
+        const widePipeline = yield* makeCitationCleanerPipeline(limits).pipe(
+          Effect.provideService(CitationCleanerRuntime, wide.runtime)
+        );
+        expect(yield* Effect.flip(widePipeline.run({ text: "x", plan: "bytes-html" }))).toMatchObject({
+          _tag: "CitationSafetyLimitExceeded",
+          limit: "producedTextUtf16",
+        });
+        expect(yield* worker.snapshot).toMatchObject({ active: 0, queued: 0, processes: 0, quarantined: 0 });
+      }),
+    { timeout: 30_000 }
   );
 });

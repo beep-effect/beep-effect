@@ -174,10 +174,13 @@ and accepts already-owned intermediate text. Complete job framing is checked
 before payload allocation; ABI/host/protocol input bounds agree on the derived
 32-million-byte maximum. Exact output settlement and composed cancellation are
 covered in [native stage evidence](./history/evidence/2026-10-31-html-cleaner-stage.md).
-Full live ownership, sequence replay and global admission remain open. A pinned
-source probe also confirms callback-returned bytes before html are valid; the
-current Unicode stage does not cover that protocol. Capture/support non-text
-builtin paths before claiming exhaustive cleaner parity.
+The byte stage now supports the confirmed callback-byte path using the oracle's
+GNU libiconv 1.17 backend. Source capture adds 589 byte cases and 45 non-text
+controls; all direct byte outcomes match. Full source/relink material and
+sixteen notices are provided. See
+[byte-stage evidence](./history/evidence/2026-10-31-html-byte-stage.md).
+Full live ownership, complete sequence/non-text replay, global admission and
+maps/public Layer remain open.
 
 ## Delivery Rule
 

@@ -38,7 +38,9 @@ now serializes native-sized production against ordinary reservations, including
 zero-capacity empty output and cleanup on cancellation. The
 [native HTML stage](./history/evidence/2026-10-31-html-cleaner-stage.md) now uses
 that allowance, accepts intermediate text and preflights complete framing before
-payload allocation. Global admission and full host/registry replay remain open.
+payload allocation. The [byte stage and pinned GNU converter](./history/evidence/2026-10-31-html-byte-stage.md)
+now preserve byte encoding detection and source decode failures, with complete
+source/relink material. Global admission and full host/registry replay remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
