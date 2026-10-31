@@ -5,12 +5,14 @@
 // layout the npm `yaml` writer used before R4 (sequences indented under their
 // key), keeping every comment.
 
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { replaceNodeVersionWithFile, updateYamlValue } from "@beep/repo-cli/test/VersionSync";
-import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 
 const compose = [
@@ -51,7 +53,7 @@ const writeFixture = Effect.fnUntraced(function* (name: string, content: string)
   return file;
 });
 
-layer(NodeServices.layer)("YamlFileUpdater", (it) => {
+it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds" })("YamlFileUpdater", (it) => {
   it.effect("replaces one scalar and leaves every other byte in place", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
