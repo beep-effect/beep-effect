@@ -11,6 +11,54 @@ Historical leads remain in the [exploration ledger](../../../explorations/turbor
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
 
+## 2026-10-31: inherited dependency advisories interrupt protected qualification
+
+PR #2368's Security job found newly reviewed `glob` and `minimatch`
+advisories in dependency state shared with `main`. The affected installed
+versions were `glob` 10.5.0/13.0.6 and `minimatch` 5.1.9/9.0.9/10.2.6.
+The repair lane pins `glob` 14.0.3 and `minimatch` 11.0.3 and regenerates
+the lockfile without changing scanner exceptions. Cache policy audit passes.
+
+The first complete `@beep/glob` package check exposed removed upstream
+test-oracle APIs (`AST`, `makeRe`, `levelTwoFileOptimize`). A direct runtime
+probe also found changed empty-path and dot-segment matching semantics.
+These are introduced compatibility failures, not inherited-red waivers.
+Keep the dependency repair in draft until the old dialect contract and
+its independent assertions are preserved against a secure oracle. Owner:
+this goal's dependency repair lane. Prevent recurrence by checking oracle
+API and dialect compatibility before calling a security upgrade final.
+The same uncapped optimizer cloning existed in the vendored engine. Its
+repair now enforces the existing expansion cap before cloning and before
+pairwise preprocessing. The focused hostile-input suite passes 20 tests,
+including first-excess and oversized direct-input controls; this does not
+turn the still-red complete oracle suite into a pass.
+The signed trial remains inactive and the credential helper remains unrun.
+
+## 2026-10-29: request tags need their own captured evidence
+
+The closed-producer source inspection found that `CacheFixtureEvent.tagPresent`
+describes the returned tag and cannot establish which opaque tag arrived on a
+request. Capture the incoming header's digest at the HTTP request boundary,
+including absence; test a GET whose request and response tags differ. Retain
+neither value. This closes a capture gap only: the synthetic fixture supplies
+no actual adapter backend-result evidence, and no success status may be
+translated into an asserted backend authorization. Owner: this goal. Protected
+publication remains closed until the owned native summary and actual adapter
+exchange are joined.
+
+The first full Effect/Vitest scan found EV006 in the new compound Option
+assertion. It is now expressed with the canonical `deepStrictEqual` helper,
+preserving all three expected payloads and order. The detector baseline stays
+unchanged; rerun the current tests and detector after this assertion repair.
+
+The signed pilot previously retained only its selected-task projection,
+dependency projections and original summary digest. The continuation retains
+the complete minimal native task summary from those same supervised bytes,
+using the existing schema moved into its schema role. This supplies the missing
+input for a full-graph validation before single-task selection. A schema or
+component-test pass is not actual native execution proof for this changed
+capture, and no backend authorization or protected publication is inferred.
+
 ### Complete protocol checks at the supervisor boundary
 
 While preparing accepted receipt import, source review found that
@@ -606,8 +654,91 @@ CI hit HTTP408 during checkout before lint ran. GitHub refused the exact-job
 retry while the workflow was running. This source repair will supersede that
 head; keep the environmental attribution and do not hide it by restarting an
 active proof.
+### Contained native replay request
+
+A native protocol replay refused an absolute request path outside the checkout
+before execution: `Cannot read the bounded local experiment request.` The
+request boundary intentionally accepts contained regular files only. Keep
+requests and reports under the checkout-owned ignored proof directory, then
+archive their bounded results privately. No native worker or cloud operation
+ran in the refused attempt.
 
 
+### Owned-graph negative fixture construction
+
+The first new graph-dependency test failed before its assertion because it sent
+already decoded `Option` values through a wire decoder: `Expected string` at
+the cache-source field. Construct schema-derived typed task arrays with `.make`
+for this internal fixture. The failed test log is retained; the implementation
+guards and the original successful native protocol reports are unchanged.
+
+
+### Pinned merge-gate invocation
+
+An initial readiness command omitted the required PR and head arguments; it
+returned usage before any merge. The canonical orchestrator gate requires
+`yeet merge-gate <pr> <sha> --dry-run` for a read-only check. Supply the exact
+verified head, then use the owner merge command only after that gate passes.
+The unsuccessful invocation is retained privately; no merge bypass was used.
+
+
+### Interrupted source commit hooks
+
+The initial source commit stopped in pre-commit with `signal: terminated` from
+the documentation and formatter hooks. Leak scanning and typo checks passed;
+Git HEAD and source bytes were unchanged. Retain the first log and rerun the
+normal hooks without disabling any hook, baseline or commit signing. Attribute
+a repeated failure before changing code or retrying further.
+
+
+### Full audit catches a stale native-summary fixture
+
+The complete CLI audit passed 8,119 tests and failed one signed process-boundary
+case because its fake native summary omitted `turboVersion`. Include the fake
+executable's own pin in that observation, then assert the retained version and
+all dependency task ids. Keep the production summary requirement unchanged.
+The same package attempt's docgen exited 130 and supplies no passing result;
+retain both logs and rerun the affected boundary and complete package proof.
+
+The standalone CLI docgen replay also exits 130. All 3,560 generated examples
+compile under direct Node and Bun launches, and the same compiler succeeds
+through both Effect process backends. The default hosted Docgen gate passed at
+the original head. Keep the local full-runner interruption unattributed while
+checking executable resolution; do not change a compiler or platform service
+on speculation, and do not report a whole-package pass.
+
+
+### Resolve current Effect HTTP leaves before a transport prototype
+
+- A disposable private-network transport probe selected two obsolete HTTP
+  import locations and failed before sending any request. The pinned package
+  exports use the dedicated `effect/http/HttpClient` and
+  `effect/http/HttpClientRequest` leaves. Read the installed import map and
+  implementation before writing the probe; guessing historical module paths
+  added avoidable retries. Exact original errors remain in private diagnostics
+  and are not attributed to the backend. The public ledger also enforces the
+  retired-path policy in prose, so describe the mistake without repeating a
+  prohibited import location.
+
+
+### Docgen child interpreter compatibility
+
+- While replaying the producer-capture package audit, full Docgen twice
+  returned exit 130 at example typechecking. Direct compilation of all 3,560 generated
+  examples and both Effect process backends passed. A complete launch without
+  `bunx --bun` passed; a later default before/after pair both passed, retaining
+  the intermittent nature of the failure. The CLI script now relies on the
+  executable's Bun shebang and preserves the compiler's own Node interpreter.
+  Prevent recurrence by qualifying actual full command launches, not only the
+  generated compiler input or mocked child processes. No gate is disabled.
+
+
+### Discover scheduling commands before a status probe
+
+- A read-only `bun run beep scheduler status` probe returned
+  `Unknown subcommand "scheduler"`. No scheduler state changed. Consult the
+  root command list and the owning quality command's help before constructing
+  a status command; command discovery would have avoided this interruption.
 ### Existing native-addon runtime warnings
 
 Publication exposed two `no-global-process-runtime` warnings in the KG addon
@@ -628,3 +759,510 @@ Use the test framework's scoped module pin and lift the dynamic import through
 Hosted policy found EV011 on the direct `vi` import from `vitest`. Import the
 same API through the pinned `@effect/vitest` export-star entrypoint and rerun
 the policy check; do not add a baseline finding or waive the detector.
+### Private socket test boundary attribution
+
+- The first real socket test reached the upstream and preserved its rejection,
+  but expected an absent result for a contradictory success header. The existing
+  classifier correctly preserves `invalid-evidence`; the assertion now checks
+  that finite failure rather than erasing its cause. The original failed run is
+  retained privately. A nested client layer also failed the strict provision
+  diagnostic; the fixture now acquires the platform agent in its own scope and
+  supplies the service value, preserving the lifecycle boundary.
+
+- The additional real-socket exhaustion assertion initially nested an Effect
+  result inside predicate/assertion calls. The compiler required the equivalent
+  Result pipe; the canonical helper form passed lint/check and the full package
+  replay. Keep runtime refusal and evidence-invalidity assertions together.
+
+
+## Current real-pilot preparation friction
+
+- Reusing an older dependency snapshot because its lockfile and root manifest
+  matched was insufficient: the actual installed tree differed. The existing
+  guard correctly refused it; regenerate through the canonical dependency
+  materialization command and compare the complete tree identity.
+- The active verification checkout had210 additional native identity-lint inputs
+  relative to a clean source worktree, including compiled utilities and coverage
+  reports, although command and configuration matched. Use a clean registered
+  runner for like-for-like comparisons. Any later input narrowing still needs
+  semantic invalidation proof; no input was discarded here.
+- The new activation fixture reserialized JSON and changed formatting. Because
+  the selected command runs `biome check`, the proposed enabled config made the
+  check fail. An actual formatter comparison identified this introduced fixture
+  error. Preserve the original formatting, change only the cache literal and
+  refresh the exact activation reference. Failed observations remain retained;
+  the corrected proposed-launch diagnostic is running and grants no qualification.
+
+
+### Native transport proof and in-process coverage
+
+The existing native socket lifecycle passes through a Bun child during Node
+coverage, leaving the new common listener function unexecuted in Node/V8.
+Actual focused V8 evidence showed 34/35 functions and 118/129 lines. Add explicit
+constructor-double controls for modes, wrong-address refusal, bind-cause
+preservation and cleanup; keep the physical Bun lifecycle as transport proof.
+The first controls tried to spy on an immutable ESM export and used a forbidden
+native HTTP import. Use the framework's module replacement and existing Effect
+server interface instead. Missing target options and the mock's filesystem
+error channel were corrected before both runtimes passed the three controls.
+Both runtime integration runs now pass 51 tests and package lint/check passes.
+Include json-summary with LCOV to judge the statement metric explicitly;
+function/branch/line counts alone are not the full committed ratchet. Preserve
+the original failures, unchanged implementation and unchanged coverage floor.
+
+Source-removal controls reject removal of the Unix-address guard and owner-only
+socket chmod for the intended assertions; exact original bytes are restored.
+Vitest truncates assertion strings in JSON failure messages, so the receipt
+wrapper verifies the unique test plus identifying assertion prefixes rather
+than requiring untruncated prose. Both providers now prove all four fixture
+metrics at 100%, and the proxy exceeds its existing floors.
+
+
+### Source aliases and owned upload execution
+
+A synthetic filesystem probe reproduced a confinement gap: a private file under
+source `.beep/cache/experiments` was absent at its original host path but readable
+through `/fixture/.beep/cache/experiments`. Read-only mounts are not read denial.
+Private supervisor and experiment storage now lives outside all input mounts;
+the source-visible alias is refused before writing a request. Retain original
+observations and require a fresh actual native boundary proof. Five current
+qualification records are excluded; none grants reuse and no state was changed.
+See `closed-producer-upload-checkpoint.json` for exact source bindings and limits.
+
+The implementation check caught use of removed Effect v3 `Effect.if`; the current
+Effect source and Option dispatch provide the supported equivalent. Five nested
+Redacted calls were rewritten to their pipe form. A missing test value import was
+fixed, and private storage preparation was extracted as its own resource concern
+to meet the unchanged Fallow cognitive limit. No floor or suppression was added.
+The first deliberate request-guard removal produced a null serialized Effect
+failure in Vitest JSON. Assert that no worker started before matching the typed
+result; both source-removal controls then fail with clear assertions and restore
+the original source bytes exactly. These are controlled unit counterexamples,
+not protected native producer proof.
+
+
+## Review deliberate resource lifetimes before changing a test baseline
+
+The first socket draft publication stopped on a stale generated instrumentation
+shard and seven new test-rule findings. Regenerate the catalog through its
+owner. Replace the hand-written Option assertion with the canonical helper,
+preserving its payload. The other findings concern four deliberate shorter
+scopes and two physical filesystem subjects. Four scope-removal controls fail
+the cleanup assertions, so retain those lifetimes with explicit source-bound
+reasons. Preserve every existing inventory judgment and coverage floor.
+
+The initial targeted replay guessed two nonexistent sibling filters and selected
+only the four socket tests. Reuse the owner's recorded file list and assert the
+actual four-file, 51-test scope before reporting a broader pass. The corrected
+Node and Bun provider runs both meet that scope.
+
+
+## Signed supervisor runtime discovery
+
+- While refreshing the real signed pilot, the unchanged supervisor exited1 at
+  toolchain discovery. A private observer retained only static error classes
+  and source locations. Its pinned Bun file was named `bun.native`, with no
+  `bun` command in the mounted search path. An actual private-network probe
+  exited 127 with the original mounts and exited 0 with exact private binary
+  aliases, reporting the expected Bun and Node versions. Keep aliases in the
+  supervisor and test their complete mount arguments; never share a host tools
+  directory or weaken the namespace. No current qualification was obtained.
+- The first added assertion used an unavailable Array helper. The installed
+  Effect declarations and canonical source expose `Array.window`; use that
+  primitive and retain the failed tests as introduced harness evidence.
+
+- The fixture's existing spy variable named `process` shadowed the runtime
+  process used by the new assertion. The compiler and runtime tests exposed it;
+  renaming the spy preserved the fixture API and restored the typed assertion.
+
+- Distinguish an added tools directory from the existing read-only system and
+  source mounts in evidence claims. Overbroad wording was corrected before the
+  first push; the superseded publication wave is not passing proof. Describe
+  additions relative to the reviewed mount baseline to prevent this ambiguity.
+
+
+### Runtime-alias regression fixture complexity
+
+Normal publication rejected the new test callback because repeated optional
+argument fallbacks increased cognitive complexity. Decode required arguments
+once through Option and reuse the resulting array; absent arguments now fail
+the fixture explicitly. Both18-test runtime suites, quick package lint/check
+and targeted Fallow audit/health pass. Retain the rejected publication and
+unchanged baselines. The earlier full package replay covers the production
+launcher and prior fixture bytes; fresh final proof must cover the new fixture.
+
+
+### Checkpoint reference refresh after fixture edits
+
+Main integration exposed an audit reference still bound to the earlier launcher
+checkpoint bytes after its fixture proof was updated. Refresh that exact report
+digest after formatting and retain both prior SPEC identities. Preserve the
+landed graph/capture evidence and the launcher evidence independently; neither
+component grants qualification or signed production authority.
+## Deterministic contained-directory error coverage
+
+- PR #2361's current final repeat passed 8,114 tests with 5 skips but lost the
+  existing FsGuards file floors. Its implementation is identical to the passing
+  producer-capture lane; actual lcov shows 0 executions of the parent-creation
+  error callback versus 1 incidental execution in the passing lane. A controlled
+  filesystem creation failure now proves the original platform cause, contained
+  root/target/path, and refusal before writing. Both runtime suites pass 34 tests;
+  targeted Node V8 records 1 execution of that callback. Retain the floor and use
+  a deliberate error-path fixture rather than incidental concurrent filesystem
+  behavior. The full package audit and documentation pass; fresh final and
+  hosted acceptance remain in progress.
+
+
+### Strict policy fields need an explicit exec lane
+
+The ordinary adapter intentionally strips policy fields from its environment.
+Reusing that entrypoint for a signed experiment would discard its strict mode,
+namespace and role. Add an opt-in pinned exec lane and inspect the actual child
+environment with inert credentials. Removing the checksum refusal or admitting
+the artifact key fails the corresponding control. These checks cover the exec
+boundary; preserve separate real-process, resource, grant and R2 proof.
+
+## 2026-10-29: keep runtime capabilities independent from later fixture environments
+
+The new owned-host lifecycle control initially failed with `KeyError` before
+startup because a later native fixture had rebound the loop variable holding
+the adapter environment. The adapter units and storage fixture were cleaned up.
+The driver now snapshots each role's explicit environment at launch and passes
+that snapshot to the host control. Separate capability snapshots prevent later
+client fixture construction from changing backend launch inputs. This was an
+introduced test-driver failure, not R2 grant or deployment evidence.
+
+## 2026-10-29: keep controller probes on the supported command runtime
+
+A bare-Node controller probe reached the existing admission runner and failed
+with `Bun is not defined` before adapter startup. The command tools are owned
+by the canonical Bun CLI; the controller's actual success, callback-failure and
+interruption proof uses that route. Node Vitest supplies the repository's test
+platform setup and passed the focused integration. The bare-Node invocation is
+retained as an unsupported probe, not a Node deployment or native-client pass.
+The controller documentation now states its Bun CLI owner explicitly.
+
+## 2026-10-29: distinguish empty coverage output from measured coverage
+
+The first focused coverage filter used a repository-relative path against the
+project configuration and matched no files. Its summary contained only
+`Unknown`, so it was not accepted as coverage evidence. A suffix filter matched
+exactly `Cache.adapter.ts`; the report names that file and measures 98.14%
+lines/statements, 94.44% branches and 100% functions. Always require an actual
+file row before treating a successful coverage command as proof.
+
+The schema policy scan also found two new codec-heavy tests without generated
+coverage. Both now include schema-derived pin/storage properties and the scan
+passes with no introduced advisory; no exception or floor was added.
+### Combined prerequisite source and file-confinement repair
+
+Repeated same-owner prerequisite merges conflicted only in appended goal
+decisions, report lists and derived SPEC hashes. Preserve both sides and their
+source-bound facts, then perform the expensive integrated proof once in PR2367.
+The original branches and receipts remain recoverable until combined acceptance.
+One normal publisher waited603seconds without admission, was interrupted through
+its exact owning process, and exited130 before the prepared commit was pushed
+through the standing constrained-compute route. That old-source escape is not
+proof for the newer combined source; fresh normal and hosted acceptance remain
+required. Four exact superseded pull-request runs were cancelled and verified
+terminal, without changing runner capacity or touching unrelated runs.
+
+The private-file probe found a real alias gap: absent original host paths did
+not stop reads through the guest checkout. Move private scratch outside all
+source mounts instead of weakening the probe. The current worker imports pass
+in a real isolated bwrap/Bun process, supervisor controls cover the storage
+refusal and cleanup, and removal of that guard fails the intended control.
+These component observations do not replace a current native comparison matrix.
+See `private-pilot-storage-checkpoint.json` for source bindings and exact scope.
+
+
+### Include orchestration consumers after storage changes
+
+The earlier76-test focused replay missed the orchestration file. The full
+package audit and CI each reported15 introduced failures because its cleanup
+checks still read `.beep/cache/experiments`. Include filesystem consumers when
+a storage boundary moves. Observe the allocated private directories and test
+their removal directly; do not restore source-visible storage to satisfy an
+obsolete assertion. The deliberate scope-removal control fails the new cleanup
+check. The first filesystem observer also needed a named Effect.fn, caught by
+the package type check and repaired before publication. Existing floors and
+qualification state remain unchanged.
+
+
+### Exercise new containment refusals before full coverage
+
+The current CI run passed its tests but lost three per-file coverage floors:
+the new private-storage refusal had zero executions. Test a deliberately
+source-visible allocation before starting a task, including cleanup after the
+refusal. Its source-removal control fails as expected. Preserve the original
+floors and use fresh canonical/hosted coverage as acceptance.
+
+The first diagnostic tried an unavailable unscoped Istanbul package and raw-map
+equality. Reuse the repo owner's `@vitest/istanbul-lib-coverage` fork and canonical
+normalizer: derived line metadata and serialized infinite columns need that
+normalization. Keep the diagnostic distinct from a new hosted proof.
+
+
+### Integrated producer publication gate attribution, 2026-10-30
+
+The current producer's normal cheap gates found four introduced inline schema
+compilations (the approved storage-host guard and three test codecs), four new
+Effect Vitest detector rows, and a stale repo-cli instrumentation shard. The
+focused 142-test runtime replays and quick package lint/check did not cover
+these root policy gates. Both owned source proofs were stopped before repairs;
+the interrupted complete package audit is not a passing receipt. Hoist the
+codecs/guard, review each detector row, and regenerate catalogs through their
+canonical writers before a fresh publication/final proof. An initial catalog
+invocation only checked drift; the documented writer requires `--write`.
+Preserve every policy and coverage floor; no cache or runtime activation.
+
+
+### Producer Fallow preflight and documentation feedback, 2026-10-30
+
+The normal publication at `2e4f001e7f` completed the collected cheap tier with
+only Fallow audit/health red: the upload validator had cyclomatic complexity
+30, one preflight test had cognition 17, and dependency descriptor reads formed
+one introduced clone group. Nothing was pushed. The complete package attempt
+was stopped before editing and is not passing proof. Focused Fallow should run
+immediately after adding approval predicates and scenario setup, before the
+expensive inventory/full-package replay. Whole canonical URLs, one verified
+dependency reader and independently named preflight cases remove the findings
+without a threshold change. A generated valid-byte replacement property also
+fails at its intended rejection assertion when the digest guard is removed;
+exact source restoration is verified. The observer initially expected a Vitest
+message, while the canonical helper uses Node strict equality; preserve the
+actual failure and fix the observer, never count an unrelated failure.
+
+The first regenerated documentation inventory found one newly introduced
+example-import violation: `@beep/schema` was used instead of its stable
+`@beep/schema/Sha256` leaf. Compilation alone did not check that policy. Fix the
+example import and regenerate through the canonical writer; do not edit the
+generated issue away.
+
+
+## Coverage source and runtime fixture recovery, 2026-10-30
+
+- Hosted coverage exposed two unreachable post-decode guards and absent owned
+  upload/workflow paths. Use each trusted caller's exact schema decoder, and
+  add meaningful transport, admission and refusal controls; retain every floor.
+- An include filter prefixed with the repository path yielded empty reports
+  because the workspace coverage owner uses a different root. Assert the exact
+  three report members before comparing counters; a green test exit alone is
+  not coverage proof.
+- The first upload fixture used a native server factory; hosted directive
+  policy subsequently rejected its scoped suppression (see the receipt below).
+  ESM namespace exports cannot be redefined directly; hoisted Vitest spying
+  needs its direct mocks import and the actual original implementation.
+- Formatting removes an inferred Boolean parameter annotation that the Effect
+  function diagnostic still needs. A schema-derived Boolean type retains an
+  explicit typed boundary through formatting. An admitted-route fixture also
+  supplies its declared MemoryStats service even when admission is controlled.
+- The two previously opaque JSDoc child exits pass as exact serial commands.
+  Preserve their failed full-final receipt; the cause of termination remains
+  unproven and does not justify editing unrelated packages.
+
+
+### Pre-push policy coverage for fixture edits
+
+Quick package checks did not run root inline-schema or Fallow policy. A normal
+publication spent 598 seconds before rejecting three repeated activation
+codec compilations and one extended fixture exit rule. Run the narrow root
+policy and changed-file Fallow controls during fixture editing, then retain
+the normal publication gate. Module-scoped codec reuse and named match cases
+fix the findings; no threshold, fixture assertion or coverage floor changes.
+
+
+### Hosted directive policy catches a fixture interop exception, 2026-10-30
+
+PR #2368 at ac7f passed the complete package audit and normal publication, but
+Heavy / Lint Policy rejected the test-only `nodeBuiltinImport:off` directive.
+The root directive collector rejects next-line exceptions even with an adjacent
+reason; quick package checks did not cover it. This was introduced by this PR.
+Use Effect's existing `NodeHttpServer.layerTest` for the upload composition
+fixture and route its agent to an ephemeral TCP port. Keep its fixed socket-path
+assertion and actual PUT/failed-graph controls. The separate private-socket test
+continues to prove native Unix transport and lifetime. Remove the import and
+directive rather than exempting another file. Replay `beep quality tsgo-rules`
+before the next normal publication; retain the failed hosted log and require
+fresh source-bound proof. No production policy or coverage floor is relaxed.
+
+
+### Quiet lint hides a source-owned warning, 2026-10-30
+
+The successful normal publication at 001f summarized one root oxlint warning.
+A nonquiet replay attributed it to this component's adapter fixture reading
+`process.platform` at its Linux-only test gate. Reuse `currentHostPlatform`
+instead; current Node/Bun suites pass 153 cases each and complete nonquiet
+root oxlint reports zero warnings/errors. Read warning locations before calling
+a component final even when a quiet gate exits zero. Preserve the successful
+publication's attempt-start head separately from its actual pushed commit;
+a post-commit full receipt remains required.
+
+
+### Exact refusal assertions expose masked coverage, 2026-10-30
+
+The full final at 401 passed every lane except coverage: one statement each in
+Cache.adapter and Cache.workflow.github remained uncovered. Generic failure
+assertions hid a hosted fixture encoding runtime Option values as unknown JSON.
+Encode the wire schema before mutation and assert the intended provenance error.
+Stream.mapEffect already emitted singleton chunks; replace the dead local tail
+queue with the explicit upstream rechunk(1) contract and retain final-pull refusal.
+The corrected 45-case suites pass on both runtimes, both modules measure 100%,
+and removing either refusal guard fails its focused control. Full current-head
+package/final/hosted proof is still required; coverage floors stay unchanged.
+
+
+### Span changes require catalog regeneration, 2026-10-30
+
+The 938 normal publication passed all other cheap subgates but refused the
+observability catalog before push. Removing the singleton-tail helper also
+removed its named span; JSDoc inventory regeneration did not update this separate
+catalog. Use the canonical observability catalog writer and then its default
+check. It removes exactly the stale span in the producer lane and records the
+new provisioning spans in the unpublished dependent lane. Both checks report
+zero drift. Run this narrow check after changing named Effect functions before
+the next complete publication. Preserve the failed verdict; no gate is waived.
+
+## Generated anchors and duplicate research review, 2026-10-30
+
+- PR #2368 review identified a repeated preparation/transport section and an
+  outdated adapter import anchor. Removed only the later duplicate block.
+- The canonical Effect Vitest writer refreshed three import source anchors.
+  A normalized comparison confirms that every judgment, occurrence and finding
+  is unchanged; no new baseline allowance or lower threshold was introduced.
+- The earlier final-check interruption is now attributed: the workstation
+  journal records earlyoom sending SIGTERM to two Node/Vitest workers. The
+  unchanged-source canonical retry passed all final gates. Sequence heavy
+  checks around available memory; preserve the interrupted result separately.
+
+
+### Admit the owned upload before starting its backend, 2026-10-30
+
+- Doing: close protected-producer execution review in PR #2368.
+- Evidence: the backend's fixed 600-second unit lifetime began outside the
+  memory-gated upload admission. Queue time and a full ten-minute worker could
+  exhaust it before the parent's post-load verification. This fails closed but
+  can reject a valid run on a busy host.
+- Repair: put backend acquisition and the complete upload inside one admitted
+  scope, remove the nested worker admission and bound the callback to nine
+  minutes after readiness. The backend cap and stop bound remain unchanged.
+- Prevention: test a queue longer than the backend lifetime and actual peer
+  cleanup on callback timeout. Moving acquisition before admission and removing
+  the timeout must each fail their intended assertions, with exact restoration.
+
+
+### Isolate deterministic clocks and preserve bind-failure attribution, 2026-10-30
+
+- The two new lifecycle timing cases initially shared their parent layer's
+  TestClock. The full detector identified both ownership judgments. Each case
+  now owns a single-case `TestClock.layer()` block; all existing 554 judgments
+  remain unchanged and no policy exception was added.
+- A parallel runtime replay also exposed an inherited `EADDRINUSE` in the
+  shared direct-server fixture. Preserve that failure and the passing serial
+  Node replay. A separate main fix will reuse the existing loopback bind-event
+  and bounded retry path, then dependent lanes consume the accepted fix once.
+### Reuse the bind-safe loopback path in conformance tests, 2026-10-30
+
+- An overlapping Node/Bun replay failed with `EADDRINUSE` in the shared
+  conformance test server before its assertion. The same Node source passed
+  serially. The direct Bun server bypassed the existing scoped bind-event and
+  bounded address-in-use retry path.
+- Reuse `serveCacheLoopback`, retain the original 128 MiB body limit, and
+  qualify recovery against an actually occupied socket in both runtimes.
+  Production trust, credentials and cache activation remain unchanged.
+
+### Preserve partial evidence when joining accepted components
+
+- Work: merge accepted conformance and Markdown repairs into the owned producer
+  lane. Both sides append decisions and report references.
+- A strict complete-row equality check rejected additional partial evidence.
+  Preserve those references and compare requirements and unproven status
+  independently. An overly broad text merge also dropped a local section in
+  the uncommitted working copy; Git union over preserved stages restored every
+  original section before staging.
+- Prevention: use the canonical merge algorithm for additive text, assert both
+  original section sets survive, recompute SPEC hashes and regenerate the
+  existing Effect inventory. Never choose one evidence side wholesale.
+
+### 2026-10-30: hosted coverage exposes an untested upload approval refusal
+
+- Work: accepted-base producer execution verification at `189d1966b0`.
+- Evidence: hosted Coverage Regression reports one uncovered function and line in
+  `Cache.pilot.runner.ts`: functions 95%, lines/statements 98.85%, branches 100%.
+  Both immutable repo-cli coverage artifacts identify the missing callback at
+  line 384: refusal of absent independent backend approval.
+- Response: stop the exact owned obsolete local full proof before editing; add a
+  refusal test that checks the error and proves admission, adapter, listener and
+  worker invocation remain untouched. Preserve every coverage floor.
+- Separate environment failures: earlyoom killed this proof's JSDoc child; the
+  hosted Lint Policy job carries the lost-runner communication annotation, and
+  an automatic attempt is already active. Do not duplicate that retry or use
+  either environment failure to excuse the real missing test.
+- Command friction: the first focused invocation combined a package `--root`
+  with the repository-relative `--config`, duplicating the package path before
+  test startup. Run from the package with `--config vitest.config.ts`; the failed
+  invocation is not test evidence.
+
+- Follow-through: both internal capture callers explicitly supply the issuer
+  option. Removing only that unreachable private default preserves the public
+  default and produces 87/87 lines/statements, 20/20 functions and 39/39 branches
+  under both local providers. No coverage floor or safety check changed. The
+  current admission-reordering control still fails exactly once after refinement,
+  and source restoration is byte-exact.
+
+### 2026-10-30: preserve concurrent source reviews without double counting
+
+- The accepted feature branch and producer branch both reviewed the same
+  external-advisory computation. Preserve both reports, choose the accepted
+  security review as the current row, retain the structural fingerprint lead,
+  and count the computation once: 199 fresh dispositions, 2,372 gaps.
+- Six goal files conflicted. All 18 merge stages were preserved before changes.
+  Markdown uses Git's union merge and verifies every addition from both parents;
+  JSON uses explicit field decisions and both prior SPEC provenance records.
+- A check demanding every historical line initially rejected legitimate base
+  replacements from 198 to 199. Checking additions relative to the shared base
+  preserves all new work without restoring obsolete counters. No source work
+  was discarded and no whole-goal acceptance or runtime setting changed.
+
+### 2026-10-31: secure dependency upgrade preserves its older oracle contract
+
+The initial patched dependency fixed hosted Security but broke the vendored
+engine's test oracle APIs and matching assumptions. Preserve all original
+expected outcomes with published-source-verified reference data, then execute
+the full original-generator samples and fresh bounded fragment candidates.
+The package audit/docgen, 270 Node tests and V8/Istanbul coverage now pass.
+Removing the budget check or corrupting a matching result each fails the
+intended control; source restores byte-for-byte. The
+[checkpoint](dependency-security-compatibility-checkpoint.json) records the
+scope and current hosted-proof requirement. No scanner exception or quality
+floor was changed. Reference JSON is decoded through the existing schemas in
+an owned, disposed FileSystem runtime, avoiding giant inferred JSON unions.
+
+
+### 2026-10-31: publication lint has stricter source imports than the compiler hint
+
+The first compatibility wave created an unpublished commit, then correctly
+stopped at repository lint: NodeNext's `.js` import suggestion conflicts with
+the repo's explicit `.ts` rule. The same gate required the NodeURL namespace
+and a module-scoped JSON codec. Correct all three, run repository lint without
+quiet output, and refresh the full package and both runtime coverage proofs.
+Those checks and the repeated negative controls pass; the initial refusal
+remains retained. No gate or diagnostic was disabled. Prevent recurrence by
+checking existing source-import conventions before applying compiler hints.
+
+
+### 2026-10-31: expansion budgets do not bound optional pairwise work
+
+PR2373 review found that 4,096 alternatives remain below the existing expansion
+budget but still entered quadratic second-phase processing. Mirror the patched
+upstream 1,000-alternative deduplication ceiling and retain all larger sets.
+The exact-boundary and zero-comparison tests plus a subprocess watchdog pass.
+Removing only the new guard fails the fast 1,001-alternative assertion; source
+restores exactly. Full package and both runtime coverage suites pass 273 tests.
+The same review found a stray import inside JSDoc; remove that text while keeping
+the actual filesystem import. Preserve the earlier proof as historical and
+require a new complete final check for this source wave.
+
+A first coverage launch was refused by the shell's unmatched-glob rule before
+any test process started. Quoting the literal exclusion argument allowed the
+intended run; no test or coverage rule was changed.

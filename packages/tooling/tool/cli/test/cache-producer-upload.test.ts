@@ -1,13 +1,9 @@
 import {
   CacheConformanceExchange,
   CacheConformanceProxyEvent,
-  CacheConformanceProxyOptions,
-  CacheProducerBinding,
   CacheProtocolNativeSummary,
-  makeCacheConformanceFaultProxy,
 } from "@beep/repo-cli/commands/Cache";
 import { CacheHostedProducerUpload, joinCacheProducerUpload } from "@beep/repo-cli/test/Cache";
-import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
@@ -15,54 +11,18 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
-import * as HttpClient from "effect/http/HttpClient";
-import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { bearers, goodMode, makeConformanceServer, secrets, targetFor, teamId } from "./cache-conformance-server.ts";
-import { input } from "./helpers/cache-producer-bundle-fixture.ts";
+import { secrets } from "./cache-conformance-server.ts";
+import {
+  makeOwnedUploadFixture as fixture,
+  producerUploadTaskHash as hash,
+} from "./helpers/cache-producer-upload-fixture.ts";
 
-const hash = "0123456789abcdef";
-const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const encodeUpload = S.encodeEffect(S.fromJsonString(CacheHostedProducerUpload));
 const Services = Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer);
-
-const fixture = Effect.fn("ProducerUploadTest.fixture")(function* (taskHash = hash) {
-  const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
-    ...input.pilot,
-    protocolClient: input.protocol.observation.client,
-    workflowRevision: input.pilot.sourceRevision,
-    workflowImplementation: input.pilot.configurationDigest,
-    policyDigest: input.pilot.configurationDigest,
-  });
-  const summary = CacheProtocolNativeSummary.make({
-    turboVersion: binding.client.version,
-    tasks: [
-      {
-        taskId: binding.key.computation,
-        hash: taskHash,
-        cache: { status: "MISS", source: O.none() },
-        execution: { exitCode: 0 },
-      },
-    ],
-  });
-  const server = yield* makeConformanceServer({ ...goodMode, responseCacheResult: "allowed" });
-  const proxy = yield* makeCacheConformanceFaultProxy(
-    CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
-  );
-  const body = new TextEncoder().encode("owned-upload-body-canary");
-  yield* HttpClientRequest.put(`${proxy.url}/v8/artifacts/${taskHash}?teamId=${teamId}`).pipe(
-    HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "opaque-tag-canary" }),
-    HttpClientRequest.bodyUint8Array(body),
-    HttpClient.execute,
-    Effect.flatMap((reply) => reply.arrayBuffer)
-  );
-  const events = yield* proxy.events;
-  const event = O.getOrThrow(A.head(events));
-  return { binding, summary, events, event, archiveSha256: yield* hashBytes(body), archiveBytes: body.byteLength };
-});
 
 it.layer(Services, { timeout: "30 seconds", excludeTestServices: true })("owned producer upload join", (it) => {
   it.effect.prop(
@@ -152,6 +112,103 @@ it.layer(Services, { timeout: "30 seconds", excludeTestServices: true })("owned 
           }),
         { concurrency: 1, discard: true }
       );
+    })
+  );
+
+  it.effect.prop(
+    "checks the whole reviewed graph before joining its selected upload task",
+    { dependencyHash: CacheHostedProducerUpload.fields.taskHash },
+    ({ dependencyHash }) =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const selected = O.getOrThrow(A.head(f.summary.tasks));
+        const dependency = { ...selected, taskId: "@beep/types#build", hash: dependencyHash };
+        const summary = CacheProtocolNativeSummary.make({ ...f.summary, tasks: [dependency, selected] });
+        const expectedTasks = [selected.taskId, dependency.taskId];
+        const upload = yield* joinCacheProducerUpload(f.binding, summary, f.events, expectedTasks);
+        expect(upload.taskHash).toBe(selected.hash);
+        expect(upload.archiveSha256).toBe(f.archiveSha256);
+        (yield* joinCacheProducerUpload(f.binding, summary, f.events).pipe(Effect.result)).pipe(
+          Result.isFailure,
+          assertTrue
+        );
+      }),
+    { arbitrary: fcRuns(12) }
+  );
+
+  it.effect("rejects missing, foreign, duplicated, failed and cached graph dependencies", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const selected = O.getOrThrow(A.head(f.summary.tasks));
+      const dependency = { ...selected, taskId: "@beep/types#build", hash: "fedcba9876543210" };
+      const expectedTasks = [selected.taskId, dependency.taskId];
+      const invalid: ReadonlyArray<CacheProtocolNativeSummary["tasks"]> = [
+        [selected],
+        [dependency],
+        [selected, dependency, dependency],
+        [selected, { ...dependency, taskId: "foreign#task" }],
+        [selected, { ...dependency, hash: "not-a-native-hash" }],
+        [selected, { ...dependency, cache: { ...dependency.cache, status: "HIT" } }],
+        [selected, { ...dependency, cache: { ...dependency.cache, source: O.some("REMOTE") } }],
+        [selected, { ...dependency, execution: { exitCode: 1 } }],
+      ];
+      yield* Effect.forEach(
+        invalid,
+        (tasks) =>
+          Effect.gen(function* () {
+            const summary = CacheProtocolNativeSummary.make({ ...f.summary, tasks });
+            (yield* joinCacheProducerUpload(f.binding, summary, f.events, expectedTasks).pipe(Effect.result)).pipe(
+              Result.isFailure,
+              assertTrue
+            );
+          }),
+        { concurrency: 1, discard: true }
+      );
+      const graph = CacheProtocolNativeSummary.make({ ...f.summary, tasks: [selected, dependency] });
+      yield* Effect.forEach(
+        [
+          [],
+          [selected.taskId],
+          [selected.taskId, selected.taskId],
+          A.makeBy(65, (index) => `dependency-${index}#build`),
+        ],
+        (expected) =>
+          Effect.gen(function* () {
+            (yield* joinCacheProducerUpload(f.binding, graph, f.events, expected).pipe(Effect.result)).pipe(
+              Result.isFailure,
+              assertTrue
+            );
+          }),
+        { concurrency: 1, discard: true }
+      );
+      const withoutSelected = CacheProtocolNativeSummary.make({ ...f.summary, tasks: [dependency] });
+      (yield* joinCacheProducerUpload(f.binding, withoutSelected, f.events, [dependency.taskId]).pipe(
+        Effect.result
+      )).pipe(Result.isFailure, assertTrue);
+      const duplicated = CacheProtocolNativeSummary.make({ ...f.summary, tasks: [selected, selected, dependency] });
+      (yield* joinCacheProducerUpload(f.binding, duplicated, f.events, [
+        selected.taskId,
+        selected.taskId,
+        dependency.taskId,
+      ]).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      const oversized = CacheProtocolNativeSummary.make({
+        ...f.summary,
+        tasks: [selected, ...A.makeBy(64, (index) => ({ ...dependency, taskId: `dependency-${index}#build` }))],
+      });
+      (yield* joinCacheProducerUpload(
+        f.binding,
+        oversized,
+        f.events,
+        A.map(oversized.tasks, (task) => task.taskId)
+      ).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      const bounded = CacheProtocolNativeSummary.make({ ...oversized, tasks: A.take(oversized.tasks, 64) });
+      const accepted = yield* joinCacheProducerUpload(
+        f.binding,
+        bounded,
+        f.events,
+        A.map(bounded.tasks, (task) => task.taskId)
+      );
+      expect(accepted.taskHash).toBe(selected.hash);
     })
   );
 

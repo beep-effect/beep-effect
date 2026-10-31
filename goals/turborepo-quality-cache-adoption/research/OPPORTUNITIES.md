@@ -130,3 +130,243 @@ duplicate or missing targets and reported execution. A fresh report directory
 is created before writing. The new control receipt separates unit excerpts
 from actual synthetic stable/canary replay and retains all historical source
 bindings. Owner: the active Turbo goals. No qualification or rollout changed.
+
+
+### Fixer classification must follow delegated scripts
+
+The census command digest binds the complete sorted script map, not just the
+visible task command. The first direct-command digest comparison was therefore
+inapplicable; use the owner's existing encoding. All 136 current source-fixer
+script maps match, and their delegated `--write` implementations have separate
+read-only counterparts. A native control initially probed canary version without
+`--skip-infer` and selected local stable. Preserve that failed harness check;
+explicit inference suppression validates the exact canary and six native runs.
+Keep source-review dispositions separate from qualification and runtime proof.
+
+The population file exceeds Biome's default one-MiB read limit. Format this
+existing large evidence file with a one-command five-million-byte limit and
+verify structural diffs; do not change the repository's shared limit.
+
+
+### Historical profile leads are not the current semantic population
+
+The first source-fixer review selected 136 historical source-fix profile leads.
+The current population also contains 50 unreviewed `lint:fix` commands. Exact
+current source shows 49 use the same write implementation and Storybook writes
+shared story sources. Review current executable rows directly; a historical
+profile label cannot establish complete classification. All 186 whole-command
+fixers stay fresh, with separate read-only lint qualification still unfinished.
+
+
+### Cheap publication still holds a memory admission lease
+
+Three normal publication attempts after the directory-coverage repair showed
+that the second and third waited behind the first local gate wave. The current
+`runPushFirstPublishPhases` source explicitly holds weighted admission because
+the schema-catalog scan peaks near 12.6 GiB, and `yeet-command-wiring.test.ts`
+covers cheap-gates admission. The Yeet skill still claimed no ticket was taken.
+Correct that wording and preserve the resource guard. A local queue is distinct
+from a Turbo miss or hosted runner queue; cache hit-rate cannot explain it away.
+Use the existing ten-minute constrained-compute route when its real threshold
+is reached, recording completed local checks and relying on current hosted
+proof rather than lowering test floors or forcing overlapping memory-heavy jobs.
+
+
+### Refresh source absence before final applicability, 2026-10-30
+
+A prepared Go-workspace review named an unpublished producer source tree.
+Refresh it against the accepted tree before changing the feature matrix:
+43,760 tracked paths contain no Go files or manifests; 4,544 declared manifest
+scripts have no enumerated direct Go build/module command. Keep the superset
+script count distinct from executable computation population, preserve disabled
+configuration and reopen when a real consumer appears. Do not infer Go support
+from missing canary documentation or extend this absence result to Cargo/Python.
+
+
+### Missing documentation is not missing configuration support, 2026-10-30
+
+The pinned canary docs omit several future-flag names. Exact native dry runs
+accept all 14 flags false/true on both pins while rejecting an unknown key on
+both. Record this stronger availability evidence without calling syntax
+acceptance a semantic regression pass. The marker command never executes;
+production configuration and feature-acceptance states stay unchanged.
+
+
+### Retain reproducible observation drivers, 2026-10-30
+
+PR #2369 review found that the sixty-case native availability report recorded
+an executed-script digest without retaining that driver in the packet. Retain
+a portable driver, bind its exact bytes in the regenerated report and document
+the reproduction command in SOURCES.md. Re-run the observations from that
+retained driver; keep the previous report in Git history. This closes evidence
+reproduction, not feature semantics, task qualification or production adoption.
+
+
+### Revalidate older retained-driver bindings, 2026-10-30
+
+A source-binding audit found that the older native input and real ignored-input
+reports also named driver digests that differ from their retained files. Re-run
+those exact retained drivers and bind the new observations to their bytes before
+using either report for current feature review. Preserve the old observations in
+Git history; do not relabel an old run with the current script's hash. Both
+replays pass: eighteen synthetic runs plus both real-computation dry-only
+perturbations, with exact owned cleanup and baseline restoration.
+
+### Publication context can precede its generated commit, 2026-10-30
+
+The normal publisher pushed commit `1ed7bfa943` but its successful verdict still
+named the earlier `07db932b41` context captured before it committed the staged
+index. Retain that mismatch and refuse to call it same-head proof. An explicit
+commit before the next publication avoids this attribution defect while its
+owner fixes context refresh; do not weaken the exact-head acceptance gate.
+
+### Generated report binding drift, 2026-10-30
+
+- Doing: make the retained native-input report reproducible on replay.
+- Evidence: PR #2369 review found that the generator emitted `driverSha256`
+  without the report's added `driver` path/digest object. The actual ignored
+  input generator had the same postprocessing gap.
+- Repair: generate bindings before writing either report, capture real source
+  metadata in the ignored-input driver, replay both and copy generated bytes
+  unchanged. Preserve prior reports in Git history.
+- Prevention: compare the retained JSON directly with generated output before
+  publication, in addition to checking each digest against retained source.
+
+### Constrained evidence-repair publication, 2026-10-30
+
+- Doing: publish the completed report-generator repair.
+- Evidence: the canonical publisher spent more than thirteen minutes in
+  admission and local gates while available memory constrained the host.
+- Action: cancel only that owned publisher after preserving its logs, then use
+  the existing hosted escape. Retain eighteen native executions, six dry plans,
+  Ruff and packet checks; disclose unfinished broad gates in the PR.
+- Prevention: qualify reusable policy phases and keep publication admission
+  separate from broad local proof; do not widen memory capacity or lower gates.
+### Preserve actual publication identity separately, 2026-10-30
+
+While publishing the feature evidence repair, Yeet pushed `1ed7bfa943` but its
+verdict retained the starting `07db932b41` head. The attempt identity is useful
+and immutable; it cannot by itself name the new commit produced in the run.
+Add an optional, independently recorded published commit identity, bound around
+the successful Git push. Refuse a head that changes during that phase, retain
+unknown identity on a failed push, and keep starting proof facts unchanged.
+
+### Attribute full-check worker termination before retry, 2026-10-30
+
+The producer component's full final check at `e9866c4c4ea7` ended with SIGTERM
+errors in two Vitest coverage workers: CLI coverage-artifact tests and cli-kit.
+Their sources match accepted main. Focused Node replays pass all 114 affected
+CLI artifact cases and all 1,396 cli-kit tests. The signal's sender and cause
+remain unproven. Preserve that failed run and permit one unchanged-head full
+retry; investigate the lifecycle before a further retry if termination recurs.
+No coverage floor, expectation, source or required status is relaxed.
+
+
+The system journal subsequently identifies the two victims: `earlyoom` sent
+SIGTERM to two Node/Vitest workers from the producer checkout at 11:14:52-53
+UTC. No later earlyoom signal appeared in the subsequent journal observation.
+The unchanged-head canonical retry then passed every final gate with no skips
+or lowered floors. Keep the original failed run and sender attribution; order
+additional heavy local checks around the active proofs instead of changing the
+workstation's memory protection policy.
+
+### Publication repair duplication gate, 2026-10-30
+
+- Doing: publish the attempt/publication identity repair through Yeet.
+- Evidence: the collected cheap-gate wave identified one introduced Fallow
+  duplication group in the two publication tails. The canonical publisher
+  stopped before pushing. The old-source whole-package audit was interrupted
+  deliberately before repair; it is not a passing proof.
+- Repair: move upstream warning and push-step selection into the existing shared
+  push phase, keeping both before/after head guards and all original behavior.
+  Replay focused tests, both guard-removal controls and the unchanged Fallow
+  gate before publishing. Preserve the original failed result.
+- Prevention: exercise the existing duplication gate during the focused edit
+  loop when consolidating a shared phase, before the broader publication wave.
+
+
+### Direct prove-first publication coverage, 2026-10-30
+
+- Doing: close review of the publication-identity repair in PR #2370.
+- Evidence: the real Git fixtures initially drove only the push-first tail,
+  leaving the standard tail's prepared-head capture unexercised directly.
+- Repair: expose the existing standard tail through the source-only test kit
+  and reuse the same disposable bare remote for its success and proof-time
+  drift cases. Moving the capture after proof fails the selected new case
+  under both Node and Bun; restore exact source bytes after each control.
+- Prevention: exercise each independently ordered publication route, even
+  when the final push guards are shared. Production phase behavior is unchanged.
+
+### Review-request Git transport recovery, 2026-10-30
+
+- Doing: push the generated review-request commit for PR #2368 after full proof.
+- Evidence: SSH refused the available public-key route. The scoped HTTPS
+  consumer authenticated, but GitHub repeatedly returned `fatal error in
+  commit_refs`. The commit object was already uploaded with the expected parent.
+- Recovery: verify that exact object and parent through GitHub, then update the
+  existing branch forward with `force=false`. Retain each failed transport
+  result separately; the recovery grants no new proof or merge authority.
+- Prevention: distinguish authentication failure from an uncertain ref update,
+  inspect the actual remote object/ref, and preserve forward-only updates.
+
+### Do not infer execution or dependency closure from selection switches
+
+- Work: establish the pinned task-selection contract. A first broad expectation
+  treated graph-only plans as identical across strict false/true; the native
+  assertion exposed two extra commandless entrypoints in default mode.
+  Both pins also preserve same-name dependencies under `--only`, and sixteen
+  fixture zero exits have no selected execution record.
+- Prevention: retain complete task/edge and actual execution-summary controls
+  before changing selection. Count real selected commands, and classify empty
+  or dependency-only results explicitly; do not equate zero exit with proof.
+- Local tooling: Ruff was absent from PATH; use the existing cached 0.17.2
+  binary for this driver rather than fetching another tool. Its standard UTC
+  formatting rule was applied before the final source-bound replay.
+
+### Root discovery absence is not ecosystem absence
+
+- Work: review the experimental Python workspace flag. The tracked tree has
+  no root uv workspace, but the Beep CLI owns a nested `beep-photo-face` project
+  and explicit `beep:lint:python`/`beep:test:python` audit steps.
+- Prevention: inventory nested manifests and generated command ownership before
+  declaring an ecosystem inapplicable. Preserve those quality computations in
+  decomposition/qualification even when root discovery remains disabled.
+
+### Tree-exact evidence cannot refresh external security data
+
+- Work: review the existing root Bun audit boundary. The command also applies
+  wall-clock expiry to OSV ignores and package overrides, so even an unchanged
+  lockfile and config can require a different current verdict.
+- Prevention: preserve both the existing Turbo cache exclusion and local proof
+  exclusion. A future pure parsing optimization must not suppress the fresh
+  network verdict or freeze expiry policy. No audit or cache setting changed.
+
+- Report formatting friction: the generated population JSON exceeds the default
+  formatter one-MiB limit. An explicit four-MiB process bound formats the full
+  report; repository formatter settings and all correctness floors stay intact.
+
+### Preserve module isolation around native coverage witnesses
+
+- Work: finish the occupied-port repair's full proof.
+- Evidence: all Markdown tests passed, but the root ratchet measured two uncovered
+  default-metadata branches. The existing direct test and standalone full-package
+  replays cover those branches; the original measurement is retained privately.
+- Response: follow the shared harness's existing rule for registry-mocking
+  packages and isolate each file during coverage. Both native full suites and
+  default package verification pass without lowering any floor.
+- Limit: standalone controls do not reproduce the original failure or establish
+  an exact V8 cause. Retain the extra measured coverage runtime and require fresh
+  whole-proof/hosted evidence before closure.
+
+### Cross-check evidence references after extending retained drivers
+
+- Work: review the expanded native input controls. The driver/report had moved
+  to22 cases while the completion audit still named the older18-case digest.
+  A prose summary also lagged the structured feature counts.
+- Prevention: derive current references from the retained driver/report bytes
+  and count actual results. Pin the prior replay to its immutable source revision
+  instead of reusing a current path for old bytes. Keep numeric totals in
+  reviewCounts and row statuses rather than duplicating them in limits prose.
+- The superseded local proof was stopped through its exact owned launcher
+  before changing tracked files. No current full pass or cache qualification
+  is inferred from its completed gates.

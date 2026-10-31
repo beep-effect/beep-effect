@@ -51,7 +51,26 @@
     "research/actual-ignored-input-control.py",
     "research/actual-ignored-input-observation.json",
     "research/current-runtime-baseline-review.md",
-    "research/current-runtime-baseline-checkpoint.json"
+    "research/current-runtime-baseline-checkpoint.json",
+    "research/mutating-fixer-disposition-review.json",
+    "research/mutating-fixer-replay-control.json",
+    "research/persistent-service-disposition-review.json",
+    "research/remaining-mutating-fixer-disposition-review.json",
+    "research/remaining-persistent-service-disposition-review.json",
+    "research/go-workspace-feature-review.json",
+    "research/native-future-flag-availability.json",
+    "research/native-future-flag-availability.py",
+    "research/published-head-identity-checkpoint.json",
+    "research/task-descriptions-feature-review.json",
+    "research/native-selection-controls.py",
+    "research/native-selection-controls.json",
+    "research/selection-semantics-checkpoint.json",
+    "research/python-workspace-feature-review.json",
+    "research/external-security-disposition-review.json",
+    "research/markdown-coverage-isolation-checkpoint.json",
+    "research/external-verdict-source-review.json",
+    "research/generator-boundary-source-review.json",
+    "research/accepted-feature-merge-checkpoint.json"
   ],
   "agentLaunchers": [
     {
@@ -113,5 +132,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Launched 2026-10-28. Current P0 inventory: 190 workspaces, 4586 configured nodes and 2571 executable computations; all final dispositions remain open. Stable 2.11.10 and published canary 2.11.9-canary.1 are pinned with native inference disabled. No new qualification, production signing or whole-program completion is claimed."
+  "statusNote": "Active. Source review gives 199 keep-fresh whole-command dispositions: 186 lint fixers, 12 persistent services and one current external advisory verdict. Nine generator write boundaries have source-reviewed pure decomposition leads, not final exclusions. The other 2372 final dispositions, all qualification/adoption/observation and all whole-goal acceptance remain unfinished."
 }

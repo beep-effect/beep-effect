@@ -324,3 +324,99 @@ regexes = [
   '''^\n?[\t ]*"packages/drivers/discord/src/Discord\.models\.ts": "3131149b01b4da6ab27da9c58ff652bd7d10fa4a30159d4b827e593fc2e138b1",$''',
   '''^\n?[\t ]*"packages/drivers/discord/src/Discord\.service\.ts": "4e1dfbe789379f7bc7c80e4911a8c4f56f4fcc3bb282f2235f538da620cd6388",$''',
 ]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/atomic\-pause\-package\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/delivery\-policy\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/maintenance\-package\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/query\-backoff\-package\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/replay\-package\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/retirement\-package\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/review\-health\-package\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/surface\-label\-package\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]
+
+[[allowlists]]
+description = "Verified observation receipt source SHA-256 values; exact file, source key and digest survive squash without excluding other values."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/whole\-cli\-runtime\-abort\-verification\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout\.schemas\.ts": "43cbed8bccbf8ee70931ed6ced320f9a840bcc87a50254cfef87465d4873953e",$''',
+  '''^\n?[\t ]*"packages/tooling/tool/cli/src/commands/Accounts/AccountsSecretsLayout\.service\.ts": "0af9611f146d7da9add684d107d7255eb5376662d769daa42f76210abacaa4aa",$''',
+  '''^\n?[\t ]*"packages/tooling/tool/cli/src/commands/Lint/internal/SchemaParityCodemodExactOptionalKeysRule\.ts": "ee722b17d151d9c6b0af3c5819bf9a798b12beead2c068cd38fa2cc32a113847",$''',
+  '''^\n?[\t ]*"packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth\.ts": "0de691270bc82e40cc1053801b1e5b6d610688e66025a696e554b8b8189d17c6",$''',
+  '''^\n?[\t ]*"packages/tooling/tool/cli/src/internal/WholeToken\.ts": "b84c0c89fe4ad20b0e2ad7c6f655d935d85fdf3704c929ef6ae8c76f2b39f102",$''',
+  '''^\n?[\t ]*"packages/tooling/tool/cli/test/accounts\-secrets\-layout\.test\.ts": "1c95d8f07769861c190f335dbad9a11adbf9e57ec2b13e64fed85e5c38140581",$''',
+  '''^\n?[\t ]*"packages/tooling/tool/cli/test/schema\-parity\-codemod\-exact\-optional\-keys\.test\.ts": "dc5aeae919a93a0da3ab43cb4dce147b6a2d985175911fbcd69c03e33fee2469",$''',
+]

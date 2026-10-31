@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "accepted-feature-merge-checkpoint/v1",
+  "recordedAt": "2026-10-30T23:47:23.138607+00:00",
+  "authority": "Static merge/source preservation evidence only; no runtime qualification or whole-goal acceptance.",
+  "producerBeforeJoin": "e06ac291cc5e2f04573ccafd89e69eceddf8b0b6",
+  "acceptedFeatureCommit": "0e601a3d55f88d875ca49d47931e216a5a328aa2",
+  "specSha256": "dac9820e8e2517f97f503a05869b5424f663978dc50cf7dd815d3a4d0648f33f",
+  "conflictedFiles": [
+    "goals/turborepo-quality-cache-adoption/PLAN.md",
+    "goals/turborepo-quality-cache-adoption/SPEC.md",
+    "goals/turborepo-quality-cache-adoption/ops/manifest.json",
+    "goals/turborepo-quality-cache-adoption/research/SOURCES.md",
+    "goals/turborepo-quality-cache-adoption/research/current-completion-audit.json",
+    "goals/turborepo-quality-cache-adoption/research/current-population.json"
+  ],
+  "preservedMergeStages": 18,
+  "markdownInvariant": "Every added nonempty line relative to the common base is preserved from both parents. Legitimately replaced base counters are not restored.",
+  "scalarDecisions": "Current audit binds merged SPEC; both conformance-join histories preserved; current external disposition uses accepted security review while the prior fingerprint lead is retained. Manifest retains generator leads and all evidence refs.",
+  "population": {
+    "uniqueComputations": 2571,
+    "freshWholeTaskDispositions": 199,
+    "remainingFinalDispositionGaps": 2372,
+    "other2570RowsIdenticalAcrossBothParents": true,
+    "bothExternalSourceReviewsRetained": true,
+    "reviewedExternalComputationCount": 1
+  },
+  "featureDispositions": {
+    "final": 3,
+    "pending": 32,
+    "changedByJoin": false
+  },
+  "nativeInputAudit": {
+    "path": "research/native-input-controls.json",
+    "driverSha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b",
+    "cases": 22,
+    "priorDriverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+    "replayedAt": "2026-10-30T19:06:18.231530+00:00",
+    "bindingGeneratedByDriver": true,
+    "sourceRevision": "91322bf96426b34daaae6d0e4c577303d1847a7a"
+  },
+  "allGoalAcceptanceUnproven": true,
+  "deploymentChanged": false,
+  "credentialsChanged": false
+}

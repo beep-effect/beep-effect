@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "cache-producer-capture-checkpoint/v1",
+  "authority": "Source-bound component observations only; no protected producer, qualification or deployed-trust authority.",
+  "sourceHead": "1e01d6f79ac13bdbf55198cab5bf81cc0ea5abaa",
+  "sourceFiles": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.schemas.ts": "f4f35127610767d5e2972bdbaa0479b835b285d907f4d68f95b3c23551a45693",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.fixture.ts": "7209269381023bff166ef1ea81ce2f003c218632b0580121cc6df79e8497d6bd",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.schemas.ts": "877b495dc6fadb8063f15d71646cbd3e6e235a0b1ff29dfda4e879a00f0562a5",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.runner.ts": "6c06689ee128246ca34a1f8ebdba183cd03371f7a4bf3724103c15d42ebd08f4",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.schemas.ts": "0d7531b7d343e36ff23931466227c45893b930e631a4c1a480bafe91a8feffc2",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts": "a95016ed6292c3b4416b55da57825b4f98b5e1c76fa79dca39cd765c243b71ec",
+    "packages/tooling/tool/cli/test/cache-protocol-fixture.test.ts": "e2d3b84044d77bebdf4e24c84cd8671e2d7c0382d8afff78fcfccf1334644c9b",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts": "f101c8d279bd697759580e537aad756c8154860498732c3021430406f6578c24",
+    "packages/tooling/tool/cli/test/cache-producer-upload.test.ts": "923fcb4f507151e128c841fcc8cfacad02b5b0f56bf0c6c60574d52fd49b821f"
+  },
+  "integrationTests": [
+    {
+      "runtime": "node",
+      "exit": 0,
+      "elapsedSeconds": 15.718,
+      "tests": 196,
+      "files": 11
+    },
+    {
+      "runtime": "bun",
+      "exit": 0,
+      "elapsedSeconds": 11.475,
+      "tests": 196,
+      "files": 11
+    }
+  ],
+  "uploadJoinCoverage": {
+    "node": {
+      "lines": 100,
+      "statements": 100,
+      "functions": 100,
+      "branches": 100
+    },
+    "bun": {
+      "lines": 100,
+      "statements": 100,
+      "functions": 100,
+      "branches": 100
+    }
+  },
+  "guardControls": {
+    "intendedFailures": 5,
+    "sourceRestored": true,
+    "cases": [
+      "graph-membership",
+      "all-task-results",
+      "selected-task",
+      "expected-unique",
+      "graph-bound"
+    ]
+  },
+  "nativeProtocol": [
+    {
+      "channel": "stable",
+      "client": {
+        "version": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6",
+        "namespace": "team_capture_native_20261029_stable"
+      },
+      "reportSha256": "6d2c0923f46c3b8b5afd58c173fb7fc94ffc43f406c79ea2ef9b991173bc365f",
+      "reportBytes": 10258,
+      "integrityScenarios": 6,
+      "transportScenarios": 3,
+      "events": 23,
+      "roots": 9,
+      "taggedUploadObserved": true,
+      "untaggedReadsWithResponseTag": 5
+    },
+    {
+      "channel": "canary",
+      "client": {
+        "version": "2.11.9-canary.1",
+        "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb",
+        "namespace": "team_capture_native_20261029_canary"
+      },
+      "reportSha256": "72a5153a54afdd4553c267bf3ede3a91f47ff297ea39ac4dca99d62bf4dac68d",
+      "reportBytes": 10314,
+      "integrityScenarios": 6,
+      "transportScenarios": 3,
+      "events": 23,
+      "roots": 9,
+      "taggedUploadObserved": true,
+      "untaggedReadsWithResponseTag": 5
+    }
+  ],
+  "nativeFixtureRootsRemaining": 0,
+  "population": {
+    "sourcesVerified": 431,
+    "counts": {
+      "workspaces": 190,
+      "rootScripts": 113,
+      "configuredGraphNodes": 4586,
+      "executableComputations": 2571,
+      "graphOnlyNodes": 2015,
+      "cacheEnabledExecutableComputations": 1621,
+      "newSinceRetainedHandoff": 638,
+      "retainedCommandTextUnchanged": 1923,
+      "retainedQualificationRecordStates": {
+        "excluded": 5
+      }
+    },
+    "semanticRowsAndConfigurationUnchanged": true,
+    "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+    "ledgerUnchanged": true,
+    "changedInputCounts": 237,
+    "changedInputDigests": 246
+  },
+  "observationScope": [
+    "Request-tag digests are captured from actual incoming headers, independently of returned artifact tags.",
+    "The existing complete minimal summary schema lives in the schema role and remains re-exported from its original module.",
+    "Signed real-pilot runs now retain the complete minimal native summary from the same owned summary bytes. The changed signed real-pilot worker has not yet been executed.",
+    "The upload join validates the supplied complete reviewed closure before selecting its upload task; it permits at most 64 unique fresh successful tasks. The one-task default remains.",
+    "Only the owned supervisor may supply independently reviewed graph and settled captures. This pure validator authenticates no caller.",
+    "All nine implementation/test hashes matched after the unpublished replay onto merged PR2358."
+  ],
+  "limitations": [
+    "Actual finite backend-result capture and the owned supervisor upload-join integration are unfinished.",
+    "Closed protected GitHub execution and immutable publication remain unfinished.",
+    "No signed R2 activation or credential assignment occurred; the human secret handoff remains pending.",
+    "Current real-computation qualification, all eligible dispositions/adoption, rotation/rollback and real 7/7/14-day observations remain open.",
+    "This checkpoint supplies no whole-package or current-head hosted acceptance result.",
+    "Input counts and digests are time-bound clone observations; changed counts grant no semantic review or task qualification."
+  ],
+  "rawEvidence": "Bounded reports and original logs are preserved in operator-private state; no raw credentials or request tags are published.",
+  "boundaryFixtureRepair": {
+    "sourceHeadAtObservation": "f19fe1e5f19bb4199d67696b2689a770e01942d1",
+    "fixtureSource": {
+      "path": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "sha256": "4bdeb426ca8ea866325fa7df95ab3b7f7813ffe2e703db5bc4f870dcc464e9d4"
+    },
+    "failedWholePackageAttempt": {
+      "testsPassed": 8119,
+      "testsFailed": 1,
+      "testsSkipped": 3,
+      "cause": "Fake native summary omitted turboVersion.",
+      "docgenExit": 130,
+      "sourceAndGoalManifestsUnchanged": true
+    },
+    "repair": "The fake executable reports its own pin; producer summaries must retain that version and all dependency ids. Production capture code and its summary requirements are unchanged.",
+    "focusedTests": [
+      {
+        "runtime": "node",
+        "passed": 221,
+        "files": 12
+      },
+      {
+        "runtime": "bun",
+        "passed": 221,
+        "files": 12
+      }
+    ],
+    "retentionControls": {
+      "sourceSha256": "a95016ed6292c3b4416b55da57825b4f98b5e1c76fa79dca39cd765c243b71ec",
+      "sourceRestored": true,
+      "fixtureSha256": "4bdeb426ca8ea866325fa7df95ab3b7f7813ffe2e703db5bc4f870dcc464e9d4",
+      "controls": [
+        {
+          "case": "missing-native-summary",
+          "exit": 1,
+          "intendedFailure": true,
+          "elapsedSeconds": 4.495
+        },
+        {
+          "case": "filtered-native-summary",
+          "exit": 1,
+          "intendedFailure": true,
+          "elapsedSeconds": 4.134
+        }
+      ]
+    },
+    "hostedAttribution": {
+      "repoCliUnit": "Same missing turboVersion fixture failure.",
+      "propertyLaws": "Same missing turboVersion fixture failure.",
+      "coverage": "UNIT_RESULT=failure prerequisite; no metric evaluation."
+    },
+    "documentationDiagnostics": {
+      "localFullRunnerExits": [130, 130],
+      "directGeneratedExamples": [
+        {
+          "runtime": "node",
+          "exit": 0,
+          "elapsedSeconds": 14.012
+        },
+        {
+          "runtime": "bun",
+          "exit": 0,
+          "elapsedSeconds": 14.412
+        }
+      ],
+      "effectProcessBackends": [
+        {
+          "backend": "bun",
+          "exit": 0,
+          "elapsedSeconds": 14.062
+        },
+        {
+          "backend": "node",
+          "exit": 0,
+          "elapsedSeconds": 13.334
+        }
+      ],
+      "scope": "Compiler checks pass; the local full-runner interruption remains unattributed. Original hosted Docgen passes at f19. Fresh repaired-head hosted and whole-package proof remain separate."
+    },
+    "limits": "Controlled process-boundary test doubles; the changed real signed-pilot worker is still not physically executed."
+  },
+  "passingWholePackageReplay": {
+    "sourceHead": "11c6a3dc9a8d42cfc4264290c89b5ca6e8adf86f",
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "exit": 0,
+    "elapsedSeconds": 1158.844,
+    "auditSeconds": 1117.9,
+    "docgenSeconds": 39.4,
+    "scope": "Complete default CLI package audit and actual full Docgen on the fixed signed-summary fixture source. Earlier f19 fixture failure and interrupted Docgen attempts remain historical evidence.",
+    "fixtureSource": {
+      "path": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "sha256": "4bdeb426ca8ea866325fa7df95ab3b7f7813ffe2e703db5bc4f870dcc464e9d4"
+    },
+    "notClaimed": [
+      "closed protected producer",
+      "live signed R2 activation",
+      "current computation qualification",
+      "representative observation windows"
+    ]
+  }
+}

@@ -384,3 +384,134 @@ artifact, signing activation, deployed grant or observation window changes.
   excerpts stay distinct from eighteen real synthetic native replay processes.
   Earlier observations keep their original driver identities and full goal
   acceptance remains open.
+
+
+## Docgen launch repair, 2026-10-29
+
+`docgen-launch-repair-checkpoint.json` records the actual full before/after
+commands, the retained intermittent exit 130 attempts, interpreter observation
+and package/script checks. The baseline review names the ten blocking cached
+tasks and the one reviewed package subject; fourteen executable command-digest
+records change with those manifest bytes. Scope/profile/epoch and the
+qualification ledger remain unchanged. This grants no cache qualification or
+signed trust readiness.
+
+
+## Signed supervisor launcher repair, 2026-10-29
+
+- [Source-bound checkpoint](signed-runtime-alias-checkpoint.json): exact private
+  runtime aliases repair discovery of a pinned executable named `bun.native`.
+  The actual isolated old/fixed topology probe exited127/0 respectively and
+  the fixed form reported the expected pinned runtime versions.
+- 18 supervisor tests pass in each runtime; package lint/check and the complete
+  package audit plus Docgen pass. This is launcher proof; current native task
+  qualification and production trust remain separate unfinished gates.
+
+
+- [Deterministic contained-directory error coverage](fs-guards-directory-coverage-checkpoint.json):
+  real typed filesystem cause, refusal before writing, both 34-test runtime
+  suites, exact error adapter V8 hit and full package audit/documentation.
+  Existing floors and implementation remain unchanged; consumer final proof
+  and both full-goal contracts remain open.
+
+
+### Owned native capture and complete graph, 2026-10-29
+
+[The source-bound checkpoint](producer-capture-checkpoint.json) records actual
+pinned native protocol runs, separate incoming tag digests, complete minimal
+summary retention, and the reviewed whole-graph upload validator. It also records
+the current census without changing configuration or qualification decisions.
+Actual signed real-pilot execution, backend/supervisor integration and protected
+publication remain separate proof obligations.
+
+
+## Passing producer-capture whole-package replay
+
+`producer-capture-checkpoint.json` now also records the complete default
+`@beep/repo-cli` package audit and full Docgen pass on the fixed signed-summary
+fixture source at `11c6a3dc9a8d`. The run completed in 1158.844 seconds (audit
+1117.9 seconds, Docgen 39.4 seconds). Prior failed and interrupted runs remain
+historical evidence; this pass grants neither live trust nor qualification.
+
+
+## Private socket transport component, 2026-10-29
+
+- [Source-bound checkpoint](private-socket-checkpoint.json): original TCP wrapper
+  shares the observer handler with a scoped owner-only Unix endpoint. Existing
+  Effect NetAddress and platform Unix HTTP agent are reused.
+- Actual Node and Bun focused runs passed 48 tests in 3 files each. Additional
+  real-socket controls prove request-budget refusal and invalid evidence after
+  exhaustion. The earlier source-bound package audit and documentation build passed in 1244.41s.
+- These are component observations. They neither prove real R2 producer traffic
+  nor confer protected workflow, qualification or production signing authority.
+
+
+### Private socket coverage controls
+
+The private-socket checkpoint also retains current 51-test Node/V8 and
+Bun/Istanbul runs. Both providers report 100% lines, statements, functions and
+branches for the fixture; proxy metrics exceed the existing per-file floors.
+Three constructor-double cases prove modes, wrong-address refusal, bind-cause
+preservation and cleanup in-process, while the native lifecycle proves Bun
+transport. Two source-removal controls fail their intended assertions and restore
+the exact source. The production implementation and original test stay byte
+identical to the prior full package replay; current integrated final proof
+remains required for the new test file and combined source.
+
+
+- [Private-socket test lifetime review](private-socket-scope-review.json):
+  one canonical Option assertion repair, six explicit resource judgments, and
+  four actual scope-removal controls that fail the required cleanup assertions.
+  Both current 51-test provider runs pass with unchanged coverage floors.
+
+- `private-pilot-storage-checkpoint.json`: consolidated prerequisite source, actual synthetic guest-alias counterexample, scoped private storage and dependency import checks. Fresh combined whole-package/hosted and native trust acceptance remain pending.
+
+
+### Private storage refusal coverage
+
+The current hosted run 40985410945 and coverage job 123844603476 identify the
+unexecuted refusal. Retained CLI-shard artifacts plus the direct 26-test
+Istanbul run map the source guard; the existing coverage owner's normalizer and
+scoped Istanbul library combine the diagnostic counters. See the source-bound
+repair checkpoint. New published-head canonical and hosted acceptance remain
+required.
+
+
+- `closed-producer-upload-checkpoint.json`: owned upload preparation, paired target/key approval, source/runtime snapshots, actual synthetic guest-alias counterexample and scoped private storage repair; current protected native acceptance remains pending.
+
+
+### Signed adapter exec controls
+
+The signed-adapter-launch checkpoint binds the explicit launcher, real child
+environment observations, default infra package audit/Docgen and two private
+source-copy controls. Its selected test executable is inert. It establishes no
+R2 capability, protected producer authority or resource/listener attestation.
+The ordinary adapter lifecycle and cache configuration remain unchanged.
+
+- `owned-adapter-lifecycle-checkpoint.json`: source-bound local implementation
+  and proof for late owned-backend acquisition, approved storage identity,
+  private pipe startup, fixed real resource/lifetime observations and
+  issuer-bound cleanup. Separates 112-test Node/Bun orchestration, real
+  synthetic adapter/controller cases and three intended guard failures from
+  the unperformed R2/protected/qualification/observation gates.
+
+- `owned-adapter-integration-checkpoint.json`: accepted PR #2367 main integration with the owned backend/upload path; fresh 142-test Node and Bun replays and package lint/check. Earlier checkpoints retain their original source scope; complete and protected proof remains pending.
+
+- `producer-integration-policy-review.json`: exact source repair, canonical assertion semantics, one source-reviewed real-process platform judgment, and scoped passing checks; interrupted complete proof is explicitly not acceptance.
+
+- `producer-fallow-repair-checkpoint.json`: introduced complexity/duplication attribution, canonical upload-profile and shared-reader repair, current 163-case dual-runtime replay, intended digest-removal failure with exact restoration, real synthetic controller cleanup and canonical documentation/policy checks. Complete package/final/hosted and all real trust/adoption gates remain required.
+
+
+- [Upload lifetime review checkpoint](producer-upload-lifetime-checkpoint.json)
+  binds the current admitted lifecycle, unchanged backend caps, seventy focused
+  cases per runtime and exact-restored regression controls. The inert peer and
+  controlled admission do not prove actual R2 grants or protected publication.
+
+- [Owned approval refusal checkpoint](producer-approval-refusal-checkpoint.json):
+  immutable hosted gap, current exact source hashes, admission-order negative
+  control, and 176-case Node/Bun runner coverage. Local controlled evidence only.
+
+- [Dependency security compatibility checkpoint](dependency-security-compatibility-checkpoint.json):
+  patched dependency identities, independent legacy-reference provenance,
+  complete package and cross-runtime test/coverage proof, and restored negative
+  controls. This component repair grants no signed reuse or whole-goal acceptance.

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "cache-adoption-feature-matrix-refresh/v1",
-  "authority": "Current documented/CLI capability inventory and explicit remaining test obligations; not qualification.",
+  "authority": "Source-backed applicability decisions and remaining feature-test obligations; no computation qualification or activation.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
   "clients": "current-client-pins.json",
   "rows": [
@@ -29,7 +29,13 @@
       "correctnessCase": "Mutate upstream source and compare dependent and unrelated task hashes.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "dependsOn"
+      "availabilityTerm": "dependsOn",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Commandless transit dependency retained in the real-task fixture; graph-only behavior compared with strict selection false/true.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
     },
     {
       "feature": "entrypoint-selection",
@@ -56,7 +62,13 @@
       "correctnessCase": "Missing-script and strict-entrypoint fixtures must not emit successful execution evidence.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "--only"
+      "availabilityTerm": "--only",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Package-filtered missing command, explicit missing command, graph-only requests and actual selected execution records.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
     },
     {
       "feature": "affected-selection",
@@ -110,7 +122,13 @@
       "correctnessCase": "Compare positive, empty and invalid filter selection with the root graph.",
       "disposition": "review existing use and qualify applicable changes",
       "acceptanceStatus": "pending",
-      "availabilityTerm": "--filter"
+      "availabilityTerm": "--filter",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Positive package filter, complete negation, missing package/path, unresolved selector and malformed regex refusals.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
     },
     {
       "feature": "global-and-child-config",
@@ -262,14 +280,19 @@
       ],
       "beepUseCase": "Make generated task intent inspectable without altering correctness.",
       "expectedBenefit": "Make generated task intent inspectable without altering correctness.",
-      "correctnessCase": "Compare schema-supported descriptions against effective task configuration.",
-      "disposition": "review existing use and qualify applicable changes",
-      "acceptanceStatus": "pending",
+      "correctnessCase": "Add/edit invalidates the implicit raw turbo.json task input on both pins; removing the field restores the exact earlier hash and HIT while definition/global digests stay unchanged.",
+      "disposition": "Retain absent optional descriptions in current Turbo config; no execution benefit or requested metadata consumer justifies adding another documentation source.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "availabilityTerm": "description",
       "runtimeObservation": {
         "report": "native-input-controls.json",
-        "scope": "Description-only changes produce MISS and a changed hash on both pins; no reuse guarantee assumed.",
-        "authority": "synthetic feature observation only; real computation qualification remains pending"
+        "scope": "Six asserted description add/edit/remove cases across both pinned clients; raw config is a task input while description is absent from resolved definition.",
+        "authority": "Synthetic native feature evidence only; no real computation qualification."
+      },
+      "finalReview": {
+        "report": "task-descriptions-feature-review.json",
+        "sourceBaseRevision": "d39e9ee2945c4d8e2dda46767f3400a49426f661",
+        "reopenWhen": "A concrete task-inspection or UI consumer needs descriptions and a reviewed source/configuration change justifies their maintenance and invalidation cost."
       }
     },
     {
@@ -600,7 +623,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "retain observed setting pending current evidence",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:errorsOnlyShowHash",
@@ -616,7 +651,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalCargoWorkspaces",
@@ -632,7 +679,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalGoWorkspaces",
@@ -641,14 +700,33 @@
       "enabledInObservedRoot": false,
       "canaryDocumentationObserved": false,
       "prerequisites": [
-        "Exact-client regression evidence",
-        "Change only one experimental flag at a time"
+        "Reopen applicability if a Go consumer or discovery-contract change appears.",
+        "Exact-client regression evidence remains required before any future activation."
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "beepUseCase": "No Go workspace or computation exists in the current accepted source tree.",
+      "expectedBenefit": "Zero current Go-workspace computations or graph edges can benefit; no time saving is claimed.",
+      "correctnessCase": "Verify the clean accepted-tree absence census, exact pinned binary identities and schema false default; preserve absent root setting. Do not enable the feature or substitute a synthetic Go task for a repository consumer.",
+      "disposition": "not-applicable-current-repository; retain disabled",
+      "acceptanceStatus": "accepted-not-applicable",
+      "applicabilityReason": "There is no root go.work, Go module manifest or tracked Go source. No tracked package.json script directly invokes the enumerated Go build/module commands. The current accepted source has no Go workspace graph for this discovery feature to enroll.",
+      "finalReview": "go-workspace-feature-review.json",
+      "reopenWhen": [
+        "A root Go workspace, module, tracked source or actual consumer is introduced.",
+        "A client update changes the discovery or applicability contract.",
+        "A proposal would enable Go workspace discovery; exact-client positive and negative regression evidence is then required before activation."
+      ],
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalObservability",
@@ -664,7 +742,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:experimentalPythonWorkspaces",
@@ -677,10 +767,31 @@
         "Change only one experimental flag at a time"
       ],
       "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "expectedBenefit": "No measured benefit is claimed. The current Python lint and test commands remain in the computation census and must receive their own semantic decomposition and qualification evidence.",
+      "correctnessCase": "Preserve absent root uv workspace/flag and existing generated quality scripts. Any proposal to introduce root uv discovery must prove exact-client real uv graph selection and task ownership without duplicate, missing or falsely successful execution.",
+      "disposition": "Retain absent root uv discovery; preserve the existing nested standalone project and explicit Beep CLI quality-command ownership.",
+      "acceptanceStatus": "accepted-retain-current-absence",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "finalReview": {
+        "report": "python-workspace-feature-review.json",
+        "sourceBaseRevision": "daf68a6395be5dd329453c9f56f4a579de14e666",
+        "reopenWhen": [
+          "A concrete owner proposes a root uv workspace or Turbo Python graph consumer.",
+          "Python quality decomposition would benefit from independent uv package ownership.",
+          "A pinned client update changes root/nested discovery behavior or another Python project is added."
+        ]
+      }
     },
     {
       "feature": "futureFlag:experimentalSetup",
@@ -696,7 +807,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:filterUsingTasks",
@@ -712,7 +835,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "retain observed setting pending current evidence",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:githubActionsRemoteBaseRefFallback",
@@ -728,7 +863,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:globalConfiguration",
@@ -749,6 +896,18 @@
         "report": "native-input-controls.json",
         "scope": "Pinned local globalConfiguration profile; no other future flag is inferred.",
         "authority": "synthetic feature observation only; real computation qualification remains pending"
+      },
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
       }
     },
     {
@@ -765,7 +924,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:pruneIncludesGlobalFiles",
@@ -781,7 +952,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     },
     {
       "feature": "futureFlag:strictTaskEntrypointSelection",
@@ -797,7 +980,25 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Only this flag varies across the44 cases; all three observed current root flags stay fixed. Real repository adoption remains pending.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
     },
     {
       "feature": "futureFlag:watchUsingTaskInputs",
@@ -813,7 +1014,19 @@
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
       "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending"
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
     }
   ],
   "counts": {
@@ -827,6 +1040,25 @@
   "limits": [
     "Documented availability is not runtime correctness proof.",
     "Research-only upstream main is not a production or canary lane.",
-    "Feature-specific applicability and regression evidence remain open."
-  ]
+    "Feature rows carry current dispositions; reviewCounts records their totals. Native fixture evidence alone grants no real computation qualification."
+  ],
+  "reviewCounts": {
+    "acceptedNotApplicable": 1,
+    "acceptedRetainCurrentAbsence": 2,
+    "pending": 32
+  },
+  "nativeAvailabilityCounts": {
+    "flagCasesAccepted": 56,
+    "baselineCasesAccepted": 2,
+    "unknownControlsRefused": 2,
+    "sentinelsExecuted": 0,
+    "featuresSemanticallyQualified": 0
+  },
+  "nativeSelectionEvidence": {
+    "cases": 44,
+    "strictVariants": 2,
+    "semanticFlagsQualifiedForRepository": 0,
+    "checkpoint": "selection-semantics-checkpoint.json",
+    "clientChannels": 2
+  }
 }

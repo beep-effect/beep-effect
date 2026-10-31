@@ -1,16 +1,32 @@
 import {
+  CacheCommandError,
+  CacheConformanceExchange,
+  CacheConformanceProxyEvent,
   CacheDependencyMaterialization,
   CacheDependencyTree,
   CachePilotRequest,
+  CacheProducerBinding,
   CacheProtocolExecution,
+  CacheProtocolNativeSummary,
   CacheProtocolRequest,
   CacheSignedPilotReceipt,
   CacheSignedPilotRequest,
+  CacheSignedPilotRun,
   runCacheProtocolExperiment,
   runCacheSignedPilotExperiment,
 } from "@beep/repo-cli/commands/Cache";
+import * as Adapter from "@beep/repo-cli/commands/Cache/Cache.adapter";
+import * as ConformanceProxy from "@beep/repo-cli/commands/Cache/Cache.conformance.proxy";
 import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
-import { CacheRuntimeAdmission, CacheRuntimeProcess } from "@beep/repo-cli/test/Cache";
+import {
+  CacheAdapterRuntimeObservation,
+  CacheProducerAdapterReceipt,
+  CacheProducerUploadApproval,
+  CacheProducerUploadRuntime,
+  CacheRuntimeAdmission,
+  CacheRuntimeProcess,
+  runCacheProducerUploadExperiment,
+} from "@beep/repo-cli/test/Cache";
 import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
 import { CacheClientPin, CacheEvidenceReference } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
@@ -19,15 +35,25 @@ import { HostProcessPlatform } from "@beep/utils";
 import { NodeCrypto, NodeFileSystem, NodePath } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
+import * as NetAddress from "effect/net/NetAddress";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
+import * as TestClock from "effect/testing/TestClock";
+import { bearers, secrets, targetFor } from "./cache-conformance-server.ts";
+import { makeOwnedUploadFixture } from "./helpers/cache-producer-upload-fixture.ts";
 import { executionInput } from "./helpers/cache-protocol-fixture.ts";
 import { signedPilotInput } from "./helpers/cache-signed-pilot-fixture.ts";
 
@@ -40,6 +66,7 @@ const hash = S.decodeEffect(Sha256HexFromBytes);
 const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMaterialization));
 const decodeReport = S.decodeUnknownEffect(CacheSignedPilotReceipt);
 const encodeReport = S.encodeEffect(S.fromJsonString(CacheSignedPilotReceipt));
+const encodePilotRun = S.encodeEffect(S.fromJsonString(CacheSignedPilotRun));
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -107,7 +134,7 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(
     Effect.succeed(fault === "pin" ? Sha256Hex.make(Str.repeat(64)("b")) : digest)
   );
-  const process = vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
+  const capturedProcess = vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
     Effect.fn("SignedRunnerTest.process")(function* (options) {
       if (options.command === "/usr/bin/git")
         return CacheRuntimeProcess.CapturedStreams.make({
@@ -118,12 +145,20 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
         });
       expect(options.command).toBe("/usr/bin/bwrap");
       expect(options.extendEnv).toBe(false);
-      expect(options.args).toContain("--unshare-all");
-      expect(options.args).not.toContain(issuer);
-      const worker = O.getOrThrow(A.last(options.args ?? []));
+      const args = O.getOrThrow(O.fromUndefinedOr(options.args));
+      expect(args).toContain("--unshare-all");
+      expect(args).not.toContain(issuer);
+      expect(options.env?.PATH).toBe("/tools:/usr/bin");
+      expect(A.window(args, 3)).toContainEqual(["--ro-bind", yield* fs.realPath(process.execPath), "/tools/bun"]);
+      expect(A.window(args, 3)).toContainEqual(["--ro-bind", tool, "/tools/node"]);
+      const worker = O.getOrThrow(A.last(args));
       const directory = path.dirname(worker);
+      expect((yield* fs.stat(directory)).mode & 0o777).toBe(0o700);
+      expect(Str.startsWith(`${root}/`)(directory)).toBe(false);
+      expect(Str.startsWith(`${sourceRoot}/`)(directory)).toBe(false);
+      expect(yield* fs.readLink(path.join(directory, "node_modules"))).toBe(path.join(root, "node_modules"));
       const config = `--config=${path.join(directory, "bunfig.toml")}`;
-      expect(options.args).toContain(config);
+      expect(args).toContain(config);
       expect(yield* fs.readFileString(path.join(directory, "bunfig.toml"))).toBe("");
       expect(yield* fs.readFileString(worker)).toContain("runCacheSignedPilotWorker");
       const protect = (pair: (typeof signedPilotInput.pairs)[number]) => ({
@@ -156,7 +191,118 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       });
     }, Effect.orDie)
   );
-  return { root, issuer, request, admission, process };
+  return { root, issuer, request, admission, process: capturedProcess };
+});
+
+const UploadFault = LiteralKit(["none", "exit", "truncated", "missing-summary", "foreign-read", "issuer-change"]);
+
+// The existing real HTTP fixture supplies upload bytes/events. The process and
+// Unix-listener constructors are controlled; this is supervisor orchestration
+// proof, not a claim that native Turbo or a real Unix listener executed here.
+const ownedUploadFixture = Effect.fn("SignedRunnerTest.uploadFixture")(function* (fault: typeof UploadFault.Type) {
+  const f = yield* fixture("none");
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const captured = yield* makeOwnedUploadFixture();
+  const runtime = CacheProducerUploadRuntime.make({
+    target: targetFor({ url: "http://127.0.0.1:19427/" }),
+    bearers,
+    signing: Redacted.make("synthetic-owned-upload-signing"),
+  });
+  const binding = CacheProducerBinding.make({
+    ...captured.binding,
+    client: f.request.pilot.client,
+    uploadApproval: O.some(CacheProducerUploadApproval.make({ targetSha256: digest, artifactKeySha256: digest })),
+  });
+  const observed = CacheAdapterRuntimeObservation.make({
+    role: "writer",
+    phase: "ready",
+    tokioNamedThreadsIncludingBlocking: 2,
+    totalThreads: 6,
+    memoryPeakBytes: S.Natural.make(1024),
+  });
+  const adapterReceipt = CacheProducerAdapterReceipt.make({
+    backendSha256: digest,
+    targetSha256: digest,
+    ready: { ...observed, role: "writer", phase: "ready" },
+    afterLoad: { ...observed, role: "writer", phase: "after-load" },
+  });
+  const adapterStarted = vi.fn();
+  const adapter = vi
+    .spyOn(Adapter, "withCacheProducerAdapter")
+    .mockImplementation(
+      <Success, Error, Requirements>(
+        _root: string,
+        _request: CacheSignedPilotRequest,
+        _runtime: CacheProducerUploadRuntime,
+        _approval: CacheProducerUploadApproval,
+        use: Effect.Effect<Success, Error, Requirements>
+      ) =>
+        Effect.sync(adapterStarted).pipe(
+          Effect.flatMap(() => use),
+          Effect.map((result) => Tuple.make(result, adapterReceipt)),
+          CacheCommandError.mapError("Controlled adapter failed.")
+        )
+    );
+  const summary = CacheProtocolNativeSummary.make({ ...captured.summary, turboVersion: binding.client.version });
+  const address = Redacted.make(NetAddress.unixPathAddress(f.request.pilot.executable));
+  const extra = CacheConformanceProxyEvent.make({
+    ...captured.event,
+    exchange: CacheConformanceExchange.make({
+      ...captured.event.exchange,
+      method: "GET",
+      requestBytes: 0,
+      requestSha256: O.none(),
+      requestTagSha256: O.none(),
+    }),
+  });
+  const events = fault === "foreign-read" ? [...captured.events, extra] : captured.events;
+  const listener = vi.spyOn(ConformanceProxy, "makeCacheConformanceSocketProxy").mockReturnValue(
+    Effect.succeed({
+      address,
+      events: Effect.succeed(events),
+      setScenario: () => Effect.void,
+    })
+  );
+  const original = O.getOrThrow(O.fromUndefinedOr(f.process.getMockImplementation()));
+  f.process.mockImplementation(
+    Effect.fn("SignedRunnerTest.uploadProcess")(function* (options) {
+      if (options.command === "/usr/bin/git") return yield* original(options);
+      expect(options.command).toBe("/usr/bin/bwrap");
+      expect(options.args).toContain("--unshare-all");
+      expect(options.args).toContain("/cache-upload.sock");
+      expect(options.args).toContain(Redacted.value(address).path);
+      expect(options.args).not.toContain(f.issuer);
+      expect(options.extendEnv).toBe(false);
+      expect(options.env).toMatchObject({
+        BEEP_CACHE_UPLOAD_BEARER: secrets.writer,
+        BEEP_CACHE_UPLOAD_SIGNING: Redacted.value(runtime.signing),
+      });
+      const values = R.values(O.getOrElse(O.fromUndefinedOr(options.env), R.empty<string>));
+      for (const secret of [secrets.reader, secrets.foreign, secrets.unknown]) expect(values).not.toContain(secret);
+      const worker = O.getOrThrow(A.last(options.args ?? []));
+      expect(Str.startsWith(`${f.root}/`)(worker)).toBe(false);
+      expect(Str.startsWith(`${f.request.sourceRoot}/`)(worker)).toBe(false);
+      const text = yield* fs.readFileString(worker);
+      expect(text).toContain('Config.Redacted("BEEP_CACHE_UPLOAD_BEARER")');
+      expect(text).toContain(";\nimport { CacheConformanceTarget }");
+      for (const secret of [secrets.writer, Redacted.value(runtime.signing)]) expect(text).not.toContain(secret);
+      const seed = yield* S.decodeUnknownEffect(CacheSignedPilotRun)(signedPilotInput.pairs[0].producer);
+      const report = CacheSignedPilotRun.make({
+        ...seed,
+        nativeSummary: fault === "missing-summary" ? O.none() : O.some(summary),
+      });
+      yield* fs.writeFileString(path.join(path.dirname(worker), "report.json"), yield* encodePilotRun(report));
+      if (fault === "issuer-change") yield* fs.writeFileString(f.issuer, "changed owned issuer");
+      return CacheRuntimeProcess.CapturedStreams.make({
+        exitCode: fault === "exit" ? 1 : 0,
+        stdout: "",
+        stderr: "",
+        truncated: fault === "truncated",
+      });
+    }, Effect.orDie)
+  );
+  return { ...f, binding, runtime, captured, listener, adapter, adapterStarted, adapterReceipt };
 });
 
 it.layer(
@@ -168,10 +314,105 @@ it.layer(
       ChildProcessSpawner.make(() => Effect.die("Unexpected native process"))
     ),
     NodeCrypto.layer,
+    FetchHttpClient.layer,
     Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) }))
   ),
   { timeout: "30 seconds" }
 )("signed pilot supervisor", (it) => {
+  it.effect("rejects missing backend approval before admission or supervisor side effects", () =>
+    Effect.gen(function* () {
+      const f = yield* ownedUploadFixture("none");
+      const error = yield* runCacheProducerUploadExperiment(
+        f.root,
+        f.request,
+        f.runtime,
+        CacheProducerBinding.make({ ...f.binding, uploadApproval: O.none() }),
+        [f.binding.key.computation],
+        f.issuer
+      ).pipe(Effect.flip);
+      expect(error.message).toBe("Owned upload requires its independent backend approval.");
+      expect(f.admission).not.toHaveBeenCalled();
+      expect(f.adapter).not.toHaveBeenCalled();
+      expect(f.adapterStarted).not.toHaveBeenCalled();
+      expect(f.listener).not.toHaveBeenCalled();
+      expect(f.process).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("joins the owned worker summary to the complete parent upload capture", () =>
+    Effect.gen(function* () {
+      const f = yield* ownedUploadFixture("none");
+      const [upload, backend] = yield* runCacheProducerUploadExperiment(
+        f.root,
+        f.request,
+        f.runtime,
+        f.binding,
+        [f.binding.key.computation],
+        f.issuer
+      );
+      expect(backend).toEqual(f.adapterReceipt);
+      expect(f.admission).toHaveBeenCalledOnce();
+      expect(f.adapterStarted).toHaveBeenCalledOnce();
+      expect(upload.archiveSha256).toBe(f.captured.archiveSha256);
+      expect(upload.archiveBytes).toBe(f.captured.archiveBytes);
+      expect(f.listener).toHaveBeenCalledWith(
+        expect.objectContaining({ maxEvents: 200, maxBodyBytes: 50 * 1024 * 1024, maxCaptureBytes: 50 * 1024 * 1024 })
+      );
+      expect(f.process).toHaveBeenCalledTimes(2);
+    })
+  );
+  it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated upload admission clock", (it) => {
+    it.effect("does not start an owned backend while waiting for upload admission", () =>
+      Effect.gen(function* () {
+        const f = yield* ownedUploadFixture("none");
+        const queued = yield* Deferred.make<void>();
+        const admitted = yield* Deferred.make<void>();
+        f.admission.mockImplementation(
+          <Success, Error, Requirements>(
+            _request: unknown,
+            _gate: unknown,
+            use: Effect.Effect<Success, Error, Requirements>
+          ) => Deferred.succeed(queued, undefined).pipe(Effect.andThen(Deferred.await(admitted)), Effect.andThen(use))
+        );
+        const worker = yield* runCacheProducerUploadExperiment(
+          f.root,
+          f.request,
+          f.runtime,
+          f.binding,
+          [f.binding.key.computation],
+          f.issuer
+        ).pipe(Effect.forkScoped);
+        yield* Deferred.await(queued);
+        yield* TestClock.adjust("11 minutes");
+        expect(f.adapterStarted).not.toHaveBeenCalled();
+        expect(f.listener).not.toHaveBeenCalled();
+        expect(f.process).not.toHaveBeenCalled();
+        yield* Deferred.succeed(admitted, undefined);
+        const [upload] = yield* Fiber.join(worker);
+        expect(upload.archiveSha256).toBe(f.captured.archiveSha256);
+        expect(f.adapterStarted).toHaveBeenCalledOnce();
+        expect(f.admission).toHaveBeenCalledOnce();
+      })
+    );
+  });
+  it.effect("refuses failed, truncated, incomplete, extra-read and changed-issuer upload executions", () =>
+    Effect.gen(function* () {
+      for (const fault of UploadFault.pick(["exit", "truncated", "missing-summary", "foreign-read", "issuer-change"])
+        .literals) {
+        const f = yield* ownedUploadFixture(fault);
+        const failed = yield* runCacheProducerUploadExperiment(
+          f.root,
+          f.request,
+          f.runtime,
+          f.binding,
+          [f.binding.key.computation],
+          f.issuer
+        ).pipe(Effect.isFailure);
+        expect(failed, fault).toBe(true);
+        expect(f.process).toHaveBeenCalledTimes(2);
+        vi.restoreAllMocks();
+      }
+    })
+  );
   it.effect("validates the supervised report with and without persistent issuer protection", () =>
     Effect.gen(function* () {
       const { root, request, issuer, admission, process } = yield* fixture("none");
@@ -181,6 +422,13 @@ it.layer(
       }
       expect(admission).toHaveBeenCalledTimes(2);
       expect(process).toHaveBeenCalledTimes(4);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      for (const [options] of process.mock.calls) {
+        if (options.command !== "/usr/bin/bwrap") continue;
+        const worker = O.getOrThrow(A.last(options.args ?? []));
+        expect(yield* fs.exists(path.dirname(worker))).toBe(false);
+      }
     })
   );
   it.effect.prop(
@@ -218,6 +466,29 @@ it.layer(
         onFailure: (error) => expect(error.message).toContain("Linux x64"),
       });
       expect(captured).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("refuses a private storage alias inside a source mount before writing the request", () =>
+    Effect.gen(function* () {
+      const { root, request, process } = yield* fixture("none");
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const alias = path.join(root, "private-storage-alias");
+      yield* fs.makeDirectory(alias);
+      const result = yield* runCacheSignedPilotExperiment(root, request).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          realPath: (file) =>
+            Str.startsWith("/tmp/beep-cache-supervisor-")(file) ? Effect.succeed(alias) : fs.realPath(file),
+        }),
+        Effect.result
+      );
+      Result.match(result, {
+        onSuccess: () => expect.fail("Supervisor accepted a source-visible private directory"),
+        onFailure: (error) => expect(error.message).toContain("Private supervisor storage must remain outside"),
+      });
+      expect(yield* fs.exists(path.join(alias, "request.json"))).toBe(false);
+      expect(process).toHaveBeenCalledTimes(1);
     })
   );
   it.effect("refuses issuer material inside a read-only input mount before starting the worker", () =>
