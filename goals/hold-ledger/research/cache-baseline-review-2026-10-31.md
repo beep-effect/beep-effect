@@ -18,6 +18,11 @@ The only change to `packages/tooling/tool/cli/package.json` is two added lines:
   command group can bind its records to the claim envelope;
 - `"./commands/Holds": "./src/commands/Holds/index.ts"` under `exports`.
 
+After merging `main` at `2e63c77499` the drift is re-recorded on top of the
+W0 retirements row (`goals/beep-cli-composition/research/w0-cache-baseline-review.md`),
+which dropped the runpod and codex-sdk dependencies from the same manifest. The
+merged manifest carries both changes and nothing else.
+
 Script words, task names, project files, inputs, outputs, cache flags and the
 cache posture of every task are unchanged. The request re-records the existing
 posture for `@beep/repo-cli` only. It grants no qualification and adds no

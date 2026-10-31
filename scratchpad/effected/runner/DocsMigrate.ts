@@ -2,7 +2,8 @@
  * S2 carrier conversion for ported modules: extract every JSDoc block that
  * still uses `@example`, `@remarks` or an undescribed `@see`, then apply
  * editor-supplied titles and routing through the repo's conservation-checked
- * rewriter (`beep quality jsdoc-migrate`'s pure core).
+ * rewriter (the JSDoc carrier-migration rewrite core, JSDocMigrateRewrite.ts; the
+ * jsdoc-migrate command was retired in beep-cli-composition W0).
  *
  * **Details**
  *

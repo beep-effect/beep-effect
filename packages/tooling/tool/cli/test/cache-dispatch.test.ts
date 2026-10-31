@@ -345,18 +345,16 @@ describe("cache qualification command dispatch", () => {
   });
 
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
-    it.effect("renders the index, audit formats and explicit ledger through the injected authority", () =>
+    it.effect("renders the index and audit formats through the injected authority", () =>
       Effect.gen(function* () {
         const f = yield* fixture();
         yield* f.run([]);
         yield* f.run(["audit"]);
         yield* f.run(["audit", "--json"]);
-        yield* f.run(["inspect"]);
         const text = yield* consoleText;
         expect(text).toContain("cache commands: census");
         expect(text).toContain("0 blocking findings; 1 unassessed");
         expect(text).toContain('"unassessed"');
-        expect(text).toContain('"revision":1');
       })
     );
   });
@@ -432,7 +430,7 @@ describe("cache qualification command dispatch", () => {
         const f = yield* fixture();
         const bad = f.path.join(f.root, "bad.json");
         yield* f.fs.writeFileString(bad, "{}");
-        for (const command of ["baseline", "transition", "activation", "synthetic", "pilot"]) {
+        for (const command of ["baseline", "transition", "activation", "pilot"]) {
           expect(yield* f.run([command, "--request", bad]).pipe(Effect.isFailure)).toBe(true);
         }
         yield* f.fs.writeFile(bad, new Uint8Array([255]));
