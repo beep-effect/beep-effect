@@ -173,6 +173,7 @@ extend-exclude = [
   # Exact pinned oracle text includes legal abbreviations and upstream typos.
   # Its schema, hashes, coordinates and source accounting have a separate gate.
   "packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+  "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
   "packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",

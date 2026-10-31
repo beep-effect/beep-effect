@@ -1151,6 +1151,14 @@ instead of silently splitting delivery or weakening scope.
   maps, public translation and Layer integration remain open. No canonical
   completion or normalization law follows.
 
+- **2026-10-31 cleaner sequence source:** 1,155 source cases retain all named
+  sequences through length three, twelve original cleaning observations and 51
+  custom scenes. Lazy iteration, live registry/hash/equality dispatch, retained
+  callback state and non-string/identity-preserving values require explicit
+  server runtime contracts. The eleventh portable component seals this corpus;
+  no target composition or completion row follows. The existing approved native
+  safety exception stops subsequent callbacks after resource exhaustion.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
@@ -1158,7 +1166,8 @@ spellcheck and formatting in the root tool configuration: `operation-cases`,
 `assertion-cases`, `source-inventory`, `canonical-cases`, `regex-inventory`,
 `typescript-extensions`, `vocabulary-mapping` and `regex-adversarial-corpus`
 JSON files below the eyecite
-fixture directory. They retain upstream legal spellings, source expressions
+fixture directory. The cleaner-pipeline report additionally retains complete
+source callback traces under its dedicated checker. They retain upstream legal spellings, source expressions
 or hash-bound payloads. Their separate schema/source/hash/coverage validators
 and corruption controls remain required. These exclusions do not apply to
 authored code or unrelated fixtures. Remove each exact exclusion when its

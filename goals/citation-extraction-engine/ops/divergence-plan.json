@@ -146,7 +146,14 @@
         "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md",
         "packages/law-practice/server/test/CitationHtmlWorkerCorpus.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-10-31-html-worker-qualification.md"
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-html-worker-qualification.md",
+        "goals/citation-extraction-engine/ops/probe-cleaner-pipeline.py",
+        "goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts",
+        "goals/citation-extraction-engine/ops/verify-cleaner-pipeline-controls.py",
+        "goals/citation-extraction-engine/ops/check-parity.ts",
+        "goals/citation-extraction-engine/ops/verify-parity-controls.py",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-pipeline-source.md",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

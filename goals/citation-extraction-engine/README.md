@@ -22,6 +22,10 @@ composed stage budgets, source maps and the live Layer remain open.
 The [worker corpus qualification](./history/evidence/2026-10-31-html-worker-qualification.md)
 now checks all 1,097 frozen outcomes through actual children, plus the absolute
 source ceiling and exact request/reply boundaries.
+The [cleaner sequence source corpus](./history/evidence/2026-10-31-cleaner-pipeline-source.md)
+adds 1,155 cases and 51 custom scenes, including lazy steps, live registry
+mutation and non-string callback values. The portable audit now has eleven
+components; target cleaner contracts and composition remain open.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

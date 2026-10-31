@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "1401be84c28f2ec1efcc56b8397aeab645885914c43a3b2db55b6322e6f0ebf1",
+  "planSha256": "d0924f46aff757cde121505c35ccd6aead9b75e358589b4f95681358b788754d",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -446,6 +446,34 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-html-worker-qualification.md",
           "sha256": "4282672830286a4a8a558f5062f0b8f4fee52678496b66a9fc860b88a8fcb784"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-cleaner-pipeline.py",
+          "sha256": "15d13496e4a904732851e5766173ca78b67fee299cc16346ec3b95c4c0b0cdc7"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts",
+          "sha256": "4aa35b931757ba126d6aaf12640e3f50ec5f0aa18d22de0beaf026a63eee6e2f"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-cleaner-pipeline-controls.py",
+          "sha256": "b5b037fe49a2d10bffd97c2f1fd61aa3a1a8b2ad5e88f40e2501e25647582d07"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/check-parity.ts",
+          "sha256": "faa854eb57fbda62dc150c8b39a0a2c8de63337bac93b5b16823c981280fe08d"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-parity-controls.py",
+          "sha256": "8df5250654e61c4f2b513229cbaddad2d251a4607f16eaeeaee1cd18cded42d1"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-pipeline-source.md",
+          "sha256": "afa9d65ba31d7aa142d62cdb05039add24de37d77971be1833908da8bb076072"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
+          "sha256": "814406f61958dfe9d43b32cad562378372e07fa5f32f5e5a5437457e6ea5e3ff"
         }
       ],
       "workflowState": "audit",

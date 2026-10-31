@@ -5,13 +5,13 @@
     "title": "Citation Extraction Engine",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-10-28",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "P0/P1 remain in progress. The existing Citation union contains only eight canonical semantic families after retirement of 37 provisional mixed/locator/relationship/extension directories. Shared persisted citation identity is distinct; SourceRef quote-selector encoding is preserved. No donor disposition or behavior parity is completed by removing obsolete APIs/tests. Verified mention composition and explicit receipt restoration pass local package gates; they do not attest semantic classification. Private ca1 production matches focused oracle equality and protocol vectors; artifact integration and full grouping remain open. Stable-ID document/resolution schemas validate graph coherence and structural receipt round-trips. Authority examples are optional mention/detached references. Receipt v2 separates decisions from ordered, repeated membership and explicit shared list IDs; detached semantic objects contain no source proof. Private persistence binds decisions and optional exact list nodes separately and rejects unverified custom keys. A private callback session now executes all five captured callbacks and matches 18 focused source contexts / 53 events through test adapters; production defaults now pass all 76 default contexts through that session and also serve the 18 custom traces. Work accounting is shared and operation-local. General host/alias/model mutation and final document/service integration remain open. Private document projection/restoration validates occurrence/default authority keys and shares source verification. Private resolver text helpers preserve frozen Unicode/punctuation and arbitrary-precision Id. pin behavior. The private default resolver matches 46 focused scenes and all 30 committed default resolution calls over all canonical families, totaling 76 semantic contexts and 210 mentions; original-source span/extraction proof stays separate. Exhaustive resolver/custom-resource proof, live artifact integration, Bluebook codecs, extension proof and the bounded parser remain unfinished. Sixteen additional callback mutation scenes expose empty/ordered/repeated/cross-group values and alias/detached requirements. All sixteen group/alias/retained-dictionary/detached scenes now match all thirty-eight events and final groups, including list slots and detached prior-full/member references. An operation-owned captured dictionary service serializes updates, preserves owned list handles and closes on success/failure/interruption. All sixteen final source snapshots have structural codec representation proof, including list sharing and detached nodes. Private scoped detached object issuance preserves registered object identity without source capabilities. Eight additional prior-full-list/pair scenes now match all thirty-one events and final groups/context. The captured owner preserves retained prior-full state and immutable pair-node identities, including equal-valued replacement. Eleven additional semantic/default-key mutation scenes are frozen. Eight stable-resource scenes now match complete event and semantic snapshots through owned writes; source anchors and mention IDs remain unchanged. Three mutable default-key scenes remain open, including duplicate entries for one resource object and an alternate edit that retains one group. A private bounded combined/general-key table now matches eight frozen CPython histories / sixty-two events, including exact comparison calls, duplicate key-object entries, deletion, growth and stored-hash resize. Full live hash production and callback-owner integration remain open, so the three mutable default-key engine cases are not promoted. General host/model mutation, comparison reentrancy, document identity integration and final projection remain open.",
+  "statusNote": "P0/P1 remain in progress. The existing Citation union contains only eight canonical semantic families after retirement of 37 provisional mixed/locator/relationship/extension directories. Shared persisted citation identity is distinct; SourceRef quote-selector encoding is preserved. No donor disposition or behavior parity is completed by removing obsolete APIs/tests. Verified mention composition and explicit receipt restoration pass local package gates; they do not attest semantic classification. Private ca1 production matches focused oracle equality and protocol vectors; artifact integration and full grouping remain open. Stable-ID document/resolution schemas validate graph coherence and structural receipt round-trips. Authority examples are optional mention/detached references. Receipt v2 separates decisions from ordered, repeated membership and explicit shared list IDs; detached semantic objects contain no source proof. Private persistence binds decisions and optional exact list nodes separately and rejects unverified custom keys. A private callback session now executes all five captured callbacks and matches 18 focused source contexts / 53 events through test adapters; production defaults now pass all 76 default contexts through that session and also serve the 18 custom traces. Work accounting is shared and operation-local. General host/alias/model mutation and final document/service integration remain open. Private document projection/restoration validates occurrence/default authority keys and shares source verification. Private resolver text helpers preserve frozen Unicode/punctuation and arbitrary-precision Id. pin behavior. The private default resolver matches 46 focused scenes and all 30 committed default resolution calls over all canonical families, totaling 76 semantic contexts and 210 mentions; original-source span/extraction proof stays separate. Exhaustive resolver/custom-resource proof, live artifact integration, Bluebook codecs, extension proof and the bounded parser remain unfinished. Sixteen additional callback mutation scenes expose empty/ordered/repeated/cross-group values and alias/detached requirements. All sixteen group/alias/retained-dictionary/detached scenes now match all thirty-eight events and final groups, including list slots and detached prior-full/member references. An operation-owned captured dictionary service serializes updates, preserves owned list handles and closes on success/failure/interruption. All sixteen final source snapshots have structural codec representation proof, including list sharing and detached nodes. Private scoped detached object issuance preserves registered object identity without source capabilities. Eight additional prior-full-list/pair scenes now match all thirty-one events and final groups/context. The captured owner preserves retained prior-full state and immutable pair-node identities, including equal-valued replacement. Eleven additional semantic/default-key mutation scenes are frozen. Eight stable-resource scenes now match complete event and semantic snapshots through owned writes; source anchors and mention IDs remain unchanged. Three mutable default-key scenes remain open, including duplicate entries for one resource object and an alternate edit that retains one group. A private bounded combined/general-key table now matches eight frozen CPython histories / sixty-two events, including exact comparison calls, duplicate key-object entries, deletion, growth and stored-hash resize. Full live hash production and callback-owner integration remain open, so the three mutable default-key engine cases are not promoted. General host/model mutation, comparison reentrancy, document identity integration and final projection remain open. The owned HTML worker now replays all 1,097 frozen outcomes and independently confirms all 859 launched child exits. A source-only cleaner sequence corpus adds 1,155 cases and 51 custom scenes covering lazy steps, live registry dispatch, retained callback state and non-string host values. The eleventh portable source component does not qualify target cleaner composition or complete canonical parity.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -82,7 +82,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-10-29-detached-callback-objects.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-29-retained-prior-fulls.md",
     "goals/citation-extraction-engine/history/evidence/2026-10-29-semantic-model-mutations.md",
-    "goals/citation-extraction-engine/history/evidence/2026-10-29-runtime-dictionary.md"
+    "goals/citation-extraction-engine/history/evidence/2026-10-29-runtime-dictionary.md",
+    "goals/citation-extraction-engine/history/evidence/2026-10-31-cleaner-pipeline-source.md"
   ],
   "researchReports": [
     "research/EYECITE_BASELINE.md",
@@ -157,7 +158,8 @@
     "git diff --check origin/main...HEAD -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
     "git diff --check -- goals/citation-extraction-engine goals/INDEX.md THIRD_PARTY_NOTICES.md",
     "bun run beep yeet verify",
-    "bun run beep lint reflection-artifacts"
+    "bun run beep lint reflection-artifacts",
+    "bun run goals/citation-extraction-engine/ops/check-cleaner-pipeline.ts"
   ],
   "stopConditions": [
     "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
@@ -326,6 +328,18 @@
     {
       "path": "ops/verify-runtime-dictionary-controls.py",
       "purpose": "Validate eight dictionary histories / sixty-two events, eight corruption controls, exact redistributed CPython license and optional frozen replay."
+    },
+    {
+      "path": "ops/check-cleaner-pipeline.ts",
+      "purpose": "Validate 1,155 pinned source cleaner cases, all value references and exact producer/runtime identity; target contracts and composition remain open."
+    },
+    {
+      "path": "ops/probe-cleaner-pipeline.py",
+      "purpose": "Capture named sequences and controlled lazy-step, registry, callback and host-value source behavior without narrowing the callable capability."
+    },
+    {
+      "path": "ops/verify-cleaner-pipeline-controls.py",
+      "purpose": "Validate cleaner source data, sixteen portable corruption controls and optional byte-identical pinned replay; no target parity claim."
     }
   ]
 }

@@ -137,6 +137,15 @@ also checks child launch/acknowledgement counts. Original source and intermediat
 produced-text bounds must remain distinct during composition. See
 history/evidence/2026-10-31-html-worker-qualification.md. No canonical row advances.
 
+Latest cleaner sequence evidence (2026-10-31): 1,155 pinned source cases retain
+8,703 ordered events and 109 immutable strings. Lazy steps, live name lookup,
+callback state, arbitrary intermediate host values and two distinct dictionary
+lookups must survive the target port design. All twelve original cleaning
+observations are replayed unchanged. The portable command adds an eleventh
+source component; it still rejects default completion. See
+history/evidence/2026-10-31-cleaner-pipeline-source.md. Capture does not qualify a
+composed target cleaner or advance any canonical completion row.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

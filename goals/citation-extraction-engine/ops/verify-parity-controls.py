@@ -1,4 +1,4 @@
-"""Exercise the actual package command, including ten corrupted component inputs."""
+"""Exercise the actual package command, including eleven corrupted component inputs."""
 import argparse
 import json
 from pathlib import Path
@@ -21,7 +21,7 @@ def main():
                               capture_output=True, text=True, timeout=180)
 
     baseline = invoke("--audit")
-    if baseline.returncode or "audit passed: 10 components" not in baseline.stdout:
+    if baseline.returncode or "audit passed: 11 components" not in baseline.stdout:
         raise SystemExit("package audit baseline must pass")
     strict = invoke()
     if (strict.returncode != 1 or "FAIL ledgers" not in strict.stdout or "FAIL donors" not in strict.stdout or "FAIL supplemental" not in strict.stdout or "FAIL divergences" not in strict.stdout or "FAIL regex-benchmarks" not in strict.stdout
@@ -46,11 +46,12 @@ def main():
         shutil.copytree(evidence, copied_evidence)
         flags = ["--audit", "--fixtures", str(copied_fixtures), "--evidence", str(copied_evidence)]
         relocated = invoke(*flags)
-        if relocated.returncode or "audit passed: 10 components" not in relocated.stdout:
+        if relocated.returncode or "audit passed: 11 components" not in relocated.stdout:
             raise SystemExit("relocated baseline must pass")
         for component, file in {
             "discovery": copied_evidence / "oracle-discovery.json",
             "operations": copied_fixtures / "operation-cases.json",
+            "cleaner-pipeline": copied_fixtures / "cleaner-pipeline.json",
             "assertions": copied_fixtures / "assertion-cases.json",
             "ledgers": copied_fixtures / "source-inventory.json",
             "donors": copied_fixtures / "typescript-extensions.json",
@@ -70,7 +71,7 @@ def main():
                     or "audit passed" in result.stdout or "portable parity checks passed" in result.stdout):
                 raise SystemExit(f"corrupt component escaped the package gate: {component}")
             print(f"PASS corrupted-{component}")
-    print("package and relocated audit baselines passed; 15 rejection controls passed")
+    print("package and relocated audit baselines passed; 16 rejection controls passed")
 
 
 if __name__ == "__main__":

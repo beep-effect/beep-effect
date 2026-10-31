@@ -74,6 +74,8 @@
       // Canonical Python payload bytes are hash-bound and deliberately retain
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
+      // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",
