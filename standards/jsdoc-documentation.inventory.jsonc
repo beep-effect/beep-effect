@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T13:42:52.247Z",
+  "generatedAt": "2026-10-31T15:23:54.644Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -2227,8 +2227,8 @@
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1624,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1624-baseidentityinput",
+          "line": 1628,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1628-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -2249,8 +2249,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1653,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1653-baseidentityinput",
+          "line": 1657,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1657-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -2271,8 +2271,8 @@
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 2169,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-2169-make",
+          "line": 2173,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-2173-make",
           "currentTags": [
             "@since",
             "@category"

@@ -925,8 +925,8 @@ type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<
  * type AnnotatedString = AnnotatedSchema<typeof S.String>
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type AnnotatedSchema<Schema extends S.Top> = SchemaStatics.Preserved<Schema>;
 
@@ -942,8 +942,8 @@ export type AnnotatedSchema<Schema extends S.Top> = SchemaStatics.Preserved<Sche
  * type Modules = TaggedModuleRecord<"@beep/pkg", readonly ["auth", "billing"]>
  * ```
  *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
  */
 export type TaggedModuleRecord<
   Value extends string,
@@ -1142,8 +1142,8 @@ export interface IdentityComposer<
    *
    * @throws A tagged invariant defect when the rebuilt schema rejects a custom static descriptor.
    *
-   * @since 0.0.0
    * @category combinators
+   * @since 0.0.0
    */
   annoteHttp<Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
     identifier: SegmentValue<Next>,
@@ -1208,8 +1208,8 @@ export interface IdentityComposer<
    *
    * @throws A tagged invariant defect when the rebuilt schema rejects a custom static descriptor.
    *
-   * @since 0.0.0
    * @category combinators
+   * @since 0.0.0
    */
   annoteSchema<Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
     identifier: SegmentValue<Next>,
