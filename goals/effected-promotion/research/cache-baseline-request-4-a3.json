@@ -1,0 +1,20 @@
+{
+  "previous": "ffc8e3361326af0250356cc02ef72a504b9b322da6d2ede230179006c0143183",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion 4-A3, refactor/repo-utils-workspaces-onto-kit-v2)",
+    "reason": "Record the root policy-fingerprint seals after the 4-A3 source move: the repo-utils workspace discovery and dependency index are deleted and every repo-cli caller reads @beep/repo-workspaces through internal/RepoWorkspaces.ts, so seventeen seals gain the reader and its kit closure (shared drops the four deleted files), as measured in the review; no manifest changes and no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-4-a3.md",
+      "sha256": "16ca9b8a35e4821617fb5d35f64fe98ab24c9d38c484315037af1e2fde43e0b4"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}
