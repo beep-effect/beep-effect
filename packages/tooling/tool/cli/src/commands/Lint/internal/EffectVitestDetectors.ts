@@ -1945,6 +1945,12 @@ const liveClockFor = (wait: CallExpression, imports: EffectVitestImports): boole
 
 const FORK_MEMBERS = ["forkChild", "forkScoped", "forkDetach"];
 
+// A pipe stage that forks: `Effect.forkChild` or `Effect.forkChild({ ... })`.
+const isForkStage = (argument: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isCallExpression(argument)
+    ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
+    : Node.isExpression(argument) && isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS);
+
 // `Effect.forkChild(x)`, or a `.pipe` stage `Effect.forkChild` / `Effect.forkChild({ ... })`.
 const forkCall = (call: CallExpression, imports: EffectVitestImports): boolean => {
   if (isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)) return true;
@@ -1952,12 +1958,7 @@ const forkCall = (call: CallExpression, imports: EffectVitestImports): boolean =
   return (
     Node.isPropertyAccessExpression(callee) &&
     callee.getName() === "pipe" &&
-    A.some(call.getArguments(), (argument) =>
-      Node.isCallExpression(argument)
-        ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
-        : Node.isExpression(argument) &&
-          isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
-    )
+    A.some(call.getArguments(), (argument) => isForkStage(argument, imports))
   );
 };
 
@@ -3632,11 +3633,7 @@ const closesPureOperand = (call: CallExpression, stage: O.Option<MorphNode>, imp
 // `pipe(effect, ..., Effect.forkChild)` from `effect/Function`, the free-function form `forkCall` leaves out.
 const functionPipeFork = (call: CallExpression, imports: EffectVitestImports): boolean =>
   isProvenanceCall(call, imports, ["effect", "effect/Function"], "Function", ["pipe"]) &&
-  A.some(call.getArguments().slice(1), (argument) =>
-    Node.isCallExpression(argument)
-      ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
-      : Node.isExpression(argument) && isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
-  );
+  A.some(call.getArguments().slice(1), (argument) => isForkStage(argument, imports));
 
 // `Effect.gen(function* () { ... })` runs its generator in place; any other function value may run later
 // or never, even when it is a call argument.
@@ -3656,6 +3653,11 @@ const leavesExecution = (current: MorphNode, parent: MorphNode, imports: EffectV
 const isBodyStatement = (current: MorphNode, parent: MorphNode): boolean =>
   Node.isBlock(parent) && Node.isStatement(current);
 
+// A body statement runs the scope only when it yields it; the test callback's own `return` hands the
+// effect to the harness, which runs it.
+const statementRuns = (current: MorphNode, parent: MorphNode, ran: boolean, root: EffectVitestFunctionNode) =>
+  !isBodyStatement(current, parent) || ran || (Node.isReturnStatement(current) && parent === root.getBody());
+
 // Whether every step from the scope up to the test or helper callback runs it: each enclosing statement
 // yields the scoped effect (`const work = Effect.scoped(acquire)` only builds it), no step is conditional,
 // forked or deferred, and only `Effect.gen` generator bodies are crossed.
@@ -3669,13 +3671,15 @@ const scopeRuns = (
   if (current === root) return true;
   if (parent === undefined || leavesExecution(current, parent, imports)) return false;
   const ran = Node.isYieldExpression(current) || (executed && !isFunctionValue(current));
-  // The test callback's own `return` hands the effect to the harness, which runs it.
-  const handedToHarness = Node.isReturnStatement(current) && parent === root.getBody();
-  return (!isBodyStatement(current, parent) || ran || handedToHarness) && scopeRuns(parent, ran, root, imports);
+  return statementRuns(current, parent, ran, root) && scopeRuns(parent, ran, root, imports);
 };
 
 // Whether a statement after one of the scope's enclosing statements always asserts.
-const observedAfterScope = (current: MorphNode, root: EffectVitestFunctionNode, imports: EffectVitestImports) => {
+const observedAfterScope = (
+  current: MorphNode,
+  root: EffectVitestFunctionNode,
+  imports: EffectVitestImports
+): boolean => {
   const parent = current.getParent();
   if (current === root || parent === undefined) return false;
   return (

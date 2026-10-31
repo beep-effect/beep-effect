@@ -136,3 +136,29 @@ fixture object built in the body. It is the next wave's design question.
 Two earlier runs were SIGTERM'd by the workstation earlyoom while other sessions held about
 105 GB. That was environment-only; the reruns above passed. The full repo-cli coverage ratchet
 and package-verify were left to hosted CI under the operator's push-first rule.
+
+### Review rounds 2 and 3 (greptile on #2424): the whole class closed
+
+Round 2 found that assertions inside uninvoked methods counted, and that a free-function
+`pipe(x, Effect.forkChild)` escaped the fork guard. Round 3 found that assertions inside an `if`
+counted. Rather than patch each construct, the rule now has two passes:
+
+- **`scopeRuns`**: every step from the scope up to the test or helper callback must run it. Each
+  enclosing body statement yields the scoped effect, except the test callback's own `return`,
+  which hands the effect to the harness. No step may be a conditional (`if`, `switch`, loops,
+  `try`, `?:`, `&&`, `||`, `??`), a fork in either pipe form, or a nested declaration. The only
+  function bodies crossed are `Effect.gen` generators, which run in place. Any other callback,
+  including `Effect.flatMap` and `acquireUseRelease` callbacks and uninvoked `Effect.fnUntraced`
+  values, ends the walk.
+- **`observedAfterScope`**: a later statement must assert unconditionally. Nothing inside
+  `if`/`else`, `switch`, loops, `try`/`catch`, conditional expressions, short-circuits, nested
+  blocks, or function, method, accessor or class bodies counts.
+
+The counterexamples cover one case per construct (16 judgment cases, plus `root return` and
+`in-place generator` as accepted shapes).
+
+The stricter rule returned 5 more of the first-retired rows, each restored with its original
+exception and reason: `CosmosProjection.test.ts:190/194/237` (scopes inside `try`/`finally`),
+`AgentMessage.runtime.test.ts:771` and `worktree-command.test.ts:2270`. The wave now retires
+**62** EV004 exceptions with none added. A plain rescan after merging main reports
+`introduced=0 resolved=0`, and Fallow passes after `isForkStage` was shared with `forkCall`.
