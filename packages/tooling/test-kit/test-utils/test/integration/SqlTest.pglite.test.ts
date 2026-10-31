@@ -12,6 +12,7 @@ import {
 } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -399,7 +400,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
         )
       );
 
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
       if (Exit.isFailure(exit)) {
         const failure = Cause.squash(exit.cause);
 

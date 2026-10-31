@@ -19,6 +19,7 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -138,7 +139,10 @@ if (!shouldRunPgliteIntegration) {
           const conflicts = yield* Effect.fromResult(Result.all(A.map(conflictRows, fromSyncConflictRow)));
 
           expect(A.map(items, (item) => item.localRelPath)).toEqual(["matters/client-default/complaint.pdf"]);
-          expect(A.map(items, (item) => item.contentDigest)).toEqual([O.some("abc123")]);
+          deepStrictEqual(
+            A.map(items, (item) => item.contentDigest),
+            [O.some("abc123")]
+          );
           expect(A.map(operations, (operation) => operation.idempotencyKey)).toEqual(["sync-item-1:uploadFile:4"]);
           expect(A.map(cursors, (cursor) => cursor.streamPosition)).toEqual(["now"]);
           expect(A.map(conflicts, (conflict) => conflict.remotePayload)).toEqual([

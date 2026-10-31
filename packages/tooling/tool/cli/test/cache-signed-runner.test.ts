@@ -360,7 +360,8 @@ it.layer(
       expect(f.process).toHaveBeenCalledTimes(2);
     })
   );
-  it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated upload admission clock", (it) => {
+  // Each clock-adjusting case owns its TestClock in a single-case block.
+  it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated comparison deadline clock", (it) => {
     it.effect("reports a comparison deadline safely and releases its private worker directory", () =>
       Effect.gen(function* () {
         const { root, request, process: captured } = yield* fixture("none");
@@ -387,6 +388,8 @@ it.layer(
         expect(yield* fs.exists(path.dirname(script))).toBe(false);
       })
     );
+  });
+  it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated upload deadline clock", (it) => {
     it.effect("reports the shorter upload execution deadline and releases private storage", () =>
       Effect.gen(function* () {
         const f = yield* ownedUploadFixture("none");
@@ -421,6 +424,8 @@ it.layer(
         expect(yield* fs.exists(path.dirname(script))).toBe(false);
       })
     );
+  });
+  it.layer(TestClock.layer(), { timeout: "30 seconds" })("isolated upload admission clock", (it) => {
     it.effect("does not start an owned backend while waiting for upload admission", () =>
       Effect.gen(function* () {
         const f = yield* ownedUploadFixture("none");
