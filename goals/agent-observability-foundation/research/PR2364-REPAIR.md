@@ -309,3 +309,36 @@ prior finding statuses/reasons remain unchanged; other changes are location
 metadata. A later standalone check declined on resource headroom, so fresh
 hosted policy remains mandatory. See the
 [repair receipt](../ops/history/effect-vitest-repair-20261031.json).
+
+## Documentation, accepted coverage main and generated metadata — October 31
+
+Accepted main adedee335a includes the security lane's three-file coverage repair
+(ac8993e777). The documentation correction covers 195 comments: 168 real fenced
+examples now have independently reviewed titles describing their actual actions;
+27 barrel references remain owning-module prose. Details precede Examples with
+canonical spacing. All example bodies are unchanged, the shape oracle reports
+zero findings, and all 40 files have byte-identical minified runtime output.
+The cumulative source binding preserves historical receipts: disposable 50/88
+and live 49/87 sources remain full-file identical, with 38 explicit comment-only
+bridges in each. Three separately checked files are outside both canary maps.
+
+The worker's Fallow writer, JSDoc writer and cache audit each exited zero on the
+exact staged tree also represented by checkpoint dd5763445f. The outer job timed
+out during textual-patch cleanup; it is not reported as a passing whole job.
+After confirming the original overlay tree, no unstaged changes and no writer,
+only its 146 paths were restored directly. Worker cleanup then passed with a
+clean original head. Generated output hashes are retained. JSDoc is 183 packages
+with 97 open exports, versus incoming main's 99; cache audit has zero findings,
+while 1,655 unassessed computations remain unqualified.
+
+The crash test's existing schema exception moved from line 13 to 14 after the
+Schedule import. The actual single-file canonical detector and identity merger
+re-anchor that same reviewed entry. All 272 entries, statuses and reasons are
+retained; only its location changes. The interrupted full local scan is not a
+pass, and fresh hosted policy remains required. See the
+[metadata refresh evidence](../ops/history/accepted-main-docs-refresh-20261031.json).
+
+The new 11da coverage comparison is a separate actionable report, not a canceled
+unit shard: the unit result succeeded. Its new-file/baseline-identity findings
+are being attributed under the established initial-baseline policy. No existing
+floor is lowered, and no final readiness or goal-completion claim is made.

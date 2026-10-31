@@ -1505,7 +1505,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 13,
+      "line": 14,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Deterministic regressions serialize fixed policy/submission fixtures across real child processes, kill producers at four exact durability/operation boundaries, and race independent producers for one private file-backed claim. Schema-generated round trips do not establish crash ordering or exclusive claims. Exit: reusable schema laws or an independently modeled claim-state property move here; preserve exact SIGKILL boundaries and the process race. Independently reviewed by Astra; no property coverage elsewhere is claimed."
     },
