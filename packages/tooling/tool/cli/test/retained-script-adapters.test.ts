@@ -34,13 +34,22 @@ const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pre-runtime adapters", (it) => {
   for (const scenario of [
-    { signal: "", phase: "wait", exitCode: 1, name: "failed Bun download" },
-    { signal: "TERM", phase: "wait", exitCode: 143, name: "TERM interruption" },
-    { signal: "TERM", phase: "register", exitCode: 143, name: "TERM before PID registration" },
-    { signal: "HUP", phase: "wait", exitCode: 129, name: "HUP interruption" },
-    { signal: "HUP", phase: "register", exitCode: 129, name: "HUP before PID registration" },
-    { signal: "INT", phase: "wait", exitCode: 130, name: "INT interruption" },
-    { signal: "INT", phase: "register", exitCode: 130, name: "INT before PID registration" },
+    { signal: "TERM", phase: "wait", worker: "unzip", exitCode: 143, name: "TERM during unresponsive extraction" },
+    {
+      signal: "",
+      phase: "deadline",
+      worker: "unzip",
+      exitCode: 1,
+      name: "whole-worker deadline during unresponsive extraction",
+    },
+    { signal: "", phase: "wait", worker: "node", exitCode: 1, name: "failed Bun download" },
+    { signal: "", phase: "wait", worker: "op", exitCode: 1, name: "failed Bun with optional op still running" },
+    { signal: "TERM", phase: "wait", worker: "node", exitCode: 143, name: "TERM interruption" },
+    { signal: "TERM", phase: "register", worker: "bun", exitCode: 143, name: "TERM before PID registration" },
+    { signal: "HUP", phase: "wait", worker: "node", exitCode: 129, name: "HUP interruption" },
+    { signal: "HUP", phase: "register", worker: "bun", exitCode: 129, name: "HUP before PID registration" },
+    { signal: "INT", phase: "wait", worker: "node", exitCode: 130, name: "INT interruption" },
+    { signal: "INT", phase: "register", worker: "bun", exitCode: 130, name: "INT before PID registration" },
   ]) {
     it.effect(
       `settles parallel cloud downloads before cleanup after ${scenario.name}`,
@@ -54,24 +63,30 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
         yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
         yield* fs.makeDirectory(bin);
         yield* fs.makeDirectory(home);
-        for (const file of ["scripts/cloud/bootstrap.sh", ".bun-version", ".nvmrc", ".bun-linux-x64.sha256"]) {
+        for (const file of [
+          "scripts/cloud/bootstrap.sh",
+          "scripts/cloud/fetch.sh",
+          ".bun-version",
+          ".nvmrc",
+          ".bun-linux-x64.sha256",
+        ]) {
           yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
         }
-        // Waiting for a PID other than Bun releases Node. Re-waiting Bun during
-        // cleanup does not release it; an early rm exposes the reversed ordering.
+        // Deliver signals only after the selected fake child is running. A DEBUG
+        // hook covers the gap between launch and PID registration without sleeps.
         const bashEnv = path.join(root, "bash-env");
         yield* fs.writeFileString(
           bashEnv,
-          `first_wait_pid=""
-signal_sent=0
-trap 'if [[ "$BEEP_BOOTSTRAP_PHASE" == register && "$BASH_COMMAND" == pids+=* && "$signal_sent" == 0 ]]; then signal_sent=1; kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi' DEBUG
+          `signal_sent=0
+fixture_ready() {
+  while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/worker-ready" ]; do sleep 0.01; done
+}
+trap 'if [[ "$BEEP_BOOTSTRAP_PHASE" == register && "$BASH_COMMAND" == pids+=* && "$signal_sent" == 0 ]]; then signal_sent=1; fixture_ready; kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi' DEBUG
 wait() {
-  [ "$#" -eq 1 ] || return 86
-  if [ -z "$first_wait_pid" ]; then
-    first_wait_pid="$1"
+  if [ "$#" -eq 1 ] && [ "$signal_sent" = 0 ]; then
+    fixture_ready
+    signal_sent=1
     if [ "$BEEP_BOOTSTRAP_PHASE" = wait ] && [ -n "$BEEP_BOOTSTRAP_SIGNAL" ]; then kill -"$BEEP_BOOTSTRAP_SIGNAL" "$$"; fi
-  elif [ "$1" != "$first_wait_pid" ]; then
-    : > "$BEEP_BOOTSTRAP_FIXTURE/release-node"
   fi
   builtin wait "$@"
 }
@@ -81,31 +96,65 @@ wait() {
           ["bun", '#!/bin/sh\nprintf "0.0.0\\n"\n'],
           ["node", '#!/bin/sh\nprintf "v0.0.0\\n"\n'],
           ["sudo", "#!/bin/sh\nexit 1\n"],
+          ["sha256sum", "#!/bin/sh\ncat >/dev/null\nexit 0\n"],
+          [
+            "timeout",
+            `#!/bin/sh
+if [ "$1" = --kill-after=5s ]; then
+  [ "$2" = 240s ] || exit 86
+  if [ "$BEEP_BOOTSTRAP_PHASE" = deadline ]; then
+    shift 2
+    exec /usr/bin/timeout --kill-after=0.1s 1s "$@"
+  fi
+fi
+exec /usr/bin/timeout "$@"
+`,
+          ],
+          [
+            "unzip",
+            `#!/bin/sh
+[ "$BEEP_BOOTSTRAP_WORKER" = unzip ] || exit 22
+trap '' TERM
+printf '%s\\n' "$$" > "$BEEP_BOOTSTRAP_FIXTURE/worker-pid"
+: > "$BEEP_BOOTSTRAP_FIXTURE/worker-ready"
+while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-workers" ]; do sleep 0.01; done
+`,
+          ],
           ["uname", '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n'],
           [
             "curl",
             `#!/bin/sh
 case "$*" in
-  *"--connect-timeout 15 --max-time 120"*) ;;
+  *"--connect-timeout 15 --max-time 120 --retry-max-time 120"*) ;;
   *) echo 'missing download bounds' >&2; exit 86;;
 esac
+worker=""
 case "$*" in
-  *bun-linux-x64.zip*)
-    ;;
-  *index.tab*)
-    while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-node" ]; do sleep 0.01; done
-    [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] || exit 22
-    printf 'node-finished\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
-    ;;
+  *bun-linux-x64.zip*) worker=bun ;;
+  *index.tab*) worker=node ;;
+  *op_linux_amd64*) worker=op ;;
 esac
+if [ "$worker" = bun ] && [ "$BEEP_BOOTSTRAP_WORKER" = unzip ]; then exit 0; fi
+if [ "$worker" = "$BEEP_BOOTSTRAP_WORKER" ]; then
+  trap 'printf "%s-finished\\n" "$worker" >> "$BEEP_BOOTSTRAP_FIXTURE/events"; exit 22' TERM
+  : > "$BEEP_BOOTSTRAP_FIXTURE/worker-ready"
+  while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/release-workers" ]; do sleep 0.01; done
+elif [ "$worker" = bun ]; then
+  while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/worker-ready" ]; do sleep 0.01; done
+fi
 exit 22
 `,
           ],
           [
             "rm",
             `#!/bin/sh
+if [ -f "$BEEP_BOOTSTRAP_FIXTURE/worker-pid" ]; then
+  pid=$(cat "$BEEP_BOOTSTRAP_FIXTURE/worker-pid")
+  state=$(awk '{print $3}' "/proc/$pid/stat" 2>/dev/null || true)
+  case "$state" in ''|Z|X) ;; *) printf 'worker-live\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events" ;; esac
+fi
 printf 'cleanup\\n' >> "$BEEP_BOOTSTRAP_FIXTURE/events"
-: > "$BEEP_BOOTSTRAP_FIXTURE/release-node"
+: > "$BEEP_BOOTSTRAP_FIXTURE/release-workers"
 exec /bin/rm "$@"
 `,
           ],
@@ -121,7 +170,8 @@ exec /bin/rm "$@"
             BEEP_BOOTSTRAP_FIXTURE: root,
             BEEP_BOOTSTRAP_SIGNAL: scenario.signal,
             BEEP_BOOTSTRAP_PHASE: scenario.phase,
-            BEEP_CLOUD_SKIP_OP: "1",
+            BEEP_BOOTSTRAP_WORKER: scenario.worker,
+            BEEP_CLOUD_SKIP_OP: scenario.worker === "op" ? "0" : "1",
             BEEP_CLOUD_VENDOR: "fixture",
             HOME: home,
             NVM_DIR: path.join(home, ".nvm"),
@@ -134,15 +184,18 @@ exec /bin/rm "$@"
         });
         // Finalizers run in reverse acquisition order: release the fixture worker
         // before the child-process finalizer runs on an interrupted test.
-        yield* Effect.addFinalizer(() => fs.writeFileString(path.join(root, "release-node"), "").pipe(Effect.orDie));
+        yield* Effect.addFinalizer(() => fs.writeFileString(path.join(root, "release-workers"), "").pipe(Effect.orDie));
         const [exitCode, stderr] = yield* Effect.all(
           [handle.exitCode, handle.stderr.pipe(Stream.decodeText, Stream.mkString), Stream.runDrain(handle.stdout)],
           { concurrency: "unbounded" }
         );
         expect(exitCode).toBe(scenario.exitCode);
+        expect(yield* fs.exists(path.join(root, "worker-ready"))).toBe(true);
         if (scenario.signal === "") expect(stderr).toContain("download or checksum failed");
         expect(stderr).not.toContain("missing download bounds");
-        expect(yield* fs.readFileString(path.join(root, "events"))).toBe("node-finished\ncleanup\n");
+        expect(yield* fs.readFileString(path.join(root, "events"))).toBe(
+          scenario.worker === "unzip" ? "cleanup\n" : `${scenario.worker}-finished\ncleanup\n`
+        );
         expect(yield* fs.readDirectory(path.join(root, "cache/beep/cloud-bootstrap"))).toEqual([]);
         expect(yield* fs.exists(path.join(home, ".bun"))).toBe(false);
         expect(yield* fs.exists(path.join(root, "node_modules"))).toBe(false);

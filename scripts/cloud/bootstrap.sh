@@ -79,22 +79,21 @@ find "${bootstrap_cache}" -mindepth 1 -maxdepth 1 -name 'run.*' -mmin +60 -exec 
 run_dir="$(mktemp -d "${bootstrap_cache}/run.XXXXXX")"
 pids=()
 cleanup_run_dir() {
-  local entry
+  local pid
   trap '' INT TERM HUP
-  # Join every worker before removing its files, including fatal and signal exits.
-  # Waiting again for a worker already joined below returns its cached status.
-  for entry in "${pids[@]:-}"; do
-    [ -n "${entry}" ] || continue
-    wait "${entry%%:*}" || true
+  # Only active jobs owned by this shell are timeout supervisors. TERM cancels
+  # their process groups; their kill-after grace handles unresponsive children.
+  for pid in $(jobs -pr); do
+    kill -TERM "${pid}" 2>/dev/null || true
   done
+  # Bare wait also joins a worker interrupted between launch and PID recording.
+  wait || true
   rm -rf -- "${run_dir}"
 }
 trap cleanup_run_dir EXIT
-# Defer exits until each launched worker has been recorded for cleanup.
-pending_signal=0
-trap 'pending_signal=130' INT
-trap 'pending_signal=143' TERM
-trap 'pending_signal=129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
 
 # Symlink into /usr/local/bin when we can, so tools resolve for every shell the
 # vendor spawns (login, non-login, the agent's own exec daemon). Claude and
@@ -131,99 +130,33 @@ persist_path() {
 # ---------------------------------------------------------------------------
 # Claude caches a setup script only when it finishes in roughly five minutes,
 # so independent network fetches run concurrently and the install step waits.
-# Each transfer is bounded so failure cleanup cannot wait forever on a worker.
-download_limits=(--connect-timeout 15 --max-time 120)
+# Each whole worker has a four-minute deadline, including retries and local
+# verification/extraction, with five seconds to terminate unresponsive children.
+OP_PINNED_VERSION="2.39.0"
 
 need_bun=0
-if ! command -v bun >/dev/null 2>&1 || [ "$(bun --version 2>/dev/null)" != "${BUN_VERSION}" ]; then
+if ! command -v bun >/dev/null 2>&1 || [ "$(timeout --kill-after=1s 5s bun --version 2>/dev/null)" != "${BUN_VERSION}" ]; then
   need_bun=1
 fi
 
 need_node=0
-if ! command -v node >/dev/null 2>&1 || [ "$(node --version 2>/dev/null | sed 's/^v//')" != "${NODE_VERSION}" ]; then
+if ! command -v node >/dev/null 2>&1 || [ "$(timeout --kill-after=1s 5s node --version 2>/dev/null | sed 's/^v//')" != "${NODE_VERSION}" ]; then
   need_node=1
 fi
 
-fetch_bun() {
-  local sha work archive
-  sha="$(tr -d '[:space:]' < .bun-linux-x64.sha256)"
-  work="${run_dir}/bun"
-  mkdir -p "${work}"
-  archive="${work}/bun-linux-x64.zip"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${archive}" \
-    "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
-  printf '%s  %s\n' "${sha}" "${archive}" | sha256sum --check --strict - >/dev/null
-  unzip -oq "${archive}" -d "${work}"
-}
-
-fetch_node() {
-  # nvm first when the image ships it (Cursor); otherwise the official tarball
-  # from nodejs.org, which the Claude Trusted allowlist admits.
-  if [ -s "${NVM_DIR:-${HOME}/.nvm}/nvm.sh" ]; then
-    printf 'nvm' > "${run_dir}/node.mode"
-    return 0
-  fi
-  local index version work
-  index="$(curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    "https://nodejs.org/dist/index.tab")" || return 1
-  version="$(printf '%s\n' "${index}" | awk -v requested="v${NODE_VERSION}" '$1 == requested { print $1; exit }')"
-  [ -n "${version}" ] || return 1
-  work="${run_dir}/node"
-  mkdir -p "${work}"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/node.tar.xz" \
-    "https://nodejs.org/dist/${version}/node-${version}-linux-x64.tar.xz"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/SHASUMS256.txt" \
-    "https://nodejs.org/dist/${version}/SHASUMS256.txt"
-  (cd "${work}" && grep " node-${version}-linux-x64.tar.xz\$" SHASUMS256.txt | sed 's# .*# node.tar.xz#' | sha256sum --check --strict - >/dev/null)
-  printf 'tarball' > "${run_dir}/node.mode"
-}
-
-# 1Password CLI: always download + GPG-verify the pinned release; never trust an
-# `op` already on PATH (a reused snapshot could carry an unverified binary that
-# would then handle OP_SERVICE_ACCOUNT_TOKEN). Best-effort: op-backed runs are
-# optional, the toolchain is not.
-OP_PINNED_VERSION="2.39.0"
-OP_GPG_FINGERPRINT="3FEF9748469ADBE15DA7CA80AC2D62742012EA22"
-OP_GPG_KEY_URL="https://downloads.1password.com/linux/keys/1password.asc"
-fetch_op() {
-  local work ver
-  work="${run_dir}/op"
-  mkdir -p "${work}"
-  ver="v${OP_PINNED_VERSION}"
-  curl "${download_limits[@]}" -fsSLo "${work}/op.zip" "https://cache.agilebits.com/dist/1P/op2/pkg/${ver}/op_linux_amd64_${ver}.zip" || return 1
-  unzip -oq "${work}/op.zip" op op.sig -d "${work}" || return 1
-  [ -f "${work}/op" ] && [ -f "${work}/op.sig" ] || return 1
-  export GNUPGHOME="${work}/gnupg"
-  mkdir -p "${GNUPGHOME}" && chmod 700 "${GNUPGHOME}"
-  curl "${download_limits[@]}" -fsSL "${OP_GPG_KEY_URL}" | gpg --batch --import >/dev/null 2>&1 || return 1
-  gpg --batch --with-colons --fingerprint 2>/dev/null | grep -q "^fpr:::::::::${OP_GPG_FINGERPRINT}:" || return 1
-  gpg --batch --status-fd=1 --verify "${work}/op.sig" "${work}/op" 2>/dev/null \
-    | grep -q "^\[GNUPG:\] VALIDSIG ${OP_GPG_FINGERPRINT} " || return 1
-  unset GNUPGHOME
-  : > "${run_dir}/op.verified"
-}
 
 if [ "${need_bun}" = "1" ]; then
   log "fetching bun ${BUN_VERSION}"
-  fetch_bun & pids+=("$!:bun")
+  timeout --kill-after=5s 240s bash "${REPO_ROOT}/scripts/cloud/fetch.sh" bun "${run_dir}" "${BUN_VERSION}" & pids+=("$!:bun")
 fi
 if [ "${need_node}" = "1" ]; then
   log "fetching node ${NODE_VERSION}"
-  fetch_node & pids+=("$!:node")
+  timeout --kill-after=5s 240s bash "${REPO_ROOT}/scripts/cloud/fetch.sh" node "${run_dir}" "${NODE_VERSION}" & pids+=("$!:node")
 fi
 if [ "${BEEP_CLOUD_SKIP_OP:-0}" != "1" ]; then
   log "fetching 1Password CLI ${OP_PINNED_VERSION}"
-  fetch_op & pids+=("$!:op")
+  timeout --kill-after=5s 240s bash "${REPO_ROOT}/scripts/cloud/fetch.sh" op "${run_dir}" "${OP_PINNED_VERSION}" & pids+=("$!:op")
 fi
-
-# Every started worker now has a cleanup owner; signals can exit immediately.
-trap 'exit 130' INT
-trap 'exit 143' TERM
-trap 'exit 129' HUP
-[ "${pending_signal}" = "0" ] || exit "${pending_signal}"
 
 op_ok=1
 node_ok=1
@@ -242,6 +175,9 @@ done
 # ---------------------------------------------------------------------------
 # 2. Place the toolchain
 # ---------------------------------------------------------------------------
+# Download jobs are settled; retain the vendor shell's foreground signal behavior
+# for installation rather than deferring cancellation behind an install command.
+trap - INT TERM HUP
 if [ "${need_bun}" = "1" ]; then
   install -d -m 0755 "${BUN_INSTALL}/bin"
   install -m 0755 "${run_dir}/bun/bun-linux-x64/bun" "${BUN_INSTALL}/bin/bun"
@@ -290,7 +226,7 @@ if [ "${need_node}" = "1" ] && [ "${node_ok}" = "1" ]; then
   fi
 fi
 
-if [ "${node_ok}" != "1" ] || ! command -v node >/dev/null 2>&1 || [ "$(node --version 2>/dev/null | sed 's/^v//')" != "${NODE_VERSION}" ]; then
+if [ "${node_ok}" != "1" ] || ! command -v node >/dev/null 2>&1 || [ "$(timeout --kill-after=1s 5s node --version 2>/dev/null | sed 's/^v//')" != "${NODE_VERSION}" ]; then
   die "Node ${NODE_VERSION} is required; refusing to continue with an unverified or older runtime."
 fi
 
