@@ -13,7 +13,7 @@ the `@beep/xstate` driver in `packages/drivers/xstate`.
 | `xstate` | `6.0.0-alpha.71` | v6 alpha: inline transition functions, `schemas`, state contracts. |
 | `@xstate/effect` | `1.0.0-alpha.10` | Peers `effect ^4.0.0` and `xstate ^6.0.0-alpha.70`. No patch: alpha.10 exports the public `"~xstate/effect/action"` key itself. |
 | `@xstate/test` | `2.0.0-alpha.4` | Model-based testing. Declares Vitest 3 or 4 as an optional peer. |
-| `@statelyai/sdk` | `0.42.0` | Inspector client. `@statelyai/inspect` peers xstate v5 and is not used. |
+| `@statelyai/sdk` | `0.43.0` | Inspector client. `@statelyai/inspect` peers xstate v5 and is not used. |
 | `statelyai` | `0.14.3` | CLI, root dev dependency. |
 
 All five are catalog entries in the root `package.json`. Keep this table in sync when updating the catalog.
@@ -167,7 +167,8 @@ bunx statelyai open apps/professional-desktop/src/intake/DocumentIntake.machine.
 ```
 
 `scan` and `status` need no account. `statelyai.json` at the repo root sets the discovery globs
-(`**/src/**/*.machine.ts`) and `defaultXStateVersion: 6`. `open` starts a local visual editor;
+(`packages/**/src/**/*.machine.ts` and `apps/**/src/**/*.machine.ts`) and
+`defaultXStateVersion: 6`. `open` starts a local visual editor;
 `push`, `pull`, and Studio links need `statelyai login`. `toMachineJsonText(machine)` from
 `@beep/xstate` produces the same serialised definition in code.
 
