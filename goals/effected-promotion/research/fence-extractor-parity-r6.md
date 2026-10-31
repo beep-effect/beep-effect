@@ -4,7 +4,7 @@ Recorded 2026-10-31 for roadmap PR R6 of `goals/effected-promotion` (map site
 #282, SPEC W4-q). Lane cut from `origin/main` `adedee335a`; the JSON record
 (`fence-extractor-parity-r6.json`) was first written by
 `ops/fence-extractor-parity.ts` at `d247e0e12a` and is now the review-round-1
-record, written at `45751a48a0` (the lane merged with `origin/main`
+record, written at `e5ca79c80b` (the lane merged with `origin/main`
 `d4e134f672`) with a clean tree. Review round 1 added the `jsdoc-sections` and
 `doctest` legs below and changed `scriptFences` to hand EffectImports the
 CommonMark value.
@@ -114,7 +114,8 @@ string, marker and name edits, console rewrites).
 - `frame-indent-removed` (27,451): the old mask replaced the `*` frame with
   spaces in place, so body lines 2 and later kept the frame's indentation; the
   new unwrap removes it per line. Everything else is equal and so are the
-  findings of all 27,451.
+  findings of all 27,451. The record tallies this class without listing
+  each fence.
 - `marker-mid-line` (8): the old pattern closed the fence at a marker run inside
   a code line (a string literal holding a fence) in the examples of docgen
   `Core.ts` (2), repo-cli `JSDocMigrateRewrite.ts` (3), `JSDocSections.ts`,
