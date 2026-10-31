@@ -41,7 +41,6 @@ import {
   decodeSchemaFirstPolicyFindingLine,
   encodeSchemaFirstPolicyFinding,
   envValue,
-  escapeRegexChar,
   GhPageInfo,
   GhPrView,
   globMatches,
@@ -232,8 +231,13 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       expect(re.test("src/a/b.ts")).toBe(false);
     });
 
+    it("lets a bare double star cross separators", () => {
+      const re = globPatternToRegExp("src/**");
+      expect(re.test("src/a/b/c.ts")).toBe(true);
+      expect(re.test("other/src/a.ts")).toBe(false);
+    });
+
     it("escapes regex metacharacters literally", () => {
-      expect(escapeRegexChar(".")).toBe("\\.");
       expect(globPatternToRegExp("a.b").test("a.b")).toBe(true);
       expect(globPatternToRegExp("a.b").test("axb")).toBe(false);
     });

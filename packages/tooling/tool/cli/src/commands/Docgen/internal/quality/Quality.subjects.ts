@@ -20,10 +20,11 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
 import { boundedText, firstLine } from "../../../../internal/cli/Timing.ts";
-import { escapeRegexChar, globPatternToRegExp } from "../../../../internal/GlobPattern.ts";
+import { globPatternToRegExp } from "../../../../internal/GlobPattern.ts";
 import { DocgenConfigDocument } from "../../Docgen.schemas.ts";
 import { loadDocgenConfigDocument } from "../Workspace.ts";
 import {
@@ -293,19 +294,19 @@ const hasInheritDoc = (rawJsDoc: string): boolean => /\{@inheritDoc\s+[^}]+\}/.t
 const isSchemaCompanionTypeAlias = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "type" &&
   (new RegExp(
-    `^export\\s+type\\s+${escapeRegexChar(exportName)}\\s+=\\s+typeof\\s+${escapeRegexChar(exportName)}\\.Type\\b`
+    `^export\\s+type\\s+${Regex.escape(exportName)}\\s+=\\s+typeof\\s+${Regex.escape(exportName)}\\.Type\\b`
   ).test(signature) ||
     new RegExp(
-      `^export\\s+type\\s+${escapeRegexChar(exportName)}\\s+=\\s+\\w+\\.Schema\\.Type<\\s*typeof\\s+${escapeRegexChar(exportName)}\\s*>`
+      `^export\\s+type\\s+${Regex.escape(exportName)}\\s+=\\s+\\w+\\.Schema\\.Type<\\s*typeof\\s+${Regex.escape(exportName)}\\s*>`
     ).test(signature));
 
 const isCompanionNamespace = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "namespace" &&
-  new RegExp(`^export\\s+declare\\s+namespace\\s+${escapeRegexChar(exportName)}\\b`).test(signature);
+  new RegExp(`^export\\s+declare\\s+namespace\\s+${Regex.escape(exportName)}\\b`).test(signature);
 
 const isSchemaCompanionInterface = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "interface" &&
-  new RegExp(`^export\\s+interface\\s+${escapeRegexChar(exportName)}\\b[\\s\\S]*\\bextends\\s+\\w+\\.`).test(signature);
+  new RegExp(`^export\\s+interface\\s+${Regex.escape(exportName)}\\b[\\s\\S]*\\bextends\\s+\\w+\\.`).test(signature);
 
 const descriptionFromRawJsDoc = (rawJsDoc: string): string | null => {
   if (Str.trim(rawJsDoc).length === 0) {
