@@ -39,11 +39,6 @@
       "!.claude/skills/teach",
       "!.claude/skills/turborepo",
       "!skills-lock.json",
-      // Graft-generated wiring (the two shims and the skill files) is written by
-      // `graft init`; the repo-owned graft-loader.cjs beside the shims is linted.
-      "!.claude/helpers/graft-hooks.cjs",
-      "!.claude/helpers/graft-statusline.cjs",
-      "!.claude/skills/graft",
       "!.grok",
       "!specs",
       "!**/.tsup",
@@ -224,9 +219,7 @@
             "allowedEnvVars": [
               "BEEP_NODE_BIN",
               "BEEP_YEET_ADMISSION_LEASE_ID",
-              "BEEP_YEET_ADMISSION_WORKLOAD_PATH",
-              "GRAFT_CRUX_MODULE",
-              "GRAFT_EXTRACT_MODULE"
+              "BEEP_YEET_ADMISSION_WORKLOAD_PATH"
             ]
           }
         },
