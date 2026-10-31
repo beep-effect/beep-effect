@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T12:56:17.063Z",
+  "generatedAt": "2026-10-31T14:03:18.454Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -385410,8 +385410,8 @@
           "exportKind": "namespace",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 486,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-486-workspacediscoveryoptions",
+          "line": 508,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-508-workspacediscoveryoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -385432,8 +385432,8 @@
           "exportKind": "interface",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 503,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-503-workspacediscoveryshape",
+          "line": 525,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-525-workspacediscoveryshape",
           "currentTags": [
             "@public",
             "@category",
@@ -385455,8 +385455,8 @@
           "exportKind": "class",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 619,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-619-workspacediscovery",
+          "line": 641,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-641-workspacediscovery",
           "currentTags": [
             "@public",
             "@category",
@@ -550640,8 +550640,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Root.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Root.ts",
-          "line": 77,
-          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-77-rootcommand",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-79-rootcommand",
           "currentTags": [
             "@internal",
             "@category",
