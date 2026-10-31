@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-30T16:11:06.630Z
+Generated: 2026-10-31T09:48:59.473Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 164 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3568 |
-| publicExports | 25360 |
+| publicModules | 3569 |
+| publicExports | 25361 |
 | openModules | 166 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -124,7 +124,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 66 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
 | 67 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
 | 68 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
-| 69 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 69 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |
 | 70 | `@beep/pretext` | `packages/drivers/pretext` | clean | 6 | 36 | 0 | 0 |
 | 71 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
 | 72 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |
