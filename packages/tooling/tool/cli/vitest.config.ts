@@ -19,6 +19,7 @@ import shared, { fcDeepSweepActive, packageTestTimeout, vitestDoctestActive } fr
  */
 const isolatedSuites = [
   "test/bun-runtime-version.test.ts",
+  "test/cache-acceptance.test.ts",
   "test/cache-conformance-command.test.ts",
   "test/cache-operational-acceptance.test.ts",
   "test/cache-pilot-orchestration.test.ts",

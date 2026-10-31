@@ -2166,6 +2166,7 @@
         "allow": [
           "@beep/effect-drizzle",
           "@beep/fc-runs",
+          "@beep/markdown",
           "@beep/pglite",
           "@beep/repo-utils",
           "@beep/test-runner"
@@ -2173,6 +2174,7 @@
         "allowTypeOnly": [
           "@beep/effect-drizzle",
           "@beep/fc-runs",
+          "@beep/markdown",
           "@beep/pglite",
           "@beep/repo-utils",
           "@beep/test-runner"
@@ -4551,6 +4553,7 @@
           "@beep/chalk",
           "@beep/config-file",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/md",
           "@beep/memfs",
           "@beep/package-json",
@@ -4567,6 +4570,7 @@
           "@beep/chalk",
           "@beep/config-file",
           "@beep/identity",
+          "@beep/markdown",
           "@beep/md",
           "@beep/memfs",
           "@beep/package-json",
