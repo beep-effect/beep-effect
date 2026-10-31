@@ -31046,6 +31046,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 0,
+            "functions": 4
+          }
+        },
         "packages/tooling/tool/cli/src/commands/AIMetrics/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -31094,6 +31106,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts": {
+          "lines": 80,
+          "statements": 78.94,
+          "branches": 50,
+          "functions": 56.25,
+          "uncovered": {
+            "lines": 11,
+            "statements": 12,
+            "branches": 7,
+            "functions": 7
+          }
+        },
         "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Mirror.ts": {
           "lines": 100,
           "statements": 100,
@@ -31104,6 +31128,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 157,
+            "statements": 180,
+            "branches": 109,
+            "functions": 43
           }
         },
         "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": {
@@ -31464,6 +31500,30 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts": {
+          "lines": 32.35,
+          "statements": 30.55,
+          "branches": 0,
+          "functions": 12.5,
+          "uncovered": {
+            "lines": 23,
+            "statements": 25,
+            "branches": 4,
+            "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": {
+          "lines": 85.18,
+          "statements": 83,
+          "branches": 81.57,
+          "functions": 73.68,
+          "uncovered": {
+            "lines": 28,
+            "statements": 35,
+            "branches": 21,
+            "functions": 15
           }
         },
         "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.peer.command.ts": {
