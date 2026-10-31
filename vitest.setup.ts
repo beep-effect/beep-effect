@@ -395,21 +395,47 @@ const createShimPortLock = (port: number): boolean => {
   }
 };
 
-// A lock whose owner exited, or one without a pid (never written by this shim), is reclaimed once.
-// Two processes reclaiming the same abandoned lock at the same instant could both succeed; that
-// needs a crashed owner and an exact collision, and a live owner is never displaced.
+// Each reclaimer holds a hard link to the inode it inspected. Only a canonical lock with exactly
+// that one extra link can be removed: another live reclaimer's link prevents both from winning.
+// Keeping the link through publication also protects a new owner's lock from a late stale unlink.
+const pruneAbandonedShimPortLinks = (port: number): void => {
+  for (const name of NodeFS.readdirSync(shimPortLockDirectory)) {
+    if (!Str.startsWith(`${port}.`)(name) || !(Str.endsWith(".tmp")(name) || Str.endsWith(".reap")(name))) continue;
+    const owner = Number(Str.split(name, ".")[1]);
+    if (Number.isInteger(owner) && owner > 0 && !isLiveProcess(owner)) {
+      NodeFS.rmSync(NodePath.join(shimPortLockDirectory, name), { force: true });
+    }
+  }
+};
+
 const lockShimPort = (port: number): boolean => {
   if (createShimPortLock(port)) return true;
-  let owner: number;
+  const canonical = shimPortLockPath(port);
+  const intent = NodePath.join(shimPortLockDirectory, `${port}.${process.pid}.${NodeCrypto.randomUUID()}.reap`);
   try {
-    owner = Number.parseInt(NodeFS.readFileSync(shimPortLockPath(port), "utf8"), 10);
+    NodeFS.linkSync(canonical, intent);
   } catch (cause) {
     if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
     throw cause;
   }
-  if (Number.isInteger(owner) && isLiveProcess(owner)) return false;
-  NodeFS.rmSync(shimPortLockPath(port), { force: true });
-  return createShimPortLock(port);
+  try {
+    const owner = Number.parseInt(NodeFS.readFileSync(intent, "utf8"), 10);
+    if (Number.isInteger(owner) && isLiveProcess(owner)) return false;
+    pruneAbandonedShimPortLinks(port);
+    const inspected = NodeFS.statSync(intent);
+    let current: NodeFS.Stats;
+    try {
+      current = NodeFS.statSync(canonical);
+    } catch (cause) {
+      if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
+      throw cause;
+    }
+    if (current.dev !== inspected.dev || current.ino !== inspected.ino || current.nlink !== 2) return false;
+    NodeFS.rmSync(canonical, { force: true });
+    return createShimPortLock(port);
+  } finally {
+    NodeFS.rmSync(intent, { force: true });
+  }
 };
 
 const claimShimPort = (): number => {

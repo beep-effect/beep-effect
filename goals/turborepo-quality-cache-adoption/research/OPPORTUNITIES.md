@@ -370,3 +370,19 @@ workstation's memory protection policy.
 - The superseded local proof was stopped through its exact owned launcher
   before changing tracked files. No current full pass or cache qualification
   is inferred from its completed gates.
+
+### Protect the quality harness from competing stale-port reclaimers
+
+- Work: attribute a coverage failure in the existing forty-server identity test;
+  one response belonged to another server. The original failure is retained
+  privately and its exact cause remains unproven.
+- Evidence: a controlled interleaving at the real filesystem unlink boundary
+  makes the original allocator return the same reserved port to two servers.
+  The regression fails on duplicate port identity; existing request assertions
+  and server counts remain intact.
+- Response: pin the inspected inode with a hard link until acquisition finishes.
+  Reclaim only the matching inode with no other live reclaimer link; remove
+  abandoned staging/reclaimer links only after their owning process exits.
+- Prevention: keep a failing-original control, real HTTP response checks, and
+  explicit abandoned/live reclaimer cases. A focused pass is not whole-proof,
+  hosted, cache-performance, or goal-acceptance evidence.
