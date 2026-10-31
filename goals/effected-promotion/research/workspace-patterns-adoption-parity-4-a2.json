@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/workspace-patterns-adoption-parity.ts",
-  "commit": "baa595c2dd2e432fc78be36eeed7ead0de03f2d3",
+  "commit": "17e57412090fae80e2320c074fcf07531433c863",
   "patterns": {
     "legacyStrict": {
       "count": 122,
