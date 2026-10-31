@@ -127,16 +127,21 @@ gate; there is no separate diagnostics job. A policy fixture in
 `@beep/repo-configs` proves an Effect-only finding fails `tsrs`, an empty-project
 canary proves the root map produces no unknown-rule warnings, and
 `beep quality tsgo-rules` checks that every installed rule is configured, that
-the copied profiles match the root map (effect-drizzle's documented
-`missedPipeableOpportunity` exception aside), and that the documented plugin
-options are explicit.
+the copied profiles match the root map exactly (effect-drizzle's former
+`missedPipeableOpportunity` exception was retired 2026-10-31), and that the
+documented plugin options are explicit.
 
 The root map in `tsconfig.base.json` holds all 130 rules of the installed
 `@effect/tsgo` (125 errors, five declared off: `apiStabilityLeak`,
 `experimentalApiUsage`, `unstableApiUsage`, `preferBarrelImport`,
-`preferNamespaceImport`). The import-style rules stay off because intentional
-named helper imports are pervasive and Effect barrel imports violate the
-module-path law.
+`preferNamespaceImport`). `preferBarrelImport` stays off because Effect barrel
+imports violate the module-path law. `preferNamespaceImport` stays off because
+the rule has no named-import allowlist: with `effect` in
+`namespaceImportPackages` it reports every `pipe`, `flow`, `identity`, `dual`
+and `constant` named import from `effect/Function` that the code law requires
+(2026-10-31 census: 6422 reports in 1998 files, 5125 from `effect/Function`,
+the other 1297 in 112 files mostly in `@beep/effect-drizzle`). Enabling it needs
+an upstream allowlist option or a change to that law.
 
 History: from 2026-10-14 to `goals/tsrs-gates` PR 2 (2026-10-27) the newest
 rules ran in a standalone `Heavy / Effect Diagnostics` job
