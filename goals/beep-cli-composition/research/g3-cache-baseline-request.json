@@ -1,0 +1,20 @@
+{
+  "previous": "1b8a9e66553c922ce33218a24bcd1ceeb2fae2aafbd2c82fe3bbca1521d93af6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (G3 lane, claude/beep-lazy-dispatch-369e54)",
+    "reason": "Re-record the root subject after resealing seven policy-fingerprint seal tasks: the shared seal gains the lazy dispatch modules, and six seals drop or swap inputs that #2381 changed before #2390 sealed; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/g3-cache-baseline-review.md",
+      "sha256": "3cdbbe6411bf8a94fead0576df71cd48a7f56139919c812ec937d0ba296ed9db"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
