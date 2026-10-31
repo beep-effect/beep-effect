@@ -20,18 +20,15 @@
  * @since 0.0.0
  */
 
-import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import { RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
+import { SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
-  DmsEventType,
   DmsMirror,
   DmsMirrorAvailability,
   DmsMirrorUnavailable,
   EnsureFolderInput,
   MoveItemInput,
-  PollEventsInput,
   RenameItemInput,
   SyncOnceInput,
   UploadFileInput,
@@ -46,16 +43,10 @@ import {
   MarkSyncConflictReviewedInput,
   SyncConflictRepository,
   SyncConflictRepositoryNotFound,
-  SyncConflictSeed,
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
-import {
-  FindSyncCursorInput,
-  SyncCursorRepository,
-  SyncCursorSeed,
-} from "@beep/documents-use-cases/entities/SyncCursor/server";
+import { FindSyncCursorInput, SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import {
   FindSyncItemByPathInput,
-  FindSyncItemByRemoteIdInput,
   ListSyncItemsByWorkspaceInput,
   SyncItemRepository,
   SyncItemSeed,
@@ -69,7 +60,6 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -84,41 +74,27 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
+import { echoClassForOperation, makePushRecord } from "./VaultPush.model.ts";
 import { VaultSyncConfig } from "./VaultSync.config.ts";
+import { makeVaultSyncDrift } from "./VaultSync.drift.ts";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
 import type { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
-import type {
-  DmsRemoteEvent,
-  DmsRemoteItem,
-  MarkConflictReviewedInput,
-} from "@beep/documents-use-cases/aggregates/Sync/server";
+import type { RemoteItemId } from "@beep/documents-domain/values/Sync";
+import type { DmsRemoteItem, MarkConflictReviewedInput } from "@beep/documents-use-cases/aggregates/Sync/server";
 import type * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import type { PushRecord } from "./VaultPush.model.ts";
 import type { ObservedFile, ObservedFolder } from "./VaultScan.model.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncEngine.service");
 
 const BOX_PROVIDER = "box";
 
-const SyncConflictKind = DomainSyncConflict.SyncConflictKind;
 const SyncItemState = DomainSyncItem.SyncItemState;
 const SyncOperationType = DomainSyncOperation.SyncOperationType;
 
 const ZERO = S.Natural.make(0);
 const GENERATION_ONE = S.Natural.make(1);
-
-/**
- * Cap for stored drift payload snapshots: an account-wide provider event can
- * carry arbitrarily large payloads, and conflict rows must stay bounded.
- */
-const PAYLOAD_SNAPSHOT_LIMIT = 8192;
-
-const truncatedPayload = (payload: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> => {
-  const encoded = JSON.stringify(payload);
-  return encoded.length <= PAYLOAD_SNAPSHOT_LIMIT
-    ? payload
-    : { head: Str.slice(0, PAYLOAD_SNAPSHOT_LIMIT)(encoded), truncated: true };
-};
 
 const scanFailed = (reason: string): VaultScanFailed => VaultScanFailed.make({ reason });
 
@@ -218,140 +194,6 @@ const stalledOperationType = (item: DomainSyncItem.SyncItem): O.Option<DomainSyn
         : O.none<DomainSyncOperation.SyncOperationType>(),
   });
 
-const knownItemConflictKind = (eventType: DmsEventType): DomainSyncConflict.SyncConflictKind =>
-  DmsEventType.match(eventType, {
-    created: () => SyncConflictKind.Enum.remoteEdit,
-    deleted: () => SyncConflictKind.Enum.remoteDelete,
-    edited: () => SyncConflictKind.Enum.remoteEdit,
-    moved: () => SyncConflictKind.Enum.remoteMove,
-    renamed: () => SyncConflictKind.Enum.remoteRename,
-    unknown: () => SyncConflictKind.Enum.remoteUnknown,
-  });
-
-const unknownItemConflictKind = (eventType: DmsEventType): DomainSyncConflict.SyncConflictKind =>
-  DmsEventType.match(eventType, {
-    created: () => SyncConflictKind.Enum.remoteCreate,
-    deleted: () => SyncConflictKind.Enum.remoteUnknown,
-    edited: () => SyncConflictKind.Enum.remoteCreate,
-    moved: () => SyncConflictKind.Enum.remoteUnknown,
-    renamed: () => SyncConflictKind.Enum.remoteUnknown,
-    unknown: () => SyncConflictKind.Enum.remoteUnknown,
-  });
-
-/**
- * Echo equivalence class linking push verbs to the provider event types they
- * emit: `content` covers create/upload/version pushes (providers report them
- * as `created` or `edited`); `moved` and `renamed` map one-to-one.
- */
-const EchoClass = LiteralKit(["content", "moved", "renamed"]).pipe(
-  $I.annoteSchema("EchoClass", {
-    description:
-      "Echo equivalence class linking push verbs to the provider event types they\nemit: `content` covers create/upload/version pushes (providers report them\nas `created` or `edited`); `moved` and `renamed` map one-to-one.",
-  })
-);
-type EchoClass = typeof EchoClass.Type;
-
-const echoClassForOperation = (operationType: DomainSyncOperation.SyncOperationType): EchoClass =>
-  SyncOperationType.match(operationType, {
-    createFolder: F.constant(EchoClass.Enum.content),
-    moveItem: F.constant(EchoClass.Enum.moved),
-    renameItem: F.constant(EchoClass.Enum.renamed),
-    uploadFile: F.constant(EchoClass.Enum.content),
-    uploadFileVersion: F.constant(EchoClass.Enum.content),
-  });
-
-const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> =>
-  DmsEventType.match(eventType, {
-    created: () => O.some<EchoClass>(EchoClass.Enum.content),
-    deleted: O.none<EchoClass>,
-    edited: () => O.some<EchoClass>(EchoClass.Enum.content),
-    moved: () => O.some<EchoClass>(EchoClass.Enum.moved),
-    renamed: () => O.some<EchoClass>(EchoClass.Enum.renamed),
-    unknown: O.none<EchoClass>,
-  });
-
-/**
- * One successful push recorded during the current pass; polled events consume
- * these to suppress the provider echoing our own verbs.
- */
-class ContentPushRecord extends S.Opaque<ContentPushRecord, { readonly brand: unique symbol }>()(
-  S.Struct({
-    echoClass: S.tag("content"),
-    remoteId: RemoteItemId,
-  }).pipe(
-    $I.annoteSchema("ContentPushRecord", {
-      description: "A successful content push awaiting its provider echo.",
-    })
-  )
-) {}
-
-class MovedPushRecord extends S.Opaque<MovedPushRecord, { readonly brand: unique symbol }>()(
-  S.Struct({
-    echoClass: S.tag("moved"),
-    remoteId: RemoteItemId,
-  }).pipe(
-    $I.annoteSchema("MovedPushRecord", {
-      description: "A successful move awaiting its provider echo.",
-    })
-  )
-) {}
-
-class RenamedPushRecord extends S.Opaque<RenamedPushRecord, { readonly brand: unique symbol }>()(
-  S.Struct({
-    echoClass: S.tag("renamed"),
-    remoteId: RemoteItemId,
-  }).pipe(
-    $I.annoteSchema("RenamedPushRecord", {
-      description: "A successful rename awaiting its provider echo.",
-    })
-  )
-) {}
-
-const PushRecord = S.Union([ContentPushRecord, MovedPushRecord, RenamedPushRecord]).pipe(
-  S.toTaggedUnion("echoClass"),
-  $I.annoteSchema("PushRecord", {
-    description:
-      "One successful push recorded during the current pass; polled events consume these to suppress the provider echoing our own verbs",
-  })
-);
-type PushRecord = typeof PushRecord.Type;
-
-const makePushRecord = (echoClass: EchoClass, remoteId: RemoteItemId): PushRecord =>
-  EchoClass.match(echoClass, {
-    content: () => ContentPushRecord.make({ remoteId }),
-    moved: () => MovedPushRecord.make({ remoteId }),
-    renamed: () => RenamedPushRecord.make({ remoteId }),
-  });
-
-const strictFieldMatches = <Value>(field: O.Option<Value>, current: O.Option<Value>): boolean =>
-  O.match(field, {
-    onNone: () => O.isNone(current),
-    onSome: (value) => O.exists(current, (candidate) => candidate === value),
-  });
-
-/**
- * Crash-window echo fallback for events with no same-pass push record: a
- * `created`/`moved`/`renamed` event whose observed `(name, parent)` exactly
- * equals the item's recorded pushed state describes no drift. Missing event
- * fields count as a mismatch (conservative: surface a conflict rather than
- * swallow drift), and `edited` events never match — a content change is
- * invisible in `(name, parent)`, so an unexplained edit is always drift.
- */
-const matchesPushedState = (
-  event: DmsRemoteEvent,
-  item: DomainSyncItem.SyncItem,
-  rootRemoteId: O.Option<RemoteItemId>
-): boolean => {
-  if (DmsEventType.is.edited(event.eventType) || O.isNone(echoClassForEvent(event.eventType))) {
-    return false;
-  }
-  const normalizedParent = O.filter(
-    event.parentRemoteId,
-    (parent) => !O.exists(rootRemoteId, (root) => root === parent)
-  );
-  return strictFieldMatches(event.name, item.remoteName) && strictFieldMatches(normalizedParent, item.remoteParentId);
-};
-
 /**
  * Build the vault sync engine from its repository, mirror, configuration, and
  * platform dependencies.
@@ -405,6 +247,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* makeVaultSyncFileStore();
+  const drift = yield* makeVaultSyncDrift();
 
   // One sync pass per workspace at a time. Every pass opens by requeuing all
   // leased operations, so two overlapping passes hand each other's in-flight
@@ -1013,223 +856,6 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     return yield* Ref.get(pushRecordsRef);
   });
 
-  const conflictSeedFor = (
-    workspaceId: WorkspaceIdentity.WorkspaceId,
-    event: DmsRemoteEvent,
-    conflictKind: DomainSyncConflict.SyncConflictKind,
-    item: O.Option<DomainSyncItem.SyncItem>
-  ): SyncConflictSeed =>
-    SyncConflictSeed.make({
-      conflictKind,
-      localRelPath: O.map(item, (tracked) => tracked.localRelPath),
-      provider: BOX_PROVIDER,
-      remoteEventId: O.some(event.eventId),
-      remoteId: event.remoteId,
-      remotePayload: truncatedPayload(event.payload),
-      resolutionStatus: "open",
-      syncItemId: O.map(item, (tracked) => tracked.id),
-      workspaceId,
-    });
-
-  /**
-   * Consume one same-pass push record explaining this event as our own echo.
-   * Returns `true` (and burns the record) when a record with the event's
-   * remote id and echo class is outstanding.
-   */
-  const consumePushEcho = (
-    pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
-    remoteId: RemoteItemId,
-    eventClass: EchoClass
-  ): Effect.Effect<boolean> =>
-    Ref.modify(pushRecordsRef, (records) =>
-      pipe(
-        A.findFirstIndex(records, (record) => record.remoteId === remoteId && record.echoClass === eventClass),
-        O.match({
-          onNone: () => [false, records] as const,
-          onSome: (index) => [true, A.remove(records, index)] as const,
-        })
-      )
-    );
-
-  /**
-   * Classify one polled remote event against the drift rules:
-   *
-   * - no remote id → unattributable account noise, ignored (v1 posture);
-   * - unknown remote id → conflict only when the event's parent is the mirror
-   *   root or a tracked folder (activity outside the mirror is invisible);
-   * - tracked item → same-pass push records (then the crash-window pushed-state
-   *   fallback) suppress our own echoes; anything else records drift and marks
-   *   the item conflicted.
-   */
-  const classifyRemoteEvent = Effect.fn($I`classifyRemoteEvent`)(function* (
-    workspaceId: WorkspaceIdentity.WorkspaceId,
-    pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
-    trackedFolderRemoteIds: HashMap.HashMap<RemoteItemId, boolean>,
-    rootRemoteId: O.Option<RemoteItemId>,
-    event: DmsRemoteEvent
-  ) {
-    if (O.isNone(event.remoteId)) {
-      yield* Effect.logDebug("Documents vault sync ignored an unattributable remote event").pipe(
-        Effect.annotateLogs({ eventId: event.eventId })
-      );
-      return;
-    }
-    const tracked = yield* itemRepository.findByRemoteId(
-      FindSyncItemByRemoteIdInput.make({
-        provider: BOX_PROVIDER,
-        remoteId: event.remoteId.value,
-        workspaceId,
-      })
-    );
-    if (O.isNone(tracked)) {
-      const underMirror = O.exists(
-        event.parentRemoteId,
-        (parent) =>
-          O.exists(rootRemoteId, (root) => root === parent) || O.isSome(HashMap.get(trackedFolderRemoteIds, parent))
-      );
-      if (!underMirror) {
-        yield* Effect.logDebug("Documents vault sync ignored a remote event outside the mirror").pipe(
-          Effect.annotateLogs({
-            eventId: event.eventId,
-            remoteId: event.remoteId.value,
-          })
-        );
-        return;
-      }
-      yield* conflictRepository.record(
-        conflictSeedFor(workspaceId, event, unknownItemConflictKind(event.eventType), O.none())
-      );
-      return;
-    }
-    const item = tracked.value;
-    const eventClass = echoClassForEvent(event.eventType);
-    if (O.isSome(eventClass)) {
-      const consumed = yield* consumePushEcho(pushRecordsRef, event.remoteId.value, eventClass.value);
-      if (consumed || matchesPushedState(event, item, rootRemoteId)) {
-        yield* Effect.logDebug("Documents vault sync ignored a push echo event").pipe(
-          Effect.annotateLogs({
-            eventId: event.eventId,
-            remoteId: event.remoteId.value,
-          })
-        );
-        return;
-      }
-    }
-    yield* conflictRepository.record(
-      conflictSeedFor(workspaceId, event, knownItemConflictKind(event.eventType), tracked)
-    );
-    yield* itemRepository.update(
-      DomainSyncItem.SyncItem.make({
-        ...item,
-        syncState: SyncItemState.Enum.conflict,
-      })
-    );
-  });
-
-  /**
-   * Poll remote drift. A `none` cursor bootstraps via `pollEvents(none)`,
-   * which returns the provider's current position with (per port contract)
-   * empty entries; any returned entries are classified with the same rules.
-   * The page loop is bounded by `eventPageLimit` per sync pass.
-   */
-  const pollRemoteEvents = Effect.fn($I`pollRemoteEvents`)(function* (
-    input: SyncOnceInput,
-    pushRecords: ReadonlyArray<PushRecord>
-  ) {
-    const probe = yield* availability.probe;
-    const trackedItems = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({
-        provider: BOX_PROVIDER,
-        workspaceId: input.workspaceId,
-      })
-    );
-    const trackedFolderRemoteIds = HashMap.fromIterable<RemoteItemId, boolean>(
-      pipe(
-        trackedItems,
-        A.filter((item) => SyncItemKind.is.folder(item.itemKind)),
-        A.flatMap((item) =>
-          O.match(item.remoteId, {
-            onNone: A.empty<readonly [RemoteItemId, boolean]>,
-            onSome: (remoteId) => [[remoteId, true] as const],
-          })
-        )
-      )
-    );
-    const pushRecordsRef = yield* Ref.make(pushRecords);
-    const cursor = yield* cursorRepository.find(
-      FindSyncCursorInput.make({
-        provider: BOX_PROVIDER,
-        workspaceId: input.workspaceId,
-      })
-    );
-    let streamPosition = O.map(cursor, (current) => current.streamPosition);
-    let lastEventId = O.flatMap(cursor, (current) => current.lastEventId);
-    for (let page = 0; page < config.eventPageLimit; page += 1) {
-      const events = yield* mirror.pollEvents(PollEventsInput.make({ streamPosition }));
-      yield* Effect.forEach(events.entries, (event) =>
-        classifyRemoteEvent(input.workspaceId, pushRecordsRef, trackedFolderRemoteIds, probe.rootRemoteId, event)
-      );
-      lastEventId = O.orElse(
-        O.map(A.last(events.entries), (event) => event.eventId),
-        () => lastEventId
-      );
-      yield* cursorRepository.upsert(
-        SyncCursorSeed.make({
-          lastError: O.none(),
-          lastEventId,
-          provider: BOX_PROVIDER,
-          status: "active",
-          streamPosition: events.nextStreamPosition,
-          workspaceId: input.workspaceId,
-        })
-      );
-      streamPosition = O.some(events.nextStreamPosition);
-      const drained = A.match(events.entries, {
-        onEmpty: F.constTrue,
-        onNonEmpty: F.constFalse,
-      });
-      if (drained) {
-        return;
-      }
-    }
-  });
-
-  /**
-   * A mirror failure while polling records the cursor error state instead of
-   * failing `syncOnce`; before the cursor bootstraps there is no durable row
-   * to mark, so the failure is only logged.
-   */
-  const recordPollFailure = Effect.fn($I`recordPollFailure`)(function* (
-    input: SyncOnceInput,
-    error: DmsMirrorUnavailable
-  ) {
-    const cursor = yield* cursorRepository.find(
-      FindSyncCursorInput.make({
-        provider: BOX_PROVIDER,
-        workspaceId: input.workspaceId,
-      })
-    );
-    yield* O.match(cursor, {
-      onNone: () =>
-        Effect.logDebug("Documents vault sync poll failed before the cursor bootstrapped").pipe(
-          Effect.annotateLogs({ reason: error.reason })
-        ),
-      onSome: (current) =>
-        cursorRepository
-          .upsert(
-            SyncCursorSeed.make({
-              lastError: O.some(error.reason),
-              lastEventId: current.lastEventId,
-              provider: BOX_PROVIDER,
-              status: "error",
-              streamPosition: current.streamPosition,
-              workspaceId: input.workspaceId,
-            })
-          )
-          .pipe(Effect.asVoid),
-    });
-  });
-
   /**
    * Revive-eligibility for a failed operation: its item still sits at the
    * operation's target path, its type still matches the item kind, no queued
@@ -1526,9 +1152,9 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           yield* recoverStalledOperations(canonicalInput, probe.connected);
           yield* scanVault(canonicalInput);
           const pushRecords = yield* pumpQueue(canonicalInput);
-          yield* pollRemoteEvents(canonicalInput, pushRecords).pipe(
-            Effect.catchTag("DmsMirrorUnavailable", (error) => recordPollFailure(canonicalInput, error))
-          );
+          yield* drift
+            .pollRemoteEvents(canonicalInput, pushRecords)
+            .pipe(Effect.catchTag("DmsMirrorUnavailable", (error) => drift.recordPollFailure(canonicalInput, error)));
           return yield* readStatus(VaultSyncStatusInput.make({ workspaceId: input.workspaceId }));
         })
       );
