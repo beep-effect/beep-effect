@@ -358,6 +358,21 @@ const shimPortFloor = 20_000;
 const shimPortCount = 12_000;
 const shimPortLockDirectory = NodePath.join(NodeOS.tmpdir(), "beep-vitest-bun-serve-ports");
 const ownedShimPorts = MutableHashSet.empty<number>();
+// Setup runs again for each file in shared workers. The process owns one cleanup listener and
+// every evaluation publishes its absolute lock paths into the same registry. Keep ownedShimPorts
+// local so stopping a server can only release a reservation acquired by its own shim instance.
+const shimPortCleanupKey = Symbol.for("@beep/vitest/BunServePortCleanup");
+const shimPortCleanup = (() => {
+  const existing: unknown = Reflect.get(process, shimPortCleanupKey);
+  if (MutableHashSet.isMutableHashSet<string>(existing)) return existing;
+  const locks = MutableHashSet.empty<string>();
+  Reflect.set(process, shimPortCleanupKey, locks);
+  process.once("exit", () => {
+    for (const lock of locks) NodeFS.rmSync(lock, { force: true });
+    MutableHashSet.clear(locks);
+  });
+  return locks;
+})();
 let nextShimPortOffset = Math.floor(Math.random() * shimPortCount);
 
 const shimPortLockPath = (port: number): string => NodePath.join(shimPortLockDirectory, `${port}.lock`);
@@ -446,6 +461,7 @@ const claimShimPort = (): number => {
     if (lockShimPort(port)) {
       nextShimPortOffset = (offset + 1) % shimPortCount;
       MutableHashSet.add(ownedShimPorts, port);
+      MutableHashSet.add(shimPortCleanup, shimPortLockPath(port));
       return port;
     }
   }
@@ -457,12 +473,9 @@ const claimShimPort = (): number => {
 const releaseShimPort = (port: number): void => {
   if (!MutableHashSet.has(ownedShimPorts, port)) return;
   MutableHashSet.remove(ownedShimPorts, port);
+  MutableHashSet.remove(shimPortCleanup, shimPortLockPath(port));
   NodeFS.rmSync(shimPortLockPath(port), { force: true });
 };
-
-process.once("exit", () => {
-  for (const port of ownedShimPorts) NodeFS.rmSync(shimPortLockPath(port), { force: true });
-});
 
 const listenPort = (requestedPort: number | undefined): number =>
   requestedPort === undefined || requestedPort === 0 ? claimShimPort() : requestedPort;
