@@ -1460,6 +1460,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Manual source inspection is operational evidence, not a required quality lane.
         "cache-producer-inspect.yml:Inspect producer sources and tools",
         "data-sync.yml:Sync Official Data",
+        // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
+        "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
