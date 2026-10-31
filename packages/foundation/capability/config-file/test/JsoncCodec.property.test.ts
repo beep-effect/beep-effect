@@ -30,7 +30,7 @@ describe("JsoncCodec properties", () => {
     ([value]) =>
       Effect.gen(function* () {
         const input = yield* S.encodeEffect(JsonText)(value);
-        const parsed = yield* JsoncCodec.parse("/* leading comment */" + input + "/* trailing comment */");
+        const parsed = yield* JsoncCodec.parse(`/* leading comment */${input}/* trailing comment */`);
         const formatted = yield* JsoncCodec.stringify(parsed);
         const reparsed = yield* JsoncCodec.parse(formatted);
         assert.deepStrictEqual(reparsed, parsed);

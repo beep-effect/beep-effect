@@ -3697,6 +3697,70 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("accepts shorter scopes whose close a later assertion observes", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("call", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }));',
+        'it.effect("pipe", () => Fx.gen(function* () { const error = yield* serve.pipe(Fx.flip, Fx.scoped); expect(error.closed).toBe(true); }));',
+        'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); expect(closed).toBe(true); }); it.effect("helper", helper);',
+        'it.effect("negated matcher", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(open).not.toBe(true); }));',
+        'it.effect("root return", () => { return Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); });',
+        'it.effect("in-place generator", Fx.fnUntraced(function* () { yield* Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); }));',
+        'it.effect("staged", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.tap(acquire), Fx.scoped); expect(released).toBe(true); }));',
+        'import { deepStrictEqual } from "@effect/vitest/utils"; it.effect("utils", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); deepStrictEqual(released, true); }));',
+        'import { assert } from "@effect/vitest"; it.effect("assert", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); assert.strictEqual(released, true); }));',
+      ]) {
+        assertFalse(yield* hasRule(source, "EV004"));
+      }
+    })
+  );
+
+  it.effect("keeps shorter scopes no later assertion observes as judgments", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("before", Fx.fnUntraced(function* () { expect(ready).toBe(true); yield* Fx.scoped(acquire); yield* after; }));',
+        'it.effect("closure", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); yield* Fx.sync(() => expect(released).toBe(true)); }));',
+        'it.effect("deferred", Fx.fnUntraced(function* () { const later = () => Fx.scoped(acquire); expect(ready).toBe(true); yield* later(); }));',
+        'it.effect("fork", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire).pipe(Fx.forkChild); expect(running).toBe(true); }));',
+        'it.effect("pure", Fx.fnUntraced(function* () { const value = yield* Fx.scoped(Fx.succeed(1)); expect(value).toBe(1); }));',
+        'it.effect("inner", Fx.fnUntraced(function* () { yield* Fx.scoped(Fx.gen(function* () { yield* acquire; expect(open).toBe(true); })); }));',
+        'it.effect("built", Fx.fnUntraced(function* () { const work = Fx.scoped(acquire); expect(ready).toBe(true); yield* work; }));',
+        'it.effect("built pipe", Fx.fnUntraced(function* () { const later = acquire.pipe(Fx.scoped); expect(ready).toBe(true); yield* later; }));',
+        'it.effect("if false", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); if (false) { expect(released).toBe(true); } }));',
+        'it.effect("bare", Fx.fnUntraced(function* () { Fx.scoped(acquire); expect(ready).toBe(true); }));',
+        'it.effect("pure stage", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.scoped); expect(ready).toBe(true); }));',
+        'it.effect("method", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); const observer = { check() { expect(released).toBe(true); } }; yield* use(observer); }));',
+        'it.effect("accessor", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); const observer = { get closed() { return expect(released).toBe(true); } }; yield* use(observer); }));',
+        'it.effect("class", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); class Probe { run() { expect(released).toBe(true); } } yield* use(Probe); }));',
+        'import { pipe } from "effect/Function"; it.effect("pipe fork", Fx.fnUntraced(function* () { yield* pipe(Fx.scoped(acquire), Fx.forkChild); expect(running).toBe(true); }));',
+        'it.effect("scope in if", Fx.fnUntraced(function* () { if (ready) { yield* Fx.scoped(acquire); } expect(released).toBe(true); }));',
+        'it.effect("scope in callback", () => Fx.flatMap(root, () => Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); })));',
+        'it.effect("scope in returned callback", () => Fx.flatMap(root, () => { return Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); }));',
+        'it.effect("uninvoked generator", Fx.fnUntraced(function* () { const later = Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); yield* use(later); }));',
+        'it.effect("if", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); if (released) { expect(released).toBe(true); } }));',
+        'it.effect("else", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); if (ready) { yield* after; } else expect(released).toBe(true); }));',
+        'it.effect("switch", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); switch (mode) { case "a": expect(released).toBe(true); } }));',
+        'it.effect("for", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); for (let i = 0; i < n; i++) expect(released).toBe(true); }));',
+        'it.effect("for of", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); for (const item of items) expect(item).toBe(true); }));',
+        'it.effect("while", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); while (pending) expect(released).toBe(true); }));',
+        'it.effect("do", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); do { expect(released).toBe(true); } while (pending); }));',
+        'it.effect("try", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); try { expect(released).toBe(true); } catch { yield* after; } }));',
+        'it.effect("ternary", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); ready ? expect(released).toBe(true) : undefined; }));',
+        'it.effect("and", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); ready && expect(released).toBe(true); }));',
+        'it.effect("nullish", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); value ?? expect(released).toBe(true); }));',
+        'it.effect("block", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); { expect(released).toBe(true); } }));',
+        'it.effect("bare expect", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released); }));',
+        'it.effect("unapplied matcher", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe; }));',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        deepStrictEqual(
+          A.map(rows, (row) => row.mechanization),
+          ["judgment"]
+        );
+      }
+    })
+  );
+
   it.effect("does not invent applied test scopes: (each)", () =>
     Effect.gen(function* () {
       for (const source of [

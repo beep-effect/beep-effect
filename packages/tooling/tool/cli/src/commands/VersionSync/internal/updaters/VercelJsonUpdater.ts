@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -46,9 +46,9 @@ export const updateVercelBunVersion: {
     const original = yield* fs
       .readFileString(filePath)
       .pipe(VersionSyncError.mapError(`Failed to read ${filePath}`, filePath));
-    const document = yield* decodeJsoncTextAs(BunVercelDocument)(original).pipe(
-      VersionSyncError.mapError(`Failed to parse ${filePath}`, filePath)
-    );
+    const document = yield* Jsonc.bind(BunVercelDocument)
+      .decode(original)
+      .pipe(VersionSyncError.mapError(`Failed to parse ${filePath}`, filePath));
     const command = Match.value(field).pipe(
       Match.when("installCommand", () => document.installCommand),
       Match.when("buildCommand", () => document.buildCommand),
