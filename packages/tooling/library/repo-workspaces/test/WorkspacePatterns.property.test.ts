@@ -1,12 +1,6 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { MemoryFileSystem } from "@beep/memfs";
-import {
-  manifestPatternsOf,
-  PatternReadFailureKind,
-  pnpmPatternsOf,
-  readPatterns,
-  stringsOf,
-} from "@beep/repo-workspaces/internal/patterns";
+import { WorkspacePatternReadFailureKind, WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { Yaml } from "@beep/yaml";
 import { assert, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
@@ -28,14 +22,14 @@ const stringEntries = S.Array(S.String).pipe(
 );
 
 it.effect.prop(
-  "PatternReadFailureKind decode(encode(x)) equals x and decoding never fails",
-  [Arbitrary.schema(PatternReadFailureKind)],
+  "WorkspacePatternReadFailureKind decode(encode(x)) equals x and decoding never fails",
+  [Arbitrary.schema(WorkspacePatternReadFailureKind)],
   ([value]) =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(PatternReadFailureKind)(value);
-      const decoded = yield* S.decodeEffect(PatternReadFailureKind)(encoded);
-      assert.isTrue(S.toEquivalence(PatternReadFailureKind)(decoded, value));
-      assert.deepStrictEqual(yield* S.encodeEffect(PatternReadFailureKind)(decoded), encoded);
+      const encoded = yield* S.encodeEffect(WorkspacePatternReadFailureKind)(value);
+      const decoded = yield* S.decodeEffect(WorkspacePatternReadFailureKind)(encoded);
+      assert.isTrue(S.toEquivalence(WorkspacePatternReadFailureKind)(decoded, value));
+      assert.deepStrictEqual(yield* S.encodeEffect(WorkspacePatternReadFailureKind)(decoded), encoded);
     }),
   runs
 );
@@ -46,29 +40,33 @@ it.effect.prop(
   ([entries]) =>
     Effect.gen(function* () {
       const expected = A.filter(entries, P.isString);
-      assertSome(stringsOf(entries), expected);
-      assertSome(stringsOf(expected), expected);
-      const pnpm = pnpmPatternsOf({ packages: entries });
-      const manifest = manifestPatternsOf({ workspaces: { packages: entries } });
+      assertSome(WorkspacePatterns.stringsOf(entries), expected);
+      assertSome(WorkspacePatterns.stringsOf(expected), expected);
+      const pnpm = WorkspacePatterns.fromPnpmWorkspace({ packages: entries });
+      const manifest = WorkspacePatterns.fromManifest({ workspaces: { packages: entries } });
       assert.deepStrictEqual(pnpm, expected);
       assert.deepStrictEqual(manifest, expected);
       assert.deepStrictEqual(
-        pnpmPatternsOf(yield* S.decodeEffect(json)(yield* S.encodeEffect(json)({ packages: pnpm }))),
+        WorkspacePatterns.fromPnpmWorkspace(
+          yield* S.decodeEffect(json)(yield* S.encodeEffect(json)({ packages: pnpm }))
+        ),
         pnpm
       );
       assert.deepStrictEqual(
-        manifestPatternsOf(yield* S.decodeEffect(json)(yield* S.encodeEffect(json)({ workspaces: manifest }))),
+        WorkspacePatterns.fromManifest(
+          yield* S.decodeEffect(json)(yield* S.encodeEffect(json)({ workspaces: manifest }))
+        ),
         manifest
       );
-      assert.deepStrictEqual(pnpmPatternsOf({ packages: pnpm }), pnpm);
-      assert.deepStrictEqual(manifestPatternsOf({ workspaces: manifest }), manifest);
+      assert.deepStrictEqual(WorkspacePatterns.fromPnpmWorkspace({ packages: pnpm }), pnpm);
+      assert.deepStrictEqual(WorkspacePatterns.fromManifest({ workspaces: manifest }), manifest);
     }),
   runs
 );
 
-it.layer(Path.layer, { timeout: "30 seconds" })("readPatterns fidelity", (it) => {
+it.layer(Path.layer, { timeout: "30 seconds" })("WorkspacePatterns.read fidelity", (it) => {
   it.effect.prop(
-    "readPatterns preserves YAML patterns, gives them precedence, and falls back to JSON for an empty list",
+    "WorkspacePatterns.read preserves YAML patterns, gives them precedence, and falls back to JSON for an empty list",
     [stringEntries, stringEntries],
     ([patterns, fallback]) =>
       Effect.gen(function* () {
@@ -78,18 +76,18 @@ it.layer(Path.layer, { timeout: "30 seconds" })("readPatterns fidelity", (it) =>
           "/repo/pnpm-workspace.yaml": yaml,
           "/repo/package.json": manifest,
         });
-        const parsed = yield* readPatterns("/repo").pipe(
+        const parsed = yield* WorkspacePatterns.read("/repo").pipe(
           Effect.provideService(FileSystem.FileSystem, handle.fileSystem)
         );
         assert.deepStrictEqual(parsed, patterns.length > 0 ? patterns : fallback);
         const normalized = yield* Yaml.stringify({ packages: parsed });
         yield* handle.fileSystem.writeFileString("/repo/pnpm-workspace.yaml", normalized);
         assert.deepStrictEqual(
-          yield* readPatterns("/repo").pipe(Effect.provideService(FileSystem.FileSystem, handle.fileSystem)),
+          yield* WorkspacePatterns.read("/repo").pipe(Effect.provideService(FileSystem.FileSystem, handle.fileSystem)),
           parsed
         );
         assert.strictEqual(
-          yield* Yaml.stringify({ packages: pnpmPatternsOf(yield* Yaml.parse(normalized)) }),
+          yield* Yaml.stringify({ packages: WorkspacePatterns.fromPnpmWorkspace(yield* Yaml.parse(normalized)) }),
           normalized
         );
       }),
