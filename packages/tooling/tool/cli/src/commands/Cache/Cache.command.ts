@@ -34,7 +34,12 @@ import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
-import { loadCacheProducerStoreConfiguration, persistCacheProducerAcceptance } from "./Cache.acceptance.store.ts";
+import {
+  cacheProducerImportMaxBytes,
+  cacheProducerObservationMaxBytes,
+  loadCacheProducerStoreConfiguration,
+  persistCacheProducerAcceptance,
+} from "./Cache.acceptance.store.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import {
   CacheConformanceComparison,
@@ -500,7 +505,6 @@ const observeCacheRun = (
  * ```ts
  * import { buildCacheDashboard } from "@beep/repo-cli/commands/Cache"
  * import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
  * import * as Option from "effect/Option";
  * console.log(Effect.isEffect(buildCacheDashboard(".turbo/runs", Option.none(), []))) // true
  * ```
@@ -556,7 +560,6 @@ export const buildCacheDashboard = Effect.fn("Cache.buildCacheDashboard")(functi
  * ```ts
  * import { runCacheRestorationProbe } from "@beep/repo-cli/commands/Cache"
  * import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
  * console.log(Effect.isEffect(runCacheRestorationProbe(".", ".beep/cache/probe"))) // true
  * ```
  *
@@ -898,7 +901,11 @@ const cacheAcceptCommand = Command.make(
   { request: Flag.File("request"), output: outputFlag },
   ({ request, output }) =>
     Effect.gen(function* () {
-      const input = yield* readCacheRequest(request, CacheProducerImportRequest, S.Natural.make(8 * 1024 * 1024));
+      const input = yield* readCacheRequest(
+        request,
+        CacheProducerImportRequest,
+        S.Natural.make(cacheProducerImportMaxBytes)
+      );
       const configuration = yield* loadCacheProducerStoreConfiguration();
       const reference = yield* persistCacheProducerAcceptance(
         configuration.directory,
@@ -972,7 +979,7 @@ const cacheProducerRunCommand = Command.make(
         JsonStringCodec(CacheProducerObservation),
         output,
         O.isNone(output),
-        O.some(8 * 1024 * 1024),
+        O.some(cacheProducerObservationMaxBytes),
         privateOutput
       );
       if (O.isSome(hosted))

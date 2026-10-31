@@ -6,6 +6,7 @@ import {
   CacheProducerBundle,
   CacheSignedPilotReceipt,
 } from "@beep/repo-cli/commands/Cache";
+import { cacheProducerImportMaxBytes } from "@beep/repo-cli/commands/Cache/Cache.acceptance.store";
 import {
   buildCacheHostedProducerCompleteReport,
   CacheHostedProducerApproval,
@@ -427,7 +428,7 @@ const checkStoreBounds = Effect.fn("AcceptanceTest.checkStoreBounds")(function* 
   const path = yield* Path.Path;
   const file = path.join(directory, `${reference.sha256}.json`);
   const original = yield* fs.readFileString(file);
-  for (const contents of ["", Str.repeat(8 * 1024 * 1024 + 1)("x")]) {
+  for (const contents of ["", Str.repeat(cacheProducerImportMaxBytes + 1)("x")]) {
     yield* fs.writeFileString(file, contents);
     const error = yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.flip);
     expect(error.message).toContain("bounded private single-link file");
@@ -444,7 +445,7 @@ const checkStoreBounds = Effect.fn("AcceptanceTest.checkStoreBounds")(function* 
             ...request.observations.stable.observation.pilot,
             client: CacheClientPin.make({
               ...request.observations.stable.observation.pilot.client,
-              version: `2.11.4-${Str.repeat(8 * 1024 * 1024)("x")}`,
+              version: `2.11.4-${Str.repeat(cacheProducerImportMaxBytes)("x")}`,
             }),
           }),
         }),

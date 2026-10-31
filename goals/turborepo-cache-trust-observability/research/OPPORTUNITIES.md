@@ -1556,3 +1556,21 @@ in the owning producer PR; preserve it until the accepted-parent replay.
 - Prevention: package audit success does not imply every hosted policy gate
   passed. Keep those proof authorities separate and run the required package
   law check before another expensive full replay.
+
+### Producer transport budgets and accepted-main replay, 2026-10-31
+
+- Review found that per-channel eight-MiB outputs could exceed the old aggregate
+  import bound. Storage had the same old limit. Share the derived twenty-MiB
+  import budget across command input, persistence and rereading; retain the
+  eight-MiB channel output budget and one-MiB publication ZIP bounds.
+- The dispatcher regression composes two maximal-size channel JSON texts plus
+  maximum publication transport, reaches trust lookup, and rejects input beyond
+  twenty MiB before configuration. Existing store-bound refusals now exercise
+  the shared aggregate limit; authentication and metadata checks remain intact.
+- Two unprefixed unused imports in JSDoc examples came from import insertion;
+  edit actual imports with syntax-aware scope. Both example bodies are repaired.
+- Accepted task-specific fingerprints and coverage sharding advanced main during
+  validation. Stop only the owned proof before merging; preserve its exit130
+  as interrupted, resolve leaf imports, and regenerate inventory artifacts.
+  One inventory attempt was stopped after the additional storage-bound defect;
+  the final canonical scan and one hundred focused tests passed.

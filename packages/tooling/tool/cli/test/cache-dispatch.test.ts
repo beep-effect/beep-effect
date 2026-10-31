@@ -20,10 +20,16 @@ import {
   CacheToolchainSnapshot,
   CacheTransitionRequest,
 } from "@beep/repo-cli/commands/Cache";
+import {
+  CacheProducerImportRequest,
+  CacheProducerPublication,
+} from "@beep/repo-cli/commands/Cache/Cache.acceptance.schemas";
+import * as AcceptanceStore from "@beep/repo-cli/commands/Cache/Cache.acceptance.store";
 import * as Producer from "@beep/repo-cli/commands/Cache/Cache.producer";
 import * as Profile from "@beep/repo-cli/commands/Cache/Cache.profile";
 import * as Runtime from "@beep/repo-cli/commands/Cache/Cache.runtime";
 import * as Workflow from "@beep/repo-cli/commands/Cache/Cache.workflow";
+import { CacheHostedProducerReference } from "@beep/repo-cli/commands/Cache/Cache.workflow.github.schemas";
 import {
   CacheHostedProducerCompleteReport,
   CacheProducerExecutionProfile,
@@ -148,6 +154,7 @@ const emptyAudit = CachePolicyAuditReport.make({ findings: [], unassessed: [key.
 const encodeSignedPilotRequest = S.encodeEffect(S.fromJsonString(CacheSignedPilotRequest));
 const decodeProducerObservation = S.decodeEffect(S.fromJsonString(CacheProducerObservation));
 const decodeCompleteReport = S.decodeEffect(S.fromJsonString(CacheHostedProducerCompleteReport));
+const encodeProducerImport = S.encodeEffect(S.fromJsonString(CacheProducerImportRequest));
 const encodeBaselineRequest = S.encodeEffect(S.fromJsonString(CacheBaselineRequest));
 const encodeTransitionRequest = S.encodeEffect(S.fromJsonString(CacheTransitionRequest));
 const encodeActivationRequest = S.encodeEffect(S.fromJsonString(CacheActivationRequest));
@@ -611,6 +618,39 @@ describe("cache qualification command dispatch", () => {
             yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(Str.trimEnd(contents)))
           );
           expect((yield* f.fs.stat(publication)).mode & 0o777).toBe(0o600);
+          const transported = CacheProducerPublication.make({
+            reference: CacheHostedProducerReference.make({ runId: 11, attempt: 2, artifactId: 111 }),
+            archive: new Uint8Array(1024 * 1024),
+          });
+          const encodedImport = yield* encodeProducerImport(
+            CacheProducerImportRequest.make({
+              observations: { stable: observation, canary: observation },
+              publications: O.some({ stable: transported, canary: transported }),
+            })
+          );
+          const channelJson = Str.trimEnd(contents);
+          const channelBytes = new TextEncoder().encode(channelJson).byteLength;
+          expect(channelBytes).toBeLessThan(8 * 1024 * 1024);
+          const paddedChannel = Str.concat(channelJson, Str.repeat(8 * 1024 * 1024 - channelBytes)(" "));
+          const composed = Str.replaceAll(channelJson, paddedChannel)(encodedImport);
+          const composedBytes = new TextEncoder().encode(composed).byteLength;
+          expect(composedBytes).toBeGreaterThan(18 * 1024 * 1024);
+          expect(composedBytes).toBeLessThan(20 * 1024 * 1024);
+          const importFile = f.path.join(f.root, "complete-import.json");
+          yield* f.fs.writeFileString(importFile, composed);
+          const configure = vi
+            .spyOn(AcceptanceStore, "loadCacheProducerStoreConfiguration")
+            .mockReturnValue(Effect.fail(CacheCommandError.new("Complete bounded pair decoded before trust lookup.")));
+          expect(yield* f.run(["accept", "--request", importFile]).pipe(Effect.isFailure)).toBe(true);
+          expect(configure).toHaveBeenCalledTimes(1);
+          expect(yield* errorText).toContain("Complete bounded pair decoded before trust lookup.");
+          configure.mockClear();
+          yield* f.fs.writeFileString(
+            importFile,
+            Str.concat(composed, Str.repeat(20 * 1024 * 1024 + 1 - composedBytes)(" "))
+          );
+          expect(yield* f.run(["accept", "--request", importFile]).pipe(Effect.isFailure)).toBe(true);
+          expect(configure).not.toHaveBeenCalled();
         }
         yield* f.fs.writeFileString(output, "preserved observation");
         expect(yield* execute.pipe(Effect.isFailure)).toBe(true);

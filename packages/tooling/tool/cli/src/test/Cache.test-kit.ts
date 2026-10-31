@@ -30,7 +30,7 @@ export {
   CacheProducerAdapterReceipt,
 } from "../commands/Cache/Cache.adapter.schemas.ts";
 export { withCacheProducerAdapter } from "../commands/Cache/Cache.adapter.ts";
-export { joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
+export { forwardsBiomeConfigPath, joinCacheCensusPlan } from "../commands/Cache/Cache.census.ts";
 export {
   makeCacheCommandForTesting,
   runCacheWarmForTesting,
