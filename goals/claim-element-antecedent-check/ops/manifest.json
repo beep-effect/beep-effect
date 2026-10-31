@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Autonomous acceptance v1 applied: strict 37/538, all 34 protected passes retained; actual-attorney fields false. Accepted main #2399/f16d82e9f1 is merged locally at 11b3cd715c. Fresh positive/allowed replay results and all 251 successful reports are byte-identical; all 20 runtime, 631 historical and 1,136 snapshot hashes match. Alternative #2402 is closed unmerged, with recovery commit42ddc80058 retained. All three current-base package audit/docgen verifications and cache policy pass. The primary claim PR remains unpublished; P4 is in progress and P5 is pending."
+  "statusNote": "Autonomous acceptance v1 applied: strict 37/538, all 34 protected passes retained; actual-attorney fields false. Accepted main #2399 and #2409 are consumed. Fresh fixed replay results/all 251 reports and all 20 runtime, 631 historical and 1,136 snapshot hashes match. Three current-base package audit/docgen verifications pass. The publication collector passed 24/25 checks in over ten minutes; its sole obsolete-inventory failure is corrected with accepted main and a passing standalone check. Hosted-first delivery remains in progress; P4 is active and P5 is pending."
 }
