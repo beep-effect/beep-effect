@@ -23,7 +23,9 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -34,7 +36,7 @@ const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, s
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-repo-workspaces-" }));
-  for (const [relative, content] of Object.entries(files)) {
+  for (const [relative, content] of R.toEntries(files)) {
     const file = path.join(root, relative);
     yield* fs.makeDirectory(path.dirname(file), { recursive: true });
     yield* fs.writeFileString(file, content);
@@ -52,7 +54,10 @@ const twoMembers = {
 };
 
 const sortedEntries = <V>(map: HashMap.HashMap<string, V>): ReadonlyArray<readonly [string, V]> =>
-  A.sort(HashMap.toEntries(map), (left, right) => Str.Order(left[0], right[0]));
+  A.sort(
+    HashMap.toEntries(map),
+    Order.mapInput(Str.Order, (entry: readonly [string, V]) => entry[0])
+  );
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) => {
   describe("members", () => {
