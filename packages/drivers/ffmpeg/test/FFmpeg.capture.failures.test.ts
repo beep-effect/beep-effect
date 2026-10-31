@@ -371,8 +371,10 @@ describe("@beep/ffmpeg capture failures", () => {
             };
             const error = yield* Effect.flip(
               operation === "extractFrames"
-                ? ffmpeg.extractFrames(ExtractFramesRequest.make({ ...request, fps: 1 }))
-                : ffmpeg.extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
+                ? ffmpeg.extractFrames(ExtractFramesRequest.make({ ...request, fps: 1 })).pipe(Effect.asVoid)
+                : ffmpeg
+                    .extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
+                    .pipe(Effect.asVoid)
             );
             expect(error.operation).toBe(operation);
             expect(error.message).toContain("to be a file");
@@ -409,8 +411,10 @@ describe("@beep/ffmpeg capture failures", () => {
               };
               const exit = yield* Effect.exit(
                 operation === "extractFrames"
-                  ? ffmpeg.extractFrames(ExtractFramesRequest.make({ ...request, fps: 1 }))
-                  : ffmpeg.extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
+                  ? ffmpeg.extractFrames(ExtractFramesRequest.make({ ...request, fps: 1 })).pipe(Effect.asVoid)
+                  : ffmpeg
+                      .extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
+                      .pipe(Effect.asVoid)
               );
               expect(Exit.isFailure(exit)).toBe(true);
               const recoveryDirectory = yield* Effect.fromOption(
