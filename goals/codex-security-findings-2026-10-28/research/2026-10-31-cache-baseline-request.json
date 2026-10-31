@@ -1,0 +1,20 @@
+{
+  "previous": "1b8a9e66553c922ce33218a24bcd1ceeb2fae2aafbd2c82fe3bbca1521d93af6",
+  "review": {
+    "reviewer": "GPT-6.1-Sol medium independent dependency review",
+    "reason": "Reconcile six root fingerprint seal input lists after main helper extraction; retain existing cache posture with no new qualification.",
+    "basis": {
+      "path": "goals/codex-security-findings-2026-10-28/research/2026-10-31-cache-baseline-review.md",
+      "sha256": "01f2de19520f71e556395377828e96451648ebd0ab3f764a5c70eb41d5305c51"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
