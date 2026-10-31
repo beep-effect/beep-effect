@@ -110,3 +110,27 @@ session/machine ids, quote only the minimal identifying error text.
 - **Would have prevented it:** per-day checkpointing in the capture (write after each completed
   UTC day; receipt `until` = last completed day), and a brief that names the API budget so the
   first run is windowed.
+
+## 2026-10-31 — The one-shot pause-and-retry on a 403 can land on an already-spent fresh budget
+
+- **Doing:** the second capture window (2026-09-22..10-11) with per-day checkpointing live.
+- **Evidence:** eight in-flight `gh run view` calls each waited 2,751 s for the 09:47:31Z reset, then
+  the first retry reported "hit the GitHub API rate limit again" while `gh api rate_limit` read
+  `remaining: 5000` a second later; the checkpoint kept 2026-09-01..09-28 (2,210 runs) and the
+  gap check refused a `--since` past the receipt, so nothing was lost.
+- **Would have prevented it:** retrying one call at a time after the reset instead of releasing
+  every parked call at once, and a `--budget <calls>` flag that stops at a day boundary before
+  the shared limit is reached.
+
+## 2026-10-31 — `Command.make` names and flags must be literal: the knowledge doctor derives the command surface statically
+
+- **Doing:** collapsing the census and replay subcommands into one factory to satisfy a fallow
+  duplication finding.
+- **Evidence:** `package-verify @beep/repo-cli` failed three tests (`knowledge-doctor`
+  "derives the current command surface statically", "matches the runtime flag declarations",
+  `knowledge-semantic-delta` structural parity) with `KnowledgeOperationalError: command factory
+  arguments are not bound string literals`; `Command.make(name, …)` over a parameter is opaque to
+  the deriver. Sharing the handler body and keeping two literal `Command.make` calls satisfies
+  both the deriver and fallow.
+- **Would have prevented it:** a GritQL guard on non-literal `Command.make` first arguments, or
+  the knowledge doctor's error naming the file and call.

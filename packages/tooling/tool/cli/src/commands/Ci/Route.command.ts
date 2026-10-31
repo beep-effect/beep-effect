@@ -242,26 +242,17 @@ const captureCommand = Command.make(
   Command.provide(routeLayers)
 );
 
-const corpusFlag = Flag.String("corpus").pipe(
-  Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
-  Flag.withDescription("Corpus receipt path, relative to the repository root")
-);
-
-// census and replay differ only in which reader method runs and how the report prints.
-const corpusReportCommand = <A, Sch extends S.Top & { readonly Type: A; readonly EncodingServices: never }>(
-  name: string,
-  description: string,
-  read: (reader: RouteCensusShape, loaded: RouteCorpusLoaded) => Effect.Effect<A, RouteError>,
-  schema: Sch,
-  render: (report: A) => ReadonlyArray<string>
-) =>
-  Command.make(
-    name,
-    {
-      corpus: corpusFlag,
-      json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription(`Print the ${name} as JSON`)),
-    },
-    Effect.fn(`Ci.route.${name}`)(function* ({ corpus, json }) {
+// census and replay differ only in which reader method runs and how the report prints. The
+// `Command.make` calls stay literal because the knowledge doctor derives the documented command
+// surface statically from bound string names; only the handler body is shared.
+const runCorpusReport =
+  <A, Sch extends S.Top & { readonly Type: A; readonly EncodingServices: never }>(
+    read: (reader: RouteCensusShape, loaded: RouteCorpusLoaded) => Effect.Effect<A, RouteError>,
+    schema: Sch,
+    render: (report: A) => ReadonlyArray<string>
+  ) =>
+  ({ corpus, json }: { readonly corpus: string; readonly json: boolean }) =>
+    Effect.gen(function* () {
       const root = yield* (yield* RouteGit).repoRoot;
       const program = Effect.gen(function* () {
         const receiptPath = yield* resolveCorpusReceipt(root, corpus);
@@ -271,23 +262,36 @@ const corpusReportCommand = <A, Sch extends S.Top & { readonly Type: A; readonly
         yield* printLines(lines);
       });
       yield* routeFailure(program);
-    })
-  ).pipe(Command.withDescription(description), Command.provide(routeLayers));
+    });
 
-const censusCommand = corpusReportCommand(
+const censusCommand = Command.make(
   "census",
-  "Print the loss census: hosted machine time by atom kind and lane",
-  (reader, loaded) => reader.census(loaded),
-  RouteCensusSchema,
-  renderCensus
+  {
+    corpus: Flag.String("corpus").pipe(
+      Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
+      Flag.withDescription("Corpus receipt path, relative to the repository root")
+    ),
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the census as JSON")),
+  },
+  runCorpusReport((reader, loaded) => reader.census(loaded), RouteCensusSchema, renderCensus)
+).pipe(
+  Command.withDescription("Print the loss census: hosted machine time by atom kind and lane"),
+  Command.provide(routeLayers)
 );
 
-const replayCommand = corpusReportCommand(
+const replayCommand = Command.make(
   "replay",
-  "Replay the route over the corpus and print its recall with base-green attribution",
-  (reader, loaded) => reader.replay(loaded),
-  RouteReplaySchema,
-  renderReplay
+  {
+    corpus: Flag.String("corpus").pipe(
+      Flag.withDefault(`${ROUTE_CORPUS_DEFAULT_DIR}/${ROUTE_CORPUS_RECEIPT_FILE}`),
+      Flag.withDescription("Corpus receipt path, relative to the repository root")
+    ),
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the replay as JSON")),
+  },
+  runCorpusReport((reader, loaded) => reader.replay(loaded), RouteReplaySchema, renderReplay)
+).pipe(
+  Command.withDescription("Replay the route over the corpus and print its recall with base-green attribution"),
+  Command.provide(routeLayers)
 );
 
 /**
