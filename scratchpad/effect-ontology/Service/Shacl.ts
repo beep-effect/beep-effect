@@ -443,7 +443,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
               );
             const ontologyN3 = new N3.Store(new N3.Parser().parse(ontologyTurtle));
             const cacheKey = yield* hashStore(ontologyN3).pipe(
-              Effect.provideService(Crypto.Crypto, crypto),
+              Effect.provideService(Digest.Digest, crypto),
               Effect.mapError((cause) =>
                 ValidationReportError.make({ message: "Failed to hash ontology shapes", cause: O.some(cause) })
               )

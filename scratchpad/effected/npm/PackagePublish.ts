@@ -494,9 +494,7 @@ const make = Effect.fnUntraced(function* () {
 		const bytes = yield* fs
 			.readFile(tarballPath)
 			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
-		const digest = yield* crypto
-			.digest(Digest.sha256, bytes)
-			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
+		const digest = yield* crypto.digest(Digest.sha256, bytes);
 		return PackedTarball.make({
 			tarballPath,
 			name: entry.name,

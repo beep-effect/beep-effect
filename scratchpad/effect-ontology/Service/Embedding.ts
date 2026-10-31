@@ -181,7 +181,7 @@ export const EmbeddingServiceLive: Layer.Layer<
     const crypto = yield* Digest.Digest;
     const hashVersionedEmbeddingKey = flow(
       hashVersionedEmbeddingKeyEffect,
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     );
     const cache = yield* EmbeddingCache;
     const metrics = yield* MetricsService;

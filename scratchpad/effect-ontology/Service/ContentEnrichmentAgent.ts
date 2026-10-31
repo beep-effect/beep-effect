@@ -231,7 +231,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
           "content.wordCount": wordCount,
         },
       }).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.provideService(LanguageModel.LanguageModel, llm),
         Effect.mapError((error) =>
           ContentEnrichmentError.make({

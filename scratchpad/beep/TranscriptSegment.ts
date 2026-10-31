@@ -49,7 +49,7 @@ const textEncoder = new TextEncoder();
 const uuidV5 = Effect.fnUntraced(function* (
   name: string,
   namespace: Uint8Array,
-): Effect.fn.Return<string, PlatformError.PlatformError, Digest.Digest | SecureRandom.SecureRandom> {
+): Effect.fn.Return<string, PlatformError.PlatformError, Digest.Digest> {
   if (!name.isWellFormed()) {
     return yield* PlatformError.badArgument({
       module: "TranscriptSegment",
@@ -58,7 +58,6 @@ const uuidV5 = Effect.fnUntraced(function* (
     });
   }
   const crypto = yield* Digest.Digest;
-  const secureRandom = yield* SecureRandom.SecureRandom;
   const nameBytes = textEncoder.encode(name);
   const input = new Uint8Array(namespace.length + nameBytes.length);
   input.set(namespace);
@@ -155,11 +154,11 @@ export const SENTENCE_FINDALL_RE = new RegExp(`[^${SENTENCE_ENDERS}]+(?:${senten
  * @since 0.0.0
  */
 export const legacyConversationSegmentId: {
-  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Digest.Digest | SecureRandom.SecureRandom>;
-  (index: number): (conversationId: string) => Effect.Effect<string, PlatformError.PlatformError, Digest.Digest | SecureRandom.SecureRandom>;
+  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Digest.Digest>;
+  (index: number): (conversationId: string) => Effect.Effect<string, PlatformError.PlatformError, Digest.Digest>;
 } = dual(
   2,
-  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Digest.Digest | SecureRandom.SecureRandom> =>
+  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Digest.Digest> =>
     uuidV5(`omi/conversations/${conversationId}/transcript-segments/${index}`, NAMESPACE_URL),
 );
 

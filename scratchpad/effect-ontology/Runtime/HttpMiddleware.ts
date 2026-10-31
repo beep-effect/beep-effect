@@ -125,7 +125,7 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  */
 export const makeAuthMiddleware = Effect.gen(function* () {
   const crypto = yield* Digest.Digest;
-  const sha256 = flow(sha256Effect, Effect.provideService(Crypto.Crypto, crypto));
+  const sha256 = flow(sha256Effect, Effect.provideService(Digest.Digest, crypto));
   const config = yield* ConfigService;
 
   // Skip auth if not required

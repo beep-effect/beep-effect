@@ -41,7 +41,6 @@ import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import { CanonicalEntityId, EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../Repository/Examples.ts";
-import type { HashingError } from "../Utils/Hash.ts";
 import { sha256SyncFull as sha256SyncFullEffect } from "../Utils/Hash.ts";
 import { EmbeddingService } from "./Embedding.ts";
 import type { EventEntry } from "./EventBus.ts";
@@ -71,7 +70,7 @@ const CurationActionTag = LiteralKit([
  * @category type-level
  * @since 0.0.0
  */
-export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError | EventBusError | HashingError;
+export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError | EventBusError;
 
 /**
  * Outcome of applying one curation action to a claim or entity.
@@ -127,7 +126,7 @@ export class CurationResult extends S.Opaque<CurationResult, { readonly brand: u
 export class CurationService extends Context.Service<CurationService>()($I`CurationService`, {
   make: Effect.gen(function* () {
     const crypto = yield* Digest.Digest;
-    const sha256SyncFull = flow(sha256SyncFullEffect, Effect.provideService(Crypto.Crypto, crypto));
+    const sha256SyncFull = flow(sha256SyncFullEffect, Effect.provideService(Digest.Digest, crypto));
     const claimRepo = yield* ClaimRepository;
     const entityRegistry = yield* EntityRegistryRepository;
     const examplesRepo = yield* ExamplesRepository;

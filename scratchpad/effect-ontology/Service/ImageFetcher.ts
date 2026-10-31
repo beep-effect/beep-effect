@@ -286,7 +286,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
     ImageFetcher,
     Effect.gen(function* () {
       const crypto = yield* Digest.Digest;
-      const sha256Bytes = flow(sha256BytesEffect, Effect.provideService(Crypto.Crypto, crypto));
+      const sha256Bytes = flow(sha256BytesEffect, Effect.provideService(Digest.Digest, crypto));
       const httpClient = yield* HttpClient.HttpClient;
 
       const fetchAttempt = Effect.fn("ImageFetcher.fetchAttempt")(function* (

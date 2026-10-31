@@ -227,7 +227,7 @@ const heredocLines = (input: {
 /**
  * Filesystem mode a rendered generation file is materialized with.
  *
- * @example
+ * **Example** (List the file mode literals)
  * ```ts
  * import { OpenClawFileMode } from "@beep/infra"
  *
@@ -247,7 +247,7 @@ export const OpenClawFileMode = OpenClawFileModeBase.pipe(
 /**
  * Runtime type for {@link OpenClawFileMode}.
  *
- * @example
+ * **Example** (Annotate a file mode value)
  * ```ts
  * import type { OpenClawFileMode } from "@beep/infra"
  *
@@ -320,7 +320,7 @@ type OpenClawPulumiConfigInputValues = Omit<
 /**
  * Raw optional Pulumi config values before workstation defaults are applied.
  *
- * @example
+ * **Example** (Reference the raw config schema)
  * ```ts
  * import { OpenClawPulumiConfigValues } from "@beep/infra"
  *
@@ -381,7 +381,7 @@ export const OpenClawPulumiConfigValues = S.Class<OpenClawPulumiConfigValuesFiel
  * incomplete expectation must refuse to render rather than degrade into an
  * empty match.
  *
- * @example
+ * **Example** (Build the expected host identity)
  * ```ts
  * import { OpenClawExpectedIdentity } from "@beep/infra"
  *
@@ -429,7 +429,7 @@ export class OpenClawExpectedIdentity extends S.Opaque<OpenClawExpectedIdentity,
 /**
  * Filesystem layout the workstation applicator owns.
  *
- * @example
+ * **Example** (Read the default config root)
  * ```ts
  * import { OpenClawWorkstationPaths } from "@beep/infra"
  *
@@ -475,7 +475,7 @@ export class OpenClawWorkstationPaths extends S.Opaque<OpenClawWorkstationPaths,
 /**
  * Hosted OpenAI-compatible provider selected as the workstation primary.
  *
- * @example
+ * **Example** (Configure a hosted provider)
  * ```ts
  * import { OpenClawHostedProviderConfig } from "@beep/infra"
  * import { OpenclawSecretReference } from "@beep/openclaw"
@@ -520,7 +520,7 @@ export class OpenClawHostedProviderConfig extends S.Opaque<
 /**
  * Local loopback OpenAI-compatible fallback provider.
  *
- * @example
+ * **Example** (Configure a local Ollama provider)
  * ```ts
  * import { OpenClawLocalProviderConfig } from "@beep/infra"
  *
@@ -559,7 +559,7 @@ const openClawDeploymentConfigGatewayAuthTokenRefDefault = OpenclawSecretReferen
  * Secret material never appears here: `gatewayAuthTokenRef` is an `op://`
  * reference resolved on the workstation at runtime.
  *
- * @example
+ * **Example** (Build a deployment config)
  * ```ts
  * import {
  *   OpenClawDeploymentConfig,
@@ -676,7 +676,7 @@ const sha256Hex = Effect.fnUntraced(function* (text: string) {
 /**
  * Build the driver deployment intent a deployment config describes.
  *
- * @example
+ * **Example** (Derive the deployment intent)
  * ```ts
  * import {
  *   makeOpenClawDeploymentIntent,
@@ -822,7 +822,7 @@ export const makeOpenClawDeploymentIntent: {
  * directory, copies an already-encrypted archive into it, and reads back a
  * sha256 receipt. Nothing else on the remote is modified.
  *
- * @example
+ * **Example** (Read the default backup host)
  * ```ts
  * import { OpenClawBackupConfig } from "@beep/infra"
  *
@@ -874,7 +874,7 @@ export class OpenClawBackupConfig extends S.Opaque<OpenClawBackupConfig, { reado
  * directory name, so equal inputs always produce the same generation
  * directory and the applicator becomes idempotent by construction.
  *
- * @example
+ * **Example** (Materialize a generation)
  * ```ts
  * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  * import * as Effect from "effect/Effect"
@@ -969,7 +969,7 @@ export class OpenClawGeneration extends S.Opaque<OpenClawGeneration, { readonly 
 /**
  * Content hashes that form an immutable OpenClaw generation identity.
  *
- * @example
+ * **Example** (Build bundle hash inputs)
  * ```ts
  * import { OpenClawBundleHashInput } from "@beep/infra"
  * import { OpenclawSha256Hex } from "@beep/openclaw"
@@ -1008,7 +1008,7 @@ export class OpenClawBundleHashInput extends S.Opaque<OpenClawBundleHashInput, {
  * Shared input for rendered scripts that bind a generation to its expected
  * workstation identity.
  *
- * @example
+ * **Example** (Reference the identity script input schema)
  * ```ts
  * import { OpenClawGenerationIdentityScriptInput } from "@beep/infra"
  *
@@ -1039,7 +1039,7 @@ export class OpenClawGenerationIdentityScriptInput extends S.Opaque<
 /**
  * Input for rendering an encrypted OpenClaw backup shipping script.
  *
- * @example
+ * **Example** (Reference the backup script input schema)
  * ```ts
  * import { OpenClawBackupShipScriptInput } from "@beep/infra"
  *
@@ -1182,7 +1182,7 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
 /**
  * Build the deterministic length-delimited generation bundle hash.
  *
- * @example
+ * **Example** (Hash a bundle from zero hashes)
  * ```ts
  * import { makeOpenClawBundleHash, OpenClawBundleHashInput } from "@beep/infra"
  * import { OpenclawSha256Hex } from "@beep/openclaw"
@@ -1236,7 +1236,7 @@ export const makeOpenClawBundleHash: (
  * hashes become one length-delimited generation identity. Hashing requires
  * `Digest`.
  *
- * @example
+ * **Example** (Build a generation effect)
  * ```ts
  * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  * import * as Effect from "effect/Effect"
@@ -1318,7 +1318,7 @@ export const makeOpenClawGeneration: (
  * the manager environment, and the scoped 1Password service-account token
  * arrives exclusively through `LoadCredential`.
  *
- * @example
+ * **Example** (Render the systemd unit)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1391,7 +1391,7 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  * `preflight` validates the generation's config with its own binary;
  * `gateway` (the default) starts the gateway.
  *
- * @example
+ * **Example** (Render the run script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1460,7 +1460,7 @@ export const renderOpenClawRunScript = (generation: OpenClawGeneration): string 
 /**
  * Render one generation file with its content and materialization mode.
  *
- * @example
+ * **Example** (Build a generation file)
  * ```ts
  * import { OpenClawGenerationFile } from "@beep/infra"
  *
@@ -1493,7 +1493,7 @@ export class OpenClawGenerationFile extends S.Opaque<OpenClawGenerationFile, { r
  * not this function — materializes them, which keeps generation rendering
  * testable without a filesystem and reusable by a future remote applicator.
  *
- * @example
+ * **Example** (Render the generation tree)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1554,7 +1554,7 @@ export const renderOpenClawGenerationTree = (
  * desktops; the manager state is recorded and only rejected outside
  * `running|degraded|maintenance|starting`.
  *
- * @example
+ * **Example** (Render the preflight script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1696,7 +1696,7 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * config is validated by the candidate's own binary before apply is allowed to
  * proceed.
  *
- * @example
+ * **Example** (Render the stage script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1827,7 +1827,7 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  * than the live state, because an old binary cannot safely open migrated
  * state.
  *
- * @example
+ * **Example** (Render the apply script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1948,7 +1948,7 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  * state before switching binaries, which is exactly what makes starting the
  * older binary safe.
  *
- * @example
+ * **Example** (Render the rollback script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2094,7 +2094,7 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * and reports each divergence as an `ALERT: OPENCLAW_CONFIG_DRIFT` line —
  * repair is an operator redeploy, never an automatic correction.
  *
- * @example
+ * **Example** (Render the drift audit script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2152,7 +2152,7 @@ export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentity
  * surfaces, then fold in the read-only drift inventory so a single command
  * output carries both acceptance evidence and the post-apply drift picture.
  *
- * @example
+ * **Example** (Render the probe script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2232,7 +2232,7 @@ export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScrip
  * restore it and run `restored`; the restored phase immediately proves model,
  * local inventory, skill, Telegram send, and channel health.
  *
- * @example
+ * **Example** (Render the live acceptance script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2328,7 +2328,7 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  * dumb storage: it receives the archive and returns a sha256 receipt that must
  * match the local digest.
  *
- * @example
+ * **Example** (Render the backup ship script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2406,7 +2406,7 @@ export const renderOpenClawBackupShipScript = ({ backup, generation }: OpenClawB
  * `identity` has no default on purpose — the stack must be told which machine
  * it owns before it can render anything.
  *
- * @example
+ * **Example** (Build stack args from config values)
  * ```ts
  * import { makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
@@ -2462,7 +2462,7 @@ export class OpenClawStackArgs extends S.Opaque<OpenClawStackArgs, { readonly br
   /**
    * Build component args around a declared workstation identity.
    *
-   * @example
+   * **Example** (Build stack args from identity and deployment)
    * ```ts
    * import { OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
    *
@@ -2503,7 +2503,7 @@ export class OpenClawStackArgs extends S.Opaque<OpenClawStackArgs, { readonly br
  * apply against an undeclared machine is the outcome this stack exists to make
  * impossible.
  *
- * @example
+ * **Example** (Map raw config values to stack args)
  * ```ts
  * import { makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
@@ -2631,7 +2631,7 @@ export const makeOpenClawStackArgsFromConfigValues = ({
 /**
  * Load OpenClaw stack args from Pulumi config.
  *
- * @example
+ * **Example** (Reference the stack args loader)
  * ```ts
  * import { loadOpenClawStackArgs } from "@beep/infra"
  *
@@ -2695,7 +2695,7 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
  * bodies, which is what makes a changed unit or config re-execute the chain.
  * Nothing is torn down on destroy.
  *
- * @example
+ * **Example** (Declare the OpenClaw stack)
  * ```ts
  * import { makeOpenClawStackArgsFromConfigValues, OpenClawStack } from "@beep/infra"
  *

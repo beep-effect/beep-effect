@@ -1,10 +1,10 @@
 import { assert, describe, it } from "@effect/vitest";
 import { MemoryFileSystem } from "@beep/memfs";
 import * as Digest from "effect/crypto/Digest";
-import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as HttpClient from "effect/http/HttpClient";
@@ -23,18 +23,7 @@ const BODY = new TextEncoder().encode("effected-tarball-fixture");
 const INTEGRITY = "sha512-YGOjDdAkq0He9th3F8QoLyZHfvbUNr9OGv/drJVnyUx2zF2bOOF29Gp5cML2pcOF2PQNjA+ybAkQXeTcdDIfFA==";
 
 /** A real digest, so the integrity check is exercised rather than simulated. */
-const liveCrypto = Layer.succeed(
-	Crypto.Crypto,
-	Crypto.make({
-		digest: (algorithm, data) =>
-			// `data.slice()` yields a Uint8Array over a plain ArrayBuffer, which is
-			// what WebCrypto's BufferSource accepts.
-			Effect.promise(() =>
-				globalThis.crypto.subtle.digest(algorithm, data.slice()).then((buffer) => new Uint8Array(buffer)),
-			),
-		randomBytes: (size) => new Uint8Array(size),
-	}),
-);
+const liveCrypto = Digest.layerWebCrypto;
 
 /** An `HttpClient` answering one scripted response for every request. */
 const http = (result: { status: number; body?: Uint8Array } | "transport"): Layer.Layer<HttpClient.HttpClient> =>
@@ -178,40 +167,28 @@ describe("PackageTarball", () => {
 		}
 
 		{
-			const refusingCrypto = Layer.succeed(
-				Crypto.Crypto,
-				Crypto.make({
-					digest: () =>
-						Effect.fail(
-							PlatformError.badArgument({ module: "Crypto", method: "digest", description: "algorithm refused" }),
-						),
-					randomBytes: (size) => new Uint8Array(size),
-				}),
-			);
+			const digestDefect = new Error("algorithm refused");
+			const dyingDigest = Layer.mock(Digest.Digest)({ digest: () => Effect.die(digestDefect) });
 			const spawner = scripted(() => ({ exit: 0 }));
 			const layer = PackageTarball.layer.pipe(
-				Layer.provide(Layer.mergeAll(spawner.layer, MemoryFileSystem.layer, refusingCrypto, http({ status: 200 }))),
+				Layer.provide(Layer.mergeAll(spawner.layer, MemoryFileSystem.layer, dyingDigest, http({ status: 200 }))),
 			);
 			it.layer(layer, { timeout: "30 seconds" })((it) => {
-				it.effect("reports a digest that could not be COMPUTED as unverifiable, not as a mismatch", () =>
-					// A mismatch is a measurement: two digests exist and differ, which is what
-					// tampering looks like. A runtime refusing the algorithm (SHA-1 under a
-					// FIPS-configured Node) produces no digest at all, so nothing was
-					// compared. Reporting the second as the first routes a platform problem
-					// into tamper handling and renders "did not match (expected X, got
-					// unknown)" — evidence of an attack nobody observed. This is the same
-					// class the wave fixes in PackageManagerInstaller.
+				it.effect("propagates a digest that could not be COMPUTED as a defect, not as a mismatch", () =>
+					// effect 4.1.0's digest cannot fail, so a runtime refusing the algorithm
+					// (SHA-1 under a FIPS-configured Node) surfaces as a defect. It must
+					// never become a typed integrityMismatch, which would report tampering
+					// nobody observed, and the unverified tarball must never reach tar.
 					Effect.gen(function* () {
-						const error = yield* Effect.flip(
+						const exit = yield* Effect.exit(
 							Effect.gen(function* () {
 								const tarball = yield* PackageTarball;
 								return yield* tarball.extract(published({ ...WITH_TARBALL, integrity: INTEGRITY }));
 							}),
 						);
-						assert.strictEqual(error.reason, "integrityUnverifiable");
-						assert.strictEqual(error.actual, undefined, "nothing was measured, so there is no actual digest to report");
-						assert.include(error.message, "never checked");
-						assert.notInclude(error.message, "did not match");
+						assert.isTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
+						assert.isFalse(Exit.isFailure(exit) && Exit.hasFails(exit), "a defect must not become a typed TarballError");
+						assert.strictEqual(Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined, digestDefect);
 						assert.deepStrictEqual(spawner.spawns, [], "an unverified tarball must still never reach tar");
 					}),
 				);

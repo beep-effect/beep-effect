@@ -1,5 +1,4 @@
 import * as Digest from "effect/crypto/Digest";
-import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
@@ -72,14 +71,10 @@ export const scripted = (script: (command: string, args: ReadonlyArray<string>) 
 };
 
 /**
- * A deterministic `Crypto` whose digest is the byte length repeated — enough to
+ * A deterministic `Digest` whose digest is the byte length repeated — enough to
  * prove the digest is computed from the tarball's bytes and hex-encoded,
  * without asserting a real SHA-256 in a unit test.
  */
-export const fakeCrypto = Layer.succeed(
-	Crypto.Crypto,
-	Crypto.make({
-		randomBytes: (size) => new Uint8Array(size),
-		digest: (_algorithm, data) => Effect.succeed(new Uint8Array([data.length & 0xff, 0xab])),
-	}),
-);
+export const fakeCrypto = Layer.mock(Digest.Digest)({
+	digest: (_algorithm, data) => Effect.succeed(new Uint8Array([data.length & 0xff, 0xab])),
+});

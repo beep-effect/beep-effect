@@ -10,7 +10,6 @@
  */
 import { sql } from "drizzle-orm";
 import { $ScratchpadId } from "@beep/identity";
-import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import { dual } from "effect/Function";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -1041,7 +1040,7 @@ const normalizeSlot = (slot: O.Option<string>): O.Option<string> =>
   });
 
 const sha256Hex = Effect.fn("ProductMemory.sha256Hex")(function* (payload: string) {
-  const digest = yield* Effect.promise(() => crypto.subtle.digest(Digest.sha256, new TextEncoder().encode(payload)));
+  const digest = yield* Effect.promise(() => crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload)));
   return A.join(
     A.map(A.fromIterable(new Uint8Array(digest)), (byte) => {
       const text = byte.toString(16);
@@ -1334,13 +1333,10 @@ export const sourceIds = (item: MemoryItem): ReadonlyArray<string> =>
  */
 export const memoryItemHasLifecycleMetadata = (item: MemoryItem): boolean => O.isSome(item.promotion);
 
-const memoryIds = Crypto.make({
-  randomBytes: (size) => {
-    const bytes = new Uint8Array(size);
-    globalThis.crypto.getRandomValues(bytes);
-    return bytes;
-  },
-  digest: (_algorithm, data) => Effect.succeed(data),
+const memoryIds = SecureRandom.make((size) => {
+  const bytes = new Uint8Array(size);
+  globalThis.crypto.getRandomValues(bytes);
+  return bytes;
 });
 
 /**

@@ -351,7 +351,7 @@ const ASSERTIONS = {
 export class AssertionService extends Context.Service<AssertionService>()($I`AssertionService`, {
   make: Effect.gen(function* () {
     const crypto = yield* Digest.Digest;
-    const sha256 = flow(sha256Effect, Effect.provideService(Crypto.Crypto, crypto));
+    const sha256 = flow(sha256Effect, Effect.provideService(Digest.Digest, crypto));
     const claimRepo = yield* ClaimRepository;
 
     // In-memory store for assertions (can be replaced with DB repository later)

@@ -9,7 +9,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -42,13 +41,10 @@ const $I = $ScratchpadId.create("beep/NotificationMessage");
  */
 export const MAX_CONTENT_BLOCKS_BYTES = 3000;
 
-const notificationCrypto = Crypto.make({
-  randomBytes: (size) => {
-    const bytes = new Uint8Array(size);
-    globalThis.crypto.getRandomValues(bytes);
-    return bytes;
-  },
-  digest: (_algorithm, data) => Effect.succeed(data),
+const notificationCrypto = SecureRandom.make((size) => {
+  const bytes = new Uint8Array(size);
+  globalThis.crypto.getRandomValues(bytes);
+  return bytes;
 });
 
 const optionalTextDefault = (missing: string) =>
@@ -111,7 +107,7 @@ const optionalTextDefault = (missing: string) =>
 export class NotificationMessage extends Model<NotificationMessage>("NotificationMessage")(
   {
     id: S.String.annotateKey({ description: "Notification id. Construction defaults to a random UUID." }).pipe(
-      S.withConstructorDefault(notificationCrypto.uuidV4().pipe(Effect.orDie)),
+      S.withConstructorDefault(notificationCrypto.uuidV4()),
       pg.text(),
       pg.columnName("id"),
     ),

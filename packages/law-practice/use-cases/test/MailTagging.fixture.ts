@@ -254,7 +254,7 @@ const digestUnavailable = PlatformError.systemError({
 });
 
 const sha1Of = (bytes: Uint8Array) =>
-  Effect.promise(() => globalThis.crypto.subtle.digest(Digest.sha1, Uint8Array.from(bytes))).pipe(
+  Effect.promise(() => globalThis.crypto.subtle.digest("SHA-1", Uint8Array.from(bytes))).pipe(
     Effect.map((buffer) => ContentSha1.make(Hex.encode(new Uint8Array(buffer))))
   );
 

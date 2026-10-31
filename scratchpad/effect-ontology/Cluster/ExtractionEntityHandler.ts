@@ -197,10 +197,10 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const { ontologyId, ontologyVersion, params, text } = envelope.payload;
       const idempotencyKey = IdempotencyKey.make(
         yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
-          Effect.provideService(Crypto.Crypto, crypto)
+          Effect.provideService(Digest.Digest, crypto)
         )
       );
-      const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Crypto.Crypto, crypto));
+      const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
       const keyString = idempotencyKey;
       const startTime = yield* DateTime.now;
       const cancelSignal = yield* Deferred.make<void>();
@@ -386,11 +386,11 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         Effect.catch(
           Effect.fnUntraced(function* (error) {
             const text = envelope.payload.text;
-            const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Crypto.Crypto, crypto));
+            const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
             const { ontologyId, ontologyVersion, params } = envelope.payload;
             const idempotencyKey = IdempotencyKey.make(
               yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
-                Effect.provideService(Crypto.Crypto, crypto)
+                Effect.provideService(Digest.Digest, crypto)
               )
             );
             const extractionError = toExtractionError(error);

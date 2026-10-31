@@ -585,7 +585,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   const crypto = yield* Digest.Digest;
   const sha256SyncFull = flow(
     sha256SyncFullEffect,
-    Effect.provideService(Crypto.Crypto, crypto),
+    Effect.provideService(Digest.Digest, crypto),
     Effect.mapError(
       (cause) =>
         new SystemError({
