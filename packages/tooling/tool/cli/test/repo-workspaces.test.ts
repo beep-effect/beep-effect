@@ -134,6 +134,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
           assertInstanceOf(error, UnsafeWorkspacePatternError);
           strictEqual(error.pattern, pattern);
           strictEqual(error.reason, reason);
+          strictEqual(error.message, `Unsafe workspace pattern "${pattern}" escapes the repository root (${reason}).`);
         }
       })
     );

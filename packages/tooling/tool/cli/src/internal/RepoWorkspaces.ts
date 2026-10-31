@@ -85,7 +85,7 @@ export type UnsafeWorkspacePatternReason = typeof UnsafeWorkspacePatternReason.T
  * ```ts
  * import { UnsafeWorkspacePatternError } from "@beep/repo-cli/test/SharedInternals"
  *
- * const error = UnsafeWorkspacePatternError.make({ root: "/repo", pattern: "../*", reason: "parentSegment" })
+ * const error = UnsafeWorkspacePatternError.refuse("/repo", "../*", "parentSegment")
  * console.log(error.message) // Unsafe workspace pattern "../*" escapes the repository root (parentSegment).
  * ```
  *
@@ -101,21 +101,33 @@ export class UnsafeWorkspacePatternError extends S.TaggedError<
     root: S.String.annotateKey({ description: "The repository root the pattern was declared in." }),
     pattern: S.String.annotateKey({ description: "The refused pattern, verbatim." }),
     reason: UnsafeWorkspacePatternReason.annotateKey({ description: "Why the pattern was refused." }),
+    message: S.String.annotateKey({ description: "The one-line sentence a log or a thrown error shows." }),
   },
   $I.annoteError<UnsafeWorkspacePatternError>("UnsafeWorkspacePatternError", {
     description: "A root workspace pattern that could select directories outside the repository.",
   })
 ) {
   /**
-   * Renders the refused pattern and its reason into a one-line message.
+   * Builds the refusal for `pattern`, rendering its one-line message.
    *
-   * @returns The one-line sentence a log or a thrown error shows.
-   * @category formatting
+   * @param root - The repository root the pattern was declared in.
+   * @param pattern - The refused pattern, verbatim.
+   * @param reason - Why the pattern was refused.
+   * @returns The refusal.
+   * @category constructors
    * @since 0.0.0
    */
-  override get message(): string {
-    return `Unsafe workspace pattern "${this.pattern}" escapes the repository root (${this.reason}).`;
-  }
+  static readonly refuse = (
+    root: string,
+    pattern: string,
+    reason: UnsafeWorkspacePatternReason
+  ): UnsafeWorkspacePatternError =>
+    UnsafeWorkspacePatternError.make({
+      root,
+      pattern,
+      reason,
+      message: `Unsafe workspace pattern "${pattern}" escapes the repository root (${reason}).`,
+    });
 }
 
 /**
@@ -180,7 +192,7 @@ const guardRoot = Effect.fn("RepoWorkspaces.guardRoot")(function* (
   for (const pattern of patterns) {
     const reason = unsafeReasonOf(pattern);
     if (O.isSome(reason)) {
-      return yield* UnsafeWorkspacePatternError.make({ root: repoRoot, pattern, reason: reason.value });
+      return yield* UnsafeWorkspacePatternError.refuse(repoRoot, pattern, reason.value);
     }
   }
 });
