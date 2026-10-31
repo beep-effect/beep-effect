@@ -3703,6 +3703,7 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("call", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }));',
         'it.effect("pipe", () => Fx.gen(function* () { const error = yield* serve.pipe(Fx.flip, Fx.scoped); expect(error.closed).toBe(true); }));',
         'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); expect(closed).toBe(true); }); it.effect("helper", helper);',
+        'it.effect("negated matcher", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(open).not.toBe(true); }));',
         'it.effect("root return", () => { return Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); });',
         'it.effect("in-place generator", Fx.fnUntraced(function* () { yield* Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); }));',
         'it.effect("staged", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.tap(acquire), Fx.scoped); expect(released).toBe(true); }));',
@@ -3746,6 +3747,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("and", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); ready && expect(released).toBe(true); }));',
         'it.effect("nullish", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); value ?? expect(released).toBe(true); }));',
         'it.effect("block", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); { expect(released).toBe(true); } }));',
+        'it.effect("bare expect", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released); }));',
+        'it.effect("unapplied matcher", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); expect(released).toBe; }));',
       ]) {
         const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
         deepStrictEqual(
