@@ -10,6 +10,9 @@
  * every other static, side-effect, re-export and literal dynamic import is an
  * edge. Workspace specifiers resolve through each package's `exports` map;
  * other bare specifiers are external and end the walk.
+ * Graph records are private implementation types, not public wire models.
+ * Consumers derive their local record types from the graph reader signatures;
+ * the exported source-tree interface describes runtime capabilities.
  *
  * A command path is resolved by walking `Command.make("<name>")` and
  * `Command.withSubcommands([...])` from the root command. Every command on
@@ -58,7 +61,7 @@ export interface PolicySourceTree {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyWorkspace {
+interface PolicyWorkspace {
   readonly directory: string;
   readonly exports: unknown;
   readonly imports: unknown;
@@ -72,7 +75,7 @@ export interface PolicyWorkspace {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyCliLayout {
+interface PolicyCliLayout {
   /** Directory holding every command module; dispatch edges into it are cut. */
   readonly commandsDirectory: string;
   /** The root command's binding in `rootModule`. */
@@ -398,7 +401,7 @@ const TYPESCRIPT_SOURCE = /\.(?:ts|tsx|mts|cts)$/;
  * @category models
  * @since 0.0.0
  */
-export interface PolicyClosure {
+interface PolicyClosure {
   /** Every module reached, repo-relative. */
   readonly modules: HashSet.HashSet<string>;
   /** Workspace directories whose sources hold a non-literal dynamic import that was reached. */
@@ -412,7 +415,7 @@ export interface PolicyClosure {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyCommandNode {
+interface PolicyCommandNode {
   readonly binding: string;
   readonly module: string;
   readonly name: string;
@@ -425,7 +428,7 @@ export interface PolicyCommandNode {
  * @category models
  * @since 0.0.0
  */
-export interface PolicyGraphOptions {
+interface PolicyGraphOptions {
   readonly tree: PolicySourceTree;
   readonly workspaces: ReadonlyArray<PolicyWorkspace>;
 }

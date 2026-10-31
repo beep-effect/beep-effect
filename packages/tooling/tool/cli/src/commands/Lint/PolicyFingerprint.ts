@@ -50,12 +50,11 @@ import { QualityTaskName } from "../Quality/Quality.schemas.ts";
 import { OXLINT_CIRCULAR_CONFIG, OXLINT_DEPRECATED_APIS_CONFIG } from "./internal/LintPackage.ts";
 import { makePolicyGraph, renderClosureInputs } from "./internal/PolicyFingerprintGraph.ts";
 import { PolicyFingerprintEntry, PolicyFingerprintError, PolicyToolsFingerprint } from "./PolicyFingerprint.schemas.ts";
-import type {
-  PolicyCliLayout,
-  PolicyCommandNode,
-  PolicySourceTree,
-  PolicyWorkspace,
-} from "./internal/PolicyFingerprintGraph.ts";
+import type { PolicyGraph, PolicySourceTree } from "./internal/PolicyFingerprintGraph.ts";
+
+type PolicyCliLayout = Parameters<PolicyGraph["commandPath"]>[0];
+type PolicyCommandNode = Effect.Success<ReturnType<PolicyGraph["commandPath"]>>[number];
+type PolicyWorkspace = Parameters<typeof makePolicyGraph>[0]["workspaces"][number];
 
 const $I = $RepoCliId.create("commands/Lint/PolicyFingerprint");
 
