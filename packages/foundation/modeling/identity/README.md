@@ -67,11 +67,17 @@ const Title = S.String.pipe($I.annoteSchema("Title", { description: "A non-empty
 
 console.log(S.is(Title)("Review identity usage")); // true
 console.log(S.is(Title)("")); // false
+console.log(S.resolveAnnotations(Title)?.identifier);
+// @beep/schema/Example/TitleNotEmpty
 ```
 
 Annotate the base schema before adding checks to preserve the check's own identity:
 applying `annoteSchema` after `.check(...)` merges into the last check's annotations
 and replaces any matching identifier or description.
+When checks exist, `S.resolveAnnotations` reads the last check's annotations, so
+this example resolves to `TitleNotEmpty`. Apply `annoteSchema` after the check
+when the overall schema's identity should win; apply it before the check when
+the check's own identity should survive.
 
 The [composer contract](src/Id.ts) also documents declaration-specific
 `annoteClass`, tagged-error `annoteError`, and field-path `annoteKey` helpers.
