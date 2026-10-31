@@ -89,10 +89,10 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] The `HoldProposition` schema exists with the fields and tagged unions
+- [x] The `HoldProposition` schema exists with the fields and tagged unions
       above, plus unit tests for the verdict rules (a passing control gives
       `ProbeBroken`; one passing run is not a flip; two are).
-- [ ] The statelyai hold record runs end to end through
+- [x] The statelyai hold record runs end to end through
       `beep holds probe statelyai-model-testing-404`. It reproduces the
       `@statelyai/model-testing` 404 at 0.15.0 with `bun install` and reports
       a verdict for npm latest. (Changed from the jsdom hold on 2026-10-31; see

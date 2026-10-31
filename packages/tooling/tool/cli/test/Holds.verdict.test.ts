@@ -1,4 +1,5 @@
 import {
+  classifyProbeOutput,
   confirmHoldVerdict,
   HoldClaimVersion,
   HoldId,
@@ -114,5 +115,23 @@ describe("hold schemas", () => {
         S.decodeUnknownResult(HoldClaimVersion)({ ...version, logicalKey: "hold:jsdom-vitest-eventtarget" })
       )
     ).toBe(true);
+  });
+});
+
+describe("classifyProbeOutput", () => {
+  const classify = classifyProbeOutput("@statelyai/model-testing");
+
+  it("reads the failure signature as Reproduced, even on exit 0", () => {
+    expect(classify({ exitCode: 1, output: "error: @statelyai/model-testing@0.2.0 failed to resolve" })._tag).toBe(
+      "Reproduced"
+    );
+    expect(classify({ exitCode: 0, output: "warn: @statelyai/model-testing missing" })._tag).toBe("Reproduced");
+  });
+
+  it("treats a clean exit as Passed and any other failure as Inconclusive", () => {
+    expect(classify({ exitCode: 0, output: "80 packages installed" })._tag).toBe("Passed");
+    const inconclusive = classify({ exitCode: 1, output: "error: network unreachable\n" });
+    expect(inconclusive._tag).toBe("Inconclusive");
+    expect(inconclusive._tag === "Inconclusive" ? inconclusive.detail : "").toBe("exit 1: error: network unreachable");
   });
 });
