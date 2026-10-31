@@ -320,6 +320,13 @@ export type RouteAffectedPackages = (base: string, head: string) => Effect.Effec
  * {@link RouteAffectedPackages} over `@beep/repo-workspaces`'s
  * `ChangeDetector`: the changed packages plus their transitive dependents.
  *
+ * **Gotchas**
+ *
+ * Owners and dependents come from the checkout's workspace graph, not the
+ * graph at `head`, so a historical head whose packages were since renamed or
+ * re-wired reports today's names. The list only labels the plan in slice 1; no
+ * lane is selected from it (`goals/verification-route` Decision Log).
+ *
  * **Example** (Read the production affected-packages function)
  *
  * ```ts

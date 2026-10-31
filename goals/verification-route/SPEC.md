@@ -133,6 +133,9 @@ Slice 2:
       and revocable from the sentinel.
 - [ ] The proof-ledger shadow's resulting misses are attributed in the receipt
       as key change, not disagreement.
+- [ ] Package-grain propagation reads the workspace graph at the requested head,
+      not the checkout, before any lane is selected from affected packages (see
+      the 2026-10-31 Decision Log row).
 
 Slice 3:
 
@@ -199,6 +202,7 @@ new rulings append here.
 | 2026-10-31 | `external` footprint flag; `security` external (always selected) | Replay: Security red on an empty-tree head while green on the base; osv-scanner reads the live advisory DB | Clear the flag; Security then follows its atom kinds |
 | 2026-10-31 | Missing PR heads are fetched by SHA; an unfetchable head is a counted `unknown` change | 4 of 5,083 heads were force-pushed over and absent from `refs/pull/*/head`; one missing head failed the whole census | Fail the census on a missing head |
 | 2026-10-31 | Census purity is judged over tree kinds (ignores `commits`) | Nearly every head carries `commits`; including it empties the pure columns that rank refinements | Count `commits` in purity |
+| 2026-10-31 | Slice 1 reports affected packages from the live workspace graph, not the graph at each head | The field only labels the plan; every lane selects from atoms, which already resolve owners at the commit. A graph per head means reading every workspace manifest at each of 5,083 census heads | Read the graph at the head (batched `git cat-file`) once propagation selects lanes in slice 2 |
 
 ## Exception Ledger
 

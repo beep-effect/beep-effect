@@ -232,6 +232,19 @@ it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (i
       })
     );
 
+    it.effect("an empty field map that appears or disappears still yields its atom", () =>
+      Effect.gen(function* () {
+        const changeSet = yield* classifyChangedPaths(
+          diffOf([["packages/app/package.json", "M"]]),
+          yield* fixtureReadAt("empty-exports")
+        );
+        expect(rows(changeSet)).toEqual([
+          ["packages/app/package.json", "pkg:exports", "@fixture/app", "exports removed"],
+          ["packages/app/package.json", "pkg:manifest-other", "@fixture/app", "version 0.0.0 -> 0.0.1"],
+        ]);
+      })
+    );
+
     it.effect("an unparseable package.json yields one unknown atom", () =>
       Effect.gen(function* () {
         const manifest = "packages/app/package.json";

@@ -497,11 +497,19 @@ const familyObject = (value: O.Option<unknown>): O.Option<ManifestObject> =>
 const familySides = (change: KeyedChange): O.Option<readonly [ManifestObject, ManifestObject]> =>
   O.all([familyObject(change.before), familyObject(change.after)]);
 
+// A field that only appears or disappears as `{}` has no keyed entries, yet the
+// presence itself is the change (an empty `exports` map blocks every entry point).
+const entriesOrField = <A>(entries: ReadonlyArray<A>, field: () => A): ReadonlyArray<A> =>
+  A.isReadonlyArrayNonEmpty(entries) ? entries : [field()];
+
 const entryLines = (label: string, change: KeyedChange, showValues: boolean): ReadonlyArray<string> =>
   pipe(
     familySides(change),
     O.map(([before, after]) =>
-      A.map(keyedChanges(before, after), (entry) => describeChange(`${label} ${entry.key}`, entry, showValues))
+      entriesOrField(
+        A.map(keyedChanges(before, after), (entry) => describeChange(`${label} ${entry.key}`, entry, showValues)),
+        () => describeChange(label, change, false)
+      )
     ),
     O.getOrElse(() => [describeChange(label, change, false)])
   );
@@ -519,7 +527,10 @@ const catalogsFamily = (change: KeyedChange): ReadonlyArray<ManifestChange> =>
   pipe(
     familySides(change),
     O.map(([before, after]) =>
-      A.flatMap(keyedChanges(before, after), (named) => entryLines(`${change.key}.${named.key}`, named, true))
+      entriesOrField(
+        A.flatMap(keyedChanges(before, after), (named) => entryLines(`${change.key}.${named.key}`, named, true)),
+        () => describeChange(change.key, change, false)
+      )
     ),
     O.getOrElse(() => [describeChange(change.key, change, false)]),
     A.map(manifestChange("pkg:catalog", change.key))
@@ -535,11 +546,14 @@ const dependencyFamily = (change: KeyedChange): ReadonlyArray<ManifestChange> =>
   pipe(
     familySides(change),
     O.map(([before, after]) =>
-      A.map(keyedChanges(before, after), (entry) =>
-        manifestChange(
-          dependencyKind(entry.type),
-          change.key
-        )(describeChange(`${change.key} ${entry.key}`, entry, true))
+      entriesOrField(
+        A.map(keyedChanges(before, after), (entry) =>
+          manifestChange(
+            dependencyKind(entry.type),
+            change.key
+          )(describeChange(`${change.key} ${entry.key}`, entry, true))
+        ),
+        () => manifestChange(dependencyKind(change.type), change.key)(describeChange(change.key, change, false))
       )
     ),
     O.getOrElse(() => [manifestChange("unknown", change.key)(`${change.key} is not an object`)])
