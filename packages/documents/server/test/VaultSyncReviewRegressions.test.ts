@@ -421,3 +421,174 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
     );
   });
 });
+
+for (const previousKind of ["file", "folder"] as const) {
+  describe(`Vault kind replacement from ${previousKind}`, () => {
+    it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
+      it.effect(
+        "supersedes incompatible queued work and converges the replacement kind",
+        Effect.fnUntraced(function* () {
+          const engine = yield* VaultSyncEngine;
+          const items = yield* SyncItemRepository;
+          const operations = yield* SyncOperationRepository;
+          const mirror = yield* DmsMirrorFixtureHandle;
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* makeVaultRoot();
+          const target = "replaced";
+          const replacementKind = previousKind === "file" ? "folder" : "file";
+          const seeded = yield* items.create(
+            SyncItemSeed.make({
+              itemKind: previousKind,
+              localGeneration: S.Natural.make(1),
+              localRelPath: VaultRelPath.make(target),
+              provider: "box",
+              syncState: "pending",
+              workspaceId,
+            })
+          );
+          const oldOperation = yield* operations.enqueue(
+            SyncOperationSeed.make({
+              attemptCount: S.Natural.make(0),
+              idempotencyKey: `replace-${previousKind}`,
+              inputGeneration: S.Natural.make(1),
+              operationType: previousKind === "file" ? "uploadFile" : "createFolder",
+              provider: "box",
+              status: "queued",
+              syncItemId: seeded.id,
+              targetName: target,
+              targetRelPath: VaultRelPath.make(target),
+              workspaceId,
+            })
+          );
+          if (replacementKind === "folder") {
+            yield* fs.makeDirectory(path.join(root, target));
+          } else {
+            yield* writeVaultFile(root, target, "replacement bytes");
+          }
+          const status = yield* engine.syncOnce(syncInput(root));
+          const failed = yield* listOperationsByStatus("failed");
+          expect(A.map(failed, (operation) => operation.id)).toEqual([oldOperation.id]);
+          expect(O.getOrNull(failed[0]?.lastError ?? O.none())).toBe(
+            `superseded: ${target} changed kind to ${replacementKind}`
+          );
+          const replacement = yield* findTrackedItem(target);
+          expect(replacement.id).toBe(seeded.id);
+          expect(replacement.itemKind).toBe(replacementKind);
+          expect(replacement.localGeneration).toBe(2);
+          expect(replacement.syncState).toBe("current");
+          expect((yield* mirror.snapshotTree)[target]?.itemKind).toBe(replacementKind);
+          expect(status.queuedOperations).toBe(0);
+          const again = yield* engine.syncOnce(syncInput(root));
+          expect(again.failedOperations).toBe(1);
+          expect(again.queuedOperations).toBe(0);
+        })
+      );
+    });
+  });
+}
+
+it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "does not recover or execute operations pointing into another workspace",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const items = yield* SyncItemRepository;
+      const operations = yield* SyncOperationRepository;
+      const mirror = yield* DmsMirrorFixtureHandle;
+      const root = yield* makeVaultRoot();
+      const foreignWorkspace = WorkspaceIdentity.WorkspaceId.make(22);
+      const foreign = yield* items.create(
+        SyncItemSeed.make({
+          itemKind: "file",
+          localGeneration: S.Natural.make(1),
+          localRelPath: VaultRelPath.make("foreign.txt"),
+          provider: "box",
+          syncState: "pending",
+          workspaceId: foreignWorkspace,
+        })
+      );
+      for (const status of ["queued", "failed"] as const) {
+        yield* operations.enqueue(
+          SyncOperationSeed.make({
+            attemptCount: S.Natural.make(0),
+            idempotencyKey: `foreign-operation-${status}`,
+            inputGeneration: S.Natural.make(1),
+            operationType: "uploadFile",
+            provider: "box",
+            status,
+            syncItemId: foreign.id,
+            targetName: "foreign.txt",
+            targetRelPath: VaultRelPath.make("foreign.txt"),
+            workspaceId,
+          })
+        );
+      }
+      const status = yield* engine.syncOnce(syncInput(root));
+      expect(status.queuedOperations).toBe(1);
+      expect(status.failedOperations).toBe(1);
+      expect((yield* mirror.counts).uploadFile).toBe(0);
+      const after = yield* items.findByPath(
+        FindSyncItemByPathInput.make({
+          localRelPath: foreign.localRelPath,
+          provider: "box",
+          workspaceId: foreignWorkspace,
+        })
+      );
+      expect(O.getOrNull(after)).toEqual(foreign);
+    })
+  );
+});
+
+for (const missing of ["remote-id", "parent"] as const) {
+  it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      `leaves an operation queued without burning attempts when its ${missing} is missing`,
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const items = yield* SyncItemRepository;
+        const operations = yield* SyncOperationRepository;
+        const mirror = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        const localRelPath = VaultRelPath.make("waiting.txt");
+        const item = yield* items.create(
+          SyncItemSeed.make({
+            itemKind: "file",
+            localGeneration: S.Natural.make(1),
+            localRelPath,
+            provider: "box",
+            syncState: "pending",
+            workspaceId,
+          })
+        );
+        const seed = SyncOperationSeed.make({
+          attemptCount: S.Natural.make(0),
+          idempotencyKey: `waiting-${missing}`,
+          inputGeneration: S.Natural.make(1),
+          operationType: missing === "remote-id" ? "renameItem" : "uploadFile",
+          provider: "box",
+          status: "queued",
+          syncItemId: item.id,
+          targetName: "waiting.txt",
+          targetParentRelPath: missing === "parent" ? O.some(VaultRelPath.make("absent")) : O.none(),
+          targetRelPath: localRelPath,
+          workspaceId,
+        });
+        const queued = yield* operations.enqueue(seed);
+        if (missing === "remote-id") {
+          yield* operations.enqueue(
+            SyncOperationSeed.make({ ...seed, idempotencyKey: "failed-twin", status: "failed" })
+          );
+        }
+        yield* engine.syncOnce(syncInput(root));
+        const remaining = yield* listOperationsByStatus("queued");
+        expect(A.map(remaining, (operation) => operation.id)).toEqual([queued.id]);
+        expect(remaining[0]?.attemptCount).toBe(0);
+        expect(yield* listOperationsByStatus("leased")).toEqual([]);
+        expect((yield* mirror.counts).uploadFile).toBe(0);
+        expect((yield* mirror.counts).renameItem).toBe(0);
+        expect(A.length(yield* listOperationsByStatus("failed"))).toBe(missing === "remote-id" ? 1 : 0);
+      })
+    );
+  });
+}

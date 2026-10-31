@@ -6,6 +6,7 @@
  */
 
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
+import { SyncItem } from "@beep/documents-domain/entities/SyncItem";
 import { VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
@@ -77,4 +78,32 @@ export class VaultScanObservation extends S.Opaque<VaultScanObservation, { reado
     files: S.Array(ObservedFile),
     folders: S.Array(ObservedFolder),
   }).pipe($I.annoteSchema("VaultScanObservation", { description: "Files and folders observed by a safe vault scan." }))
+) {}
+
+/**
+ * Tracked paths and remaining move candidates threaded through one file scan.
+ *
+ * **Example** (Start reconciliation without tracked items)
+ * ```ts
+ * import * as HashMap from "effect/HashMap"
+ * import { VaultScanFileState } from "./VaultScan.model.ts"
+ *
+ * const state = VaultScanFileState.make({
+ *   itemsByPath: HashMap.empty(),
+ *   missingFileItems: [],
+ * })
+ * ```
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export class VaultScanFileState extends S.Opaque<VaultScanFileState, { readonly brand: unique symbol }>()(
+  S.Struct({
+    itemsByPath: S.HashMap(S.String, SyncItem),
+    missingFileItems: S.Array(SyncItem),
+  }).pipe(
+    $I.annoteSchema("VaultScanFileState", {
+      description: "Tracked paths and unused move candidates for one local file reconciliation pass.",
+    })
+  )
 ) {}
