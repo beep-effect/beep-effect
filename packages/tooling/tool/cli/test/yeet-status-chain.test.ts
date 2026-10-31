@@ -359,6 +359,32 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (i
       expect(snapshot.remote.requiredCheckCount).toBe(0);
     })
   );
+  it.effect("keeps a failing check list whose text says no checks reported", () =>
+    Effect.gen(function* () {
+      const root = yield* tempRoot();
+      const recorder = yield* makeRecorder;
+      const failing = JSON.stringify([
+        {
+          bucket: "fail",
+          completedAt: "2026-09-25T18:15:00Z",
+          description: "no checks reported upstream",
+          link: link(9),
+          name: "Check / Gate",
+          startedAt: "2026-09-25T18:10:00Z",
+          state: "FAILURE",
+          workflow: "Check",
+        },
+      ]);
+      const answers = ghAnswers.pipe(HashMap.set("pr checks", failing), HashMap.set("pr checks --required", failing));
+      const exitCodes = HashMap.make(["pr checks", 1], ["pr checks --required", 1]);
+      const snapshot = yield* collectYeetStatus(contextFor(root), true).pipe(
+        withFakeRunner(recorder, Duration.zero, false, answers, exitCodes)
+      );
+      assertNone(snapshot.remote.readFailure);
+      expect(snapshot.remote.checkCount).toBe(1);
+      expect(snapshot.remote.failingRequiredCheckCount).toBe(1);
+    })
+  );
   it.effect("preserves the sequential snapshot after projecting out the retired Knip gate", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();

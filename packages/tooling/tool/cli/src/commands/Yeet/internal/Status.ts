@@ -1015,11 +1015,14 @@ export const collectRemoteChecks: {
       return O.none();
     }
     // gh answers a head with no (required) checks yet in text with exit 1; that
-    // is a complete, empty census, not an unreadable one.
-    if (result.exitCode !== 0 && NO_CHECKS_REPORTED.test(result.output)) {
-      return O.some(A.empty<GhStatusCheck>());
-    }
-    return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+    // is a complete, empty census, not an unreadable one. JSON decodes first: a
+    // failing check also exits non-zero and its text may carry the same phrase.
+    return yield* decodeGhStatusChecks(result.output).pipe(
+      Effect.asSome,
+      Effect.orElseSucceed(() =>
+        result.exitCode !== 0 && NO_CHECKS_REPORTED.test(result.output) ? O.some(A.empty<GhStatusCheck>()) : O.none()
+      )
+    );
   })
 );
 
