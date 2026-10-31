@@ -1,4 +1,4 @@
-import { syncBuiltinESMExports } from "node:module";
+import * as NodeModule from "node:module";
 import { assert, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -149,11 +149,11 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
         }
         remove(path, options);
       });
-      syncBuiltinESMExports();
+      NodeModule.syncBuiltinESMExports();
       yield* Effect.gen(function* () {
         servers.push(yield* serveText("reclaimer"));
         removal.mockRestore();
-        syncBuiltinESMExports();
+        NodeModule.syncBuiltinESMExports();
         assert.isTrue(interleaved);
         const ports = A.map(servers, portOf);
         assert.strictEqual(HashSet.size(HashSet.fromIterable(ports)), 2);
@@ -163,7 +163,7 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
         Effect.ensuring(
           Effect.sync(() => {
             removal.mockRestore();
-            syncBuiltinESMExports();
+            NodeModule.syncBuiltinESMExports();
           })
         ),
         Effect.ensuring(Effect.forEach(servers, stop, { discard: true }))
