@@ -3536,13 +3536,37 @@ const detectResourceWrapper = (context: ReturnType<typeof inspectContext>, state
   }
 };
 
+// Value assertions that also observe state, beside `isAssertion`'s expect and Boolean forms.
+const VALUE_ASSERTIONS = [
+  "deepStrictEqual",
+  "notDeepStrictEqual",
+  "strictEqual",
+  "assertEquals",
+  "assertSome",
+  "assertNone",
+  "assertSuccess",
+  "assertFailure",
+  "assertExitSuccess",
+  "assertExitFailure",
+  "assertInclude",
+  "assertMatch",
+  "assertInstanceOf",
+  "assertDefined",
+  "assertUndefined",
+];
+
+const isObservation = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isAssertion(call, imports) ||
+  isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", VALUE_ASSERTIONS) ||
+  isProvenanceCall(call, imports, VITEST_MODULES, "assert", VALUE_ASSERTIONS);
+
 // Whether `node` runs an assertion itself, outside nested closures that may run later or never.
 const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean => {
   let asserts = false;
   node.forEachDescendant((child, traversal) => {
     if (isFunctionValue(child) || Node.isFunctionDeclaration(child)) {
       traversal.skip();
-    } else if (Node.isCallExpression(child) && isAssertion(child, imports)) {
+    } else if (Node.isCallExpression(child) && isObservation(child, imports)) {
       asserts = true;
       traversal.stop();
     }
@@ -3550,47 +3574,60 @@ const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean
   return asserts;
 };
 
-// The operand an `Effect.scoped(operand)` call or `operand.pipe(..., Effect.scoped)` stage closes.
+// The operand an `Effect.scoped(operand)` call closes, or the pipe input when `Effect.scoped` is the
+// first stage. A later stage closes the earlier stages' output, so no operand is claimed for it.
 const scopedOperand = (call: CallExpression, stage: O.Option<MorphNode>): O.Option<MorphNode> => {
-  if (O.isNone(stage)) return O.fromUndefinedOr(call.getArguments()[0]);
+  const arguments_ = call.getArguments();
+  if (O.isNone(stage)) return O.fromUndefinedOr(arguments_[0]);
   const callee = call.getExpression();
-  return Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe"
-    ? O.some(callee.getExpression())
-    : O.fromUndefinedOr(call.getArguments()[0]);
+  if (Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe")
+    return arguments_[0] === stage.value ? O.some(callee.getExpression()) : O.none();
+  return arguments_[1] === stage.value ? O.fromUndefinedOr(arguments_[0]) : O.none();
 };
 
-// A shorter scope the test observes closing: a later statement of the same test or helper asserts
-// after the scoped effect has completed. The walk gives up at a closure that is not an executed
-// call argument, at a nested function declaration, and at a fork, whose scope can outlive the
-// statements after it. An operand built by `Effect.succeed` or `Effect.sync` acquires nothing.
+// `Effect.succeed(...)` and `Effect.sync(...)` acquire nothing a scope could release.
+const closesPureOperand = (call: CallExpression, stage: O.Option<MorphNode>, imports: EffectVitestImports) =>
+  O.exists(
+    scopedOperand(call, stage),
+    (operand) =>
+      Node.isCallExpression(operand) &&
+      isProvenanceCall(operand, imports, EFFECT_MODULES, "Effect", ["succeed", "sync"])
+  );
+
+// A closure that may run later or never, a nested declaration, or a fork whose scope can outlive the
+// following statements ends the walk.
+const leavesExecution = (current: MorphNode, parent: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isFunctionDeclaration(current) ||
+  (Node.isCallExpression(current) && forkCall(current, imports)) ||
+  (isFunctionValue(current) && !Node.isCallExpression(parent));
+
+// At a statement that ran the scoped effect: observed when a later sibling asserts, otherwise keep
+// climbing. A statement that only builds the effect (`const work = Effect.scoped(acquire)`) ends the
+// walk; a `return` hands the effect to the enclosing call, which the walk checks next.
+const statementVerdict = (statement: MorphNode, executed: boolean, imports: EffectVitestImports): O.Option<boolean> => {
+  if (executed && A.some(statement.getNextSiblings(), (sibling) => assertsDirectly(sibling, imports)))
+    return O.some(true);
+  return executed || Node.isReturnStatement(statement) ? O.none() : O.some(false);
+};
+
+// A shorter scope the test observes closing: a statement of the same test or helper yields the scoped
+// effect, and a later statement asserts after it has completed.
 const assertsAfterScopeClose = (
   call: CallExpression,
   stage: O.Option<MorphNode>,
   root: O.Option<EffectVitestFunctionNode>,
   imports: EffectVitestImports
 ): boolean => {
-  if (
-    O.isNone(root) ||
-    O.exists(
-      scopedOperand(call, stage),
-      (operand) =>
-        Node.isCallExpression(operand) &&
-        isProvenanceCall(operand, imports, EFFECT_MODULES, "Effect", ["succeed", "sync"])
-    )
-  )
-    return false;
+  if (O.isNone(root) || closesPureOperand(call, stage, imports)) return false;
   let current: MorphNode = call;
+  let executed = false;
   while (current !== root.value) {
     const parent = current.getParent();
-    if (parent === undefined || Node.isFunctionDeclaration(current)) return false;
-    if (Node.isCallExpression(current) && forkCall(current, imports)) return false;
-    if (isFunctionValue(current) && !Node.isCallExpression(parent)) return false;
-    if (
-      Node.isBlock(parent) &&
-      Node.isStatement(current) &&
-      A.some(current.getNextSiblings(), (statement) => assertsDirectly(statement, imports))
-    )
-      return true;
+    if (parent === undefined || leavesExecution(current, parent, imports)) return false;
+    executed = Node.isYieldExpression(current) || (executed && !isFunctionValue(current));
+    const verdict =
+      Node.isBlock(parent) && Node.isStatement(current) ? statementVerdict(current, executed, imports) : O.none();
+    if (O.isSome(verdict)) return verdict.value;
     current = parent;
   }
   return false;

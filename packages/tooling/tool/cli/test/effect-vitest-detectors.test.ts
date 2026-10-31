@@ -3705,6 +3705,10 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("nested", Fx.fnUntraced(function* () { if (ready) { yield* Fx.scoped(acquire); } expect(released).toBe(true); }));',
         'it.effect("callback", () => Fx.flatMap(root, () => Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); })));',
         'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); expect(closed).toBe(true); }); it.effect("helper", helper);',
+        'it.effect("staged", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.tap(acquire), Fx.scoped); expect(released).toBe(true); }));',
+        'import { deepStrictEqual } from "@effect/vitest/utils"; it.effect("utils", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); deepStrictEqual(released, true); }));',
+        'import { assert } from "@effect/vitest"; it.effect("assert", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); assert.strictEqual(released, true); }));',
+        'it.effect("returned", () => Fx.flatMap(root, () => { return Fx.gen(function* () { yield* Fx.scoped(acquire); expect(released).toBe(true); }); }));',
       ]) {
         assertFalse(yield* hasRule(source, "EV004"));
       }
@@ -3720,6 +3724,9 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("fork", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire).pipe(Fx.forkChild); expect(running).toBe(true); }));',
         'it.effect("pure", Fx.fnUntraced(function* () { const value = yield* Fx.scoped(Fx.succeed(1)); expect(value).toBe(1); }));',
         'it.effect("inner", Fx.fnUntraced(function* () { yield* Fx.scoped(Fx.gen(function* () { yield* acquire; expect(open).toBe(true); })); }));',
+        'it.effect("built", Fx.fnUntraced(function* () { const work = Fx.scoped(acquire); expect(ready).toBe(true); yield* work; }));',
+        'it.effect("bare", Fx.fnUntraced(function* () { Fx.scoped(acquire); expect(ready).toBe(true); }));',
+        'it.effect("pure stage", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.scoped); expect(ready).toBe(true); }));',
       ]) {
         const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
         deepStrictEqual(
