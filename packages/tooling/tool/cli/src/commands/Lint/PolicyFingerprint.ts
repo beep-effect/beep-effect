@@ -152,9 +152,14 @@ interface PolicyTaskScripts {
  *
  * **Details**
  *
- * Accepts `beep-cli <argv>`, `bun run beep <argv>`, and `bun run <script>
- * [args]` where the root manifest defines `<script>` (followed recursively).
+ * Accepts `beep-cli <argv>`, `bun run beep <argv>`, and
+ * `bun run <script> [args]` where the root manifest defines the script (followed recursively).
  * Shell operators are rejected: the task would run more than one command.
+ *
+ * @param script - Manifest script text to resolve.
+ * @param rootScripts - Root manifest scripts available for recursive expansion.
+ * @param depth - Current expansion depth, bounded to prevent cycles.
+ * @returns Parsed CLI arguments, or none for an unsupported command.
  */
 const scriptArgv = (
   script: string,
@@ -173,7 +178,12 @@ const scriptArgv = (
 
 const isQualityTask = S.is(QualityTaskName);
 
-/** Whether `bin-main.ts` routes this argv to a fast path the graph does not model. */
+/**
+ * Whether `bin-main.ts` routes this argv to a fast path the graph does not model.
+ *
+ * @param argv - CLI arguments after the executable name.
+ * @returns Whether dispatch bypasses the modeled command graph.
+ */
 const usesFastPath = (argv: ReadonlyArray<string>): boolean => {
   const [first, second] = argv;
   if (first === "ci") return true;
@@ -517,7 +527,12 @@ const fingerprintFromSources = Effect.fnUntraced(function* (sources: Fingerprint
   });
 });
 
-/** The fingerprint edges each policy task should carry, keyed by task id. */
+/**
+ * The fingerprint edges each policy task should carry, keyed by task id.
+ *
+ * @param fingerprint - Generated shared and command-specific closures.
+ * @returns Required seal dependencies for each policy task.
+ */
 const expectedEdges = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap<string, ReadonlyArray<string>> =>
   A.reduce(
     [
@@ -560,7 +575,12 @@ const sealTaskValue = (inputs: ReadonlyArray<string>, dependsOn: ReadonlyArray<s
     ? { cache: true, outputs: [], inputs }
     : { cache: true, outputs: [], dependsOn, inputs };
 
-/** Every generated task in `turbo.json`, keyed by task id. */
+/**
+ * Every generated task in `turbo.json`, keyed by task id.
+ *
+ * @param fingerprint - Generated shared and command-specific closures.
+ * @returns Expected generated task configurations by task identifier.
+ */
 const expectedSealTasks = (fingerprint: PolicyToolsFingerprint): HashMap.HashMap<string, SealTaskValue> =>
   HashMap.fromIterable([
     [sealTask(SHARED_KEY), sealTaskValue(fingerprint.shared, [])] as const,
@@ -590,6 +610,12 @@ const isScalar = (value: unknown) => !P.isObject(value) || value === null;
  * Render a JSON value the way Biome formats it: objects expanded, an array of
  * scalars on one line when it fits the line width (counting a following
  * comma), otherwise one element per line.
+ *
+ * @param value - JSON value to render.
+ * @param indent - Whitespace preceding the enclosing value.
+ * @param column - Starting column of this value.
+ * @param trailing - Width reserved for following punctuation.
+ * @returns JSON text using the repository line-width convention.
  */
 const renderJson = (value: unknown, indent: string, column: number, trailing: number): string => {
   if (A.isArray(value)) {
@@ -616,7 +642,15 @@ const renderJson = (value: unknown, indent: string, column: number, trailing: nu
   return JSON.stringify(value);
 };
 
-/** Set a value with jsonc, then re-lay the written node out the way Biome would. */
+/**
+ * Set a value with jsonc, then re-lay the written node out the way Biome would.
+ *
+ * @param text - Original JSONC document.
+ * @param path - Property path to insert, replace or remove.
+ * @param value - Replacement value; undefined removes the node.
+ * @param insertion - Optional property insertion-position selector.
+ * @returns Updated JSONC text with the replacement value formatted.
+ */
 const modify = (
   text: string,
   path: jsonc.JSONPath,
@@ -648,7 +682,14 @@ const modify = (
   return `${Str.slice(0, node.offset)(next)}${rendered}${Str.slice(node.offset + node.length)(next)}`;
 };
 
-/** Apply the generated edits to `turbo.json` text. */
+/**
+ * Apply the generated edits to `turbo.json` text.
+ *
+ * @param text - Original Turbo JSONC document.
+ * @param turbo - Decoded current task configuration.
+ * @param fingerprint - Generated policy closures to materialize.
+ * @returns Turbo text containing current seal tasks and dependencies.
+ */
 const materializeTurbo = (text: string, turbo: TurboConfiguration, fingerprint: PolicyToolsFingerprint): string => {
   const seals = expectedSealTasks(fingerprint);
   const edges = expectedEdges(fingerprint);
@@ -671,7 +712,14 @@ const materializeTurbo = (text: string, turbo: TurboConfiguration, fingerprint: 
   return next;
 };
 
-/** Apply the generated seal scripts to the root manifest text. */
+/**
+ * Apply the generated seal scripts to the root manifest text.
+ *
+ * @param text - Original root package manifest.
+ * @param scripts - Decoded current root scripts.
+ * @param fingerprint - Generated policy closures to materialize.
+ * @returns Root manifest text containing the current seal scripts.
+ */
 const materializeRootManifest = (
   text: string,
   scripts: Readonly<Record<string, string>>,

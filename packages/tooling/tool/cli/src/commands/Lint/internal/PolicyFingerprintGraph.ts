@@ -456,6 +456,7 @@ interface PolicyGraphOptions {
  * @internal
  * @category constructors
  * @since 0.0.0
+ * @returns Cached graph reader with source, resolution and closure operations.
  */
 export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
   const byName = HashMap.fromIterable(A.map(workspaces, (workspace) => [workspace.name, workspace] as const));
