@@ -371,6 +371,35 @@ workstation's memory protection policy.
   before changing tracked files. No current full pass or cache qualification
   is inferred from its completed gates.
 
+### Protect the quality harness from competing stale-port reclaimers
+
+- Work: attribute a coverage failure in the existing forty-server identity test;
+  one response belonged to another server. The original failure is retained
+  privately and its exact cause remains unproven.
+- Evidence: a controlled interleaving at the real filesystem unlink boundary
+  makes the original allocator return the same reserved port to two servers.
+  The regression fails on duplicate port identity; existing request assertions
+  and server counts remain intact.
+- Response: pin the inspected inode with a hard link until acquisition finishes.
+  Reclaim only the matching inode with no other live reclaimer link; remove
+  abandoned staging/reclaimer links only after their owning process exits.
+- Prevention: keep a failing-original control, real HTTP response checks, and
+  explicit abandoned/live reclaimer cases. A focused pass is not whole-proof,
+  hosted, cache-performance, or goal-acceptance evidence.
+
+- Publication review caught the allocator function's complexity and a plain
+  Vitest import in the added test. Separate inode reclamation from intent
+  ownership, and use the existing Effect-aware Vitest entry point. The native
+  boundary control needs no policy exception or lowered threshold. Current
+  Fallow audit and health checks pass; retain the interrupted package attempt
+  as unproven and complete the normal proof and hosted review before closure.
+
+- Additional source review found fixture setup could overwrite another job's
+  reservation. Publish complete marker files with an exclusive hard link;
+  atomically retire only markers still owned by this live test process. Keep
+  a direct occupied-marker refusal control and wrap fixture offsets within
+  the allocator range. This repairs the test setup without weakening the
+  server-identity assertions.
 
 ### 2026-10-31: real Cargo applicability graphs exceed the synthetic capture cap
 
@@ -454,3 +483,29 @@ assertion rejects failure, and removing only that assertion lets the former
 count-only behavior pass. Both bounded cases restore the source exactly. This
 is synthetic decoded-reply fault injection, not a reproduced registration-timeout
 defect. Publish/prove the new source and answer the review before acceptance.
+
+### Quiet-log probe portability, 2026-10-31
+
+- Preparing the pinned native output-log controls exposed a report-directory
+  variable colliding with the existing command-list variable (`TypeError`).
+  The first presentation pass and failed cache attempt remain private; the
+  shared invocation helper and native semantics were unchanged. Rename only
+  the report directory and rerun both drivers before retaining accepted evidence.
+- A registry refresh used the wrong package-relative `dist-tags` endpoint and
+  returned HTTP404. Use the registry package-tag endpoint; the failed request
+  establishes no version freshness. Exact executable digest checks still ran
+  before each attempted native control.
+- The successful registry refresh found canary 2.11.11-canary.1 while the
+  retained baseline is 2.11.9-canary.1; stable remains 2.11.10. Preserve those
+  historical receipts. Freeze separate feature-local pins for the fresh replay;
+  this does not upgrade a repository consumer or grant current protected
+  producer authority to the older canary.
+- The fresh canary archive uses `turbo-linux-x64/`, rather than the assumed
+  `package/` prefix. The first member lookup failed before writing an executable.
+  Inspect the exact integrity-verified archive; validate package name/version
+  and read only the named regular executable. No broad extraction is needed.
+- Committing before this fresh worktree installed its dependencies printed
+  `Can’t find lefthook in PATH`; that commit is not a hook pass. The frozen
+  install completed, an explicit scan of the committed change found no secrets,
+  and commit-message validation passed. Install before committing a new lane.
+  The source-only follow-up uses the installed normal hooks.

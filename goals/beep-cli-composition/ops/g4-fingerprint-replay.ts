@@ -183,10 +183,23 @@ const weightOf = (task: string) =>
         }
       }).length;
 
-const rows = [];
+type ReplayRow = {
+  readonly task: string;
+  readonly seals: ReadonlyArray<string>;
+  readonly weight: number;
+  readonly cached: boolean;
+  readonly oracleModules: number;
+  readonly gaps: number;
+  readonly today: number;
+  readonly perTask: number;
+  readonly todayNonGlobal: number;
+  readonly perTaskNonGlobal: number;
+  readonly stale: number;
+};
+const rows: Array<ReplayRow> = [];
 for (const task of Object.keys(turbo.tasks).sort()) {
   if (task.startsWith("//#lint:policy-fingerprint")) continue;
-  const keys = (turbo.tasks[task].dependsOn ?? [])
+  const keys: ReadonlyArray<string> = (turbo.tasks[task].dependsOn ?? [])
     .filter((dependency: string) => dependency.startsWith(sealPrefix))
     .map((dependency: string) => dependency.slice(sealPrefix.length));
   if (keys.length === 0) continue;
@@ -195,7 +208,9 @@ for (const task of Object.keys(turbo.tasks).sort()) {
   for (const key of keys) {
     const entry = entries.get(key);
     if (entry === undefined) continue;
-    const nodes = await Effect.runPromise(graph.commandPath(layout, entry.command));
+    const nodes: ReadonlyArray<{ module: string; binding: string }> = await Effect.runPromise(
+      graph.commandPath(layout, entry.command)
+    );
     for (const module of oracleCommand(nodes)) truth.add(module);
   }
   const gaps = [...truth].filter((module) => !declared(module));

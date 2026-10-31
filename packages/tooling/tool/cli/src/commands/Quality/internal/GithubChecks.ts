@@ -555,6 +555,23 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
     "preflight",
     bunRunLane(repoRoot, "repo-sanity:config-typecheck", ["check:configs"])
   ),
+  // goals/tsconfig.ops.json: every goals/*/ops script (packet oracles, differentials and codemods),
+  // which no package project or tsconfig.configs.json reaches. Compiler gate only: the project
+  // clears the Effect plugin because the scripts are frozen evidence, not product code.
+  githubCheckLane(
+    "repo-sanity:goals-ops-typecheck",
+    "pre-push",
+    "repo-sanity",
+    "preflight",
+    bunxLane(repoRoot, "repo-sanity:goals-ops-typecheck", [
+      "tsrs",
+      "-p",
+      "goals/tsconfig.ops.json",
+      "--noEmit",
+      "--pretty",
+      "false",
+    ])
+  ),
   githubCheckLane(
     "repo-sanity:bun-audit",
     "pre-push",

@@ -125,7 +125,7 @@
           "mapSomeToAsSome": "error",
           "matchEffectToMapBoth": "error",
           "matchEffectToMatch": "error",
-          "missedPipeableOpportunity": "off",
+          "missedPipeableOpportunity": "error",
           "missingEffectContext": "error",
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",
@@ -199,6 +199,9 @@
   "references": [
     {
       "path": "../../drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/markdown/tsconfig.json"
     },
     {
       "path": "../../tooling/library/repo-utils/tsconfig.json"

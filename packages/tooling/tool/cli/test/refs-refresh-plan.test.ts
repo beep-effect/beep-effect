@@ -1,27 +1,14 @@
 import { fcRuns } from "@beep/fc-runs";
-import { GraftDeepCoverage } from "@beep/repo-cli/commands/Graft";
-import { ReferenceWorkspaceManifest, RefsRefreshPreflight, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
+import { ReferenceWorkspaceManifest, RefsRefreshStatus } from "@beep/repo-cli/commands/Refs";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
-import * as HttpClient from "effect/http/HttpClient";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import {
-  graftTestApiKey,
-  patchKitStub,
-  ReferenceFixture,
-  referenceFixtureLayer,
-  scriptedHttpClient,
-  withGraftEnv,
-  workspace,
-  writeExecutable,
-} from "./refs-test-utils.ts";
-import type * as HttpClientRequest from "effect/http/HttpClientRequest";
+import { ReferenceFixture, referenceFixtureLayer, workspace, writeExecutable } from "./refs-test-utils.ts";
 
 // JSON normalizes -0 to 0; schema equivalence compares their numeric value.
 const refreshStatusEquivalent = S.toEquivalence(RefsRefreshStatus);
@@ -39,44 +26,15 @@ case "$1" in
 esac
 exit 0
 `;
-const graftStub = `#!/bin/sh
-printf 'graft %s %s env=%s\\n' "\${PWD##*/}" "$*" "$GRAFT_NO_GITIGNORE" >> "$HOME/commands.log"
-[ ! -f build-fail ] || exit 8
-printf 'meaning coverage: 9/10 symbols\\n1 file(s) failed to summarize\\n'
-`;
 
 const prepare = Effect.fn("RefsTest.prepare")(function* () {
   const f = yield* ReferenceFixture;
   yield* writeExecutable(f.path.join(f.bin, "git"), gitStub);
-  yield* writeExecutable(f.path.join(f.bin, "graft"), graftStub);
   yield* writeExecutable(
     f.path.join(f.bin, "notify-send"),
     '#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/notifications.log"\n'
   );
   return f;
-});
-
-// Both fixture manifest members are deep; give each clean main Git metadata and refresh them with
-// the unit's graft settings and a scripted proxy.
-const refreshWithProxy = Effect.fn("RefsTest.refreshWithProxy")(function* (
-  respond: () => Response | undefined,
-  seen: Array<HttpClientRequest.HttpClientRequest>,
-  arrange: (f: Effect.Success<ReturnType<typeof prepare>>) => Effect.Effect<void> = () => Effect.void,
-  extraConfig: Readonly<Record<string, string>> = {}
-) {
-  const f = yield* prepare();
-  for (const name of ["effect", "effect-tsgo"])
-    yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
-  yield* arrange(f);
-  const status = yield* workspace
-    .use((service) => service.refresh(f.home, f.root, 4))
-    .pipe(
-      Effect.provideService(HttpClient.HttpClient, scriptedHttpClient({ respond, seen })),
-      Effect.provideService(ConfigProvider.ConfigProvider, withGraftEnv({ ...f.configValues, ...extraConfig }))
-    );
-  const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
-  const receipt = yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"));
-  return { f, status, log, receipt };
 });
 
 describe("reference planning and refresh", () => {
@@ -99,7 +57,7 @@ describe("reference planning and refresh", () => {
         theme: "effect",
         rootDefault: "$HOME/refs",
         workspaceLink: ".repos/effect-workspace",
-        members: [{ name: "effect", url: "upstream", tier: "deep" }],
+        members: [{ name: "effect", url: "upstream" }],
       };
       expect((yield* ReferenceWorkspaceManifest.decode(manifest).pipe(Effect.result))._tag).toBe("Success");
       expect(
@@ -108,7 +66,7 @@ describe("reference planning and refresh", () => {
       expect(
         (yield* ReferenceWorkspaceManifest.decode({
           ...manifest,
-          members: [{ name: "effect", url: "upstream", tier: "deep", revision: "topic" }],
+          members: [{ name: "effect", url: "upstream", revision: "topic" }],
         }).pipe(Effect.result))._tag
       ).toBe("Failure");
     })
@@ -134,11 +92,14 @@ describe("reference planning and refresh", () => {
           const f = yield* ReferenceFixture;
           const missing = f.path.join(f.temp, "absent");
           const plan = yield* workspace.use((service) => service.plan(f.home, missing));
-          expect(A.join(plan, "\n")).toContain("clone git@github.com:Effect-TS/effect.git");
-          expect(A.join(plan, "\n")).toContain("--deep --allow-partial -j 16");
-          expect(plan[1]).toBe(
-            `preflight: ${f.path.join(f.owner, "scripts/graft/apply-dist-patches.sh")} --check; deep members build structural unless it passes`
-          );
+          expect(plan).toEqual([
+            `Reference workspace: ${missing}`,
+            `clone git@github.com:Effect-TS/effect.git --branch main -> ${f.path.join(missing, "effect")}`,
+            `link ${f.path.join(f.owner, ".repos", "effect")} -> ${f.path.join(missing, "effect")}`,
+            `clone git@github.com:Effect-TS/tsgo.git --branch main -> ${f.path.join(missing, "effect-tsgo")}`,
+            `link ${f.path.join(f.owner, ".repos", "effect-tsgo")} -> ${f.path.join(missing, "effect-tsgo")}`,
+            `link ${f.path.join(f.owner, ".repos/effect-workspace")} -> ${missing}`,
+          ]);
           expect(yield* f.fs.exists(missing)).toBe(false);
           expect(yield* f.fs.exists(f.path.join(f.owner, ".repos"))).toBe(false);
         })
@@ -147,10 +108,10 @@ describe("reference planning and refresh", () => {
   );
 
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "skips dirty and off-main members without pulling or explicitly building either",
+    "skips dirty and off-main members without pulling either",
     (it) => {
       it.effect(
-        "skips dirty and off-main members without pulling or explicitly building either",
+        "skips dirty and off-main members without pulling either",
         Effect.fnUntraced(function* () {
           const f = yield* prepare();
           for (const [name, marker] of [
@@ -161,20 +122,19 @@ describe("reference planning and refresh", () => {
             yield* f.fs.makeDirectory(f.path.join(directory, ".git"), { recursive: true });
             yield* f.fs.writeFileString(f.path.join(directory, marker ?? ""), "preserve");
           }
-          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 3));
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-dirty", "skipped-off-branch"]);
           const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
           expect(log).not.toContain("pull");
-          expect(log).not.toContain("graft effect ");
-          expect(log).not.toContain("graft effect-tsgo ");
-          expect(log).toContain("graft references build env=1");
-          expect(log).toContain(`check ${f.root}`);
           const saved = yield* RefsRefreshStatus.decodeJson(
             yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"))
           );
+          expect(saved.schemaVersion).toBe("beep-refs-refresh/v2");
           expect(saved.members).toEqual(status.members);
           // Skips are policy, not failure: no critical notification fires for them.
           expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
+          // Refresh never writes exclude entries into a member's Git metadata.
+          expect(yield* f.fs.exists(f.path.join(f.root, "effect", ".git", "info"))).toBe(false);
         })
       );
     }
@@ -201,7 +161,7 @@ describe("reference planning and refresh", () => {
           yield* f.fs.writeFileString(f.path.join(f.root, "effect", "current-branch"), "v2\n");
           const plan = A.join(yield* workspace.use((service) => service.plan(f.home, f.root)), "\n");
           expect(plan).toContain("pull --ff-only origin v2 only if clean and on v2");
-          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["unchanged", "skipped-off-branch"]);
           const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
           expect(log).toContain("git effect pull --ff-only origin v2");
@@ -214,46 +174,42 @@ describe("reference planning and refresh", () => {
   );
 
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "expands onlyDir, distinguishes deep and structural args, and retains coverage",
+    "reports pulled when HEAD advances and unchanged otherwise, without notifying",
     (it) => {
       it.effect(
-        "expands onlyDir, distinguishes deep and structural args, and retains coverage",
+        "reports pulled when HEAD advances and unchanged otherwise, without notifying",
         Effect.fnUntraced(function* () {
           const f = yield* prepare();
-          const manifestFile = f.path.join(f.owner, "scripts/references.json");
-          const manifest = yield* ReferenceWorkspaceManifest.decode({
-            schemaVersion: "beep-references/v1",
-            theme: "effect",
-            rootDefault: "$HOME/refs",
-            workspaceLink: ".repos/effect-workspace",
-            members: [
-              { name: "effect", url: "upstream", tier: "deep", onlyDir: ["packages/effect", "packages/platform"] },
-              { name: "effect-tsgo", url: "upstream", tier: "structural", onlyDir: ["src"] },
-            ],
-          });
-          yield* f.fs.writeFileString(manifestFile, yield* ReferenceWorkspaceManifest.encodeJson(manifest));
-          for (const member of manifest.members)
-            yield* f.fs.makeDirectory(f.path.join(f.root, member.name, ".git"), { recursive: true });
+          for (const name of ["effect", "effect-tsgo"])
+            yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
           yield* f.fs.writeFileString(f.path.join(f.root, "effect", "advance"), "");
-          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 3));
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["pulled", "unchanged"]);
-          const exclude = yield* f.fs.readFileString(f.path.join(f.root, "effect", ".git", "info", "exclude"));
-          expect(exclude).toBe("graft/\n.graft/\n.ignore\n");
+          for (const report of status.members) assertNone(report.detail);
           const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
-          expect(log).toContain(
-            "graft effect build --deep --allow-partial -j 3 --only-dir packages/effect --only-dir packages/platform env=1"
+          expect(log).toBe(
+            A.join(
+              [
+                "git effect status --porcelain --untracked-files=all",
+                "git effect branch --show-current",
+                "git effect rev-parse HEAD",
+                "git effect pull --ff-only origin main",
+                "git effect rev-parse HEAD",
+                "git effect-tsgo status --porcelain --untracked-files=all",
+                "git effect-tsgo branch --show-current",
+                "git effect-tsgo rev-parse HEAD",
+                "git effect-tsgo pull --ff-only origin main",
+                "git effect-tsgo rev-parse HEAD",
+                "",
+              ],
+              "\n"
+            )
           );
-          expect(log).toContain("graft effect-tsgo build --only-dir src env=1");
-          assertSome(
-            status.members[0]?.coverage ?? O.none(),
-            GraftDeepCoverage.make({
-              covered: S.Natural.make(9),
-              total: S.Natural.make(10),
-              failedFiles: S.Natural.make(1),
-            })
-          );
-          assertNone(status.members[1]?.coverage ?? O.none());
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
+          const receipt = yield* f.fs.readFileString(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"));
+          const saved = yield* RefsRefreshStatus.decodeJson(receipt);
+          expect(refreshStatusEquivalent(saved, status)).toBe(true);
+          expect(saved.root).toBe(f.root);
+          expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
         })
       );
     }
@@ -267,253 +223,38 @@ describe("reference planning and refresh", () => {
         Effect.fnUntraced(function* () {
           const f = yield* prepare();
           for (const name of ["effect", "effect-tsgo"]) yield* f.fs.makeDirectory(f.path.join(f.root, name));
-          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
           expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toContain("No Git metadata at");
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git ");
+          expect(yield* f.fs.exists(f.path.join(f.home, "commands.log"))).toBe(false);
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
         })
       );
     }
   );
 
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "records pull and build failures without losing later reports",
+    "records a pull failure, keeps later reports, and notifies once",
     (it) => {
       it.effect(
-        "records pull and build failures without losing later reports",
+        "records a pull failure, keeps later reports, and notifies once",
         Effect.fnUntraced(function* () {
           const f = yield* prepare();
-          for (const [name, marker] of [
-            ["effect", "pull-fail"],
-            ["effect-tsgo", "build-fail"],
-          ]) {
-            yield* f.fs.makeDirectory(f.path.join(f.root, name ?? "", ".git"), { recursive: true });
-            yield* f.fs.writeFileString(f.path.join(f.root, name ?? "", marker ?? ""), "");
-          }
-          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
-          expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "build-failed"]);
-          expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toBe(
-            "git pull --ff-only origin main exited 7"
-          );
-          expect(O.getOrElse(status.members[1]?.detail ?? O.none(), () => "")).toBe("graft exited 8");
-          expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(true);
-        })
-      );
-    }
-  );
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "skips deep builds while the model cools down and keeps structural wiring fresh",
-    (it) => {
-      it.effect(
-        "skips deep builds while the model cools down and keeps structural wiring fresh",
-        Effect.fnUntraced(function* () {
-          const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-          const { f, status, log, receipt } = yield* refreshWithProxy(
-            () =>
-              new Response('{"error":{"code":"model_cooldown"}}', {
-                status: 429,
-                headers: { "retry-after": "55516" },
-              }),
-            seen
-          );
-          expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-cooldown", "skipped-cooldown"]);
-          expect(log).not.toContain("--deep");
-          expect(log).toContain("graft effect build env=1");
-          expect(log).toContain("graft effect-tsgo build env=1");
-          for (const report of status.members) {
-            assertNone(report.coverage);
-            expect(O.getOrElse(report.detail, () => "")).toMatch(
-              /^model claude-opus-5 cooling down at http:\/\/127\.0\.0\.1:8317\/v1; retry-after 55516s \(until \d{4}-\d{2}-\d{2}T[^)]+\)$/u
-            );
-          }
-          expect(A.map(seen, (request) => [request.method, request.url])).toEqual([
-            ["POST", "http://127.0.0.1:8317/v1/chat/completions"],
-            ["POST", "http://127.0.0.1:8317/v1/chat/completions"],
-          ]);
-          expect(seen[0]?.headers.authorization).toBe(`Bearer ${graftTestApiKey}`);
-          // Neither the key nor the proxy's response body reaches the receipt.
-          expect(receipt).not.toContain(graftTestApiKey);
-          expect(receipt).not.toContain("model_cooldown");
-          expect(receipt).toContain('"outcome":"skipped-cooldown"');
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
-        })
-      );
-    }
-  );
-
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "reads an HTTP-date Retry-After and reports a bare 429 without one",
-    (it) => {
-      it.effect(
-        "reads an HTTP-date Retry-After and reports a bare 429 without one",
-        Effect.fnUntraced(function* () {
-          const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-          const answers = [
-            new Response("{}", { status: 429, headers: { "retry-after": "Wed, 21 Oct 2099 07:28:00 GMT" } }),
-            new Response("{}", { status: 429, headers: { "retry-after": "soon" } }),
-          ];
-          const { status, log } = yield* refreshWithProxy(() => answers.shift(), seen);
-          expect(seen.length).toBe(2);
-          expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-cooldown", "skipped-cooldown"]);
-          expect(log).not.toContain("--deep");
-          expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toMatch(
-            /^model claude-opus-5 cooling down at http:\/\/127\.0\.0\.1:8317\/v1; retry-after \d+s \(until 2099-10-21T07:28:00\.000Z\)$/u
-          );
-          assertSome(
-            status.members[1]?.detail ?? O.none(),
-            "HTTP 429 from http://127.0.0.1:8317/v1/chat/completions for model claude-opus-5"
+          for (const name of ["effect", "effect-tsgo"])
+            yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
+          yield* f.fs.writeFileString(f.path.join(f.root, "effect", "pull-fail"), "");
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "unchanged"]);
+          assertSome(status.members[0]?.detail ?? O.none(), "git pull --ff-only origin main exited 7");
+          const statusPath = f.path.join(f.home, ".local/state/beep/refs/last-refresh.json");
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toBe(
+            `--urgency=critical beep refs refresh failed See ${statusPath}\n`
           );
         })
       );
     }
   );
 
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })("runs deep builds when the model answers", (it) => {
-    it.effect(
-      "runs deep builds when the model answers",
-      Effect.fnUntraced(function* () {
-        const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-        const { f, status, log } = yield* refreshWithProxy(() => new Response("{}", { status: 200 }), seen);
-        expect(A.map(status.members, (report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
-        expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
-        expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
-        expect(seen.length).toBe(2);
-        for (const report of status.members) {
-          assertNone(report.detail);
-          report.coverage.pipe(O.isSome, assertTrue);
-        }
-        // The patch kit is checked once, before any member work, with the maintenance allowlist.
-        expect(Str.startsWith("patch-kit --check\n")(log)).toBe(true);
-        expect(yield* f.fs.readFileString(f.path.join(f.home, "patch-kit-env.log"))).toBe("root=unset key=unset\n");
-        assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
-      })
-    );
-  });
-
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "downgrades deep members to structural builds when the patch kit is missing",
-    (it) => {
-      it.effect(
-        "downgrades deep members to structural builds when the patch kit is missing",
-        Effect.fnUntraced(function* () {
-          const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-          const { f, status, log, receipt } = yield* refreshWithProxy(
-            () => new Response("{}", { status: 200 }),
-            seen,
-            (f) => f.fs.writeFileString(f.path.join(f.owner, "patch-kit-missing"), "").pipe(Effect.orDie)
-          );
-          expect(A.map(status.members, (report) => report.outcome)).toEqual(["skipped-preflight", "skipped-preflight"]);
-          // A downgraded member is never probed for a model cooldown.
-          expect(seen).toEqual([]);
-          expect(log).not.toContain("--deep");
-          expect(log).toContain("graft effect build env=1");
-          expect(log).toContain("graft effect-tsgo build env=1");
-          expect(log).toContain("graft references build env=1");
-          const tail = "applied  0001-keep\nmissing  0002-summaries\n1 patch(es) not applied to graft 9.9.9";
-          assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "missing", detail: O.some(tail) }));
-          for (const report of status.members) {
-            assertNone(report.coverage);
-            assertSome(report.detail, `graft dist patch kit missing; deep pass skipped: ${tail}`);
-          }
-          expect(receipt).toContain('"patchKit":"missing"');
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
-        })
-      );
-    }
-  );
-
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "treats an absent, unrunnable, or broken patch kit as unavailable",
-    (it) => {
-      it.effect(
-        "treats an absent, unrunnable, or broken patch kit as unavailable",
-        Effect.fnUntraced(function* () {
-          const cases: ReadonlyArray<
-            readonly [
-              label: string,
-              arrange: (f: Effect.Success<ReturnType<typeof prepare>>, script: string) => Effect.Effect<void>,
-              detail: (script: string) => string,
-            ]
-          > = [
-            ["absent", (f, script) => f.fs.remove(script).pipe(Effect.orDie), (script) => `${script} not found`],
-            [
-              "unrunnable",
-              (f, script) => f.fs.chmod(script, 0o644).pipe(Effect.orDie),
-              (script) => `${script} failed to run.`,
-            ],
-            [
-              "broken",
-              (f) => f.fs.writeFileString(f.path.join(f.owner, "patch-kit-broken"), "").pipe(Effect.orDie),
-              () => "no Graft package at /nowhere",
-            ],
-          ];
-          const fixture = yield* ReferenceFixture;
-          const script = fixture.path.join(fixture.owner, "scripts/graft/apply-dist-patches.sh");
-          for (const [label, arrange, detail] of cases) {
-            const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-            const { f, status, log } = yield* refreshWithProxy(
-              () => new Response("{}", { status: 200 }),
-              seen,
-              (f) => arrange(f, script)
-            );
-            expect([label, A.map(status.members, (report) => report.outcome)]).toEqual([
-              label,
-              ["skipped-preflight", "skipped-preflight"],
-            ]);
-            assertSome(
-              status.preflight,
-              RefsRefreshPreflight.make({ patchKit: "unavailable", detail: O.some(detail(script)) })
-            );
-            expect(seen).toEqual([]);
-            expect(log).not.toContain("--deep");
-            expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain(
-              "--urgency=critical"
-            );
-            yield* f.fs.remove(f.path.join(f.home, "commands.log"));
-            yield* f.fs.remove(f.path.join(f.home, "notifications.log"));
-            yield* writeExecutable(script, patchKitStub);
-            yield* f.fs.remove(f.path.join(f.owner, "patch-kit-broken")).pipe(Effect.ignore);
-          }
-        })
-      );
-    }
-  );
-
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "checks the Graft install the unit environment names and nothing else",
-    (it) => {
-      it.effect(
-        "checks the Graft install the unit environment names and nothing else",
-        Effect.fnUntraced(function* () {
-          const { f, status } = yield* refreshWithProxy(
-            () => new Response("{}", { status: 200 }),
-            [],
-            () => Effect.void,
-            { GRAFT_PACKAGE_ROOT: "/opt/graft-package" }
-          );
-          assertSome(status.preflight, RefsRefreshPreflight.make({ patchKit: "ok", detail: O.none() }));
-          // GRAFT_PACKAGE_ROOT reaches the check; the provider key in the same environment does not.
-          expect(yield* f.fs.readFileString(f.path.join(f.home, "patch-kit-env.log"))).toBe(
-            "root=/opt/graft-package key=unset\n"
-          );
-        })
-      );
-    }
-  );
-
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })("never lets a failed probe block the deep build", (it) => {
-    it.effect(
-      "never lets a failed probe block the deep build",
-      Effect.fnUntraced(function* () {
-        const seen: Array<HttpClientRequest.HttpClientRequest> = [];
-        const { status, log } = yield* refreshWithProxy(() => undefined, seen);
-        expect(seen.length).toBe(2);
-        expect(A.map(status.members, (report) => report.outcome)).toEqual(["unchanged", "unchanged"]);
-        expect(log).toContain("graft effect build --deep --allow-partial -j 4 env=1");
-        expect(log).toContain("graft effect-tsgo build --deep --allow-partial -j 4 env=1");
-      })
-    );
-  });
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
     "keeps a failed git probe's stderr in the member detail",
     (it) => {
@@ -524,7 +265,7 @@ describe("reference planning and refresh", () => {
           for (const name of ["effect", "effect-tsgo"])
             yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
           yield* f.fs.writeFileString(f.path.join(f.root, "effect", "rev-parse-fail"), "");
-          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root));
           expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "unchanged"]);
           assertSome(status.members[0]?.detail ?? O.none(), "git rev-parse HEAD exited 128: fatal: bad object HEAD");
           expect(yield* f.fs.readFileString(f.path.join(f.home, "commands.log"))).not.toContain("git effect pull");
@@ -534,46 +275,28 @@ describe("reference planning and refresh", () => {
   );
 
   it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "records a graft that cannot start as a build failure and still writes the receipt",
+    "records a git that cannot start as a pull failure and still writes the receipt",
     (it) => {
       it.effect(
-        "records a graft that cannot start as a build failure and still writes the receipt",
+        "records a git that cannot start as a pull failure and still writes the receipt",
         Effect.fnUntraced(function* () {
           const f = yield* prepare();
-          // With graft absent from a stub-only PATH the spawn itself fails; nothing exits non-zero.
-          yield* f.fs.remove(f.path.join(f.bin, "graft"));
+          // With git absent from a stub-only PATH the spawn itself fails; nothing exits non-zero.
+          yield* f.fs.remove(f.path.join(f.bin, "git"));
           for (const name of ["effect", "effect-tsgo"])
             yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
           const status = yield* workspace
-            .use((service) => service.refresh(f.home, f.root, 2))
+            .use((service) => service.refresh(f.home, f.root))
             .pipe(
               Effect.provideService(
                 ConfigProvider.ConfigProvider,
                 ConfigProvider.fromUnknown({ ...f.configValues, PATH: f.bin })
               )
             );
-          expect(A.map(status.members, (report) => report.outcome)).toEqual(["build-failed", "build-failed"]);
-          assertSome(status.members[0]?.detail ?? O.none(), "graft failed to run.");
-          expect(status.workspaceCheck.buildExitCode).toBe(1);
-          expect(status.workspaceCheck.exitCode).toBe(1);
-          expect(status.workspaceCheck.output).toBe("graft failed to run.");
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["pull-failed", "pull-failed"]);
+          assertSome(status.members[0]?.detail ?? O.none(), "git failed to run.");
           expect(yield* f.fs.exists(f.path.join(f.home, ".local/state/beep/refs/last-refresh.json"))).toBe(true);
           expect(yield* f.fs.readFileString(f.path.join(f.home, "notifications.log"))).toContain("--urgency=critical");
-        })
-      );
-    }
-  );
-
-  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
-    "rejects a non-positive job count before any work",
-    (it) => {
-      it.effect(
-        "rejects a non-positive job count before any work",
-        Effect.fnUntraced(function* () {
-          const f = yield* prepare();
-          const error = yield* workspace.use((service) => service.refresh(f.home, f.root, 0)).pipe(Effect.flip);
-          expect(error.message).toBe("--jobs must be a positive integer.");
-          expect(yield* f.fs.exists(f.path.join(f.home, "commands.log"))).toBe(false);
         })
       );
     }
@@ -647,6 +370,108 @@ describe("reference planning and refresh", () => {
           const redirected = yield* workspace.use((service) => service.linkInto(checkout, f.root)).pipe(Effect.flip);
           expect(redirected.message).toBe("Refusing a symlinked .repos directory.");
           expect(yield* f.fs.readDirectory(f.path.join(f.temp, "elsewhere"))).toEqual([]);
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "refuses redirected provisioning before creating a root or starting Git",
+    (it) => {
+      it.effect(
+        "refuses redirected provisioning before creating a root or starting Git",
+        Effect.fnUntraced(function* () {
+          const f = yield* prepare();
+          const checkout = f.path.join(f.temp, "checkout");
+          const redirected = f.path.join(f.temp, "redirected");
+          const missingRoot = f.path.join(f.temp, "not-provisioned");
+          yield* f.fs.makeDirectory(checkout);
+          yield* f.fs.makeDirectory(redirected);
+          yield* f.fs.symlink(redirected, f.path.join(checkout, ".repos"));
+          const error = yield* workspace
+            .use((service) => service.provision(f.home, checkout, missingRoot))
+            .pipe(Effect.flip);
+          expect(error.message).toBe("Refusing a symlinked .repos directory.");
+          expect(error.path).toBe(checkout);
+          expect(yield* f.fs.exists(missingRoot)).toBe(false);
+          expect(yield* f.fs.exists(f.path.join(f.home, "commands.log"))).toBe(false);
+          expect(yield* f.fs.readDirectory(redirected)).toEqual([]);
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "reports receipt storage failures without replacing the operator's colliding file",
+    (it) => {
+      it.effect(
+        "reports receipt storage failures without replacing the operator's colliding file",
+        Effect.fnUntraced(function* () {
+          const f = yield* prepare();
+          for (const name of ["effect", "effect-tsgo"])
+            yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
+          const state = f.path.join(f.home, ".local", "state");
+          yield* f.fs.makeDirectory(f.path.dirname(state), { recursive: true });
+          yield* f.fs.writeFileString(state, "operator state file");
+          const error = yield* workspace.use((service) => service.refresh(f.home, f.root)).pipe(Effect.flip);
+          expect(error.message).toBe("Cannot complete reference refresh.");
+          expect(error.path).toBe(f.path.join(f.owner, "scripts", "references.json"));
+          expect(error.cause).toBeDefined();
+          expect(yield* f.fs.readFileString(state)).toBe("operator state file");
+          expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
+          const commands = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
+          expect(commands).toContain("git effect pull --ff-only origin main");
+          expect(commands).toContain("git effect-tsgo pull --ff-only origin main");
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "preserves written units and the command error when timer activation fails",
+    (it) => {
+      it.effect(
+        "preserves written units and the command error when timer activation fails",
+        Effect.fnUntraced(function* () {
+          const f = yield* ReferenceFixture;
+          yield* writeExecutable(
+            f.path.join(f.bin, "systemctl"),
+            '#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/systemctl.log"\n[ "$2" != "enable" ] || { printf "activation refused\\n"; exit 5; }\n'
+          );
+          const error = yield* workspace
+            .use((service) => service.installTimer(f.home, f.root, "*-*-* 03:30:00", "/bin/bun"))
+            .pipe(Effect.flip);
+          expect(error.message).toBe("systemctl exited 5: activation refused");
+          expect(error.path).toBe(f.home);
+          const directory = f.path.join(f.home, ".config", "systemd", "user");
+          expect(yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.service"))).toContain(
+            `--root "${f.root}"`
+          );
+          expect(yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.timer"))).toContain(
+            "OnCalendar=*-*-* 03:30:00"
+          );
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"))).toBe(
+            "--user daemon-reload\n--user enable --now beep-refs-refresh.timer\n"
+          );
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "uninstalls an absent timer without calling systemctl or creating directories",
+    (it) => {
+      it.effect(
+        "uninstalls an absent timer without calling systemctl or creating directories",
+        Effect.fnUntraced(function* () {
+          const f = yield* ReferenceFixture;
+          yield* writeExecutable(
+            f.path.join(f.bin, "systemctl"),
+            '#!/bin/sh\nprintf "unexpected\\n" >> "$HOME/systemctl.log"\nexit 7\n'
+          );
+          expect(yield* workspace.use((service) => service.uninstallTimer(f.home))).toEqual([]);
+          expect(yield* f.fs.exists(f.path.join(f.home, "systemctl.log"))).toBe(false);
+          expect(yield* f.fs.exists(f.path.join(f.home, ".config"))).toBe(false);
         })
       );
     }
