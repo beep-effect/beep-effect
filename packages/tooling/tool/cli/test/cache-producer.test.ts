@@ -327,13 +327,15 @@ it.layer(NodeCrypto.layer, { concurrent: false, timeout: "30 seconds" })("closed
       expect(yield* issuer.verify(fresh, receipt)).toEqual(receipt);
     })
   );
-  it.effect("expires a correctly authenticated envelope after its lifetime", () =>
-    Effect.gen(function* () {
-      const { issuer, receipt, envelope } = yield* setup();
-      yield* TestClock.adjust("25 hours");
-      (yield* issuer.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-    })
-  );
+  it.layer(TestClock.layer())("expires a correctly authenticated envelope after its lifetim (own clock)", (it) => {
+    it.effect("expires a correctly authenticated envelope after its lifetime", () =>
+      Effect.gen(function* () {
+        const { issuer, receipt, envelope } = yield* setup();
+        yield* TestClock.adjust("25 hours");
+        (yield* issuer.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      })
+    );
+  });
 });
 
 const persistentSetup = Effect.fn("ProducerTest.persistentSetup")(function* () {

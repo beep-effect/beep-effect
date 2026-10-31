@@ -102,43 +102,45 @@ describe("Contradiction detection golden vectors", () => {
       })
     );
     for (const [vector, index] of A.map(vectors, (vector, index) => Tuple.make(vector, index))) {
-      it.effect(
-        vector.name,
-        Effect.fnUntraced(function* () {
-          const snapshot = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)(vector.snapshot);
-          const records = yield* detect(snapshot);
-          expect(A.length(records)).toBe(vector.expectedCount);
-          for (const record of records) {
-            expect(record.matchBasis.detector).toBe(`epistemic-contradiction-detection-${vector.expectedClass}`);
-            expect(record.assessment.confidence).toBe(vector.expectedClass === "exact-negation" ? 1 : 0.9);
-          }
-          expect(yield* encodedOutput(records)).toBe(A.getUnsafe(golden, index).canonicalOutput);
-          yield* Effect.forEach(records, conformance, { concurrency: 1 });
-          for (const record of records) {
-            for (const proposal of record.assessment.proposals) {
-              const other = A.findFirst(
-                snapshot.beliefs,
-                (belief) => belief.ref.edgeVersionId !== proposal.losingBelief.edgeVersionId
-              );
-              const assertion = O.getOrThrow(other);
-              expect(proposal.fact).toEqual({
-                subject: assertion.subject,
-                predicate: assertion.predicate,
-                value: assertion.value,
-                polarity: assertion.polarity,
-              });
+      it.layer(TestClock.layer())("exact-negation (own clock)", (it) => {
+        it.effect(
+          vector.name,
+          Effect.fnUntraced(function* () {
+            const snapshot = yield* S.decodeUnknownEffect(ContradictionDetectionSnapshot)(vector.snapshot);
+            const records = yield* detect(snapshot);
+            expect(A.length(records)).toBe(vector.expectedCount);
+            for (const record of records) {
+              expect(record.matchBasis.detector).toBe(`epistemic-contradiction-detection-${vector.expectedClass}`);
+              expect(record.assessment.confidence).toBe(vector.expectedClass === "exact-negation" ? 1 : 0.9);
             }
-          }
+            expect(yield* encodedOutput(records)).toBe(A.getUnsafe(golden, index).canonicalOutput);
+            yield* Effect.forEach(records, conformance, { concurrency: 1 });
+            for (const record of records) {
+              for (const proposal of record.assessment.proposals) {
+                const other = A.findFirst(
+                  snapshot.beliefs,
+                  (belief) => belief.ref.edgeVersionId !== proposal.losingBelief.edgeVersionId
+                );
+                const assertion = O.getOrThrow(other);
+                expect(proposal.fact).toEqual({
+                  subject: assertion.subject,
+                  predicate: assertion.predicate,
+                  value: assertion.value,
+                  polarity: assertion.polarity,
+                });
+              }
+            }
 
-          yield* TestClock.adjust("1 hour");
-          expect(yield* encodedOutput(yield* detect(snapshot))).toBe(yield* encodedOutput(records));
-          const permuted = ContradictionDetectionSnapshot.make({
-            beliefs: A.reverse(snapshot.beliefs),
-            singleValuedPredicates: A.reverse(snapshot.singleValuedPredicates),
-          });
-          expect(yield* encodedOutput(yield* detect(permuted))).toBe(yield* encodedOutput(records));
-        })
-      );
+            yield* TestClock.adjust("1 hour");
+            expect(yield* encodedOutput(yield* detect(snapshot))).toBe(yield* encodedOutput(records));
+            const permuted = ContradictionDetectionSnapshot.make({
+              beliefs: A.reverse(snapshot.beliefs),
+              singleValuedPredicates: A.reverse(snapshot.singleValuedPredicates),
+            });
+            expect(yield* encodedOutput(yield* detect(permuted))).toBe(yield* encodedOutput(records));
+          })
+        );
+      });
     }
     it.effect.prop(
       "schema-derived values preserve negation and permutation invariants",

@@ -425,51 +425,53 @@ const fixture = Effect.fnUntraced(function* <A, E, R>(
 it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 seconds" })(
   "Managed mailbox resilience",
   (it) => {
-    it.effect("retries recover, claim and completion without resubmitting a consumed prompt", () =>
-      fixture((store) =>
-        Effect.gen(function* () {
-          const finished = yield* Deferred.make<void>();
-          let recoverCalls = 0;
-          let claimCalls = 0;
-          let completeCalls = 0;
-          let submits = 0;
-          const wrapped: AgentMessageStoreShape = {
-            ...store,
-            recover: Effect.fnUntraced(function* (now: number) {
-              if (++recoverCalls <= 2) return yield* lockTimeout;
-              return yield* store.recover(now);
-            }),
-            claimNext: Effect.fnUntraced(function* (...args: Parameters<AgentMessageStoreShape["claimNext"]>) {
-              if (++claimCalls <= 2) return yield* lockTimeout;
-              return yield* store.claimNext(...args);
-            }),
-            complete: Effect.fnUntraced(function* (...args: Parameters<AgentMessageStoreShape["complete"]>) {
-              if (++completeCalls <= 2) return yield* lockTimeout;
-              const receipt = yield* store.complete(...args);
-              yield* Deferred.succeed(finished, undefined);
-              return receipt;
-            }),
-          };
-          const fiber = yield* runAgentMessageDispatchLoop("target", "target-owner").pipe(
-            Effect.provideService(AgentMessageStore, wrapped),
-            Effect.provideService(EndpointDispatch, {
-              submit: Effect.fnUntraced(function* () {
-                submits++;
-                yield* store.acknowledge("message", "target", 0);
-                return yield* Effect.succeed<"delivered">("delivered");
+    it.layer(TestClock.layer())("retries recover, claim and completion without resubmitting a (own clock)", (it) => {
+      it.effect("retries recover, claim and completion without resubmitting a consumed prompt", () =>
+        fixture((store) =>
+          Effect.gen(function* () {
+            const finished = yield* Deferred.make<void>();
+            let recoverCalls = 0;
+            let claimCalls = 0;
+            let completeCalls = 0;
+            let submits = 0;
+            const wrapped: AgentMessageStoreShape = {
+              ...store,
+              recover: Effect.fnUntraced(function* (now: number) {
+                if (++recoverCalls <= 2) return yield* lockTimeout;
+                return yield* store.recover(now);
               }),
-            }),
-            Effect.forkChild
-          );
-          yield* TestClock.adjust(Duration.seconds(2));
-          yield* Deferred.await(finished);
-          expect(submits).toBe(1);
-          expect(completeCalls).toBe(3);
-          expect((yield* store.acknowledge("message", "target", 0)).status).toBe("acknowledged");
-          yield* Fiber.interrupt(fiber);
-        })
-      )
-    );
+              claimNext: Effect.fnUntraced(function* (...args: Parameters<AgentMessageStoreShape["claimNext"]>) {
+                if (++claimCalls <= 2) return yield* lockTimeout;
+                return yield* store.claimNext(...args);
+              }),
+              complete: Effect.fnUntraced(function* (...args: Parameters<AgentMessageStoreShape["complete"]>) {
+                if (++completeCalls <= 2) return yield* lockTimeout;
+                const receipt = yield* store.complete(...args);
+                yield* Deferred.succeed(finished, undefined);
+                return receipt;
+              }),
+            };
+            const fiber = yield* runAgentMessageDispatchLoop("target", "target-owner").pipe(
+              Effect.provideService(AgentMessageStore, wrapped),
+              Effect.provideService(EndpointDispatch, {
+                submit: Effect.fnUntraced(function* () {
+                  submits++;
+                  yield* store.acknowledge("message", "target", 0);
+                  return yield* Effect.succeed<"delivered">("delivered");
+                }),
+              }),
+              Effect.forkChild
+            );
+            yield* TestClock.adjust(Duration.seconds(2));
+            yield* Deferred.await(finished);
+            expect(submits).toBe(1);
+            expect(completeCalls).toBe(3);
+            expect((yield* store.acknowledge("message", "target", 0)).status).toBe("acknowledged");
+            yield* Fiber.interrupt(fiber);
+          })
+        )
+      );
+    });
 
     it.effect("rejects missing, foreign and contradictory native settlement evidence without changing the hold", () =>
       fixture(
@@ -652,51 +654,53 @@ it.layer(Layer.mergeAll(NodeServices.layer, Reactivity.layer), { timeout: "10 se
       })
     );
 
-    it.effect("exhausted completion retries retain the claim and owned process until cancellation", () =>
-      fixture((store) =>
-        Effect.gen(function* () {
-          const exhausted = yield* Deferred.make<void>();
-          const started = yield* Deferred.make<ChildProcessHandle>();
-          let submits = 0;
-          let attempts = 0;
-          const wrapped: AgentMessageStoreShape = {
-            ...store,
-            complete: Effect.fnUntraced(function* () {
-              if (++attempts === 9) yield* Deferred.succeed(exhausted, undefined);
-              return yield* lockTimeout;
-            }),
-          };
-          const fiber = yield* Effect.scoped(
-            Effect.gen(function* () {
-              const child = yield* ChildProcess.make(process.execPath, ["-e", "setInterval(() => {}, 1000)"], {
-                stdout: "ignore",
-                stderr: "inherit",
-              });
-              yield* Deferred.succeed(started, child);
-              yield* runAgentMessageDispatchLoop("target", "target-owner").pipe(
-                Effect.provideService(AgentMessageStore, wrapped),
-                Effect.provideService(EndpointDispatch, {
-                  submit: () =>
-                    Effect.sync(() => {
-                      submits++;
-                      return "delivered";
-                    }),
-                })
-              );
-            })
-          ).pipe(Effect.forkChild);
-          const child = yield* Deferred.await(started);
-          yield* TestClock.adjust(Duration.seconds(3));
-          yield* Deferred.await(exhausted);
-          expect(submits).toBe(1);
-          expect(attempts).toBe(9);
-          expect(yield* child.isRunning).toBe(true);
-          assertNone(yield* store.claimNext("target", "target-owner", 3000, 183000));
-          yield* Fiber.interrupt(fiber);
-          expect(yield* child.isRunning).toBe(false);
-        })
-      )
-    );
+    it.layer(TestClock.layer())("exhausted completion retries retain the claim and owned proc (own clock)", (it) => {
+      it.effect("exhausted completion retries retain the claim and owned process until cancellation", () =>
+        fixture((store) =>
+          Effect.gen(function* () {
+            const exhausted = yield* Deferred.make<void>();
+            const started = yield* Deferred.make<ChildProcessHandle>();
+            let submits = 0;
+            let attempts = 0;
+            const wrapped: AgentMessageStoreShape = {
+              ...store,
+              complete: Effect.fnUntraced(function* () {
+                if (++attempts === 9) yield* Deferred.succeed(exhausted, undefined);
+                return yield* lockTimeout;
+              }),
+            };
+            const fiber = yield* Effect.scoped(
+              Effect.gen(function* () {
+                const child = yield* ChildProcess.make(process.execPath, ["-e", "setInterval(() => {}, 1000)"], {
+                  stdout: "ignore",
+                  stderr: "inherit",
+                });
+                yield* Deferred.succeed(started, child);
+                yield* runAgentMessageDispatchLoop("target", "target-owner").pipe(
+                  Effect.provideService(AgentMessageStore, wrapped),
+                  Effect.provideService(EndpointDispatch, {
+                    submit: () =>
+                      Effect.sync(() => {
+                        submits++;
+                        return "delivered";
+                      }),
+                  })
+                );
+              })
+            ).pipe(Effect.forkChild);
+            const child = yield* Deferred.await(started);
+            yield* TestClock.adjust(Duration.seconds(3));
+            yield* Deferred.await(exhausted);
+            expect(submits).toBe(1);
+            expect(attempts).toBe(9);
+            expect(yield* child.isRunning).toBe(true);
+            assertNone(yield* store.claimNext("target", "target-owner", 3000, 183000));
+            yield* Fiber.interrupt(fiber);
+            expect(yield* child.isRunning).toBe(false);
+          })
+        )
+      );
+    });
 
     it.effect("late terminal completion keeps the worker alive for ambiguity recovery without another submission", () =>
       fixture((store) =>
