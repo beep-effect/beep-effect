@@ -53,7 +53,7 @@ scheduled nights are recorded: 2026-09-26 ended with exit 130 when the user mana
 2026-09-27 hit the model cooldown. Reading back the first clean scheduled night is an operator
 follow-up, recorded in [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) when it lands. The
 receipt is `$HOME/.local/state/beep/refs/last-refresh.json`, and
-`docs/runbooks/graft-local-recovery.md` describes how to read it.
+the graft local-recovery runbook (retired 2026-10-28) describes how to read it.
 
 ## Latest Evidence
 
