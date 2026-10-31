@@ -32,8 +32,12 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P2 validate` - all 7 findings are captured and untriaged. Reproduce each
-report at current HEAD, then record a verdict, disposition, and owner surface.
+The seven Cloud findings are merged in PR #2333 and individually verified Fixed
+on 2026-10-31. The live Cloud view shows zero open findings. Twenty newer
+Dependabot alerts are appended separately in `ops/dependabot.json`; their
+upstream dependency updates, qualification, merge and closure are in progress.
+
+See [current closure evidence](research/2026-10-31-closeout.md).
 
 ## Findings at a glance
 

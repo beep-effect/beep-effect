@@ -8,7 +8,7 @@
     "capturedCount": 8,
     "capturedAt": "2026-10-20",
     "captureMethod": "signed-in-csv-export",
-    "note": "PR #1928 merged at 426d494b3433; main integrated. PR #1930 remote head 02b5bd3f47 contains eight Cloud remediations with scoped proof and 123 Dependabot remediations. Coverage repair passed locally; consolidated publication and next-head hosted checks remain required. All captured Cloud statuses remain New; external closure requires merge and merged-revision proof."
+    "note": "All eight original exact Cloud IDs rechecked Fixed on 2026-10-31. PR #1930 merged at 60b2c052fb72cf19403a43c79ea3a3c9b0b68a89. Historical Dependabot scope: 121 fixed and two withdrawn, none open. Expanded October 28 dependency follow-on remains active."
   },
   "lanes": {
     "hub-auth": {
@@ -46,7 +46,7 @@
       "codexId": "commit:07a100626d5c819194ab57d2fed1ca8e",
       "title": "Local clients can forge the review hub's Tailscale identity",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "713f2aa18f0f4a8bff24da8f8fc1766b7f2b0c23",
       "disposition": "remediate",
       "validation": {
@@ -76,6 +76,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     },
     {
@@ -83,7 +89,7 @@
       "codexId": "commit:7fe99a05d5608191bbfe0b2d9b678fc7",
       "title": "PDF stream discovery enables CPU denial of service",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "a679390ed8c533152f8c88f18b162a7fe741649f",
       "disposition": "remediate",
       "validation": {
@@ -112,6 +118,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     },
     {
@@ -119,7 +131,7 @@
       "codexId": "commit:81b276e35ab4819193ac02a90daa921d",
       "title": "Box DOCX extraction permits decompression-based denial of service",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "8086a42233ab3eab7265c8deb7a6f3816686d445",
       "disposition": "remediate",
       "validation": {
@@ -149,6 +161,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     },
     {
@@ -156,7 +174,7 @@
       "codexId": "commit:28dd91e164f4819199af63a391a87ad2",
       "title": "Hub removal still disables HTTPS 443 after migration to 8787",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "0e0b70d2b23c8e1a8c9b94c2d1696355862349e7",
       "disposition": "remediate",
       "validation": {
@@ -178,6 +196,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     },
     {
@@ -185,7 +209,7 @@
       "codexId": "commit:6c30cfcc0ac481919efd9bb1fee4f3d7",
       "title": "Unbounded .git probe bypasses snapshot memory limits",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "91b585e425797eeb9b953c84ced7499ae2d08d66",
       "disposition": "remediate",
       "validation": {
@@ -214,6 +238,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     },
     {
@@ -221,7 +251,7 @@
       "codexId": "commit:98737e00cd2c81919ddcc2c39ed2a018",
       "title": "Palantiri telemetry may disclose Junie authentication JWTs",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "23d2088b3ed1f842cca9d90b7eb2a70742dcc9dd",
       "disposition": "remediate",
       "validation": {
@@ -253,6 +283,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     },
     {
@@ -260,7 +296,7 @@
       "codexId": "commit:c9d992b72a68819190cd1659ec4d97ad",
       "title": "Quadratic email redaction can stall parcel reads",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "764a3e2942ab856a39d7934b5b60d29cf439f394",
       "disposition": "remediate",
       "validation": {
@@ -289,6 +325,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     },
     {
@@ -296,7 +338,7 @@
       "codexId": "commit:cc49f82a58cc8191b5f3cd8d1f90612a",
       "title": "Unbounded claim-chain expansion permits denial of service",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Fixed",
       "commit": "44dbfa70fff89339e8818dfcd4a45d6666cb449f",
       "disposition": "remediate",
       "validation": {
@@ -325,6 +367,12 @@
         "acceptedHead": "e82c0ca7ff30df14e4abd2fc9e9fdecfa8dae422",
         "externalStatusObservedAt": "2026-10-28",
         "externalStatus": "Fixed"
+      },
+      "closure": {
+        "status": "Fixed",
+        "observedAt": "2026-10-31",
+        "mergeRevision": "60b2c052fb72cf19403a43c79ea3a3c9b0b68a89",
+        "evidence": "research/2026-10-31-revalidation.md"
       }
     }
   ]

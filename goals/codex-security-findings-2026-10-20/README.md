@@ -6,6 +6,13 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+## Current closeout evidence
+
+All eight original Cloud IDs remain Fixed. The 123 captured Dependabot IDs
+are resolved: 121 Fixed, two withdrawn. The seven October 28 Cloud IDs are
+also Fixed. Twenty newer dependency alerts are being remediated in the
+October 28 packet. See [current revalidation](research/2026-10-31-revalidation.md).
+
 ## Mission
 
 Capture, validate, remediate, and close every open Codex Cloud security finding

@@ -8,12 +8,12 @@ Remediate every open Codex Cloud security finding visible at
 the work through Yeet, reach mergeable hosted state, merge, then resolve the
 exact captured findings until no packet-applicable finding remains open.
 
-## Non-Goals
+The 2026-10-31 closeout adds all 20 newly observed Dependabot alerts in
+`ops/dependabot.json`. Preserve the seven Cloud bindings; dependency IDs remain
+a separate catalog. The prior session-only unmerged hold ended when #2333
+merged and the operator requested full closure.
 
-- 2026-10-29 takeover instruction: repair PR #2333 and leave it fully mergeable
-  and unmerged. Do not merge, enable auto-merge, close Cloud findings, or retire
-  the worktree. This instruction supersedes the original post-merge objective
-  and acceptance items below for this session.
+## Non-Goals
 
 - No accepted-risk or `Won't fix` disposition.
 - No raw report bodies, signed artifact URLs, auth headers, cookie values,
@@ -94,6 +94,13 @@ exact captured findings until no packet-applicable finding remains open.
 - The same blocking condition repeats after reasonable investigation.
 
 ## Decision Log
+
+- 2026-10-31: Close the seven exact Cloud IDs after #2333 merge and current-main
+  source proof. Capture 20 newer dependency alerts and fix all four affected
+  libraries through upstream releases. Retain both packets and merge the
+  remediation and final closure documentation through normal PR gates. Reversal
+  is a reviewed follow-up PR; never restore a vulnerable dependency as rollback.
+
 
 - 2026-10-29: Register the artifact collection and native Windows pipe jobs as
   explicit hosted-job inventory exemptions because their platform and artifact

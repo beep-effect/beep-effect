@@ -5,7 +5,7 @@
     "title": "Codex Security Findings (2026-10-28)",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-28",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-10-28",
@@ -48,7 +48,12 @@
     "goals/codex-security-findings-2026-10-28/GOAL.md",
     "goals/codex-security-findings-2026-10-28/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/qualification.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/qualification.md",
+    "research/2026-10-31-closeout.md",
+    "research/2026-10-31-dependencies.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -82,7 +87,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All seven complete Cloud reports reviewed; source defects validated and controls implemented. Qualification, merge and exact-ID closure remain open."
+    "note": "All seven Cloud findings merged and verified Fixed; 20 supplemental dependency alerts tracked separately in ops/dependabot.json."
   },
   "closeoutPolicy": {
     "fixed": "Fixed",
@@ -174,5 +179,11 @@
   "proposedCloseout": {
     "status": "completed-retained",
     "finalPullRequest": 2333
+  },
+  "statusNote": "All seven Cloud findings merged and verified Fixed; 20 supplemental dependency alerts tracked separately in ops/dependabot.json.",
+  "supplementalDependencies": {
+    "catalog": "ops/dependabot.json",
+    "expectedCount": 20,
+    "status": "in-progress"
   }
 }

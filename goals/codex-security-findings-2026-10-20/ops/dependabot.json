@@ -31,8 +31,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -60,8 +60,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -89,8 +89,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -118,8 +118,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -152,9 +152,9 @@
       "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
       "report": "research/dependabot-fixtures.md",
       "closure": {
-        "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "state": "withdrawn",
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -184,8 +184,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -215,8 +215,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -244,8 +244,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -273,8 +273,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -302,8 +302,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -331,8 +331,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -360,8 +360,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -389,8 +389,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -418,8 +418,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -454,8 +454,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -483,8 +483,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -512,8 +512,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -521,7 +521,7 @@
       "url": "https://github.com/beep-effect/beep-effect/security/dependabot/413",
       "ghsa": "GHSA-fxqj-rqcc-2cmp",
       "severity": "medium",
-      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
       "ecosystem": "npm",
       "package": "postcss",
       "manifest": "scratchpad/test/lockfiles/fixtures/yarn/v2/yarn.lock",
@@ -543,8 +543,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -572,8 +572,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -601,8 +601,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -630,8 +630,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -661,8 +661,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -692,8 +692,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -721,8 +721,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -750,8 +750,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -779,8 +779,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -808,8 +808,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -839,8 +839,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -868,8 +868,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -897,8 +897,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -926,8 +926,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -955,8 +955,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -984,8 +984,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1013,8 +1013,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1042,8 +1042,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1071,8 +1071,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1100,8 +1100,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1129,8 +1129,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1158,8 +1158,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1190,8 +1190,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1222,8 +1222,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1254,8 +1254,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1286,8 +1286,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1318,8 +1318,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1350,8 +1350,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1379,8 +1379,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1408,8 +1408,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1437,8 +1437,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1466,8 +1466,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1495,8 +1495,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1524,8 +1524,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1560,8 +1560,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1589,8 +1589,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1598,7 +1598,7 @@
       "url": "https://github.com/beep-effect/beep-effect/security/dependabot/377",
       "ghsa": "GHSA-fxqj-rqcc-2cmp",
       "severity": "medium",
-      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
       "ecosystem": "npm",
       "package": "postcss",
       "manifest": "scratchpad/test/lockfiles/fixtures/pnpm/v2/pnpm-lock.yaml",
@@ -1620,8 +1620,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1651,8 +1651,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1682,8 +1682,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1711,8 +1711,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1740,8 +1740,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1769,8 +1769,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1798,8 +1798,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1827,8 +1827,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1856,8 +1856,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1885,8 +1885,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1914,8 +1914,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1946,8 +1946,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -1978,8 +1978,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2010,8 +2010,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2042,8 +2042,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2071,8 +2071,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2100,8 +2100,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2129,8 +2129,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2158,8 +2158,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2187,8 +2187,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2216,8 +2216,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2245,8 +2245,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2274,8 +2274,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2303,8 +2303,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2332,8 +2332,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2361,8 +2361,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2370,7 +2370,7 @@
       "url": "https://github.com/beep-effect/beep-effect/security/dependabot/349",
       "ghsa": "GHSA-fxqj-rqcc-2cmp",
       "severity": "medium",
-      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+      "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q \u2014 attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
       "ecosystem": "npm",
       "package": "postcss",
       "manifest": "scratchpad/test/lockfiles/fixtures/npm/v2/package-lock.json",
@@ -2392,8 +2392,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2423,8 +2423,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2454,8 +2454,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2483,8 +2483,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2512,8 +2512,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2541,8 +2541,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2570,8 +2570,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2599,8 +2599,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2628,8 +2628,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2657,8 +2657,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2686,8 +2686,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2718,8 +2718,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2750,8 +2750,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2782,8 +2782,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2814,8 +2814,8 @@
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2843,8 +2843,8 @@
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2872,8 +2872,8 @@
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2901,8 +2901,8 @@
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2930,8 +2930,8 @@
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2959,8 +2959,8 @@
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -2988,8 +2988,8 @@
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -3017,8 +3017,8 @@
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -3046,8 +3046,8 @@
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -3075,8 +3075,8 @@
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -3104,8 +3104,8 @@
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       }
     },
     {
@@ -3132,8 +3132,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3161,8 +3161,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3190,8 +3190,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3219,8 +3219,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3248,8 +3248,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3277,8 +3277,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3306,8 +3306,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3335,8 +3335,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3364,8 +3364,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3393,8 +3393,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3422,8 +3422,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3451,8 +3451,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3480,8 +3480,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3509,8 +3509,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3538,8 +3538,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3567,8 +3567,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3596,8 +3596,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3625,8 +3625,8 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "fixed",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs"
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     },
@@ -3654,15 +3654,14 @@
       "captured_batch": "post-publication-refresh-2026-10-21",
       "closure": {
         "state": "withdrawn",
-        "observedAt": "2026-10-28",
-        "source": "GitHub REST exact captured alert IDs",
-        "evidence": "Exact-ID GET returns HTTP 410: Alert number 431 has been withdrawn."
+        "observedAt": "2026-10-31",
+        "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
       "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
     }
   ],
   "initial_count": 104,
-  "last_refreshed_at_utc": "2026-10-21T03:29:29.392311+00:00",
+  "last_refreshed_at_utc": "2026-10-31T09:09:35.055644+00:00",
   "severity_counts": {
     "critical": 13,
     "high": 55,
