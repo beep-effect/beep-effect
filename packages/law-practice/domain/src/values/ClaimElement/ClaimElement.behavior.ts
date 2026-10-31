@@ -345,11 +345,12 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
     HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word)
   );
   const finite = O.exists(current, (word) =>
-    HashSet.has(HashSet.make("display", "extend", "mesh"), pipe(word, Str.replace(/(?:es|s)$/u, "")))
+    HashSet.has(HashSet.make("display", "extend", "mesh", "embed"), pipe(word, Str.replace(/(?:es|s)$/u, "")))
   );
   const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
+  const purposeParticiple = O.contains(current, "used") && O.contains(next, "for");
   return (
-    (O.exists(current, (word) => HashSet.has(predicateWords, word)) || finite || (participle && complement)) &&
+    (O.exists(current, (word) => HashSet.has(predicateWords, word)) || finite || purposeParticiple || (participle && complement)) &&
     (!O.exists(next, (word) => HashSet.has(nominalFollowers, word)) || clauseVerb) &&
     !nominal
   );
@@ -522,6 +523,7 @@ const scanStep =
         ["by", "means", "of"],
         ["side", "by", "side"],
         ["in", "association", "with"],
+        ["in", "response", "to"],
         ["at", "least", "by", "means", "of"],
       ],
       (words) => surfaceAt(tokens, index)(words)
