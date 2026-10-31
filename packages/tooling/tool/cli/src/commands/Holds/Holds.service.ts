@@ -88,7 +88,10 @@ export interface HoldLedgerShape {
  * import { HoldLedger } from "@beep/repo-cli/commands/Holds"
  * import * as Effect from "effect/Effect"
  *
- * const program = Effect.flatMap(HoldLedger.asEffect(), (ledger) => ledger.currentVersions)
+ * const program = Effect.gen(function* () {
+ *   const ledger = yield* HoldLedger
+ *   return yield* ledger.currentVersions
+ * })
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -227,8 +230,11 @@ export interface HoldProbeShape {
  * import { HoldProbe } from "@beep/repo-cli/commands/Holds"
  * import * as Effect from "effect/Effect"
  *
- * const probe = HoldProbe.asEffect()
- * console.log(Effect.isEffect(probe)) // true
+ * const program = Effect.gen(function* () {
+ *   const probe = yield* HoldProbe
+ *   return probe.probe
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @category services
