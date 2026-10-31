@@ -1057,7 +1057,8 @@
   "reviewCounts": {
     "acceptedNotApplicable": 1,
     "acceptedRetainCurrentAbsence": 3,
-    "pending": 31
+    "acceptedRetainCurrentDefault": 1,
+    "pending": 30
   },
   "nativeAvailabilityCounts": {
     "flagCasesAccepted": 56,

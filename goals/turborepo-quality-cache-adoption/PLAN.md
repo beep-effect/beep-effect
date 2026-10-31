@@ -388,12 +388,12 @@ not refreshed or requalified here. No phase or whole-goal criterion is completed
 The [source review](research/errors-only-feature-review.json) retains the absent
 `errorsOnlyShowHash` default: the existing cache probe obtains hashes from JSON
 summaries, with no named log-only consumer or measured execution benefit. The
-[new native controls](research/native-log-controls.json) cover24 actual native
+[new native controls](research/native-log-controls.json) cover 24 actual native
 cases and six intended driver refusals. Success visibility changes as documented;
 failure output and exit status remain intact. Constant-cache-directory monorepo
 controls preserve the task hash, inputs, restored bytes and executable mode.
 
-Stable remains2.11.10. The registry has advanced canary to2.11.11-canary.1, so
+Stable remains 2.11.10. The registry has advanced canary to 2.11.11-canary.1, so
 this review freezes separate [feature-local pins](research/errors-only-client-pins.json).
 Older canary results keep their historical identity. Repository consumers and
 the baseline pin file are unchanged.

@@ -466,8 +466,8 @@ defect. Publish/prove the new source and answer the review before acceptance.
   returned HTTP404. Use the registry package-tag endpoint; the failed request
   establishes no version freshness. Exact executable digest checks still ran
   before each attempted native control.
-- The successful registry refresh found canary2.11.11-canary.1 while the
-  retained baseline is2.11.9-canary.1; stable remains2.11.10. Preserve those
+- The successful registry refresh found canary 2.11.11-canary.1 while the
+  retained baseline is 2.11.9-canary.1; stable remains 2.11.10. Preserve those
   historical receipts. Freeze separate feature-local pins for the fresh replay;
   this does not upgrade a repository consumer or grant current protected
   producer authority to the older canary.
@@ -475,3 +475,8 @@ defect. Publish/prove the new source and answer the review before acceptance.
   `package/` prefix. The first member lookup failed before writing an executable.
   Inspect the exact integrity-verified archive; validate package name/version
   and read only the named regular executable. No broad extraction is needed.
+- Committing before this fresh worktree installed its dependencies printed
+  `Can’t find lefthook in PATH`; that commit is not a hook pass. The frozen
+  install completed, an explicit scan of the committed change found no secrets,
+  and commit-message validation passed. Install before committing a new lane.
+  The source-only follow-up uses the installed normal hooks.
