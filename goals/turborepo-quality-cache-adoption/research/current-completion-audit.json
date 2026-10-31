@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "dac9820e8e2517f97f503a05869b5424f663978dc50cf7dd815d3a4d0648f33f",
+  "specSha256": "285117df2068fd7568d62796fab21ef16f771e4099d9f45f16504a391bfb9725",
   "acceptance": [
     {
       "id": "AC-01",
@@ -321,5 +321,16 @@
     },
     "acceptedCommit": "0e601a3d55f88d875ca49d47931e216a5a328aa2"
   },
-  "acceptedFeatureMergeCheckpoint": "research/accepted-feature-merge-checkpoint.json"
+  "acceptedFeatureMergeCheckpoint": "research/accepted-feature-merge-checkpoint.json",
+  "priorSpecSha256AtCargoWorkspaceReview": "a5c62133cbf7d74af84c17f3596edd067efab7d340d33a6cc809ceaa467d4b98",
+  "cargoWorkspaceFeatureReview": {
+    "path": "research/cargo-workspace-feature-review.json",
+    "scope": "Current-tree no-change discovery decision; real Rust computations, qualification and all nine full acceptance criteria remain open.",
+    "sha256": "b260673a1b4eb2eff61b90e0462cc1b72cc91d974f5fa9a572f010de7f80502e"
+  },
+  "priorSpecSha256AtHeldReplyReadinessReview": "0260cefc164f9ad091c0a31d31463f04132bd04f3787dfe30ace9fe876b27a6c",
+  "priorSpecSha256AtAcceptedProducerMerge": {
+    "cargoBranch": "30b9232c085ccdf3c5bc545e2546eda27f9365f353fae883901714350be3562a",
+    "acceptedProducer": "dac9820e8e2517f97f503a05869b5424f663978dc50cf7dd815d3a4d0648f33f"
+  }
 }

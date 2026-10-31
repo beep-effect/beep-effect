@@ -11,10 +11,11 @@ import { dual, pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import { documentationShapeViolations } from "./JSDocDocumentationInventory.ts";
 import { JSDocMigrateRemarksRouting } from "./JSDocMigrate.schemas.ts";
-import { escapeRegExp, fencedLineState, stripCommentFraming } from "./QualityArtifactSupport.ts";
+import { fencedLineState, stripCommentFraming } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocMigrateRewrite");
 
@@ -367,7 +368,7 @@ const normalizeTagSegment = (segment: TagSegment, nextSeePurpose: () => string |
 
   const rename = renamedTag(tag);
   if (rename !== undefined) {
-    firstLine = Str.replace(new RegExp(`^(\\s*)${escapeRegExp(tag)}\\b`), `$1${rename}`)(firstLine);
+    firstLine = Str.replace(new RegExp(`^(\\s*)${Regex.escape(tag)}\\b`), `$1${rename}`)(firstLine);
     A.appendInPlace(removedTokens, tag);
     A.appendInPlace(addedTokens, rename);
     tag = rename;
