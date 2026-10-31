@@ -27,7 +27,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -56,7 +56,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -85,7 +85,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -114,7 +114,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -149,7 +149,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "GitHub explicitly reports this alert withdrawn (HTTP 410); not counted as a proven version fix. See research/2026-10-31-revalidation.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "withdrawn",
@@ -180,7 +180,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -211,7 +211,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -240,7 +240,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -269,7 +269,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -298,7 +298,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -327,7 +327,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -356,7 +356,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -385,7 +385,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -414,7 +414,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -450,7 +450,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -479,7 +479,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -508,7 +508,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -539,7 +539,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -568,7 +568,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -597,7 +597,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -626,7 +626,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -657,7 +657,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -688,7 +688,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -717,7 +717,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -746,7 +746,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -775,7 +775,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -804,7 +804,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -835,7 +835,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -864,7 +864,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -893,7 +893,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -922,7 +922,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -951,7 +951,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -980,7 +980,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1009,7 +1009,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1038,7 +1038,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1067,7 +1067,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1096,7 +1096,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1125,7 +1125,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1154,7 +1154,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1186,7 +1186,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1218,7 +1218,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1250,7 +1250,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1282,7 +1282,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1314,7 +1314,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1346,7 +1346,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1375,7 +1375,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1404,7 +1404,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1433,7 +1433,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1462,7 +1462,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1491,7 +1491,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1520,7 +1520,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1556,7 +1556,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1585,7 +1585,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1616,7 +1616,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1647,7 +1647,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1678,7 +1678,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1707,7 +1707,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1736,7 +1736,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1765,7 +1765,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1794,7 +1794,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1823,7 +1823,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1852,7 +1852,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1881,7 +1881,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1910,7 +1910,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1942,7 +1942,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -1974,7 +1974,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2006,7 +2006,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2038,7 +2038,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2067,7 +2067,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2096,7 +2096,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2125,7 +2125,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2154,7 +2154,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2183,7 +2183,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2212,7 +2212,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2241,7 +2241,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2270,7 +2270,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2299,7 +2299,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2328,7 +2328,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2357,7 +2357,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2388,7 +2388,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2419,7 +2419,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2450,7 +2450,7 @@
         "goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-override-evidence.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2479,7 +2479,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2508,7 +2508,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2537,7 +2537,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2566,7 +2566,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2595,7 +2595,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2624,7 +2624,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2653,7 +2653,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2682,7 +2682,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2714,7 +2714,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2746,7 +2746,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2778,7 +2778,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2810,7 +2810,7 @@
         "goals/repository-simplification-residue/history/receipts/hold-register.md"
       ],
       "source_attribution": "inert historical parser input; not installed by reviewed consumers",
-      "verification": "See research/dependabot-fixtures.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md.",
       "report": "research/dependabot-fixtures.md",
       "closure": {
         "state": "fixed",
@@ -2839,7 +2839,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
@@ -2868,7 +2868,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
@@ -2897,7 +2897,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
@@ -2926,7 +2926,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
@@ -2955,7 +2955,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
@@ -2984,7 +2984,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
@@ -3013,7 +3013,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
@@ -3042,7 +3042,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-python.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md.",
       "report": "research/dependabot-python.md",
       "closure": {
         "state": "fixed",
@@ -3071,7 +3071,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
@@ -3100,7 +3100,7 @@
       },
       "prior_packet_references": [],
       "source_attribution": "affected locked version persists on reviewed default branch",
-      "verification": "See research/dependabot-rust.md; final committed hosted and merged proof pending",
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-rust.md.",
       "report": "research/dependabot-rust.md",
       "closure": {
         "state": "fixed",
@@ -3135,7 +3135,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 448,
@@ -3164,7 +3164,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 447,
@@ -3193,7 +3193,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 446,
@@ -3222,7 +3222,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 445,
@@ -3251,7 +3251,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 444,
@@ -3280,7 +3280,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 443,
@@ -3309,7 +3309,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 442,
@@ -3338,7 +3338,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 441,
@@ -3367,7 +3367,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-fixtures.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-fixtures.md."
     },
     {
       "number": 440,
@@ -3396,7 +3396,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 439,
@@ -3425,7 +3425,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 438,
@@ -3454,7 +3454,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 437,
@@ -3483,7 +3483,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 436,
@@ -3512,7 +3512,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 435,
@@ -3541,7 +3541,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 434,
@@ -3570,7 +3570,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 433,
@@ -3599,7 +3599,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 432,
@@ -3628,7 +3628,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "Merged remediation and exact alert closure revalidated Fixed on 2026-10-31. See research/2026-10-31-revalidation.md; scoped qualification remains in research/dependabot-python.md."
     },
     {
       "number": 431,
@@ -3657,7 +3657,7 @@
         "observedAt": "2026-10-31",
         "source": "GitHub REST exact captured alert IDs; HTTP 410 explicitly identifies withdrawn IDs 426 and 431"
       },
-      "verification": "See research/dependabot-python.md post-publication refresh; hosted and merged proof pending"
+      "verification": "GitHub explicitly reports this alert withdrawn (HTTP 410); not counted as a proven version fix. See research/2026-10-31-revalidation.md."
     }
   ],
   "initial_count": 104,
