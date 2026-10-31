@@ -1625,3 +1625,9 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   check-only case exceeding its thirty-second test limit. Its exact isolated
   replay passed in16.763 seconds. Preserve both scopes and the failed full audit;
   use fresh combined hosted validation instead of inferring a complete pass.
+- A producer verifier import legitimately expanded the generated quality-seal
+  closure, but resealing alone left the reviewed cache baseline stale. Pair
+  canonical fingerprint regeneration with a root-scoped reviewed-baseline
+  compare-and-swap acknowledgement and inspect the exact projection delta.
+  Preserve all other reviews and the qualification ledger; do not exempt this
+  PR-owned cache-policy failure as inherited.

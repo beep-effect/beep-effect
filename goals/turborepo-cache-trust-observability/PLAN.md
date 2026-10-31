@@ -1005,3 +1005,17 @@ requests before querying a native client. Current combined focused replay
 passes 104 cases on Node and 104 on Bun, and package quick checking passes.
 Accepted-main integration, current combined hosted proof and full supervised
 stable/current-canary receipts remain required.
+
+### Producer quality-seal baseline acknowledgement
+
+Fresh hosted Repo Sanity found a PR-owned cache-policy drift after the producer
+verifier expanded the canonical quality-seal input closure by four files. The
+[review](research/producer-quality-closure-baseline-review-2026-10-31.md) and
+[request](research/producer-quality-closure-baseline-request-2026-10-31.json)
+restrict the compare-and-swap write to root subject `//`. The writer carried all
+188 other subject reviews and dropped none. Direct before/after comparison
+confirms exactly one changed task (the quality seal), only `turbo.json` as a
+changed source, no added/removed nodes, unchanged global configuration, scope,
+historical profile/epoch, and a byte-identical qualification ledger. No cache
+enablement, disposition or qualification was granted. Hosted validation of the
+corrected pushed head remains required.

@@ -111,7 +111,9 @@
     "research/inspection-governance-checkpoint.json",
     "research/producer-command-publication-checkpoint.json",
     "research/producer-private-output-checkpoint.json",
-    "research/normal-source-worker-observation.json"
+    "research/normal-source-worker-observation.json",
+    "research/producer-quality-closure-baseline-review-2026-10-31.md",
+    "research/producer-quality-closure-baseline-request-2026-10-31.json"
   ],
   "agentLaunchers": [
     {

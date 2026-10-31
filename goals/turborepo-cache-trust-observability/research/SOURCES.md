@@ -577,3 +577,10 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   Invalid stdin controls are excluded from the negative/pass evidence.
 - Scope: diagnostic worker observation, without a production, protected
   publication, ordinary CLI success or operational qualification claim.
+
+## Producer quality-seal input closure, 2026-10-31
+
+- [Reviewed closure](producer-quality-closure-baseline-review-2026-10-31.md) and
+  [bounded compare-and-swap request](producer-quality-closure-baseline-request-2026-10-31.json):
+  four added policy inputs, root-only acknowledgement, unchanged runtime scope
+  and byte-identical qualification ledger. No qualification or activation.
