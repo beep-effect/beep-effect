@@ -84,6 +84,7 @@ export const ROUTE_FOOTPRINTS = {
 /**
  * The footprints in lane-id declaration order.
  *
+ * @returns One {@link CheckFootprint} per lane, in `CI_LANE_ID_VALUES` order.
  * @category queries
  * @since 0.0.0
  */
@@ -102,6 +103,7 @@ export const routeFootprintList = (): ReadonlyArray<CheckFootprint> =>
  * console.log(routeFootprintCanonicalJson() === routeFootprintCanonicalJson()) // true
  * ```
  *
+ * @returns The minified JSON text the footprint digest is computed over.
  * @category queries
  * @since 0.0.0
  */
@@ -128,6 +130,8 @@ export const routeFootprintCanonicalJson = (): string =>
  * console.log(HashSet.size(lanesAffectedBy("unknown")) === CI_LANE_ID_VALUES.length) // true
  * ```
  *
+ * @param kind - The atom kind to look up.
+ * @returns The lanes whose footprint names `kind`.
  * @category queries
  * @since 0.0.0
  */
@@ -152,6 +156,8 @@ export const lanesAffectedBy = (kind: ChangeAtomKind): HashSet.HashSet<CiLaneId>
  * console.log(HashMap.size(requiredLanes([]))) // 0
  * ```
  *
+ * @param atoms - The classified change.
+ * @returns Each required lane with the atom kinds that selected it.
  * @category queries
  * @since 0.0.0
  */
@@ -175,6 +181,8 @@ export const requiredLanes = (
 /**
  * The lanes a set of atoms does not require, in lane-id declaration order.
  *
+ * @param required - The output of {@link requiredLanes}.
+ * @returns Every lane id absent from `required`.
  * @category queries
  * @since 0.0.0
  */
@@ -185,6 +193,7 @@ export const skippedLanes = (
 /**
  * The footprint record as a plain record keyed by lane id, for JSON output.
  *
+ * @returns The same rows as {@link ROUTE_FOOTPRINTS}, typed as a plain record.
  * @category queries
  * @since 0.0.0
  */

@@ -24,6 +24,11 @@ import { CiLaneId } from "./CiLane.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Route");
 
+// An optional string that decodes from an absent key and constructs as None by default; the
+// shape every optional text field of the route shares (owning package, detail, conclusion,
+// timestamps, cost source).
+const OptionalText = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
+
 /**
  * Literal values of {@link ChangeAtomKind}, in census order.
  *
@@ -118,8 +123,8 @@ export class ChangeAtom extends S.Opaque<ChangeAtom, { readonly brand: unique sy
   S.Struct({
     kind: ChangeAtomKind,
     path: S.NonEmptyString,
-    pkg: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    detail: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    pkg: OptionalText,
+    detail: OptionalText,
     digest: S.NonEmptyString,
   }).pipe(
     $I.annoteSchema("ChangeAtom", {
@@ -308,9 +313,9 @@ export class RoutePlan extends S.Opaque<RoutePlan, { readonly brand: unique symb
 export class HostedJob extends S.Opaque<HostedJob, { readonly brand: unique symbol }>()(
   S.Struct({
     name: S.NonEmptyString,
-    conclusion: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    startedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    completedAt: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    conclusion: OptionalText,
+    startedAt: OptionalText,
+    completedAt: OptionalText,
   }).pipe(
     $I.annoteSchema("HostedJob", {
       description: "One hosted job: its check name, conclusion and timestamps.",
@@ -350,7 +355,7 @@ export class HostedRun extends S.Opaque<HostedRun, { readonly brand: unique symb
     headBranch: S.String,
     headSha: S.NonEmptyString,
     createdAt: S.NonEmptyString,
-    conclusion: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    conclusion: OptionalText,
     attempt: S.Int,
     jobs: S.Array(HostedJob),
   }).pipe(
@@ -417,7 +422,7 @@ export class RouteLaneCost extends S.Opaque<RouteLaneCost, { readonly brand: uni
     lane: CiLaneId,
     basis: RouteCostBasis,
     p50Ms: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    source: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    source: OptionalText,
   }).pipe(
     $I.annoteSchema("RouteLaneCost", {
       description: "A lane's cost estimate, its basis and its source pointer.",

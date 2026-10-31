@@ -8,9 +8,9 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { HostedRun, RouteCorpusReceipt } from "./Route.schemas.ts";
-import type * as Effect from "effect/Effect";
 import type { ChangeSet, RouteCensus, RouteError, RoutePlan, RouteReplay } from "./Route.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Route.service");
@@ -125,7 +125,7 @@ export class RouteCorpusCaptureOptions extends S.Opaque<RouteCorpusCaptureOption
   S.Struct({
     repoRoot: S.NonEmptyString,
     since: S.NonEmptyString,
-    until: S.String.pipe(S.OptionFromOptionalKey),
+    until: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     workflows: S.Array(S.NonEmptyString),
     outDir: S.NonEmptyString,
   }).pipe(
@@ -163,7 +163,7 @@ export class RouteCorpusLoaded extends S.Opaque<RouteCorpusLoaded, { readonly br
 export interface RouteCorpusShape {
   /** Capture (or extend) the corpus and write its receipt. */
   readonly capture: (options: RouteCorpusCaptureOptions) => Effect.Effect<RouteCorpusReceipt, RouteError>;
-  /** Load a corpus by its receipt path, failing when the file's sha256 differs from the receipt. */
+  /** Load a corpus by its receipt path: the corpus file lives beside the receipt (`receipt.path` records its repo-relative location), and the load fails when the file's sha256 or run count differs from the receipt. */
   readonly load: (receiptPath: string) => Effect.Effect<RouteCorpusLoaded, RouteError>;
 }
 
