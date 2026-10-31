@@ -56,9 +56,12 @@ export CLOUDFLARE_ACCOUNT_ID
 previous_ids=""
 page=1
 while :; do
-  rows="$(cf accounts tokens list --page "$page" --per-page 50 | sed -n '/^[{[]/,$p' | jq -c '(.[]? // .result[]?)')"
-  previous_ids+="$(printf '%s\n' "$rows" | jq -r --arg name "$TOKEN_NAME" 'select(.name == $name) | .id')"$'\n'
-  [[ "$(printf '%s\n' "$rows" | grep -c .)" -lt 50 ]] && break
+  # The CLI prints a bare array or an API envelope; select the array first so an
+  # empty page (`[]`) yields no rows instead of a jq error.
+  page_rows="$(cf accounts tokens list --page "$page" --per-page 50 | sed -n '/^[{[]/,$p' |
+    jq -c '(if type == "array" then . else (.result // []) end)')"
+  previous_ids+="$(printf '%s' "$page_rows" | jq -r --arg name "$TOKEN_NAME" '.[] | select(.name == $name) | .id')"$'\n'
+  [[ "$(printf '%s' "$page_rows" | jq 'length')" -lt 50 ]] && break
   page=$((page + 1))
 done
 
