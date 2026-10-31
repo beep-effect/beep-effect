@@ -25,7 +25,6 @@ import { exploreCommand } from "./Explore/index.ts";
 import { fallowCommand } from "./Fallow/index.ts";
 import { filesCommand } from "./Files/index.ts";
 import { goalsCommand } from "./Goals/index.ts";
-import { graftCommand } from "./Graft/index.ts";
 import { harnessLedgerCommand } from "./HarnessLedger/index.ts";
 import { imageCommand } from "./Image/index.ts";
 import { knowledgeCommand } from "./Knowledge/index.ts";
@@ -96,7 +95,6 @@ export const rootCommand = Command.make("beep-cli").pipe(
     fallowCommand,
     filesCommand,
     goalsCommand as Command.Command<"goals", {}, {}, never, never>,
-    graftCommand,
     harnessLedgerCommand,
     refsCommand,
     imageCommand,

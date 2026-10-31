@@ -4,7 +4,8 @@ Reviewer: Claude Opus 5.5 (G3 lane, `claude/beep-lazy-dispatch-369e54`).
 
 `beep lint policy-fingerprint --write` resealed seven generated tasks under
 subject `//`. These are the only configuration-drift BLOCKs in
-`beep cache audit`. Each input change, compared with `main` at `b30cd9e6dd`:
+`beep cache audit`. Each input change, compared with `main` at `3fbb6e614b`
+(after #2376 retired Graft):
 
 | Task | Inputs added | Inputs removed | Cause |
 | --- | --- | --- | --- |
@@ -14,7 +15,7 @@ subject `//`. These are the only configuration-drift BLOCKs in
 | `//#lint:policy-fingerprint:knowledge` | none | same | same |
 | `//#lint:policy-fingerprint:lint-deprecated-apis` | none | same | same |
 | `//#lint:policy-fingerprint:lint-roadmap-refs` | none | same | same |
-| `//#lint:policy-fingerprint:quality` | `packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts` | same | Inherited: #2381 moved the docgen quality subjects onto `JsDocNodes.ts`. |
+| `//#lint:policy-fingerprint:quality` | `packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts` | `GlobPattern.ts`, `packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts`, `packages/foundation/modeling/schema/src/UnitInterval.ts` | Inherited: #2381 moved the docgen quality subjects onto `JsDocNodes.ts`. #2376 deleted the Graft group; `UnitInterval.ts` was reached only through `Graft.schemas.ts`. |
 
 No task, flag or edge outside these input lists changed. No qualification is
 granted, and no exception row or standards debt is added. Scope, profile and

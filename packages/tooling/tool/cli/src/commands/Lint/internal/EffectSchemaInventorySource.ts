@@ -1,6 +1,6 @@
 /**
  * Service boundary for every input the schema inventory reads outside its own fixture: the
- * catalog pin, the pinned Effect sources, and optional local graft context.
+ * catalog pin and the pinned Effect sources.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -8,30 +8,20 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { A, Str } from "@beep/utils";
+import { Str } from "@beep/utils";
 import * as Context from "effect/Context";
-import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import { OutputBound, runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
-import {
-  EffectSchemaInventoryGraftContext,
-  EffectSchemaInventoryGraftSkeleton,
-  EffectSchemaInventoryPin,
-  EffectSchemaInventoryReferencePath,
-} from "../EffectSchemaInventory.schemas.ts";
+import { EffectSchemaInventoryReferencePath } from "../EffectSchemaInventory.schemas.ts";
 import {
   EffectSchemaInventoryCatalogPinError,
   EffectSchemaInventoryError,
-  EffectSchemaInventoryGraftUnavailableError,
   EffectSchemaInventoryPinAbsentError,
   EffectSchemaInventoryReferenceMissingError,
 } from "../Lint.errors.ts";
@@ -39,13 +29,9 @@ import { parseEffectSchemaInventoryPin } from "./EffectSchemaInventoryModules.ts
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
+import type { EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/internal/EffectSchemaInventorySource");
-
-const GRAFT_TIMEOUT = Duration.seconds(60);
-const graftOutputBound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "\n[graft] output truncated" });
-const decodeGraftSkeleton = S.decodeUnknownEffect(S.fromJsonString(EffectSchemaInventoryGraftSkeleton));
-const decodePin = S.decodeUnknownEffect(EffectSchemaInventoryPin);
 
 /**
  * Operations over the inventory's external inputs.
@@ -53,9 +39,7 @@ const decodePin = S.decodeUnknownEffect(EffectSchemaInventoryPin);
  * **Details**
  *
  * `readPin` never consults the reference HEAD; `readPinned` is the only source-byte path and
- * reads `git show <pin>:<file>`, never the working tree. Graft is local-only and never a
- * hosted-CI input; when a prompt asks for it and it cannot be read, `graftContext` fails with
- * {@link EffectSchemaInventoryGraftUnavailableError}.
+ * reads `git show <pin>:<file>`, never the working tree.
  *
  * **Example** (Describe a fake source)
  *
@@ -70,11 +54,6 @@ const decodePin = S.decodeUnknownEffect(EffectSchemaInventoryPin);
  * @since 0.0.0
  */
 export interface EffectSchemaInventorySourceShape {
-  /** Graft skeleton of `<file>` in the reference working tree; fails when graft cannot be read. */
-  readonly graftContext: (
-    pin: EffectSchemaInventoryPin,
-    file: string
-  ) => Effect.Effect<EffectSchemaInventoryGraftContext, EffectSchemaInventoryGraftUnavailableError>;
   /** `inventoryPin` from the root `package.json` catalog entry for `effect`. */
   readonly readPin: Effect.Effect<EffectSchemaInventoryPin, EffectSchemaInventoryCatalogPinError>;
   /** UTF-8 text of `<file>` at the pin. */
@@ -145,63 +124,10 @@ const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.m
       EffectSchemaInventoryError.new(`Unable to read ${file} at ${pin} (${commandLine}: ${detail}).`)
     ).pipe(Effect.withSpan("EffectSchemaInventorySource.readPinned", { attributes: { file } }));
 
-  // Messages can land in terminal output and committed prompts, so they never carry the checkout's
-  // absolute path.
-  const graftFailure = (commandLine: string, detail: string) =>
-    EffectSchemaInventoryGraftUnavailableError.new(
-      pipe(`${commandLine}: ${detail}`, Str.split("\n"), A.take(3), A.join(" "), Str.replaceAll(root, "<repo>"))
-    );
-
-  const graftSkeleton = Effect.fn("EffectSchemaInventorySource.graftSkeleton")(function* (file: string) {
-    const commandLine = `graft skeleton --json --no-refresh ${file} ${EffectSchemaInventoryReferencePath}`;
-    const captured = yield* runCapturedStreams({
-      command: "graft",
-      args: ["skeleton", "--json", "--no-refresh", file, reference],
-      cwd: root,
-      extendEnv: true,
-      bound: graftOutputBound,
-    }).pipe(
-      Effect.provide(context),
-      Effect.timeoutOption(GRAFT_TIMEOUT),
-      Effect.mapError((cause) => graftFailure(commandLine, `could not run: ${renderCause(cause)}`))
-    );
-    if (O.isNone(captured))
-      return yield* graftFailure(commandLine, `timed out after ${Duration.format(GRAFT_TIMEOUT)}`);
-    if (captured.value.exitCode !== 0)
-      return yield* graftFailure(commandLine, `exit ${captured.value.exitCode}: ${Str.trim(captured.value.stderr)}`);
-    return yield* decodeGraftSkeleton(captured.value.stdout).pipe(
-      Effect.mapError((cause) => graftFailure(commandLine, `output did not decode: ${renderCause(cause)}`))
-    );
-  });
-
-  // Graft reads the working tree, so span alignment is judged by the working-tree file's blob id
-  // (`git hash-object`) against the pin's blob, never by the committed HEAD blob.
-  const graftContext: EffectSchemaInventorySourceShape["graftContext"] = Effect.fn(
-    "EffectSchemaInventorySource.graftContext"
-  )(function* (pin, file) {
-    const head = yield* git(["rev-parse", "--verify", "HEAD^{commit}"], graftFailure).pipe(
-      Effect.map(Str.trim),
-      Effect.flatMap((sha) =>
-        decodePin(sha).pipe(Effect.mapError((cause) => graftFailure("git rev-parse HEAD", renderCause(cause))))
-      )
-    );
-    const [workingTreeBlob, pinBlob] = yield* Effect.all([
-      git(["hash-object", "--", file], graftFailure).pipe(Effect.map(Str.trim)),
-      git(["rev-parse", `${pin}:${file}`], graftFailure).pipe(Effect.map(Str.trim)),
-    ]);
-    const skeleton = yield* graftSkeleton(file);
-    return EffectSchemaInventoryGraftContext.make({
-      head,
-      workingTreeMatchesPin: workingTreeBlob === pinBlob,
-      entries: skeleton.entries,
-    });
-  });
-
   return {
     readPin,
     verifyPin,
     readPinned,
-    graftContext,
   } satisfies EffectSchemaInventorySourceShape;
 });
 
@@ -228,7 +154,7 @@ export class EffectSchemaInventorySource extends Context.Service<
    * Live source for a repository root: `<root>/package.json` and `<root>/.repos/effect`.
    *
    * @param root - Absolute repository root.
-   * @returns A layer reading the catalog, git objects, and graft for that root.
+   * @returns A layer reading the catalog and git objects for that root.
    * @category layers
    * @since 0.0.0
    */

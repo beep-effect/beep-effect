@@ -145,10 +145,6 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Goals/index.ts").then((module) => module.goalsCommand)),
   groupRoute(
-    { name: "graft", description: "Repo-owned operations on clone-local Graft caches" },
-    []
-  )(() => import("../../commands/Graft/index.ts").then((module) => module.graftCommand)),
-  groupRoute(
     {
       name: "harness-ledger",
       description: "Append-only harness evidence ledger (propose, disposition, list, prune-proposals, reconcile)",

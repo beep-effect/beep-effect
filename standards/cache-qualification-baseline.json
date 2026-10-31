@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (G3 lane, claude/beep-lazy-dispatch-369e54)",
-      "reason": "Re-record the root subject after resealing seven policy-fingerprint seal tasks: the shared seal gains the lazy dispatch modules, and six seals drop or swap inputs that #2381 changed before #2390 sealed; no qualification is granted.",
+      "reason": "Re-record the root subject after resealing seven policy-fingerprint seal tasks: the shared seal gains the lazy dispatch modules; six seals drop inputs that #2381 and #2376 deleted or moved after #2390 sealed; no qualification is granted.",
       "basis": {
         "path": "goals/beep-cli-composition/research/g3-cache-baseline-review.md",
-        "sha256": "3cdbbe6411bf8a94fead0576df71cd48a7f56139919c812ec937d0ba296ed9db"
+        "sha256": "2be3c4139c7ae0cd4eb2f43bfbff9149b1130919480f6b26d5aad8becbd1e272"
       }
     },
     "@beep/acp": {
@@ -1565,8 +1565,6 @@
           "CODEX_SESSION_ID",
           "CODEX_THREAD_ID",
           "GITHUB_ACTIONS",
-          "GRAFT_CRUX_MODULE",
-          "GRAFT_EXTRACT_MODULE",
           "TURBO_CACHE",
           "TURBO_FORCE",
           "TURBO_TOKEN",
@@ -2690,7 +2688,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -5759,7 +5756,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5907,7 +5903,6 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -7030,7 +7025,6 @@
             "!.claude/worktrees/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7071,7 +7065,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*",
             "./.bun-version",
             "./.nvmrc",
@@ -7183,7 +7176,6 @@
             "!**/storybook-static/**",
             "!.git/**",
             "!.repos/**",
-            "!graft/**",
             "**/*.{ts,tsx,mts,cts,md,mdx}",
             "./.bun-version",
             "./.nvmrc",
@@ -7347,7 +7339,6 @@
             "!explorations/**",
             "!explorations/*/CAPTURE.md",
             "!goals/**",
-            "!graft/**",
             "!infra/ci-runners/sdks/**",
             "!node_modules/**",
             "!outputs/agent-reliability/**",
@@ -133861,7 +133852,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "3ab08e9883b6f6a9265f5eaa632f119c239b8dd64b73d7423f881146d1e659f3"
+        "sha256": "bc2e6d19c56f42ff35fe68a5a5fc80ddb2fd6287bb61547db6ab07a06298a2ae"
       }
     ]
   }

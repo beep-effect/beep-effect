@@ -11,7 +11,7 @@ Schema, then service, then implementation:
 | Layer | Module | What it holds |
 | --- | --- | --- |
 | Schema | `packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts` | `RuntimeService` (`fs-utils`, `ts-morph`, `memory-stats`), `CommandGroupHelp` (name, description, short description, alias, unlisted), `DispatchTarget` (`group`, `root`, `full-tree`, `quality-task`). |
-| Manifest | `.../internal/dispatch/Dispatch.manifest.ts` | 44 routes in `beep --help` order. Each has static help, its runtime service keys, and a dynamic import of its facade. Plus the quality-task route. |
+| Manifest | `.../internal/dispatch/Dispatch.manifest.ts` | One route per top-level group in `beep --help` order: 44 when measured, 43 after #2376 retired `graft`. Each has static help, its runtime service keys, and a dynamic import of its facade. Plus the quality-task route. |
 | Dispatch | `.../internal/dispatch/Dispatch.ts` | `resolveDispatchTarget` (argv only), `dispatchRuntimeServices`, `loadDispatchTarget`, `makeStubCommand`, `makeRootCommand`. |
 | Bin | `.../src/bin-main.ts` | Builds the platform base plus only the declared service Layers, loads the target, runs the composed root. The `CliRuntime.main` failure rendering from #2309 is unchanged. |
 
