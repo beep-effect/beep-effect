@@ -10,6 +10,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { DomainError } from "@beep/repo-utils";
 import { buildCanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { SchemaUtils } from "@beep/schema";
@@ -23,11 +24,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import {
-  applyJsoncModification as applySharedJsoncModification,
-  decodeJsoncTextAs,
-  JsoncModification,
-} from "../../internal/cli/Jsonc.ts";
+import { applyJsoncModification, JsoncModification } from "../../internal/cli/Jsonc.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
 
@@ -171,9 +168,9 @@ const parseJsoncObject: {
 } = dual(
   2,
   Effect.fn(function* (content, filePath) {
-    return yield* decodeJsoncTextAs(JsoncUnknownObject)(content).pipe(
-      Effect.mapError(DomainError.newCauseMessage(`Invalid JSONC in ${filePath}`))
-    );
+    return yield* Jsonc.bind(JsoncUnknownObject)
+      .decode(content)
+      .pipe(Effect.mapError(DomainError.newCauseMessage(`Invalid JSONC in ${filePath}`)));
   })
 );
 
@@ -223,27 +220,11 @@ const normalizeTargets = (targets: ReadonlyArray<ConfigUpdateTarget>): ReadonlyA
 const defaultAliasTargetsForPackage = (packagePath: string) =>
   buildCanonicalAliasTargets(packagePath, "./src/index.ts");
 
-// fallow-ignore-next-line code-duplication -- config-updater helper twin of the CreatePackage/TsconfigSync copy, converged after the tstyche removal and the JSDoc grammar migration. Owner: @beep/repo-cli. Exit: consolidate both onto `@beep/repo-utils` (workspaceGlobsFrom/readPackageJsonFile) and delete the twins.
 const aliasTargetsForTarget = (target: ConfigUpdateTarget) => ({
   rootAliasTarget: target.rootAliasTarget ?? defaultAliasTargetsForPackage(target.packagePath).rootAliasTarget,
   wildcardAliasTarget:
     target.wildcardAliasTarget ?? defaultAliasTargetsForPackage(target.packagePath).wildcardAliasTarget,
 });
-
-const applyJsoncModification = (
-  content: string,
-  path: ReadonlyArray<string | number>,
-  value: unknown,
-  options?: { readonly isArrayInsertion?: boolean }
-): string =>
-  applySharedJsoncModification(
-    JsoncModification.make({
-      content,
-      path,
-      value,
-      ...(options?.isArrayInsertion === true ? { isArrayInsertion: true } : {}),
-    })
-  );
 
 /**
  * Read → transform → write-if-changed. Returns `true` when the file was
@@ -315,7 +296,13 @@ export const updateTsconfigPackages: {
           return content;
         }
 
-        return applyJsoncModification(content, ["references"], A.append(references, { path: packagePath }));
+        return applyJsoncModification(
+          JsoncModification.make({
+            content: content,
+            path: ["references"],
+            value: A.append(references, { path: packagePath }),
+          })
+        );
       })
     );
   })
@@ -376,11 +363,23 @@ export const updateTsconfigPaths: {
 
         const withBaseAlias = hasBaseAlias
           ? content
-          : applyJsoncModification(content, ["compilerOptions", "paths", alias], [rootAliasTarget]);
+          : applyJsoncModification(
+              JsoncModification.make({
+                content: content,
+                path: ["compilerOptions", "paths", alias],
+                value: [rootAliasTarget],
+              })
+            );
 
         return hasWildcardAlias
           ? withBaseAlias
-          : applyJsoncModification(withBaseAlias, ["compilerOptions", "paths", `${alias}/*`], [wildcardAliasTarget]);
+          : applyJsoncModification(
+              JsoncModification.make({
+                content: withBaseAlias,
+                path: ["compilerOptions", "paths", `${alias}/*`],
+                value: [wildcardAliasTarget],
+              })
+            );
       })
     );
   })

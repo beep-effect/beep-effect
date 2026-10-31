@@ -7,7 +7,7 @@
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -50,7 +50,7 @@ const encodeJson = S.encodeUnknownEffect(UnknownJson);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeJsonObjectOption = S.decodeUnknownOption(S.JsonObject);
 const decodeJsonArrayOption = S.decodeUnknownOption(S.Array(S.Json));
-const decodeRepoBiomeConfig = decodeJsoncTextAs(S.JsonObject);
+const decodeRepoBiomeConfig = Jsonc.bind(S.JsonObject).decode;
 const normalizePathSeparators = Str.replaceAll("\\", "/");
 const normalizeRelativePath: (value: string) => string = flow(normalizePathSeparators, Str.replace(/^\.\//, ""));
 const excerpt: (value: string) => string = Str.slice(0, ENVIRONMENT_EXCERPT_LENGTH);
