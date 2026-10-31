@@ -11,6 +11,8 @@
     "packages/epistemic/server/scripts/retention-report.ts",
     // Offline calibration command invoked by the frozen packet replay protocol.
     "packages/epistemic/server/scripts/retention-calibrate.ts",
+    // Executable offline claim evaluation commands in the fixed replay protocol.
+    "packages/law-practice/server/test/evaluation/*.main.ts",
     "infra/src/internal/*-entry.ts",
     // Preloaded by every infra Pulumi.yaml (runtime.options.nodeargs).
     "infra/pulumi-typescript6.cjs",

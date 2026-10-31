@@ -32,7 +32,7 @@ export class StructuralEvaluationError extends S.TaggedError<
 ) {}
 
 /** One selected claim's exact result and diagnostic typed-edge counts. */
-export class StructuralClaimScore extends S.Opaque<StructuralClaimScore, { readonly brand: unique symbol }>()(
+class StructuralClaimScore extends S.Opaque<StructuralClaimScore, { readonly brand: unique symbol }>()(
   S.Struct({
     claimNumber: S.Int.check(S.isGreaterThan(0)),
     strict: S.Boolean,

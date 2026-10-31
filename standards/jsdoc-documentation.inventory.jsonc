@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T07:31:18.882Z",
+  "generatedAt": "2026-10-31T10:05:36.830Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 164,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 17,
-    "publicModules": 3568,
-    "publicExports": 25360,
+    "publicModules": 3572,
+    "publicExports": 25375,
     "openModules": 166,
     "openExports": 99,
     "missingExportExamples": 3,
@@ -169703,8 +169703,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 609,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-609-sanitizedtoolkit",
+          "line": 616,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-616-sanitizedtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -176470,9 +176470,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 251,
-        "publicModuleCount": 251,
-        "publicExportCount": 949
+        "sourceFileCount": 252,
+        "publicModuleCount": 252,
+        "publicExportCount": 953
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -178497,6 +178497,28 @@
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
           "line": 1,
           "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-tree-model-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 1,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-1-module",
           "currentTags": [
             "@packageDocumentation",
             "@since"
@@ -187529,8 +187551,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/Antecedent.policy.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/Antecedent.policy.ts",
-          "line": 103,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-103-antecedentpolicy",
+          "line": 108,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-108-antecedentpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -187551,8 +187573,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/Antecedent.policy.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/Antecedent.policy.ts",
-          "line": 468,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-468-antecedentpolicy",
+          "line": 499,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-499-antecedentpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -187749,8 +187771,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 53,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-53-claimtermintroducingdeterminer",
+          "line": 60,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-60-claimtermintroducingdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -187771,8 +187793,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 70,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-70-claimtermintroducingdeterminer",
+          "line": 77,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-77-claimtermintroducingdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -187793,8 +187815,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 88,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-88-claimtermreferringdeterminer",
+          "line": 95,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-95-claimtermreferringdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -187815,8 +187837,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 100,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-100-claimtermreferringdeterminer",
+          "line": 107,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-107-claimtermreferringdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -187837,8 +187859,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 156,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-156-claimelementdecomposer",
+          "line": 163,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-163-claimelementdecomposer",
           "currentTags": [
             "@category",
             "@since"
@@ -187859,8 +187881,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 563,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-563-decomposeclaim",
+          "line": 919,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-919-decomposeclaim",
           "currentTags": [
             "@category",
             "@since"
@@ -188477,6 +188499,94 @@
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
           "line": 301,
           "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-tree-model-ts-301-claimelementtree",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isSingleModifiedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 21,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-21-issinglemodifiedhead",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isExplicitAbbreviatedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 37,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-37-isexplicitabbreviatedhead",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isDesignatedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 60,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-60-isdesignatedhead",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isCountedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 79,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-79-iscountedhead",
           "currentTags": [
             "@category",
             "@since"
@@ -196837,8 +196947,8 @@
           "exportKind": "class",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 74,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-74-patentdocumentnormalizationerror",
+          "line": 75,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-75-patentdocumentnormalizationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -196859,8 +196969,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 478,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-478-normalizepatentclaims",
+          "line": 517,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-517-normalizepatentclaims",
           "currentTags": [
             "@category",
             "@since"
@@ -196881,8 +196991,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 543,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-543-normalizepatentapplicationdocument",
+          "line": 582,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-582-normalizepatentapplicationdocument",
           "currentTags": [
             "@effects",
             "@category",
@@ -210595,8 +210705,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 118,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-118-generateretentionreport",
+          "line": 138,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-138-generateretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210617,8 +210727,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 229,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-229-encoderetentionreport",
+          "line": 249,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-249-encoderetentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210639,8 +210749,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 244,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-244-renderretentionreport",
+          "line": 264,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-264-renderretentionreport",
           "currentTags": [
             "@category",
             "@since"
@@ -210661,8 +210771,8 @@
           "exportKind": "const",
           "filePath": "src/Retention/Retention.service.ts",
           "repoPath": "packages/epistemic/use-cases/src/Retention/Retention.service.ts",
-          "line": 291,
-          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-291-evaluateretentioncandidate",
+          "line": 311,
+          "anchor": "packages-epistemic-use-cases-src-retention-retention-service-ts-311-evaluateretentioncandidate",
           "currentTags": [
             "@category",
             "@since"
@@ -286879,7 +286989,7 @@
         "srcDir": "src",
         "sourceFileCount": 5,
         "publicModuleCount": 5,
-        "publicExportCount": 25
+        "publicExportCount": 27
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -286981,7 +287091,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         },
         {
@@ -287387,12 +287497,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "UsptoPublishedDocumentReference",
+          "exportKind": "class",
+          "filePath": "src/Uspto.models.ts",
+          "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
+          "line": 353,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-353-usptopublisheddocumentreference",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "UsptoApplicationMetadata",
           "exportKind": "class",
           "filePath": "src/Uspto.models.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
-          "line": 348,
-          "anchor": "packages-drivers-uspto-src-uspto-models-ts-348-usptoapplicationmetadata",
+          "line": 382,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-382-usptoapplicationmetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -287413,8 +287545,30 @@
           "exportKind": "class",
           "filePath": "src/Uspto.models.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
-          "line": 391,
-          "anchor": "packages-drivers-uspto-src-uspto-models-ts-391-usptocontinuity",
+          "line": 431,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-431-usptocontinuity",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UsptoDocumentDownloadOption",
+          "exportKind": "class",
+          "filePath": "src/Uspto.models.ts",
+          "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
+          "line": 466,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-466-usptodocumentdownloadoption",
           "currentTags": [
             "@category",
             "@since"
@@ -287435,8 +287589,8 @@
           "exportKind": "class",
           "filePath": "src/Uspto.models.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
-          "line": 422,
-          "anchor": "packages-drivers-uspto-src-uspto-models-ts-422-usptodocumentreference",
+          "line": 494,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-494-usptodocumentreference",
           "currentTags": [
             "@category",
             "@since"
@@ -287457,8 +287611,8 @@
           "exportKind": "interface",
           "filePath": "src/Uspto.service.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.service.ts",
-          "line": 56,
-          "anchor": "packages-drivers-uspto-src-uspto-service-ts-56-usptoshape",
+          "line": 58,
+          "anchor": "packages-drivers-uspto-src-uspto-service-ts-58-usptoshape",
           "currentTags": [
             "@category",
             "@since"
@@ -287479,8 +287633,8 @@
           "exportKind": "class",
           "filePath": "src/Uspto.service.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.service.ts",
-          "line": 400,
-          "anchor": "packages-drivers-uspto-src-uspto-service-ts-400-uspto",
+          "line": 438,
+          "anchor": "packages-drivers-uspto-src-uspto-service-ts-438-uspto",
           "currentTags": [
             "@category",
             "@since"
@@ -290330,9 +290484,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 104,
-        "publicModuleCount": 103,
-        "publicExportCount": 651
+        "sourceFileCount": 105,
+        "publicModuleCount": 104,
+        "publicExportCount": 656
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -290548,6 +290702,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 1,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -292623,7 +292799,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 18,
+          "exportCount": 19,
           "remediationStatus": "resolved"
         },
         {
@@ -293235,6 +293411,94 @@
           "repoPath": "packages/law-practice/use-cases/src/CandorRecord/index.ts",
           "line": 16,
           "anchor": "packages-law-practice-use-cases-src-candorrecord-index-ts-16-export-from-candorrecord-reader-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaimSelfCheckReviewRequest",
+          "exportKind": "class",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 44,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-44-claimselfcheckreviewrequest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaimSelfCheckReviewResult",
+          "exportKind": "class",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 77,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-77-claimselfcheckreviewresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaimSelfCheckTool",
+          "exportKind": "const",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 111,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-111-claimselfchecktool",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "claimSelfCheckReview",
+          "exportKind": "const",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 158,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-158-claimselfcheckreview",
           "currentTags": [
             "@category",
             "@since"
@@ -306182,8 +306446,8 @@
           "exportKind": "const",
           "filePath": "src/Tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/Tools.ts",
-          "line": 36,
-          "anchor": "packages-law-practice-use-cases-src-tools-ts-36-practicekgtoolkit",
+          "line": 37,
+          "anchor": "packages-law-practice-use-cases-src-tools-ts-37-practicekgtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -306204,8 +306468,8 @@
           "exportKind": "type",
           "filePath": "src/Tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/Tools.ts",
-          "line": 66,
-          "anchor": "packages-law-practice-use-cases-src-tools-ts-66-practicekgtoolkit",
+          "line": 68,
+          "anchor": "packages-law-practice-use-cases-src-tools-ts-68-practicekgtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -306554,12 +306818,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./ClaimSelfCheck.tools.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/law-practice/use-cases/src/server.ts",
+          "line": 30,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-30-export-from-claimselfcheck-tools-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * as DailyNotice from \"./DailyNotice/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 39,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-39-export-as-dailynotice-from-dailynotice-index-ts",
+          "line": 46,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-46-export-as-dailynotice-from-dailynotice-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306580,8 +306866,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 41,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-41-export-as-documentidentification-from-documentidentification-index-ts",
+          "line": 48,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-48-export-as-documentidentification-from-documentidentification-index-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -306599,8 +306885,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 56,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-56-export-as-irtolaw-from-irtolaw-index-ts",
+          "line": 63,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-63-export-as-irtolaw-from-irtolaw-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306621,8 +306907,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 72,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-72-export-as-mailtagging-from-mailtagging-index-ts",
+          "line": 79,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-79-export-as-mailtagging-from-mailtagging-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306643,8 +306929,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 87,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-87-export-as-officeactionreview-from-officeactionreview-index-ts",
+          "line": 94,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-94-export-as-officeactionreview-from-officeactionreview-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306665,8 +306951,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 89,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-89-export-as-officeactionstructure-from-officeactionstructure-index-ts",
+          "line": 96,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-96-export-as-officeactionstructure-from-officeactionstructure-index-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -306684,8 +306970,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 96,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-96-export-from-patentclaimcandidate-index-ts",
+          "line": 103,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-103-export-from-patentclaimcandidate-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306706,8 +306992,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 111,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-111-export-from-practicekg-correspondent-lookup-ts",
+          "line": 118,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-118-export-from-practicekg-correspondent-lookup-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306728,8 +307014,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 112,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-112-export-from-practicekg-matter-lookup-ts",
+          "line": 119,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-119-export-from-practicekg-matter-lookup-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -306747,8 +307033,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 113,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-113-export-from-practicekg-tools-ts",
+          "line": 120,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-120-export-from-practicekg-tools-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -306766,8 +307052,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 129,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-129-export-as-questionqueue-from-questionqueue-index-ts",
+          "line": 136,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-136-export-as-questionqueue-from-questionqueue-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306788,8 +307074,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 145,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-145-export-as-questionwrites-from-questionwrites-index-ts",
+          "line": 152,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-152-export-as-questionwrites-from-questionwrites-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306810,8 +307096,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 161,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-161-export-as-reviewhub-from-reviewhub-index-ts",
+          "line": 168,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-168-export-as-reviewhub-from-reviewhub-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306832,8 +307118,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 176,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-176-export-as-reviewitemstore-from-reviewitemstore-index-ts",
+          "line": 183,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-183-export-as-reviewitemstore-from-reviewitemstore-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306854,8 +307140,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 192,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-192-export-as-reviewqueue-from-reviewqueue-index-ts",
+          "line": 199,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-199-export-as-reviewqueue-from-reviewqueue-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306876,8 +307162,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 199,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-199-export-from-tools-ts",
+          "line": 206,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-206-export-from-tools-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -306898,8 +307184,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 215,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-215-export-as-verdictprojector-from-verdictprojector-index-ts",
+          "line": 222,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-222-export-as-verdictprojector-from-verdictprojector-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -434715,8 +435001,8 @@
           "exportKind": "const",
           "filePath": "src/PracticeKg.tool-handlers.ts",
           "repoPath": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
-          "line": 234,
-          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-234-practicekgfailurereasonkey",
+          "line": 242,
+          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-242-practicekgfailurereasonkey",
           "currentTags": [
             "@category",
             "@since"
@@ -434737,8 +435023,8 @@
           "exportKind": "const",
           "filePath": "src/PracticeKg.tool-handlers.ts",
           "repoPath": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
-          "line": 315,
-          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-315-practicekgtoolkithandlerslive",
+          "line": 323,
+          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-323-practicekgtoolkithandlerslive",
           "currentTags": [
             "@category",
             "@since"
@@ -435383,8 +435669,8 @@
           "exportKind": "const",
           "filePath": "src/UsptoClaims/UsptoClaims.layer.ts",
           "repoPath": "packages/law-practice/server/src/UsptoClaims/UsptoClaims.layer.ts",
-          "line": 162,
-          "anchor": "packages-law-practice-server-src-usptoclaims-usptoclaims-layer-ts-162-usptoclaimslive",
+          "line": 217,
+          "anchor": "packages-law-practice-server-src-usptoclaims-usptoclaims-layer-ts-217-usptoclaimslive",
           "currentTags": [
             "@category",
             "@since"
@@ -581697,9 +581983,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 28,
-        "publicModuleCount": 28,
-        "publicExportCount": 104
+        "sourceFileCount": 30,
+        "publicModuleCount": 30,
+        "publicExportCount": 108
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -581947,6 +582233,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/Sync/VaultSync.config.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.config.ts",
           "line": 1,
@@ -581965,6 +582273,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 7,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Sync/VaultSync.file-store.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-file-store-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
           "remediationStatus": "resolved"
         },
         {
@@ -583547,6 +583877,75 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "ObservedFile",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 34,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-34-observedfile",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ObservedFolder",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 56,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-56-observedfolder",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VaultScanObservation",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Sync/VaultScan.model.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultScan.model.ts",
+          "line": 75,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultscan-model-ts-75-vaultscanobservation",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "DOCUMENTS_SYNC_MAX_ATTEMPTS_ENV",
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/VaultSync.config.ts",
@@ -583701,12 +584100,35 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "makeVaultSyncFileStore",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Sync/VaultSync.file-store.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSync.file-store.ts",
+          "line": 74,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsync-file-store-ts-74-makevaultsyncfilestore",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "makeVaultSyncEngine",
           "exportKind": "const",
           "filePath": "src/aggregates/Sync/VaultSyncEngine.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
-          "line": 430,
-          "anchor": "packages-documents-server-src-aggregates-sync-vaultsyncengine-service-ts-430-makevaultsyncengine",
+          "line": 397,
+          "anchor": "packages-documents-server-src-aggregates-sync-vaultsyncengine-service-ts-397-makevaultsyncengine",
           "currentTags": [
             "@effects",
             "@category",

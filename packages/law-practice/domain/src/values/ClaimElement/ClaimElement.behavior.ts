@@ -17,7 +17,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
@@ -338,6 +338,10 @@ const nominalFollowers = HashSet.fromIterable(
     " "
   )
 );
+const isPurposePredicate = (tokens: ReadonlyArray<Span>, index: number, participle: boolean): boolean =>
+  surfaceAt(tokens, index + 1)(["for"]) &&
+  (surfaceAt(tokens, index)(["used"]) || (participle && surfaceAt(tokens, index - 1)(["be"])));
+
 const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean => {
   const current = O.map(A.get(tokens, index), ({ text }) => Str.toLowerCase(text));
   const next = O.map(A.get(tokens, index + 1), ({ text }) => Str.toLowerCase(text));
@@ -352,13 +356,13 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
       word
     )
   );
-  const quantifiedObject =
-    (O.contains(next, "at") &&
-      O.exists(A.get(tokens, index + 2), ({ text }) => Str.toLowerCase(text) === "least") &&
-      O.exists(A.get(tokens, index + 3), ({ text }) => Str.toLowerCase(text) === "one")) ||
-    (O.contains(next, "one") &&
-      O.exists(A.get(tokens, index + 2), ({ text }) => Str.toLowerCase(text) === "or") &&
-      O.exists(A.get(tokens, index + 3), ({ text }) => Str.toLowerCase(text) === "more"));
+  const quantifiedObject = A.some(
+    [
+      ["at", "least", "one"],
+      ["one", "or", "more"],
+    ],
+    surfaceAt(tokens, index + 1)
+  );
   const nominal = O.exists(previous, (word) =>
     HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word)
   );
@@ -368,17 +372,21 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
     )
   );
   const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
-  const purposeParticiple =
-    O.contains(next, "for") && (O.contains(current, "used") || (participle && O.contains(previous, "be")));
+  const purposeParticiple = isPurposePredicate(tokens, index, participle);
   const relational = O.contains(current, "responsive") && O.contains(next, "to");
   const formingInfinitive = O.contains(previous, "to") && O.contains(current, "form");
   return (
-    (O.exists(current, (word) => HashSet.has(predicateWords, word)) ||
-      finite ||
-      purposeParticiple ||
-      relational ||
-      formingInfinitive ||
-      (participle && (complement || quantifiedObject))) &&
+    A.some(
+      [
+        O.exists(current, (word) => HashSet.has(predicateWords, word)),
+        finite,
+        purposeParticiple,
+        relational,
+        formingInfinitive,
+        participle && (complement || quantifiedObject),
+      ],
+      identity
+    ) &&
     (!O.exists(next, (word) => HashSet.has(nominalFollowers, word)) || clauseVerb) &&
     !nominal
   );
@@ -439,77 +447,69 @@ const abbreviationAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
   O.exists(A.get(tokens, index + 1), ({ text }) => O.isSome(Str.match(/^[A-Z][A-Z0-9-]+$/u)(text))) &&
   O.exists(A.get(tokens, index + 2), ({ text }) => text === ")");
 
+const ordinalWords = HashSet.make(
+  "first",
+  "second",
+  "third",
+  "fourth",
+  "fifth",
+  "sixth",
+  "seventh",
+  "eighth",
+  "ninth",
+  "tenth"
+);
+
+const continuesHeadAt = (tokens: ReadonlyArray<Span>, position: number): boolean =>
+  O.exists(
+    A.get(tokens, position),
+    ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)) && !HashSet.has(punctuation, text)
+  ) && !isPredicateToken(tokens, position);
+
+const isCoordinatedOrdinal = (tokens: ReadonlyArray<Span>, index: number, offset: number): boolean =>
+  offset > 0 &&
+  A.every(A.take(A.drop(tokens, index), offset), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text))) &&
+  O.exists(A.get(tokens, index + offset + 1), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text)));
+
+const isSelectorHead = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+  surfaceAt(tokens, index - 2)(["one", "of"]) && !surfaceAt(tokens, index - 4)(["at", "least"]);
+
+const hasPartitiveHead = (tokens: ReadonlyArray<Span>, index: number, offset: number): boolean =>
+  A.some(A.take(A.drop(tokens, index), offset), ({ text }) =>
+    HashSet.has(HashSet.make("pair", "set", "group", "series", "number"), Str.toLowerCase(text))
+  ) && O.exists(A.get(tokens, index + offset + 1), ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)));
+
+const permitsHeadBoundary = (tokens: ReadonlyArray<Span>, index: number, offset: number, word: string): boolean => {
+  const position = index + offset;
+  return A.some(
+    [
+      word === "of" && hasPartitiveHead(tokens, index, offset),
+      word === "and" && isCoordinatedOrdinal(tokens, index, offset),
+      word === "or" && offset > 0 && continuesHeadAt(tokens, position + 1),
+      word === "through" && offset === 0 && surfaceAt(tokens, position + 1)(["hole"]),
+      word === "further" && offset === 0 && !isPredicateToken(tokens, position + 1),
+    ],
+    identity
+  );
+};
+
+const permitsAdverbHead = (tokens: ReadonlyArray<Span>, position: number, offset: number, word: string): boolean =>
+  A.some(
+    [!Str.endsWith("ly")(word), Str.endsWith("assembly")(word), offset === 0 && continuesHeadAt(tokens, position + 1)],
+    identity
+  );
+
 const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span> =>
   A.takeWhile(A.drop(tokens, index), ({ text }, offset) => {
     const word = Str.toLowerCase(text);
     const position = index + offset;
-    if (
-      abbreviationAt(tokens, position) ||
-      abbreviationAt(tokens, position - 1) ||
-      abbreviationAt(tokens, position - 2)
-    )
-      return true;
-    const ordinalWords = HashSet.make(
-      "first",
-      "second",
-      "third",
-      "fourth",
-      "fifth",
-      "sixth",
-      "seventh",
-      "eighth",
-      "ninth",
-      "tenth"
-    );
-    const coordinatedOrdinal =
-      word === "and" &&
-      offset > 0 &&
-      A.every(A.take(A.drop(tokens, index), offset), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text))) &&
-      O.exists(A.get(tokens, position + 1), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text)));
-    const alternativeName =
-      word === "or" &&
-      offset > 0 &&
-      O.exists(
-        A.get(tokens, position + 1),
-        ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)) && !HashSet.has(punctuation, text)
-      ) &&
-      !isPredicateToken(tokens, position + 1);
-    const selectorList =
-      O.exists(A.get(tokens, index - 2), ({ text }) => Str.toLowerCase(text) === "one") &&
-      O.exists(A.get(tokens, index - 1), ({ text }) => Str.toLowerCase(text) === "of") &&
-      !(
-        O.exists(A.get(tokens, index - 3), ({ text }) => Str.toLowerCase(text) === "least") &&
-        O.exists(A.get(tokens, index - 4), ({ text }) => Str.toLowerCase(text) === "at")
-      );
-    if (selectorList && (text === "," || word === "or" || word === "and")) return true;
-    const furtherModifier = word === "further" && offset === 0 && !isPredicateToken(tokens, position + 1);
-    const throughHole =
-      word === "through" &&
-      offset === 0 &&
-      O.exists(A.get(tokens, position + 1), ({ text }) => Str.toLowerCase(text) === "hole");
-    const partitive =
-      word === "of" &&
-      A.some(A.take(A.drop(tokens, index), offset), ({ text }) =>
-        HashSet.has(HashSet.make("pair", "set", "group", "series", "number"), Str.toLowerCase(text))
-      ) &&
-      O.exists(A.get(tokens, position + 1), ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)));
+    if (A.some([position, position - 1, position - 2], (at) => abbreviationAt(tokens, at))) return true;
+    if (isSelectorHead(tokens, index) && HashSet.has(HashSet.make(",", "or", "and"), word)) return true;
     return (
       !HashSet.has(punctuation, text) &&
-      (!HashSet.has(boundaryWords, word) ||
-        partitive ||
-        coordinatedOrdinal ||
-        alternativeName ||
-        throughHole ||
-        furtherModifier) &&
+      (!HashSet.has(boundaryWords, word) || permitsHeadBoundary(tokens, index, offset, word)) &&
       !isPredicateToken(tokens, position) &&
-      (!Str.endsWith("ly")(word) ||
-        Str.endsWith("assembly")(word) ||
-        (offset === 0 &&
-          O.exists(
-            A.get(tokens, position + 1),
-            ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)) && !HashSet.has(punctuation, text)
-          ) &&
-          !isPredicateToken(tokens, position + 1)))
+      permitsAdverbHead(tokens, position, offset, word)
     );
   });
 

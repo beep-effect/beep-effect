@@ -47,6 +47,11 @@ const encodeReport = S.encodeEffect(S.fromJsonString(PublishedClaimSelfCheckRepo
 const allowedSampleJson = S.fromJsonString(AllowedSample);
 const implementationFreezeJson = S.fromJsonString(ImplementationFreeze);
 
+const isCompleteSample = (manifest: typeof AllowedSample.Type): boolean =>
+  manifest.sets.length === manifest.selectedSetCount &&
+  A.reduce(manifest.sets, 0, (total, row) => total + row.claimCount) === manifest.selectedClaimCount &&
+  A.dedupe(A.map(manifest.sets, (row) => row.patentNumber)).length === manifest.sets.length;
+
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Crypto.Crypto;
@@ -64,11 +69,7 @@ const program = Effect.gen(function* () {
       return yield* StructuralEvaluationError.make({ message: `Frozen file hash mismatch: ${path}` });
     return text;
   });
-  if (
-    manifest.sets.length !== manifest.selectedSetCount ||
-    A.reduce(manifest.sets, 0, (total, row) => total + row.claimCount) !== manifest.selectedClaimCount ||
-    A.dedupe(A.map(manifest.sets, (row) => row.patentNumber)).length !== manifest.sets.length
-  )
+  if (!isCompleteSample(manifest))
     return yield* StructuralEvaluationError.make({
       message: "Frozen allowed sample has inconsistent counts or duplicate patents.",
     });
@@ -85,75 +86,81 @@ const program = Effect.gen(function* () {
       message: "Allowed evaluation output already exists; choose a new directory.",
     });
   yield* fs.makeDirectory(output, { recursive: true });
-  const rows: Array<unknown> = [];
-  for (const { row, xml } of inputs) {
-    const alias = `https://api.uspto.gov/evaluation-replay/allowed/${row.patentNumber}.xml`;
-    const metadata = yield* encode({
-      patentFileWrapperDataBag: [
-        {
-          applicationNumberText: row.applicationNumber,
-          applicationMetaData: { patentNumber: row.patentNumber },
-          grantDocumentMetaData: {
-            productIdentifier: "PTGRXML",
-            xmlFileName: "recorded-native-claims.xml",
-            fileLocationURI: alias,
-          },
-        },
-      ],
-    });
-    const transport = Layer.succeed(
-      HttpClient.HttpClient,
-      HttpClient.make((request) =>
-        Effect.succeed(
-          HttpClientResponse.fromWeb(
-            request,
-            Str.includes("/applications/search?")(request.url)
-              ? new Response(metadata)
-              : request.url === alias
-                ? new Response(xml)
-                : new Response("", { status: 404 })
-          )
-        )
-      )
-    );
-    const live = ClaimSelfCheckLive.pipe(
-      Layer.provide(UsptoClaimsLive),
-      Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
-      Layer.provide(transport)
-    );
-    const checked = yield* Effect.gen(function* () {
-      const context = yield* Layer.build(live);
-      return yield* ClaimSelfCheck.use((service) =>
-        service.checkPublished(
-          UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make(row.patentNumber) })
-        )
-      ).pipe(Effect.provide(context), Effect.result);
-    }).pipe(Effect.scoped);
-    if (checked._tag === "Success") {
-      const report = checked.success;
-      if (report.claimSet.claims.length !== row.claimCount)
-        return yield* StructuralEvaluationError.make({
-          message: `Allowed adapter claim count mismatch: ${row.patentNumber}`,
+  const rows = yield* Effect.forEach(
+    inputs,
+    ({ row, xml }, index) =>
+      Effect.gen(function* () {
+        const alias = `https://api.uspto.gov/evaluation-replay/allowed/${row.patentNumber}.xml`;
+        const metadata = yield* encode({
+          patentFileWrapperDataBag: [
+            {
+              applicationNumberText: row.applicationNumber,
+              applicationMetaData: { patentNumber: row.patentNumber },
+              grantDocumentMetaData: {
+                productIdentifier: "PTGRXML",
+                xmlFileName: "recorded-native-claims.xml",
+                fileLocationURI: alias,
+              },
+            },
+          ],
         });
-      yield* fs.writeFileString(`${output}/${row.patentNumber}.prediction.json`, yield* encodeReport(report));
-      rows.push({
-        ...row,
-        status: "checked",
-        checkedClaims: report.claimSet.claims.length,
-        trees: report.report.trees.length,
-        undecomposed: report.report.undecomposed.length,
-        findings: report.report.findings.length,
-      });
-    } else {
-      rows.push({
-        ...row,
-        status: "input-failed",
-        failureReason: checked.failure.reason,
-        failureMessage: checked.failure.message,
-      });
-    }
-    yield* Console.log(`Replayed frozen allowed set ${rows.length}/${inputs.length}: ${row.patentNumber}`);
-  }
+        const transport = Layer.succeed(
+          HttpClient.HttpClient,
+          HttpClient.make((request) =>
+            Effect.succeed(
+              HttpClientResponse.fromWeb(
+                request,
+                Str.includes("/applications/search?")(request.url)
+                  ? new Response(metadata)
+                  : request.url === alias
+                    ? new Response(xml)
+                    : new Response("", { status: 404 })
+              )
+            )
+          )
+        );
+        const live = ClaimSelfCheckLive.pipe(
+          Layer.provide(UsptoClaimsLive),
+          Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
+          Layer.provide(transport)
+        );
+        const checked = yield* Effect.gen(function* () {
+          const context = yield* Layer.build(live);
+          return yield* ClaimSelfCheck.use((service) =>
+            service.checkPublished(
+              UsptoClaimSource.cases.publication.make({ publicationNumber: PatentNumber.make(row.patentNumber) })
+            )
+          ).pipe(Effect.provide(context), Effect.result);
+        }).pipe(Effect.scoped);
+        const result = yield* Effect.gen(function* () {
+          if (checked._tag === "Success") {
+            const report = checked.success;
+            if (report.claimSet.claims.length !== row.claimCount)
+              return yield* StructuralEvaluationError.make({
+                message: `Allowed adapter claim count mismatch: ${row.patentNumber}`,
+              });
+            yield* fs.writeFileString(`${output}/${row.patentNumber}.prediction.json`, yield* encodeReport(report));
+            return {
+              ...row,
+              status: "checked",
+              checkedClaims: report.claimSet.claims.length,
+              trees: report.report.trees.length,
+              undecomposed: report.report.undecomposed.length,
+              findings: report.report.findings.length,
+            };
+          }
+          return {
+            ...row,
+            status: "input-failed",
+            failureReason: checked.failure.reason,
+            failureMessage: checked.failure.message,
+          };
+        });
+        yield* Console.log(`Replayed frozen allowed set ${index + 1}/${inputs.length}: ${row.patentNumber}`);
+        return result;
+      }),
+    { concurrency: 1 }
+  );
   yield* fs.writeFileString(
     `${output}/results.json`,
     yield* encode({

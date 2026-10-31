@@ -46,6 +46,12 @@ export const isExplicitAbbreviatedHead =
     );
   };
 
+const matchesCapturedHead =
+  (pattern: RegExp) =>
+  (head: string) =>
+  (candidate: string): boolean =>
+    O.exists(Str.match(pattern)(candidate), (match) => O.contains(A.get(match, 1), head));
+
 /**
  * Match a name whose source supplies a trailing letter-number designator.
  * **Example** (Match a Letter Number Designator)
@@ -57,10 +63,7 @@ export const isExplicitAbbreviatedHead =
  * @category domain-logic
  * @since 0.0.0
  */
-export const isDesignatedHead =
-  (head: string) =>
-  (candidate: string): boolean =>
-    O.exists(Str.match(/^(.+)\s+[a-z]{1,4}\d+[a-z0-9]*$/u)(candidate), (match) => O.contains(A.get(match, 1), head));
+export const isDesignatedHead = matchesCapturedHead(/^(.+)\s+[a-z]{1,4}\d+[a-z0-9]*$/u);
 
 /**
  * Match an exact plural head under an explicit number-of quantity wrapper.
@@ -76,9 +79,4 @@ export const isDesignatedHead =
  * @category domain-logic
  * @since 0.0.0
  */
-export const isCountedHead =
-  (head: string) =>
-  (candidate: string): boolean =>
-    O.exists(Str.match(/^(?:(?:specified|predetermined|selected|fixed)\s+)?number of (.+)$/u)(candidate), (match) =>
-      O.contains(A.get(match, 1), head)
-    );
+export const isCountedHead = matchesCapturedHead(/^(?:(?:specified|predetermined|selected|fixed)\s+)?number of (.+)$/u);
