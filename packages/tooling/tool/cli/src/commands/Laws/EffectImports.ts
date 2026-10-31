@@ -1516,6 +1516,32 @@ const tryTransformSourceFile = (
 ): O.Option<ReturnType<typeof transformSourceFile>> =>
   Result.getSuccess(Result.try(() => transformSourceFile(mappings, file, sourceFile)));
 
+type FenceTransform = {
+  readonly summary: ReturnType<typeof transformSourceFile>;
+  readonly replacement: string;
+};
+
+// The transform of one fence and its rewritten body, or the warning for a fence that cannot be parsed
+// or that sits in a blockquote or list item, where splicing the rewritten code would end the container.
+const transformFence = (
+  mappings: RootImportMappings,
+  file: string,
+  fence: ScriptFence | FencedCodeBlockDetail,
+  ordinal: number
+): Result.Result<FenceTransform, string> => {
+  const fenceProject = new Project({ useInMemoryFileSystem: true });
+  const fenceSource = fenceProject.createSourceFile(`fence-${ordinal}${fence.extension}`, fence.code);
+  return O.match(tryTransformSourceFile(mappings, `${file}#fence-${ordinal}`, fenceSource), {
+    onNone: () => Result.fail(`${file}#fence-${ordinal}: cannot parse root Effect import`),
+    onSome: (summary) =>
+      summary.rewritten && !fence.inPlace
+        ? Result.fail(
+            `${file}#fence-${ordinal}: root Effect import in a fence inside a blockquote or list item; rewrite it by hand`
+          )
+        : Result.succeed({ summary, replacement: `${Str.trimEnd(fenceSource.getFullText())}\n` }),
+  });
+};
+
 const transformFencedContent = (
   mappings: RootImportMappings,
   file: string,
@@ -1538,23 +1564,12 @@ const transformFencedContent = (
     if (!ROOT_EFFECT_IMPORT_PATTERN.test(fence.code)) {
       continue;
     }
-    const fenceProject = new Project({ useInMemoryFileSystem: true });
-    const fenceSource = fenceProject.createSourceFile(`fence-${ordinal}${fence.extension}`, fence.code);
-    const transformed = tryTransformSourceFile(mappings, `${file}#fence-${ordinal}`, fenceSource);
-    if (O.isNone(transformed)) {
-      warnings = A.append(warnings, `${file}#fence-${ordinal}: cannot parse root Effect import`);
+    const transformed = transformFence(mappings, file, fence, ordinal);
+    if (Result.isFailure(transformed)) {
+      warnings = A.append(warnings, transformed.failure);
       continue;
     }
-    const sourceSummary = transformed.value;
-    // A fence inside a blockquote or list item keeps a prefix on every written line; a splice of the
-    // rewritten code would end the container, so that fence is reported for a hand edit instead.
-    if (sourceSummary.rewritten && !fence.inPlace) {
-      warnings = A.append(
-        warnings,
-        `${file}#fence-${ordinal}: root Effect import in a fence inside a blockquote or list item; rewrite it by hand`
-      );
-      continue;
-    }
+    const { summary: sourceSummary, replacement } = transformed.success;
     rootImportsRewritten += sourceSummary.rootImportsRewritten;
     rootExportsRewritten += sourceSummary.rootExportsRewritten;
     emittedImports += sourceSummary.emittedImports;
@@ -1563,7 +1578,6 @@ const transformFencedContent = (
     manualReviews = A.appendAll(manualReviews, sourceSummary.manualReviews);
 
     if (sourceSummary.rewritten) {
-      const replacement = `${Str.trimEnd(fenceSource.getFullText())}\n`;
       rewrittenContent = `${Str.slice(0, fence.codeStart)(rewrittenContent)}${replacement}${Str.slice(fence.codeEnd)(
         rewrittenContent
       )}`;

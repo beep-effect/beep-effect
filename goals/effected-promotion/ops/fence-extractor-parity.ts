@@ -629,7 +629,8 @@ const runDoctestUnit = (file: string, source: string): void => {
   });
   const push = (side: Difference["side"], category: Category, key: number, old?: string, next?: string) => {
     counts[category] += 1;
-    if (category !== "identical")
+    // `frame-indent-removed` touches nearly every multi-line fence, so it is tallied, not listed.
+    if (category !== "identical" && category !== "frame-indent-removed")
       differences.push({
         corpus: "source",
         extractor: "doctest",

@@ -202,8 +202,8 @@ describe("doctest rewrite planning", () => {
 
   it.effect("keeps a four-marker opener whole when it plans the marker rewrite", () =>
     Effect.gen(function* () {
-      const fence = "~".repeat(4);
-      const inner = "~".repeat(3);
+      const fence = Str.repeat(4)("~");
+      const inner = Str.repeat(3)("~");
       const source = A.join(
         [
           "/**",
