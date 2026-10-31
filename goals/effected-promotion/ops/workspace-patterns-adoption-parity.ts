@@ -190,13 +190,15 @@ const surface = (lines: ReadonlyArray<string>) => ({ count: A.length(lines), sha
 const derivedFor = Effect.fn("derivedFor")(function* (patterns: ReadonlyArray<string>, syncpackConfig: string) {
   const dirs = yield* candidateDirs(patterns);
   const matched = yield* matchedPackageDirs(dirs);
-  const relativeDirs = A.map(matched, (dir) => Str.slice(repoRoot.length)(dir));
+  // Fingerprint repository-relative paths, so a report recorded in another checkout compares equal.
+  const relative = (dir: string): string => Str.slice(repoRoot.length)(dir);
+  const relativeDirs = A.map(matched, relative);
   const uncovered = A.filter(relativeDirs, (dir) => !isCovered(patterns, dir));
   const sources = canonicalSyncpackSources(patterns);
   const derived: DerivedSurfaces = {
     changesetGraphPathspecs: surface(A.map(patterns, pathspecFor)),
-    tasksCandidateDirs: surface(dirs),
-    tasksMatchedPackageDirs: surface(matched),
+    tasksCandidateDirs: surface(A.map(dirs, relative)),
+    tasksMatchedPackageDirs: surface(relativeDirs),
     tsconfigSyncSyncpackSources: surface(sources),
     createPackageCoverage: {
       dirs: A.length(relativeDirs),
