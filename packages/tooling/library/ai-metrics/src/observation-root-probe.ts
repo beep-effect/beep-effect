@@ -42,13 +42,18 @@ const PrivateLabel = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
 /**
  * Explicit local scope for a metadata-only root probe.
  *
- * **Example** (Inspect observation root declaration)
+ * **Details**
+ *
+ * The host key must remain stable and differ between hosts. Retirement is operator evidence; retired paths are never accessed. This private declaration must not be published.
+ *
+ * **Example** (Reject an empty observation root declaration)
+ *
  * ```ts
  * import { ObservationRootDeclaration } from "@beep/repo-ai-metrics/observation-root-probe"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationRootDeclaration)({})) // false
  * ```
- * **Details** The host key must remain stable and differ between hosts. Retirement is operator evidence; retired paths are never accessed. This private declaration must not be published.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,13 +105,18 @@ const ReceiptBody = S.Struct({
 /**
  * Content-addressed, path-free evidence for one root observation.
  *
- * **Example** (Inspect observation root receipt)
+ * **Details**
+ *
+ * Retained alongside the inventory so verified identities have inspectable evidence, not only unexplained hashes.
+ *
+ * **Example** (Reject an empty observation root receipt)
+ *
  * ```ts
  * import { ObservationRootReceipt } from "@beep/repo-ai-metrics/observation-root-probe"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationRootReceipt)({})) // false
  * ```
- * **Details** Retained alongside the inventory so verified identities have inspectable evidence, not only unexplained hashes.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,13 +129,18 @@ export class ObservationRootReceipt extends S.Opaque<ObservationRootReceipt, { r
 /**
  * Inventory and its root evidence from one bounded local probe.
  *
- * **Example** (Inspect observation root probe result)
+ * **Details**
+ *
+ * Harness routes and populations remain unknown; Git identity does not qualify an AI collection route.
+ *
+ * **Example** (Reject an empty observation root probe result)
+ *
  * ```ts
  * import { ObservationRootProbeResult } from "@beep/repo-ai-metrics/observation-root-probe"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationRootProbeResult)({})) // false
  * ```
- * **Details** Harness routes and populations remain unknown; Git identity does not qualify an AI collection route.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -151,12 +166,17 @@ const decodeObservationRootDeclarationJson = S.decodeEffect(S.fromJsonString(Obs
 /**
  * Read a private root declaration with strict UTF-8 and field validation.
  *
- * **Example** (Read declared roots)
+ * **Details**
+ *
+ * A 64 KiB byte ceiling applies before parsing. Input-bearing schema errors and paths never escape.
+ *
+ * **Example** (Build a root-declaration read effect)
+ *
  * ```ts
  * import { readObservationRootDeclaration } from "@beep/repo-ai-metrics/observation-root-probe"
  * console.log(readObservationRootDeclaration("/tmp/synthetic-declaration.json"))
  * ```
- * **Details** A 64 KiB byte ceiling applies before parsing. Input-bearing schema errors and paths never escape.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -187,12 +207,17 @@ const encodeVersionHostRecordJson = S.encodeEffect(
 /**
  * Observe only explicitly declared checkout roots and build a safe host inventory.
  *
- * **Example** (Probe declared roots)
+ * **Details**
+ *
+ * Requires a nonblank operator salt, uses up to four concurrent five-second Git probes, and caps the whole probe at fifty seconds. Does not read transcripts or mutate repositories, services, enrollment or historical identity records. Legacy root IDs remain host-scoped checkout-path hashes; clone/worktree fields use versioned Git evidence.
+ *
+ * **Example** (Inspect the declared-root probe function)
+ *
  * ```ts
  * import { probeObservationRoots } from "@beep/repo-ai-metrics/observation-root-probe"
  * console.log(typeof probeObservationRoots) // function
  * ```
- * **Details** Requires a nonblank operator salt, uses up to four concurrent five-second Git probes, and caps the whole probe at fifty seconds. Does not read transcripts or mutate repositories, services, enrollment or historical identity records. Legacy root IDs remain host-scoped checkout-path hashes; clone/worktree fields use versioned Git evidence.
+ *
  * @category services
  * @since 0.0.0
  */

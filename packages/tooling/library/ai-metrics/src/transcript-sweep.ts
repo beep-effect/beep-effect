@@ -27,12 +27,17 @@ const $I = $RepoAiMetricsId.create("transcript-sweep");
 /**
  * Private candidate declaration and per-sweep resource limits.
  *
- * **Example** (Inspect transcript sweep input)
+ * **Details**
+ *
+ * At most 4096 declared files and 32 selected reads. Retired entries remain counted but are not opened. This is explicit candidate processing, not recursive discovery or proof of harness coverage. The declaration must remain private.
+ *
+ * **Example** (Inspect the transcript sweep input constructor)
+ *
  * ```ts
  * import { TranscriptSweepInput } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(typeof TranscriptSweepInput.make)
  * ```
- * **Details** At most 4096 declared files and 32 selected reads. Retired entries remain counted but are not opened. This is explicit candidate processing, not recursive discovery or proof of harness coverage. The declaration must remain private.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -65,12 +70,17 @@ export class TranscriptSweepInput extends S.Opaque<TranscriptSweepInput, { reado
 /**
  * Metadata-only result for one selected source.
  *
- * **Example** (Inspect transcript sweep outcome)
+ * **Details**
+ *
+ * Accepted means a local page/cursor commit, not export. Idle can include an incomplete tail. Failed reads or admissions retain the prior accepted cursor. No raw path or content is included.
+ *
+ * **Example** (Inspect the accepted transcript sweep outcome case)
+ *
  * ```ts
  * import { TranscriptSweepOutcome } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(TranscriptSweepOutcome.cases.Accepted)
  * ```
- * **Details** Accepted means a local page/cursor commit, not export. Idle can include an incomplete tail. Failed reads or admissions retain the prior accepted cursor. No raw path or content is included.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -90,12 +100,17 @@ export const TranscriptSweepOutcome = S.TaggedUnion({
 /**
  * Bounded sweep counts over a declared candidate set.
  *
- * **Example** (Inspect transcript sweep report)
+ * **Details**
+ *
+ * Counts describe the supplied list only; undiscovered files and unobserved harnesses are not inferred absent.
+ *
+ * **Example** (Inspect the transcript sweep report constructor)
+ *
  * ```ts
  * import { TranscriptSweepReport } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(typeof TranscriptSweepReport.make)
  * ```
- * **Details** Counts describe the supplied list only; undiscovered files and unobserved harnesses are not inferred absent.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -115,12 +130,17 @@ export class TranscriptSweepReport extends S.Opaque<TranscriptSweepReport, { rea
 /**
  * Reserve a fair source slice, then atomically accept each bounded metadata page.
  *
- * **Example** (Run a bounded transcript sweep)
+ * **Details**
+ *
+ * Scheduling advances before reading, independently of page acceptance. A crash can delay reserved sources until the next wrap but cannot advance their accepted byte positions. One bad source does not abort the rest. A worker must supply a scoped private SQLite connection and enforce hard process/resource limits; this function never starts the held forwarder.
+ *
+ * **Example** (Inspect the transcript sweep function)
+ *
  * ```ts
  * import { runTranscriptSweep } from "@beep/repo-ai-metrics/transcript-sweep"
  * console.log(typeof runTranscriptSweep)
  * ```
- * **Details** Scheduling advances before reading, independently of page acceptance. A crash can delay reserved sources until the next wrap but cannot advance their accepted byte positions. One bad source does not abort the rest. A worker must supply a scoped private SQLite connection and enforce hard process/resource limits; this function never starts the held forwarder.
+ *
  * @category services
  * @since 0.0.0
  */

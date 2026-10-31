@@ -31,12 +31,18 @@ import type { PageDisposition, TranscriptIntakeConfig } from "./transcript-intak
 const $I = $RepoAiMetricsId.create("evidence-retention");
 /**
  * Explicit observation-window lifetime and bounded retirement work.
- * **Example** (Inspecting policy)
+ *
+ * **Details**
+ *
+ * minEpochMillis is the minimum window duration, not a minimum age for every fact. Retirement requires every payload disposed and a quiet interval after sends. It erases per-event local detail, preserves aggregate uncertainty and source cursors, and ends that epoch's duplicate-detection guarantee. maxRecoveryRows and maxRecoveryBytes bound a single logical recovery generation (encoded row payload bytes; database overhead also remains under the journal page ceiling). No production policy is selected by this API.
+ *
+ * **Example** (Inspect the evidence retention policy constructor)
+ *
  * ```ts
  * import { EvidenceRetentionPolicy } from "@beep/repo-ai-metrics/evidence-retention"
  * console.log(typeof EvidenceRetentionPolicy.make)
  * ```
- * **Details** minEpochMillis is the minimum window duration, not a minimum age for every fact. Retirement requires every payload disposed and a quiet interval after sends. It erases per-event local detail, preserves aggregate uncertainty and source cursors, and ends that epoch's duplicate-detection guarantee. maxRecoveryRows and maxRecoveryBytes bound a single logical recovery generation (encoded row payload bytes; database overhead also remains under the journal page ceiling). No production policy is selected by this API.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -128,12 +134,18 @@ const eventCountKey = Match.type<DeliveryEventState["state"]>().pipe(
 
 /**
  * Retire a fully disposed epoch and preserve a bounded checksummed summary.
- * **Example** (Inspecting the service)
+ *
+ * **Details**
+ *
+ * seal(expectedEpoch) is an atomic compare-and-swap. None means the epoch is empty, young, has retained payloads, or has recent send reservations. Exact replay of the latest successful seal returns its summary. Older/conflicting requests fail. Bounded pages of checksummed receipts and ledger states feed cumulative observation counts; overflow fails before deletion. A checksummed bounded recovery generation is copied before deletion in the same transaction. Copy failure preserves current facts and the previous generation. restore(retirementDigest) restores compact facts and the predecessor window only while the exact successor is empty and admission/attempt sequences are unchanged; it preserves source cursors. Exact replay returns already-restored. The next seal replaces the recovery generation. This is logical rollback, not an independent database/disaster backup. Deletion and epoch advancement commit together. Earlier details cannot be reconstructed from the summary alone; current-window absence is not lifetime absence. Source files, cursors and held services are untouched.
+ *
+ * **Example** (Inspect the factory for evidence retention)
+ *
  * ```ts
  * import { makeEvidenceRetention } from "@beep/repo-ai-metrics/evidence-retention"
  * console.log(typeof makeEvidenceRetention)
  * ```
- * **Details** seal(expectedEpoch) is an atomic compare-and-swap. None means the epoch is empty, young, has retained payloads, or has recent send reservations. Exact replay of the latest successful seal returns its summary. Older/conflicting requests fail. Bounded pages of checksummed receipts and ledger states feed cumulative observation counts; overflow fails before deletion. A checksummed bounded recovery generation is copied before deletion in the same transaction. Copy failure preserves current facts and the previous generation. restore(retirementDigest) restores compact facts and the predecessor window only while the exact successor is empty and admission/attempt sequences are unchanged; it preserves source cursors. Exact replay returns already-restored. The next seal replaces the recovery generation. This is logical rollback, not an independent database/disaster backup. Deletion and epoch advancement commit together. Earlier details cannot be reconstructed from the summary alone; current-window absence is not lifetime absence. Source files, cursors and held services are untouched.
+ *
  * @category services
  * @since 0.0.0
  */

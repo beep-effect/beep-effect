@@ -28,12 +28,18 @@ import { ObservationLaunchContext, ObservationLaunchSubmission } from "./observa
 const $I = $RepoAiMetricsId.create("observation-launch-client");
 /**
  * Explicit private socket directory, expected destination and exchange deadline.
- * **Example** (Inspect the client policy)
+ *
+ * **Details**
+ *
+ * No TCP address, credential, raw command or environment is accepted. Host and namespace must come from the owner's enrollment, never from an unchecked server response.
+ *
+ * **Example** (Inspect the observation launch client policy constructor)
+ *
  * ```ts
  * import { ObservationLaunchClientPolicy } from "@beep/repo-ai-metrics/observation-launch-client"
  * console.log(typeof ObservationLaunchClientPolicy.make)
  * ```
- * **Details** No TCP address, credential, raw command or environment is accepted. Host and namespace must come from the owner's enrollment, never from an unchecked server response.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -50,12 +56,18 @@ export class ObservationLaunchClientPolicy extends S.Opaque<
 ) {}
 /**
  * Content-free client refusal or uncertain delivery.
- * **Example** (Describe ambiguity)
+ *
+ * **Details**
+ *
+ * ambiguous and invalid-response do not prove non-acceptance. Reconcile the exact submission; never start another process or switch epochs automatically. conflict and retired also require explicit reconciliation.
+ *
+ * **Example** (Construct an ambiguous launch-client refusal)
+ *
  * ```ts
  * import { ObservationLaunchClientError } from "@beep/repo-ai-metrics/observation-launch-client"
  * console.log(ObservationLaunchClientError.make({ reason: "ambiguous" }).reason)
  * ```
- * **Details** ambiguous and invalid-response do not prove non-acceptance. Reconcile the exact submission; never start another process or switch epochs automatically. conflict and retired also require explicit reconciliation.
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -118,12 +130,18 @@ const submissionFailureReason = (status: number): ObservationLaunchClientError["
 
 /**
  * Connect to one owner-only socket with bounded single-attempt exchanges.
- * **Example** (Inspect the client factory)
+ *
+ * **Details**
+ *
+ * The runtime supplies its effective UID. Requires a canonical absolute 0700 directory and 0600 socket owned by that UID, and pins both inode identities for this client lifetime. Replacement requires a new client, never transparent retargeting. Uses the Effect Node socket client without redirects or retries, one exchange at a time and bounded response bytes. context is a read, not admission authority; submit retains its supplied epoch. Receipt metadata, header and digest must all agree. The client does not launch agents or establish independent coverage.
+ *
+ * **Example** (Inspect the factory for observation launch client)
+ *
  * ```ts
  * import { makeObservationLaunchClient } from "@beep/repo-ai-metrics/observation-launch-client"
  * console.log(typeof makeObservationLaunchClient)
  * ```
- * **Details** The runtime supplies its effective UID. Requires a canonical absolute 0700 directory and 0600 socket owned by that UID, and pins both inode identities for this client lifetime. Replacement requires a new client, never transparent retargeting. Uses the Effect Node socket client without redirects or retries, one exchange at a time and bounded response bytes. context is a read, not admission authority; submit retains its supplied epoch. Receipt metadata, header and digest must all agree. The client does not launch agents or establish independent coverage.
+ *
  * @category services
  * @since 0.0.0
  */

@@ -28,12 +28,17 @@ const $I = $RepoAiMetricsId.create("native-intake");
 /**
  * Durable local native admission counts and precise conflict positions.
  *
- * **Example** (Inspect native intake receipt)
+ * **Details**
+ *
+ * Accepted includes idempotent duplicate occurrences. Rejected includes malformed projections, identity/content conflicts and explicitly expired identities. Expired indices default to empty for earlier receipts. Conflict and expired indices refer to the batch's projected spans, not raw OTLP ordinals. The receipt establishes local persistence only, never backend delivery.
+ *
+ * **Example** (Inspect the native intake receipt constructor)
+ *
  * ```ts
  * import { NativeIntakeReceipt } from "@beep/repo-ai-metrics/native-intake"
  * console.log(typeof NativeIntakeReceipt.make)
  * ```
- * **Details** Accepted includes idempotent duplicate occurrences. Rejected includes malformed projections, identity/content conflicts and explicitly expired identities. Expired indices default to empty for earlier receipts. Conflict and expired indices refer to the batch's projected spans, not raw OTLP ordinals. The receipt establishes local persistence only, never backend delivery.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -98,12 +103,17 @@ const decodeEventIdPayloadHashRecordRows = S.decodeUnknownEffect(
 /**
  * Open native admission over the same owned SQLite profile and shared page budget.
  *
- * **Example** (Open a bounded native journal)
+ * **Details**
+ *
+ * Batch metadata, unique-event index and receipt commit together before return. Exact retries return the original receipt even at capacity, except that expired accepted references receive an explicit permanent refusal. Historical receipts remain readable. Repeated event IDs with different metadata are rejected without replacing the original. Native requests and transcript pages share maxPages/maxPayloadBytes and the database-file ceiling. SQLite index/receipt overhead is covered by that physical ceiling, not the payload counter. Read-back verifies payload and receipt digests; readNewEvents returns only canonical new events, while readBatch includes duplicate/conflict evidence and is not an export queue. The caller owns private storage, connection lifetime and hard process limits.
+ *
+ * **Example** (Inspect the factory for native intake journal)
+ *
  * ```ts
  * import { makeNativeIntakeJournal } from "@beep/repo-ai-metrics/native-intake"
  * console.log(typeof makeNativeIntakeJournal)
  * ```
- * **Details** Batch metadata, unique-event index and receipt commit together before return. Exact retries return the original receipt even at capacity, except that expired accepted references receive an explicit permanent refusal. Historical receipts remain readable. Repeated event IDs with different metadata are rejected without replacing the original. Native requests and transcript pages share maxPages/maxPayloadBytes and the database-file ceiling. SQLite index/receipt overhead is covered by that physical ceiling, not the payload counter. Read-back verifies payload and receipt digests; readNewEvents returns only canonical new events, while readBatch includes duplicate/conflict evidence and is not an export queue. The caller owns private storage, connection lifetime and hard process limits.
+ *
  * @category services
  * @since 0.0.0
  */

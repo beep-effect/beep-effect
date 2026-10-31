@@ -15,12 +15,18 @@ const $I = $RepoAiMetricsId.create("evidence-window");
 const count = S.Int.check(S.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }));
 /**
  * Cumulative observation counts, explicitly scoped to retired local windows.
- * **Example** (Inspecting totals)
+ *
+ * **Details**
+ *
+ * An event may recur in another window. These counts are not lifetime unique events or fleet coverage. Native accepted occurrences include duplicates; transcript frame occurrences include non-accepted frames. State populations refer only to canonical enrolled event observations.
+ *
+ * **Example** (Inspect the retired evidence totals constructor)
+ *
  * ```ts
  * import { RetiredEvidenceTotals } from "@beep/repo-ai-metrics/evidence-window"
  * console.log(typeof RetiredEvidenceTotals.make)
  * ```
- * **Details** An event may recur in another window. These counts are not lifetime unique events or fleet coverage. Native accepted occurrences include duplicates; transcript frame occurrences include non-accepted frames. State populations refer only to canonical enrolled event observations.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -63,12 +69,18 @@ export class RetiredEvidenceTotals extends S.Opaque<RetiredEvidenceTotals, { rea
 ) {}
 /**
  * Content-free summary of the latest retired observation window.
- * **Example** (Inspecting a retirement record)
+ *
+ * **Details**
+ *
+ * previousDigest links the preceding summary; it does not make missing historical detail reconstructible. Counts preserve uncertainty at retirement, without promoting delivery. Times describe local evidence retention, not source-event time.
+ *
+ * **Example** (Inspect the evidence retirement constructor)
+ *
  * ```ts
  * import { EvidenceRetirement } from "@beep/repo-ai-metrics/evidence-window"
  * console.log(typeof EvidenceRetirement.make)
  * ```
- * **Details** previousDigest links the preceding summary; it does not make missing historical detail reconstructible. Counts preserve uncertainty at retirement, without promoting delivery. Times describe local evidence retention, not source-event time.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -83,12 +95,18 @@ export class EvidenceRetirement extends S.Opaque<EvidenceRetirement, { readonly 
 ) {}
 /**
  * Current duplicate-detection scope and bounded historical accounting.
- * **Example** (Inspecting the window)
+ *
+ * **Details**
+ *
+ * Detailed receipts and canonical hashes exist only within the current epoch. Earlier evidence is retired, not known absent. Source cursors survive retirement. A native event can be observed again in a later epoch, with its source identity unchanged.
+ *
+ * **Example** (Inspect the evidence window constructor)
+ *
  * ```ts
  * import { EvidenceWindow } from "@beep/repo-ai-metrics/evidence-window"
  * console.log(typeof EvidenceWindow.make)
  * ```
- * **Details** Detailed receipts and canonical hashes exist only within the current epoch. Earlier evidence is retired, not known absent. Source cursors survive retirement. A native event can be observed again in a later epoch, with its source identity unchanged.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,12 +136,18 @@ const encodeEvidenceRetirementJson = S.encodeEffect(S.fromJsonString(EvidenceRet
 
 /**
  * Read and checksum-verify the owned bounded evidence window.
- * **Example** (Inspecting the reader)
+ *
+ * **Details**
+ *
+ * The intake factory initializes the table. Callers map SQL/schema failures to their safe domain error. No raw identifiers or source content are returned.
+ *
+ * **Example** (Inspect the evidence-window reader)
+ *
  * ```ts
  * import { readEvidenceWindow } from "@beep/repo-ai-metrics/evidence-window"
  * console.log(typeof readEvidenceWindow)
  * ```
- * **Details** The intake factory initializes the table. Callers map SQL/schema failures to their safe domain error. No raw identifiers or source content are returned.
+ *
  * @category utilities
  * @since 0.0.0
  */

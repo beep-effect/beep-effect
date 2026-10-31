@@ -374,4 +374,106 @@ describe("reference planning and refresh", () => {
       );
     }
   );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "refuses redirected provisioning before creating a root or starting Git",
+    (it) => {
+      it.effect(
+        "refuses redirected provisioning before creating a root or starting Git",
+        Effect.fnUntraced(function* () {
+          const f = yield* prepare();
+          const checkout = f.path.join(f.temp, "checkout");
+          const redirected = f.path.join(f.temp, "redirected");
+          const missingRoot = f.path.join(f.temp, "not-provisioned");
+          yield* f.fs.makeDirectory(checkout);
+          yield* f.fs.makeDirectory(redirected);
+          yield* f.fs.symlink(redirected, f.path.join(checkout, ".repos"));
+          const error = yield* workspace
+            .use((service) => service.provision(f.home, checkout, missingRoot))
+            .pipe(Effect.flip);
+          expect(error.message).toBe("Refusing a symlinked .repos directory.");
+          expect(error.path).toBe(checkout);
+          expect(yield* f.fs.exists(missingRoot)).toBe(false);
+          expect(yield* f.fs.exists(f.path.join(f.home, "commands.log"))).toBe(false);
+          expect(yield* f.fs.readDirectory(redirected)).toEqual([]);
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "reports receipt storage failures without replacing the operator's colliding file",
+    (it) => {
+      it.effect(
+        "reports receipt storage failures without replacing the operator's colliding file",
+        Effect.fnUntraced(function* () {
+          const f = yield* prepare();
+          for (const name of ["effect", "effect-tsgo"])
+            yield* f.fs.makeDirectory(f.path.join(f.root, name, ".git"), { recursive: true });
+          const state = f.path.join(f.home, ".local", "state");
+          yield* f.fs.makeDirectory(f.path.dirname(state), { recursive: true });
+          yield* f.fs.writeFileString(state, "operator state file");
+          const error = yield* workspace.use((service) => service.refresh(f.home, f.root)).pipe(Effect.flip);
+          expect(error.message).toBe("Cannot complete reference refresh.");
+          expect(error.path).toBe(f.path.join(f.owner, "scripts", "references.json"));
+          expect(error.cause).toBeDefined();
+          expect(yield* f.fs.readFileString(state)).toBe("operator state file");
+          expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
+          const commands = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
+          expect(commands).toContain("git effect pull --ff-only origin main");
+          expect(commands).toContain("git effect-tsgo pull --ff-only origin main");
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "preserves written units and the command error when timer activation fails",
+    (it) => {
+      it.effect(
+        "preserves written units and the command error when timer activation fails",
+        Effect.fnUntraced(function* () {
+          const f = yield* ReferenceFixture;
+          yield* writeExecutable(
+            f.path.join(f.bin, "systemctl"),
+            '#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/systemctl.log"\n[ "$2" != "enable" ] || { printf "activation refused\\n"; exit 5; }\n'
+          );
+          const error = yield* workspace
+            .use((service) => service.installTimer(f.home, f.root, "*-*-* 03:30:00", "/bin/bun"))
+            .pipe(Effect.flip);
+          expect(error.message).toBe("systemctl exited 5: activation refused");
+          expect(error.path).toBe(f.home);
+          const directory = f.path.join(f.home, ".config", "systemd", "user");
+          expect(yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.service"))).toContain(
+            `--root "${f.root}"`
+          );
+          expect(yield* f.fs.readFileString(f.path.join(directory, "beep-refs-refresh.timer"))).toContain(
+            "OnCalendar=*-*-* 03:30:00"
+          );
+          expect(yield* f.fs.readFileString(f.path.join(f.home, "systemctl.log"))).toBe(
+            "--user daemon-reload\n--user enable --now beep-refs-refresh.timer\n"
+          );
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "uninstalls an absent timer without calling systemctl or creating directories",
+    (it) => {
+      it.effect(
+        "uninstalls an absent timer without calling systemctl or creating directories",
+        Effect.fnUntraced(function* () {
+          const f = yield* ReferenceFixture;
+          yield* writeExecutable(
+            f.path.join(f.bin, "systemctl"),
+            '#!/bin/sh\nprintf "unexpected\\n" >> "$HOME/systemctl.log"\nexit 7\n'
+          );
+          expect(yield* workspace.use((service) => service.uninstallTimer(f.home))).toEqual([]);
+          expect(yield* f.fs.exists(f.path.join(f.home, "systemctl.log"))).toBe(false);
+          expect(yield* f.fs.exists(f.path.join(f.home, ".config"))).toBe(false);
+        })
+      );
+    }
+  );
 });

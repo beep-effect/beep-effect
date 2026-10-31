@@ -19,12 +19,18 @@ import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 const $I = $RepoAiMetricsId.create("observation-launch-facts");
 /**
  * Controller-evidenced launch attribution; identity components remain separate.
- * **Example** (Inspect the attribution boundary)
+ *
+ * **Details**
+ *
+ * No command, environment, prompt, path or task title is accepted. Verified identities require producer evidence; an objective-content hash is not an execution ID. The collector's checkout never supplies these values by default.
+ *
+ * **Example** (Inspect the observation launch identity constructor)
+ *
  * ```ts
  * import { ObservationLaunchIdentity } from "@beep/repo-ai-metrics/observation-launch-facts"
  * console.log(typeof ObservationLaunchIdentity.make)
  * ```
- * **Details** No command, environment, prompt, path or task title is accepted. Verified identities require producer evidence; an objective-content hash is not an execution ID. The collector's checkout never supplies these values by default.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -48,12 +54,18 @@ export class ObservationLaunchIdentity extends S.Opaque<ObservationLaunchIdentit
 ) {}
 /**
  * Immutable lifecycle facts observed by an owning launcher.
- * **Example** (Inspect allowed lifecycle phases)
+ *
+ * **Details**
+ *
+ * Prepared does not establish a started process. SessionBound is reserved for a verified runtime session; Finished is a process result, never task-quality evaluation. Abandonment can close uncertain work explicitly as unknown.
+ *
+ * **Example** (Inspect the prepared observation launch fact constructor)
+ *
  * ```ts
  * import { ObservationLaunchFact } from "@beep/repo-ai-metrics/observation-launch-facts"
  * console.log(typeof ObservationLaunchFact.cases.Prepared.make)
  * ```
- * **Details** Prepared does not establish a started process. SessionBound is reserved for a verified runtime session; Finished is a process result, never task-quality evaluation. Abandonment can close uncertain work explicitly as unknown.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -81,12 +93,18 @@ export const ObservationLaunchFact = S.TaggedUnion({
 export type ObservationLaunchFact = typeof ObservationLaunchFact.Type;
 /**
  * Locally committed launch observation with an explicit evidence epoch.
- * **Example** (Inspect a receipt)
+ *
+ * **Details**
+ *
+ * recordedAt is local observation time, not an invented process-start timestamp. Receipt identity binds host, hash namespace, epoch and the exact fact. It proves local durability only.
+ *
+ * **Example** (Inspect the observation launch receipt constructor)
+ *
  * ```ts
  * import { ObservationLaunchReceipt } from "@beep/repo-ai-metrics/observation-launch-facts"
  * console.log(typeof ObservationLaunchReceipt.make)
  * ```
- * **Details** recordedAt is local observation time, not an invented process-start timestamp. Receipt identity binds host, hash namespace, epoch and the exact fact. It proves local durability only.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -139,12 +157,18 @@ const decodeReceipt = S.decodeEffect(S.fromJsonString(ObservationLaunchReceipt),
 
 /**
  * Derive the receipt identity for one exact launch fact and destination window.
- * **Example** (Inspect the shared identity function)
+ *
+ * **Details**
+ *
+ * Shared by the journal and its client. This digest binds metadata but is not a signature or proof of process execution.
+ *
+ * **Example** (Inspect the launch-receipt identity function)
+ *
  * ```ts
  * import { observationLaunchReceiptId } from "@beep/repo-ai-metrics/observation-launch-facts"
  * console.log(typeof observationLaunchReceiptId)
  * ```
- * **Details** Shared by the journal and its client. This digest binds metadata but is not a signature or proof of process execution.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -182,12 +206,18 @@ const requireTransition = Effect.fnUntraced(function* (
 
 /**
  * Open bounded immutable launch observations inside the existing owned journal.
- * **Example** (Inspect the factory)
+ *
+ * **Details**
+ *
+ * At most maxPages launches, four facts per launch, and 8192 bytes per fact. Preparing a launch reserves 32768 bytes for all four bounded facts, so ordinary intake cannot consume its completion budget. Actual launch bytes and unused reservations share maxPayloadBytes with retained source pages; all tables remain under the physical journal ceiling. Exact retries return the original receipt even at capacity. Writes require the current epoch and the worker's ownership/admission boundary. Retirement preserves summaries and a reversible recovery generation; earlier detail is not known absent. This service does not start an agent or establish unobserved launch coverage.
+ *
+ * **Example** (Inspect the factory for observation launch facts)
+ *
  * ```ts
  * import { makeObservationLaunchFacts } from "@beep/repo-ai-metrics/observation-launch-facts"
  * console.log(typeof makeObservationLaunchFacts)
  * ```
- * **Details** At most maxPages launches, four facts per launch, and 8192 bytes per fact. Preparing a launch reserves 32768 bytes for all four bounded facts, so ordinary intake cannot consume its completion budget. Actual launch bytes and unused reservations share maxPayloadBytes with retained source pages; all tables remain under the physical journal ceiling. Exact retries return the original receipt even at capacity. Writes require the current epoch and the worker's ownership/admission boundary. Retirement preserves summaries and a reversible recovery generation; earlier detail is not known absent. This service does not start an agent or establish unobserved launch coverage.
+ *
  * @category services
  * @since 0.0.0
  */

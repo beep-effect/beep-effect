@@ -19,12 +19,17 @@ const $I = $RepoAiMetricsId.create("observation-inventory");
 /**
  * Requested harnesses, independent of their supported collection routes.
  *
- * **Example** (Inspect observation harness)
+ * **Details**
+ *
+ * Membership does not establish installation, enrollment or coverage.
+ *
+ * **Example** (Read the grok observation harness literal)
+ *
  * ```ts
  * import { ObservationHarness } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationHarness.Enum.grok)
  * ```
- * **Details** Membership does not establish installation, enrollment or coverage.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,13 +47,18 @@ export const ObservationHarness = LiteralKit([
 /**
  * Runtime type of {@link ObservationHarness}.
  *
- * **Example** (Inspect observation harness)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation harness)
+ *
  * ```ts
  * import type { ObservationHarness } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationHarness | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -57,12 +67,17 @@ export type ObservationHarness = typeof ObservationHarness.Type;
 /**
  * Signal capabilities established by adapter evidence.
  *
- * **Example** (Inspect observation signal)
+ * **Details**
+ *
+ * Supporting metrics does not imply support for traces or launches.
+ *
+ * **Example** (Read the traces observation signal literal)
+ *
  * ```ts
  * import { ObservationSignal } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationSignal.Enum.traces)
  * ```
- * **Details** Supporting metrics does not imply support for traces or launches.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -72,13 +87,18 @@ export const ObservationSignal = LiteralKit(["launches", "traces", "metrics", "o
 /**
  * Runtime type of {@link ObservationSignal}.
  *
- * **Example** (Inspect observation signal)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation signal)
+ *
  * ```ts
  * import type { ObservationSignal } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationSignal | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,12 +111,17 @@ const PopulationIds = S.Array(Sha256Hex)
 /**
  * Explicitly enumerated population or a population whose size is unknown.
  *
- * **Example** (Inspect observation population)
+ * **Details**
+ *
+ * An empty enumerated set needs evidence; absence is never encoded as zero.
+ *
+ * **Example** (Construct the unknown observation population case)
+ *
  * ```ts
  * import { ObservationPopulation } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationPopulation.cases.Unknown.make({})._tag)
  * ```
- * **Details** An empty enumerated set needs evidence; absence is never encoded as zero.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -109,13 +134,18 @@ export const ObservationPopulation = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationPopulation}.
  *
- * **Example** (Inspect observation population)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation population)
+ *
  * ```ts
  * import type { ObservationPopulation } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationPopulation | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -124,12 +154,17 @@ export type ObservationPopulation = typeof ObservationPopulation.Type;
 /**
  * Qualified capability, explicit lack of support, or an uninvestigated route.
  *
- * **Example** (Inspect observation capability)
+ * **Details**
+ *
+ * Capability is independent of whether the route is currently running.
+ *
+ * **Example** (Construct the unknown observation capability case)
+ *
  * ```ts
  * import { ObservationCapability } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationCapability.cases.Unknown.make({})._tag)
  * ```
- * **Details** Capability is independent of whether the route is currently running.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -148,13 +183,18 @@ export const ObservationCapability = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationCapability}.
  *
- * **Example** (Inspect observation capability)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation capability)
+ *
  * ```ts
  * import type { ObservationCapability } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationCapability | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -163,12 +203,17 @@ export type ObservationCapability = typeof ObservationCapability.Type;
 /**
  * Deliberate collection policy, separate from missing capability or failure.
  *
- * **Example** (Inspect observation policy)
+ * **Details**
+ *
+ * An exclusion carries its policy evidence, never a fabricated idle reading.
+ *
+ * **Example** (Construct the included observation policy case)
+ *
  * ```ts
  * import { ObservationPolicy } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationPolicy.cases.Included.make({})._tag)
  * ```
- * **Details** An exclusion carries its policy evidence, never a fabricated idle reading.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -178,13 +223,18 @@ export const ObservationPolicy = S.TaggedUnion({ Included: {}, Excluded: { evide
 /**
  * Runtime type of {@link ObservationPolicy}.
  *
- * **Example** (Inspect observation policy)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation policy)
+ *
  * ```ts
  * import type { ObservationPolicy } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationPolicy | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -197,12 +247,17 @@ const ProducerActivity = LiteralKit(["active", "idle", "failed"]).pipe(
 /**
  * A route health observation with a finite validity window, or no observation.
  *
- * **Example** (Inspect observation heartbeat)
+ * **Details**
+ *
+ * A stopped producer becomes stale; no trace arrivals alone cannot prove idle.
+ *
+ * **Example** (Construct the unknown observation heartbeat case)
+ *
  * ```ts
  * import { ObservationHeartbeat } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationHeartbeat.cases.Unknown.make({})._tag)
  * ```
- * **Details** A stopped producer becomes stale; no trace arrivals alone cannot prove idle.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -233,13 +288,18 @@ export const ObservationHeartbeat = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationHeartbeat}.
  *
- * **Example** (Inspect observation heartbeat)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation heartbeat)
+ *
  * ```ts
  * import type { ObservationHeartbeat } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationHeartbeat | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -252,12 +312,17 @@ const RootId = S.String.check(S.isPattern(/^root-[a-f0-9]{64}$/u)).pipe(
 /**
  * Binding supported by source evidence, or an explicitly unattributed route.
  *
- * **Example** (Inspect observation root binding)
+ * **Details**
+ *
+ * Global source directories do not inherit a collector checkout binding.
+ *
+ * **Example** (Construct the unknown observation root binding case)
+ *
  * ```ts
  * import { ObservationRootBinding } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationRootBinding.cases.Unknown.make({})._tag)
  * ```
- * **Details** Global source directories do not inherit a collector checkout binding.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -270,13 +335,18 @@ export const ObservationRootBinding = S.TaggedUnion({
 /**
  * Runtime type of {@link ObservationRootBinding}.
  *
- * **Example** (Inspect observation root binding)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation root binding)
+ *
  * ```ts
  * import type { ObservationRootBinding } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationRootBinding | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -285,13 +355,18 @@ export type ObservationRootBinding = typeof ObservationRootBinding.Type;
 /**
  * Privacy-safe host identity in one operator-defined identity namespace.
  *
- * **Example** (Inspect observation host)
+ * **Details**
+ *
+ * IDs are digests; no hostname, home path or access-bearing URL is accepted.
+ *
+ * **Example** (Reject an empty observation host)
+ *
  * ```ts
  * import { ObservationHost } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationHost)({})) // false
  * ```
- * **Details** IDs are digests; no hostname, home path or access-bearing URL is accepted.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -304,12 +379,17 @@ export class ObservationHost extends S.Opaque<ObservationHost, { readonly brand:
 /**
  * Evidenced identity component or an explicitly unresolved component.
  *
- * **Example** (Inspect observation identity)
+ * **Details**
+ *
+ * A retired root can remain inventoried even when its owning clone was never proven.
+ *
+ * **Example** (Construct the unknown observation identity case)
+ *
  * ```ts
  * import { ObservationIdentity } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationIdentity.cases.Unknown.make({})._tag)
  * ```
- * **Details** A retired root can remain inventoried even when its owning clone was never proven.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -325,13 +405,18 @@ export const ObservationIdentity = S.TaggedUnion({
 /**
  * Repository, clone and worktree identities kept as separate fields.
  *
- * **Example** (Inspect observation root)
+ * **Details**
+ *
+ * Retired roots remain representable without pretending their files are present.
+ *
+ * **Example** (Reject an empty observation root)
+ *
  * ```ts
  * import { ObservationRoot } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationRoot)({})) // false
  * ```
- * **Details** Retired roots remain representable without pretending their files are present.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -352,13 +437,18 @@ export class ObservationRoot extends S.Opaque<ObservationRoot, { readonly brand:
 /**
  * One declared harness route with independent capability and population evidence.
  *
- * **Example** (Inspect observation route)
+ * **Details**
+ *
+ * Declaring a route never discovers unmanaged launches or expected events by inference.
+ *
+ * **Example** (Reject an empty observation route)
+ *
  * ```ts
  * import { ObservationRoute } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationRoute)({})) // false
  * ```
- * **Details** Declaring a route never discovers unmanaged launches or expected events by inference.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -385,13 +475,18 @@ export class ObservationRoute extends S.Opaque<ObservationRoute, { readonly bran
 /**
  * Bounded host/root/route manifest with referential integrity checks.
  *
- * **Example** (Inspect observation inventory)
+ * **Details**
+ *
+ * Populations cover [populationWindowStart, populationWindowEnd); observation cannot precede the window end. The manifest describes its declared boundary, not every application on a machine.
+ *
+ * **Example** (Reject an empty observation inventory)
+ *
  * ```ts
  * import { ObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationInventory)({})) // false
  * ```
- * **Details** Populations cover [populationWindowStart, populationWindowEnd); observation cannot precede the window end. The manifest describes its declared boundary, not every application on a machine.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -465,12 +560,17 @@ export class ObservationInventory extends S.Opaque<ObservationInventory, { reado
 /**
  * Route state, separate from whether launch/event populations are known.
  *
- * **Example** (Inspect observation route status)
+ * **Details**
+ *
+ * Unknown is neither zero activity nor intentional exclusion.
+ *
+ * **Example** (Read the stale observation route status literal)
+ *
  * ```ts
  * import { ObservationRouteStatus } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationRouteStatus.Enum.stale)
  * ```
- * **Details** Unknown is neither zero activity nor intentional exclusion.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -490,13 +590,18 @@ export const ObservationRouteStatus = LiteralKit([
 /**
  * Runtime type of {@link ObservationRouteStatus}.
  *
- * **Example** (Inspect observation route status)
+ * **Details**
+ *
+ * Inferred from the canonical runtime schema.
+ *
+ * **Example** (Annotate an optional observation route status)
+ *
  * ```ts
  * import type { ObservationRouteStatus } from "@beep/repo-ai-metrics/observation-inventory"
  * const value: ObservationRouteStatus | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the canonical runtime schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -505,12 +610,17 @@ export type ObservationRouteStatus = typeof ObservationRouteStatus.Type;
 /**
  * Interpret route state at a supplied clock instant.
  *
- * **Example** (Classify a declared route)
+ * **Details**
+ *
+ * Future heartbeat observations are unknown; expired heartbeats are stale.
+ *
+ * **Example** (Inspect the arity of observationRouteStatus)
+ *
  * ```ts
  * import { observationRouteStatus } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(observationRouteStatus.length)
  * ```
- * **Details** Future heartbeat observations are unknown; expired heartbeats are stale.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -535,13 +645,18 @@ export const observationRouteStatus: {
 /**
  * Counts for declared capabilities, known launches and expected events.
  *
- * **Example** (Inspect observation inventory summary)
+ * **Details**
+ *
+ * Unknown-route counts accompany known subsets; no universal capture percentage is inferred.
+ *
+ * **Example** (Reject an empty observation inventory summary)
+ *
  * ```ts
  * import { ObservationInventorySummary } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationInventorySummary)({})) // false
  * ```
- * **Details** Unknown-route counts accompany known subsets; no universal capture percentage is inferred.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -576,12 +691,17 @@ const populationIds = ObservationPopulation.match({
 /**
  * Count declared route capabilities and deduplicate known launch/event identities.
  *
- * **Example** (Summarize declared coverage)
+ * **Details**
+ *
+ * The same known launch seen by two routes on one host counts once. Host-local ID collisions remain separate; unknown populations stay explicit.
+ *
+ * **Example** (Inspect the arity of summarizeObservationInventory)
+ *
  * ```ts
  * import { summarizeObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(summarizeObservationInventory.length)
  * ```
- * **Details** The same known launch seen by two routes on one host counts once. Host-local ID collisions remain separate; unknown populations stay explicit.
+ *
  * @param inventory - Declared routes and independently known populations.
  * @returns Separate capability and population totals with unknown routes retained.
  * @category utilities
@@ -621,12 +741,17 @@ export const summarizeObservationInventory = (inventory: ObservationInventory): 
 /**
  * A safe inventory boundary error that never includes the rejected payload.
  *
- * **Example** (Inspect observation inventory error)
+ * **Details**
+ *
+ * Schema issues can contain input values, so they are deliberately not attached as causes.
+ *
+ * **Example** (Construct an invalid-inventory error)
+ *
  * ```ts
  * import { ObservationInventoryError } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(ObservationInventoryError.make({ message: "Invalid observation inventory." })._tag)
  * ```
- * **Details** Schema issues can contain input values, so they are deliberately not attached as causes.
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -645,14 +770,19 @@ const decodeObservationInventoryJson = S.decodeEffect(S.fromJsonString(Observati
 /**
  * Decode a bounded inventory, rejecting unexpected fields and masking input-bearing schema errors.
  *
- * **Example** (Decode an inventory declaration)
+ * **Details**
+ *
+ * The character ceiling bounds parsing; network callers must also enforce a request-byte limit before reading.
+ *
+ * **Example** (Build an inventory decoder with a flipped error channel)
+ *
  * ```ts
  * import { decodeObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as Effect from "effect/Effect"
  * const result = decodeObservationInventory("{}").pipe(Effect.flip)
  * console.log(result)
  * ```
- * **Details** The character ceiling bounds parsing; network callers must also enforce a request-byte limit before reading.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -668,13 +798,18 @@ export const decodeObservationInventory = Effect.fn("AiMetrics.decodeObservation
 /**
  * Read a declared inventory with a hard byte ceiling before JSON parsing.
  *
- * **Example** (Read an inventory declaration)
+ * **Details**
+ *
+ * Reads at most 4 MiB plus one sentinel byte. File errors omit paths and payloads.
+ *
+ * **Example** (Build an inventory-file read effect)
+ *
  * ```ts
  * import { readObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * const program = readObservationInventory("/tmp/synthetic-inventory.json")
  * console.log(program)
  * ```
- * **Details** Reads at most 4 MiB plus one sentinel byte. File errors omit paths and payloads.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -690,13 +825,18 @@ export const readObservationInventory = Effect.fn("AiMetrics.readObservationInve
 /**
  * Snapshot of the declared inventory and health interpretation at a supplied time.
  *
- * **Example** (Inspect observation inventory report)
+ * **Details**
+ *
+ * Includes the evidence manifest so consumers can inspect the scope behind each count.
+ *
+ * **Example** (Reject an empty observation inventory report)
+ *
  * ```ts
  * import { ObservationInventoryReport } from "@beep/repo-ai-metrics/observation-inventory"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationInventoryReport)({})) // false
  * ```
- * **Details** Includes the evidence manifest so consumers can inspect the scope behind each count.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -719,12 +859,17 @@ export class ObservationInventoryReport extends S.Opaque<
 /**
  * Build a report without probing applications or inferring undeclared coverage.
  *
- * **Example** (Report declared coverage)
+ * **Details**
+ *
+ * The clock is explicit so stored heartbeat expiry can be reproduced in tests.
+ *
+ * **Example** (Inspect the arity of reportObservationInventory)
+ *
  * ```ts
  * import { reportObservationInventory } from "@beep/repo-ai-metrics/observation-inventory"
  * console.log(reportObservationInventory.length)
  * ```
- * **Details** The clock is explicit so stored heartbeat expiry can be reproduced in tests.
+ *
  * @category utilities
  * @since 0.0.0
  */

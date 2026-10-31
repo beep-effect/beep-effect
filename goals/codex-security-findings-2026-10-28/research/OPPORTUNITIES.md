@@ -19,3 +19,12 @@
   historical colon-containing archive filename. Check out only the deployment
   scripts for this focused native test; retain Windows path protections and
   repository history. Evidence: PR #2333 Windows job checkout failure.
+
+- 2026-10-31: Connected Cloud tools returned an empty repository list and zero
+  canonical open findings while the authenticated UI displayed seven. The UI
+  exact identities matched this packet. Use the authenticated UI to resolve this
+  coverage mismatch; an empty connector response alone is not closure proof.
+- 2026-10-31: Cargo refused zip 9.0.5 while the updater required zip ^4.
+  Updating the owning updater to 2.14.1 selected zip 9.2.0 and its required
+  Tauri 2.12 dependency family. Inspect reverse dependencies before choosing
+  a transitive version; do not fake a version or bypass resolver constraints.

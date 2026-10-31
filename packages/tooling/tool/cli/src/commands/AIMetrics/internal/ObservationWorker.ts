@@ -238,12 +238,18 @@ const prepareObservationStorage = Effect.fnUntraced(function* (directory: string
 });
 /**
  * Run a paused-by-default observation process on a private Unix socket.
- * **Example** (Inspecting the process program)
+ *
+ * **Details**
+ *
+ * Linux/Bun only. Requires a pre-created private directory/config, inherited exclusive flock, cgroup memory/swap/CPU/task ceilings, finite descriptor/file limits, zero core dumps and no-new-privileges. Opens only fixed owned journal/socket paths; refuses symlink/hardlink database files and active stale sockets. Health, metrics and pause/resume are private-socket routes; no TCP listener is created. A frontend may expose only /v1/traces with the previously qualified transport limits. Installed credentials come from bounded private systemd files; direct process fixtures may use an explicit environment. A present but invalid credential directory never falls back to environment secrets. Secrets never enter argv or health. Scope shutdown drains the worker and closes the socket. No source is enrolled automatically and the historical recovery hold is untouched.
+ *
+ * **Example** (Inspect the worker process entry point)
+ *
  * ```ts
  * import { runObservationWorkerProcess } from "@beep/repo-cli/commands/AIMetrics/internal/ObservationWorker"
  * console.log(typeof runObservationWorkerProcess)
  * ```
- * **Details** Linux/Bun only. Requires a pre-created private directory/config, inherited exclusive flock, cgroup memory/swap/CPU/task ceilings, finite descriptor/file limits, zero core dumps and no-new-privileges. Opens only fixed owned journal/socket paths; refuses symlink/hardlink database files and active stale sockets. Health, metrics and pause/resume are private-socket routes; no TCP listener is created. A frontend may expose only /v1/traces with the previously qualified transport limits. Installed credentials come from bounded private systemd files; direct process fixtures may use an explicit environment. A present but invalid credential directory never falls back to environment secrets. Secrets never enter argv or health. Scope shutdown drains the worker and closes the socket. No source is enrolled automatically and the historical recovery hold is untouched.
+ *
  * @category programs
  * @since 0.0.0
  */

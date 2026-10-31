@@ -25,12 +25,18 @@ const traceId = S.String.check(S.isPattern(/^[0-9a-f]{32}$/));
 const spanId = S.String.check(S.isPattern(/^[0-9a-f]{16}$/));
 /**
  * Exact identity and the only attribute keys allowed out of the reader.
- * **Example** (Inspecting a lookup)
+ *
+ * **Details**
+ *
+ * The caller owns this allowlist. Unknown response attributes and event/message content never leave this reader. The server must return an unpaginated unique match; omitted rows are not proof of non-delivery.
+ *
+ * **Example** (Inspect the phoenix span lookup constructor)
+ *
  * ```ts
  * import { PhoenixSpanLookup } from "@beep/phoenix"
  * console.log(typeof PhoenixSpanLookup.make)
  * ```
- * **Details** The caller owns this allowlist. Unknown response attributes and event/message content never leave this reader. The server must return an unpaginated unique match; omitted rows are not proof of non-delivery.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -44,12 +50,18 @@ export class PhoenixSpanLookup extends S.Opaque<PhoenixSpanLookup, { readonly br
 ) {}
 /**
  * Positive scalar projection of one stored span.
- * **Example** (Inspecting evidence)
+ *
+ * **Details**
+ *
+ * This is query evidence, not a persistence guarantee. Unexpected content is discarded and malformed requested values refuse the response.
+ *
+ * **Example** (Inspect the phoenix stored span constructor)
+ *
  * ```ts
  * import { PhoenixStoredSpan } from "@beep/phoenix"
  * console.log(typeof PhoenixStoredSpan.make)
  * ```
- * **Details** This is query evidence, not a persistence guarantee. Unexpected content is discarded and malformed requested values refuse the response.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -167,12 +179,18 @@ const projectStoredSpan = Effect.fnUntraced(function* (decoded: typeof page.Type
 
 /**
  * Make a one-query-at-a-time Phoenix reader with a 256 KiB streaming ceiling.
- * **Example** (Inspecting the reader)
+ *
+ * **Details**
+ *
+ * Uses explicit driver configuration, including its optional API key, without environment discovery. Require a raw HTTP client without retries/redirects. Only HTTPS or loopback HTTP origins are allowed. Each query has a 5 second cooperative deadline, no waiting queue and an exact identity check. A missing result returns None; malformed, paginated, duplicate, unauthorized or unavailable replies fail safely. No raw response content is returned in errors or logged.
+ *
+ * **Example** (Inspect the factory for phoenix span reader)
+ *
  * ```ts
  * import { makePhoenixSpanReader } from "@beep/phoenix"
  * console.log(typeof makePhoenixSpanReader)
  * ```
- * **Details** Uses explicit driver configuration, including its optional API key, without environment discovery. Require a raw HTTP client without retries/redirects. Only HTTPS or loopback HTTP origins are allowed. Each query has a 5 second cooperative deadline, no waiting queue and an exact identity check. A missing result returns None; malformed, paginated, duplicate, unauthorized or unavailable replies fail safely. No raw response content is returned in errors or logged.
+ *
  * @category services
  * @since 0.0.0
  */

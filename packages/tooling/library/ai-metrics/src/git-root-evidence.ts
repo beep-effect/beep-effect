@@ -34,12 +34,17 @@ const UnknownReason = LiteralKit([
 /**
  * Current Git identity evidence, separate from the legacy checkout-path IDs.
  *
- * **Example** (Inspect ai metrics git root evidence)
+ * **Details**
+ *
+ * Physical identities are scoped to a hash namespace and host. No path, remote URL, revision text or salt is stored.
+ *
+ * **Example** (Construct the unknown AI metrics git root evidence case)
+ *
  * ```ts
  * import { AiMetricsGitRootEvidence } from "@beep/repo-ai-metrics/git-root-evidence"
  * console.log(AiMetricsGitRootEvidence.cases.Unknown.make({ reason: "not-observed" })._tag)
  * ```
- * **Details** Physical identities are scoped to a hash namespace and host. No path, remote URL, revision text or salt is stored.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -64,13 +69,18 @@ export const AiMetricsGitRootEvidence = S.TaggedUnion({
 /**
  * Runtime type of {@link AiMetricsGitRootEvidence}.
  *
- * **Example** (Inspect ai metrics git root evidence)
+ * **Details**
+ *
+ * Inferred from the evidence schema.
+ *
+ * **Example** (Annotate an optional AI metrics git root evidence)
+ *
  * ```ts
  * import type { AiMetricsGitRootEvidence } from "@beep/repo-ai-metrics/git-root-evidence"
  * const value: AiMetricsGitRootEvidence | undefined = undefined
  * console.log(value)
  * ```
- * **Details** Inferred from the evidence schema.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -115,14 +125,19 @@ const decodeArgumentsOption = S.decodeUnknownOption(S.Tuple([S.String, S.String,
 /**
  * Observe root identity without changing historical registry or event IDs.
  *
- * **Example** (Observe a declared Git root)
+ * **Details**
+ *
+ * Uses a five-second bounded read-only Git probe. Missing process service or salt yields explicit unknown evidence. Errors never expose probe output or private paths.
+ *
+ * **Example** (Build a synthetic Git root observation effect)
+ *
  * ```ts
  * import { observeAiMetricsGitRoot } from "@beep/repo-ai-metrics/git-root-evidence"
  * import { AiMetricsCanonicalRootInput } from "@beep/repo-ai-metrics/identity-registry"
  * const program = observeAiMetricsGitRoot(AiMetricsCanonicalRootInput.make({ rootPath: "/tmp/synthetic-repo", hashSalt: "synthetic-salt" }))
  * console.log(program)
  * ```
- * **Details** Uses a five-second bounded read-only Git probe. Missing process service or salt yields explicit unknown evidence. Errors never expose probe output or private paths.
+ *
  * @category services
  * @since 0.0.0
  */

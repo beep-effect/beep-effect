@@ -28,14 +28,20 @@ const $I = $RepoAiMetricsId.create("native-schedule");
 const milliseconds = S.Int.check(S.isBetween({ minimum: 100, maximum: 3600000 }));
 /**
  * Age observations for unresolved events visited during one bounded pass.
- * **Example** (Inspecting the lag summary)
+ *
+ * **Details**
+ *
+ * Maxima cover sampled unresolved events before their pass operation,
+ * not the oldest event in the journal or fleet. Source age includes historical
+ * replay. Missing timestamps and future clocks never become zero lag.
+ *
+ * **Example** (Inspect the observation lag summary constructor)
+ *
  * ```ts
  * import { ObservationLagSummary } from "@beep/repo-ai-metrics/native-schedule"
  * console.log(typeof ObservationLagSummary.make)
  * ```
- * **Details** Maxima cover sampled unresolved events before their pass operation,
- * not the oldest event in the journal or fleet. Source age includes historical
- * replay. Missing timestamps and future clocks never become zero lag.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -74,16 +80,22 @@ const summarizeAges = (samples: ReadonlyArray<typeof AgeSample.Type>) => {
 };
 /**
  * Explicit authorization to repeat stable event identities at a qualified target.
- * **Example** (Inspecting the opt-in policy)
- * ```ts
- * import { IdempotentReplayPolicy } from "@beep/repo-ai-metrics/native-schedule"
- * console.log(typeof IdempotentReplayPolicy.make)
- * ```
- * **Details** The owner supplies a retained qualification receipt digest for the
+ *
+ * **Details**
+ *
+ * The owner supplies a retained qualification receipt digest for the
  * target's duplicate behavior; the digest is a reference, not automatically
  * validated proof. A fresh missing read-back is required before retry, but is
  * never treated as proof of loss. The ledger's attempt ceilings still apply.
  * Changing target or qualification requires a new owned scheduling profile.
+ *
+ * **Example** (Inspect the idempotent replay policy constructor)
+ *
+ * ```ts
+ * import { IdempotentReplayPolicy } from "@beep/repo-ai-metrics/native-schedule"
+ * console.log(typeof IdempotentReplayPolicy.make)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,12 +112,18 @@ export class IdempotentReplayPolicy extends S.Opaque<IdempotentReplayPolicy, { r
 ) {}
 /**
  * Immutable bounded native and reconstructed scheduling policy.
- * **Example** (Inspecting policy construction)
+ *
+ * **Details**
+ *
+ * Each pass visits at most 32 durable events. Explicit retryable responses and repeated read-back queries use capped exponential backoff. Query delay starts at reconcileDelayMillis and caps at the greater of reconcileDelayMillis and maxRetryDelayMillis. Accepted and ambiguous attempts are queried before any replay. They remain held unless the owner explicitly qualifies duplicate handling for this target; missing read-back is not proof of non-delivery. The cooperative tick deadline does not replace process limits. This policy does not start a timer or enroll a source.
+ *
+ * **Example** (Inspect the native schedule policy constructor)
+ *
  * ```ts
  * import { NativeSchedulePolicy } from "@beep/repo-ai-metrics/native-schedule"
  * console.log(typeof NativeSchedulePolicy.make)
  * ```
- * **Details** Each pass visits at most 32 durable events. Explicit retryable responses and repeated read-back queries use capped exponential backoff. Query delay starts at reconcileDelayMillis and caps at the greater of reconcileDelayMillis and maxRetryDelayMillis. Accepted and ambiguous attempts are queried before any replay. They remain held unless the owner explicitly qualifies duplicate handling for this target; missing read-back is not proof of non-delivery. The cooperative tick deadline does not replace process limits. This policy does not start a timer or enroll a source.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -131,12 +149,18 @@ export class NativeSchedulePolicy extends S.Opaque<NativeSchedulePolicy, { reado
 ) {}
 /**
  * Safe evidence from one visited event.
- * **Example** (Inspecting outcome constructors)
+ *
+ * **Details**
+ *
+ * Held reasons are workflow observations, not replacements for the five delivery states. Failed contains no SQL, endpoint, payload or decoder error. Query errors remain distinct from a missing span.
+ *
+ * **Example** (Inspect the held native schedule outcome case)
+ *
  * ```ts
  * import { NativeScheduleOutcome } from "@beep/repo-ai-metrics/native-schedule"
  * console.log(NativeScheduleOutcome.cases.Held)
  * ```
- * **Details** Held reasons are workflow observations, not replacements for the five delivery states. Failed contains no SQL, endpoint, payload or decoder error. Query errors remain distinct from a missing span.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -158,12 +182,18 @@ export const NativeScheduleOutcome = S.TaggedUnion({
 }).pipe($I.annoteSchema("NativeScheduleOutcome", { description: "Content-free scheduling outcome." }));
 /**
  * A bounded pass result or an explicitly incomplete deadline result.
- * **Example** (Inspecting tick constructors)
+ *
+ * **Details**
+ *
+ * Complete with no outcomes means no retained accepted-event candidates at this observation, not fleet-wide idle. Deadline can follow committed work; the durable ledger remains authoritative. The cursor advances before I/O, so interrupted candidates return on a later wrap.
+ *
+ * **Example** (Inspect the deadline native schedule tick case)
+ *
  * ```ts
  * import { NativeScheduleTick } from "@beep/repo-ai-metrics/native-schedule"
  * console.log(NativeScheduleTick.cases.Deadline)
  * ```
- * **Details** Complete with no outcomes means no retained accepted-event candidates at this observation, not fleet-wide idle. Deadline can follow committed work; the durable ledger remains authoritative. The cursor advances before I/O, so interrupted candidates return on a later wrap.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -226,12 +256,18 @@ const decodeLastAttemptRows = S.decodeUnknownEffect(S.Array(LastAttempt));
 
 /**
  * Recover and execute bounded native and reconstructed delivery work from the existing journal.
- * **Example** (Inspecting the factory)
+ *
+ * **Details**
+ *
+ * Captures one owned SQL client and existing sender/read-back capabilities. A checksummed singleton binds policy/host/namespace/target and persists fair traversal independently of delivery success. A replaceable checksummed query reservation per enrolled event is bounded by the delivery ledger and cleared on evidence retirement. It is committed before query I/O, so interruption or reconstruction cannot immediately repeat a query. New transport attempts reset that event's query ordinal. New sends use deterministic epoch-scoped single-event attempt IDs; retries require a fresh ordinal. Existing multi-event attempts are reconstructed exactly for read-back. Source payloads and all send facts remain authoritative. One pass at a time is admitted without waiting; hard single-process ownership is a deployment requirement. Retired/disposed payloads are excluded by the live payload join; this is not proof they were delivered. Qualified replay still requires a fresh Missing result, its minimum delay, capped backoff and remaining attempt capacity. Query errors and mismatches never authorize replay.
+ *
+ * **Example** (Inspect the factory for native delivery scheduler)
+ *
  * ```ts
  * import { makeNativeDeliveryScheduler } from "@beep/repo-ai-metrics/native-schedule"
  * console.log(typeof makeNativeDeliveryScheduler)
  * ```
- * **Details** Captures one owned SQL client and existing sender/read-back capabilities. A checksummed singleton binds policy/host/namespace/target and persists fair traversal independently of delivery success. A replaceable checksummed query reservation per enrolled event is bounded by the delivery ledger and cleared on evidence retirement. It is committed before query I/O, so interruption or reconstruction cannot immediately repeat a query. New transport attempts reset that event's query ordinal. New sends use deterministic epoch-scoped single-event attempt IDs; retries require a fresh ordinal. Existing multi-event attempts are reconstructed exactly for read-back. Source payloads and all send facts remain authoritative. One pass at a time is admitted without waiting; hard single-process ownership is a deployment requirement. Retired/disposed payloads are excluded by the live payload join; this is not proof they were delivered. Qualified replay still requires a fresh Missing result, its minimum delay, capped backoff and remaining attempt capacity. Query errors and mismatches never authorize replay.
+ *
  * @category services
  * @since 0.0.0
  */

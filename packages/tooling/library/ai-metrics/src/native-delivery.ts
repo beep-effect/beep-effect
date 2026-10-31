@@ -26,12 +26,18 @@ import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 const $I = $RepoAiMetricsId.create("native-delivery");
 /**
  * Explicit private destination and cooperative request deadline.
- * **Example** (Inspecting delivery policy)
+ *
+ * **Details**
+ *
+ * Only HTTPS or loopback HTTP /v1/traces is accepted, without credentials, query or fragment. The injected HTTP client must have no automatic retries or redirects. This layer sends no credentials and never infers a destination from source metadata.
+ *
+ * **Example** (Inspect the native delivery policy constructor)
+ *
  * ```ts
  * import { NativeDeliveryPolicy } from "@beep/repo-ai-metrics/native-delivery"
  * console.log(typeof NativeDeliveryPolicy.make)
  * ```
- * **Details** Only HTTPS or loopback HTTP /v1/traces is accepted, without credentials, query or fragment. The injected HTTP client must have no automatic retries or redirects. This layer sends no credentials and never infers a destination from source metadata.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -49,12 +55,18 @@ export class NativeDeliveryPolicy extends S.Opaque<NativeDeliveryPolicy, { reado
 ) {}
 /**
  * A bounded canonical page slice and unique network-attempt identity.
- * **Example** (Inspecting a send request)
+ *
+ * **Details**
+ *
+ * Offsets address canonical new events, excluding native duplicate/conflict occurrences and rejected transcript frames. Each retry uses a new attempt ID. The original receipt and intake timestamp determine bytes across restarts.
+ *
+ * **Example** (Inspect the native delivery request constructor)
+ *
  * ```ts
  * import { NativeDeliveryRequest } from "@beep/repo-ai-metrics/native-delivery"
  * console.log(typeof NativeDeliveryRequest.make)
  * ```
- * **Details** Offsets address canonical new events, excluding native duplicate/conflict occurrences and rejected transcript frames. Each retry uses a new attempt ID. The original receipt and intake timestamp determine bytes across restarts.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -68,12 +80,18 @@ export class NativeDeliveryRequest extends S.Opaque<NativeDeliveryRequest, { rea
 ) {}
 /**
  * Durable result of a send call, separate from backend visibility.
- * **Example** (Inspecting result constructors)
+ *
+ * **Details**
+ *
+ * Recorded follows the outcome commit. ExistingAttempt means no new network operation was performed; callers query the ledger for prior evidence.
+ *
+ * **Example** (Inspect the recorded native delivery result case)
+ *
  * ```ts
  * import { NativeDeliveryResult } from "@beep/repo-ai-metrics/native-delivery"
  * console.log(NativeDeliveryResult.cases.Recorded)
  * ```
- * **Details** Recorded follows the outcome commit. ExistingAttempt means no new network operation was performed; callers query the ledger for prior evidence.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,12 +136,18 @@ const endpoint = (policy: NativeDeliveryPolicy) =>
   );
 /**
  * Resolve the declared Phoenix query origin independently of an intermediary collector.
- * **Example** (Inspecting read-back routing)
+ *
+ * **Details**
+ *
+ * Defaults to the export origin for direct Phoenix delivery. An intermediary requires an explicitly declared backend origin. Both origins enter the immutable target identity; changing either requires a new owned journal or migration.
+ *
+ * **Example** (Inspect the delivery read-back origin selector)
+ *
  * ```ts
  * import { nativeDeliveryReadbackOrigin } from "@beep/repo-ai-metrics/native-delivery"
  * console.log(typeof nativeDeliveryReadbackOrigin)
  * ```
- * **Details** Defaults to the export origin for direct Phoenix delivery. An intermediary requires an explicitly declared backend origin. Both origins enter the immutable target identity; changing either requires a new owned journal or migration.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -152,12 +176,18 @@ export const nativeDeliveryReadbackOrigin = Effect.fn("AiMetrics.nativeDeliveryR
 });
 /**
  * Bind the ledger target to its exact destination, project and projection version.
- * **Example** (Inspecting target derivation)
+ *
+ * **Details**
+ *
+ * The hash is destination identity, not authentication. Changing destination/project/projection requires a new owned journal or explicit migration.
+ *
+ * **Example** (Inspect the delivery target-ID function)
+ *
  * ```ts
  * import { nativeDeliveryTargetId } from "@beep/repo-ai-metrics/native-delivery"
  * console.log(typeof nativeDeliveryTargetId)
  * ```
- * **Details** The hash is destination identity, not authentication. Changing destination/project/projection requires a new owned journal or explicit migration.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -188,12 +218,18 @@ const boundedReply = Effect.fn("AiMetrics.nativeDelivery.boundedReply")(function
 });
 /**
  * Create a bounded single-send worker over canonical locally accepted metadata.
- * **Example** (Inspecting the worker)
+ *
+ * **Details**
+ *
+ * One request at a time with no waiting queue; commit a single-use attempt before I/O, parse at most 64 KiB of reply, and commit the outcome before returning. Existing attempt IDs never send again. Interrupted or killed sends remain unresolved. Full acknowledgment means accepted-unverified, never backend visibility. Inject a raw client without retries/redirects; process resource limits, scheduling, authentication and backend read-back are caller responsibilities.
+ *
+ * **Example** (Inspect the factory for native delivery)
+ *
  * ```ts
  * import { makeNativeDelivery } from "@beep/repo-ai-metrics/native-delivery"
  * console.log(typeof makeNativeDelivery)
  * ```
- * **Details** One request at a time with no waiting queue; commit a single-use attempt before I/O, parse at most 64 KiB of reply, and commit the outcome before returning. Existing attempt IDs never send again. Interrupted or killed sends remain unresolved. Full acknowledgment means accepted-unverified, never backend visibility. Inject a raw client without retries/redirects; process resource limits, scheduling, authentication and backend read-back are caller responsibilities.
+ *
  * @category services
  * @since 0.0.0
  */

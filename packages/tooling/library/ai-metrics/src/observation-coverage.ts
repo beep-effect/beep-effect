@@ -38,13 +38,18 @@ const size = Snapshot.match({ Unknown: () => 0, Observed: (value) => value.ids.l
 /**
  * Independent inventory and observation evidence for exactly one population window.
  *
- * **Example** (Validate coverage evidence)
+ * **Details**
+ *
+ * Omitted routes are unassessed. IDs use the inventory host's namespace; observation evidence never creates a denominator. Producers must establish provenance before asserting exhaustive queries.
+ *
+ * **Example** (Reject an empty observation coverage input)
+ *
  * ```ts
  * import { ObservationCoverageInput } from "@beep/repo-ai-metrics/observation-coverage"
  * import * as S from "effect/Schema"
  * console.log(S.is(ObservationCoverageInput)({})) // false
  * ```
- * **Details** Omitted routes are unassessed. IDs use the inventory host's namespace; observation evidence never creates a denominator. Producers must establish provenance before asserting exhaustive queries.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -135,12 +140,17 @@ const compare = (expected: ObservationPopulation, observed: typeof Snapshot.Type
 /**
  * Auditable report retaining independent declarations and observation provenance.
  *
- * **Example** (Inspect the report codec)
+ * **Details**
+ *
+ * Accepted and visible populations are separate snapshots. No subset relation is inferred across local retention or backend query boundaries. Not-observed is not proof of loss; these counts are not task success or universal session coverage.
+ *
+ * **Example** (Inspect the observation coverage report constructor)
+ *
  * ```ts
  * import { ObservationCoverageReport } from "@beep/repo-ai-metrics/observation-coverage"
  * console.log(typeof ObservationCoverageReport.make)
  * ```
- * **Details** Accepted and visible populations are separate snapshots. No subset relation is inferred across local retention or backend query boundaries. Not-observed is not proof of loss; these counts are not task success or universal session coverage.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -160,12 +170,17 @@ export class ObservationCoverageReport extends S.Opaque<ObservationCoverageRepor
 /**
  * Compare each declared route to its own independently observed populations.
  *
- * **Example** (Locate the reconciler)
+ * **Details**
+ *
+ * A duplicate ID on a different route does not satisfy this route's expectation. Missing observations remain unknown, including explicitly empty expectations.
+ *
+ * **Example** (Inspect the coverage reconciliation function)
+ *
  * ```ts
  * import { reconcileObservationCoverage } from "@beep/repo-ai-metrics/observation-coverage"
  * console.log(typeof reconcileObservationCoverage)
  * ```
- * **Details** A duplicate ID on a different route does not satisfy this route's expectation. Missing observations remain unknown, including explicitly empty expectations.
+ *
  * @param input - Declared expectations and observations for each route.
  * @returns Route-scoped comparisons preserving absent observations as unknown.
  * @category utilities
@@ -196,12 +211,17 @@ const decodeObservationCoverageInputJson = S.decodeEffect(S.fromJsonString(Obser
 /**
  * Read a bounded metadata-only coverage evidence file with sanitized failures.
  *
- * **Example** (Read declared evidence)
+ * **Details**
+ *
+ * The 4 MiB limit is enforced before parsing. Excess fields are rejected; schema diagnostics cannot leak their contents or paths.
+ *
+ * **Example** (Build a coverage-file read effect)
+ *
  * ```ts
  * import { readObservationCoverage } from "@beep/repo-ai-metrics/observation-coverage"
  * console.log(readObservationCoverage("/tmp/synthetic-coverage.json"))
  * ```
- * **Details** The 4 MiB limit is enforced before parsing. Excess fields are rejected; schema diagnostics cannot leak their contents or paths.
+ *
  * @category services
  * @since 0.0.0
  */

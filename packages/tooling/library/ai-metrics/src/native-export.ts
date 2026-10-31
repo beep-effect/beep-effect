@@ -24,12 +24,18 @@ import { NativeTraceMetadata } from "./native-trace.ts";
 const $I = $RepoAiMetricsId.create("native-export");
 /**
  * Owned export context and canonical sanitized spans.
- * **Example** (Inspecting the projection input)
+ *
+ * **Details**
+ *
+ * acceptedAtMillis is the durable intake time and supplies a stable point timestamp only when source endpoints are absent. It is not a measured duration. Unknown models/providers and incomplete usage remain unknown. Only the declared Phoenix project, approved model names and enabled finite synthetic fixture labels are plaintext labels. Fixture labels are not real application instrumentation.
+ *
+ * **Example** (Inspect the native export input constructor)
+ *
  * ```ts
  * import { NativeExportInput } from "@beep/repo-ai-metrics/native-export"
  * console.log(typeof NativeExportInput.make)
  * ```
- * **Details** acceptedAtMillis is the durable intake time and supplies a stable point timestamp only when source endpoints are absent. It is not a measured duration. Unknown models/providers and incomplete usage remain unknown. Only the declared Phoenix project, approved model names and enabled finite synthetic fixture labels are plaintext labels. Fixture labels are not real application instrumentation.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -57,12 +63,18 @@ export class NativeExportInput extends S.Opaque<NativeExportInput, { readonly br
 ) {}
 /**
  * Exact outgoing bytes, digest and logical event population.
- * **Example** (Inspecting the encoded batch)
+ *
+ * **Details**
+ *
+ * The SHA-256 covers the actual protobuf bytes, not their hexadecimal text. Native trace/span/parent identifiers remain unchanged. Explicit source timestamp strings also retain exact nanoseconds in backends whose standard timestamp columns truncate precision. No raw source attributes, commands, prompts, outputs, exceptions or URLs are encoded.
+ *
+ * **Example** (Inspect the native encoded batch constructor)
+ *
  * ```ts
  * import { NativeEncodedBatch } from "@beep/repo-ai-metrics/native-export"
  * console.log(typeof NativeEncodedBatch.make)
  * ```
- * **Details** The SHA-256 covers the actual protobuf bytes, not their hexadecimal text. Native trace/span/parent identifiers remain unchanged. Explicit source timestamp strings also retain exact nanoseconds in backends whose standard timestamp columns truncate precision. No raw source attributes, commands, prompts, outputs, exceptions or URLs are encoded.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -167,12 +179,18 @@ const metadataAttributes = (span: NativeTraceMetadata, evidenceEpoch: number) =>
 ];
 /**
  * Encode canonical native metadata, preserving source time and cache accounting.
- * **Example** (Inspecting the encoder)
+ *
+ * **Details**
+ *
+ * Claude prompt count is uncached input plus cache read plus cache write only when all are known. OpenInference prompt input is already inclusive and is not summed again. Standard usage fields are emitted only for LLM spans, preventing agent-level aggregates from being counted as another model call. Unknown/incomplete/overflow values are not fabricated. No provider or dollar cost is inferred. This is encoding proof, not Phoenix ingestion or UI reconciliation.
+ *
+ * **Example** (Inspect the native-trace batch encoder)
+ *
  * ```ts
  * import { encodeNativeTraceBatch } from "@beep/repo-ai-metrics/native-export"
  * console.log(typeof encodeNativeTraceBatch)
  * ```
- * **Details** Claude prompt count is uncached input plus cache read plus cache write only when all are known. OpenInference prompt input is already inclusive and is not summed again. Standard usage fields are emitted only for LLM spans, preventing agent-level aggregates from being counted as another model call. Unknown/incomplete/overflow values are not fabricated. No provider or dollar cost is inferred. This is encoding proof, not Phoenix ingestion or UI reconciliation.
+ *
  * @category encoding
  * @since 0.0.0
  */

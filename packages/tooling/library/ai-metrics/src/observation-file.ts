@@ -13,12 +13,17 @@ import * as Stream from "effect/Stream";
 /**
  * Read strict UTF-8 through a byte ceiling before parsing.
  *
- * **Example** (Inspect the bounded reader)
+ * **Details**
+ *
+ * Reads at most maxBytes plus one sentinel byte. The caller supplies a finite trusted byte ceiling, path authorization and safe errors; private file data is excluded from error causes. This performs no ownership or inode check and does not establish a stable snapshot.
+ *
+ * **Example** (Inspect the bounded metadata reader)
+ *
  * ```ts
  * import { readBoundedMetadata } from "@beep/repo-ai-metrics/observation-file"
  * console.log(typeof readBoundedMetadata)
  * ```
- * **Details** Reads at most maxBytes plus one sentinel byte. The caller supplies a finite trusted byte ceiling, path authorization and safe errors; private file data is excluded from error causes. This performs no ownership or inode check and does not establish a stable snapshot.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -61,12 +66,18 @@ export const readBoundedMetadata: {
 
 /**
  * Test regular-file type, exact private mode, owner and single-link metadata.
- * **Example** (Inspect the private-file predicate)
+ *
+ * **Details**
+ *
+ * This checks supplied metadata only. Callers must obtain it through their owned lstat or pinned handle and separately enforce canonical paths, inode stability, locks and size bounds. Missing owner or link counts fail closed.
+ *
+ * **Example** (Inspect the private-file metadata predicate)
+ *
  * ```ts
  * import { isPrivateObservationFile } from "@beep/repo-ai-metrics/observation-file"
  * console.log(typeof isPrivateObservationFile)
  * ```
- * **Details** This checks supplied metadata only. Callers must obtain it through their owned lstat or pinned handle and separately enforce canonical paths, inode stability, locks and size bounds. Missing owner or link counts fail closed.
+ *
  * @category predicates
  * @since 0.0.0
  */

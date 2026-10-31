@@ -31,12 +31,18 @@ import type { TranscriptSweepReport } from "./transcript-sweep.ts";
 const $I = $RepoAiMetricsId.create("transcript-discovery");
 /**
  * Explicit root declarations and traversal budgets.
- * **Example** (Inspecting configuration)
+ *
+ * **Details**
+ *
+ * Private paths and salt must not become telemetry. At most eight disjoint absolute roots, eight directory levels per root, 1024 consumed helper events/launches and 32 candidates per page. Retired roots are never accessed. Archives are not implicitly enrolled. A cycle entry ceiling reports overflow instead of claiming completeness.
+ *
+ * **Example** (Inspect the transcript discovery input constructor)
+ *
  * ```ts
  * import { TranscriptDiscoveryInput } from "@beep/repo-ai-metrics/transcript-discovery"
  * console.log(typeof TranscriptDiscoveryInput.make)
  * ```
- * **Details** Private paths and salt must not become telemetry. At most eight disjoint absolute roots, eight directory levels per root, 1024 consumed helper events/launches and 32 candidates per page. Retired roots are never accessed. Archives are not implicitly enrolled. A cycle entry ceiling reports overflow instead of claiming completeness.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -76,12 +82,18 @@ export class TranscriptDiscoveryError extends S.TaggedError<
 ) {}
 /**
  * Safe progress for declared roots, separate from file acceptance and fleet coverage.
- * **Example** (Inspecting reports)
+ *
+ * **Details**
+ *
+ * Completion means an observed traversal, not an atomic snapshot. Symlinks/nonfiles are excluded. Overflow, unreadability and directory replacement differ from completion. Progress restarts with the process; accepted offsets remain in the journal. Counts cover each current cycle; cycle numbers are local to this scanner. Read progress remains pending until the matching page outcomes are recorded. Partial and failed reads survive later empty directory pages in that same cycle.
+ *
+ * **Example** (Inspect the transcript discovery report constructor)
+ *
  * ```ts
  * import { TranscriptDiscoveryReport } from "@beep/repo-ai-metrics/transcript-discovery"
  * console.log(typeof TranscriptDiscoveryReport.make)
  * ```
- * **Details** Completion means an observed traversal, not an atomic snapshot. Symlinks/nonfiles are excluded. Overflow, unreadability and directory replacement differ from completion. Progress restarts with the process; accepted offsets remain in the journal. Counts cover each current cycle; cycle numbers are local to this scanner. Read progress remains pending until the matching page outcomes are recorded. Partial and failed reads survive later empty directory pages in that same cycle.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -212,12 +224,18 @@ const recordReadOutcome = (read: RootRuntime["read"], outcome: TranscriptSweepRe
 };
 /**
  * Create a scoped, single-owner directory scanner.
- * **Example** (Inspecting the factory)
+ *
+ * **Details**
+ *
+ * Alternates directory operations across roots. Managed isolated Python helpers retain streaming progress across pages, with at most one process per active root and roots times depth directory handles. Their stdout is bounded by pipe backpressure; they may prefetch ahead of observed progress, up to the cycle limit, and never read file contents. This adapter requires /usr/bin/python3. Pending means no completed observation is asserted. suspend closes helpers and resets unfinished roots to pending; resumed discovery rescans them using durable accepted offsets. A completed/failed/overflowed root closes and retries next page; one bad root cannot starve others. The returned sources array is private reader input; only report is publishable. Each pull has a five-second cooperative deadline; failure or scope closure kills the owned helper. Deployment must still impose process, CPU and memory limits. Canonical path and inode/device checks reject symlinks and observed replacement, but cannot defeat adversarial path-resolution races. Do not enroll untrusted writable mounts.
+ *
+ * **Example** (Inspect the factory for transcript discovery)
+ *
  * ```ts
  * import { makeTranscriptDiscovery } from "@beep/repo-ai-metrics/transcript-discovery"
  * console.log(typeof makeTranscriptDiscovery)
  * ```
- * **Details** Alternates directory operations across roots. Managed isolated Python helpers retain streaming progress across pages, with at most one process per active root and roots times depth directory handles. Their stdout is bounded by pipe backpressure; they may prefetch ahead of observed progress, up to the cycle limit, and never read file contents. This adapter requires /usr/bin/python3. Pending means no completed observation is asserted. suspend closes helpers and resets unfinished roots to pending; resumed discovery rescans them using durable accepted offsets. A completed/failed/overflowed root closes and retries next page; one bad root cannot starve others. The returned sources array is private reader input; only report is publishable. Each pull has a five-second cooperative deadline; failure or scope closure kills the owned helper. Deployment must still impose process, CPU and memory limits. Canonical path and inode/device checks reject symlinks and observed replacement, but cannot defeat adversarial path-resolution races. Do not enroll untrusted writable mounts.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -467,12 +485,18 @@ export class TranscriptDiscoveryReadPolicy extends S.Opaque<
 ) {}
 /**
  * Process every candidate from one bounded discovery page through durable intake.
- * **Example** (Inspecting discovery composition)
+ *
+ * **Details**
+ *
+ * Namespace mismatch fails before directory progress. Failed admissions retain their accepted cursor and are retried in a later traversal. Discovery is not a durable receipt; a crash between discovery and acceptance causes rescanning. Returns only metadata reports, never the private candidate paths.
+ *
+ * **Example** (Inspect the discovered-transcript sweep function)
+ *
  * ```ts
  * import { runDiscoveredTranscriptSweep } from "@beep/repo-ai-metrics/transcript-discovery"
  * console.log(typeof runDiscoveredTranscriptSweep)
  * ```
- * **Details** Namespace mismatch fails before directory progress. Failed admissions retain their accepted cursor and are retried in a later traversal. Discovery is not a durable receipt; a crash between discovery and acceptance causes rescanning. Returns only metadata reports, never the private candidate paths.
+ *
  * @category services
  * @since 0.0.0
  */

@@ -60,12 +60,17 @@ const Rejection = S.Struct({ ordinal: S.Natural, reason: S.tag("invalid-span") }
 /**
  * Owned route policy and bounded native request bytes.
  *
- * **Example** (Inspect native trace request)
+ * **Details**
+ *
+ * Route identity is supplied by the receiver configuration, not asserted by a producer attribute. Only exact approved model names and explicitly enabled finite synthetic fixture labels may survive in plaintext. Fixture labels are ignored by default, and never attest real application activity. At most 256 KiB is decoded; the HTTP adapter must enforce the same limit while streaming, before constructing this value.
+ *
+ * **Example** (Inspect the native trace request constructor)
+ *
  * ```ts
  * import { NativeTraceRequest } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof NativeTraceRequest.make)
  * ```
- * **Details** Route identity is supplied by the receiver configuration, not asserted by a producer attribute. Only exact approved model names and explicitly enabled finite synthetic fixture labels may survive in plaintext. Fixture labels are ignored by default, and never attest real application activity. At most 256 KiB is decoded; the HTTP adapter must enforce the same limit while streaming, before constructing this value.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,12 +96,17 @@ export class NativeTraceRequest extends S.Opaque<NativeTraceRequest, { readonly 
 /**
  * Content-free native span metadata preserving source identity and measured time.
  *
- * **Example** (Inspect native trace metadata)
+ * **Details**
+ *
+ * No prompt, completion, tool body, exception text, resource map or arbitrary attribute is retained. Zero/unset timestamps remain unknown. Model names require an explicit allowlist; other source strings are hashed except explicitly enabled finite synthetic fixture labels. Usage categories retain their declared convention and are not summed here.
+ *
+ * **Example** (Inspect the native trace metadata constructor)
+ *
  * ```ts
  * import { NativeTraceMetadata } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof NativeTraceMetadata.make)
  * ```
- * **Details** No prompt, completion, tool body, exception text, resource map or arbitrary attribute is retained. Zero/unset timestamps remain unknown. Model names require an explicit allowlist; other source strings are hashed except explicitly enabled finite synthetic fixture labels. Usage categories retain their declared convention and are not summed here.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -154,12 +164,17 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
 /**
  * Safe metadata batch with explicit rejected occurrence ordinals.
  *
- * **Example** (Inspect native trace batch)
+ * **Details**
+ *
+ * Request hashes are salted and include route identity. Rejections contain no offending value. Projection alone is neither durable acceptance nor a network acknowledgment.
+ *
+ * **Example** (Inspect the native trace batch constructor)
+ *
  * ```ts
  * import { NativeTraceBatch } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof NativeTraceBatch.make)
  * ```
- * **Details** Request hashes are salted and include route identity. Rejections contain no offending value. Projection alone is neither durable acceptance nor a network acknowledgment.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -194,12 +209,17 @@ export class NativeTraceBatch extends S.Opaque<NativeTraceBatch, { readonly bran
 /**
  * Payload-free native projection refusal.
  *
- * **Example** (Inspect native trace error)
+ * **Details**
+ *
+ * Raw decoder errors and inputs are deliberately not attached.
+ *
+ * **Example** (Construct an invalid-envelope refusal)
+ *
  * ```ts
  * import { NativeTraceError } from "@beep/repo-ai-metrics/native-trace"
  * console.log(NativeTraceError.make({ reason: "invalid-envelope" }).message)
  * ```
- * **Details** Raw decoder errors and inputs are deliberately not attached.
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -418,12 +438,17 @@ const projectSpan = Effect.fnUntraced(function* (
 /**
  * Decode and sanitize native OTLP/HTTP JSON or protobuf traces before persistence.
  *
- * **Example** (Project a native trace request)
+ * **Details**
+ *
+ * Limits request bytes, groups, attributes and total spans. Invalid spans produce safe rejection ordinals; malformed envelopes fail as a whole. Original native trace/span IDs survive and deterministic event IDs scope them to the declared route. The caller must durably commit the result before acknowledging upstream.
+ *
+ * **Example** (Inspect the native-trace projector)
+ *
  * ```ts
  * import { projectNativeTraceRequest } from "@beep/repo-ai-metrics/native-trace"
  * console.log(typeof projectNativeTraceRequest)
  * ```
- * **Details** Limits request bytes, groups, attributes and total spans. Invalid spans produce safe rejection ordinals; malformed envelopes fail as a whole. Original native trace/span IDs survive and deterministic event IDs scope them to the declared route. The caller must durably commit the result before acknowledging upstream.
+ *
  * @category services
  * @since 0.0.0
  */

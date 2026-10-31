@@ -34,12 +34,18 @@ const events = S.Array(Sha256Hex).check(
 );
 /**
  * Immutable destination identity and bounded ledger populations.
- * **Example** (Inspecting the configuration)
+ *
+ * **Details**
+ *
+ * One owned journal has one declared target, including backend/project/projection version. Changing it requires a migration. The shared SQLite physical ceiling still applies to all indexes and facts. Exhaustion refuses new work; it never silently deletes evidence.
+ *
+ * **Example** (Inspect the delivery ledger config constructor)
+ *
  * ```ts
  * import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger"
  * console.log(typeof DeliveryLedgerConfig.make)
  * ```
- * **Details** One owned journal has one declared target, including backend/project/projection version. Changing it requires a migration. The shared SQLite physical ceiling still applies to all indexes and facts. Exhaustion refuses new work; it never silently deletes evidence.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -53,12 +59,18 @@ export class DeliveryLedgerConfig extends S.Opaque<DeliveryLedgerConfig, { reado
 ) {}
 /**
  * A caller-owned send identity and exact serialized-request digest.
- * **Example** (Inspecting an attempt)
+ *
+ * **Details**
+ *
+ * Commit this fact before network I/O. Reusing its ID is an idempotent local operation, not permission to send again. Every actual retry needs a new attempt ID. Event IDs refer to canonical, locally accepted metadata; payloadDigest identifies the exact outgoing request bytes.
+ *
+ * **Example** (Inspect the delivery attempt constructor)
+ *
  * ```ts
  * import { DeliveryAttempt } from "@beep/repo-ai-metrics/delivery-ledger"
  * console.log(typeof DeliveryAttempt.make)
  * ```
- * **Details** Commit this fact before network I/O. Reusing its ID is an idempotent local operation, not permission to send again. Every actual retry needs a new attempt ID. Event IDs refer to canonical, locally accepted metadata; payloadDigest identifies the exact outgoing request bytes.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -69,12 +81,18 @@ export class DeliveryAttempt extends S.Opaque<DeliveryAttempt, { readonly brand:
 ) {}
 /**
  * Safe protocol evidence for one send attempt.
- * **Example** (Inspecting outcome constructors)
+ *
+ * **Details**
+ *
+ * Accepted means a parsed complete hop acknowledgment, never durable backend storage. Partial carries counts only; no rejected subset is invented. Unknown includes lost/invalid replies. Retryable and Rejected require explicit HTTP responses, not network guesses. Raw server messages are excluded.
+ *
+ * **Example** (Inspect the accepted delivery outcome case)
+ *
  * ```ts
  * import { DeliveryOutcome } from "@beep/repo-ai-metrics/delivery-ledger"
  * console.log(DeliveryOutcome.cases.Accepted)
  * ```
- * **Details** Accepted means a parsed complete hop acknowledgment, never durable backend storage. Partial carries counts only; no rejected subset is invented. Unknown includes lost/invalid replies. Retryable and Rejected require explicit HTTP responses, not network guesses. Raw server messages are excluded.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -97,12 +115,18 @@ export const DeliveryOutcome = S.TaggedUnion({
 );
 /**
  * One derived state, with evidence populations kept separate.
- * **Example** (Inspecting the state schema)
+ *
+ * **Details**
+ *
+ * Visibility is historical positive read-back evidence, not a promise of perpetual retention. Accepted-unverified survives a later failed retry. Ambiguous attempts prevent a later refusal from falsely proving non-delivery. Unknown source populations and policy exclusions are outside this enrolled-event ledger. After explicit window retirement, absence refers only to the current window; query evidenceWindow for retained aggregate history.
+ *
+ * **Example** (Inspect the delivery event state constructor)
+ *
  * ```ts
  * import { DeliveryEventState } from "@beep/repo-ai-metrics/delivery-ledger"
  * console.log(typeof DeliveryEventState.make)
  * ```
- * **Details** Visibility is historical positive read-back evidence, not a promise of perpetual retention. Accepted-unverified survives a later failed retry. Ambiguous attempts prevent a later refusal from falsely proving non-delivery. Unknown source populations and policy exclusions are outside this enrolled-event ledger. After explicit window retirement, absence refers only to the current window; query evidenceWindow for retained aggregate history.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -120,12 +144,18 @@ export class DeliveryEventState extends S.Opaque<DeliveryEventState, { readonly 
 ) {}
 /**
  * Bounded positive backend read-back linked to a specific sent payload.
- * **Example** (Inspecting visibility evidence)
+ *
+ * **Details**
+ *
+ * The backend adapter must verify the expected identity and metadata before calling recordVisibility. Merely receiving a query response or finding any span is insufficient. This API validates enrollment, attempt membership and the exact request digest; it does not perform a backend query itself.
+ *
+ * **Example** (Inspect the delivery visibility constructor)
+ *
  * ```ts
  * import { DeliveryVisibility } from "@beep/repo-ai-metrics/delivery-ledger"
  * console.log(typeof DeliveryVisibility.make)
  * ```
- * **Details** The backend adapter must verify the expected identity and metadata before calling recordVisibility. Merely receiving a query response or finding any span is insufficient. This API validates enrollment, attempt membership and the exact request digest; it does not perform a backend query itself.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -202,12 +232,18 @@ const decodeReceiptIdRecordRows = S.decodeUnknownEffect(S.Array(S.Struct({ recei
 
 /**
  * Open append-only delivery accounting over the owned local intake database.
- * **Example** (Inspecting the factory)
+ *
+ * **Details**
+ *
+ * Registration verifies durable native/transcript pages before indexing their canonical accepted events. Page registration and event indexing commit together, independently of source cursor advancement. Attempts commit before sends; results and positive visibility append idempotently. No method deletes facts or reclaims a page. Missing results after restart remain unresolved. All queries and populations are bounded; the caller supplies hard process limits and backend verification.
+ *
+ * **Example** (Inspect the factory for delivery ledger)
+ *
  * ```ts
  * import { makeDeliveryLedger } from "@beep/repo-ai-metrics/delivery-ledger"
  * console.log(typeof makeDeliveryLedger)
  * ```
- * **Details** Registration verifies durable native/transcript pages before indexing their canonical accepted events. Page registration and event indexing commit together, independently of source cursor advancement. Attempts commit before sends; results and positive visibility append idempotently. No method deletes facts or reclaims a page. Missing results after restart remain unresolved. All queries and populations are bounded; the caller supplies hard process limits and backend verification.
+ *
  * @category services
  * @since 0.0.0
  */

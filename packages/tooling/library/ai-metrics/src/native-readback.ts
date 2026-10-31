@@ -28,12 +28,18 @@ import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 const $I = $RepoAiMetricsId.create("native-readback");
 /**
  * A verified historical backend observation or a non-conclusive query result.
- * **Example** (Inspecting read-back results)
+ *
+ * **Details**
+ *
+ * Missing and Mismatch never erase earlier visibility, acceptance or ambiguity. Visible follows the visibility fact commit. No response bodies or unexpected metadata values are retained.
+ *
+ * **Example** (Inspect the visible native readback result case)
+ *
  * ```ts
  * import { NativeReadbackResult } from "@beep/repo-ai-metrics/native-readback"
  * console.log(NativeReadbackResult.cases.Visible)
  * ```
- * **Details** Missing and Mismatch never erase earlier visibility, acceptance or ambiguity. Visible follows the visibility fact commit. No response bodies or unexpected metadata values are retained.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -189,12 +195,18 @@ const storedMatches = (
 };
 /**
  * Reconcile one event against its original encoded request and declared backend.
- * **Example** (Inspecting the reconciler)
+ *
+ * **Details**
+ *
+ * Rebuilds the original bounded page slice and validates event population and byte digest against the durable attempt before querying. Exact identity, parent, kind, status, all managed scalar metadata and standard timestamps must be microsecond-aligned and differ from the source by strictly less than one microsecond (rounding or truncation); explicit source timestamps retain nanoseconds. Only then append visibility. Queries do not imply completeness, permanence or absence of loss. The backend origin must match the immutable target, including when export traverses an intermediary collector. One reconciliation runs at a time with no waiting queue.
+ *
+ * **Example** (Inspect the factory for native readback)
+ *
  * ```ts
  * import { makeNativeReadback } from "@beep/repo-ai-metrics/native-readback"
  * console.log(typeof makeNativeReadback)
  * ```
- * **Details** Rebuilds the original bounded page slice and validates event population and byte digest against the durable attempt before querying. Exact identity, parent, kind, status, all managed scalar metadata and standard timestamps must be microsecond-aligned and differ from the source by strictly less than one microsecond (rounding or truncation); explicit source timestamps retain nanoseconds. Only then append visibility. Queries do not imply completeness, permanence or absence of loss. The backend origin must match the immutable target, including when export traverses an intermediary collector. One reconciliation runs at a time with no waiting queue.
+ *
  * @category services
  * @since 0.0.0
  */

@@ -26,12 +26,18 @@ import { TranscriptCursor, TranscriptFrame } from "./transcript-page.ts";
 const $I = $RepoAiMetricsId.create("transcript-export");
 /**
  * Owned context and a bounded slice of accepted physical occurrences.
- * **Example** (Inspecting reconstruction input)
+ *
+ * **Details**
+ *
+ * Session IDs are explicit source evidence. Source format is not a desktop/CLI/provider assertion. Model/cwd remain hashes; unknown repository/task/attempt identities are not invented.
+ *
+ * **Example** (Inspect the transcript export input constructor)
+ *
  * ```ts
  * import { TranscriptExportInput } from "@beep/repo-ai-metrics/transcript-export"
  * console.log(typeof TranscriptExportInput.make)
  * ```
- * **Details** Session IDs are explicit source evidence. Source format is not a desktop/CLI/provider assertion. Model/cwd remain hashes; unknown repository/task/attempt identities are not invented.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -69,12 +75,18 @@ export class TranscriptExportError extends S.TaggedError<TranscriptExportError, 
 ) {}
 /**
  * Encode reconstructed points separately from native spans without invented costs or durations.
- * **Example** (Inspecting the encoder)
+ *
+ * **Details**
+ *
+ * Stable host/namespace/occurrence-derived trace and span IDs prevent collision with native IDs. Each record is a CHAIN observation point with no fabricated parent. Explicit session hashes permit grouping but do not prove completeness. Source timestamps retain nanoseconds; missing time uses durable intake time. Usage remains a non-additive observation with message/last-request/cumulative basis, never standard model-call totals: repeated updates and native/reconstructed overlap are not deduplicated by this projection. No model/provider/cost, duration, task or repository identity is inferred.
+ *
+ * **Example** (Inspect the transcript-trace batch encoder)
+ *
  * ```ts
  * import { encodeTranscriptTraceBatch } from "@beep/repo-ai-metrics/transcript-export"
  * console.log(typeof encodeTranscriptTraceBatch)
  * ```
- * **Details** Stable host/namespace/occurrence-derived trace and span IDs prevent collision with native IDs. Each record is a CHAIN observation point with no fabricated parent. Explicit session hashes permit grouping but do not prove completeness. Source timestamps retain nanoseconds; missing time uses durable intake time. Usage remains a non-additive observation with message/last-request/cumulative basis, never standard model-call totals: repeated updates and native/reconstructed overlap are not deduplicated by this projection. No model/provider/cost, duration, task or repository identity is inferred.
+ *
  * @category encoding
  * @since 0.0.0
  */

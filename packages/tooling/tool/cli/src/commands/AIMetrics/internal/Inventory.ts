@@ -35,13 +35,18 @@ const $I = $RepoCliId.create("commands/AIMetrics/internal/Inventory");
 /**
  * Inputs for a read-only inventory report.
  *
- * **Example**
+ * **Details**
+ *
+ * The file must contain a bounded metadata manifest, never transcript content.
+ *
+ * **Example** (Configure JSON output for an inventory report)
+ *
  * ```ts
  * import { InventoryReportOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Inventory"
  * const options = InventoryReportOptions.make({ input: "/tmp/synthetic-inventory.json", json: true })
  * console.log(options.json)
  * ```
- * **Details** The file must contain a bounded metadata manifest, never transcript content.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -55,13 +60,18 @@ const encodeObservationInventoryReportJson = S.encodeEffect(S.fromJsonString(Obs
 /**
  * Print evidence-scoped denominators and current route health from a declared inventory.
  *
- * **Example**
+ * **Details**
+ *
+ * Reads metadata only. Does not discover transcripts, mutate enrollment or activate collection.
+ *
+ * **Example** (Build a read-only inventory-report effect)
+ *
  * ```ts
  * import { InventoryReportOptions, makeInventoryReportProgram } from "@beep/repo-cli/commands/AIMetrics/internal/Inventory"
  * const program = makeInventoryReportProgram(InventoryReportOptions.make({ input: "/tmp/synthetic-inventory.json", json: true }))
  * console.log(program)
  * ```
- * **Details** Reads metadata only. Does not discover transcripts, mutate enrollment or activate collection.
+ *
  * @category programs
  * @since 0.0.0
  */
@@ -114,12 +124,17 @@ const encodeObservationRootProbeResultJson = S.encodeEffect(S.fromJsonString(Obs
 /**
  * Inspect declared roots without starting AI metrics collection.
  *
- * **Example**
+ * **Details**
+ *
+ * Reads the existing hash salt through redacted configuration. JSON contains the inventory and safe root receipts; private declarations and salt are never printed.
+ *
+ * **Example** (Build a root-probe command effect)
+ *
  * ```ts
  * import { InventoryReportOptions, makeInventoryProbeProgram } from "@beep/repo-cli/commands/AIMetrics/internal/Inventory"
  * console.log(makeInventoryProbeProgram(InventoryReportOptions.make({ input: "/tmp/synthetic-roots.json", json: true })))
  * ```
- * **Details** Reads the existing hash salt through redacted configuration. JSON contains the inventory and safe root receipts; private declarations and salt are never printed.
+ *
  * @category programs
  * @since 0.0.0
  */
@@ -166,12 +181,17 @@ const formatCoverageComparison = ObservationCoverageReport.fields.routes.value.f
 /**
  * Reconcile declared populations with separately evidenced collection snapshots.
  *
- * **Example** (Read synthetic coverage evidence)
+ * **Details**
+ *
+ * This command performs no network requests and changes no enrollment. Evidence timestamps, route identity and query completeness remain visible in JSON.
+ *
+ * **Example** (Build a coverage-report command effect)
+ *
  * ```ts
  * import { InventoryReportOptions, makeInventoryCoverageProgram } from "@beep/repo-cli/commands/AIMetrics/internal/Inventory"
  * console.log(makeInventoryCoverageProgram(InventoryReportOptions.make({ input: "/tmp/synthetic-coverage.json", json: true })))
  * ```
- * **Details** This command performs no network requests and changes no enrollment. Evidence timestamps, route identity and query completeness remain visible in JSON.
+ *
  * @category programs
  * @since 0.0.0
  */

@@ -29,12 +29,18 @@ const $I = $RepoAiMetricsId.create("observation-runtime");
 const delay = S.Int.check(S.isBetween({ minimum: 100, maximum: 60000 }));
 /**
  * Explicit cadence, cooperative cycle deadline and health freshness bound.
- * **Example** (Inspecting runtime policy)
+ *
+ * **Details**
+ *
+ * A delay follows each completed cycle; slow work never creates catch-up jobs. Freshness must exceed one cycle deadline plus its delay. Hard process limits and an external stale-heartbeat observer remain deployment requirements.
+ *
+ * **Example** (Inspect the observation runtime policy constructor)
+ *
  * ```ts
  * import { ObservationRuntimePolicy } from "@beep/repo-ai-metrics/observation-runtime"
  * console.log(typeof ObservationRuntimePolicy.make)
  * ```
- * **Details** A delay follows each completed cycle; slow work never creates catch-up jobs. Freshness must exceed one cycle deadline plus its delay. Hard process limits and an external stale-heartbeat observer remain deployment requirements.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -58,12 +64,18 @@ export class ObservationRuntimePolicy extends S.Opaque<ObservationRuntimePolicy,
 ) {}
 /**
  * Counts observed in one bounded delivery scheduling pass.
- * **Example** (Inspecting pass observations)
+ *
+ * **Details**
+ *
+ * These are pass observations, not unique events, totals or fleet denominators. sent counts sender invocations, including attempts that received refusal or uncertain replies. No event ID, endpoint, path, payload or exception is included.
+ *
+ * **Example** (Inspect the observation pass summary constructor)
+ *
  * ```ts
  * import { ObservationPassSummary } from "@beep/repo-ai-metrics/observation-runtime"
  * console.log(typeof ObservationPassSummary.make)
  * ```
- * **Details** These are pass observations, not unique events, totals or fleet denominators. sent counts sender invocations, including attempts that received refusal or uncertain replies. No event ID, endpoint, path, payload or exception is included.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -86,12 +98,18 @@ export class ObservationPassSummary extends S.Opaque<ObservationPassSummary, { r
 ) {}
 /**
  * Latest bounded cycle result, preserving unknown work after deadlines.
- * **Example** (Inspecting result constructors)
+ *
+ * **Details**
+ *
+ * Deadline and Failed do not assert zero progress: durable work may already have committed. Paused does not claim an empty queue. Retained totals include reconstructed pages and duplicate occurrences, not undelivered unique events.
+ *
+ * **Example** (Inspect the deadline observation cycle result case)
+ *
  * ```ts
  * import { ObservationCycleResult } from "@beep/repo-ai-metrics/observation-runtime"
  * console.log(ObservationCycleResult.cases.Deadline)
  * ```
- * **Details** Deadline and Failed do not assert zero progress: durable work may already have committed. Paused does not claim an empty queue. Retained totals include reconstructed pages and duplicate occurrences, not undelivered unique events.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -104,12 +122,18 @@ export const ObservationCycleResult = S.TaggedUnion({
 const Cycle = S.Struct({ startedAt: S.Natural, completedAt: S.Natural, result: ObservationCycleResult });
 /**
  * Fresh in-process health for the native scheduling loop.
- * **Example** (Inspecting health construction)
+ *
+ * **Details**
+ *
+ * idle means the last pass observed no candidates and its starting snapshot had no retained pages; scanning denotes a bounded pass over retained pages without an event outcome; source coverage and expected activity remain unknown. Stopped and stale are distinct from idle. Cycle times are wall-clock observations; a backward clock is explicit. Restart resets this volatile snapshot and never synthesizes persisted counts. An external consumer must independently age any serialized snapshot, because a dead process cannot update itself.
+ *
+ * **Example** (Inspect the observation runtime health constructor)
+ *
  * ```ts
  * import { ObservationRuntimeHealth } from "@beep/repo-ai-metrics/observation-runtime"
  * console.log(typeof ObservationRuntimeHealth.make)
  * ```
- * **Details** idle means the last pass observed no candidates and its starting snapshot had no retained pages; scanning denotes a bounded pass over retained pages without an event outcome; source coverage and expected activity remain unknown. Stopped and stale are distinct from idle. Cycle times are wall-clock observations; a backward clock is explicit. Restart resets this volatile snapshot and never synthesizes persisted counts. An external consumer must independently age any serialized snapshot, because a dead process cannot update itself.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -262,12 +286,18 @@ const configuredSourceHealth = (
 };
 /**
  * Construct a sequential scoped scheduling loop without implicitly resuming intake.
- * **Example** (Inspecting the runtime factory)
+ *
+ * **Details**
+ *
+ * Construction starts nothing. run owns one loop until interrupted; a second run fails without queuing. The native cycle observes control, retained metadata totals and the bounded native tick. Optional explicit source work runs in an independent sequential loop with its own cadence/deadline, so slow discovery cannot block native scheduling. Both loops share one owner and one pause/drain finalizer; source health keeps unconfigured and unknown states explicit. Expected failures/deadlines produce content-free degraded observations and allow the next delayed cycle. Unexpected defects terminate the loop. Scope/interruption cleanup marks stopped and pauses/drains the worker; it never resumes admission. This factory does not install a service, expose a listener, reclaim payloads, infer source identity or release the recovery hold.
+ *
+ * **Example** (Inspect the factory for observation runtime)
+ *
  * ```ts
  * import { makeObservationRuntime } from "@beep/repo-ai-metrics/observation-runtime"
  * console.log(typeof makeObservationRuntime)
  * ```
- * **Details** Construction starts nothing. run owns one loop until interrupted; a second run fails without queuing. The native cycle observes control, retained metadata totals and the bounded native tick. Optional explicit source work runs in an independent sequential loop with its own cadence/deadline, so slow discovery cannot block native scheduling. Both loops share one owner and one pause/drain finalizer; source health keeps unconfigured and unknown states explicit. Expected failures/deadlines produce content-free degraded observations and allow the next delayed cycle. Unexpected defects terminate the loop. Scope/interruption cleanup marks stopped and pauses/drains the worker; it never resumes admission. This factory does not install a service, expose a listener, reclaim payloads, infer source identity or release the recovery hold.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -457,12 +487,18 @@ const completedCycleMetrics = ({ summary, retained }: typeof ObservationCycleRes
 };
 /**
  * Render bounded metadata-only gauges for one runtime observation.
- * **Example** (Inspecting the renderer)
+ *
+ * **Details**
+ *
+ * Names and phase labels are fixed; no host, route, event, model or private string becomes a label. Latest-pass counts are gauges, never cumulative counters. Missing retained/pass observations are omitted rather than reported as zero. An exporter must combine scrape availability with observation/cycle timestamp freshness; a preserved text file is not proof of a running process. This does not install an exporter or claim fleet coverage.
+ *
+ * **Example** (Inspect the runtime-metrics renderer)
+ *
  * ```ts
  * import { renderObservationRuntimeMetrics } from "@beep/repo-ai-metrics/observation-runtime"
  * console.log(typeof renderObservationRuntimeMetrics)
  * ```
- * **Details** Names and phase labels are fixed; no host, route, event, model or private string becomes a label. Latest-pass counts are gauges, never cumulative counters. Missing retained/pass observations are omitted rather than reported as zero. An exporter must combine scrape availability with observation/cycle timestamp freshness; a preserved text file is not proof of a running process. This does not install an exporter or claim fleet coverage.
+ *
  * @param health - A point-in-time runtime health observation.
  * @returns Fixed-label Prometheus gauges preserving missing observations.
  * @category utilities

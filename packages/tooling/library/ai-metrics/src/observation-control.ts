@@ -14,12 +14,18 @@ import * as Semaphore from "effect/Semaphore";
 const $I = $RepoAiMetricsId.create("observation-control");
 /**
  * In-process activity ceiling and cooperative drain deadline.
- * **Example** (Inspecting worker limits)
+ *
+ * **Details**
+ *
+ * This does not replace listener, memory, CPU or filesystem limits. Excess work is refused without a waiting queue.
+ *
+ * **Example** (Inspect the observation control policy constructor)
+ *
  * ```ts
  * import { ObservationControlPolicy } from "@beep/repo-ai-metrics/observation-control"
  * console.log(typeof ObservationControlPolicy.make)
  * ```
- * **Details** This does not replace listener, memory, CPU or filesystem limits. Excess work is refused without a waiting queue.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -31,12 +37,18 @@ export class ObservationControlPolicy extends S.Opaque<ObservationControlPolicy,
 ) {}
 /**
  * Current control state, separate from source coverage and backend health.
- * **Example** (Inspecting control state)
+ *
+ * **Details**
+ *
+ * accepting=false with active greater than zero means draining. closed=true forbids reopening after scope release; active work may still be completing its finalizer.
+ *
+ * **Example** (Inspect the observation control state constructor)
+ *
  * ```ts
  * import { ObservationControlState } from "@beep/repo-ai-metrics/observation-control"
  * console.log(typeof ObservationControlState.make)
  * ```
- * **Details** accepting=false with active greater than zero means draining. closed=true forbids reopening after scope release; active work may still be completing its finalizer.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -83,12 +95,18 @@ interface ControlRuntime {
 const failure = (reason: ObservationControlError["reason"]) => ObservationControlError.make({ reason });
 /**
  * Construct a scoped controller, initially paused, for one journal owner.
- * **Example** (Inspecting the controller)
+ *
+ * **Details**
+ *
+ * run reserves activity atomically before evaluating its effect and releases on success, failure or interruption. pause closes admission before waiting for that generation to drain. pauseWith retains the same exclusive control permit through an after-drain action, preventing resume from racing scanner suspension. Timeout/interruption keeps admission closed. maintain only runs while paused and drained; control calls never queue behind each other. A failed maintenance action leaves the worker paused. Scope release permanently closes admission. This coordinates one process only; deployment must enforce one owner per database.
+ *
+ * **Example** (Inspect the factory for observation control)
+ *
  * ```ts
  * import { makeObservationControl } from "@beep/repo-ai-metrics/observation-control"
  * console.log(typeof makeObservationControl)
  * ```
- * **Details** run reserves activity atomically before evaluating its effect and releases on success, failure or interruption. pause closes admission before waiting for that generation to drain. pauseWith retains the same exclusive control permit through an after-drain action, preventing resume from racing scanner suspension. Timeout/interruption keeps admission closed. maintain only runs while paused and drained; control calls never queue behind each other. A failed maintenance action leaves the worker paused. Scope release permanently closes admission. This coordinates one process only; deployment must enforce one owner per database.
+ *
  * @category services
  * @since 0.0.0
  */

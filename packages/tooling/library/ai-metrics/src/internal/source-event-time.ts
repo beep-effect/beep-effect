@@ -28,12 +28,17 @@ const SourceTimestampText = S.String.check(
 /**
  * Validated event time represented without floating point nanosecond loss.
  *
- * **Example**
+ * **Details**
+ *
+ * Seconds and fractional nanoseconds remain separate until OTLP encoding.
+ *
+ * **Example** (Parse an exact nanosecond timestamp)
+ *
  * ```ts
  * import { parseSourceEventTime } from "@beep/repo-ai-metrics/internal/source-event-time"
  * console.log(parseSourceEventTime("2026-10-27T00:00:00.000000001Z"))
  * ```
- * **Details** Seconds and fractional nanoseconds remain separate until OTLP encoding.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -50,12 +55,17 @@ export class SourceEventTime extends S.Opaque<SourceEventTime, { readonly brand:
 /**
  * Parse a real calendar timestamp that fits OTLP's unsigned nanosecond range.
  *
- * **Example**
+ * **Details**
+ *
+ * Rejects rollover dates, timezone-free values, leap seconds and unsigned overflow. Invalid input is never returned as an error payload.
+ *
+ * **Example** (Reject an invalid calendar date)
+ *
  * ```ts
  * import { parseSourceEventTime } from "@beep/repo-ai-metrics/internal/source-event-time"
  * console.log(parseSourceEventTime("2026-02-30T00:00:00Z")) // None
  * ```
- * **Details** Rejects rollover dates, timezone-free values, leap seconds and unsigned overflow. Invalid input is never returned as an error payload.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -85,12 +95,17 @@ export const parseSourceEventTime = (input: string): O.Option<SourceEventTime> =
 /**
  * Order exact instants regardless of the source timezone or fractional formatting.
  *
- * **Example**
+ * **Details**
+ *
+ * Nanoseconds break ties between events in the same second.
+ *
+ * **Example** (Inspect the exact-timestamp ordering function)
+ *
  * ```ts
  * import { SourceEventTimeOrder } from "@beep/repo-ai-metrics/internal/source-event-time"
  * console.log(typeof SourceEventTimeOrder)
  * ```
- * **Details** Nanoseconds break ties between events in the same second.
+ *
  * @category utilities
  * @since 0.0.0
  */

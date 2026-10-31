@@ -14,12 +14,18 @@ import type { runDiscoveredTranscriptSweep } from "./transcript-discovery.ts";
 const $I = $RepoAiMetricsId.create("observation-source-health");
 /**
  * One source pass, distinct from unique events and backend delivery.
- * **Example** (Inspecting source observations)
+ *
+ * **Details**
+ *
+ * Accepted means local durable page acceptance, possibly a replay. Partial tails are explicitly waiting. Root traversal observations are not an atomic snapshot or an independent coverage denominator.
+ *
+ * **Example** (Inspect the observation source summary constructor)
+ *
  * ```ts
  * import { ObservationSourceSummary } from "@beep/repo-ai-metrics/observation-source-health"
  * console.log(typeof ObservationSourceSummary.make)
  * ```
- * **Details** Accepted means local durable page acceptance, possibly a replay. Partial tails are explicitly waiting. Root traversal observations are not an atomic snapshot or an independent coverage denominator.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -66,12 +72,18 @@ export const ObservationSourceCycle = S.TaggedUnion({
 export type ObservationSourceCycle = typeof ObservationSourceCycle.Type;
 /**
  * Source cadence health with independently aged cycle observations.
- * **Example** (Inspecting health alternatives)
+ *
+ * **Details**
+ *
+ * Missing configuration is not an empty population. Idle means completed current traversals whose discovered files are assessed, with no accepted progress, unread backlog, partial tails or failed reads; it is not proof of fleet capture. Staleness must also be evaluated by an external observer after process death.
+ *
+ * **Example** (Inspect the not configured observation source health case)
+ *
  * ```ts
  * import { ObservationSourceHealth } from "@beep/repo-ai-metrics/observation-source-health"
  * console.log(ObservationSourceHealth.cases.NotConfigured)
  * ```
- * **Details** Missing configuration is not an empty population. Idle means completed current traversals whose discovered files are assessed, with no accepted progress, unread backlog, partial tails or failed reads; it is not proof of fleet capture. Staleness must also be evaluated by an external observer after process death.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -195,12 +207,18 @@ const completedSourceMetrics = (s: ObservationSourceSummary) => {
 
 /**
  * Render source gauges using only fixed names and enumerated state labels.
- * **Example** (Rendering no configured discovery)
+ *
+ * **Details**
+ *
+ * Never label paths, source IDs or content. Missing counts after failure/deadline remain omitted. Latest-pass gauges are not lifetime totals. Root state counts concern declared roots only.
+ *
+ * **Example** (Render metrics for an unconfigured source)
+ *
  * ```ts
  * import { ObservationSourceHealth, renderObservationSourceMetrics } from "@beep/repo-ai-metrics/observation-source-health"
  * console.log(renderObservationSourceMetrics(ObservationSourceHealth.cases.NotConfigured.make({})))
  * ```
- * **Details** Never label paths, source IDs or content. Missing counts after failure/deadline remain omitted. Latest-pass gauges are not lifetime totals. Root state counts concern declared roots only.
+ *
  * @param health - A source-health snapshot with explicit configuration and coverage state.
  * @returns Prometheus gauges with fixed labels and unknown counts omitted.
  * @category utilities

@@ -39,13 +39,18 @@ const emptySession = () => Session.make({ id: O.none(), conflicted: false });
 /**
  * Restartable source position; committing it requires durable acceptance of its page.
  *
- * **Example** (Inspect transcript cursor)
+ * **Details**
+ *
+ * Contains hashes and offsets only. Anchors detect observed replacement, truncation and rewrites near the prefix/cursor; they cannot prove absence of an unobserved rewrite elsewhere. Discard mode advances through an oversized line without retaining it.
+ *
+ * **Example** (Reject an empty transcript cursor)
+ *
  * ```ts
  * import { TranscriptCursor } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
  * console.log(S.is(TranscriptCursor)({})) // false
  * ```
- * **Details** Contains hashes and offsets only. Anchors detect observed replacement, truncation and rewrites near the prefix/cursor; they cannot prove absence of an unobserved rewrite elsewhere. Discard mode advances through an oversized line without retaining it.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -96,13 +101,18 @@ const Usage = S.Struct({
 /**
  * Allowlisted metadata from one source record, with no prompt or tool payload.
  *
- * **Example** (Inspect transcript metadata)
+ * **Details**
+ *
+ * Logical message IDs are grouping evidence, not unique event IDs: streamed updates may share them. Model and working-directory values remain hashes. Cumulative usage must not be summed as per-request usage.
+ *
+ * **Example** (Reject an empty transcript metadata)
+ *
  * ```ts
  * import { TranscriptMetadata } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
  * console.log(S.is(TranscriptMetadata)({})) // false
  * ```
- * **Details** Logical message IDs are grouping evidence, not unique event IDs: streamed updates may share them. Model and working-directory values remain hashes. Cumulative usage must not be summed as per-request usage.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -134,12 +144,17 @@ export class TranscriptMetadata extends S.Opaque<TranscriptMetadata, { readonly 
 /**
  * One physical source occurrence or an explicit rejection, never raw text.
  *
- * **Example** (Inspect transcript frame)
+ * **Details**
+ *
+ * Occurrence IDs distinguish repeated identical lines and copied files. Content hashes identify duplicate candidates without claiming they are the same logical event. Oversize rejection can span several pages with one occurrence ID.
+ *
+ * **Example** (Inspect the accepted transcript frame case)
+ *
  * ```ts
  * import { TranscriptFrame } from "@beep/repo-ai-metrics/transcript-page"
  * console.log(TranscriptFrame.cases.Accepted)
  * ```
- * **Details** Occurrence IDs distinguish repeated identical lines and copied files. Content hashes identify duplicate candidates without claiming they are the same logical event. Oversize rejection can span several pages with one occurrence ID.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -165,13 +180,18 @@ export const TranscriptFrame = S.TaggedUnion({
 /**
  * Bounded read budget and optional previously committed cursor.
  *
- * **Example** (Inspect transcript page input)
+ * **Details**
+ *
+ * Private path and salt are ephemeral. Page size must exceed the line limit so growth can be classified without starvation. Reads never write the source or persist a cursor.
+ *
+ * **Example** (Reject an empty transcript page input)
+ *
  * ```ts
  * import { TranscriptPageInput } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
  * console.log(S.is(TranscriptPageInput)({})) // false
  * ```
- * **Details** Private path and salt are ephemeral. Page size must exceed the line limit so growth can be classified without starvation. Reads never write the source or persist a cursor.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -199,13 +219,18 @@ export class TranscriptPageInput extends S.Opaque<TranscriptPageInput, { readonl
 /**
  * Proposed metadata page; its cursor is not an intake or backend acknowledgment.
  *
- * **Example** (Inspect transcript page)
+ * **Details**
+ *
+ * A reset reports observed identity changes. Partial tails remain unconsumed unless they exceed the line limit. The sampled end bounds the read even while the file grows.
+ *
+ * **Example** (Reject an empty transcript page)
+ *
  * ```ts
  * import { TranscriptPage } from "@beep/repo-ai-metrics/transcript-page"
  * import * as S from "effect/Schema"
  * console.log(S.is(TranscriptPage)({})) // false
  * ```
- * **Details** A reset reports observed identity changes. Partial tails remain unconsumed unless they exceed the line limit. The sampled end bounds the read even while the file grows.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -223,12 +248,17 @@ export class TranscriptPage extends S.Opaque<TranscriptPage, { readonly brand: u
 /**
  * Payload-free read failure: the caller retains its previous durable cursor.
  *
- * **Example** (Inspect transcript page error)
+ * **Details**
+ *
+ * Filesystem and parse causes are never attached because they can contain paths or private source content.
+ *
+ * **Example** (Construct an unavailable-page refusal)
+ *
  * ```ts
  * import { TranscriptPageError } from "@beep/repo-ai-metrics/transcript-page"
  * console.log(TranscriptPageError.make({ reason: "unavailable" }).reason)
  * ```
- * **Details** Filesystem and parse causes are never attached because they can contain paths or private source content.
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -426,12 +456,17 @@ const parseRecord = (text: string) => {
 /**
  * Read a fixed-size source page through one pinned file handle.
  *
- * **Example** (Read an incremental transcript page)
+ * **Details**
+ *
+ * The call requests a ten-second cooperative timeout; its owning worker must enforce a hard process limit for uninterruptible platform I/O. Reads use at most 1 MiB per sampled page, re-read once for stability, plus at most 1281 anchor/boundary bytes, and at most 4096 frames. A cursor mismatch fails rather than adopting another source. Source bytes are never archived or returned. The caller must journal frames and cursor together before advancing; retries with the same cursor reproduce occurrence IDs.
+ *
+ * **Example** (Inspect the bounded transcript-page reader)
+ *
  * ```ts
  * import { readTranscriptPage } from "@beep/repo-ai-metrics/transcript-page"
  * console.log(typeof readTranscriptPage) // function
  * ```
- * **Details** The call requests a ten-second cooperative timeout; its owning worker must enforce a hard process limit for uninterruptible platform I/O. Reads use at most 1 MiB per sampled page, re-read once for stability, plus at most 1281 anchor/boundary bytes, and at most 4096 frames. A cursor mismatch fails rather than adopting another source. Source bytes are never archived or returned. The caller must journal frames and cursor together before advancing; retries with the same cursor reproduce occurrence IDs.
+ *
  * @category services
  * @since 0.0.0
  */

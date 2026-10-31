@@ -28,12 +28,18 @@ import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 const $I = $RepoAiMetricsId.create("observation-launch-http");
 /**
  * Explicit route allowlist for the owner's private launch endpoint.
- * **Example** (Disable launch intake)
+ *
+ * **Details**
+ *
+ * The private socket authenticates the local owner, not individual harnesses. Route attribution is a producer assertion matched against this administrator allowlist. Empty routes disable intake. This endpoint must never be exposed by the public trace frontend.
+ *
+ * **Example** (Configure an empty launch-route list)
+ *
  * ```ts
  * import { ObservationLaunchHttpPolicy } from "@beep/repo-ai-metrics/observation-launch-http"
  * console.log(ObservationLaunchHttpPolicy.make({ routes: [], bodyTimeoutMillis: 1000 }).routes.length)
  * ```
- * **Details** The private socket authenticates the local owner, not individual harnesses. Route attribution is a producer assertion matched against this administrator allowlist. Empty routes disable intake. This endpoint must never be exposed by the public trace frontend.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -66,12 +72,18 @@ export class ObservationLaunchHttpPolicy extends S.Opaque<
 ) {}
 /**
  * Current local destination window and declared launch routes.
- * **Example** (Inspect the context schema)
+ *
+ * **Details**
+ *
+ * Readable while paused. This snapshot can become stale immediately; it is not permission to launch or a reservation. A stale submission is refused instead of moved into another epoch.
+ *
+ * **Example** (Inspect the observation launch context constructor)
+ *
  * ```ts
  * import { ObservationLaunchContext } from "@beep/repo-ai-metrics/observation-launch-http"
  * console.log(typeof ObservationLaunchContext.make)
  * ```
- * **Details** Readable while paused. This snapshot can become stale immediately; it is not permission to launch or a reservation. A stale submission is refused instead of moved into another epoch.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,12 +103,18 @@ export class ObservationLaunchContext extends S.Opaque<ObservationLaunchContext,
 ) {}
 /**
  * Exact fact submission bound to one host, namespace and evidence epoch.
- * **Example** (Inspect the wire boundary)
+ *
+ * **Details**
+ *
+ * Receipt retries must preserve these values. This schema admits no prompts, argv, paths or environment values.
+ *
+ * **Example** (Inspect the observation launch submission constructor)
+ *
  * ```ts
  * import { ObservationLaunchSubmission } from "@beep/repo-ai-metrics/observation-launch-http"
  * console.log(typeof ObservationLaunchSubmission.make)
  * ```
- * **Details** Receipt retries must preserve these values. This schema admits no prompts, argv, paths or environment values.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -139,12 +157,18 @@ const rejectSubmissionHeaders = (request: HttpServerRequest.HttpServerRequest) =
 
 /**
  * Serve one bounded launch write at a time through shared worker admission.
- * **Example** (Inspect the transport factory)
+ *
+ * **Details**
+ *
+ * A 200 receipt follows the local transaction commit, not backend visibility. Lost responses require exact replay, never a new launch ID. Body reading is limited to 8192 bytes and a deadline; excess concurrency is refused without a queue. An interrupted or uncertain commit can be reconciled by exact retry. The caller owns private socket access and hard process limits. Epoch mismatch is 410 and never automatically resubmitted in a new epoch.
+ *
+ * **Example** (Inspect the factory for observation launch http)
+ *
  * ```ts
  * import { makeObservationLaunchHttp } from "@beep/repo-ai-metrics/observation-launch-http"
  * console.log(typeof makeObservationLaunchHttp)
  * ```
- * **Details** A 200 receipt follows the local transaction commit, not backend visibility. Lost responses require exact replay, never a new launch ID. Body reading is limited to 8192 bytes and a deadline; excess concurrency is refused without a queue. An interrupted or uncertain commit can be reconciled by exact retry. The caller owns private socket access and hard process limits. Epoch mismatch is 410 and never automatically resubmitted in a new epoch.
+ *
  * @category services
  * @since 0.0.0
  */

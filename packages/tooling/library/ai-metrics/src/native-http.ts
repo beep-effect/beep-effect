@@ -48,13 +48,19 @@ const ResponseCounts = S.Struct({
 );
 /**
  * Process-lifetime intake response decisions, including refusals before journaling.
- * **Example** (Inspecting intake health)
+ *
+ * **Details**
+ *
+ * Counts reset with the intake instance, saturate at the safe integer
+ * ceiling, and count response decisions rather than delivered replies or events.
+ *
+ * **Example** (Inspect the native http health constructor)
+ *
  * ```ts
  * import { NativeHttpHealth } from "@beep/repo-ai-metrics/native-http"
  * console.log(typeof NativeHttpHealth.make)
  * ```
- * **Details** Counts reset with the intake instance, saturate at the safe integer
- * ceiling, and count response decisions rather than delivered replies or events.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -67,13 +73,19 @@ export class NativeHttpHealth extends S.Opaque<NativeHttpHealth, { readonly bran
 ) {}
 /**
  * Render fixed intake counters without event, session or caller labels.
- * **Example** (Inspecting the metric renderer)
+ *
+ * **Details**
+ *
+ * Start timestamp identifies process-lifetime resets. Saturation is
+ * explicit. Collector counters cannot substitute for these pre-journal refusals.
+ *
+ * **Example** (Inspect the native-HTTP metrics renderer)
+ *
  * ```ts
  * import { renderNativeHttpMetrics } from "@beep/repo-ai-metrics/native-http"
  * console.log(typeof renderNativeHttpMetrics)
  * ```
- * **Details** Start timestamp identifies process-lifetime resets. Saturation is
- * explicit. Collector counters cannot substitute for these pre-journal refusals.
+ *
  * @param health - Process-lifetime response decisions and reset timestamps.
  * @returns Prometheus counters with fixed labels and explicit saturation state.
  * @category utilities
@@ -104,12 +116,17 @@ const byteLimit = 262144;
 /**
  * Owned route policy and cooperative body-read deadline.
  *
- * **Example** (Inspecting the policy constructor)
+ * **Details**
+ *
+ * The route identity and model allowlist are administrator inputs. Requests cannot override them. The deadline bounds body reading and gzip expansion, not a durable transaction already in progress. The caller must also configure server connection/header limits and hard worker resource limits.
+ *
+ * **Example** (Inspect the native http policy constructor)
+ *
  * ```ts
  * import { NativeHttpPolicy } from "@beep/repo-ai-metrics/native-http"
  * console.log(typeof NativeHttpPolicy.make)
  * ```
- * **Details** The route identity and model allowlist are administrator inputs. Requests cannot override them. The deadline bounds body reading and gzip expansion, not a durable transaction already in progress. The caller must also configure server connection/header limits and hard worker resource limits.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -196,12 +213,17 @@ const response = (
 /**
  * Create a single-admission HTTP handler backed by the durable native journal.
  *
- * **Example** (Inspecting the factory)
+ * **Details**
+ *
+ * POST /v1/traces accepts JSON or protobuf, identity or gzip, with 256 KiB ceilings before and after decompression. One request is admitted at a time; overlapping requests receive retryable 503 without entering a waiting queue. Full/partial 200 responses follow the local commit; duplicates are accepted, identity conflicts rejected. Expired exact replays receive non-retryable 410; expired identities in a fresh batch are counted as partial rejections, preserving admission of new events. Empty requests consume no journal page. A response is hop-local acceptance, never Phoenix visibility. Only this trace route is implemented; metrics and logs are not silently accepted. An injected controller coordinates admission with maintenance; standalone construction creates and resumes its own controller. Paused/closed/busy admission returns retryable 503 without reading the body. The caller owns a private listener, authentication, connection/header limits, storage lifecycle and process isolation.
+ *
+ * **Example** (Inspect the factory for native http intake)
+ *
  * ```ts
  * import { makeNativeHttpIntake } from "@beep/repo-ai-metrics/native-http"
  * console.log(typeof makeNativeHttpIntake)
  * ```
- * **Details** POST /v1/traces accepts JSON or protobuf, identity or gzip, with 256 KiB ceilings before and after decompression. One request is admitted at a time; overlapping requests receive retryable 503 without entering a waiting queue. Full/partial 200 responses follow the local commit; duplicates are accepted, identity conflicts rejected. Expired exact replays receive non-retryable 410; expired identities in a fresh batch are counted as partial rejections, preserving admission of new events. Empty requests consume no journal page. A response is hop-local acceptance, never Phoenix visibility. Only this trace route is implemented; metrics and logs are not silently accepted. An injected controller coordinates admission with maintenance; standalone construction creates and resumes its own controller. Paused/closed/busy admission returns retryable 503 without reading the body. The caller owns a private listener, authentication, connection/header limits, storage lifecycle and process isolation.
+ *
  * @category services
  * @since 0.0.0
  */

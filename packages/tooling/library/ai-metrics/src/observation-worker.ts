@@ -41,12 +41,18 @@ const defaultSchedulePolicy = NativeSchedulePolicy.make({
 });
 /**
  * Private, explicit policies for one journal, native route and backend target.
- * **Example** (Inspecting worker configuration)
+ *
+ * **Details**
+ *
+ * Contains private routing and hashing configuration; do not publish it as telemetry. No policy is inferred from source content. Journal/destination identity checks remain owned by the constituent services.
+ *
+ * **Example** (Inspect the observation worker config constructor)
+ *
  * ```ts
  * import { ObservationWorkerConfig } from "@beep/repo-ai-metrics/observation-worker"
  * console.log(typeof ObservationWorkerConfig.make)
  * ```
- * **Details** Contains private routing and hashing configuration; do not publish it as telemetry. No policy is inferred from source content. Journal/destination identity checks remain owned by the constituent services.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -75,12 +81,18 @@ const decodeTranscriptAcceptanceRows = S.decodeUnknownEffect(S.Array(TranscriptA
 
 /**
  * Compose intake, delivery, read-back, source sweeps and reversible maintenance.
- * **Example** (Inspecting the worker factory)
+ *
+ * **Details**
+ *
+ * Starts paused and never starts a listener, poll loop or held service. All activity methods share bounded admission; excess work fails without queuing. pause closes admission and drains accepted activity; only then may backup/seal/restore run. Maintenance is exclusive and leaves the worker paused on success or failure. resume is explicit. Read-only status/ledger views remain available while paused. The worker exposes no raw mutation-capable journal. The first discovery capability is bound to this worker; a different scanner is refused. Successful pause drains admitted work then suspends that scanner, and worker scope closure also suspends it. Its scope closes admission permanently. Deployment must still enforce a single database owner, connection/header and hard process/disk limits, snapshot generation retention/off-device replication, explicit scheduling and upstream loss accounting. Transcript sweeps collect reconstructed metadata only; shared delivery exports accepted occurrences in an explicit reconstructed stream, with non-additive usage and separate trace identities.
+ *
+ * **Example** (Inspect the factory for observation worker)
+ *
  * ```ts
  * import { makeObservationWorker } from "@beep/repo-ai-metrics/observation-worker"
  * console.log(typeof makeObservationWorker)
  * ```
- * **Details** Starts paused and never starts a listener, poll loop or held service. All activity methods share bounded admission; excess work fails without queuing. pause closes admission and drains accepted activity; only then may backup/seal/restore run. Maintenance is exclusive and leaves the worker paused on success or failure. resume is explicit. Read-only status/ledger views remain available while paused. The worker exposes no raw mutation-capable journal. The first discovery capability is bound to this worker; a different scanner is refused. Successful pause drains admitted work then suspends that scanner, and worker scope closure also suspends it. Its scope closes admission permanently. Deployment must still enforce a single database owner, connection/header and hard process/disk limits, snapshot generation retention/off-device replication, explicit scheduling and upstream loss accounting. Transcript sweeps collect reconstructed metadata only; shared delivery exports accepted occurrences in an explicit reconstructed stream, with non-additive usage and separate trace identities.
+ *
  * @category services
  * @since 0.0.0
  */

@@ -14,12 +14,18 @@ const $I = $RepoAiMetricsId.create("delivery-response");
 const MediaType = S.Literals(["application/json", "application/x-protobuf"]);
 /**
  * Bounded response bytes and the exact outgoing span population.
- * **Example** (Inspecting a response)
+ *
+ * **Details**
+ *
+ * The transport must enforce the 64 KiB ceiling while reading, before constructing this value. Content type has already been normalized by the transport. Missing or mismatched response types never imply acceptance. Only actual HTTP responses belong here; connection failure or timeout is a separate Unknown outcome.
+ *
+ * **Example** (Inspect the delivery http reply constructor)
+ *
  * ```ts
  * import { DeliveryHttpReply } from "@beep/repo-ai-metrics/delivery-response"
  * console.log(typeof DeliveryHttpReply.make)
  * ```
- * **Details** The transport must enforce the 64 KiB ceiling while reading, before constructing this value. Content type has already been normalized by the transport. Missing or mismatched response types never imply acceptance. Only actual HTTP responses belong here; connection failure or timeout is a separate Unknown outcome.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -58,12 +64,18 @@ const decodeResponseJson = S.decodeEffect(S.fromJsonString(response));
 
 /**
  * Interpret one trace reply without losing partial-success semantics.
- * **Example** (Inspecting the decoder)
+ *
+ * **Details**
+ *
+ * A parsed 200 with zero rejected spans means complete hop acceptance, including warning-only partialSuccess. A positive count stays batch-level partial evidence, even when it equals the batch size. Invalid/missing/mismatched bodies and impossible counts remain unknown. The four OTLP retryable statuses remain distinct from permanent HTTP refusal. Raw server messages are neither returned nor persisted.
+ *
+ * **Example** (Inspect the delivery-response interpreter)
+ *
  * ```ts
  * import { interpretDeliveryHttpReply } from "@beep/repo-ai-metrics/delivery-response"
  * console.log(typeof interpretDeliveryHttpReply)
  * ```
- * **Details** A parsed 200 with zero rejected spans means complete hop acceptance, including warning-only partialSuccess. A positive count stays batch-level partial evidence, even when it equals the batch size. Invalid/missing/mismatched bodies and impossible counts remain unknown. The four OTLP retryable statuses remain distinct from permanent HTTP refusal. Raw server messages are neither returned nor persisted.
+ *
  * @category decoding
  * @since 0.0.0
  */

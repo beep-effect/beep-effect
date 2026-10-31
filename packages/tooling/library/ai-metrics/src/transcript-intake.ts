@@ -24,12 +24,17 @@ const $I = $RepoAiMetricsId.create("transcript-intake");
 /**
  * Bounded candidate identities for one fair scheduling reservation.
  *
- * **Example** (Inspect transcript schedule input)
+ * **Details**
+ *
+ * Candidates are source-qualified hashes, never paths. Scheduling is independent of durable source progress; reserving a failed source cannot advance its accepted byte cursor.
+ *
+ * **Example** (Set a one-candidate scheduling limit)
+ *
  * ```ts
  * import { TranscriptScheduleInput } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(TranscriptScheduleInput.make({ candidates: [], limit: 1 }).limit)
  * ```
- * **Details** Candidates are source-qualified hashes, never paths. Scheduling is independent of durable source progress; reserving a failed source cannot advance its accepted byte cursor.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -42,13 +47,18 @@ export class TranscriptScheduleInput extends S.Opaque<TranscriptScheduleInput, {
 /**
  * Fixed ownership and storage bounds for a dedicated local intake database.
  *
- * **Example** (Inspect transcript intake config)
+ * **Details**
+ *
+ * A changed host, namespace or limit profile requires an explicit migration. Database pages are 4096 bytes; rollback-journal space and filesystem overhead need separate deployment headroom.
+ *
+ * **Example** (Reject an empty transcript intake config)
+ *
  * ```ts
  * import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake"
  * import * as S from "effect/Schema"
  * console.log(S.is(TranscriptIntakeConfig)({})) // false
  * ```
- * **Details** A changed host, namespace or limit profile requires an explicit migration. Database pages are 4096 bytes; rollback-journal space and filesystem overhead need separate deployment headroom.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -69,13 +79,18 @@ export class TranscriptIntakeConfig extends S.Opaque<TranscriptIntakeConfig, { r
 /**
  * Local transaction acceptance, distinct from export or backend visibility.
  *
- * **Example** (Inspect transcript acceptance)
+ * **Details**
+ *
+ * Returned only after the page and cursor transaction commits. Exact replays return the same receipt. It does not assert Phoenix storage or delivery.
+ *
+ * **Example** (Reject an empty transcript acceptance)
+ *
  * ```ts
  * import { TranscriptAcceptance } from "@beep/repo-ai-metrics/transcript-intake"
  * import * as S from "effect/Schema"
  * console.log(S.is(TranscriptAcceptance)({})) // false
  * ```
- * **Details** Returned only after the page and cursor transaction commits. Exact replays return the same receipt. It does not assert Phoenix storage or delivery.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -96,12 +111,18 @@ export class TranscriptAcceptance extends S.Opaque<TranscriptAcceptance, { reado
 ) {}
 /**
  * Durable evidence that a verified page payload was intentionally reclaimed.
- * **Example** (Inspecting a disposition)
+ *
+ * **Details**
+ *
+ * The original acceptance and event identities survive payload removal. Verification is historical evidence, not a promise of perpetual backend retention. This record never represents uncertain expiry.
+ *
+ * **Example** (Inspect the verified page disposition constructor)
+ *
  * ```ts
  * import { VerifiedPageDisposition } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(typeof VerifiedPageDisposition.make)
  * ```
- * **Details** The original acceptance and event identities survive payload removal. Verification is historical evidence, not a promise of perpetual backend retention. This record never represents uncertain expiry.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,12 +140,18 @@ export class VerifiedPageDisposition extends S.Opaque<VerifiedPageDisposition, {
 ) {}
 /**
  * Explicit retention expiry with the delivery-state population at removal.
- * **Example** (Inspecting an expiry record)
+ *
+ * **Details**
+ *
+ * Counts describe unique accepted event references in this page, including native duplicates owned by other pages. They are a historical snapshot, not fleet totals or a delivery outcome. Never-enrolled references remain separate from the five delivery states; native canonical ownership has a separate count and checksum. Expiry never writes a successful result or visibility fact.
+ *
+ * **Example** (Inspect the expired page disposition constructor)
+ *
  * ```ts
  * import { ExpiredPageDisposition } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(typeof ExpiredPageDisposition.make)
  * ```
- * **Details** Counts describe unique accepted event references in this page, including native duplicates owned by other pages. They are a historical snapshot, not fleet totals or a delivery outcome. Never-enrolled references remain separate from the five delivery states; native canonical ownership has a separate count and checksum. Expiry never writes a successful result or visibility fact.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -198,13 +225,18 @@ export type PageDisposition = typeof PageDisposition.Type;
 /**
  * Current retained metadata totals, not a fleet coverage count.
  *
- * **Example** (Inspect transcript intake stats)
+ * **Details**
+ *
+ * Counts include transcript pages and native request batches admitted into this journal. Frames count accepted occurrences, including duplicate native occurrences; they are not unique-event or coverage counts. Physical SQLite and rollback-journal sizes are separate health measurements.
+ *
+ * **Example** (Reject an empty transcript intake stats)
+ *
  * ```ts
  * import { TranscriptIntakeStats } from "@beep/repo-ai-metrics/transcript-intake"
  * import * as S from "effect/Schema"
  * console.log(S.is(TranscriptIntakeStats)({})) // false
  * ```
- * **Details** Counts include transcript pages and native request batches admitted into this journal. Frames count accepted occurrences, including duplicate native occurrences; they are not unique-event or coverage counts. Physical SQLite and rollback-journal sizes are separate health measurements.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -216,12 +248,17 @@ export class TranscriptIntakeStats extends S.Opaque<TranscriptIntakeStats, { rea
 /**
  * Safe refusal of intake without advancing source progress.
  *
- * **Example** (Inspect transcript intake error)
+ * **Details**
+ *
+ * SQL errors never expose paths, query parameters or payloads. A storage failure requires checking the durable cursor before retrying an uncertain acknowledgment.
+ *
+ * **Example** (Construct a capacity refusal)
+ *
  * ```ts
  * import { TranscriptIntakeError } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(TranscriptIntakeError.make({ reason: "capacity" }).message)
  * ```
- * **Details** SQL errors never expose paths, query parameters or payloads. A storage failure requires checking the durable cursor before retrying an uncertain acknowledgment.
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -263,13 +300,18 @@ const singleStats = S.Tuple([TranscriptIntakeStats]);
 /**
  * Preserve typed intake refusals while redacting unknown storage failures.
  *
- * **Example** (Retaining a safe refusal)
+ * **Details**
+ *
+ * Native and reconstructed intake share this boundary. Unknown errors
+ * become content-free storage refusals; known intake errors retain their identity.
+ *
+ * **Example** (Preserve a known intake refusal reason)
+ *
  * ```ts
  * import { sanitizeTranscriptIntakeError, TranscriptIntakeError } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(sanitizeTranscriptIntakeError(TranscriptIntakeError.make({ reason: "capacity" })).reason)
  * ```
- * **Details** Native and reconstructed intake share this boundary. Unknown errors
- * become content-free storage refusals; known intake errors retain their identity.
+ *
  * @param error - A typed refusal or untrusted storage error to sanitize.
  * @returns The existing safe refusal, or a content-free storage refusal.
  * @category utilities
@@ -396,12 +438,17 @@ const initializeJournalTables = Effect.fnUntraced(function* (sql: SqlClient.SqlC
 /**
  * Open the metadata journal on an injected dedicated, file-backed SQLite client.
  *
- * **Example** (Open a transcript journal)
+ * **Details**
+ *
+ * Verifies DELETE journal mode, EXTRA synchronization, 4096-byte pages and the configured page ceiling. Refuses foreign tables and in-memory databases before initialization. The caller owns a private directory, scoped connection, disk headroom and hard worker limits. Source pages and compare-and-swap cursors commit atomically; full capacity refuses new pages while exact retries stay idempotent. No source files, historical stores or services are mutated.
+ *
+ * **Example** (Inspect the factory for transcript intake journal)
+ *
  * ```ts
  * import { makeTranscriptIntakeJournal } from "@beep/repo-ai-metrics/transcript-intake"
  * console.log(typeof makeTranscriptIntakeJournal) // function
  * ```
- * **Details** Verifies DELETE journal mode, EXTRA synchronization, 4096-byte pages and the configured page ceiling. Refuses foreign tables and in-memory databases before initialization. The caller owns a private directory, scoped connection, disk headroom and hard worker limits. Source pages and compare-and-swap cursors commit atomically; full capacity refuses new pages while exact retries stay idempotent. No source files, historical stores or services are mutated.
+ *
  * @category services
  * @since 0.0.0
  */

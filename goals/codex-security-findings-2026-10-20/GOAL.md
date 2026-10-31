@@ -53,7 +53,7 @@ Stop if the signed-in CSV export is unavailable, tracked evidence contains secre
 or raw-path material, a fix needs an out-of-packet architecture decision, or the
 same blocker repeats after reasonable investigation.
 
-The manifest proposes closeout for PR #1930. Resume its outstanding gates rather
+The manifest proposes closeout for PR #2389. Resume its outstanding gates rather
 than treating that proposal as completion. After merge, merged proof and exact-ID
 closure, retain the genuine final-head merge-ready Yeet verdict and run
 `bun run beep goals completion refresh --slug codex-security-findings-2026-10-20`.
@@ -63,5 +63,6 @@ closure, retain the genuine final-head merge-ready Yeet verdict and run
 The user added the current Cloud batch. Read
 `research/2026-10-28-cloud-refresh.md` and the linked
 `../codex-security-findings-2026-10-28/GOAL.md`. Complete both inventories.
-PR #1930 is already merged; retain its proof and deliver the supplemental
-fixes through a new Yeet PR with exact-ID post-merge closure.
+PRs #1930 and #2333 are merged; all 15 Cloud IDs are Fixed. PR #2389 carries
+final reconciliation and 20 newer dependency fixes; verify their post-merge
+closure and both completion receipts.

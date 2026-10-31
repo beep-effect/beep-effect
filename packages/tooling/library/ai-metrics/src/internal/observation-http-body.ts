@@ -37,12 +37,18 @@ export const observationHttpBodyFailure = (reason: ObservationHttpBodyError["rea
 
 /**
  * Read request bytes within a caller-owned fixed allocation.
- * **Example** (Choose the private launch limit)
+ *
+ * **Details**
+ *
+ * Rejects a chunk before copying beyond the ceiling. Callers provide a finite trusted limit, deadlines and request admission; source errors never retain body content.
+ *
+ * **Example** (Set an 8 KiB request-body byte limit)
+ *
  * ```ts
  * const bytes = 8192
  * console.log(bytes)
  * ```
- * **Details** Rejects a chunk before copying beyond the ceiling. Callers provide a finite trusted limit, deadlines and request admission; source errors never retain body content.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -67,12 +73,18 @@ export const readObservationHttpBytes = Effect.fn("AiMetrics.readObservationHttp
 
 /**
  * Decode strict UTF-8 after a bounded request-body read with its own deadline.
- * **Example** (Choose a body deadline)
+ *
+ * **Details**
+ *
+ * The deadline covers streaming only, matching the private routes' existing contract. Decode failures retain neither input bytes nor causes. Admission and schema validation remain with the caller.
+ *
+ * **Example** (Set a one-second request-body timeout)
+ *
  * ```ts
  * const timeoutMillis = 1000
  * console.log(timeoutMillis)
  * ```
- * **Details** The deadline covers streaming only, matching the private routes' existing contract. Decode failures retain neither input bytes nor causes. Admission and schema validation remain with the caller.
+ *
  * @category utilities
  * @since 0.0.0
  */

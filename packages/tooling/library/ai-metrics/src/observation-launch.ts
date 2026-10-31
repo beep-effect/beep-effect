@@ -33,12 +33,18 @@ import { TranscriptIntakeConfig } from "./transcript-intake.ts";
 const $I = $RepoAiMetricsId.create("observation-launch");
 /**
  * Versioned private configuration without embedded secrets or inferred routing.
- * **Example** (Inspecting the launch schema)
+ *
+ * **Details**
+ *
+ * Read only from a private owned directory. Salt and optional Phoenix query credentials come from the configured secret environment. Endpoints remain private metadata. Every startup remains paused; this schema contains no auto-resume switch. Optional discovery declares exact private roots and bounded reading/cadence; omitted discovery stays unconfigured. At least two worker admission slots are required when both loops are configured. The target digest is derived from the validated export/query policy, while the declared salt namespace is checked before opening the worker.
+ *
+ * **Example** (Inspect the observation launch config constructor)
+ *
  * ```ts
  * import { ObservationLaunchConfig } from "@beep/repo-ai-metrics/observation-launch"
  * console.log(typeof ObservationLaunchConfig.make)
  * ```
- * **Details** Read only from a private owned directory. Salt and optional Phoenix query credentials come from the configured secret environment. Endpoints remain private metadata. Every startup remains paused; this schema contains no auto-resume switch. Optional discovery declares exact private roots and bounded reading/cadence; omitted discovery stays unconfigured. At least two worker admission slots are required when both loops are configured. The target digest is derived from the validated export/query policy, while the declared salt namespace is checked before opening the worker.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,12 +124,18 @@ const decodeObservationLaunchConfigJson = S.decodeEffect(S.fromJsonString(Observ
 
 /**
  * Verify and read a bounded private launch file from a pre-created state directory.
- * **Example** (Inspecting the configuration reader)
+ *
+ * **Details**
+ *
+ * Requires canonical absolute ASCII directory paths at most 80 bytes, an owned 0700 directory and an owned regular 0600 worker.json without symlinks. Reads at most 64 KiB before schema decoding. The process boundary supplies its actual effective UID. This is not a lock or permission to mutate the directory; ownership/resource qualification must precede database/listener startup. Errors never contain the path or file contents.
+ *
+ * **Example** (Inspect the launch-configuration reader)
+ *
  * ```ts
  * import { readObservationLaunchConfig } from "@beep/repo-ai-metrics/observation-launch"
  * console.log(typeof readObservationLaunchConfig)
  * ```
- * **Details** Requires canonical absolute ASCII directory paths at most 80 bytes, an owned 0700 directory and an owned regular 0600 worker.json without symlinks. Reads at most 64 KiB before schema decoding. The process boundary supplies its actual effective UID. This is not a lock or permission to mutate the directory; ownership/resource qualification must precede database/listener startup. Errors never contain the path or file contents.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -165,12 +177,18 @@ export const readObservationLaunchConfig = Effect.fn("AiMetrics.readObservationL
 });
 /**
  * Bind launch declarations to redacted environment secrets and exact target identity.
- * **Example** (Inspecting configuration composition)
+ *
+ * **Details**
+ *
+ * The supplied salt must match the explicit intake namespace. Export and query origins are validated before target derivation; no network request is made. API credentials apply only to Phoenix read-back, never to an unowned export endpoint. The result is private configuration and must not be published as health or telemetry.
+ *
+ * **Example** (Inspect the launch-to-worker configuration function)
+ *
  * ```ts
  * import { observationWorkerConfigFromLaunch } from "@beep/repo-ai-metrics/observation-launch"
  * console.log(typeof observationWorkerConfigFromLaunch)
  * ```
- * **Details** The supplied salt must match the explicit intake namespace. Export and query origins are validated before target derivation; no network request is made. API credentials apply only to Phoenix read-back, never to an unowned export endpoint. The result is private configuration and must not be published as health or telemetry.
+ *
  * @category services
  * @since 0.0.0
  */

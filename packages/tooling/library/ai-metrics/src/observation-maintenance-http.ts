@@ -21,12 +21,18 @@ import type { makeObservationWorker, ObservationWorkerConfig } from "./observati
 const $I = $RepoAiMetricsId.create("observation-maintenance-http");
 /**
  * Finite owner operations with no caller-selected filesystem destination.
- * **Example** (Request the current window)
+ *
+ * **Details**
+ *
+ * Pages returns at most 32 receipt summaries after a sequence. Backup slots are create-only: occupied or partial generations are preserved. Reclaim and Expire retain the configured age, quiet-period and delivery checks. RestoreEvidence restores the latest logical retirement only; physical disaster restore remains an offline operation into a fresh destination.
+ *
+ * **Example** (Construct the window observation maintenance command case)
+ *
  * ```ts
  * import { ObservationMaintenanceCommand } from "@beep/repo-ai-metrics/observation-maintenance-http"
  * console.log(ObservationMaintenanceCommand.cases.Window.make({})._tag)
  * ```
- * **Details** Pages returns at most 32 receipt summaries after a sequence. Backup slots are create-only: occupied or partial generations are preserved. Reclaim and Expire retain the configured age, quiet-period and delivery checks. RestoreEvidence restores the latest logical retirement only; physical disaster restore remains an offline operation into a fresh destination.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -48,12 +54,18 @@ export type ObservationMaintenanceCommand = typeof ObservationMaintenanceCommand
 
 /**
  * Private selection of one worker process and configured delivery target.
- * **Example** (Inspect the context boundary)
+ *
+ * **Details**
+ *
+ * A fresh ownerInstanceId is generated on every worker start. It distinguishes even otherwise identical journals on the same host. It is not a credential or a persisted journal identifier. After restart, explicitly select the intended worker's new context before reconciling an uncertain operation.
+ *
+ * **Example** (Inspect the observation maintenance context constructor)
+ *
  * ```ts
  * import { ObservationMaintenanceContext } from "@beep/repo-ai-metrics/observation-maintenance-http"
  * console.log(typeof ObservationMaintenanceContext.make)
  * ```
- * **Details** A fresh ownerInstanceId is generated on every worker start. It distinguishes even otherwise identical journals on the same host. It is not a credential or a persisted journal identifier. After restart, explicitly select the intended worker's new context before reconciling an uncertain operation.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -75,12 +87,18 @@ export class ObservationMaintenanceContext extends S.Opaque<
 ) {}
 /**
  * Exact destination binding for a private maintenance request.
- * **Example** (Inspect the request boundary)
+ *
+ * **Details**
+ *
+ * The socket directory authenticates the local owner. These identifiers refuse accidental operations against a different worker; they are not credentials. Unknown fields are rejected, never stored or echoed.
+ *
+ * **Example** (Inspect the observation maintenance request constructor)
+ *
  * ```ts
  * import { ObservationMaintenanceRequest } from "@beep/repo-ai-metrics/observation-maintenance-http"
  * console.log(typeof ObservationMaintenanceRequest.make)
  * ```
- * **Details** The socket directory authenticates the local owner. These identifiers refuse accidental operations against a different worker; they are not credentials. Unknown fields are rejected, never stored or echoed.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -113,12 +131,18 @@ const encodeResponse =
 
 /**
  * Expose existing maintenance invariants on one private, non-queued HTTP route.
- * **Example** (Inspect the factory)
+ *
+ * **Details**
+ *
+ * Serve only on the owned private socket, never through the public frontend. One request at a time, 4096 body bytes and a one-second body deadline bound admission. Mutations require a drained paused worker and leave it paused on all outcomes. Four fixed backup slots cap generations at four times the configured journal ceiling (at most 128 MiB plus manifests); no automatic deletion or overwrite occurs. Retain returned backup receipts independently and replicate snapshots outside the host for host-loss recovery. A lost response is uncertain: inspect the slot or replay the exact receipt/epoch/digest operation. No request can change retention policy or resume collection.
+ *
+ * **Example** (Inspect the factory for observation maintenance http)
+ *
  * ```ts
  * import { makeObservationMaintenanceHttp } from "@beep/repo-ai-metrics/observation-maintenance-http"
  * console.log(typeof makeObservationMaintenanceHttp)
  * ```
- * **Details** Serve only on the owned private socket, never through the public frontend. One request at a time, 4096 body bytes and a one-second body deadline bound admission. Mutations require a drained paused worker and leave it paused on all outcomes. Four fixed backup slots cap generations at four times the configured journal ceiling (at most 128 MiB plus manifests); no automatic deletion or overwrite occurs. Retain returned backup receipts independently and replicate snapshots outside the host for host-loss recovery. A lost response is uncertain: inspect the slot or replay the exact receipt/epoch/digest operation. No request can change retention policy or resume collection.
+ *
  * @category services
  * @since 0.0.0
  */

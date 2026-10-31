@@ -23,12 +23,18 @@ import type * as SqlConnection from "effect/sql/SqlConnection";
 const $I = $RepoAiMetricsId.create("observation-backup");
 /**
  * Per-snapshot byte ceiling, independent of the journal's logical payload budget.
- * **Example** (A one MiB proof)
+ *
+ * **Details**
+ *
+ * Hashing uses a bounded in-memory copy. Aggregate generation retention, physical disk headroom and a hard process deadline are deployment responsibilities.
+ *
+ * **Example** (Set a one-mebibyte backup limit)
+ *
  * ```ts
  * import { ObservationBackupPolicy } from "@beep/repo-ai-metrics/observation-backup"
  * console.log(ObservationBackupPolicy.make({ maxBytes: 1048576 }).maxBytes)
  * ```
- * **Details** Hashing uses a bounded in-memory copy. Aggregate generation retention, physical disk headroom and a hard process deadline are deployment responsibilities.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,12 +45,18 @@ export class ObservationBackupPolicy extends S.Opaque<ObservationBackupPolicy, {
 ) {}
 /**
  * Content and source identity of an independent physical snapshot.
- * **Example** (Inspecting the manifest model)
+ *
+ * **Details**
+ *
+ * Contains no local paths or source content. A snapshot is a recovery point, not evidence that later observations can be discarded.
+ *
+ * **Example** (Inspect the observation backup manifest constructor)
+ *
  * ```ts
  * import { ObservationBackupManifest } from "@beep/repo-ai-metrics/observation-backup"
  * console.log(typeof ObservationBackupManifest.make)
  * ```
- * **Details** Contains no local paths or source content. A snapshot is a recovery point, not evidence that later observations can be discarded.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -61,12 +73,18 @@ export class ObservationBackupManifest extends S.Opaque<ObservationBackupManifes
 ) {}
 /**
  * Caller-retained digest binding a snapshot's manifest and database.
- * **Example** (Inspecting the receipt model)
+ *
+ * **Details**
+ *
+ * Retain this receipt outside the backup directory. Restore requires it; a self-edited manifest cannot authorize different bytes.
+ *
+ * **Example** (Inspect the observation backup receipt constructor)
+ *
  * ```ts
  * import { ObservationBackupReceipt } from "@beep/repo-ai-metrics/observation-backup"
  * console.log(typeof ObservationBackupReceipt.make)
  * ```
- * **Details** Retain this receipt outside the backup directory. Restore requires it; a self-edited manifest cannot authorize different bytes.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -199,12 +217,18 @@ const encodeObservationBackupManifestJson = S.encodeEffect(S.fromJsonString(Obse
 
 /**
  * Capture an owned, paused and drained journal into a newly created private directory.
- * **Example** (Inspecting capture)
+ *
+ * **Details**
+ *
+ * The worker must serialize this operation under maintenance and hold its OS ownership lock. Reserves the SQLite connection, checks source identity and size, uses VACUUM INTO, verifies integrity/configuration, and syncs the database before atomically publishing a bounded manifest. Existing destinations are refused. Failure/crash may leave an uncommitted new directory; no prior generation or source is overwritten. SQLite work is synchronous: use the qualified process limits, not a claimed interruptible JavaScript deadline. Snapshot retention and off-device replication remain separate.
+ *
+ * **Example** (Inspect the physical-backup capture function)
+ *
  * ```ts
  * import { captureObservationBackup } from "@beep/repo-ai-metrics/observation-backup"
  * console.log(typeof captureObservationBackup)
  * ```
- * **Details** The worker must serialize this operation under maintenance and hold its OS ownership lock. Reserves the SQLite connection, checks source identity and size, uses VACUUM INTO, verifies integrity/configuration, and syncs the database before atomically publishing a bounded manifest. Existing destinations are refused. Failure/crash may leave an uncommitted new directory; no prior generation or source is overwritten. SQLite work is synchronous: use the qualified process limits, not a claimed interruptible JavaScript deadline. Snapshot retention and off-device replication remain separate.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -271,12 +295,18 @@ const encodeObservationBackupReceiptJson = S.encodeEffect(S.fromJsonString(Obser
 
 /**
  * Restore a verified snapshot into a fresh directory, preserving every existing database.
- * **Example** (Inspecting restoration)
+ *
+ * **Details**
+ *
+ * Uses a dedicated disposable SQLite verification client, independent of a damaged source. Requires the caller-retained receipt, verifies manifest/database digests and integrity, writes/syncs a distinct database and publishes restore.json last. Never rewinds a live journal or resumes a worker. The caller must explicitly select the recovered route, reconcile the recovery-point gap and retain the superseded file. An incomplete destination has no valid completion marker and is not a usable restore.
+ *
+ * **Example** (Inspect the physical-backup restore function)
+ *
  * ```ts
  * import { restoreObservationBackup } from "@beep/repo-ai-metrics/observation-backup"
  * console.log(typeof restoreObservationBackup)
  * ```
- * **Details** Uses a dedicated disposable SQLite verification client, independent of a damaged source. Requires the caller-retained receipt, verifies manifest/database digests and integrity, writes/syncs a distinct database and publishes restore.json last. Never rewinds a live journal or resumes a worker. The caller must explicitly select the recovered route, reconcile the recovery-point gap and retain the superseded file. An incomplete destination has no valid completion marker and is not a usable restore.
+ *
  * @category services
  * @since 0.0.0
  */

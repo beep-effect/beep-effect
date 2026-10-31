@@ -39,12 +39,18 @@ import type { TranscriptIntakeConfig } from "./transcript-intake.ts";
 const $I = $RepoAiMetricsId.create("payload-reclamation");
 /**
  * Immutable bounds for verified payload retention and compact dispositions.
- * **Example** (Inspecting the policy)
+ *
+ * **Details**
+ *
+ * Ages are wall-clock differences from local acceptance and latest send reservation; they are not monotonic elapsed-time measurements. A clock rollback delays reclamation. Expiry is disabled unless explicitly configured. Enabled expiry preserves delivery-state counts and never promotes delivery. The policy does not delete compact facts. Exhaustion requires an explicit epoch/retention migration; payload reclamation alone does not make the journal indefinitely renewable.
+ *
+ * **Example** (Inspect the payload retention policy constructor)
+ *
  * ```ts
  * import { PayloadRetentionPolicy } from "@beep/repo-ai-metrics/payload-reclamation"
  * console.log(typeof PayloadRetentionPolicy.make)
  * ```
- * **Details** Ages are wall-clock differences from local acceptance and latest send reservation; they are not monotonic elapsed-time measurements. A clock rollback delays reclamation. Expiry is disabled unless explicitly configured. Enabled expiry preserves delivery-state counts and never promotes delivery. The policy does not delete compact facts. Exhaustion requires an explicit epoch/retention migration; payload reclamation alone does not make the journal indefinitely renewable.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -134,12 +140,18 @@ const encodePageDispositionJson = S.encodeEffect(S.fromJsonString(PageDispositio
 
 /**
  * Open a bounded reclaimer that preserves identities, cursors and delivery facts.
- * **Example** (Inspecting the service)
+ *
+ * **Details**
+ *
+ * Reclaim and expire each check one explicitly selected page in a serialized transaction. Expire requires an explicit deadline and preserves state populations; it never creates visibility or send-result facts. None means it is too young or recently attempted; verified reclamation also waits for every accepted event's visibility. Native duplicate occurrences require the original event's visibility for verified reclamation. Deletion and a checksummed disposition commit together; failures restore the payload. SQLite reuses free pages internally without VACUUM or source-file deletion. The caller still owns disk headroom, scheduling and process limits.
+ *
+ * **Example** (Inspect the factory for payload reclaimer)
+ *
  * ```ts
  * import { makePayloadReclaimer } from "@beep/repo-ai-metrics/payload-reclamation"
  * console.log(typeof makePayloadReclaimer)
  * ```
- * **Details** Reclaim and expire each check one explicitly selected page in a serialized transaction. Expire requires an explicit deadline and preserves state populations; it never creates visibility or send-result facts. None means it is too young or recently attempted; verified reclamation also waits for every accepted event's visibility. Native duplicate occurrences require the original event's visibility for verified reclamation. Deletion and a checksummed disposition commit together; failures restore the payload. SQLite reuses free pages internally without VACUUM or source-file deletion. The caller still owns disk headroom, scheduling and process limits.
+ *
  * @category services
  * @since 0.0.0
  */
