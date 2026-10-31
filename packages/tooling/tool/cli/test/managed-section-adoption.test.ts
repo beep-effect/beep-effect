@@ -8,7 +8,7 @@ import {
 } from "@beep/repo-cli/commands/Observability";
 import { PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -92,7 +92,11 @@ describe("Models generated block", () => {
 });
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
-const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const STATUS_BEGIN = "<!-- BEGIN GENERATED: EXPLORATION STATUS -->";
 const STATUS_END = "<!-- END GENERATED: EXPLORATION STATUS -->";
 

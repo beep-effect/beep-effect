@@ -7,6 +7,8 @@
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { redactCauseForClient } from "@beep/observability/CauseRedaction";
+import { EffectFailure } from "@xstate/effect";
+import * as Cause from "effect/Cause";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
@@ -29,12 +31,24 @@ const isMessageBearing = S.is(MessageBearing);
 const hasMessage = (cause: unknown): boolean =>
   P.isObject(cause) && isMessageBearing({ message: Reflect.get(cause, "message") });
 
+// `@xstate/effect` reports a failed Effect actor as an `EffectFailure` whose own
+// `message` is the full `Cause.pretty` rendering ("<error name>: <message>").
+// The client message belongs to the failure inside it, so read the squashed
+// cause, which is what the actor reported before it began wrapping failures.
+const reportedFailure = (cause: unknown): unknown => (EffectFailure.is(cause) ? Cause.squash(cause.cause) : cause);
+
 /**
  * Best-effort human-readable message from an unknown failure cause, falling
  * back to `fallback` when no non-empty `message` string can be read: any
  * non-array object whose own or inherited `message` is a non-empty string —
  * plain shapes, `Error`s, and prototype-getter errors such as Effect's
  * `SchemaError` — yields its redacted message, otherwise `fallback`.
+ *
+ * **Details**
+ *
+ * An `EffectFailure` from an `@xstate/effect` actor is unwrapped first, so the
+ * message comes from the failure it carries rather than from its rendered
+ * cause.
  *
  * **Example** (Render an unknown failure)
  *
@@ -51,5 +65,7 @@ const hasMessage = (cause: unknown): boolean =>
  */
 export const failureMessageOr =
   (fallback: string) =>
-  (cause: unknown): string =>
-    hasMessage(cause) ? redactCauseForClient(cause).message : fallback;
+  (cause: unknown): string => {
+    const failure = reportedFailure(cause);
+    return hasMessage(failure) ? redactCauseForClient(failure).message : fallback;
+  };

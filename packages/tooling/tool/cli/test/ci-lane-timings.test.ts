@@ -45,8 +45,8 @@ import {
   deepStrictEqual,
   strictEqual,
 } from "@effect/vitest/utils";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -61,6 +61,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
 // them so the derivations are exercised on the shape they actually receive.
@@ -124,7 +125,7 @@ const laneTimingsSpawner = ChildProcessSpawner.make((command) => {
   if (!ChildProcess.isStandardCommand(command)) {
     return Effect.die("lane timings never spawns a piped command");
   }
-  return Effect.succeed(stubHandle(laneTimingsResponse(A.join([command.command, ...command.args], " "))));
+  return Effect.succeed(stubHandle(laneTimingsResponse(A.join([command.command, ...commandArgs(command)], " "))));
 });
 
 interface ScriptedGhExit {
@@ -148,7 +149,7 @@ const scriptedGhSpawner = (exits: ReadonlyArray<ScriptedGhExit>) => {
     const scripted = pending.shift();
     return Effect.succeed(
       scripted === undefined
-        ? stubHandle(laneTimingsResponse(A.join([command.command, ...command.args], " ")))
+        ? stubHandle(laneTimingsResponse(A.join([command.command, ...commandArgs(command)], " ")))
         : stubHandle(scripted.output, scripted.exitCode)
     );
   });
@@ -169,7 +170,7 @@ const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")(
   (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
     collectCiLaneTimings(".", 1).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-      Effect.provideService(Crypto.Crypto, NodeCrypto.make),
+      Effect.provideService(SecureRandom.SecureRandom, SecureRandom.make(SecureRandom.randomBytesUnsafe)),
       Effect.exit,
       Effect.forkChild
     )
@@ -361,12 +362,17 @@ const laneTimingsWindowCliSpawner = (commands: Array<string>) =>
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("lane timings never spawns a piped command");
     }
-    const rendered = A.join([command.command, ...command.args], " ");
+    const rendered = A.join([command.command, ...commandArgs(command)], " ");
     A.appendInPlace(commands, rendered);
-    return windowGithubResponse(command.args[1] ?? "").pipe(Effect.map(stubHandle));
+    return windowGithubResponse(commandArgs(command)[1] ?? "").pipe(Effect.map(stubHandle));
   });
 
-const laneTimingsCommandLayer = Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer, TestConsole.layer);
+const laneTimingsCommandLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  MemoryFileSystem.layer,
+  TestConsole.layer
+);
 const runLaneTimingsCommand = Command.runWith(ciLaneTimingsCommand, { version: "0.0.0" });
 const isString = (value: unknown): value is string => typeof value === "string";
 
@@ -630,7 +636,7 @@ describe("ci lane timings jobs pagination", () => {
         if (!ChildProcess.isStandardCommand(command)) {
           return Effect.die("lane timings never spawns a piped command");
         }
-        const rendered = A.join([command.command, ...command.args], " ");
+        const rendered = A.join([command.command, ...commandArgs(command)], " ");
         return Effect.succeed(
           stubHandle(Str.includes("page=2")(rendered) ? '{"jobs":[],"total_count":2}' : laneTimingsResponse(rendered))
         );

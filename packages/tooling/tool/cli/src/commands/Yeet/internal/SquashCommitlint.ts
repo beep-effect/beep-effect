@@ -40,7 +40,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { decodeYeetGhOutput, yeetGh } from "./GhCall.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";
@@ -803,7 +803,11 @@ const decodePullFacts = S.decodeUnknownEffect(S.fromJsonString(GhPullFacts));
  */
 export const readGitHubSquashDefaults = Effect.fn("Yeet.readGitHubSquashDefaults")(function* (
   context: RepoRunContext
-): Effect.fn.Return<GitHubSquashDefaults, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  GitHubSquashDefaults,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const settings = yield* decodeYeetGhOutput(
     "the repository squash settings",
     decodeSquashSettings,
@@ -865,7 +869,11 @@ export class SquashPullRequestFacts extends S.Opaque<SquashPullRequestFacts, { r
 export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(function* (
   context: RepoRunContext,
   facts: SquashPullRequestFacts
-): Effect.fn.Return<SquashCommitlintReport, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  SquashCommitlintReport,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const defaults = yield* readGitHubSquashDefaults(context);
   // `--slurp` wraps pages in an array; fold the pages back into one commit list.
   const pages = yield* decodeYeetGhOutput(
@@ -912,7 +920,11 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
 export const readSquashCommitlintForPullRequest = Effect.fn("Yeet.readSquashCommitlintForPullRequest")(function* (
   context: RepoRunContext,
   prNumber: number
-): Effect.fn.Return<SquashCommitlintReport, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  SquashCommitlintReport,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const pull = yield* decodeYeetGhOutput(
     "the pull request",
     decodePullFacts,

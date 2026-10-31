@@ -2764,6 +2764,28 @@ const readDirectory = (volume: Volume) =>
     );
   });
 
+// One level of `readDirectory` with each entry's own type (a symbolic link
+// reports `SymbolicLink`, never its target's type), as node's
+// `readdir(path, { withFileTypes: true })` does.
+const readDirectoryEntries = (volume: Volume) =>
+  Effect.fnUntraced(function* (path: string) {
+    return yield* volume.mutate(
+      Effect.fnUntraced(function* (state) {
+        const resolved = yield* resolve(state, path, { method: "readDirectoryEntries" });
+        if (resolved.entry._tag !== "Directory") {
+          return yield* badResource("readDirectoryEntries", path, "ENOTDIR");
+        }
+        const nextState = setInode(state, { ...resolved.entry, atime: yield* DateTime.now });
+        const entries: Array<FileSystem.DirectoryEntry> = [];
+        walkDirectory(nextState, resolved.entry, "", relativeJoin, (name, entry) => {
+          entries.push({ name, type: entry._tag });
+          return false;
+        });
+        return transitionResult(nextState, entries);
+      })
+    );
+  });
+
 const readFile = (volume: Volume) =>
   Effect.fnUntraced(function* (path: string) {
     return yield* volume.mutate(
@@ -3915,14 +3937,16 @@ const watch = (volume: Volume) => (path: string, options?: FileSystem.WatchOptio
 // exports
 // =============================================================================
 
-const toFileSystem = (volume: Volume): FileSystem.FileSystem =>
-  FileSystem.make({
+// `FileSystem.make` derives `glob` from `readDirectoryEntries`; the kit keeps
+// its own walker (case folding, root errno fidelity), so it replaces the
+// derived member after construction.
+const toFileSystem = (volume: Volume): FileSystem.FileSystem => ({
+  ...FileSystem.make({
     access: access(volume),
     copy: copy(volume),
     copyFile: copyFile(volume),
     chmod: chmod(volume),
     chown: chown(volume),
-    glob: glob(volume),
     link: link(volume),
     lstat: lstat(volume),
     makeDirectory: makeDirectory(volume),
@@ -3932,6 +3956,7 @@ const toFileSystem = (volume: Volume): FileSystem.FileSystem =>
     makeTempFileScoped: makeTempFileScoped(volume),
     open: open(volume),
     readDirectory: readDirectory(volume),
+    readDirectoryEntries: readDirectoryEntries(volume),
     readFile: readFile(volume),
     readLink: readLink(volume),
     realPath: realPath(volume),
@@ -3943,7 +3968,9 @@ const toFileSystem = (volume: Volume): FileSystem.FileSystem =>
     utimes: utimes(volume),
     watch: watch(volume),
     writeFile: writeFile(volume),
-  });
+  }),
+  glob: glob(volume),
+});
 
 const makeReadyVolume: (options: EngineOptions) => Effect.Effect<Volume> = Effect.fn("Volume.makeReady")(
   function* (options) {

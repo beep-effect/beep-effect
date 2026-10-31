@@ -1,6 +1,6 @@
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, pipe } from "effect/Function";
@@ -59,8 +59,8 @@ export type BoxCanonicalDigestError = PlatformError.PlatformError | SchemaIssue.
  * @since 0.0.0
  */
 export const digestText = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto.digest("SHA-256", utf8.encode(value));
+  const crypto = yield* Digest.Digest;
+  const bytes = yield* crypto.digest(Digest.sha256, utf8.encode(value));
   return Sha256Hex.make(Hex.encode(bytes));
 });
 
@@ -76,8 +76,8 @@ export const digestEncoded = Effect.fnUntraced(function* (value: unknown) {
 });
 
 type EncodedDigest = {
-  <A, I>(value: A): (schema: S.Codec<A, I>) => Effect.Effect<Sha256Hex, BoxCanonicalDigestError, Crypto.Crypto>;
-  <A, I>(schema: S.Codec<A, I>, value: A): Effect.Effect<Sha256Hex, BoxCanonicalDigestError, Crypto.Crypto>;
+  <A, I>(value: A): (schema: S.Codec<A, I>) => Effect.Effect<Sha256Hex, BoxCanonicalDigestError, Digest.Digest>;
+  <A, I>(schema: S.Codec<A, I>, value: A): Effect.Effect<Sha256Hex, BoxCanonicalDigestError, Digest.Digest>;
 };
 
 /**

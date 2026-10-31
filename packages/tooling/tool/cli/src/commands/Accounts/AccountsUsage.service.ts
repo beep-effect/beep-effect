@@ -22,7 +22,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -787,7 +787,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
   const junieLicenses = yield* Ref.make(HashMap.empty<string, Redacted.Redacted<string>>());
   const junieRotatedCredentials = yield* Ref.make(HashSet.empty<string>());
 
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const junieHome = yield* Config.String("JUNIE_HOME").pipe(
     Config.withDefault(path.join(yield* Config.String("HOME"), ".junie"))
@@ -801,7 +801,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     function* () {
       // Realpath also keeps synthetic HOME fixtures isolated from the real keyring.
       const realHome = yield* fs.realPath(junieHome);
-      const key = `${yield* sha256Hex(Str.toLowerCase(realHome)).pipe(Effect.provideService(Crypto.Crypto, crypto))}jb-account-stored`;
+      const key = `${yield* sha256Hex(Str.toLowerCase(realHome)).pipe(Effect.provideService(Digest.Digest, crypto))}jb-account-stored`;
       const stored = yield* spawner
         .string(
           ChildProcess.make("secret-tool", ["lookup", "service", "junie-cli", "account", key], {
@@ -849,7 +849,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
       const credentialFingerprint = yield* account.refresh_token.pipe(
         Redacted.value,
         sha256Hex,
-        Effect.provideService(Crypto.Crypto, crypto)
+        Effect.provideService(Digest.Digest, crypto)
       );
       // A credential whose refresh token rotated during cycle lookup is never sent to switch_audience again.
       if (HashSet.has(yield* Ref.get(junieRotatedCredentials), credentialFingerprint)) return junieAudienceRotated;
@@ -1076,10 +1076,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           onNone: () => Ref.get(lastBalance).pipe(Effect.map(O.getOrElse(() => failed("JetBrains AI poll timed out")))),
         })
       ),
-      Effect.catchTags({
-        HttpClientError: () => Effect.succeed(failed("JetBrains AI request is unavailable")),
-        PlatformError: () => Effect.succeed(failed("Junie credential fingerprint is unavailable")),
-      })
+      Effect.catchTag("HttpClientError", () => Effect.succeed(failed("JetBrains AI request is unavailable")))
     );
   });
 

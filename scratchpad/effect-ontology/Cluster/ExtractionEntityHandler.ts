@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 /**
  * Extraction Entity Handler
  *
@@ -161,7 +161,7 @@ const toExtractionParams = (
  * @since 0.0.0
  */
 export const makeExtractionEntityHandler = Effect.gen(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const runService = yield* ExtractionRunService;
   const nlpService = yield* NlpService;
   const entityExtractor = yield* EntityExtractor;

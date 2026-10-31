@@ -23,7 +23,7 @@ import {
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Planner.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -160,7 +160,7 @@ const runTurboQueryJson = Effect.fn("Yeet.runTurboQueryJson")(function* (
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const turbo = yield* resolveLocalRepoBinary(repoRoot, "turbo");
   const result = yield* runRepoCommandCapture(turbo, args, repoRoot).pipe(
@@ -198,7 +198,7 @@ const collectTurboVersion = Effect.fn("Yeet.collectTurboVersion")(function* (
 ): Effect.fn.Return<
   O.Option<string>,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const turbo = yield* resolveLocalRepoBinary(repoRoot, "turbo");
   const result = yield* runRepoCommandCapture(turbo, ["--version"], repoRoot).pipe(Effect.option);
@@ -254,7 +254,7 @@ const collectAffectedFeedbackTasks = Effect.fn("Yeet.collectAffectedFeedbackTask
 ): Effect.fn.Return<
   ReadonlyArray<TurboPlanTask>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   if (!shouldCollectAffectedFeedbackTasks(options.mode)) {
     return [];
@@ -312,7 +312,7 @@ export const collectTurboPlanSnapshot = Effect.fn("Yeet.collectTurboPlanSnapshot
 ): Effect.fn.Return<
   TurboPlanSnapshot,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const turboVersion = yield* collectTurboVersion(repoRoot);
   const packageJson = yield* runTurboQueryJson(repoRoot, ["query", "ls", "--output", "json"], "turbo query ls");

@@ -62,7 +62,7 @@ import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from 
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CiCommandError } from "./Ci.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as SchemaAST from "effect/SchemaAST";
 
@@ -882,7 +882,7 @@ const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
 ): Effect.fn.Return<
   string,
   CiCommandError | CiGhApiTransientExit,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runRepoCommandCapture("gh", args, repoRoot).pipe(
     CiCommandError.mapError(`Failed to run gh api ${endpoint}.`)
@@ -931,7 +931,7 @@ export const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   repoRoot: string,
   endpoint: string,
   jqProjection: O.Option<string>
-): Effect.fn.Return<string, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const args = A.appendAll(
     ["api", endpoint],
     A.flatMap(O.toArray(jqProjection), (projection) => ["--jq", projection])
@@ -965,7 +965,7 @@ const fetchLegacyCiWorkflowJobsPage = Effect.fn("Ci.fetchLegacyCiWorkflowJobsPag
   runId: number,
   perPage: number,
   pageNumber: number
-): Effect.fn.Return<string, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* ghApiJson(
     repoRoot,
     ciWorkflowJobsEndpoint(runId, perPage, pageNumber),
@@ -1036,7 +1036,11 @@ const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(func
 export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(function* (
   repoRoot: string,
   runLimit: number
-): Effect.fn.Return<CiLaneTimingsReport, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  CiLaneTimingsReport,
+  CiCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   if (runLimit < 1 || runLimit > 100) {
     return yield* CiCommandError.make({ message: `--runs must be between 1 and 100; received ${runLimit}.` });
   }
@@ -1882,7 +1886,7 @@ export class CiLaneTimingGithubClient extends Context.Service<
 >()($I`CiLaneTimingGithubClient`) {}
 
 const makeCiLaneTimingGithubClient = Effect.fn("CiLaneTimingGithubClient.make")(function* () {
-  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
   return CiLaneTimingGithubClient.of({
     getJson: Effect.fn("CiLaneTimingGithubClient.getJson")((repoRoot, endpoint, jqProjection) =>
       ghApiJson(repoRoot, endpoint, jqProjection).pipe(Effect.provide(context))

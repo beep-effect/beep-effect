@@ -9,7 +9,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { turboCachePullRequestPosture } from "../../../internal/cli/TurboCache.ts";
-import type * as ChildProcess from "effect/process/ChildProcess";
 
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
@@ -63,7 +62,7 @@ const coverageFastCheckSeed = (): string =>
  * @category utilities
  * @since 0.0.0
  */
-export const coverageEnvironment = (): NonNullable<ChildProcess.CommandOptions["env"]> => ({
+export const coverageEnvironment = (): Record<string, string | undefined> => ({
   BEEP_FC_SEED: coverageFastCheckSeed(),
   CI: "true",
   GITHUB_ACTIONS: "true",
@@ -92,7 +91,7 @@ export const coverageEnvironment = (): NonNullable<ChildProcess.CommandOptions["
  * @category utilities
  * @since 0.0.0
  */
-export const coverageProducerEnvironment = (): NonNullable<ChildProcess.CommandOptions["env"]> => ({
+export const coverageProducerEnvironment = (): Record<string, string | undefined> => ({
   ...coverageEnvironment(),
   VITEST_COVERAGE_RATCHET: undefined,
 });

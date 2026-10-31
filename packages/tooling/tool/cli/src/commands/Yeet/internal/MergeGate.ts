@@ -74,7 +74,7 @@ import {
   SquashCommitlintReport,
   SquashPullRequestFacts,
 } from "./SquashCommitlint.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 export { MergeGateCheckRun } from "./MergeGate.schemas.ts";
@@ -1009,7 +1009,11 @@ const THREADS_QUERY =
 export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
   context: RepoRunContext,
   prNumber: number
-): Effect.fn.Return<MergeGateRead, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  MergeGateRead,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const pull = yield* decodeYeetGhOutput(
     "the pull request",
     decodePull,
@@ -1117,7 +1121,11 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
 export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   context: RepoRunContext,
   decision: MergeGateMerge
-): Effect.fn.Return<MergeGateMerged, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  MergeGateMerged,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
     Effect.mapError(() =>
       YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
@@ -1290,7 +1298,11 @@ const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (
 export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
   context: RepoRunContext,
   options: MergeGateRunOptions
-): Effect.fn.Return<MergeGateDecision, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  MergeGateDecision,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const read = yield* readMergeGate(context, options.prNumber);
   yield* Console.log(
     `[yeet] squash-commitlint #${read.prNumber}: ${renderSquashCommitlintVerdict(read.squashCommitlint.verdict)} (header "${read.squashCommitlint.message.header}")`

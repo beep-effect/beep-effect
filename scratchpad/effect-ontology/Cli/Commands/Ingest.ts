@@ -1,4 +1,4 @@
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 /**
  * CLI: Ingest Command
  *
@@ -97,7 +97,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
 ): Effect.fn.Return<
   void,
   KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | S.SchemaError | HashingError,
-  ConfigService | FileSystem.FileSystem | Path.Path | StorageService | Crypto.Crypto
+  ConfigService | FileSystem.FileSystem | Path.Path | StorageService | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

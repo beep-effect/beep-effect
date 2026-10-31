@@ -12,7 +12,7 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as PersistedQueue from "effect/persistence/PersistedQueue";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as Scope from "effect/Scope";
 import type * as SqlClient from "effect/sql/SqlClient";
 import type { SqlError } from "effect/sql/SqlError";
@@ -25,7 +25,7 @@ const nativeMessage = (value: unknown): string => {
 const probes: ReadonlyArray<
   readonly [
     string,
-    Effect.Effect<void, SqlError, Crypto.Crypto | Scope.Scope | SqlClient.SqlClient | ShardingConfig.ShardingConfig>,
+    Effect.Effect<void, SqlError, Digest.Digest | Scope.Scope | SqlClient.SqlClient | ShardingConfig.ShardingConfig>,
   ]
 > = [
   ["queue", PersistedQueue.makeStoreSql().pipe(Effect.asVoid)],

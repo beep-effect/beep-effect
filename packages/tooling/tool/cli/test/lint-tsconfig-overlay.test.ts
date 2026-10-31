@@ -3,7 +3,7 @@ import { collectTsconfigOverlayViolations } from "@beep/repo-cli/commands/Lint/T
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -18,7 +18,7 @@ import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandT
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 
 const testLayer = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, TestConsole.layer).pipe(
-  Layer.provideMerge(NodeServices.layer)
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
 );
 
 // A reference-free package: its tsconfig.json has no references, so the

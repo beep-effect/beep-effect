@@ -14,7 +14,7 @@
  */
 
 import { WorktreeRemovalServiceLive, worktreeCommand } from "@beep/repo-cli/commands/Worktree";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -31,7 +31,11 @@ const name = O.getOrThrow(A.get(process.argv, 2));
 const failureMessage = (error: unknown): string =>
   P.hasProperty(error, "message") && P.isString(error.message) ? error.message : String(error);
 
-const layer = Layer.mergeAll(NodeServices.layer, WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer)));
+const layer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 await using runtime = ManagedRuntime.make(layer);
 
 const program = Effect.result(

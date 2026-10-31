@@ -29,7 +29,7 @@ import * as O from "@beep/utils/Option";
 import * as BunStdio from "@effect/platform-bun/BunStdio";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { constant, dual, pipe } from "effect/Function";
@@ -580,14 +580,8 @@ const writeAdmissionWorkload = Effect.fn("StepExec.writeAdmissionWorkload")(func
       })
     )
   );
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4().pipe(
-    Effect.mapError((cause) =>
-      AdmissionWorkloadRegistrationError.make({
-        message: `Failed to create admission workload identity ${leaseId}: ${cause.message}`,
-      })
-    )
-  );
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   const temporary = `${workloadPath}.${token}.tmp`;
   const script = `
 set -eu
@@ -668,7 +662,7 @@ const resolveAdmissionWorkload = Effect.fn("StepExec.resolveAdmissionWorkload")(
 
 const prepareAdmissionWorkload = Effect.fn("StepExec.prepareAdmissionWorkload")(function* (
   configured: O.Option<ResolvedAdmissionWorkload>
-): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, Crypto.Crypto> {
+): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, SecureRandom.SecureRandom> {
   if (O.isNone(configured) || configured.value.ownership === "inherited") return;
   yield* writeAdmissionWorkload(configured.value.workloadPath, configured.value.leaseId, {
     schemaVersion: "yeet-admission-workload/v1",
@@ -686,7 +680,7 @@ const procStartFromStat = (text: string): string | undefined => {
 const registerAdmissionWorkload = Effect.fn("StepExec.registerAdmissionWorkload")(function* (
   configured: O.Option<ResolvedAdmissionWorkload>,
   handle: ChildProcessSpawner.ChildProcessHandle
-): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, Crypto.Crypto> {
+): Effect.fn.Return<void, AdmissionWorkloadRegistrationError, SecureRandom.SecureRandom> {
   if (O.isNone(configured) || configured.value.ownership === "inherited") return;
   const processGroupId = PosInt.make(Number(handle.pid));
   const stat = yield* Effect.tryPromise({
@@ -1036,14 +1030,14 @@ export interface RunCaptured {
   ): Effect.Effect<
     CapturedStep,
     E | PlatformError.PlatformError | CaptureCommandTimedOutError | AdmissionWorkloadRegistrationError,
-    R | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    R | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >;
   (
     options: RunCapturedOptions
   ): Effect.Effect<
     CapturedStep,
     PlatformError.PlatformError | CaptureCommandTimedOutError | AdmissionWorkloadRegistrationError,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >;
 }
 
@@ -1072,7 +1066,7 @@ export const runCaptured: RunCaptured = Effect.fn("StepExec.runCaptured")(functi
 ): Effect.fn.Return<
   CapturedStep,
   E | PlatformError.PlatformError | CaptureCommandTimedOutError | AdmissionWorkloadRegistrationError,
-  R | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  R | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const source = options.source ?? "all";
   const commandLine = formatCommandLine(options.command, options.args);
@@ -1189,7 +1183,7 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
 ): Effect.fn.Return<
   CapturedStreams,
   PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.scoped(
     Effect.gen(function* () {
@@ -1280,7 +1274,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
 ): Effect.fn.Return<
   number,
   PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.scoped(
     Effect.gen(function* () {

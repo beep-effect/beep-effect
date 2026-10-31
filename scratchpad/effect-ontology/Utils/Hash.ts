@@ -12,7 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import * as Effect from "effect/Effect";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -71,9 +71,9 @@ export class HashingError extends S.TaggedError<HashingError, { readonly brand: 
  * @since 0.0.0
  */
 export const sha256 = Effect.fn("Hash.sha256")(function* (input: string) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const digest = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(input))
+    .digest(Digest.sha256, new TextEncoder().encode(input))
     .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256", cause })));
   return Hex.encode(digest);
 });
@@ -114,7 +114,7 @@ export const hashEmbeddingKey = dual2(
  *
  * **Gotchas**
  *
- * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
+ * Returns an Effect requiring Digest.Digest; the legacy Sync suffix is retained for compatibility.
  *
  * **Example** (Hash a string on the server)
  *
@@ -142,7 +142,7 @@ export const sha256SyncFull = sha256;
  *
  * **Gotchas**
  *
- * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
+ * Returns an Effect requiring Digest.Digest; the legacy Sync suffix is retained for compatibility.
  * Truncation is the first 16 hex characters of {@link sha256SyncFull}.
  *
  * **Example** (Take the 16-character digest)
@@ -286,12 +286,12 @@ export const hashVersionedEmbeddingKeySync = hashVersionedEmbeddingKey;
  * @since 0.0.0
  */
 export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: BufferSource) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const input = ArrayBuffer.isView(bytes)
     ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
     : new Uint8Array(bytes);
   const digest = yield* crypto
-    .digest("SHA-256", input)
+    .digest(Digest.sha256, input)
     .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256-bytes", cause })));
   return Hex.encode(digest);
 });
@@ -301,7 +301,7 @@ export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: Buffe
  *
  * **Gotchas**
  *
- * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
+ * Returns an Effect requiring Digest.Digest; the legacy Sync suffix is retained for compatibility.
  *
  * **Example** (Hash bytes on the server)
  *

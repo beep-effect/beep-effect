@@ -83,6 +83,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import type {
   DocgenQualityPackageReport,
   DocgenQualityReview,
@@ -133,7 +134,7 @@ const recordingSpawner = (spawned: Array<string>) =>
   ChildProcessSpawner.make((command) =>
     Effect.sync(() => {
       if (ChildProcess.isStandardCommand(command)) {
-        A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
+        A.appendInPlace(spawned, A.join([command.command, ...commandArgs(command)], " "));
       }
       return stubHandle;
     })
@@ -143,7 +144,7 @@ const rangeRejectingSpawner = (spawned: Array<string>) =>
   ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
       if (ChildProcess.isStandardCommand(command)) {
-        const commandText = A.join([command.command, ...command.args], " ");
+        const commandText = A.join([command.command, ...commandArgs(command)], " ");
         A.appendInPlace(spawned, commandText);
         if (command.command === "git" && Str.includes("origin/main...HEAD")(commandText)) {
           return yield* Effect.die(new Error("range query rejected by test stub"));
@@ -1102,7 +1103,7 @@ export const ProofFixture = 1;
       const spawner = ChildProcessSpawner.make((command) =>
         Effect.sync(() => {
           if (ChildProcess.isStandardCommand(command)) {
-            A.appendInPlace(spawned, A.join([command.command, ...command.args], " "));
+            A.appendInPlace(spawned, A.join([command.command, ...commandArgs(command)], " "));
           }
           return ChildProcessSpawner.makeHandle({ ...stubHandle, stdout: Stream.make(output) });
         })

@@ -20,7 +20,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { runCaptured } from "../../internal/process/index.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Qa/Doctor");
@@ -193,7 +193,7 @@ const probeBinary = Effect.fn("QaDoctor.probeBinary")(function* (
   args: ReadonlyArray<string>,
   required: boolean,
   remediation: string
-): Effect.fn.Return<QaProbe, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<QaProbe, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const captured = yield* runCaptured({ args, command: name, source: "stdout", trim: true }).pipe(
     Effect.asSome,
     Effect.orElseSucceed(O.none<{ readonly exitCode: number; readonly output: string }>)
@@ -296,7 +296,7 @@ const probePlaywrightChromium = Effect.fn("QaDoctor.probePlaywrightChromium")(fu
 export const runQaDoctor = Effect.fn("QaDoctor.run")(function* (): Effect.fn.Return<
   ReadonlyArray<QaProbe>,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const [ffmpeg, ffprobe, exiftool, obs, playwright] = yield* Effect.all(
     [

@@ -18,7 +18,7 @@ import { expect, layer } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -121,7 +121,7 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
       const backups = path.join(root, "backups");
       yield* fs.makeDirectory(backups);
       const writer = yield* writerWithFs(fs);
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       const cases: ReadonlyArray<readonly [string, string, string, ModelsLocatorWrite]> = [
         [
           "config.json",
@@ -156,8 +156,8 @@ layer(modelsTestExchangeLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeService
           id: "models-synthetic",
           file,
           backup,
-          beforeHash: Hex.encode(yield* crypto.digest("SHA-256", originalBytes)),
-          afterHash: Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(current))),
+          beforeHash: Hex.encode(yield* crypto.digest(Digest.sha256, originalBytes)),
+          afterHash: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(current))),
           mode: (yield* fs.stat(file)).mode,
           writes: O.some([request]),
           requestedFile: O.some(file),

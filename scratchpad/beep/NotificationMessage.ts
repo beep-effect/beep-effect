@@ -9,7 +9,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -110,7 +111,7 @@ const optionalTextDefault = (missing: string) =>
 export class NotificationMessage extends Model<NotificationMessage>("NotificationMessage")(
   {
     id: S.String.annotateKey({ description: "Notification id. Construction defaults to a random UUID." }).pipe(
-      S.withConstructorDefault(notificationCrypto.randomUUIDv4().pipe(Effect.orDie)),
+      S.withConstructorDefault(notificationCrypto.uuidV4().pipe(Effect.orDie)),
       pg.text(),
       pg.columnName("id"),
     ),

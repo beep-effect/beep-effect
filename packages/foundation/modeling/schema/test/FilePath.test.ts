@@ -346,7 +346,7 @@ describe("FilePath", () => {
     "rejects empty input",
     Effect.fnUntraced(function* () {
       const failure1 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath(""));
-      const isFailure36 = Exit.hasFails(failure1);
+      const isFailure36 = Exit.isFailure(failure1) && Exit.hasFails(failure1);
       assertTrue(isFailure36);
       expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must not be empty"
@@ -358,7 +358,7 @@ describe("FilePath", () => {
     "rejects embedded NUL bytes",
     Effect.fnUntraced(function* () {
       const failure2 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath(`bad\u0000path.txt`));
-      const isFailure37 = Exit.hasFails(failure2);
+      const isFailure37 = Exit.isFailure(failure2) && Exit.hasFails(failure2);
       assertTrue(isFailure37);
       expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must not contain embedded NUL bytes"
@@ -370,19 +370,19 @@ describe("FilePath", () => {
     "rejects root-only paths",
     Effect.fnUntraced(function* () {
       const failure3 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("/"));
-      const isFailure38 = Exit.hasFails(failure3);
+      const isFailure38 = Exit.isFailure(failure3) && Exit.hasFails(failure3);
       assertTrue(isFailure38);
       expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must include a leaf segment"
       );
       const failure4 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("C:\\"));
-      const isFailure39 = Exit.hasFails(failure4);
+      const isFailure39 = Exit.isFailure(failure4) && Exit.hasFails(failure4);
       assertTrue(isFailure39);
       expect(pipe(failure4.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must include a leaf segment"
       );
       const failure5 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("\\\\server\\share"));
-      const isFailure40 = Exit.hasFails(failure5);
+      const isFailure40 = Exit.isFailure(failure5) && Exit.hasFails(failure5);
       assertTrue(isFailure40);
       expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must include a leaf segment"
@@ -394,13 +394,13 @@ describe("FilePath", () => {
     "rejects paths ending in separators",
     Effect.fnUntraced(function* () {
       const failure6 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("foo/"));
-      const isFailure41 = Exit.hasFails(failure6);
+      const isFailure41 = Exit.isFailure(failure6) && Exit.hasFails(failure6);
       assertTrue(isFailure41);
       expect(pipe(failure6.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must include a leaf segment"
       );
       const failure7 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("foo\\"));
-      const isFailure42 = Exit.hasFails(failure7);
+      const isFailure42 = Exit.isFailure(failure7) && Exit.hasFails(failure7);
       assertTrue(isFailure42);
       expect(pipe(failure7.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must include a leaf segment"
@@ -412,7 +412,7 @@ describe("FilePath", () => {
     "rejects malformed UNC paths",
     Effect.fnUntraced(function* () {
       const failure8 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("\\\\server"));
-      const isFailure43 = Exit.hasFails(failure8);
+      const isFailure43 = Exit.isFailure(failure8) && Exit.hasFails(failure8);
       assertTrue(isFailure43);
       expect(pipe(failure8.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must use supported POSIX or Windows file path syntax"
@@ -424,13 +424,13 @@ describe("FilePath", () => {
     "rejects invalid Windows characters in Windows path families",
     Effect.fnUntraced(function* () {
       const failure9 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("C:\\bad<name.txt"));
-      const isFailure44 = Exit.hasFails(failure9);
+      const isFailure44 = Exit.isFailure(failure9) && Exit.hasFails(failure9);
       assertTrue(isFailure44);
       expect(pipe(failure9.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must use supported POSIX or Windows file path syntax"
       );
       const failure10 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("folder\\bad|name.txt"));
-      const isFailure45 = Exit.hasFails(failure10);
+      const isFailure45 = Exit.isFailure(failure10) && Exit.hasFails(failure10);
       assertTrue(isFailure45);
       expect(pipe(failure10.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must use supported POSIX or Windows file path syntax"
@@ -442,13 +442,13 @@ describe("FilePath", () => {
     "rejects Windows segments with trailing dots or spaces",
     Effect.fnUntraced(function* () {
       const failure11 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("C:\\bad.\\file.txt"));
-      const isFailure46 = Exit.hasFails(failure11);
+      const isFailure46 = Exit.isFailure(failure11) && Exit.hasFails(failure11);
       assertTrue(isFailure46);
       expect(pipe(failure11.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must use supported POSIX or Windows file path syntax"
       );
       const failure12 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("folder\\bad \\file.txt"));
-      const isFailure47 = Exit.hasFails(failure12);
+      const isFailure47 = Exit.isFailure(failure12) && Exit.hasFails(failure12);
       assertTrue(isFailure47);
       expect(pipe(failure12.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must use supported POSIX or Windows file path syntax"
@@ -460,13 +460,13 @@ describe("FilePath", () => {
     "rejects unsupported Windows namespace paths",
     Effect.fnUntraced(function* () {
       const failure13 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("\\\\?\\C:\\file.txt"));
-      const isFailure48 = Exit.hasFails(failure13);
+      const isFailure48 = Exit.isFailure(failure13) && Exit.hasFails(failure13);
       assertTrue(isFailure48);
       expect(pipe(failure13.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must use supported POSIX or Windows file path syntax"
       );
       const failure14 = yield* Effect.exit(decodeUnknownFilePathSchemaFilePath("\\\\.\\C:\\file.txt"));
-      const isFailure49 = Exit.hasFails(failure14);
+      const isFailure49 = Exit.isFailure(failure14) && Exit.hasFails(failure14);
       assertTrue(isFailure49);
       expect(pipe(failure14.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
         "File path must use supported POSIX or Windows file path syntax"
@@ -478,7 +478,7 @@ describe("FilePath", () => {
     "reports nested field failures at the filePath key",
     Effect.fnUntraced(function* () {
       const failure15 = yield* Effect.exit(decodeFilePathPayload({ filePath: "foo/" }));
-      const isFailure50 = Exit.hasFails(failure15);
+      const isFailure50 = Exit.isFailure(failure15) && Exit.hasFails(failure15);
       assertTrue(isFailure50);
       expect(pipe(failure15.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`at ["filePath"]`);
     })

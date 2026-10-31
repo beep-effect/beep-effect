@@ -1,7 +1,7 @@
 /** Syntax-only EV001-EV015 detectors. @packageDocumentation @since 0.0.0 */
 
 import { A, Str } from "@beep/utils";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { constFalse, constTrue, dual } from "effect/Function";
@@ -3141,10 +3141,10 @@ const statementTokenDigest = Effect.fnUntraced(function* (
   if (O.isSome(cached)) {
     return cached.value;
   }
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const tokens = Hex.encode(
     yield* crypto
-      .digest("SHA-256", new TextEncoder().encode(A.join(statementTokenParts(statement), "")))
+      .digest(Digest.sha256, new TextEncoder().encode(A.join(statementTokenParts(statement), "")))
       .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest statement tokens."))
   );
   MutableHashMap.set(statements, statement.getStart(), tokens);
@@ -3156,11 +3156,11 @@ const occurrenceAnchor = Effect.fnUntraced(function* (
   imports: EffectVitestImports,
   statements: MutableHashMap.MutableHashMap<number, string>
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const statement = node.getFirstAncestor((ancestor) => Node.isStatement(ancestor)) ?? node;
   const tokens = yield* statementTokenDigest(statement, statements);
   const digest = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(`${A.join(harnessLabelParts(node, imports), "")}${tokens}`))
+    .digest(Digest.sha256, new TextEncoder().encode(`${A.join(harnessLabelParts(node, imports), "")}${tokens}`))
     .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest occurrence identity."));
   return `v2:${Hex.encode(digest)}`;
 });
@@ -4506,13 +4506,13 @@ export const detectEffectVitestFindings: {
     sourceFile: SourceFile,
     file: string,
     owner: string
-  ): Effect.Effect<ReadonlyArray<EffectVitestFinding>, EffectVitestLintError, Crypto.Crypto>;
+  ): Effect.Effect<ReadonlyArray<EffectVitestFinding>, EffectVitestLintError, Digest.Digest>;
   (
     file: string,
     owner: string
   ): (
     sourceFile: SourceFile
-  ) => Effect.Effect<ReadonlyArray<EffectVitestFinding>, EffectVitestLintError, Crypto.Crypto>;
+  ) => Effect.Effect<ReadonlyArray<EffectVitestFinding>, EffectVitestLintError, Digest.Digest>;
 } = dual(
   3,
   Effect.fnUntraced(function* (sourceFile: SourceFile, file: string, owner: string) {

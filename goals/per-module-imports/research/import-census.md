@@ -769,7 +769,7 @@ The import form is part of the mapping. `namespace` means `import * as <preserve
 | `Sink` | 19 | 19 | 0 | 19 |  | `effect/Sink` | namespace | clean |
 | `Fiber` | 18 | 17 | 1 | 18 |  | `effect/Fiber` | namespace | clean |
 | `Runtime` | 18 | 18 | 0 | 18 |  | `effect/Runtime` | namespace | clean |
-| `Crypto` | 15 | 10 | 5 | 15 |  | `effect/Crypto` | namespace | clean |
+| `Crypto` | 15 | 10 | 5 | 15 |  | `effect/crypto/Digest`, `effect/crypto/SecureRandom` | namespace | clean |
 | `Semaphore` | 15 | 15 | 0 | 15 |  | `effect/Semaphore` | namespace | clean |
 | `Random` | 14 | 14 | 0 | 14 |  | `effect/Random` | namespace | clean |
 | `Graph` | 13 | 11 | 2 | 13 | G:1, Graph_:5 | `effect/Graph` | namespace | clean |

@@ -28,7 +28,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { constant, pipe } from "effect/Function";
+import { constant, flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -36,12 +36,14 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { PDFDict, PDFDocument, PDFHexString, PDFName, PDFRawStream, PDFRef, PDFString, StandardFonts } from "pdf-lib";
 import type * as PlatformError from "effect/PlatformError";
+import type * as CommandLine from "effect/process/CommandLine";
 
 const encoder = new TextEncoder();
 
@@ -326,19 +328,23 @@ const makeHandle = (exitCode: number, stderr = "", stdout = ""): ChildProcessSpa
 // Fake rsvg-convert writes a PDF with one page per input SVG at the
 // `--output` path; fake pdftoppm (not `-png`) writes the PPM fixture at the
 // requested prefix.
+/** The plain text a real spawner hands the child for one argv or environment word. */
+const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
+
 const fakeOutputs = (
   fs: FileSystem.FileSystem,
   command: ChildProcess.StandardCommand
 ): Effect.Effect<void, PlatformError.PlatformError> => {
+  const args = A.map(command.args, wordText);
   if (command.command === "rsvg-convert") {
-    const [, format = "", , output = ""] = command.args;
-    const inputs = command.args.slice(4);
+    const [, format = "", , output = ""] = args;
+    const inputs = args.slice(4);
     return A.some(inputs, Str.endsWith("no-header.svg"))
       ? fs.writeFileString(output, "not a pdf")
       : fakeRsvgPdf(A.length(inputs), format).pipe(Effect.flatMap((bytes) => fs.writeFile(output, bytes)));
   }
-  if (command.command === "pdftoppm" && !A.contains(command.args, "-png")) {
-    const source = A.get(command.args, A.length(command.args) - 2);
+  if (command.command === "pdftoppm" && !A.contains(args, "-png")) {
+    const source = A.get(args, A.length(args) - 2);
     const fixtureFor = (prefix: string) =>
       Str.endsWith("/base")(prefix)
         ? O.exists(source, Str.endsWith("blank.pdf"))
@@ -350,7 +356,7 @@ const fakeOutputs = (
             : markedPpm
           : ppmFixture;
     return pipe(
-      A.last(command.args),
+      A.last(args),
       O.match({ onNone: () => Effect.void, onSome: (prefix) => fs.writeFile(`${prefix}.ppm`, fixtureFor(prefix)) })
     );
   }
@@ -379,11 +385,13 @@ const makeFakeSpawnerLayer = (
             // The pinned fontconfig file lives in a scoped temp directory: read it while it exists.
             const fontconfig = command.options.env?.FONTCONFIG_FILE;
             if (fontconfig !== undefined) {
-              fontconfigs[A.length(fontconfigs)] = yield* fs.readFileString(fontconfig);
+              fontconfigs[A.length(fontconfigs)] = yield* fs.readFileString(wordText(fontconfig));
             }
             yield* fakeOutputs(fs, command);
             if (command.command === "pdftotext" && A.contains(command.args, "-bbox-layout")) {
-              const output = Match.value(O.getOrElse(A.get(command.args, A.length(command.args) - 2), () => "")).pipe(
+              const output = Match.value(
+                O.getOrElse(O.map(A.get(command.args, A.length(command.args) - 2), wordText), () => "")
+              ).pipe(
                 Match.when(Str.endsWith("broken.pdf"), () => "<html>no pages</html>"),
                 Match.when(Str.endsWith("invalid-coordinate.pdf"), () =>
                   Str.replace('xMin="72.000000"', 'xMin="not-a-number"')(bboxLayout)
@@ -441,7 +449,8 @@ describe("@beep/pdf-tools service", () => {
   describe("svgToPdf", () => {
     const commands: Array<ChildProcess.StandardCommand> = [];
     // Tests run concurrently: each one finds its own runs by its temp directory.
-    const runsIn = (dir: string) => A.filter(commands, (command) => A.some(command.args, Str.startsWith(dir)));
+    const runsIn = (dir: string) =>
+      A.filter(commands, (command) => A.some(command.args, flow(wordText, Str.startsWith(dir))));
     it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
       it.effect(
         "converts every SVG page in one rsvg-convert run, in page order, and stamps the requested version",
@@ -551,8 +560,11 @@ describe("@beep/pdf-tools service", () => {
       A.filter(
         commands,
         (command) =>
-          A.some(command.args, Str.includes(dir)) ||
-          A.some(R.values(command.options.env ?? {}), (value) => value !== undefined && Str.includes(dir)(value))
+          A.some(command.args, flow(wordText, Str.includes(dir))) ||
+          A.some(
+            R.values(command.options.env ?? {}),
+            (value) => value !== undefined && Str.includes(dir)(wordText(value))
+          )
       );
     it.layer(makeLayer(commands, 0, fontconfigs), { timeout: "30 seconds" })((it) => {
       it.effect(
@@ -1234,7 +1246,7 @@ describe("@beep/pdf-tools service", () => {
           const wide = yield* tools.inkCoverage(request(2));
           expect(wide.coverage).toBe(1);
           const rasterOf = (prefix: string) =>
-            A.findFirst(commands, (command) => O.exists(A.last(command.args), (last) => Str.endsWith(prefix)(last)));
+            A.findFirst(commands, (command) => O.exists(A.last(command.args), flow(wordText, Str.endsWith(prefix))));
           assertSome(
             O.map(rasterOf("/base"), (command) => command.args.slice(0, 9)),
             ["-r", "36", "-f", "3", "-l", "3", "-singlefile", "-aa", "no"]

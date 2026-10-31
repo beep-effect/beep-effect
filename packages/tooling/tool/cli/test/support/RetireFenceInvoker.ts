@@ -13,7 +13,7 @@
 
 import { WorktreeRemovalServiceLive } from "@beep/repo-cli/commands/Worktree";
 import { retireInvokingWorktree, SweepGitState, YeetRetirePlan } from "@beep/repo-cli/test/Yeet";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -54,7 +54,11 @@ const state = SweepGitState.make({
   pullRequestHeadOid: O.none(),
 });
 
-const layer = Layer.mergeAll(NodeServices.layer, WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer)));
+const layer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 await using runtime = ManagedRuntime.make(layer);
 
 const program = Effect.result(retireInvokingWorktree(plan, state)).pipe(

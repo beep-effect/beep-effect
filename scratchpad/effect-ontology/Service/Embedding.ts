@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
  * Service: Embedding
@@ -173,12 +173,12 @@ export class EmbeddingService extends Context.Service<EmbeddingService, Embeddin
 export const EmbeddingServiceLive: Layer.Layer<
   EmbeddingService,
   never,
-  EmbeddingProvider | EmbeddingCache | MetricsService | Crypto.Crypto
+  EmbeddingProvider | EmbeddingCache | MetricsService | Digest.Digest
 > = Layer.effect(
   EmbeddingService,
   Effect.gen(function* () {
     const provider = yield* EmbeddingProvider;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const hashVersionedEmbeddingKey = flow(
       hashVersionedEmbeddingKeyEffect,
       Effect.provideService(Crypto.Crypto, crypto)
@@ -296,5 +296,5 @@ export const EmbeddingServiceLive: Layer.Layer<
 export const EmbeddingServiceDefault: Layer.Layer<
   EmbeddingService,
   never,
-  EmbeddingProvider | EmbeddingCache | MetricsService | Crypto.Crypto
+  EmbeddingProvider | EmbeddingCache | MetricsService | Digest.Digest
 > = EmbeddingServiceLive;

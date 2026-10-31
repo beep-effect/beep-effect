@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import { EffectOutput } from "../internal/effectOutput.ts";
 import { CandorFilingScope } from "./CandorPolicy.values.ts";
 import type { SourceTextResolver } from "@beep/file-processing/SourceText";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { CandorRecordReadError } from "./CandorPolicy.errors.ts";
 import type { CandorGateVerdict } from "./CandorPolicy.values.ts";
 
@@ -169,7 +169,7 @@ export class CandorRecordReader extends Context.Service<CandorRecordReader, Cand
  * **Details**
  *
  * The requirement channel is deliberately explicit. `CandorRecordReader` is the
- * record seam. `SourceTextResolver` and `Crypto.Crypto` are what re-verifying a
+ * record seam. `SourceTextResolver` and `Digest.Digest` are what re-verifying a
  * persisted anchor costs, and both are satisfied by the caller — the
  * law-practice slice never owns a live layer for either, which is what keeps
  * source custody outside this slice.
@@ -199,7 +199,7 @@ export class CandorRecordReader extends Context.Service<CandorRecordReader, Cand
  *   evaluate: () => Effect.succeed(CandorGateVerdict.make({ scope, uncovered: [] })),
  * })
  *
- * // Evaluating needs the record seam, the source-text resolver, and Crypto,
+ * // Evaluating needs the record seam, the source-text resolver, and Digest,
  * // so the shape is composed here rather than run.
  * console.log(Effect.isEffect(shape.evaluate(scope))) // true
  * ```
@@ -214,7 +214,7 @@ export class CandorPolicyShape extends S.Opaque<CandorPolicyShape, { readonly br
       output: EffectOutput<
         CandorGateVerdict,
         CandorRecordReadError,
-        CandorRecordReader | SourceTextResolver | Crypto.Crypto
+        CandorRecordReader | SourceTextResolver | Digest.Digest
       >(),
     }).annotateKey({
       description: "Recompute the candor verdict for one filing from its recorded events and dispositions.",
@@ -265,7 +265,7 @@ export class CandorPolicyShape extends S.Opaque<CandorPolicyShape, { readonly br
  * )
  *
  * // The gate's own requirements stay in the channel: providing the tag does not
- * // satisfy the record seam, the resolver, or Crypto — the caller does.
+ * // satisfy the record seam, the resolver, or Digest — the caller does.
  * console.log(Effect.isEffect(program)) // true
  * ```
  *

@@ -15,7 +15,7 @@ import {
 } from "@beep/repo-cli/test/Lint";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertInstanceOf, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -409,8 +409,9 @@ export const Mode = withLiteralKitStatics(ModeBase)(brand(ModeBase));
 
 const TestLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 layer(TestLayer, { timeout: "60 seconds" })("schema-parity codemod run", (it) => {

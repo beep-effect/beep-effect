@@ -65,7 +65,8 @@ import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { readSquashCommitlintForPullRequest, renderSquashCommitlintVerdict } from "./SquashCommitlint.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
 import { mergeReadyCriterionHolds, YeetMergeReady } from "./Verdict.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -528,7 +529,11 @@ const findLiveMonitorForReady = (
 ): Effect.Effect<
   O.Option<ProofJobRecord>,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > =>
   ProofJobLauncher.make(context.repoRoot).pipe(
     Effect.flatMap((launcher) => launcher.list),
@@ -568,7 +573,7 @@ const recordInheritedThroughRest = (prNumber: number, entries: ReadonlyArray<Yee
 const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(function* (
   context: RepoRunContext,
   prNumber: number
-): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* ghOutput({
     args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
     cwd: context.repoRoot,
@@ -586,40 +591,44 @@ interface YeetReadyGateDependencies {
   readonly markReady?: (
     prNumber: number,
     confirmedHead: string
-  ) => Effect.Effect<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
   readonly read?: (
     context: RepoRunContext
   ) => Effect.Effect<
     YeetReadyPullRequestRead,
     YeetCommandError,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
   readonly readAuthor?: (
     context: RepoRunContext,
     prNumber: number
-  ) => Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
   readonly recordInherited?: (
     prNumber: number,
     entries: ReadonlyArray<YeetReadyInheritedRed>,
     headSha: string
-  ) => Effect.Effect<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
   readonly refresh?: (
     context: RepoRunContext,
     headSha: string
   ) => Effect.Effect<
     O.Option<FinalCheckRefreshVerdict>,
     YeetCommandError,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
   readonly requestReview?: (
     context: RepoRunContext,
     prNumber: number,
     confirmedHead: string
-  ) => Effect.Effect<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
   readonly squashCommitlint?: (
     context: RepoRunContext,
     prNumber: number
-  ) => Effect.Effect<SquashCommitlintReport, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<
+    SquashCommitlintReport,
+    YeetCommandError,
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  >;
 }
 
 /**
@@ -889,7 +898,11 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
 ): Effect.fn.Return<
   YeetReadyGateDecision,
   YeetCommandError | YeetReadyGateRefused,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const read = yield* (dependencies.read ?? readPullRequestForReady)(context);
   const decision = decideYeetReadyGate(read, inherited);

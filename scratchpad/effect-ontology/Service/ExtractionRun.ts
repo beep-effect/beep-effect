@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 
 /**
  * Service: Extraction Run Service
@@ -310,7 +310,7 @@ export class ExtractionRunService extends Context.Service<ExtractionRunService, 
 
 const makeExtractionRunService = Effect.gen(function* () {
   const storage = yield* StorageService;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
 
   const KeyIndex = S.Record(S.String, DocumentId);
   const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 });

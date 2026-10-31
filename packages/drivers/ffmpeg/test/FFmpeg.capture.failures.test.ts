@@ -24,6 +24,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const encoder = new TextEncoder();
 const encodeProbeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -144,6 +145,7 @@ const makeScriptedSpawnerLayer = (
             if (!ChildProcess.isStandardCommand(command)) {
               return makeHandle("", "unsupported command", 1);
             }
+            const args = commandArgs(command);
 
             commands[A.length(commands)] = command;
 
@@ -152,11 +154,11 @@ const makeScriptedSpawnerLayer = (
             }
 
             // The null muxer probe reports on stdout and writes no output file.
-            if (A.contains(command.args, "null")) {
+            if (A.contains(args, "null")) {
               return makeHandle(script.ffmpegStdout, "ffmpeg stderr", script.ffmpegExitCode);
             }
 
-            const target = A.last(command.args);
+            const target = A.last(args);
             if (O.isSome(target) && script.produceOutput && script.ffmpegExitCode === 0) {
               yield* Str.includes("%0")(target.value)
                 ? Effect.all([

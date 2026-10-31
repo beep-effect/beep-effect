@@ -8,7 +8,7 @@
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as Config from "effect/Config";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as ManagedRuntime from "effect/ManagedRuntime";
@@ -65,8 +65,8 @@ const withCsp = (cspHeader: string) => (response: NextResponse) => {
 const proxyRuntime = ManagedRuntime.make(NodeCrypto.layer);
 
 const nextNonce = Effect.gen(function* () {
-  const crypto = yield* Crypto.Crypto;
-  return btoa(yield* crypto.randomUUIDv4());
+  const crypto = yield* SecureRandom.SecureRandom;
+  return btoa(yield* crypto.uuidV4());
 });
 
 const respondWithNonce = (request: NextRequest, nonce: string): NextResponse => {

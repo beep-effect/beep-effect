@@ -42,7 +42,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, N, O, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -50,8 +50,8 @@ import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -73,7 +73,7 @@ const decodePersonMatchDeviceIndexesFromCsv = S.decodeEffect(PersonMatchDeviceIn
 const decodeUnknownPersonMatchModelOption = S.decodeUnknownOption(PersonMatchModel);
 const decodeUnknownPersonMatchWorkerReportOption = S.decodeUnknownOption(PersonMatchWorkerReport);
 
-const testLayer = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
+const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
 const runFilesCommand = Command.runWith(filesCommand, { version: "0.0.0" });
 const decodeArchivePoorCandidatesManifest = S.decodeUnknownEffect(S.fromJsonString(ArchivePoorCandidatesManifest));
 const decodeDetectBordersReport = S.decodeUnknownEffect(S.fromJsonString(DetectBordersReport));
@@ -841,9 +841,9 @@ const fileSize = Effect.fn("FilesTest.fileSize")(function* (filePath: string) {
 
 const sha256FileRef = Effect.fn("FilesTest.sha256FileRef")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const bytes = yield* fs.readFile(filePath);
-  return `sha256:${Hex.encode(yield* crypto.digest("SHA-256", bytes))}`;
+  return `sha256:${Hex.encode(yield* crypto.digest(Digest.sha256, bytes))}`;
 });
 
 it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command", (it) => {

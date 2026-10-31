@@ -11,6 +11,7 @@ import * as Context from "effect/Context";
 import * as CliConfig from "effect/cli/CliConfig";
 import * as GlobalFlag from "effect/cli/GlobalFlag";
 import * as Prompt from "effect/cli/Prompt";
+import * as TerminalCapabilities from "effect/cli/TerminalCapabilities";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -255,11 +256,16 @@ export abstract class CliPrompt {
    * real Node terminal then attaches a readline to stdin, which drops piped input and puts a TTY stdin into raw
    * mode. Not interactive, this terminal's input is an already-ended queue, its `readLine` fails as quit and its
    * `display` writes nothing, so any prompt, the wizard included, is quit at once and the real terminal is never
-   * read. Its `columns` and `rows` always come from the real one, so layout keeps working. Interactive, every
+   * read. Its `columns`, `rows` and `size` always come from the real one, so layout keeps working. Interactive, every
    * call passes through to the real terminal.
    *
    * The decision is made on every call, not when the layer is built, so a scope that narrows `CliInteractive`
    * later, such as an audience flag under `CliAudience.runWith`, gates it too.
+   *
+   * Because this gate owns the decision, it also sets core's `TerminalCapabilities.canPrompt` to `true`, keeping
+   * the ambient `canColor` and `canAnimate`. Core otherwise skips every fallback prompt when the process lacks a
+   * TTY, before `CliPrompt.fallback` can answer with its `otherwise` value; a core prompt that does run against a
+   * non-interactive gate still quits at once and fails as missing.
    *
    * It requires the real `Terminal`. `CliEnv.layer` installs it, after `TerminalEnv` is built from the real
    * terminal, so consumers do not compose it.
@@ -277,25 +283,32 @@ export abstract class CliPrompt {
    * @category layers
    * @since 0.0.0
    */
-  static readonly gateTerminal: Layer.Layer<Terminal.Terminal, never, Terminal.Terminal> = Layer.effect(
-    Terminal.Terminal,
-    Effect.gen(function* () {
-      const real = yield* Terminal.Terminal;
-      const endedInput = Effect.map(Queue.unbounded<Terminal.UserInput, Cause.Done>(), (queue) => {
-        Queue.endUnsafe(queue);
-        return queue;
-      });
-      return Terminal.make({
-        columns: real.columns,
-        rows: real.rows,
-        readInput: Effect.flatMap(CliInteractive, (interactive) => (interactive ? real.readInput : endedInput)),
-        readLine: Effect.flatMap(CliInteractive, (interactive) =>
-          interactive ? real.readLine : Effect.fail(Terminal.QuitError.make({}))
-        ),
-        display: (text) =>
-          Effect.flatMap(CliInteractive, (interactive) => (interactive ? real.display(text) : Effect.void)),
-      });
-    })
+  static readonly gateTerminal: Layer.Layer<Terminal.Terminal, never, Terminal.Terminal> = Layer.merge(
+    Layer.effect(
+      Terminal.Terminal,
+      Effect.gen(function* () {
+        const real = yield* Terminal.Terminal;
+        const endedInput = Effect.map(Queue.unbounded<Terminal.UserInput, Cause.Done>(), (queue) => {
+          Queue.endUnsafe(queue);
+          return queue;
+        });
+        return Terminal.make({
+          columns: real.columns,
+          rows: real.rows,
+          size: real.size,
+          readInput: Effect.flatMap(CliInteractive, (interactive) => (interactive ? real.readInput : endedInput)),
+          readLine: Effect.flatMap(CliInteractive, (interactive) =>
+            interactive ? real.readLine : Effect.fail(Terminal.QuitError.make({}))
+          ),
+          display: (text) =>
+            Effect.flatMap(CliInteractive, (interactive) => (interactive ? real.display(text) : Effect.void)),
+        });
+      })
+    ),
+    Layer.effect(
+      TerminalCapabilities.TerminalCapabilities,
+      Effect.map(TerminalCapabilities.TerminalCapabilities, (capabilities) => ({ ...capabilities, canPrompt: true }))
+    )
   );
 
   /**

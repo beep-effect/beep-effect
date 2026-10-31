@@ -20,7 +20,7 @@ import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import { OpaqueDefect } from "../../../internal/schema/OpaqueDefect.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 export { fencedLineState, jsdocCommentsFromSource } from "../../../internal/jsdoc/JSDocSections.ts";
@@ -504,7 +504,7 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   QualityArtifactGeneratorError,
-  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const command = "bun run topo-sort";
   const result = yield* runCaptured({

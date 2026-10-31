@@ -33,6 +33,7 @@ import {
 } from "@beep/openclaw/OpenclawRender";
 import { it } from "@beep/test-runner";
 import { currentHostArchitecture, currentHostPlatform } from "@beep/utils/HostProcess";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -307,7 +308,7 @@ const makeWorkbench = Effect.gen(function* () {
 
 const acceptanceLayer = Layer.provideMerge(
   Layer.mergeAll(OpenclawCli.makeLayer(), Layer.effect(OpenclawItWorkbench, Effect.orDie(makeWorkbench))),
-  NodeServices.layer
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest)
 );
 
 const workbenchContext = (bench: OpenclawItWorkbenchShape, configPath: O.Option<string>): OpenclawInvocationContext =>

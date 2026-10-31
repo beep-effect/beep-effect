@@ -1,6 +1,7 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { makeOpenAiEmbeddingModelLive } from "@beep/openai";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Effect from "effect/Effect";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
@@ -34,7 +35,13 @@ const LoggingLive = Logger.layer([Logger.withConsoleError(Logger.formatLogFmt)],
 // Bun honors this non-standard RequestInit extension to lift that ceiling.
 const FetchTimeoutDisabledLive = Layer.succeed(FetchHttpClient.RequestInit, { timeout: false } as RequestInit);
 
-const InfrastructureLive = Layer.mergeAll(BunServices.layer, FetchTimeoutDisabledLive, LabConfigLive, LoggingLive);
+const InfrastructureLive = Layer.mergeAll(
+  BunServices.layer,
+  BunCrypto.layer,
+  FetchTimeoutDisabledLive,
+  LabConfigLive,
+  LoggingLive
+);
 
 const P1ServicesLive = Layer.merge(CorpusManifestBuilderLive, F1CatalogLive).pipe(Layer.provide(InfrastructureLive));
 

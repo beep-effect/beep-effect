@@ -26,6 +26,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -38,7 +39,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
-import { scripted } from "./fixtures.ts";
+import { commandArgs, scripted } from "./fixtures.ts";
 import type { ScriptResult } from "./fixtures.ts";
 
 const cwd = "/repo";
@@ -89,6 +90,8 @@ const SSH_PROBE_KEYS = ["core.sshCommand", "ssh.variant"];
  */
 const isSshProbe = (args: ReadonlyArray<string>): boolean =>
   args.length === 3 && args[0] === "config" && args[1] === "--get" && SSH_PROBE_KEYS.includes(args[2] ?? "");
+
+const isSshProbeCommand = flow(commandArgs, isSshProbe);
 
 /**
  * Answers the ssh probe as "unset" (a silent exit 1, the `quiet` shape) and
@@ -3232,9 +3235,10 @@ describe("Git — remaining tiers (round 2)", () => {
         ChildProcessSpawner.ChildProcessSpawner,
         ChildProcessSpawner.make((command) => {
           if (!ChildProcess.isStandardCommand(command)) return Effect.die("piped commands not scripted");
-          seen.push({ args: command.args, options: command.options });
-          const probe = isSshProbe(command.args);
-          const asked = command.args[2];
+          const args = commandArgs(command);
+          seen.push({ args, options: command.options });
+          const probe = isSshProbe(args);
+          const asked = args[2];
           const answer =
             asked === "core.sshCommand" ? options.configured : asked === "ssh.variant" ? options.variant : undefined;
           const unset = probe && answer === undefined;
@@ -3459,7 +3463,7 @@ describe("Git — remaining tiers (round 2)", () => {
             return Effect.succeed(
               ChildProcessSpawner.makeHandle({
                 pid: ChildProcessSpawner.ProcessId(1),
-                exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbe(command.args) ? 1 : 0)),
+                exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbeCommand(command) ? 1 : 0)),
                 isRunning: Effect.succeed(false),
                 kill: () => Effect.void,
                 stdin: Sink.drain,
@@ -3524,11 +3528,11 @@ describe("Git — remaining tiers (round 2)", () => {
             ChildProcessSpawner.ChildProcessSpawner,
             ChildProcessSpawner.make((command) => {
               if (!ChildProcess.isStandardCommand(command)) return Effect.die("piped commands not scripted");
-              seen.push({ args: command.args, options: command.options });
+              seen.push({ args: commandArgs(command), options: command.options });
               return Effect.succeed(
                 ChildProcessSpawner.makeHandle({
                   pid: ChildProcessSpawner.ProcessId(1),
-                  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbe(command.args) ? 1 : 0)),
+                  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(isSshProbeCommand(command) ? 1 : 0)),
                   isRunning: Effect.succeed(false),
                   kill: () => Effect.void,
                   stdin: Sink.drain,

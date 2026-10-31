@@ -25,7 +25,7 @@ import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import type { EffectVitestLintError } from "@beep/repo-cli/commands/Lint";
 import type * as Config from "effect/Config";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AuditError, CommandFailed, LedgerInvalid, LedgerMissing } from "./Audit.errors.ts";
@@ -72,7 +72,7 @@ export type AuditRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
-  | Crypto.Crypto;
+  | Digest.Digest;
 
 /**
  * Every failure a runner method can raise: its own tagged errors and

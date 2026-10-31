@@ -46,7 +46,7 @@ import {
   RefsTimerOptions,
   RefsTimerUnit,
 } from "./Refs.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Duration from "effect/Duration";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ReferenceMember } from "./Refs.schemas.ts";
@@ -173,7 +173,7 @@ const buildArgs = (member: ReferenceMember, jobs: number, tier = member.tier): R
 const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (owner: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
   const manifestPath = path.join(owner, "scripts", "references.json");
   const readManifest = Effect.fn("ReferenceWorkspace.readManifest")(
     function* () {
@@ -801,7 +801,7 @@ export const referenceWorkspaceLayer = (
 ): Layer.Layer<
   ReferenceWorkspace,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > => Layer.effect(ReferenceWorkspace, makeReferenceWorkspace(owner));
 
 /**

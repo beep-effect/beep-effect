@@ -16,7 +16,7 @@ import { $CiopsId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -167,7 +167,7 @@ const directoryOf = (path: string): string =>
     O.getOrElse(Str.lastIndexOf("/")(path), () => 0)
   )(path);
 
-const makeLive = (fs: FileSystem.FileSystem, crypto: Crypto.Crypto) => {
+const makeLive = (fs: FileSystem.FileSystem, crypto: Digest.Digest["Service"]) => {
   // Reads raw bytes, checks their SHA-256 against the pin before any decode, then decodes UTF-8.
   const readVerified = Effect.fnUntraced(function* (
     role: KpiInputRole,
@@ -177,9 +177,7 @@ const makeLive = (fs: FileSystem.FileSystem, crypto: Crypto.Crypto) => {
     const bytes = yield* fs
       .readFile(path)
       .pipe(Effect.mapError(() => readFailure(role, path, "The file could not be read.")));
-    const digest = yield* crypto
-      .digest("SHA-256", bytes)
-      .pipe(Effect.mapError(() => readFailure(role, path, "The file could not be digested.")));
+    const digest = yield* crypto.digest(Digest.sha256, bytes);
     const actualSha256 = Sha256Hex.make(Hex.encode(digest));
     if (actualSha256 !== expectedSha256) {
       return yield* KpiDigestMismatchError.make({ role, path, expectedSha256, actualSha256 });
@@ -316,11 +314,11 @@ const makeLive = (fs: FileSystem.FileSystem, crypto: Crypto.Crypto) => {
  * @category layers
  * @since 0.0.0
  */
-export const CiOpsKpiLive: Layer.Layer<CiOpsKpi, never, FileSystem.FileSystem | Crypto.Crypto> = Layer.effect(
+export const CiOpsKpiLive: Layer.Layer<CiOpsKpi, never, FileSystem.FileSystem | Digest.Digest> = Layer.effect(
   CiOpsKpi,
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     return makeLive(fs, crypto);
   })
 );

@@ -79,6 +79,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import { waitTimesOut } from "./support/ProofJobWait.ts";
 import type {
   ProofJobLauncherShape,
@@ -251,12 +252,12 @@ const platform = Layer.mergeAll(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected piped process");
-      if (command.args[0] === "run" && command.args[1] === "list") return Effect.succeed(handle("[]"));
-      if (A.contains(command.args, "LoadState")) return Effect.succeed(handle("loaded\n"));
+      if (commandArgs(command)[0] === "run" && commandArgs(command)[1] === "list") return Effect.succeed(handle("[]"));
+      if (A.contains(commandArgs(command), "LoadState")) return Effect.succeed(handle("loaded\n"));
       if (
         command.command === "systemctl" &&
-        A.contains(command.args, `beep-proof-${jobUuid}.service`) &&
-        A.contains(command.args, "ActiveState")
+        A.contains(commandArgs(command), `beep-proof-${jobUuid}.service`) &&
+        A.contains(commandArgs(command), "ActiveState")
       ) {
         return Effect.succeed(
           handle(
@@ -278,7 +279,7 @@ const platform = Layer.mergeAll(
           )
         );
       }
-      return Effect.die(`unexpected process: ${command.command} ${A.join(command.args, " ")}`);
+      return Effect.die(`unexpected process: ${command.command} ${A.join(commandArgs(command), " ")}`);
     })
   )
 );

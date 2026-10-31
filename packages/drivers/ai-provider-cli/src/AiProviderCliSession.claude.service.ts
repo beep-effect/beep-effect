@@ -5,7 +5,7 @@
  */
 import { $AiProviderCliId } from "@beep/identity";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -79,8 +79,8 @@ const isInitializationNotice = S.is(InitializationNotice);
 export const openClaude = Effect.fn("AiProviderCliSession.openClaude")(function* (profile: ManagedLaunchProfile) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
-  const sessionId = yield* crypto.randomUUIDv4().pipe(transportFailure("session-id"));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const sessionId = yield* crypto.uuidV4().pipe(transportFailure("session-id"));
   const tools = R.fromEntries(
     A.map(profile.tools, (tool) => [tool.name, { command: tool.command, args: tool.args, env: tool.env }])
   );

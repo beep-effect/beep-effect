@@ -8,7 +8,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -80,12 +80,12 @@ const assertUntrustedReceipt = Effect.fn("CalibrationCLITest.assertUntrustedRece
     calibration: yield* S.encodeEffect(RetentionCalibration)(untrusted),
   });
   yield* fs.writeFileString(fixturePath, text);
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   yield* fs.writeFileString(
     manifestPath,
     yield* S.encodeEffect(Json)({
       ...manifest,
-      sha256: Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text))),
+      sha256: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text))),
     })
   );
   const output = path.join(temp, "bundle.json");
@@ -153,14 +153,14 @@ it.layer(
         // excludes every receipt, including claims of human approval or historical validity.
         const text = yield* S.encodeEffect(Json)({ ...fixture, calibration: submission });
         yield* fs.writeFileString(fixturePath, text);
-        const crypto = yield* Crypto.Crypto;
+        const crypto = yield* Digest.Digest;
         const manifestPath = path.join(packet, "ops/dataset-v1.json");
         const manifest = yield* S.decodeEffect(Json)(yield* fs.readFileString(manifestPath));
         yield* fs.writeFileString(
           manifestPath,
           yield* S.encodeEffect(Json)({
             ...manifest,
-            sha256: Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text))),
+            sha256: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text))),
           })
         );
         const output = path.join(temp, "bundle.json");
@@ -197,14 +197,14 @@ it.layer(
         const text = yield* S.encodeUnknownEffect(FixtureJson)(altered);
         yield* fs.writeFileString(fixturePath, text);
         if (mode !== "digest") {
-          const crypto = yield* Crypto.Crypto;
+          const crypto = yield* Digest.Digest;
           const manifestPath = path.join(packet, "ops/dataset-v1.json");
           const manifest = yield* S.decodeEffect(Json)(yield* fs.readFileString(manifestPath));
           yield* fs.writeFileString(
             manifestPath,
             yield* S.encodeEffect(Json)({
               ...manifest,
-              sha256: Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text))),
+              sha256: Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text))),
             })
           );
         }

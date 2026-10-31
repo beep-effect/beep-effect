@@ -38,42 +38,42 @@ describe("Slug", () => {
     Effect.fnUntraced(function* () {
       const failure2 = yield* Effect.exit(decodeUnknownSlugEffect("My-Post"));
       pipe(failure2, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure2)) {
+      if (Exit.isFailure(failure2) && Exit.hasFails(failure2)) {
         expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must use lowercase ASCII letters, digits, and hyphens only"
         );
       }
       const failure3 = yield* Effect.exit(decodeUnknownSlugEffect("my_post"));
       pipe(failure3, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure3)) {
+      if (Exit.isFailure(failure3) && Exit.hasFails(failure3)) {
         expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must use lowercase ASCII letters, digits, and hyphens only"
         );
       }
       const failure4 = yield* Effect.exit(decodeUnknownSlugEffect("my post"));
       pipe(failure4, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure4)) {
+      if (Exit.isFailure(failure4) && Exit.hasFails(failure4)) {
         expect(pipe(failure4.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must use lowercase ASCII letters, digits, and hyphens only"
         );
       }
       const failure5 = yield* Effect.exit(decodeUnknownSlugEffect("blog/post"));
       pipe(failure5, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure5)) {
+      if (Exit.isFailure(failure5) && Exit.hasFails(failure5)) {
         expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must use lowercase ASCII letters, digits, and hyphens only"
         );
       }
       const failure6 = yield* Effect.exit(decodeUnknownSlugEffect("post!"));
       pipe(failure6, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure6)) {
+      if (Exit.isFailure(failure6) && Exit.hasFails(failure6)) {
         expect(pipe(failure6.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must use lowercase ASCII letters, digits, and hyphens only"
         );
       }
       const failure7 = yield* Effect.exit(decodeUnknownSlugEffect("café"));
       pipe(failure7, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure7)) {
+      if (Exit.isFailure(failure7) && Exit.hasFails(failure7)) {
         expect(pipe(failure7.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must use lowercase ASCII letters, digits, and hyphens only"
         );
@@ -86,14 +86,14 @@ describe("Slug", () => {
     Effect.fnUntraced(function* () {
       const failure8 = yield* Effect.exit(decodeUnknownSlugEffect("-post"));
       pipe(failure8, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure8)) {
+      if (Exit.isFailure(failure8) && Exit.hasFails(failure8)) {
         expect(pipe(failure8.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must not start with a hyphen"
         );
       }
       const failure9 = yield* Effect.exit(decodeUnknownSlugEffect("post-"));
       pipe(failure9, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure9)) {
+      if (Exit.isFailure(failure9) && Exit.hasFails(failure9)) {
         expect(pipe(failure9.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must not end with a hyphen"
         );
@@ -106,7 +106,7 @@ describe("Slug", () => {
     Effect.fnUntraced(function* () {
       const failure10 = yield* Effect.exit(decodeUnknownSlugEffect("my--post"));
       pipe(failure10, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure10)) {
+      if (Exit.isFailure(failure10) && Exit.hasFails(failure10)) {
         expect(pipe(failure10.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Slug must not contain repeated hyphens"
         );
@@ -124,7 +124,7 @@ describe("Slug", () => {
     Effect.fnUntraced(function* () {
       const failure11 = yield* Effect.exit(decodeSlugPayloadEffect({ slug: "my_post" }));
       pipe(failure11, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure11)) {
+      if (Exit.isFailure(failure11) && Exit.hasFails(failure11)) {
         expect(pipe(failure11.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`at ["slug"]`);
       }
     })

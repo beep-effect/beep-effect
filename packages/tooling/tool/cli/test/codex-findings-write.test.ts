@@ -51,7 +51,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
           force: true,
           documents: [...sampleDocuments, doc(reflectionPath, `${contents}/home/private-owner/work\n`)],
         }).pipe(
-          Effect.map(() => false),
+          Effect.as(false),
           Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed(true))
         );
         expect(rejected).toBe(true);
@@ -94,7 +94,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         yield* fs.writeFileString(`goals/${SLUG}/README.md`, "hand written\n");
 
         const outcome = yield* writeIn({}).pipe(
-          Effect.map(() => "written"),
+          Effect.as("written"),
           Effect.catchTag("CodexPacketWriteError", (error) => Effect.succeed(error.reason))
         );
 
@@ -113,7 +113,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         const outcome = yield* writeIn({
           documents: [doc("README.md", "# ok\n"), doc("ops", "not a directory\n"), doc("ops/manifest.json", "{}\n")],
         }).pipe(
-          Effect.map(() => "written"),
+          Effect.as("written"),
           Effect.catchTag("CodexPacketWriteError", (error) => Effect.succeed(error.reason))
         );
 
@@ -129,7 +129,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
       Effect.gen(function* () {
         yield* temporaryWorkingDirectory;
         const outcome = yield* writeIn({ documents: [doc("ops/export.csv", "=SUM(1,2)\n")] }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed("refused"))
         );
         expect(outcome).toBe("refused");
@@ -165,7 +165,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         const outcome = yield* writeIn({
           documents: [doc("findings/CSF-001.md", "The resolver reads /home/someone/notes.txt.\n")],
         }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed("refused"))
         );
 
@@ -210,7 +210,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
           documents: [doc("raw/payload.json", '{"note":"op://Private/OpenAI/credential"}', false)],
           force: true,
         }).pipe(
-          Effect.map(() => "written"),
+          Effect.as("written"),
           Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed("refused"))
         );
 
@@ -230,7 +230,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
           documents: [doc("README.md", "# ok\n"), doc("ops", "not a directory\n"), doc("ops/manifest.json", "{}\n")],
           force: true,
         }).pipe(
-          Effect.map(() => "written"),
+          Effect.as("written"),
           Effect.catchTag("CodexPacketWriteError", (error) => Effect.succeed(error.reason))
         );
 
@@ -266,7 +266,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
           documents: [doc("raw/payload.json", '{"cookie":"__cf_bm=AbCdEf12345"}', false)],
           dryRun: true,
         }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsRedactionError", () => Effect.succeed("refused"))
         );
 
@@ -302,7 +302,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
         const outcome = yield* writeIn({
           documents: [doc("raw/payload.json", `{"title":"${secret}"}`, false)],
         }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsRedactionError", (error) =>
             Effect.succeed(`${error.message} ${A.join(error.surfaces, " ")}`)
           )
@@ -334,7 +334,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
       const fs = yield* FileSystem.FileSystem;
       yield* fs.makeDirectory("goals", { recursive: true });
       return yield* Effect.try(() => PacketDocument.make({ contents: "x\n", path, tracked: true })).pipe(
-        Effect.map(() => "accepted"),
+        Effect.as("accepted"),
         Effect.orElseSucceed(() => "rejected")
       );
     });
@@ -369,7 +369,7 @@ it.layer(NodeTestLayer, { timeout: "5 seconds" })((it) => {
           repoRoot: process.cwd(),
           slug: SLUG,
         }).pipe(
-          Effect.map(() => "written"),
+          Effect.as("written"),
           Effect.catchTag("CodexPacketWriteError", (error) => Effect.succeed(error.reason))
         );
 

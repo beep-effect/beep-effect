@@ -40,7 +40,8 @@ import {
 import { writeIssueArtifacts } from "./IssueArtifacts.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
@@ -299,7 +300,7 @@ export const failPublishScopeWithPacket = Effect.fn("Yeet.failPublishScopeWithPa
     readonly remediation: string;
     readonly subCategory: string;
   }
-): Effect.fn.Return<never, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<never, YeetCommandError, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const summary = `${scope.message}\n${summarizePublishPaths(scope.paths)}\nRemedy: ${scope.remediation}`;
   const issue = QualityIssue.make({
     blocking: true,
@@ -539,7 +540,7 @@ export const stashUnstagedWorktree = Effect.fn("Yeet.stashUnstagedWorktree")(fun
 ): Effect.fn.Return<
   O.Option<YeetStashState>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Digest.Digest
 > {
   const unstagedPaths = yield* collectUnstagedTrackedPaths(context.repoRoot);
   const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
@@ -564,7 +565,11 @@ export const stashUnstagedWorktree = Effect.fn("Yeet.stashUnstagedWorktree")(fun
 const locateStashRef = Effect.fn("Yeet.locateStashRef")(function* (
   repoRoot: string,
   stash: YeetStashState
-): Effect.fn.Return<O.Option<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<string>,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const listing = yield* runGitOutput(repoRoot, ["stash", "list", "--format=%H %gd %s"]);
   return pipe(
     Str.split(/\r?\n/u)(listing),
@@ -614,7 +619,7 @@ const locateStashRef = Effect.fn("Yeet.locateStashRef")(function* (
 export const restoreStashedWorktree = Effect.fn("Yeet.restoreStashedWorktree")(function* (
   context: RepoRunContext,
   stash: YeetStashState
-): Effect.fn.Return<void, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const failureDetail = yield* Effect.gen(function* () {
     const stashRef = yield* locateStashRef(context.repoRoot, stash);
     if (O.isNone(stashRef)) {
@@ -757,7 +762,7 @@ export const restorePublishStashOnFailure =
   (scope: { readonly context: RepoRunContext; readonly stash: O.Option<YeetStashState> }) =>
   <A, E, R>(
     effect: Effect.Effect<A, E, R>
-  ): Effect.Effect<A, E, R | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+  ): Effect.Effect<A, E, R | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
     O.match(scope.stash, {
       onNone: () => effect,
       onSome: (state) => Effect.onError(effect, () => restoreStashedWorktree(scope.context, state)),
@@ -794,14 +799,18 @@ export const restorePublishStashOnFailure =
  */
 export const assessBaseFreshness = Effect.fn("Yeet.assessBaseFreshness")(function* (
   context: RepoRunContext
-): Effect.fn.Return<YeetBaseFreshness, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetBaseFreshness,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
-    Effect.map(Str.trim),
-    Effect.mapError(
-      YeetCommandError.new(
+    Effect.mapBoth({
+      onFailure: YeetCommandError.new(
         `yeet publish could not compute a merge-base between ${context.base} and HEAD. Rebase onto the base ref before publishing.`
-      )
-    )
+      ),
+      onSuccess: Str.trim,
+    })
   );
   const behindCount = yield* runGitOutput(context.repoRoot, [
     "rev-list",
@@ -895,7 +904,7 @@ export const enforceBaseFreshness = Effect.fn("Yeet.enforceBaseFreshness")(funct
 ): Effect.fn.Return<
   YeetBaseFreshness,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const freshness = yield* assessBaseFreshness(context);
   if (freshness.behindCount === 0) {
@@ -925,7 +934,11 @@ export const enforceBaseFreshness = Effect.fn("Yeet.enforceBaseFreshness")(funct
 
 const collectCurrentUpstreamBranch = Effect.fn("Yeet.collectCurrentUpstreamBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<O.Option<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<string>,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runRepoCommandCapture(
     "git",
     ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
@@ -970,7 +983,7 @@ const collectCurrentUpstreamBranch = Effect.fn("Yeet.collectCurrentUpstreamBranc
  */
 export const warnOnMismatchedPublishUpstream = Effect.fn("Yeet.warnOnMismatchedPublishUpstream")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const upstream = yield* collectCurrentUpstreamBranch(context.repoRoot);
   if (O.isNone(upstream)) {
     return;
@@ -987,7 +1000,7 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
 ): Effect.fn.Return<
   O.Option<YeetExistingCommitPublishIntent>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const remoteRef = `origin/${context.branch}`;
   const remoteRefExists = yield* runRepoCommandCapture(
@@ -997,8 +1010,10 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
   ).pipe(Effect.mapError(YeetCommandError.new(`Failed to inspect publish target ${remoteRef}.`)));
   const comparisonRef = remoteRefExists.exitCode === 0 ? remoteRef : context.base;
   const aheadCount = yield* runGitOutput(context.repoRoot, ["rev-list", "--count", `${comparisonRef}..HEAD`]).pipe(
-    Effect.map((output) => Number(Str.trim(output))),
-    Effect.mapError(YeetCommandError.new(`Failed to inspect local commits ahead of ${comparisonRef}.`))
+    Effect.mapBoth({
+      onFailure: YeetCommandError.new(`Failed to inspect local commits ahead of ${comparisonRef}.`),
+      onSuccess: (output) => Number(Str.trim(output)),
+    })
   );
   if (aheadCount === 0) {
     return O.none();
@@ -1015,7 +1030,11 @@ const emptyIndexPublishIntent = Effect.fn("Yeet.emptyIndexPublishIntent")(functi
   context: RepoRunContext,
   unstagedPaths: ReadonlyArray<string>,
   untrackedPaths: ReadonlyArray<string>
-): Effect.fn.Return<YeetPublishIntent, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetPublishIntent,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const cleanWorktree = A.isReadonlyArrayEmpty(unstagedPaths) && A.isReadonlyArrayEmpty(untrackedPaths);
   const existingCommitIntent = cleanWorktree
     ? yield* collectExistingCommitPublishIntent(context)
@@ -1035,7 +1054,11 @@ const stagedOnlyPublishIntent = Effect.fn("Yeet.stagedOnlyPublishIntent")(functi
   context: RepoRunContext,
   stagedPaths: ReadonlyArray<string>,
   unstagedPaths: ReadonlyArray<string>
-): Effect.fn.Return<YeetPublishIntent, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  YeetPublishIntent,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
+> {
   const splitPaths = partiallyStagedPaths(stagedPaths, unstagedPaths);
   if (!A.isReadonlyArrayEmpty(splitPaths)) {
     return yield* failPublishScopeWithPacket(context, {
@@ -1055,7 +1078,11 @@ const wholeWorktreePublishIntent = Effect.fn("Yeet.wholeWorktreePublishIntent")(
   stagedPaths: ReadonlyArray<string>,
   unstagedPaths: ReadonlyArray<string>,
   untrackedPaths: ReadonlyArray<string>
-): Effect.fn.Return<YeetPublishIntent, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  YeetPublishIntent,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
+> {
   if (!A.isReadonlyArrayEmpty(untrackedPaths)) {
     return yield* failPublishScopeWithPacket(context, {
       message:
@@ -1124,7 +1151,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
 ): Effect.fn.Return<
   YeetPublishIntent,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
 
@@ -1177,7 +1204,7 @@ export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishInt
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
   const unexpectedStagedPaths = publishPathsOutsideIntent(intent.paths, stagedPaths);
@@ -1214,7 +1241,7 @@ export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishInt
 const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublishIntentPaths")(function* (
   context: RepoRunContext,
   intent: YeetStagedPublishIntent
-): Effect.fn.Return<ReadonlyArray<string>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ReadonlyArray<string>, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const existingPaths = yield* Effect.forEach(intent.paths, (filePath) =>
@@ -1266,7 +1293,7 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   yield* validatePublishIntentStillSafe(context, intent, stagedOnly);
   const existingPaths = yield* collectExistingPublishIntentPaths(context, intent);
@@ -1361,7 +1388,7 @@ export const validatePostCommitProofDidNotChangeWorktree = Effect.fn(
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
   const changedPaths = sortedUniquePaths([...stagedPaths, ...unstagedPaths, ...untrackedPaths]);

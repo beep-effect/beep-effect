@@ -12,7 +12,7 @@ import { OptionWrite, QuestionFact, QuestionOption, ReviewItem } from "@beep/law
 import { equals, Order as LocalDateOrder } from "@beep/schema/LocalDate";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, pipe } from "effect/Function";
@@ -21,7 +21,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { DocketIntakeError } from "./DocketIntake.ports.ts";
 import {
   DocketCandidateDateSource,
   DocketEntryFlag,
@@ -32,6 +31,7 @@ import { DocketQuestionEmail, DocketQuestionItemId } from "./DocketQuestions.sch
 import type { ReviewItemId } from "@beep/law-practice-domain";
 import type { LocalDate } from "@beep/schema/LocalDate";
 import type { QuestionReviewItem } from "../QuestionQueue/QuestionQueue.schemas.ts";
+import type { DocketIntakeError } from "./DocketIntake.ports.ts";
 import type { DocketCandidateDate, DocketNeedsReview } from "./DocketIntake.schemas.ts";
 import type { DocketQuestionInput } from "./DocketQuestions.schemas.ts";
 
@@ -45,11 +45,10 @@ const textEncoder = new TextEncoder();
 const decodeItemId = S.decodeUnknownOption(DocketQuestionItemId);
 
 // The message part of a question's item id; see `docketQuestionDigest`.
-const digestWith = (crypto: Crypto.Crypto, messageId: string): Effect.Effect<string, DocketIntakeError> =>
-  crypto.digest("SHA-256", textEncoder.encode(messageId)).pipe(
-    Effect.map((digest) => Str.slice(0, ID_HEX_LENGTH)(Hex.encode(digest))),
-    Effect.mapError(() => DocketIntakeError.make({ cause: "digest", stage: "review" }))
-  );
+const digestWith = (crypto: Digest.Digest["Service"], messageId: string): Effect.Effect<string> =>
+  crypto
+    .digest(Digest.sha256, textEncoder.encode(messageId))
+    .pipe(Effect.map((digest) => Str.slice(0, ID_HEX_LENGTH)(Hex.encode(digest))));
 
 const MONTHS = [
   "January",
@@ -444,33 +443,25 @@ export const withDocketQuestionEmail: {
  * **Details**
  *
  * The same message always gives the same digest, so a message id from the
- * write journal can be matched to the question raised for it. A digest
- * failure fails with `DocketIntakeError` at stage `review`.
+ * write journal can be matched to the question raised for it. Digesting
+ * cannot fail.
  *
  * **Example** (Digest a message id)
  *
  * ```ts
  * import { docketQuestionDigest } from "@beep/law-practice-use-cases/DocketIntake"
- * import * as Crypto from "effect/Crypto"
+ * import * as Digest from "effect/crypto/Digest"
  * import * as Effect from "effect/Effect"
  *
- * const webCrypto = Crypto.make({
- *   digest: (algorithm, data) =>
- *     Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data))).pipe(
- *       Effect.map((buffer) => new Uint8Array(buffer))
- *     ),
- *   randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size))
- * })
- *
- * const program = docketQuestionDigest("message-1").pipe(Effect.provideService(Crypto.Crypto, webCrypto))
+ * const program = docketQuestionDigest("message-1").pipe(Effect.provide(Digest.layerWebCrypto))
  * Effect.runPromise(program).then(console.log) // "9deb880b43bdf6f465a0afb130aed71b"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const docketQuestionDigest = (messageId: string): Effect.Effect<string, DocketIntakeError, Crypto.Crypto> =>
-  Effect.flatMap(Crypto.Crypto, (crypto) => digestWith(crypto, messageId));
+export const docketQuestionDigest = (messageId: string): Effect.Effect<string, never, Digest.Digest> =>
+  Effect.flatMap(Digest.Digest, (crypto) => digestWith(crypto, messageId));
 
 /**
  * Service shape of the docket question producer.
@@ -513,14 +504,13 @@ export interface DocketQuestionsShape {
 export class DocketQuestions extends Context.Service<DocketQuestions, DocketQuestionsShape>()($I`DocketQuestions`) {}
 
 /**
- * Layer providing the docket question producer over the `Crypto` service.
+ * Layer providing the docket question producer over the `Digest` service.
  *
  * **Details**
  *
  * The item id digests the message id, so the same message and reason always
  * give the same question, and the id stays short and calendar-safe whatever
- * the provider's message id looks like. A digest failure fails with
- * `DocketIntakeError` at stage `review`.
+ * the provider's message id looks like.
  *
  * **Example** (Provide the producer)
  *
@@ -534,9 +524,9 @@ export class DocketQuestions extends Context.Service<DocketQuestions, DocketQues
  * @category layers
  * @since 0.0.0
  */
-export const DocketQuestionsLive: Layer.Layer<DocketQuestions, never, Crypto.Crypto> = Layer.effect(
+export const DocketQuestionsLive: Layer.Layer<DocketQuestions, never, Digest.Digest> = Layer.effect(
   DocketQuestions,
-  Effect.map(Crypto.Crypto, (crypto) =>
+  Effect.map(Digest.Digest, (crypto) =>
     DocketQuestions.of({
       raise: Effect.fn("DocketQuestions.raise")(function* (input: DocketQuestionInput) {
         if (!DocketIntakeOutcome.guards.DocketNeedsReview(input.outcome)) {

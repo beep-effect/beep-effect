@@ -43,7 +43,7 @@ import {
   topoSortPackageNames,
   valuesForTag,
 } from "./QualityArtifactSupport.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { SourceFile } from "ts-morph";
 import type { JSDocSectionName } from "../../../internal/jsdoc/JSDocSections.ts";
@@ -1605,7 +1605,7 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
 ): Effect.fn.Return<
   Inventory,
   QualityArtifactGeneratorError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
@@ -1682,7 +1682,7 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
 ): Effect.fn.Return<
   JSDocDocumentationInventoryWriteResult,
   QualityArtifactGeneratorError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

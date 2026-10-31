@@ -3,32 +3,14 @@ import { PageOcrResult } from "@beep/file-processing/PageOcr";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath, Sha256HexFromBytes } from "@beep/schema";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-export const TestCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.tryPromise({
-        try: () =>
-          globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data)).then((buffer) => new Uint8Array(buffer)),
-        catch: (cause) =>
-          PlatformError.systemError({
-            _tag: "Unknown",
-            cause,
-            description: "Fixture digest failure",
-            method: "digest",
-            module: "OfficeActionStructureTest",
-          }),
-      }),
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
+export const TestCrypto = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
 export const fixtureSource = Effect.fn("OfficeActionFixture.source")(function* (text: string) {
   const hex = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text));
   const digest = SourceTextDigest.make(`sha256:${hex}`);

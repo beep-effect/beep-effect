@@ -25,7 +25,7 @@ import type {
   ExtractFileOperation,
 } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const decodeArtifactId = S.decodeEffect(ArtifactId);
 const decodeContentDigest = S.decodeEffect(ContentDigest);
@@ -107,7 +107,7 @@ const decodeTestArtifactPath = (
 const deriveTestChildArtifactId = (
   operation: ExportArchiveOperation,
   relativePath: PosixPath
-): Effect.Effect<ArtifactReference["id"], FileProcessingOperationError, Crypto.Crypto> =>
+): Effect.Effect<ArtifactReference["id"], FileProcessingOperationError, Digest.Digest> =>
   deriveArtifactId([operation.source.id, relativePath]).pipe(
     Effect.mapError(() =>
       FileProcessingOperationError.fromReason("archive-export-failed", {

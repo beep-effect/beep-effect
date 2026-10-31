@@ -32,7 +32,7 @@ const liveLayer = Layer.mergeAll(NodeServices.layer, Exiftool.makeLayer().pipe(L
 const exiftoolAvailable = Effect.gen(function* () {
   const exiftool = yield* Exiftool;
   return yield* exiftool.version.pipe(
-    Effect.map(() => true),
+    Effect.as(true),
     Effect.catchIf(
       (error) =>
         O.exists(error.cause, (cause) => PlatformError.isPlatformError(cause) && cause.reason._tag === "NotFound"),

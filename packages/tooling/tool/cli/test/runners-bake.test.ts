@@ -47,6 +47,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const decodeBakeConfig = S.decodeEffect(BakeConfig);
 
@@ -160,21 +161,22 @@ const makeBakeSpawner = (
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("runner bake never spawns a piped command");
     }
-    const argv = [command.command, ...command.args];
+    const args = commandArgs(command);
+    const argv = [command.command, ...args];
     const output = Match.value(command.command).pipe(
       Match.when("git", () =>
         Effect.succeed(
-          A.contains(command.args, "status")
+          A.contains(args, "status")
             ? stubHandle("")
-            : A.contains(command.args, "remote")
+            : A.contains(args, "remote")
               ? stubHandle(git.remotes ?? "origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
-              : A.contains(command.args, "--contains")
+              : A.contains(args, "--contains")
                 ? stubHandle(git.contains ?? "  origin/main")
                 : stubHandle("0123456789abcdef0123456789abcdef01234567")
         )
       ),
       Match.when("aws", () =>
-        Match.value(command.args).pipe(
+        Match.value(args).pipe(
           Match.when(A.contains("get-parameter"), () =>
             Effect.succeed(stubHandle('{"Parameter":{"Value":"ami-base"}}'))
           ),
@@ -188,7 +190,7 @@ const makeBakeSpawner = (
           Match.when(A.contains("create-image"), () => Effect.succeed(stubHandle('{"ImageId":"ami-baked"}'))),
           Match.when(A.contains("describe-images"), () => Effect.succeed(stubHandle('["available"]'))),
           Match.when(A.contains("terminate-instances"), () => Effect.succeed(stubHandle("{}"))),
-          Match.orElse(() => Effect.die(`unexpected aws command: ${A.join(command.args, " ")}`))
+          Match.orElse(() => Effect.die(`unexpected aws command: ${A.join(args, " ")}`))
         )
       ),
       Match.orElse(() => Effect.die(`unexpected command: ${command.command}`))
@@ -268,7 +270,7 @@ describe("runner image manifest checks", () => {
             }
             return Ref.update(commands, A.append(command.command)).pipe(
               Effect.as(
-                stubHandle(A.contains(command.args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567")
+                stubHandle(A.contains(commandArgs(command), "status") ? "" : "0123456789abcdef0123456789abcdef01234567")
               )
             );
           });
@@ -454,7 +456,7 @@ describe("runner bake planning and argv", () => {
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("runner bake never spawns a piped command");
           }
-          return Ref.update(commands, A.append([command.command, ...command.args])).pipe(
+          return Ref.update(commands, A.append([command.command, ...commandArgs(command)])).pipe(
             Effect.as(stubHandle('{"Images":[]}'))
           );
         });
@@ -477,18 +479,20 @@ describe("runner bake planning and argv", () => {
         if (!ChildProcess.isStandardCommand(command)) {
           return Effect.die("runner bake never spawns a piped command");
         }
-        const argv = [command.command, ...command.args];
+        const argv = [command.command, ...commandArgs(command)];
         return Ref.update(commands, A.append(argv)).pipe(
           Effect.andThen(
             Match.value(command.command).pipe(
               Match.when("git", () =>
                 Effect.succeed(
-                  stubHandle(A.contains(command.args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567")
+                  stubHandle(
+                    A.contains(commandArgs(command), "status") ? "" : "0123456789abcdef0123456789abcdef01234567"
+                  )
                 )
               ),
               Match.when("aws", () =>
                 pipe(
-                  A.contains(command.args, "get-parameter"),
+                  A.contains(commandArgs(command), "get-parameter"),
                   Match.value,
                   Match.when(true, () => Effect.succeed(stubHandle('{"Parameter":{"Value":"ami-live"}}'))),
                   Match.orElse(() =>
@@ -794,7 +798,7 @@ describe("runner bake planning and argv", () => {
         if (!ChildProcess.isStandardCommand(command)) {
           return Effect.die("runner bake never spawns a piped command");
         }
-        const argv = [command.command, ...command.args];
+        const argv = [command.command, ...commandArgs(command)];
         return Ref.update(commands, A.append(argv)).pipe(Effect.as(stubHandle(" M bun.lock")));
       });
       const testLayer = RunnersServiceLive.pipe(

@@ -21,6 +21,7 @@ import {
   workspaceCoverageScopeOwners,
 } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive } from "@beep/repo-utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, expect, it } from "@effect/vitest";
 import { assertDefined } from "@effect/vitest/utils";
@@ -46,7 +47,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
-const layer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const layer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const identity = CoverageProducerIdentity.make({
   executionSha: Str.repeat(40)("a"),
   baseSha: Str.repeat(40)("b"),

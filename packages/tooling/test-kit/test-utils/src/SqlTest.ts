@@ -13,7 +13,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -896,9 +896,9 @@ const generateCryptoUuid = Effect.fn("SqlTest.generateCryptoUuid")(function* (
   failureMessage: string
 ) {
   const context = yield* Layer.build(NodeCrypto.layer);
-  const cryptoService = Context.get(context, Crypto.Crypto);
+  const cryptoService = Context.get(context, SecureRandom.SecureRandom);
   return yield* cryptoService
-    .randomUUIDv4()
+    .uuidV4()
     .pipe(Effect.mapError((cause) => toHarnessError(driver, "provision", failureMessage, cause)));
 });
 

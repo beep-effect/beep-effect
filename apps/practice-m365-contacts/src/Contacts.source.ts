@@ -8,7 +8,7 @@ import { normaliseContacts } from "@beep/law-practice-use-cases/DocumentIdentifi
 import { parseCsvRows } from "@beep/schema/CsvParser";
 import { ParserOptions } from "@beep/schema/ParserOptions";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -38,7 +38,7 @@ const failInput = () => ContactsError.make({ reason: "input" });
  * @since 0.0.0
  */
 export const checksum = Effect.fn("Contacts.checksum")(function* (bytes: Uint8Array) {
-  return Hex.encode(yield* (yield* Crypto.Crypto).digest("SHA-256", bytes));
+  return Hex.encode(yield* (yield* Digest.Digest).digest(Digest.sha256, bytes));
 });
 const readSources = Effect.fn("Contacts.readSources")(function* (paths: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;

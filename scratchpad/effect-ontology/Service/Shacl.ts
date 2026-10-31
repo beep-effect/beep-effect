@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 /**
  * Service: SHACL Validation
  *
@@ -345,11 +345,11 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
       })
     );
 
-  static readonly Default: Layer.Layer<ShaclWorkflowService, never, RdfBuilder | StorageService | Crypto.Crypto> =
+  static readonly Default: Layer.Layer<ShaclWorkflowService, never, RdfBuilder | StorageService | Digest.Digest> =
     Layer.effect(
       ShaclWorkflowService,
       Effect.gen(function* () {
-        const crypto = yield* Crypto.Crypto;
+        const crypto = yield* Digest.Digest;
         const rdfBuilder = yield* RdfBuilder;
         const storage = yield* StorageService;
         const validationService = yield* ShaclValidationService;

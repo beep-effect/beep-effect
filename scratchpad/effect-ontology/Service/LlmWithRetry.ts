@@ -1,4 +1,4 @@
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 /**
  * Service: LLM with Retry
  *
@@ -99,7 +99,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
 ): Effect.fn.Return<
   LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"], "opaque">,
   AiError.AiError | Cause.TimeoutError | S.SchemaError | HashingError,
-  LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"] | Crypto.Crypto
+  LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"] | Digest.Digest
 > {
   const {
     annotateSuccess,

@@ -8,7 +8,7 @@ import {
   graftCommand,
 } from "@beep/repo-cli/commands/Graft";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -80,7 +80,7 @@ const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(DeepLayerManifest)
 const decodePlanJson = S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncPlan));
 const decodeReportJson = S.decodeUnknownEffect(S.fromJsonString(GraftCacheSyncReport));
 
-const testLayer = GraftCacheSyncLive.pipe(Layer.provideMerge(NodeServices.layer));
+const testLayer = GraftCacheSyncLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 // The filesystem operations a test swaps in under the subject once its fixture exists.
 // Only the subject sees them: the test's own `fs` stays native.
@@ -161,7 +161,7 @@ const assertReportRoundTrip = Effect.fn("GraftCacheSyncTest.assertReportRoundTri
 it.effect.prop(
   "round-trips arbitrary reports without losing plan entries, reasons, or counters",
   [GraftCacheSyncReport],
-  ([report]) => Effect.map(assertReportRoundTrip(GraftCacheSyncReport.make(report)), () => true)
+  ([report]) => Effect.as(assertReportRoundTrip(GraftCacheSyncReport.make(report)), true)
 );
 
 layer(testLayer, { timeout: "30 seconds" })("Graft cache sync", (it) => {

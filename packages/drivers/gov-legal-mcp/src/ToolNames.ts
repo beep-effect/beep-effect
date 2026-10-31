@@ -17,7 +17,7 @@ import { $GovLegalMcpId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, flow, pipe } from "effect/Function";
@@ -250,7 +250,7 @@ export class ToolNameNormalizationError extends S.TaggedError<
  *   buildToolNameCollisionReport([
  *     ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
  *     ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" })
- *   ]).pipe(Effect.flip, Effect.provideService(Crypto.Crypto, NodeCrypto.make))
+ *   ]).pipe(Effect.flip, Effect.provide(NodeCrypto.layer))
  * )
  * console.log(S.is(ToolNameCollisionError)(result))
  * // true
@@ -332,8 +332,8 @@ const candidateText = (candidate: ToolNameCandidate): string => `${candidate.sou
 const utf8 = new TextEncoder();
 
 const sha256Prefix8 = Effect.fnUntraced(function* (normalized: string) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto.digest("SHA-256", utf8.encode(normalized));
+  const crypto = yield* Digest.Digest;
+  const bytes = yield* crypto.digest(Digest.sha256, utf8.encode(normalized));
   return pipe(Hex.encode(bytes), Str.takeLeft(DIGEST_PREFIX_LENGTH));
 });
 

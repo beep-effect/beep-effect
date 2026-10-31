@@ -30,13 +30,13 @@ import {
   TranslationIssue,
   TranslationReport,
 } from "@beep/repo-cli/test/Goals";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -55,7 +55,11 @@ import {
 } from "./support/CommandTest.ts";
 
 const mutationLayer = PacketForkRepairApplierLive.pipe(Layer.provideMerge(PacketEventStoreLive));
-const testLayer = Layer.mergeAll(NodeServices.layer, mutationLayer.pipe(Layer.provideMerge(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  mutationLayer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const FORKED_PATH = NodeURL.fileURLToPath(new URL("./fixtures/packet-core/forked", import.meta.url));
 const encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 const encodeJson = (value: unknown): string => Result.getOrThrow(encodeJsonResult(value));
@@ -1091,7 +1095,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const traceRacePath = `${traceRaceLocator.packetPath}/ops/trace.json`;
       const traceRaceEvents = `${traceRaceLocator.packetPath}/ops/events`;
       let appended = false;
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       const traceRaceApplier = yield* makeApplier({
         ...fs,
         writeFileString: (target, content, options) =>
@@ -1118,7 +1122,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
                   body: { type: "status-set", status: "paused", previous: "active" },
                 });
                 const concurrentId = yield* packetEventDigest(concurrent).pipe(
-                  Effect.provideService(Crypto.Crypto, crypto)
+                  Effect.provideService(Digest.Digest, crypto)
                 );
                 const concurrentText = yield* renderPacketEventFile(concurrent);
                 yield* fs.writeFileString(
@@ -1180,8 +1184,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
                 body: { type: "status-set", status: "paused", previous: "active" },
               });
               return packetEventDigest(concurrent).pipe(
-                Effect.provideService(Crypto.Crypto, crypto),
-                Effect.catchTag("PlatformError", Effect.die),
+                Effect.provideService(Digest.Digest, crypto),
                 Effect.map((id) =>
                   PacketStreamListing.make({
                     events: A.append(
@@ -2778,28 +2781,31 @@ layer(testLayer, { timeout: 30_000 })("migration command boundaries", (it) => {
   );
 });
 
-layer(NodeServices.layer, { timeout: 30_000 })("registered migration command boundary", (it) => {
-  it.effect(
-    "provides PacketCore services through the goals command tree",
-    Effect.fnUntraced(function* () {
-      yield* withTempWorkingDirectory(
-        Effect.gen(function* () {
-          yield* writeProjectFile(
-            "goals/demo/ops/manifest.json",
-            `${encodeJson({
-              schemaVersion: "initiative-manifest/v2",
-              initiative: { id: "demo", status: "active" },
-              lifecycle: "active",
-              packetPath: "goals/demo",
-              completionGate,
-            })}\n`
-          );
-          const exit = yield* Effect.exit(
-            runGoals(["migrate-conventions", "--preview", "--at", "2026-08-30T00:00:00.000Z"])
-          );
-          exit.pipe(Exit.isSuccess, assertTrue);
-        })
-      );
-    })
-  );
-});
+layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: 30_000 })(
+  "registered migration command boundary",
+  (it) => {
+    it.effect(
+      "provides PacketCore services through the goals command tree",
+      Effect.fnUntraced(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeProjectFile(
+              "goals/demo/ops/manifest.json",
+              `${encodeJson({
+                schemaVersion: "initiative-manifest/v2",
+                initiative: { id: "demo", status: "active" },
+                lifecycle: "active",
+                packetPath: "goals/demo",
+                completionGate,
+              })}\n`
+            );
+            const exit = yield* Effect.exit(
+              runGoals(["migrate-conventions", "--preview", "--at", "2026-08-30T00:00:00.000Z"])
+            );
+            exit.pipe(Exit.isSuccess, assertTrue);
+          })
+        );
+      })
+    );
+  }
+);

@@ -32,7 +32,7 @@ import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -55,6 +55,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { parseDocument } from "yaml";
+import { commandArgs, commandEnv } from "./support/commandArgs.ts";
 
 const REPO_ROOT = "/repo";
 const coverageDispatchIdentity = CoverageProducerIdentity.make({
@@ -130,10 +131,10 @@ const ciExecutionLayer = (
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the CI lane test never spawns a piped command");
       }
-      spawned.push(A.join([command.command, ...command.args], " "));
+      spawned.push(A.join([command.command, ...commandArgs(command)], " "));
       const output = command.command === "git" ? A.join(changedFiles, "\n") : "";
       return Effect.succeed(
-        commandHandle(output, failedTask !== undefined && A.contains(command.args, failedTask) ? 1 : 0)
+        commandHandle(output, failedTask !== undefined && A.contains(commandArgs(command), failedTask) ? 1 : 0)
       );
     })
   );
@@ -188,7 +189,11 @@ const branchProtectionContextSnapshotUrl = new URL(
   import.meta.url
 );
 const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
-const LiveRepoLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const LiveRepoLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const PartitionLaneLayer = Layer.merge(LiveRepoLayer, TestConsole.layer);
 
 const withEnvVarEffect = <A, E, R>(
@@ -1630,7 +1635,7 @@ describe("ciLaneStepsForTesting", () => {
 
   // The workflow gates only on goals_only and hands the affected decision to
   // the lane (Turbo dry-run probe); no path profile survives anywhere.
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1681,9 +1686,11 @@ const storybookCiLayer = (dryRunOutput: string, spawned: Array<StorybookSpawn>, 
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the Storybook lane test never spawns a piped command");
       }
-      spawned.push({ line: A.join([command.command, ...command.args], " "), env: command.options.env ?? {} });
+      spawned.push({ line: A.join([command.command, ...commandArgs(command)], " "), env: commandEnv(command) ?? {} });
       return Effect.succeed(
-        A.contains(command.args, "--dry-run=json") ? commandHandle(dryRunOutput, dryRunExitCode) : commandHandle()
+        A.contains(commandArgs(command), "--dry-run=json")
+          ? commandHandle(dryRunOutput, dryRunExitCode)
+          : commandHandle()
       );
     })
   );

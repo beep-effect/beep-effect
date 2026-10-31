@@ -12,7 +12,7 @@ import { ParserOptions } from "@beep/schema/ParserOptions";
 import { XmlTextToUnknown } from "@beep/schema/Xml";
 import { A, Str } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, flow, pipe } from "effect/Function";
@@ -215,11 +215,9 @@ const readResponseBytes = Effect.fn("SyncDataToTs.readResponseBytes")(function* 
   return new Uint8Array(buffer);
 });
 
-const sha256Hex = Effect.fn("SyncDataToTs.sha256Hex")(function* (bytes: Uint8Array, targetId: string, url: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto
-    .digest("SHA-256", bytes)
-    .pipe(SyncDataToTsError.mapError(`Failed to compute SHA-256 digest for ${url}`, targetId));
+const sha256Hex = Effect.fn("SyncDataToTs.sha256Hex")(function* (bytes: Uint8Array) {
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, bytes);
   return Hex.encode(digest);
 });
 
@@ -234,7 +232,7 @@ export const fetchSource = Effect.fn("SyncDataToTs.fetchSource")(function* (
   id: string,
   url: string,
   options: FetchSourceOptions = {}
-): Effect.fn.Return<SyncDataFetchedSource, SyncDataToTsError, HttpClient.HttpClient | Crypto.Crypto> {
+): Effect.fn.Return<SyncDataFetchedSource, SyncDataToTsError, HttpClient.HttpClient | Digest.Digest> {
   const publicUrl = options.publicUrl ?? url;
   const response = yield* HttpClient.get(url, { headers: options.headers ?? {} }).pipe(
     SyncDataToTsError.mapError(`Failed to fetch ${publicUrl}`, targetId),
@@ -242,7 +240,7 @@ export const fetchSource = Effect.fn("SyncDataToTs.fetchSource")(function* (
     SyncDataToTsError.mapError(`Received a non-2xx response from ${publicUrl}`, targetId)
   );
   const bytes = yield* readResponseBytes(response, targetId, publicUrl);
-  const sha256 = yield* sha256Hex(bytes, targetId, publicUrl);
+  const sha256 = yield* sha256Hex(bytes);
 
   return SyncDataFetchedSource.make({
     id,

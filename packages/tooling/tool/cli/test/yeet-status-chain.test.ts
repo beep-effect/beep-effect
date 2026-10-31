@@ -23,6 +23,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { commandArgs } from "./support/commandArgs.ts";
 
 // W10 (goals/yeet-pr-events): the `--until-ready` poll reads its snapshot
 // through collectYeetStatus. Before the collapse the remote half ran five gh
@@ -202,7 +203,7 @@ const withFakeRunner = (recorder: GhRecorder, latency: Duration.Duration, failCe
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-      const args = command.args;
+      const args = commandArgs(command);
       const record = Ref.update(recorder.invocations, A.append({ command: command.command, args }));
       if (command.command !== "gh") return record.pipe(Effect.as(handle("")));
       if (failCensus && args[0] === "api") return record.pipe(Effect.as(handle("rate limited", 1)));

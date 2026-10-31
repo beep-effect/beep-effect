@@ -111,12 +111,13 @@ const makeFakeObsServer = Effect.fnUntraced(function* (options?: FakeObsServerOp
     reader: emitMessage(ObsHelloMessage.make({ d: hello })).pipe(
       Effect.as({
         pull: Queue.take(incoming).pipe(
-          Effect.map((frame): readonly [string] => [frame]),
-          Effect.mapError(() =>
-            Socket.SocketError.make({
-              reason: Socket.SocketCloseError.make({ code: options?.rejectIdentifyWithCloseCode ?? 1006 }),
-            })
-          )
+          Effect.mapBoth({
+            onFailure: () =>
+              Socket.SocketError.make({
+                reason: Socket.SocketCloseError.make({ code: options?.rejectIdentifyWithCloseCode ?? 1006 }),
+              }),
+            onSuccess: (frame): readonly [string] => [frame],
+          })
         ),
         upgrade: Socket.SocketUpgradeError.unsupported,
       })

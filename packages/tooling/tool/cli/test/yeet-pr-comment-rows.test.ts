@@ -40,6 +40,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { YeetPrCommentRow } from "@beep/repo-cli/test/Yeet";
 
 // pr-event-awareness W4 (D13/D21/D32/D33): the `--until-ready` merge loop turns
@@ -92,7 +93,7 @@ const stubHandle = (output: string) =>
 const ghSpawner = (payloads: Ref.Ref<Payloads>, commands: Ref.Ref<ReadonlyArray<string>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the comment poll never pipes a command");
-    const line = A.join([command.command, ...command.args], " ");
+    const line = A.join([command.command, ...commandArgs(command)], " ");
     return Ref.update(commands, A.append(line)).pipe(
       Effect.andThen(Ref.get(payloads)),
       Effect.map((current) => stubHandle(JSON.stringify([current[endpointOf(line)]])))

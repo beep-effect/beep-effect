@@ -44,7 +44,8 @@ import {
 } from "./Operations.ts";
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
@@ -154,7 +155,13 @@ const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDr
 const decodeDocgenProcessDiagnostic = S.decodeUnknownOption(DocgenProcessDiagnostic);
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
-type DocgenLocalEnvironment = Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
+type DocgenLocalEnvironment =
+  | Digest.Digest
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | FsUtils
+  | ChildProcessSpawner;
 type DocgenLocalOptions = {
   readonly allowFull: boolean;
   readonly base: string;
@@ -1419,7 +1426,7 @@ export const buildDocgenLocalPlan: (
 ) => Effect.Effect<
   DocgenLocalPlan,
   DomainError | NoSuchFileError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner
 > = Effect.fn("DocgenLocal.buildDocgenLocalPlan")(function* (options) {
   const repoRoot = yield* findRepoRoot();
   return yield* buildDocgenLocalPlanWithRepoRoot(options, repoRoot);

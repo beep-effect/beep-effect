@@ -3,7 +3,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import { Run } from "@beep/commands";
 import type * as Scope from "effect/Scope";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -180,7 +180,7 @@ export interface PackageTarballShape {
 }
 
 /** Map an SRI algorithm name onto core's digest algorithm spelling. */
-const digestAlgorithmOf = (algorithm: string): Crypto.DigestAlgorithm | undefined =>
+const digestAlgorithmOf = (algorithm: string): Digest.Algorithm | undefined =>
 	Match.value(algorithm).pipe(
 		Match.when("sha1", () => "SHA-1" as const),
 		Match.when("sha256", () => "SHA-256" as const),
@@ -195,7 +195,7 @@ const unpadded = Str.replace(/=+$/, "");
 /** Builds the service over already-resolved platform services. */
 const make = Effect.fnUntraced(function* () {
 	const fs = yield* FileSystem.FileSystem;
-	const crypto = yield* Crypto.Crypto;
+	const crypto = yield* Digest.Digest;
 	const http = yield* HttpClient.HttpClient;
 	const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
@@ -360,6 +360,6 @@ export class PackageTarball extends Context.Service<PackageTarball, PackageTarba
 	static readonly layer: Layer.Layer<
 		PackageTarball,
 		never,
-		FileSystem.FileSystem | Crypto.Crypto | HttpClient.HttpClient | ChildProcessSpawner.ChildProcessSpawner
+		FileSystem.FileSystem | Digest.Digest | HttpClient.HttpClient | ChildProcessSpawner.ChildProcessSpawner
 	> = Layer.effect(PackageTarball)(make());
 }

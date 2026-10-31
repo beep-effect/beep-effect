@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
  * Service: Assertion
@@ -350,7 +350,7 @@ const ASSERTIONS = {
  */
 export class AssertionService extends Context.Service<AssertionService>()($I`AssertionService`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const sha256 = flow(sha256Effect, Effect.provideService(Crypto.Crypto, crypto));
     const claimRepo = yield* ClaimRepository;
 

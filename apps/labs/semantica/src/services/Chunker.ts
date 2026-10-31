@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import type * as A from "effect/Array";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as Effect from "effect/Effect";
 import type { AnchorRejected } from "@/schema/Errors";
 import type { CanonicalText, Chunk } from "@/schema/Text";
@@ -17,7 +17,7 @@ const $I = $SemanticaId.create("services/Chunker");
 interface ChunkerShape {
   readonly chunk: (
     canonical: CanonicalText
-  ) => Effect.Effect<A.NonEmptyReadonlyArray<Chunk>, AnchorRejected, Crypto.Crypto>;
+  ) => Effect.Effect<A.NonEmptyReadonlyArray<Chunk>, AnchorRejected, Digest.Digest>;
 }
 
 /**

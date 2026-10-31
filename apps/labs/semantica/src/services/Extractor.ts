@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import type * as A from "effect/Array";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as Effect from "effect/Effect";
 import type { AnchorRejected } from "@/schema/Errors";
 import type { ExtractOutcome } from "@/schema/Evidence";
@@ -19,7 +19,7 @@ interface ExtractorShape {
   readonly extract: (
     canonical: CanonicalText,
     chunks: A.NonEmptyReadonlyArray<Chunk>
-  ) => Effect.Effect<ExtractOutcome, AnchorRejected, Crypto.Crypto>;
+  ) => Effect.Effect<ExtractOutcome, AnchorRejected, Digest.Digest>;
 }
 
 /**

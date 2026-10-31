@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Grounder
  *
@@ -744,7 +744,7 @@ const DEFAULT_BATCH_SIZE = 5;
  */
 export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 

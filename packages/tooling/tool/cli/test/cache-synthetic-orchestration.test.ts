@@ -7,7 +7,7 @@ import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
@@ -24,6 +24,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs, commandEnv } from "./support/commandArgs.ts";
 
 const platform = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer);
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -50,7 +51,7 @@ const faults = LiteralKit([
 // This is a deterministic process double. Its observations test the runner's
 // validation and comparison logic; they are never saved as qualification evidence.
 const fixture = Effect.fn("SyntheticOrchestrationTest.fixture")(function* (fault: typeof faults.Type = "none") {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-synthetic-orchestration-" });
@@ -77,14 +78,14 @@ const fixture = Effect.fn("SyntheticOrchestrationTest.fixture")(function* (fault
         if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
         expect(command.command).toBe("/usr/bin/bwrap");
         expect(command.options.extendEnv).toBe(false);
-        expect(command.args).toContain("--unshare-all");
-        expect(command.args).toContain("--die-with-parent");
-        const args = command.args;
+        expect(commandArgs(command)).toContain("--unshare-all");
+        expect(commandArgs(command)).toContain("--die-with-parent");
+        const args = commandArgs(command);
         const bind = O.getOrThrow(A.findFirstIndex(args, Equal.equals("--bind")));
         const directory = O.getOrThrow(A.get(args, bind + 1));
         const guest = args[bind + 2];
         const invocation = A.drop(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals("--"))) + 1);
-        const env = command.options.env ?? {};
+        const env = commandEnv(command) ?? {};
         const version = env.QUALIFY_BUN_SHA256 === bun.pin.sha256 ? bun.pin.version : alternateBun.pin.version;
         const write = Effect.fnUntraced(function* (relative: string, text: string) {
           const target = path.join(directory, relative);
@@ -210,7 +211,7 @@ const fixture = Effect.fn("SyntheticOrchestrationTest.fixture")(function* (fault
         });
       },
       Effect.orDie,
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     )
   );
   const run = (changed = request) =>

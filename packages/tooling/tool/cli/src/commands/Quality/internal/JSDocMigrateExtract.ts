@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -34,6 +34,7 @@ import { jsdocMigrateExtractCodec } from "./JSDocMigrateData.ts";
 import { jsdocMigrateBlockStats } from "./JSDocMigrateRewrite.ts";
 import { hasGeneratedFileHeader, isPackageSourceFile, jsdocGitErrorAdapter } from "./JSDocRatchet.ts";
 import { tagsFromComment } from "./QualityArtifactSupport.ts";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocMigrateExtract");
@@ -97,15 +98,13 @@ export type JSDocMigrateScannedBlock = typeof JSDocMigrateScannedBlock.Type;
  * ```
  *
  * @param blockText - Exact block bytes to hash.
- * @returns An Effect requiring Crypto that produces the `sha256:`-prefixed hex digest.
+ * @returns An Effect requiring `Digest` that produces the `sha256:`-prefixed hex digest.
  * @category use-cases
  * @since 0.0.0
  */
 export const jsdocMigrateSourceHash = Effect.fn("JSDocMigrateExtract.sourceHash")(function* (blockText: string) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(blockText))
-    .pipe(QualityScriptCommandError.mapError("Failed to hash JSDoc source."));
+  const crypto = yield* Digest.Digest;
+  const bytes = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(blockText));
   return `sha256:${Hex.encode(bytes)}`;
 });
 
@@ -320,7 +319,7 @@ const extractRecordsForFile = (filePath: string, sourceText: string) =>
  *
  * @param filePath - Repo-relative path used in anchors.
  * @param sourceText - Full source text to scan.
- * @returns An Effect requiring Crypto that produces affected-block records in source order.
+ * @returns An Effect requiring `Digest` that produces affected-block records in source order.
  * @category use-cases
  * @since 0.0.0
  */
@@ -329,11 +328,11 @@ export const jsdocMigrateExtractRecordsForFile: {
     sourceText: string
   ): (
     filePath: string
-  ) => Effect.Effect<ReadonlyArray<JSDocMigrateExtractRecord>, QualityScriptCommandError, Crypto.Crypto>;
+  ) => Effect.Effect<ReadonlyArray<JSDocMigrateExtractRecord>, QualityScriptCommandError, Digest.Digest>;
   (
     filePath: string,
     sourceText: string
-  ): Effect.Effect<ReadonlyArray<JSDocMigrateExtractRecord>, QualityScriptCommandError, Crypto.Crypto>;
+  ): Effect.Effect<ReadonlyArray<JSDocMigrateExtractRecord>, QualityScriptCommandError, Digest.Digest>;
 } = dual(2, extractRecordsForFile);
 
 /**
@@ -362,7 +361,7 @@ export const listJSDocMigrateCorpusFiles = Effect.fn("JSDocMigrateExtract.listCo
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
   return A.filter(lines, isPackageSourceFile);
@@ -422,7 +421,7 @@ export class RunJSDocMigrateExtractOptions extends S.Opaque<
 export const readJSDocMigrateSourceText = Effect.fn("JSDocMigrateExtract.readSourceText")(function* (
   repoRoot: string,
   filePath: string
-): Effect.fn.Return<O.Option<string>, QualityScriptCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<string>, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const sourceText = yield* fs
@@ -443,7 +442,7 @@ const readCorpusFileRecords = Effect.fn("JSDocMigrateExtract.readCorpusFileRecor
 ): Effect.fn.Return<
   ReadonlyArray<JSDocMigrateExtractRecord>,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const sourceText = yield* readJSDocMigrateSourceText(repoRoot, filePath);
   return yield* O.match(sourceText, {
@@ -479,7 +478,11 @@ export const runJSDocMigrateExtract = Effect.fn("JSDocMigrateExtract.run")(funct
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const path = yield* Path.Path;

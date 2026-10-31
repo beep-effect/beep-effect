@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
  * Public effect-ontology APIs for service/storage.
@@ -582,7 +582,7 @@ const prepareLocalStore = Effect.fn("Storage.prepareLocalStore")(function* (conf
  * any directory beneath the root while an operation is running.
  */
 const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageConfigValue, canonicalRoot: string) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const sha256SyncFull = flow(
     sha256SyncFullEffect,
     Effect.provideService(Crypto.Crypto, crypto),

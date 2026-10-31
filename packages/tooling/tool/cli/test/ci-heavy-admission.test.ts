@@ -19,7 +19,7 @@ import {
   runCiAdmission,
 } from "@beep/repo-cli/commands/Ci";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -37,6 +37,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import { parseRunnerFile } from "./support/runnerFile.ts";
 
 const code = ["packages/a/src/index.ts"];
@@ -72,11 +73,11 @@ const handle = (exitCode: number, output: string) =>
 const gitSpawner = (diff: string, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    return Ref.update(commands, A.append([command.command, ...command.args])).pipe(
-      Effect.as(handle(0, command.args[0] === "diff" ? diff : ""))
+    return Ref.update(commands, A.append([command.command, ...commandArgs(command)])).pipe(
+      Effect.as(handle(0, commandArgs(command)[0] === "diff" ? diff : ""))
     );
   });
-const platform = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
 const lastLine = (lines: ReadonlyArray<string>): string => O.getOrElse(A.last(lines), () => "");
 const runAdmissionCommand = Command.runWith(ciAdmissionCommand, { version: "0.0.0" });
 const temporary = Effect.fn("admissionTest.temporary")(function* <V, E, R>(

@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
  * Curation Service
@@ -126,7 +126,7 @@ export class CurationResult extends S.Opaque<CurationResult, { readonly brand: u
  */
 export class CurationService extends Context.Service<CurationService>()($I`CurationService`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const sha256SyncFull = flow(sha256SyncFullEffect, Effect.provideService(Crypto.Crypto, crypto));
     const claimRepo = yield* ClaimRepository;
     const entityRegistry = yield* EntityRegistryRepository;

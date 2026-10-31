@@ -58,7 +58,8 @@ import {
   FinalCheckStatusDrift,
 } from "./FinalCheckRefresh.schemas.ts";
 import { runGitOutput, runGitPathList } from "./GitExec.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 import type { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
@@ -201,7 +202,7 @@ export const decideFinalCheckRefresh = (facts: FinalCheckRefreshFacts): FinalChe
   return FinalCheckRefreshPass.make({ receipt: facts.receipt, finalHead: facts.finalHead, ownChanges });
 };
 
-type GitServices = Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
+type GitServices = Digest.Digest | ChildProcessSpawner.ChildProcessSpawner;
 
 const gitLine = (repoRoot: string, args: ReadonlyArray<string>) =>
   runGitOutput(repoRoot, args).pipe(Effect.map(Str.trim));
@@ -319,7 +320,7 @@ export const collectFinalCheckRefreshFacts = Effect.fn("Yeet.collectFinalCheckRe
   base: string,
   receipt: FinalCheckReceipt,
   finalHead: string
-): Effect.fn.Return<FinalCheckRefreshFacts, YeetCommandError, GitServices> {
+): Effect.fn.Return<FinalCheckRefreshFacts, YeetCommandError, GitServices | SecureRandom.SecureRandom> {
   const r = receipt.headSha;
   const mbr = yield* gitLine(repoRoot, ["merge-base", r, base]);
   const mbf = yield* gitLine(repoRoot, ["merge-base", finalHead, base]);
@@ -382,7 +383,11 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
 export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefreshReceipt")(function* (
   repoRoot: string,
   finalHead: string
-): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path | GitServices> {
+): Effect.fn.Return<
+  O.Option<string>,
+  never,
+  FileSystem.FileSystem | Path.Path | GitServices | SecureRandom.SecureRandom
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entries = yield* fs
@@ -458,7 +463,7 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
 ): Effect.fn.Return<
   O.Option<FinalCheckRefreshVerdict>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | GitServices
+  FileSystem.FileSystem | Path.Path | GitServices | SecureRandom.SecureRandom
 > {
   const malformed = (receiptHead: string, which: string) =>
     O.some(

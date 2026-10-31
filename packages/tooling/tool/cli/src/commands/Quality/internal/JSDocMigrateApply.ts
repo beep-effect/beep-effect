@@ -52,7 +52,8 @@ import {
   jsdocMigrateShapeRegressions,
   rewriteJSDocMigrateBlock,
 } from "./JSDocMigrateRewrite.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   JSDocMigrateExtractRecord,
@@ -74,7 +75,11 @@ const loadFrozenRecordSets = Effect.fn("JSDocMigrateApply.loadFrozenRecordSets")
   repoRoot: string,
   options: { readonly titles?: string | undefined; readonly overrides?: string | undefined },
   syntheticTitles: O.Option<ReadonlyArray<JSDocMigrateTitleRecord>>
-): Effect.fn.Return<FrozenRecordSets, QualityScriptCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  FrozenRecordSets,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
+> {
   const path = yield* Path.Path;
   const titles = O.isSome(syntheticTitles)
     ? syntheticTitles.value
@@ -372,7 +377,7 @@ const readAffectedFiles = Effect.fn("JSDocMigrateApply.readAffectedFiles")(funct
 ): Effect.fn.Return<
   ReadonlyArray<AffectedFile>,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
 > {
   const perFile = yield* Effect.forEach(
     files,
@@ -395,7 +400,11 @@ const readAffectedFiles = Effect.fn("JSDocMigrateApply.readAffectedFiles")(funct
 const formatBiome = Effect.fn("JSDocMigrateApply.formatBiome")(function* (
   repoRoot: string,
   files: ReadonlyArray<string>
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   for (const chunk of A.chunksOf(files, 50)) {
     const step = yield* runCaptured({
       command: "bun",
@@ -412,7 +421,7 @@ const writeManifest = Effect.fn("JSDocMigrateApply.writeManifest")(function* (
   repoRoot: string,
   manifestPath: string,
   manifest: JSDocMigrateProofManifest
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, QualityScriptCommandError, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const jsonc = yield* formatJsonc(manifest).pipe(
     QualityScriptCommandError.mapError("Failed to format jsdoc-migrate proof manifest.")
@@ -487,7 +496,7 @@ const scanAnchorsForOrphans = Effect.fn("JSDocMigrateApply.scanAnchorsForOrphans
 ): Effect.fn.Return<
   MutableHashMap.MutableHashMap<string, JSDocMigrateScannedBlock>,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -598,7 +607,11 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   if (options.syntheticTitles && !options.dryRun) {
     return yield* migrateError("--synthetic-titles is a measurement mode; combine it with --dry-run.");
@@ -785,7 +798,7 @@ export const runJSDocMigrateVerify = Effect.fn("JSDocMigrateApply.runVerify")(fu
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { fs, path, repoRoot } = yield* jsdocMigrateRunContext();
 

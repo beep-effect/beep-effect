@@ -10,10 +10,10 @@ the `@beep/xstate` driver in `packages/drivers/xstate`.
 
 | Package | Pin | Note |
 | --- | --- | --- |
-| `xstate` | `6.0.0-alpha.70` | v6 alpha: inline transition functions, `schemas`, state contracts. |
-| `@xstate/effect` | `1.0.0-alpha.9` | Peers `effect ^4.0.0` and `xstate ^6.0.0-alpha.70`; declaration patch required. |
+| `xstate` | `6.0.0-alpha.71` | v6 alpha: inline transition functions, `schemas`, state contracts. |
+| `@xstate/effect` | `1.0.0-alpha.10` | Peers `effect ^4.0.0` and `xstate ^6.0.0-alpha.70`. No patch: alpha.10 exports the public `"~xstate/effect/action"` key itself. |
 | `@xstate/test` | `2.0.0-alpha.4` | Model-based testing. Declares Vitest 3 or 4 as an optional peer. |
-| `@statelyai/sdk` | `0.39.1` | Inspector client. `@statelyai/inspect` peers xstate v5 and is not used. |
+| `@statelyai/sdk` | `0.42.0` | Inspector client. `@statelyai/inspect` peers xstate v5 and is not used. |
 | `statelyai` | `0.14.3` | CLI, root dev dependency. |
 
 All five are catalog entries in the root `package.json`. Keep this table in sync when updating the catalog.
@@ -181,11 +181,15 @@ Stately sign-in the first time it is used, and it must be listed in `enabledMcpj
 
 These were found while building the reference machine. Re-check them on each alpha bump.
 
-1. `@xstate/effect` 1.0.0-alpha.9 needs a declaration-only patch.
-   [The alpha.9 patch](../../patches/@xstate%252Feffect@1.0.0-alpha.9.patch) replaces the private
-   `effectActionBrand` unique-symbol key in both the action type and its service-requirement
-   extractor with the string key `"~xstate/effect/action"`. The atom entry point already imports
-   `effect/reactivity`; the patch does not rewrite runtime imports.
+1. `@xstate/effect` 1.0.0-alpha.10 needs no patch. Alpha.9 needed a declaration-only patch that
+   replaced the private `effectActionBrand` unique-symbol key with the string key
+   `"~xstate/effect/action"`; alpha.10 ships that public key, so the patch was retired with the
+   2026-10-31 bump. Two alpha.10 behaviour changes matter to callers: a failed actor now rejects
+   with an `EffectFailure` error whose `message` is `Cause.pretty(cause)` (rendered as
+   `<identifier>: <message>`) and whose `cause` holds the full `Cause`; read the domain error
+   through `Cause.squash(failure.cause)` (the desktop `failureMessageOr` helper does this). And
+   the hosted actor now rejects externally sent events that the machine declares in
+   `internalEvents` as `EventRejectedError` (`internalEvent`); drive it with public events only.
 2. `@xstate/test/effect-schema` calls `Schema.toArbitrary`, which Effect 4.0.0 does not have.
    Use `eventsFromSchemas` from `@beep/xstate/test`, built on `effect/Arbitrary`.
 3. An event that crosses an actor boundary cannot be an internal event. That covers events from

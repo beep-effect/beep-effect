@@ -18,7 +18,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
@@ -38,6 +38,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
 
 const temporaryDirectory = Effect.gen(function* () {
@@ -53,8 +54,9 @@ const target = RegistrationTarget.make({
 
 const commandLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 const runDeletePackage = Command.runWith(deletePackageCommand, { version: "0.0.0" });
 
@@ -747,7 +749,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ChildProcessSpawner.make((command) =>
         Effect.sync(() => {
           if (command._tag === "StandardCommand") {
-            spawned.push(A.join([command.command, ...command.args], " "));
+            spawned.push(A.join([command.command, ...commandArgs(command)], " "));
           }
           return ChildProcessSpawner.makeHandle({
             pid: ChildProcessSpawner.ProcessId(1),

@@ -868,8 +868,10 @@ const jobStatusCommand = Command.make(
           root,
           O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
         ).pipe(
-          Effect.mapError(YeetCommandError.new("Failed to read job telemetry.")),
-          Effect.map((result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()))
+          Effect.mapBoth({
+            onFailure: YeetCommandError.new("Failed to read job telemetry."),
+            onSuccess: (result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()),
+          })
         );
     if (options.json) {
       yield* Console.log(

@@ -46,7 +46,7 @@ import {
   parseDeepCoverage,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CapturedStep } from "../../internal/process/StepExec.ts";
 import type { GraftCacheSourceError, GraftCacheTargetError } from "./Graft.errors.ts";
@@ -287,7 +287,7 @@ export interface GraftDeepRunnerShape {
 export class GraftDeepRunner extends Context.Service<GraftDeepRunner, GraftDeepRunnerShape>()($I`GraftDeepRunner`) {}
 
 const makeGraftDeepRunner = Effect.fnUntraced(function* () {
-  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
   const run: GraftDeepRunnerShape["run"] = Effect.fn("GraftDeepRunner.run")(function* (step) {
     // Only the meaning-tier build needs provider credentials; the owner
     // pull, the dependency install, and the structural sibling rebuild run
@@ -367,7 +367,7 @@ const makeGraftDeepRunner = Effect.fnUntraced(function* () {
 export const GraftDeepRunnerLive: Layer.Layer<
   GraftDeepRunner,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > = Layer.effect(GraftDeepRunner, makeGraftDeepRunner());
 
 /**
@@ -1238,5 +1238,5 @@ export const GraftDeepRefreshLayer: Layer.Layer<
 export const GraftDeepRefreshLive: Layer.Layer<
   GraftDeepRefresh,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > = GraftDeepRefreshLayer.pipe(Layer.provide(Layer.mergeAll(GraftDeepRunnerLive, GraftCacheSyncLive)));

@@ -27,7 +27,7 @@ import type {
   ExtractFileOperation,
 } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { LibpffError } from "./Libpff.errors.ts";
 
 const decodePosixPath = S.decodeEffect(PosixPath);
@@ -87,7 +87,7 @@ const decodeLibpffArtifactPath = (
 const deriveLibpffChildArtifactId = (
   operation: ExportArchiveOperation,
   relativePath: PosixPath
-): Effect.Effect<ArtifactReference["id"], FileProcessingOperationError, Crypto.Crypto> =>
+): Effect.Effect<ArtifactReference["id"], FileProcessingOperationError, Digest.Digest> =>
   deriveArtifactId([operation.source.id, relativePath]).pipe(
     Effect.mapError(() =>
       FileProcessingOperationError.fromReason("archive-export-failed", {

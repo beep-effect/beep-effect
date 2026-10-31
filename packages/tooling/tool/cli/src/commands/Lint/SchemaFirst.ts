@@ -11,7 +11,6 @@ import { dual } from "effect/Function";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
 import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
 import { SchemaFirstLintOptions } from "./Lint.schemas.ts";
-import type * as Crypto from "effect/Crypto";
 import type * as O from "effect/Option";
 import type { CallExpression, SourceFile } from "ts-morph";
 import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.ts";
@@ -428,11 +427,11 @@ export const schemaFirstParityEntriesFromSourceFile: {
     context: SchemaFirstDetectorContext
   ): (
     sourceFile: SourceFile
-  ) => Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
+  ) => Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, never>;
   (
     sourceFile: SourceFile,
     context: SchemaFirstDetectorContext
-  ): Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
+  ): Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, never>;
 } = dual(2, (sourceFile: SourceFile, context: SchemaFirstDetectorContext) =>
   SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, context.file, context.owner)
 );

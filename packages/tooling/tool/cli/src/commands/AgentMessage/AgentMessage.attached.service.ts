@@ -8,7 +8,7 @@ import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { T3Code } from "@beep/t3-code";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
@@ -151,7 +151,7 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
   stateDir: string
 ) {
   const t3 = yield* T3Code;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const store = yield* AgentMessageStore;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -264,7 +264,7 @@ export const makeAttachedT3Dispatch = Effect.fn("AgentMessage.attachedDispatch")
   return {
     submit: (claim: Claim) =>
       submit(claim).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.catchTag("T3CodeError", (error) =>
           RouterError.make({
             code: "storage",

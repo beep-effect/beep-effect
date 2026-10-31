@@ -54,7 +54,7 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
@@ -85,6 +85,7 @@ import * as Struct from "effect/Struct";
 import { Header } from "tar";
 import { vi } from "vitest";
 import { secrets, targetFor } from "./cache-conformance-server.ts";
+import { commandArgs } from "./support/commandArgs.ts";
 
 vi.mock("@effect/platform-node/NodeHttpClient", { spy: true });
 
@@ -174,7 +175,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   observeProfile: typeof S.Boolean.Type = true,
   closureFault: typeof closureFaultDomain.Type = "none"
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-pilot-orchestration-" });
@@ -363,7 +364,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     Effect.fnUntraced(
       function* (command) {
         if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
-        const args = command.args;
+        const args = commandArgs(command);
         let stdout = "";
         let stderr = "";
         let exitCode = 0;
@@ -705,7 +706,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
         });
       },
       Effect.orDie,
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     )
   );
   const uncalled = () => Effect.die("Unexpected qualification mutation or unrelated service call");

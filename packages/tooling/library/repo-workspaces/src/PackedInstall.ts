@@ -2251,8 +2251,10 @@ export class PackedInstall {
     const absent = yield* Effect.forEach(plan.closure, (pkg) => {
       const manifest = path.join(pkg.path, source.directory, "package.json");
       return fs.exists(manifest).pipe(
-        Effect.map((present) => (present ? O.none<string>() : O.some(manifest))),
-        Effect.mapError((cause) => failure("Io", `could not inspect ${manifest}`, { cause }))
+        Effect.mapBoth({
+          onFailure: (cause) => failure("Io", `could not inspect ${manifest}`, { cause }),
+          onSuccess: (present) => (present ? O.none<string>() : O.some(manifest)),
+        })
       );
     });
     const missing = A.getSomes(absent);

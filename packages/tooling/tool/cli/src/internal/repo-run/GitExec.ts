@@ -36,7 +36,7 @@ import {
   runCaptured,
   runCapturedStreams,
 } from "../process/StepExec.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunCapturedOptions, RunCapturedStreamsOptions } from "../process/StepExec.ts";
@@ -308,7 +308,7 @@ const runGitCaptured = <E>(
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>,
   capture: Omit<RunCapturedOptions, "command" | "args">
-): Effect.Effect<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> => {
+): Effect.Effect<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> => {
   const commandLine = formatCommandLine("git", args);
   return runCaptured({ command: "git", args, ...capture }).pipe(
     Effect.mapError(adapter.onSpawnFailure(commandLine)),
@@ -337,7 +337,7 @@ const runGitStructured = <E>(
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>,
   capture: Omit<RunCapturedStreamsOptions, "command" | "args">
-): Effect.Effect<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> => {
+): Effect.Effect<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> => {
   const commandLine = formatCommandLine("git", args);
   return runCapturedStreams({ command: "git", args, ...capture }).pipe(
     Effect.mapError(adapter.onSpawnFailure(commandLine)),
@@ -424,7 +424,7 @@ export const runGitOutput = Effect.fn("GitExec.runGitOutput")(function* <E>(
   cwd: string,
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitCaptured(args, adapter, {
     cwd,
     extendEnv: true,
@@ -472,7 +472,7 @@ export const runGitPathList = Effect.fn("GitExec.runGitPathList")(function* <E>(
   cwd: string,
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* runGitStructured(args, adapter, { ...structuredCapture(cwd), stdoutBound: gitPathOutputBound });
   return gitPathListFromNulOutput(output);
 });
@@ -515,7 +515,7 @@ export const runGitLines = Effect.fn("GitExec.runGitLines")(function* <E>(
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>,
   parseLines: (output: string) => ReadonlyArray<string> = gitLinesFromOutput
-): Effect.fn.Return<ReadonlyArray<string>, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* runGitCaptured(args, adapter, { cwd, source: "stdout" });
   return parseLines(output);
 });
@@ -525,7 +525,7 @@ export const runGitRawOutput = Effect.fn("GitExec.runGitRawOutput")(function* <E
   cwd: string,
   args: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitStructured(args, adapter, { cwd, stdin: "ignore" });
 });
 
@@ -534,7 +534,7 @@ export const resolveGitCommit = Effect.fn("GitExec.resolveGitCommit")(function* 
   cwd: string,
   ref: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitStructured(
     ["rev-parse", "--verify", "--end-of-options", `${ref}^{commit}`],
     adapter,
@@ -548,7 +548,7 @@ export const resolveGitMergeBase = Effect.fn("GitExec.resolveGitMergeBase")(func
   leftRef: string,
   rightRef: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitStructured(["merge-base", "--", leftRef, rightRef], adapter, structuredCapture(cwd));
 });
 
@@ -651,7 +651,7 @@ export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E
   commit: string,
   archivePath: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<void, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   yield* runGitStructured(gitArchiveArgs(archivePath, commit), adapter, {
     cwd,
     stdin: "ignore",
@@ -684,7 +684,7 @@ export const guardCloneLocalGitAttributes = Effect.fn("GitExec.guardCloneLocalGi
 ): Effect.fn.Return<
   void,
   E | EDirty,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -713,7 +713,11 @@ export const readGitTree = Effect.fn("GitExec.readGitTree")(function* <E>(
   commit: string,
   adapter: GitCommandErrorAdapter<E>,
   onMalformed: () => E
-): Effect.fn.Return<ReadonlyArray<GitTreeEntry>, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<GitTreeEntry>,
+  E,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const output = yield* runGitRawOutput(cwd, ["ls-tree", "-r", "-z", "--full-tree", commit], adapter);
   return yield* Effect.fromOption(gitTreeEntriesFromNulOutput(output), () => onMalformed());
 });
@@ -726,7 +730,11 @@ export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
   pathspec: ReadonlyArray<string>,
   adapter: GitCommandErrorAdapter<E>,
   onMalformed: () => E
-): Effect.fn.Return<ReadonlyArray<GitRenameEntry>, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<GitRenameEntry>,
+  E,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const output = yield* runGitRawOutput(
     cwd,
     ["diff", "--name-status", "-z", "--find-renames=50%", baseCommit, headCommit, "--", ...pathspec],
@@ -763,7 +771,7 @@ export const readGitRenames = Effect.fn("GitExec.readGitRenames")(function* <E>(
 export const collectStagedPaths = Effect.fn("GitExec.collectStagedPaths")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitPathList(cwd, ["diff", "--cached", "--name-only", "-z"], adapter);
 });
 
@@ -795,7 +803,7 @@ export const collectStagedPaths = Effect.fn("GitExec.collectStagedPaths")(functi
 export const collectUnstagedPaths = Effect.fn("GitExec.collectUnstagedPaths")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitPathList(cwd, ["diff", "--name-only", "-z"], adapter);
 });
 
@@ -832,7 +840,7 @@ export const collectUnstagedPaths = Effect.fn("GitExec.collectUnstagedPaths")(fu
 export const collectUntrackedPaths = Effect.fn("GitExec.collectUntrackedPaths")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<ReadonlyArray<string>, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitPathList(cwd, ["ls-files", "--others", "--exclude-standard", "-z"], adapter);
 });
 
@@ -880,7 +888,7 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>,
   ref: CurrentBranchRef = "abbrev-ref"
-): Effect.fn.Return<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitOutput(
     cwd,
     ref === "show-current" ? ["branch", "--show-current"] : ["rev-parse", "--abbrev-ref", "HEAD"],
@@ -923,7 +931,7 @@ export const currentBranch = Effect.fn("GitExec.currentBranch")(function* <E>(
 export const ensureOriginMain = Effect.fn("GitExec.ensureOriginMain")(function* <E>(
   cwd: string,
   adapter: GitCommandErrorAdapter<E>
-): Effect.fn.Return<void, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const shallow = yield* runGitOutput(cwd, ["rev-parse", "--is-shallow-repository"], adapter);
   if (shallow === "true") {
     yield* runGitOutput(cwd, ["fetch", "origin", "--quiet", "--unshallow"], adapter);

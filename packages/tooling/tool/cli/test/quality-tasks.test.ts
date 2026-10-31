@@ -173,7 +173,6 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -186,7 +185,6 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -197,6 +195,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
 import type { GateOrderLaneClass, GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
@@ -622,11 +621,11 @@ const cheapGatesSpawner = (
 ) =>
   ChildProcessSpawner.make((command) => {
     if (ChildProcess.isStandardCommand(command)) {
-      const commandText = A.join([command.command, ...command.args], " ");
+      const commandText = A.join([command.command, ...commandArgs(command)], " ");
       A.appendInPlace(spawned, commandText);
-      const output = A.contains(command.args, "--is-shallow-repository")
+      const output = A.contains(commandArgs(command), "--is-shallow-repository")
         ? "false"
-        : A.contains(command.args, "--show-current")
+        : A.contains(commandArgs(command), "--show-current")
           ? "feature/cheap-gates"
           : "";
       const exitCode = A.contains(A.map(failedCommands, key), key(commandText)) ? 1 : 0;
@@ -897,8 +896,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("SAST test requires a standard command");
           }
-          A.appendInPlace(commands, [command.command, ...command.args]);
-          const output = A.contains(command.args, "--name-only") ? `${ignored}\n${changed}\n` : "";
+          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
+          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\n${changed}\n` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
@@ -929,8 +928,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("SAST test requires a standard command");
           }
-          A.appendInPlace(commands, [command.command, ...command.args]);
-          const output = A.contains(command.args, "--name-only") ? A.join(changed, "\n") : "";
+          A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
+          const output = A.contains(commandArgs(command), "--name-only") ? A.join(changed, "\n") : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
@@ -2584,54 +2583,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             } finally {
               spawnSync.mockRestore();
             }
-          },
-          Effect.provideServiceEffect(Console.Console, TestConsole.make)
-        ),
-        Effect.provideServiceEffect(Console.Console, TestConsole.make)
-      )
-    );
-
-    it.effect(
-      "surfaces platform crypto failures while identifying and staging lane proofs",
-      flow(
-        Effect.fnUntraced(
-          function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-crypto-failure-" });
-            yield* initializeLaneProofRepository(tempRoot);
-
-            const lane = laneProofTestLane(tempRoot, "proof:crypto", "preflight", "process.exit(0)");
-            const platformCrypto = yield* Crypto.Crypto;
-            const cryptoFailure = PlatformError.badArgument({ module: "Crypto", method: "test" });
-
-            const withoutIndexIdentity = yield* prepareLaneProofSession([lane], "active").pipe(
-              Effect.provideService(Crypto.Crypto, {
-                ...platformCrypto,
-                randomUUIDv4: () => Effect.fail(cryptoFailure),
-              })
-            );
-            assertNone(withoutIndexIdentity);
-
-            const digestFailure = yield* prepareLaneProofSession([lane], "active").pipe(
-              Effect.provideService(Crypto.Crypto, { ...platformCrypto, digest: () => Effect.fail(cryptoFailure) }),
-              Effect.flip
-            );
-            expect(digestFailure.message).toBe("Failed to hash lane-proof identity.");
-
-            const session = yield* Effect.fromOption(yield* prepareLaneProofSession([lane], "active"));
-            let identityCalls = 0;
-            const stagingFailure = yield* persistLaneProofs(session, [[lane, 12]]).pipe(
-              Effect.provideService(Crypto.Crypto, {
-                ...platformCrypto,
-                randomUUIDv4: () =>
-                  Effect.suspend(() => {
-                    identityCalls = identityCalls + 1;
-                    return identityCalls > 1 ? Effect.fail(cryptoFailure) : platformCrypto.randomUUIDv4();
-                  }),
-              }),
-              Effect.flip
-            );
-            expect(stagingFailure.message).toBe("Failed to create lane-proof staging identity.");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),

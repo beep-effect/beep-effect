@@ -22,7 +22,7 @@ import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
 import * as JsonFile from "./internal/JsonFile.ts";
 import * as Version from "./Version.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $RepoDocgenId.create("ProofManifest");
 
@@ -334,18 +334,8 @@ const DOCGEN_PROOF_INPUT_GLOBS = [
 const DOCGEN_PROOF_OUTPUT_GLOBS = ["docs/**/*"] as const;
 const DOCGEN_PROOF_GLOB_IGNORES = ["**/.beep/**", "**/.turbo/**", "**/node_modules/**"] as const;
 
-const sha256Text = Effect.fnUntraced(function* (value: string) {
-  return yield* utf8Sha256Hex(value).pipe(
-    Effect.mapError((cause) =>
-      Domain.DocgenError.make({
-        message: `[ProofManifest.sha256] Failed to hash proof identity\n${String(cause)}`,
-      })
-    )
-  );
-});
-
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
-  return Sha256Hex.make(yield* sha256Text(value));
+  return Sha256Hex.make(yield* utf8Sha256Hex(value));
 });
 
 const jsonText = (value: unknown): string => encodeUnknownJson(value);
@@ -488,7 +478,7 @@ export const writeDocgenProofManifest = Effect.fn("DocgenProofManifest.writeDocg
   function* (): Effect.fn.Return<
     DocgenProofManifest,
     Domain.DocgenError,
-    Configuration.Configuration | Crypto.Crypto | Domain.Process | FileSystem.FileSystem | Path.Path | FsUtils
+    Configuration.Configuration | Digest.Digest | Domain.Process | FileSystem.FileSystem | Path.Path | FsUtils
   > {
     const config = yield* Configuration.Configuration;
     const process = yield* Domain.Process;
@@ -563,7 +553,7 @@ export const verifyDocgenProofManifest = Effect.fn("DocgenProofManifest.verifyDo
 ): Effect.fn.Return<
   DocgenProofManifestVerification,
   Domain.DocgenError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils
+  Digest.Digest | FileSystem.FileSystem | Path.Path | FsUtils
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

@@ -10,7 +10,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { pipe } from "effect/Function";
@@ -177,7 +177,7 @@ const sameTriggers = (left: ReadonlyArray<string>, right: ReadonlyArray<string>)
 const dependentAction = Effect.fnUntraced(function* <Candidate>(
   input: DependentActionInput,
   candidates: ReadonlyArray<Candidate>,
-  onSingle: (candidate: Candidate) => Effect.Effect<BoxPlanAction, BoxCanonicalDigestError, Crypto.Crypto>
+  onSingle: (candidate: Candidate) => Effect.Effect<BoxPlanAction, BoxCanonicalDigestError, Digest.Digest>
 ) {
   const dependencies = [input.folder.actionKey];
   if (input.folder.blocked) {
@@ -757,7 +757,7 @@ export class BoxProvisioningPlanner extends Context.Service<BoxProvisioningPlann
   $I`BoxProvisioningPlanner`
 ) {
   static readonly layer = Layer.unwrap(
-    Effect.map(Crypto.Crypto, (crypto) =>
+    Effect.map(Digest.Digest, (digest) =>
       Layer.succeed(
         BoxProvisioningPlanner,
         BoxProvisioningPlanner.of({
@@ -765,16 +765,16 @@ export class BoxProvisioningPlanner extends Context.Service<BoxProvisioningPlann
             function* (desired: BoxDesiredState, observed: BoxObservedState) {
               return yield* planBoxProvisioning(desired, observed);
             },
-            (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+            (effect) => effect.pipe(Effect.provideService(Digest.Digest, digest))
           ),
           planWithAdoptions: Effect.fn("BoxProvisioningPlanner.planWithAdoptions")(
             function* (desired: BoxDesiredState, observed: BoxObservedState, adoptions: ReadonlyArray<BoxAdoption>) {
               return yield* planBoxProvisioning(desired, observed, adoptions);
             },
-            (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+            (effect) => effect.pipe(Effect.provideService(Digest.Digest, digest))
           ),
         })
       )
     )
-  ).pipe(Layer.provide(NodeCrypto.layer));
+  ).pipe(Layer.provide(NodeCrypto.layerDigest));
 }

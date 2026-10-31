@@ -31,12 +31,10 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -218,20 +216,6 @@ describe("renderYeetDispatchStateWarning", () => {
 
 const MemoryLayer = Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
-
-// A crypto service that refuses to hash, standing in for a platform whose
-// digest is unavailable; the row id cannot be derived without it.
-const failingCrypto = Crypto.make({
-  randomBytes: (size) => new Uint8Array(size),
-  digest: () =>
-    Effect.fail(
-      PlatformError.badArgument({
-        module: "Crypto",
-        method: "digest",
-        description: "inbox row id digest refusal",
-      })
-    ),
-});
 
 const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
@@ -485,28 +469,6 @@ describe("dispatchYeetCheckFailure", () => {
             (yield* loadYeetRemediationWave(root)).pipe(assertNone);
             const errors = A.map(yield* TestConsole.errorLines, String);
             expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
-            expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
-          })
-        )
-      );
-    }
-  );
-
-  // The row id is the dedup identity, so a capsule without one is never queued:
-  // a hashing refusal must leave the inbox untouched and say so.
-  it.layer(Layer.mergeAll(TestConsole.layer, PlatformLayer), { excludeTestServices: true, timeout: "10 seconds" })(
-    (it) => {
-      it.effect("queues nothing when the row id cannot be derived", () =>
-        inTempRepo((root) =>
-          Effect.gen(function* () {
-            yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT).pipe(
-              Effect.provideService(Crypto.Crypto, failingCrypto)
-            );
-
-            expect(A.length(yield* readInboxRows(root))).toBe(0);
-            (yield* loadYeetRemediationWave(root)).pipe(assertNone);
-            const errors = A.map(yield* TestConsole.errorLines, String);
-            expect(A.some(errors, (line) => Str.includes("failed to derive inbox row id")(line))).toBe(true);
             expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
           })
         )

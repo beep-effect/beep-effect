@@ -1568,18 +1568,18 @@ export const HookPulseV1FromLegacyRecord = HookPulseLegacyV1Record.pipe(
           sessionId: input.sessionId,
           transcriptPath: O.fromUndefinedOr(input.transcriptPath),
         }).pipe(
-          Effect.mapError(
-            () =>
+          Effect.mapBoth({
+            onFailure: () =>
               new SchemaIssue.InvalidValue({
                 message: "Failed to migrate private identifiers from a legacy hook-pulse/v1 row",
-              })
-          ),
-          Effect.map((privateRefs) => ({
-            ...input,
-            sessionId: privateRefs.sessionId,
-            cwd: privateRefs.cwd,
-            ...O.getSomesStruct({ transcriptPath: privateRefs.transcriptPath }),
-          }))
+              }),
+            onSuccess: (privateRefs) => ({
+              ...input,
+              sessionId: privateRefs.sessionId,
+              cwd: privateRefs.cwd,
+              ...O.getSomesStruct({ transcriptPath: privateRefs.transcriptPath }),
+            }),
+          })
         ),
       encode: (input) => Effect.succeed(input),
     })

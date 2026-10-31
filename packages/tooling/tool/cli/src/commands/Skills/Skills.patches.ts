@@ -29,7 +29,7 @@ import * as Str from "effect/String";
 import { diffLines, sameDiffLine } from "./internal/DiffLines.ts";
 import { readAtMergeBase } from "./internal/MergeBase.ts";
 import { SkillsCommandError } from "./Skills.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { DiffLine } from "./internal/DiffLines.ts";
 
@@ -404,13 +404,13 @@ type MergeBaseCodeowners = { readonly base: string; readonly codeowners: O.Optio
 // the file yields `None`, which fails only when a patch actually needs an owner.
 const readMergeBaseCodeowners = Effect.fn("SkillPatchOwnerSource.readMergeBaseCodeowners")(function* (
   repoRoot: string
-): Effect.fn.Return<MergeBaseCodeowners, SkillsCommandError, ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto> {
+): Effect.fn.Return<MergeBaseCodeowners, SkillsCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const read = yield* readAtMergeBase(repoRoot, CODEOWNERS_BASE_REF, CODEOWNERS_PATH, "patch ownership");
   return { base: read.base, codeowners: read.text };
 });
 
 const makeSkillPatchOwnerSource = Effect.gen(function* () {
-  const runtime = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto>();
+  const runtime = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Digest.Digest>();
   const cache = MutableHashMap.empty<string, MergeBaseCodeowners>();
   const codeownersAt = Effect.fn("SkillPatchOwnerSource.codeownersAt")(function* (repoRoot: string) {
     const cached = MutableHashMap.get(cache, repoRoot);

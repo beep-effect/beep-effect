@@ -26,7 +26,7 @@ import { DiffTotalsInput } from "../../../internal/ratchet/RatchetDiff.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");
@@ -576,7 +576,7 @@ const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(fu
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
   const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
@@ -589,7 +589,7 @@ const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function
 ): Effect.fn.Return<
   ReadonlyArray<JSDocLegacyFileFinding>,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -609,18 +609,20 @@ const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function
         return A.empty<JSDocLegacyFileFinding>();
       }
       return yield* fs.readFileString(absolutePath).pipe(
-        Effect.mapError((cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`, {})),
-        Effect.map((sourceText) => {
-          if (!includeGenerated && hasGeneratedFileHeader(sourceText)) {
-            return A.empty<JSDocLegacyFileFinding>();
-          }
-          if (!Str.includes("@example")(sourceText) && !Str.includes("@remarks")(sourceText)) {
-            return A.empty<JSDocLegacyFileFinding>();
-          }
-          const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
-          return A.flatMap(JSDocLegacyTag.literals, (tag) =>
-            A.contains(tags, tag) ? [JSDocLegacyFileFinding.make({ filePath, tag })] : []
-          );
+        Effect.mapBoth({
+          onFailure: (cause) => QualityScriptCommandError.new(cause, `Failed to read ${filePath}.`, {}),
+          onSuccess: (sourceText) => {
+            if (!includeGenerated && hasGeneratedFileHeader(sourceText)) {
+              return A.empty<JSDocLegacyFileFinding>();
+            }
+            if (!Str.includes("@example")(sourceText) && !Str.includes("@remarks")(sourceText)) {
+              return A.empty<JSDocLegacyFileFinding>();
+            }
+            const tags = pipe(jsdocCommentsFromSource(sourceText), A.flatMap(tagsFromComment), A.dedupe);
+            return A.flatMap(JSDocLegacyTag.literals, (tag) =>
+              A.contains(tags, tag) ? [JSDocLegacyFileFinding.make({ filePath, tag })] : []
+            );
+          },
         })
       );
     }),
@@ -634,7 +636,7 @@ const enforceZeroLegacy = Effect.fn("JSDocRatchet.enforceZeroLegacy")(function* 
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const findings = yield* zeroLegacyFindings(repoRoot, includeGenerated);
   const scope = includeGenerated ? "include-generated" : "non-generated";
@@ -728,7 +730,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
 }: RunJSDocRatchetOptions): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const currentTotals = yield* readCurrentInventoryTotals(repoRoot, inventoryPath);

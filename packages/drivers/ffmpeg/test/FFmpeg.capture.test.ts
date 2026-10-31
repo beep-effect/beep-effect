@@ -64,6 +64,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const decodeUnknownSafeMetadataKey = S.decodeUnknownEffect(SafeMetadataKey);
 const encoder = new TextEncoder();
@@ -147,6 +148,7 @@ const makeCaptureSpawnerLayer = (
             if (!ChildProcess.isStandardCommand(command)) {
               return makeHandle("", "unsupported command", 1);
             }
+            const args = commandArgs(command);
 
             commands[A.length(commands)] = command;
 
@@ -162,11 +164,11 @@ const makeCaptureSpawnerLayer = (
             }
             // The null muxer probe emits per-frame metadata on stdout and
             // writes no output file.
-            if (A.contains(command.args, "null")) {
+            if (A.contains(args, "null")) {
               return makeHandle(luminanceStdout, "ffmpeg stderr", commandExitCode);
             }
 
-            return yield* O.match(A.last(command.args), {
+            return yield* O.match(A.last(args), {
               onNone: () => Effect.succeed(makeHandle("", "ffmpeg stderr", commandExitCode)),
               onSome: Effect.fnUntraced(function* (target) {
                 if (commandExitCode === 0) {

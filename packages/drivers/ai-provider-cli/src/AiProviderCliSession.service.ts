@@ -15,7 +15,8 @@ import {
   validateProfile,
 } from "./AiProviderCliSession.profile.service.ts";
 import { openStdio } from "./AiProviderCliSession.stdio.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -66,7 +67,12 @@ interface SessionShape {
   ) => Effect.Effect<
     ManagedSession,
     ManagedSessionError,
-    Scope.Scope | Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | Scope.Scope
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >;
 }
 

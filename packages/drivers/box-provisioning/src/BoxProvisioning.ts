@@ -9,7 +9,7 @@ import { $BoxProvisioningId } from "@beep/identity";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { identity } from "effect/Function";
@@ -114,7 +114,7 @@ const makeService = (
   inventory: BoxProvisioningInventory["Service"],
   planner: BoxProvisioningPlanner["Service"],
   applier: BoxProvisioningApplier["Service"],
-  crypto: Crypto.Crypto
+  digest: Digest.Digest["Service"]
 ): BoxProvisioningShape => {
   const dryRun = Effect.fn("BoxProvisioning.dryRun")(
     function* (desiredInput: unknown) {
@@ -122,7 +122,7 @@ const makeService = (
       const observed = yield* inventory.observe(desired);
       return yield* planner.plan(desired, observed);
     },
-    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+    (effect) => effect.pipe(Effect.provideService(Digest.Digest, digest))
   );
 
   const applyReviewedPlan = Effect.fn("BoxProvisioning.applyReviewedPlan")(
@@ -155,7 +155,7 @@ const makeService = (
       const verdict = yield* validateBoxProvisioningPostApplyPlan(adoptedDesired, reviewedPlan, postApplyPlan);
       return BoxReviewedApplyResult.make({ adoptions, postApplyPlan, receipt, verdict });
     },
-    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+    (effect) => effect.pipe(Effect.provideService(Digest.Digest, digest))
   );
 
   return { applyReviewedPlan, dryRun, reconcile: dryRun };
@@ -205,12 +205,12 @@ export interface BoxProvisioningShape {
  */
 export class BoxProvisioning extends Context.Service<BoxProvisioning, BoxProvisioningShape>()($I`BoxProvisioning`) {
   static readonly layer = Layer.unwrap(
-    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier, Crypto.Crypto]).pipe(
-      Effect.map(([inventory, planner, applier, crypto]) =>
-        Layer.succeed(BoxProvisioning, BoxProvisioning.of(makeService(inventory, planner, applier, crypto)))
+    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier, Digest.Digest]).pipe(
+      Effect.map(([inventory, planner, applier, digest]) =>
+        Layer.succeed(BoxProvisioning, BoxProvisioning.of(makeService(inventory, planner, applier, digest)))
       )
     )
-  ).pipe(Layer.provide(NodeCrypto.layer));
+  ).pipe(Layer.provide(NodeCrypto.layerDigest));
 
   /**
    * Orchestration plus live inventory and apply layers, requiring one Box layer.

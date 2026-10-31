@@ -19,7 +19,7 @@ import { and, eq, inArray, lt } from "drizzle-orm";
 import * as Cache from "effect/Cache";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -265,13 +265,13 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     const imageExtractor = yield* ImageExtractor;
     const imageFetcher = yield* ImageFetcher;
     const imageStore = yield* ImageStore;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
 
     const computeContentHash = Effect.fn("LinkIngestionService.computeContentHash")(function* (
       content: string,
       url: string
     ): Effect.fn.Return<string, LinkIngestionError> {
-      const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(content)).pipe(
+      const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(content)).pipe(
         Effect.mapError((cause) =>
           LinkIngestionError.make({
             message: "Failed to hash fetched content",

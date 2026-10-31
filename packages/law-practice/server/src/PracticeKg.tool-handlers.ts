@@ -364,8 +364,10 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           .pipe(
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
-            Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
-            Effect.mapError(toolFailure("corpus_search_text"))
+            Effect.mapBoth({
+              onFailure: toolFailure("corpus_search_text"),
+              onSuccess: addPracticeKgCorpusPointers(bundle.corpusRoot, path),
+            })
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
@@ -380,8 +382,10 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           .pipe(
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
-            Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
-            Effect.mapError(toolFailure("corpus_get_document"))
+            Effect.mapBoth({
+              onFailure: toolFailure("corpus_get_document"),
+              onSuccess: addPracticeKgCorpusPointers(bundle.corpusRoot, path),
+            })
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),

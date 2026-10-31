@@ -26,7 +26,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -58,9 +58,10 @@ const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Resu
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
+  NodeCrypto.layer,
+  PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {

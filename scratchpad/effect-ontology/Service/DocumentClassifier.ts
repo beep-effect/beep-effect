@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Document Classifier
  *
@@ -402,7 +402,7 @@ export const defaultClassification: DocumentClassification = {
  */
 export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I`DocumentClassifier`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 

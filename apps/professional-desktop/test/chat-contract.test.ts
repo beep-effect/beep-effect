@@ -21,7 +21,8 @@ import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -50,12 +51,12 @@ const makeStack = Effect.gen(function* () {
   return { operations: yield* makeChatOperations(store, kernel, sink), usageRef: ref };
 });
 
-const TestCryptoLayer = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (_algorithm, data) => Effect.succeed(data),
-    randomBytes: (size) => new Uint8Array(size).fill(1),
-  })
+const TestCryptoLayer = Layer.mergeAll(
+  Layer.mock(Digest.Digest)({ digest: (_algorithm, data) => Effect.succeed(data) }),
+  Layer.succeed(
+    SecureRandom.SecureRandom,
+    SecureRandom.make((size) => new Uint8Array(size).fill(1))
+  )
 );
 const ThreadStoreTestLayer = ThreadStoreInMemoryLayer.pipe(Layer.provide(TestCryptoLayer));
 const StackLayer = Layer.merge(ThreadStoreTestLayer, FixtureTurnKernel);

@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
  * Runtime: HTTP Middleware
@@ -124,7 +124,7 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * @since 0.0.0
  */
 export const makeAuthMiddleware = Effect.gen(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const sha256 = flow(sha256Effect, Effect.provideService(Crypto.Crypto, crypto));
   const config = yield* ConfigService;
 

@@ -29,7 +29,7 @@ import {
 import { FsUtils, FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodePath, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodePath, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
@@ -61,7 +61,11 @@ const decodeCensusJson = S.decodeUnknownEffect(S.fromJsonString(S.Array(EffectVi
 const isEffectVitestFinding = S.is(EffectVitestFinding);
 const isEffectVitestPackageTiming = S.is(EffectVitestPackageTiming);
 
-const discoveryLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const discoveryLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 // A checked-in test whose native-subject EV010 row is a reviewed exception, so the scan
 // below always reports at least one finding for it.
@@ -839,7 +843,7 @@ it("keeps indexed legacy membership separate from anchored exception eligibility
   }
 });
 
-it.layer(NodeServices.layer)("round 2 contextual graph routing", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("round 2 contextual graph routing", (it) => {
   it.effect(
     "retains primary assertion polarity and uncertainty after graph hydration",
     Effect.fnUntraced(function* () {

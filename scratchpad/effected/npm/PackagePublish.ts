@@ -3,7 +3,7 @@ import { type CommandOutput, LocalExec, Run } from "@beep/commands";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
@@ -371,7 +371,7 @@ interface NpmInvocation {
 /** Builds the service over already-resolved platform services. */
 const make = Effect.fnUntraced(function* () {
 	const fs = yield* FileSystem.FileSystem;
-	const crypto = yield* Crypto.Crypto;
+	const crypto = yield* Digest.Digest;
 	const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 	const local = yield* LocalExec;
 
@@ -495,7 +495,7 @@ const make = Effect.fnUntraced(function* () {
 			.readFile(tarballPath)
 			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
 		const digest = yield* crypto
-			.digest("SHA-256", bytes)
+			.digest(Digest.sha256, bytes)
 			.pipe(Effect.mapError((cause) => PublishError.make({ kind: "digest", subject: tarballPath, cause })));
 		return PackedTarball.make({
 			tarballPath,
@@ -669,7 +669,7 @@ export class PackagePublish extends Context.Service<PackagePublish, PackagePubli
 	static readonly layer: Layer.Layer<
 		PackagePublish,
 		never,
-		FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | LocalExec
+		FileSystem.FileSystem | Digest.Digest | ChildProcessSpawner.ChildProcessSpawner | LocalExec
 	> = Layer.effect(this, make());
 
 	/**

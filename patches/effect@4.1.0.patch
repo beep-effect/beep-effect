@@ -1,7 +1,8 @@
 diff --git a/dist/internal/equal.js b/dist/internal/equal.js
+index 8b83c84..50de8a1 100644
 --- a/dist/internal/equal.js
 +++ b/dist/internal/equal.js
-@@ -4,6 +4,15 @@
+@@ -4,6 +4,15 @@ export const getAllObjectKeys = obj => {
    if (obj.constructor === Object) return keys;
    if (obj instanceof Error) {
      keys.delete("stack");

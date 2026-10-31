@@ -52,7 +52,7 @@ import {
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -106,8 +106,8 @@ const isTransformationLedgerRecordCasesMailStorePass = S.is(TransformationLedger
 const isTransformationLedgerRecordCasesMailWarning = S.is(TransformationLedgerRecord.cases["mail-warning"]);
 
 const testLayer = Layer.mergeAll(
-  CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  NodeServices.layer
+  CorpusCommandServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
 );
 
 const schemaRoundTripLaw = <Schema extends S.Codec<unknown>>(schema: Schema) => {

@@ -31,7 +31,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type * as LanguageModel from "effect/ai/LanguageModel";
 import type * as Config from "effect/Config";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const IrToLawLayer = Layer.succeed(IrToLaw, IrToLaw.of(makeIrToLaw()));
 const FileProcessingLayer = makeFileProcessingServiceLayer([TikaFileProcessingEngine]);
@@ -57,7 +57,7 @@ const OfficeActionReviewLayer = Layer.effect(
  * **Details**
  *
  * Hosts must merge in a `LanguageModel.LanguageModel` provider and a
- * `Crypto.Crypto` provider (e.g. `BunCrypto.layer`); this layer keeps model
+ * `Digest.Digest` provider (e.g. `BunCrypto.layer`); this layer keeps model
  * selection and the runtime crypto primitive outside law-practice while
  * LangExtract consumes the model provider for structured extraction only when
  * `BEEP_LANGEXTRACT_ALLOW_REMOTE=true`, and the file-processing capability uses
@@ -77,7 +77,7 @@ const OfficeActionReviewLayer = Layer.effect(
 export const LawPracticeServerLive: Layer.Layer<
   OfficeActionReview | IrToLaw,
   Config.ConfigError,
-  LanguageModel.LanguageModel | Crypto.Crypto
+  LanguageModel.LanguageModel | Digest.Digest
 > = OfficeActionReviewLayer.pipe(
   // `provideMerge` satisfies the loop's `IrToLaw` dependency while keeping
   // `IrToLaw` in the output surface (a sibling `mergeAll` would race the

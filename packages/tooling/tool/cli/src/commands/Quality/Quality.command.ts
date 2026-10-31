@@ -130,7 +130,8 @@ import {
   QualityHardwareProfile,
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ParseError } from "jsonc-parser";
 import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
@@ -719,10 +720,10 @@ const decodeEffectTsgoRuleRowOption = S.decodeUnknownOption(EffectTsgoRuleRow);
 const decodeEffectTsgoDiagnosticsTableOption = S.decodeUnknownOption(EffectTsgoDiagnosticsTable);
 
 type QualityScriptEnvironment =
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 type GithubCheckError =
   | QualityScriptCommandError
@@ -813,7 +814,11 @@ const qualityFileContext = Effect.fn("QualityScriptCommands.qualityFileContext")
 
 const runStep = Effect.fn("QualityScriptCommands.runStep")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
   const exitCode = yield* runToExit({
     command: step.command,
@@ -896,8 +901,11 @@ const runGithubCheckLaneGroup = (
   lanes: ReadonlyArray<GithubCheckLaneSpec>,
   failurePolicy: GithubCheckFailurePolicyType,
   concurrency = githubCheckTierConcurrency("pre-push")
-): Effect.Effect<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> =>
-  runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, concurrency);
+): Effect.Effect<
+  void,
+  QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment | Digest.Digest
+> => runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, concurrency);
 
 const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   "QualityScriptCommands.runEvidenceOrderedGithubCheckLaneGroup"
@@ -908,7 +916,7 @@ const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
 ): Effect.fn.Return<
   void,
   QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment | WaveOrder
+  QualityScriptEnvironment | WaveOrder | Digest.Digest
 > {
   const waveOrder = yield* WaveOrder;
   yield* runQualityTaskGithubCheckLaneWaves(label, githubCheckOrderedLaneWaves(waveOrder.order(lanes)), failurePolicy);
@@ -922,7 +930,7 @@ const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function*
     readonly exitCode: number;
   },
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runCaptured({
     command: step.command,
@@ -946,7 +954,11 @@ const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function*
 
 const collectSuccessfulOutput = Effect.fn("QualityScriptCommands.collectSuccessfulOutput")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<string, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* collectOutput(step);
 
   if (result.exitCode !== 0) {
@@ -965,7 +977,11 @@ const isTruthyMainPush = Effect.fn("QualityScriptCommands.isTruthyMainPush")(fun
 
 const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   return yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "git:branch",
@@ -978,7 +994,11 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
 
 const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log("[github-checks] refreshing origin/main");
   const shallow = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
@@ -1010,7 +1030,7 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
 ): Effect.fn.Return<
   ReadonlyArray<GithubCheckLaneSpec>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (yield* isTruthyMainPush()) {
     yield* Console.log("[github-checks] quality: skipped changeset status on main push");
@@ -1054,7 +1074,7 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1086,7 +1106,11 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
 const runRepoSanity = Effect.fn("QualityScriptCommands.runRepoSanity")(function* (
   repoRoot: string,
   failurePolicy: GithubCheckFailurePolicyType
-): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> {
+): Effect.fn.Return<
+  void,
+  QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment | Digest.Digest
+> {
   yield* runGithubCheckLaneGroup("github-checks:repo-sanity", githubCheckRepoSanityLanes(repoRoot), failurePolicy);
 });
 
@@ -1096,7 +1120,7 @@ const runQuality = Effect.fn("QualityScriptCommands.runQuality")(function* (
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment
+  QualityScriptEnvironment | Digest.Digest
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
   yield* runGithubCheckLaneGroup(
@@ -1112,7 +1136,7 @@ const runPrePushChecks = Effect.fn("QualityScriptCommands.runPrePushChecks")(fun
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment
+  QualityScriptEnvironment | Digest.Digest
 > {
   const changesetStatusLanes = yield* githubCheckChangesetStatusLanes(repoRoot);
   yield* runEvidenceOrderedGithubCheckLaneGroup(
@@ -1133,7 +1157,7 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed,
-  QualityScriptEnvironment
+  QualityScriptEnvironment | Digest.Digest
 > {
   const changesetStatusLanes = A.map(
     yield* githubCheckChangesetStatusLanes(repoRoot),
@@ -1230,7 +1254,11 @@ export const devQualityStepsForTesting: {
 const runDevQuality = Effect.fn("QualityScriptCommands.runDevQuality")(function* (
   repoRoot: string,
   options: { readonly base: string; readonly head: string; readonly surface: boolean }
-): Effect.fn.Return<void, QualityTaskConfigurationError | QualityTaskGroupFailed, QualityScriptEnvironment> {
+): Effect.fn.Return<
+  void,
+  QualityTaskConfigurationError | QualityTaskGroupFailed,
+  QualityScriptEnvironment | Digest.Digest
+> {
   yield* runQualityTaskStreamingStepGroup("quality:dev", devQualityStepsForTesting(repoRoot, options));
 });
 
@@ -1288,7 +1316,11 @@ const runReviewFix = Effect.fn("QualityScriptCommands.runReviewFix")(function* (
 
 const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const mergeBase = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "secrets:merge-base",
@@ -1315,7 +1347,11 @@ const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function*
 
 const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log("[github-checks] security: osv scan");
   yield* runFixedStep(repoRoot, "security:osv-scan", "docker", [
     "run",
@@ -1335,7 +1371,7 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1440,7 +1476,11 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
 
 const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log("[github-checks] nix: flake check");
   yield* runFixedStep(repoRoot, "nix:flake-check", "nix", [
     "--option",
@@ -1481,7 +1521,7 @@ const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
 export const runGithubChecks = Effect.fn("QualityScriptCommands.runGithubChecks")(function* (
   mode: GithubCheckMode,
   options: GithubCheckRunOptions = {}
-): Effect.fn.Return<void, GithubCheckError, QualityScriptEnvironment> {
+): Effect.fn.Return<void, GithubCheckError, QualityScriptEnvironment | Digest.Digest> {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const failurePolicy = options.failurePolicy ?? GithubCheckFailurePolicy.Enum["fail-fast"];
 
@@ -1626,7 +1666,7 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
 ): Effect.fn.Return<
   TestTsgoPackageResult,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2580,7 +2620,7 @@ const collectGitVisiblePaths = Effect.fn("QualityScriptCommands.collectGitVisibl
 ): Effect.fn.Return<
   HashSet.HashSet<string>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const visiblePaths = HashSet.fromIterable(
     gitPathListFromNulOutput(
@@ -3321,7 +3361,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
@@ -3386,7 +3426,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 export const runJSDocQuality = Effect.fn("QualityScriptCommands.runJSDocQuality")(function* (): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
 

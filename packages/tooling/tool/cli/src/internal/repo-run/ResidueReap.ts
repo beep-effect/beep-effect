@@ -26,7 +26,7 @@ import * as BI from "effect/BigInt";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -174,7 +174,7 @@ type ReapPolicy = {
 type DiscoveryRequirements =
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 
 type Discovered = {
@@ -566,7 +566,11 @@ const canonicalDirectoryShape = Effect.fnUntraced(function* (
 
 const gitCleanSkip = Effect.fnUntraced(function* (
   gitMarkers: ReadonlyArray<string>
-): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<ResidueReapSkipReason>,
+  never,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const readings = yield* Effect.forEach(
     gitMarkers,
     (marker) =>
@@ -607,7 +611,7 @@ const directoryCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const shape = yield* canonicalDirectoryShape(root, candidatePath);
@@ -678,7 +682,7 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -715,7 +719,7 @@ const turboCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1199,7 +1203,7 @@ const reassessTurboEntry = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1693,13 +1697,13 @@ class ResidueArchive extends Context.Service<
 const makeResidueArchive = Effect.fnUntraced(function* () {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   return ResidueArchive.of({
     publish: Effect.fn("ResidueArchive.publish")((target: string, content: string, label: string) =>
       publishArchiveText(target, content, label).pipe(
         Effect.provideService(Path.Path, path),
         Effect.provideService(FileSystem.FileSystem, fs),
-        Effect.provideService(Crypto.Crypto, crypto)
+        Effect.provideService(SecureRandom.SecureRandom, crypto)
       )
     ),
     move: Effect.fn("ResidueArchive.move")((source: string, destination: string, expected: DirectoryIdentity) =>
@@ -2400,7 +2404,7 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
     ),
   };
   return {
-    runId: yield* (yield* Crypto.Crypto).randomUUIDv4(),
+    runId: yield* (yield* SecureRandom.SecureRandom).uuidV4(),
     beepCacheRoot,
     checkoutRoots,
     checkoutBoundaries,
@@ -2785,8 +2789,8 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
   );
   const warnings = A.flatMap(rows, (row) => row.warnings);
   const refusalWarnings = A.flatMap(rows, (row) => (row.refused ? row.warnings : []));
-  const crypto = yield* Crypto.Crypto;
-  const recoveryPath = path.join(root, `recovery-${yield* crypto.randomUUIDv4()}.json`);
+  const crypto = yield* SecureRandom.SecureRandom;
+  const recoveryPath = path.join(root, `recovery-${yield* crypto.uuidV4()}.json`);
   const result = ResidueReapReport.make({
     ...report,
     reportPath: recoveryPath,

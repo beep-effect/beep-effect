@@ -19,6 +19,7 @@ folded the `arbitrary` barrel into the single `effect/Arbitrary` module.
 | `effect/unstable/<module>` | `effect/<module>` (`ai`, `cli`, `cluster`, `devtools`, `encoding`, `eventlog`, `http`, `net`, `observability`, `persistence`, `process`, `reactivity`, `rpc`, `schema`, `socket`, `sql`, `workers`, `workflow`) |
 | `effect/unstable/httpapi` | `effect/http-api` |
 | `effect/unstable/arbitrary`, `effect/unstable/arbitrary/Arbitrary` | `effect/Arbitrary` |
+| `effect/Crypto` (one `Crypto` service, retired in effect 4.1.0) | `effect/crypto/<Family>` leaves: `effect/crypto/Digest` (`Digest.Digest`, `Digest.sha256`), `effect/crypto/SecureRandom` (`SecureRandom.SecureRandom`, `uuidV4`, `uuidV7`, `randomBytes`), `effect/crypto/Mac`, `Kdf`, `Aead`, `Cipher`, `Signature`, `KeyAgreement`, `KeyWrap`; never the `effect/crypto` barrel. Platform layers: `NodeCrypto.layer` / `BunCrypto.layer` (every family) or `layerDigest` / `layerSecureRandom` |
 | `packages/effect/src/unstable/<module>/` | `packages/effect/src/<module>/` (`httpapi` is `http-api/`; `arbitrary/Arbitrary.ts` is `Arbitrary.ts`) |
 | `packages/effect/dist/unstable/<module>/` | `packages/effect/dist/<module>/` (same two exceptions) |
 | `packages/effect/{test,typetest,dtslint}/unstable/<module>/` | `packages/effect/{test,typetest,dtslint}/<module>/` (directory names unchanged) |
