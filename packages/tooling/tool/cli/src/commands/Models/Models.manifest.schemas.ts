@@ -29,6 +29,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaParser from "effect/SchemaParser";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { EffortLevel, ModelId } from "./Models.catalog.schemas.ts";
 import { ModelsLegacyPublication, ModelsPublication, ModelsTrackedPublication } from "./Models.exchange.schemas.ts";
@@ -53,7 +54,6 @@ const RoutingRoleKit = LiteralKit([
   "fallback.grok",
   "qa.judge",
   "research.routine",
-  "jsdoc.migrate-titles",
   "deprecated.routable",
   "review.panel",
   "muse.opt-in",
@@ -1017,15 +1017,53 @@ export class SupersededModel extends S.Opaque<SupersededModel, { readonly brand:
 // Roles removed from the vocabulary. A manifest written before a retirement
 // still names them, so its bindings and targets for them decode and are
 // dropped instead of failing the whole manifest (graft.deep: graft retired
-// 2026-10-28).
-const RetiredRoutingRole = LiteralKit(["graft.deep"]);
-const RetiredBindingRef = S.Struct({ role: RetiredRoutingRole });
+// 2026-10-28; jsdoc.migrate-titles: `quality jsdoc-migrate` retired
+// 2026-10-31).
+const RetiredRoutingRole = LiteralKit(["graft.deep", "jsdoc.migrate-titles"]);
+// Targets whose projected file was deleted while their role stays active. A
+// manifest written before the deletion still lists them; they are dropped on
+// decode (repo.examples.docgen-worker: `docgen quality-worker-eval` retired
+// 2026-10-31).
+const RetiredTargetId = LiteralKit(["repo.examples.docgen-worker"]);
 const RetiredBinding = S.Struct({ role: RetiredRoutingRole, surface: S.String, modelId: S.String });
-const RetiredLocator = S.Union([
-  S.Struct({ binding: RetiredBindingRef }),
-  S.Struct({ filter: S.Struct({ roles: S.NonEmptyArray(RetiredRoutingRole) }) }),
-]);
-const RetiredTarget = S.Struct({ id: S.String, locators: S.NonEmptyArray(RetiredLocator) });
+// Encoded shapes the pruner inspects before a target is decoded. A target can
+// mix retired and active roles, so retirement is pruned per locator and per
+// filter role rather than per target.
+const RetiredBindingLocator = S.Struct({ binding: S.Struct({ role: RetiredRoutingRole }) });
+const RoleFilterLocator = S.Struct({ filter: S.Struct({ roles: S.Array(S.String) }) });
+const TargetEntry = S.Struct({ id: S.String, locators: S.Array(S.Unknown) });
+
+const isActiveRole = (role: string): boolean => !S.is(RetiredRoutingRole)(role);
+
+// Drops a locator bound to a retired role, and strips retired roles from a
+// filter. A filter left with no roles is dropped rather than kept, because an
+// empty role list renders every binding.
+const pruneRetiredLocator = (locator: unknown): O.Option<unknown> => {
+  if (S.is(RetiredBindingLocator)(locator)) {
+    return O.none();
+  }
+  if (!S.is(RoleFilterLocator)(locator)) {
+    return O.some(locator);
+  }
+  const roles = A.filter(locator.filter.roles, isActiveRole);
+  return A.isReadonlyArrayNonEmpty(locator.filter.roles) && A.isReadonlyArrayEmpty(roles)
+    ? O.none()
+    : O.some({ ...locator, filter: { ...locator.filter, roles } });
+};
+
+// Drops a retired target id, and a target whose locators all pruned away.
+const pruneRetiredTarget = (entry: unknown): O.Option<unknown> => {
+  if (!S.is(TargetEntry)(entry)) {
+    return O.some(entry);
+  }
+  if (S.is(RetiredTargetId)(entry.id)) {
+    return O.none();
+  }
+  const locators = A.getSomes(A.map(entry.locators, pruneRetiredLocator));
+  return A.isReadonlyArrayNonEmpty(entry.locators) && A.isReadonlyArrayEmpty(locators)
+    ? O.none()
+    : O.some({ ...entry, locators });
+};
 
 const ActiveBindings = S.Array(S.Union([ModelBinding, RetiredBinding])).pipe(
   S.decodeTo(
@@ -1038,14 +1076,15 @@ const ActiveBindings = S.Array(S.Union([ModelBinding, RetiredBinding])).pipe(
     })
   )
 );
-const ActiveTargets = S.Array(S.Union([ModelSyncTarget, RetiredTarget])).pipe(
+const decodeEncodedTargets = SchemaParser.decodeUnknownEffect(S.Array(S.toEncoded(ModelSyncTarget)));
+
+const ActiveTargets = S.Array(S.Unknown).pipe(
   S.decodeTo(
-    ModelSyncTarget.pipe(S.toType, S.Array),
-    SchemaTransformation.transform({
-      decode: (entries: ReadonlyArray<ModelSyncTarget | typeof RetiredTarget.Type>): ReadonlyArray<ModelSyncTarget> =>
-        A.filter(entries, S.is(ModelSyncTarget)),
-      encode: (targets: ReadonlyArray<ModelSyncTarget>): ReadonlyArray<ModelSyncTarget | typeof RetiredTarget.Type> =>
-        targets,
+    S.Array(ModelSyncTarget),
+    SchemaTransformation.transformEffect({
+      decode: (entries: ReadonlyArray<unknown>) => decodeEncodedTargets(A.getSomes(A.map(entries, pruneRetiredTarget))),
+      encode: (targets: ReadonlyArray<typeof ModelSyncTarget.Encoded>) =>
+        Effect.succeed<ReadonlyArray<unknown>>(targets),
     })
   )
 );
