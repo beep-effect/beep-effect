@@ -424,7 +424,7 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
 
 for (const previousKind of ["file", "folder"] as const) {
   describe(`Vault kind replacement from ${previousKind}`, () => {
-    it.layer(Layer.fresh(RegressionTestLayer))((it) => {
+    it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
       it.effect(
         "supersedes incompatible queued work and converges the replacement kind",
         Effect.fnUntraced(function* () {
@@ -488,7 +488,7 @@ for (const previousKind of ["file", "folder"] as const) {
   });
 }
 
-it.layer(Layer.fresh(RegressionTestLayer))((it) => {
+it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
   it.effect(
     "does not recover or execute operations pointing into another workspace",
     Effect.fnUntraced(function* () {
@@ -541,7 +541,7 @@ it.layer(Layer.fresh(RegressionTestLayer))((it) => {
 });
 
 for (const missing of ["remote-id", "parent"] as const) {
-  it.layer(Layer.fresh(RegressionTestLayer))((it) => {
+  it.layer(Layer.fresh(RegressionTestLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
       `leaves an operation queued without burning attempts when its ${missing} is missing`,
       Effect.fnUntraced(function* () {

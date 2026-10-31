@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import { DmsMirrorAvailability, VaultSyncStatus } from "@beep/documents-use-cases/aggregates/Sync/server";
 import {
@@ -21,16 +22,15 @@ import {
 import { $DocumentsServerId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import type {
   ListOpenConflictsInput,
   MarkConflictReviewedInput,
+  VaultSyncError,
   VaultSyncStatusInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
-import type * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
-import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSync.review");
 const BOX_PROVIDER = "box";
@@ -51,16 +51,21 @@ const SyncItemState = DomainSyncItem.SyncItemState;
  * import * as Effect from "effect/Effect"
  * import type { VaultSyncStatusInput } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import { makeVaultSyncReview } from "./VaultSync.review.ts"
+ * import { makeVaultSyncReconciliation } from "./VaultSync.reconcile.ts"
  * const readSnapshot = (input: VaultSyncStatusInput) => Effect.gen(function* () {
- *   const review = yield* makeVaultSyncReview()
+ *   const reconciliation = yield* makeVaultSyncReconciliation()
+ *   const review = yield* makeVaultSyncReview(reconciliation.requeueReviewedConflict)
  *   return yield* review.readStatus(input)
  * })
  * ```
+ * @param requeueReviewedConflict - Persist reconciliation intent before the conflict is marked reviewed.
  * @internal
  * @category constructors
  * @since 0.0.0
  */
-export const makeVaultSyncReview = Effect.fn($I`makeVaultSyncReview`)(function* () {
+export const makeVaultSyncReview = Effect.fn($I`makeVaultSyncReview`)(function* (
+  requeueReviewedConflict: (conflict: DomainSyncConflict.SyncConflict) => Effect.Effect<void, VaultSyncError>
+) {
   const itemRepository = yield* SyncItemRepository;
   const operationRepository = yield* SyncOperationRepository;
   const cursorRepository = yield* SyncCursorRepository;
@@ -122,28 +127,6 @@ export const makeVaultSyncReview = Effect.fn($I`makeVaultSyncReview`)(function* 
     });
   });
 
-  const requeueReviewedConflictItem = Effect.fn($I`requeueReviewedConflictItem`)(function* (
-    workspaceId: WorkspaceIdentity.WorkspaceId,
-    syncItemId: DocumentsIdentity.SyncItemId
-  ) {
-    const items = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId })
-    );
-    return yield* pipe(
-      A.findFirst(items, (item) => item.id === syncItemId),
-      O.filter((item) => SyncItemState.is.conflict(item.syncState)),
-      O.map((item) =>
-        itemRepository.update(
-          DomainSyncItem.SyncItem.make({
-            ...item,
-            syncState: SyncItemState.Enum.pending,
-          })
-        )
-      ),
-      O.getOrElse(() => Effect.void)
-    );
-  });
-
   const markConflictReviewedLocked = Effect.fn($I`markConflictReviewedLocked`)(function* (
     input: MarkConflictReviewedInput
   ) {
@@ -159,23 +142,10 @@ export const makeVaultSyncReview = Effect.fn($I`makeVaultSyncReview`)(function* 
     if (O.isNone(reviewedConflict)) {
       return yield* SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId });
     }
-    const reviewed = yield* conflictRepository.markReviewed(
-      MarkSyncConflictReviewedInput.make({ conflictId: input.conflictId })
-    );
-
-    // Reviewing used to touch only the conflict record, leaving the item
-    // parked in `conflict` forever: the row vanished from the panel while the
-    // conflict counter stayed up, with no remaining way to resolve it. The
-    // mirror is a one-way push, so an acknowledged remote drift means the
-    // local state wins — return the item to `pending` and let the next pass
-    // re-converge it.
-    yield* pipe(
-      reviewedConflict.value.syncItemId,
-      O.map((syncItemId) => requeueReviewedConflictItem(input.workspaceId, syncItemId)),
-      O.getOrElse(() => Effect.void)
-    );
-
-    return reviewed;
+    // Queue durable correction before closing the review. A failed queue write
+    // leaves the conflict visible; retries use the same conflict-scoped key.
+    yield* requeueReviewedConflict(reviewedConflict.value);
+    return yield* conflictRepository.markReviewed(MarkSyncConflictReviewedInput.make({ conflictId: input.conflictId }));
   });
 
   const listOpenConflicts = Effect.fn($I`listOpenConflicts`)(function* (input: ListOpenConflictsInput) {

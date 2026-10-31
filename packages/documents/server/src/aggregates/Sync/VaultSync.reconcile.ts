@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
 import { SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
@@ -131,6 +132,8 @@ const stalledOperationType = (item: DomainSyncItem.SyncItem): O.Option<DomainSyn
  * Recovery runs after leased operations are requeued and before scanning. Both
  * phases share the idempotency and queue-squashing rules; neither calls the mirror.
  * Missing local files remain tracked because the mirror is a one-way push.
+ * Explicit reviews restore remote names and parents through the same outbox;
+ * conflict-scoped keys distinguish repeated reviews without inventing local changes.
  *
  * **Example** (Scan under the engine's workspace lock)
  * ```ts
@@ -164,8 +167,10 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
   const enqueueOrSquash = Effect.fn($I`enqueueOrSquash`)(function* (
     item: DomainSyncItem.SyncItem,
     operationType: DomainSyncOperation.SyncOperationType,
-    inputContentDigest: O.Option<DocumentContentDigest>
+    inputContentDigest: O.Option<DocumentContentDigest>,
+    reviewKey: O.Option<string> = O.none()
   ) {
+    const idempotencyKey = O.getOrElse(reviewKey, () => idempotencyKeyFor(item, operationType));
     const queued = yield* queuedOperationsFor(item);
     const existing = A.findFirst(queued, (operation) => operation.operationType === operationType);
 
@@ -175,7 +180,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
           .enqueue(
             SyncOperationSeed.make({
               attemptCount: ZERO,
-              idempotencyKey: idempotencyKeyFor(item, operationType),
+              idempotencyKey,
               inputContentDigest,
               inputGeneration: item.localGeneration,
               operationType,
@@ -201,7 +206,7 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
           .update(
             DomainSyncOperation.SyncOperation.make({
               ...operation,
-              idempotencyKey: idempotencyKeyFor(item, operationType),
+              idempotencyKey,
               inputContentDigest,
               inputGeneration: item.localGeneration,
               targetName: baseNameOf(item.localRelPath),
@@ -629,5 +634,48 @@ export const makeVaultSyncReconciliation = Effect.fn($I`makeVaultSyncReconciliat
     yield* healOrphanedPendingItems(trackedItems);
   });
 
-  return { recoverStalledOperations, scanVault };
+  // Persist reviewed move/rename intent before the review row is closed. A
+  // conflict id gives each review its own idempotency identity without changing
+  // the generation counter for unchanged local bytes or paths.
+  const requeueReviewedConflict = Effect.fn($I`requeueReviewedConflict`)(function* (
+    conflict: DomainSyncConflict.SyncConflict
+  ) {
+    const items = yield* itemRepository.listByWorkspace(
+      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: conflict.workspaceId })
+    );
+    const tracked = A.findFirst(items, (item) => O.contains(conflict.syncItemId, item.id));
+    if (O.isNone(tracked)) {
+      return;
+    }
+    const item = tracked.value;
+    const correction = DomainSyncConflict.SyncConflictKind.match(conflict.conflictKind, {
+      remoteCreate: O.none<DomainSyncOperation.SyncOperationType>,
+      remoteDelete: O.none<DomainSyncOperation.SyncOperationType>,
+      remoteEdit: O.none<DomainSyncOperation.SyncOperationType>,
+      remoteMove: () => O.some(SyncOperationType.Enum.moveItem),
+      remoteRename: () => O.some(SyncOperationType.Enum.renameItem),
+      remoteUnknown: O.none<DomainSyncOperation.SyncOperationType>,
+    });
+    // Another reviewed correction may have completed between review calls.
+    // Its `current` state does not discharge this still-open path conflict.
+    const actionable = O.filter(correction, () => O.isSome(item.remoteId));
+    if (
+      O.isNone(actionable) &&
+      !SyncItemState.is.conflict(item.syncState) &&
+      !SyncItemState.is.pending(item.syncState)
+    ) {
+      return;
+    }
+    if (O.isSome(actionable)) {
+      yield* enqueueOrSquash(
+        item,
+        actionable.value,
+        item.contentDigest,
+        O.some(`${idempotencyKeyFor(item, actionable.value)}:review:${conflict.id}`)
+      );
+    }
+    yield* itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending }));
+  });
+
+  return { recoverStalledOperations, requeueReviewedConflict, scanVault };
 });

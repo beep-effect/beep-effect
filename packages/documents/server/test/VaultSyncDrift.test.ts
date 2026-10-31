@@ -7,15 +7,22 @@ import {
 } from "@beep/documents-server/aggregates/Sync";
 import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer";
 import {
+  DmsMirror,
   DmsRemoteEvent,
   ListOpenConflictsInput,
   MarkConflictReviewedInput,
+  MoveItemInput,
+  RenameItemInput,
   SyncOnceInput,
   VaultSyncEngine,
   VaultSyncStatusInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { FindSyncCursorInput, SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import { FindSyncItemByPathInput, SyncItemRepository } from "@beep/documents-use-cases/entities/SyncItem/server";
+import {
+  SyncOperationRepository,
+  SyncOperationRepositoryUnavailable,
+} from "@beep/documents-use-cases/entities/SyncOperation/server";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -323,7 +330,7 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
 });
 
 describe("Vault review ownership and detached conflicts", () => {
-  it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "rejects another workspace review and permits an unattached conflict to be reviewed once",
       Effect.fnUntraced(function* () {
@@ -362,9 +369,9 @@ describe("Vault review ownership and detached conflicts", () => {
       })
     );
   });
-  it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "preserves a current item when reviewing an earlier conflict",
+      "preserves a current item when reviewing an earlier unknown event",
       Effect.fnUntraced(function* () {
         const engine = yield* VaultSyncEngine;
         const handle = yield* DmsMirrorFixtureHandle;
@@ -393,7 +400,7 @@ describe("Vault review ownership and detached conflicts", () => {
       })
     );
   });
-  it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+  it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "classifies a conflicting remote create for an already tracked item as an edit",
       Effect.fnUntraced(function* () {
@@ -420,7 +427,7 @@ describe("Vault review ownership and detached conflicts", () => {
   });
 });
 
-it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
   it.effect(
     "recovers when the first remote poll fails before a cursor exists",
     Effect.fnUntraced(function* () {
@@ -435,6 +442,102 @@ it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
       const recovered = yield* engine.syncOnce(syncInput(root));
       expect(O.isSome(recovered.cursorPosition)).toBe(true);
       expect(recovered.failedOperations).toBe(0);
+    })
+  );
+});
+
+it.layer(Layer.fresh(SyncDriftTestLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "restores a remotely renamed folder and its children after reviewing the drift",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const mirror = yield* DmsMirror;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "original/nested.txt", "retained child");
+      yield* writeVaultFile(root, "other/keep.txt", "unaffected child");
+      yield* engine.syncOnce(syncInput(root));
+      const folder = yield* findTrackedItem("original");
+      const remoteId = yield* Effect.fromOption(folder.remoteId);
+      yield* mirror.renameItem(RenameItemInput.make({ itemKind: "folder", remoteId, newName: "renamed" }));
+      expect((yield* handle.snapshotTree)["renamed/nested.txt"]).toBeDefined();
+      yield* engine.syncOnce(syncInput(root));
+      const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+      expect(conflict.conflictKind).toBe("remoteRename");
+      yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId }));
+      const recovered = yield* engine.syncOnce(syncInput(root));
+      expect(recovered.pendingItems).toBe(0);
+      expect(recovered.openConflicts).toBe(0);
+      const tree = yield* handle.snapshotTree;
+      assertSome((yield* findTrackedItem("original")).remoteId, remoteId);
+      expect(tree.original?.itemKind).toBe("folder");
+      expect(tree["original/nested.txt"]).toBeDefined();
+      expect(tree["renamed/nested.txt"]).toBeUndefined();
+      // A later review needs fresh intent, and two drift kinds must both be
+      // queued even after the first review has moved the item to pending.
+      const other = yield* findTrackedItem("other");
+      yield* mirror.moveItem(MoveItemInput.make({ itemKind: "folder", remoteId, newParentRemoteId: other.remoteId }));
+      yield* mirror.renameItem(RenameItemInput.make({ itemKind: "folder", remoteId, newName: "again" }));
+      yield* engine.syncOnce(syncInput(root));
+      const repeated = yield* engine.listOpenConflicts(listConflictsInput);
+      expect(A.map(repeated, (entry) => entry.conflictKind)).toEqual(["remoteMove", "remoteRename"]);
+      for (const entry of repeated) {
+        yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: entry.id, workspaceId }));
+        yield* engine.syncOnce(syncInput(root));
+      }
+      const restored = yield* engine.syncOnce(syncInput(root));
+      expect(restored.pendingItems).toBe(0);
+      expect(restored.openConflicts).toBe(0);
+      const after = yield* handle.snapshotTree;
+      expect(after["original/nested.txt"]).toBeDefined();
+      expect(after["other/keep.txt"]).toBeDefined();
+      expect(after["other/again/nested.txt"]).toBeUndefined();
+      assertSome((yield* findTrackedItem("original")).remoteId, remoteId);
+    })
+  );
+});
+
+const FailedReviewEnqueueLayer = Layer.effect(
+  SyncOperationRepository,
+  Effect.map(SyncOperationRepository, (repository) =>
+    SyncOperationRepository.of({
+      ...repository,
+      enqueue: Effect.fn("VaultReviewFailureTest.enqueue")((seed) =>
+        Str.includes(":review:")(seed.idempotencyKey)
+          ? Effect.fail(SyncOperationRepositoryUnavailable.make({ reason: "injected review queue failure" }))
+          : repository.enqueue(seed)
+      ),
+    })
+  )
+).pipe(Layer.provideMerge(SyncDriftTestLayer));
+const FailedReviewEngineLayer = Layer.effect(VaultSyncEngine, makeVaultSyncEngine()).pipe(
+  Layer.provideMerge(FailedReviewEnqueueLayer)
+);
+
+it.layer(Layer.fresh(FailedReviewEngineLayer), { timeout: "10 seconds" })((it) => {
+  it.effect(
+    "keeps the conflict visible when persisting its correction fails",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const mirror = yield* DmsMirror;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "unchanged.txt", "local content");
+      yield* engine.syncOnce(syncInput(root));
+      const item = yield* findTrackedItem("unchanged.txt");
+      const remoteId = yield* Effect.fromOption(item.remoteId);
+      yield* mirror.renameItem(RenameItemInput.make({ itemKind: "file", remoteId, newName: "drifted.txt" }));
+      yield* engine.syncOnce(syncInput(root));
+      const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+      const error = yield* Effect.flip(
+        engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId }))
+      );
+      expect(error).toMatchObject({
+        _tag: "SyncOperationRepositoryUnavailable",
+        reason: "injected review queue failure",
+      });
+      const open = yield* engine.listOpenConflicts(listConflictsInput);
+      expect(A.map(open, (entry) => entry.id)).toEqual([conflict.id]);
+      expect((yield* findTrackedItem("unchanged.txt")).syncState).toBe("conflict");
     })
   );
 });

@@ -98,7 +98,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   const reconciliation = yield* makeVaultSyncReconciliation();
   const push = yield* makeVaultSyncPush();
   const drift = yield* makeVaultSyncDrift();
-  const review = yield* makeVaultSyncReview();
+  const review = yield* makeVaultSyncReview(reconciliation.requeueReviewedConflict);
 
   // One sync pass per workspace at a time. Every pass opens by requeuing all
   // leased operations, so two overlapping passes hand each other's in-flight
