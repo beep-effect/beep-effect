@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "cache-errors-only-feature-pins/v1",
+  "authority": "Feature-local freshly frozen native pins; no repository client upgrade or computation qualification. Older canary evidence remains historical.",
+  "observedAt": "2026-10-31T10:12:26.253264+00:00",
+  "registryObservation": "Latest2.11.10 andcanary2.11.11-canary.1 observed for turbo and platform package.",
+  "stable": {
+    "packageVersion": "2.11.10",
+    "reportedVersion": "2.11.10",
+    "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+  },
+  "canary": {
+    "packageVersion": "2.11.11-canary.1",
+    "reportedVersion": "2.11.11-canary.1",
+    "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2",
+    "registryMetadata": "https://registry.npmjs.org/@turbo%2flinux-64/2.11.11-canary.1",
+    "tarball": "https://registry.npmjs.org/@turbo/linux-64/-/linux-64-2.11.11-canary.1.tgz",
+    "integrity": "sha512-roWVD6C1Q90g3XPkhc/WpUCw1BtSQoZcBxAwwqJz7tH/me4b/zhomlkV+o/I0Mn4CSiNN34jnq3FGXmggQjykw==",
+    "integrityVerified": true,
+    "archiveMember": "turbo-linux-x64/bin/turbo"
+  },
+  "supersededExperimentCanary": "2.11.9-canary.1"
+}

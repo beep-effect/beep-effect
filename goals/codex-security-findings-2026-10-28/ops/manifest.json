@@ -5,23 +5,31 @@
     "title": "Codex Security Findings (2026-10-28)",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-28",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-10-28",
   "lifecycle": "active",
-  "mission": "Remediate and close the 7 Codex security findings captured on 2026-10-28.",
+  "mission": "Retain closure of seven Cloud findings and resolve all 29 additional GitHub security alerts discovered on 2026-10-31.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 7 Codex findings are resolved with zero packet-applicable open findings.",
+    "statement": "Not achieved until PR #2389 is merged through repository gates, all seven Cloud findings remain resolved, and all 20 dependency, four code-scanning and five secret-scanning alerts are resolved with evidence.",
     "grandfathered": false,
     "pullRequests": [
       {
+        "number": 1930,
+        "role": "supporting"
+      },
+      {
         "number": 2333,
+        "role": "supporting"
+      },
+      {
+        "number": 2389,
         "role": "final"
       }
     ],
@@ -33,12 +41,12 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/codex_security-findings-20261028-8caa64bef5f4/verdict.json",
+        "ref": ".beep/yeet/runs/codex_security-closeout-20261031-51a5fd9b0fd8/verdict.json",
         "gating": true
       }
     ]
   },
-  "branch": "codex/security-findings-20261028",
+  "branch": "codex/security-closeout-20261031",
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
@@ -48,7 +56,14 @@
     "goals/codex-security-findings-2026-10-28/GOAL.md",
     "goals/codex-security-findings-2026-10-28/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/qualification.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/qualification.md",
+    "research/2026-10-31-closeout.md",
+    "research/2026-10-31-dependencies.md",
+    "research/2026-10-31-review.md",
+    "research/2026-10-31-scanning.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -82,7 +97,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All seven complete Cloud reports reviewed; source defects validated and controls implemented. Qualification, merge and exact-ID closure remain open."
+    "note": "Fixes for all seven Cloud findings merged and the findings are verified Fixed; 20 supplemental dependency alerts and nine scanning alerts are tracked in separate catalogs."
   },
   "closeoutPolicy": {
     "fixed": "Fixed",
@@ -173,6 +188,18 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2333
+    "finalPullRequest": 2389
+  },
+  "statusNote": "Fixes for all seven Cloud findings merged and the findings are verified Fixed; 20 supplemental dependency alerts and nine scanning alerts are tracked in separate catalogs.",
+  "supplementalDependencies": {
+    "catalog": "ops/dependabot.json",
+    "expectedCount": 20,
+    "status": "in-progress"
+  },
+  "supplementalScanning": {
+    "catalog": "ops/scanning.json",
+    "codeScanningCount": 4,
+    "secretScanningCount": 5,
+    "status": "complete"
   }
 }

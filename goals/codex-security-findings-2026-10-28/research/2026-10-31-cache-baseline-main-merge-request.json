@@ -1,0 +1,20 @@
+{
+  "previous": "b733417d9f3089aae017cf929b3418c3b2aff23872fdb407d50879422c5d4ca5",
+  "review": {
+    "reviewer": "GPT-6.1-Sol medium independent dependency review",
+    "reason": "Preserve main retirement and reconcile six root seal closures with current helpers; retain existing cache posture and qualification.",
+    "basis": {
+      "path": "goals/codex-security-findings-2026-10-28/research/2026-10-31-cache-baseline-main-merge-review.md",
+      "sha256": "1965fce8d84aef470a88805b8ff4e10a35f4edaa789433198ac3081ac3bce443"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}
