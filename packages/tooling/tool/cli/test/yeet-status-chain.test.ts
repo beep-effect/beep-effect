@@ -4,6 +4,7 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { collectYeetStatus, RepoRunContext, YeetStatusSnapshotJson } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -190,14 +191,14 @@ const ghAnswers = HashMap.make(
 const ghRoute = (args: ReadonlyArray<string>): string =>
   A.join([...A.take(args, 2), ...A.filter(args, (arg) => arg === "--required")], " ");
 
-const ghAnswer = (args: ReadonlyArray<string>): ReturnType<typeof handle> =>
-  handle(O.getOrElse(HashMap.get(ghAnswers, ghRoute(args)), () => "[]"));
+const ghAnswer = (args: ReadonlyArray<string>, answers = ghAnswers): ReturnType<typeof handle> =>
+  handle(O.getOrElse(HashMap.get(answers, ghRoute(args)), () => "[]"));
 
 // Records every subprocess; each gh call holds a slot for `latency` on the
 // live clock, so the recorder's peak shows how many gh calls ran at once.
 // `failCensus` makes the thread read exit 1 at once and the unfiltered census
 // spawn fail only after `latency`, so the thread failure lands first in time.
-const withFakeRunner = (recorder: GhRecorder, latency: Duration.Duration, failCensus = false) =>
+const withFakeRunner = (recorder: GhRecorder, latency: Duration.Duration, failCensus = false, answers = ghAnswers) =>
   Effect.provideService(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
@@ -224,7 +225,7 @@ const withFakeRunner = (recorder: GhRecorder, latency: Duration.Duration, failCe
             pathOrDescriptor: A.join(args, " "),
           });
         }
-        return ghAnswer(args);
+        return ghAnswer(args, answers);
       });
     })
   );
@@ -299,6 +300,35 @@ const PRE_CHANGE_SNAPSHOT_JSON = A.join(
 );
 
 it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet status chain (W10)", (it) => {
+  for (const route of ["pr checks", "pr checks --required"])
+    it.effect(`retains an unreadable ${route} response as a typed remote failure`, () =>
+      Effect.gen(function* () {
+        const root = yield* tempRoot();
+        const recorder = yield* makeRecorder;
+        const snapshot = yield* collectYeetStatus(contextFor(root), true).pipe(
+          withFakeRunner(recorder, Duration.zero, false, HashMap.set(ghAnswers, route, "API rate limit exceeded"))
+        );
+        expect(snapshot.remote.available).toBe(true);
+        assertSome(
+          O.map(snapshot.remote.readFailure, (error) => error.message),
+          "Failed to read the complete pull request check census."
+        );
+        expect(route === "pr checks" ? snapshot.remote.checkCount : snapshot.remote.requiredCheckCount).toBeUndefined();
+      })
+    );
+  it.effect("keeps a successfully decoded empty check census outside the read-failure budget", () =>
+    Effect.gen(function* () {
+      const root = yield* tempRoot();
+      const recorder = yield* makeRecorder;
+      const answers = ghAnswers.pipe(HashMap.set("pr checks", "[]"), HashMap.set("pr checks --required", "[]"));
+      const snapshot = yield* collectYeetStatus(contextFor(root), true).pipe(
+        withFakeRunner(recorder, Duration.zero, false, answers)
+      );
+      assertNone(snapshot.remote.readFailure);
+      expect(snapshot.remote.checkCount).toBe(0);
+      expect(snapshot.remote.requiredCheckCount).toBe(0);
+    })
+  );
   it.effect("preserves the sequential snapshot after projecting out the retired Knip gate", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();

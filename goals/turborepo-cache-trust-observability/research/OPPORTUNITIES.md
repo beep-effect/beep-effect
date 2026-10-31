@@ -1645,3 +1645,5 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   an unknown snapshot with typed `remote.readFailure`, while the loop counted
   failed effects only. Promote that existing error at both monitor reads; keep
   confirmed absence distinct, preserve recovery, and bound repeated API failures.
+
+- 2026-10-31: An exact `gh pr checks` read reported the shared GraphQL quota exhausted while the live monitor displayed an available PR with no check census. Preserve decoded-empty versus unreadable counts: attach the existing typed `readFailure` to an unreadable all/required census, so the existing five-error monitor budget applies. Public `--poll-interval` keeps slower polling on the supported detached path; its absence preserves thirty seconds. Regression controls retain valid empty and confirmed-absent outcomes. No identity swap or proof acceptance follows from this repair.

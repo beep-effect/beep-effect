@@ -4321,13 +4321,13 @@
       "reason": "Cleanup failure is the subject: the scope runs inside Effect.exit, and after it closes the test asserts the observed removal error, the combined body-and-release Cause and whether the root still exists. Trial without the scope (#1855 wave 8): 4 of 5 tests fail (expected true to be false), because release then runs at test teardown. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:61:scoped@31#1",
+      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:62:scoped@31#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 61,
-      "endLine": 66,
+      "line": 62,
+      "endLine": 67,
       "symbol": "scoped",
       "occurrence": "v2:0d047e0692f9688179ca33f3fe9bf8d73fdb13e4f88c922550acfc7823f20cb4",
       "class": "shorter-scope-lifetime-review",
@@ -4629,13 +4629,13 @@
       "reason": "A descriptor's close is the subject: retirement must refuse while the descriptor is open and succeed once the scope has closed it. Trial without the scope (#1855 wave 8): \"refuses archive retirement while a process holds the checkout\" fails (Refusing to retire instead of retired). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/docgen/test/Core.test.ts:104:scoped@35#1",
+      "id": "EV004:packages/tooling/tool/docgen/test/Core.test.ts:125:scoped@35#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-docgen",
       "file": "packages/tooling/tool/docgen/test/Core.test.ts",
-      "line": 104,
-      "endLine": 160,
+      "line": 125,
+      "endLine": 181,
       "symbol": "scoped",
       "occurrence": "v2:ea13e320348a1d3494832c751eb5f675c4e5172bdc343dc97385f95120971ff3",
       "class": "shorter-scope-lifetime-review",

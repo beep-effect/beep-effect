@@ -284,7 +284,7 @@ export class YeetStatusRemote extends S.Opaque<YeetStatusRemote, { readonly bran
     available: S.Boolean,
     checked: S.Boolean,
     detail: S.String,
-    // None on a successful lookup (including a confirmed absent PR).
+    // None on a complete read (including a confirmed absent PR).
     readFailure: YeetCommandError.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // Each check's whole record (signal, link, workflow, GitHub's instants), so
     // a row the merge loop writes carries the same capsule a --watch row does.
@@ -1561,6 +1561,11 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     available: true,
     checked: true,
     detail: `PR #${view.number} ${view.state}`,
+    readFailure: O.match(O.all([checks, requiredChecks]), {
+      onNone: () =>
+        O.some(YeetCommandError.make({ message: "Failed to read the complete pull request check census." })),
+      onSome: O.none,
+    }),
     checks: A.map(O.getOrElse(checks, A.empty), (row) =>
       statusWatchCheck(
         row,
