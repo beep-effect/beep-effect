@@ -63,6 +63,8 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [Shared delivery repair coordination](history/2026-10-31-delivery-coordination.json): #2399 is the designated repair to land first. The tested alternative is retained locally; claim publication waits for accepted main. Strict37/538 and all34 protected passes remain unchanged.
+
 - [Isolated repository repair ready for review](history/2026-10-31-delivery-unblocker-ready.json): upstream PR #2402 has a passing content-final receipt with explicit local skips and an identical-tree review-trigger head. Hosted checks, its review window and merge remain pending; the claim delivery PR is still unpublished.
 
 - **Current full strict public slice (2026-10-31):** [audit and regression](history/2026-10-31-current-strict-public-slice.md) distinguish the original legacy foot subset from a full current claim 9 comparison for US20110074901A1. Both tests pass; the unchanged scorer accepts the full frozen tree and the checker reproduces the examiner-cited “the brush roller” at 44–60. Source labels/results and 37/538 remain unchanged. This is a post-measurement regression witness, not new held-out accuracy.
