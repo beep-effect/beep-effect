@@ -217,7 +217,15 @@
     "adapterRuntimeComponent": "goals/turborepo-cache-trust-observability/research/adapter-runtime-checkpoint.json",
     "proxyRequestCompletionComponent": "goals/turborepo-cache-trust-observability/research/proxy-request-completion-checkpoint.json",
     "proxyNodeRuntimeComponent": "goals/turborepo-cache-trust-observability/research/proxy-node-runtime-checkpoint.json",
-    "hostedProducerVerifierComponent": "goals/turborepo-cache-trust-observability/research/hosted-producer-verifier-checkpoint.json"
+    "hostedProducerVerifierComponent": "goals/turborepo-cache-trust-observability/research/hosted-producer-verifier-checkpoint.json",
+    "credentialBootstrap": {
+      "path": "goals/turborepo-cache-trust-observability/research/normal-source-worker-observation.json",
+      "scope": "Seven exact suppressed reads and four reference-file wrappers verified. Bootstrap complete; no further human credential step at this checkpoint. Runtime signing and CI secret activation remain separate."
+    },
+    "signedWorkerObservation": {
+      "path": "goals/turborepo-cache-trust-observability/research/normal-source-worker-observation.json",
+      "scope": "Complete stable worker and actual-CLI matrices under completion observers. No worker/native launch changes. Earlier uninstrumented failures retained; fresh uninstrumented stable/current-canary proof remains open."
+    }
   },
   "remainingExplicitGates": [
     "SPEC verification matrix commands on actual final changes",
@@ -454,7 +462,7 @@
   "priorSpecSha256AtProducerWriterServiceBoundary": "9de60aafceafea92b1c4bf888c4e04637fca78b82e0a640e7eb9ced8b8d2e1d5",
   "normalSourceWorkerObservation": {
     "checkpoint": "research/normal-source-worker-observation.json",
-    "scope": "Stable worker-only observed full matrix; ordinary CLI failures remain open; no acceptance criterion completed"
+    "scope": "Stable worker and actual-CLI observer witnesses only; uninstrumented/current-canary and protected acceptance remain open."
   },
   "specNormalizationReview": "Source digest refreshed for the current producer SPEC. All nine acceptance obligations remain unproven; this is not an evidence promotion.",
   "priorSpecSha256BeforeWorkerObservation": "3de5e43c85fefd0d79c15cd23ceae94119ff4460d59536c8903c4c839f99c253"
