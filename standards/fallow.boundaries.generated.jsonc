@@ -4382,7 +4382,8 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ],
         "allowTypeOnly": [
           "@beep/cli-kit",
@@ -4398,7 +4399,8 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ]
       },
       {

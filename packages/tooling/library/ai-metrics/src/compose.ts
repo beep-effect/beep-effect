@@ -6,16 +6,20 @@
  */
 
 import { A } from "@beep/utils";
+import { Yaml, YamlStringifyOptions } from "@beep/yaml/Yaml";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import { stringify as stringifyYaml } from "yaml";
 import { AiMetricsInstallConfigurationError } from "./install.ts";
 import { AiMetricsDeployTarget, AiMetricsTool } from "./models.ts";
 import type { AiMetricsInstallSpec, AiMetricsServiceSpec } from "./install.ts";
 
 const composeFailure = (message: string, cause: unknown): AiMetricsInstallConfigurationError =>
   AiMetricsInstallConfigurationError.make({ cause, message });
+
+// The `yaml` npm writer's layout: sequences indented under their key, double
+// quotes when quoting is needed, no folding.
+const composeYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "double" });
 
 const phoenixService = (spec: AiMetricsInstallSpec): O.Option<AiMetricsServiceSpec> =>
   pipe(
@@ -59,7 +63,7 @@ export const renderAiMetricsLocalPhoenixCompose: (
     });
   }
 
-  return stringifyYaml(
+  return yield* Yaml.stringify(
     {
       name: "beep-ai-metrics-local",
       services: {
@@ -78,6 +82,10 @@ export const renderAiMetricsLocalPhoenixCompose: (
         phoenix_data: {},
       },
     },
-    { lineWidth: 0 }
+    composeYamlOptions
+  ).pipe(
+    Effect.mapError((cause) =>
+      composeFailure("AI metrics local Phoenix compose rendering could not serialize the compose file.", cause)
+    )
   );
 });

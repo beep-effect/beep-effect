@@ -3694,13 +3694,13 @@
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@beep/xdg": "workspace:^",
+        "@beep/yaml": "workspace:^",
         "@opentelemetry/api": "catalog:",
         "@opentelemetry/core": "catalog:",
         "@opentelemetry/exporter-trace-otlp-proto": "catalog:",
         "@opentelemetry/resources": "catalog:",
         "@opentelemetry/sdk-trace-base": "catalog:",
         "effect": "catalog:",
-        "yaml": "catalog:",
       },
       "devDependencies": {
         "@beep/fc-runs": "workspace:^",
@@ -4089,7 +4089,6 @@
         "tar": "catalog:",
         "ts-morph": "catalog:",
         "vitest": "catalog:",
-        "yaml": "catalog:",
       },
       "devDependencies": {
         "@beep/fc-runs": "workspace:^",

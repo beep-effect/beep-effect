@@ -264,8 +264,7 @@
     "sharp": "catalog:",
     "tar": "catalog:",
     "ts-morph": "catalog:",
-    "vitest": "catalog:",
-    "yaml": "catalog:"
+    "vitest": "catalog:"
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
