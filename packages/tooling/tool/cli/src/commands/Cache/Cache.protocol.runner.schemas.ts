@@ -14,7 +14,47 @@ import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 const $I = $RepoCliId.create("commands/Cache/Cache.protocol.runner.schemas");
 
 /**
+ * Selected native summary fields, retaining the complete observed task graph.
+ *
+ * **Example** (Inspect the summary task fields)
+ * ```ts
+ * import { CacheProtocolNativeSummary } from "@beep/repo-cli/commands/Cache"
+ * console.assert("tasks" in CacheProtocolNativeSummary.fields)
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProtocolNativeSummary extends S.Opaque<
+  CacheProtocolNativeSummary,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    turboVersion: S.NonEmptyString,
+    tasks: S.Array(
+      S.Struct({
+        taskId: S.NonEmptyString,
+        hash: S.NonEmptyString,
+        cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), source: S.OptionFromOptionalKey(S.String) }),
+        execution: S.Struct({ exitCode: S.Int }),
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("CacheProtocolNativeSummary", {
+      description:
+        "Selected fields of one native Turbo run summary; a reported hit is evidence only with wire receipts.",
+    })
+  )
+) {}
+
+/**
  * Select an exact native binary for an isolated synthetic signed-cache run.
+ *
+ * **Details**
+ * Use a concrete `team_` identifier for the client's namespace when comparing
+ * native versions. The private fixture accepts the `teamId` selector, while
+ * newer clients may interpret other namespace strings as team slugs.
  *
  * **Example** (Inspect required pin fields)
  * ```ts

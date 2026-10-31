@@ -561,7 +561,7 @@ const claimsFromDraft = Effect.fn("PatentDocument.claimsFromDraft")(function* (
  * **Example** (Normalize a minimal patent document)
  *
  * ```ts
- * import { Md } from "@beep/md"
+ * import { Md } from "@beep/md/Md"
  * import { normalizePatentApplicationDocument } from "@beep/law-practice-domain/values/PatentDocument"
  * import * as Effect from "effect/Effect";
  * const source = Md.make([

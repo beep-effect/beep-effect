@@ -300,6 +300,9 @@
         // Immutable automated reviewer receipts bind exact input/output bytes.
         "goals/claim-element-antecedent-check/history/autonomous-review-v1/reference-*-round*.json",
         "goals/claim-element-antecedent-check/history/autonomous-review-v1/allowed-*-round*.json",
+        "goals/epistemic-retention-policy-calibration/ops/protocol-v1.json",
+        "goals/epistemic-retention-policy-calibration/ops/fixture-v1.json",
+        "goals/epistemic-retention-policy-calibration/history/results/*.json",
         "goals/ciops-ontology-pipeline/research/kpi-reading.json",
         "goals/ciops-ontology-pipeline/research/kpi-adoption-table.json",
         "standards/cache-qualification.json",

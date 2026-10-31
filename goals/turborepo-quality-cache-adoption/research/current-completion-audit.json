@@ -1,0 +1,336 @@
+{
+  "schemaVersion": "cache-goal-completion-audit/v1",
+  "goal": "turborepo-quality-cache-adoption",
+  "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
+  "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+  "specSha256": "285117df2068fd7568d62796fab21ef16f771e4099d9f45f16504a391bfb9725",
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "source": "SPEC.md:165",
+      "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
+      "status": "unproven",
+      "nextProof": "Close current semantic reviews for 2571 executable computations and all applicable feature cases; consume the economics owner baseline."
+    },
+    {
+      "id": "AC-02",
+      "source": "SPEC.md:166",
+      "requirement": "Every adopted computation has valid tuple-specific qualification, semantic invalidation, output/log safety and supported portability/concurrency evidence.",
+      "status": "unproven",
+      "nextProof": "Obtain tuple-specific current qualification with invalidation, output/log, portability, concurrency and shadow evidence for every adopted computation."
+    },
+    {
+      "id": "AC-03",
+      "source": "SPEC.md:167",
+      "requirement": "Root/child graph, scripts, env, outputs, persistence and Actions transport match the reviewed qualification projection.",
+      "status": "unproven",
+      "nextProof": "Reconcile root/child graph, generated scripts, environment, outputs, persistence and Actions transport to the reviewed projection."
+    },
+    {
+      "id": "AC-04",
+      "source": "SPEC.md:168",
+      "requirement": "Named hosted cohorts preserve fork/read/write policy and emit fresh required statuses tied to the source and resolved workflow actually executed.",
+      "status": "unproven",
+      "nextProof": "Execute named hosted cohorts with current trust readiness and fresh source/resolved-workflow-bound required statuses."
+    },
+    {
+      "id": "AC-05",
+      "source": "SPEC.md:169",
+      "requirement": "Demand-based warming and result attribution have bounded costs and demonstrable critical-path/reliability value using the owning baseline.",
+      "status": "unproven",
+      "nextProof": "Implement and prove qualified demand-based warmer budgets and typed result attribution; demonstrate value against the owning baseline."
+    },
+    {
+      "id": "AC-06",
+      "source": "SPEC.md:170",
+      "requirement": "Every in-scope computation has a final disposition, eligible work is adopted, and representative observations and rollback evidence are complete.",
+      "status": "unproven",
+      "nextProof": "Record every final disposition, adopt eligible work and finish representative observations plus rollback; current review-queue rows are not final dispositions."
+    },
+    {
+      "id": "AC-07",
+      "source": "SPEC.md:171",
+      "requirement": "Relevant package/protocol checks pass; failures are attributed and no introduced regression remains.",
+      "status": "unproven",
+      "nextProof": "Complete final touched-package/protocol verification and repair introduced regressions."
+    },
+    {
+      "id": "AC-08",
+      "source": "SPEC.md:173",
+      "requirement": "The final implementation PR reaches Yeet `merge-ready: yes`, with required checks and reviews handled.",
+      "status": "unproven",
+      "nextProof": "Obtain final implementation exact-head Yeet merge-ready with required checks and reviews handled."
+    },
+    {
+      "id": "AC-09",
+      "source": "SPEC.md:175",
+      "requirement": "Final evidence, reflection and lifecycle closeout land in that same PR.",
+      "status": "unproven",
+      "nextProof": "Land final evidence, reflection and completed-retained lifecycle in the final implementation PR."
+    }
+  ],
+  "implementationContract": [
+    {
+      "id": "IC-01",
+      "source": "SPEC.md:50",
+      "section": "Comprehensive audit",
+      "requirement": "Refresh the entire executable computation population across root/child Turbo config, workspace scripts, nested commands, Quality, CI and Yeet. Reconcile historical OPPORTUNITIES.md and misspelled opportunity-file leads with current source, disposition and owner. Keep actual executions distinct from configured nodes, and required hosted contexts tied to a current ruleset/run receipt.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-02",
+      "source": "SPEC.md:56",
+      "section": "Comprehensive audit",
+      "requirement": "For stable and exact published canary, inventory graph/dependencies/transit, entrypoint/affected/filter semantics, global/task config, inputs, env and passthrough, outputs, descriptions, persistence/watch, concurrency, worktrees, artifacts, summaries/query tooling, pruning/deployment workflows, boundaries, future/experimental flags, archive transport and warming. Record exact availability, prerequisites, Beep use case, correctness test, expected benefit, disposition and owner for each applicable feature. Unsupported/non-applicable features need a reason. Main stays a non-scoring research appendix.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-03",
+      "source": "SPEC.md:67",
+      "section": "Governed task changes",
+      "requirement": "Use the qualification policy and transition API for all promotion and suspension. Adoption supplies evidence and owns rollout, not a parallel state store. Qualify each computation/layer/profile/epoch with the full comparison, input perturbation, portability, concurrency, safe-log and shadow requirements. Preserve real semantic inputs even when they reduce hit rate.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-04",
+      "source": "SPEC.md:73",
+      "section": "Governed task changes",
+      "requirement": "Inspect build compiler state and portable outputs; lint/check dependencies and transit alternatives; property seeds/run counts; docgen discovery/order/writes; coverage shard/aggregate/ratchet boundaries and shared paths; browser and integration prerequisites; and separate no-write checks for mutating generators. Fixers, services and required external/security verdicts remain fresh at their current whole-task boundary. Cache eligible pure prerequisites separately.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-05",
+      "source": "SPEC.md:80",
+      "section": "Governed task changes",
+      "requirement": "Audit Actions cache keys/save timing including child configuration and output ownership. Archive restore is transport, not a qualified task hit. Correct schema/version alignment and config descriptions as part of the exact-version review. Experimental flags change individually with regression evidence.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-06",
+      "source": "SPEC.md:87",
+      "section": "Hosted and Yeet adoption",
+      "requirement": "Prove local use first, then supported cross-worktree directions. Name the hosted workflow/runner/source cohort before enabling remote reuse and consume trust's production-ready signing/tenant/credential receipt. Preserve fork isolation and protected writers. Record the reusable Heavy definition actually resolved by the run; branch-local edits are not execution proof.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-07",
+      "source": "SPEC.md:93",
+      "section": "Hosted and Yeet adoption",
+      "requirement": "Required jobs must start and produce their own exact-source or merge-ref status even when pure prerequisites hit. Quality lane reuse, Yeet full proof and the time-to-certainty ProofLedger remain distinct authorities. Integrate through curated facades and existing owners, never private Yeet imports or new proof/lease/scheduler stores.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-08",
+      "source": "SPEC.md:101",
+      "section": "Value and completion",
+      "requirement": "Consume ci-lane-economics' baseline rather than publishing a competing timing or runner-placement authority. Measure correctness/security, critical-path seconds, reliability, compute/storage/transfer/operations cost, then hit rate. Attribute real hits and remote faults using the conformance/trust result model. Rank warming by measured protected-source demand and qualified profile, with explicit time, byte, request and concurrency bounds and selection receipts.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-09",
+      "source": "SPEC.md:108",
+      "section": "Value and completion",
+      "requirement": "Complete named local/hosted/broader cohorts inside proven profiles. Preserve the seven-day nonproduction, seven-day cohort and fourteen-day broader backend observation when the trust/backend change is rolled out; cite the owning receipt rather than rerunning an already valid observation window. Do not manufacture elapsed representative time from synthetic samples.",
+      "status": "requires current evidence"
+    },
+    {
+      "id": "IC-10",
+      "source": "SPEC.md:114",
+      "section": "Value and completion",
+      "requirement": "Every in-scope entry needs a final evidence-backed disposition. Eligible work must be qualified and adopted; exclusions need reasons and pure decomposition where viable. Unassessed/candidate/shadow/suspended entries and temporary exceptions are unfinished work, unless a new explicit scope decision removes them with rationale. A lower hit rate never justifies a correctness regression.",
+      "status": "requires current evidence"
+    }
+  ],
+  "currentEvidence": {
+    "population": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "features": "goals/turborepo-quality-cache-adoption/research/current-feature-matrix.json",
+    "pins": "goals/turborepo-quality-cache-adoption/research/current-client-pins.json",
+    "focusedTests": {
+      "command": "bunx --bun vitest run --config vitest.config.ts test/cache-signed-runner.test.ts test/cache-protocol-runner.test.ts test/cache-protocol.test.ts test/cache-producer.test.ts test/turbo-cache.test.ts",
+      "files": 5,
+      "passed": 136,
+      "seconds": 6.15,
+      "scope": "unit/fixture only; not deployed trust or all-task qualification"
+    },
+    "retainedQualification": "goals/turborepo-task-qualification/research/current-signed-qualification.json applies only to its recorded older private-loopback tuple",
+    "nativeProtocol": "goals/turborepo-cache-trust-observability/research/current-native-checkpoint.json",
+    "mutatingFixerDisposition": {
+      "path": "research/mutating-fixer-disposition-review.json",
+      "scope": "136 whole-command keep-fresh fixer dispositions. Their 136 read-only counterparts still need qualification/adoption; current population review counts include the later service review."
+    },
+    "persistentServiceDisposition": {
+      "path": "research/persistent-service-disposition-review.json",
+      "scope": "Two source-only persistent-service keep-fresh dispositions. Current aggregate counts include the later remaining-fixer review."
+    },
+    "remainingMutatingFixerDisposition": {
+      "path": "research/remaining-mutating-fixer-disposition-review.json",
+      "scope": "50 additional whole-command source-reviewed keep-fresh fixers; all 186 lint-fixer rows classified. Aggregate counts include the later persistent-service review; no acceptance criterion complete."
+    },
+    "remainingPersistentServiceDisposition": {
+      "path": "research/remaining-persistent-service-disposition-review.json",
+      "scope": "Ten additional source-only persistent-service keep-fresh dispositions. All twelve current persistent computations are classified; 198 reviewed fresh boundaries and 2373 remaining gaps. Finite builds and all acceptance criteria remain unfinished."
+    }
+  },
+  "remainingExplicitGates": [
+    "SPEC verification matrix commands on actual final changes",
+    "Runtime behavior and negative cases at the required scope",
+    "Current named deployment/cohort/numeric budget/rollback before execution",
+    "Representative observation cannot be replaced by synthetic samples",
+    "Final PR readiness, reflection and lifecycle"
+  ],
+  "referenceBase": "repository root",
+  "priorSpecSha256AtRuntimeObservation": "9c2c1c88a7f13efab9252774f154d1e1e31e8d395695b2ab37dabc212af27e5c",
+  "currentRuntimeProfileCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-profile-checkpoint.json",
+    "sha256": "dc4fb8065cad72069b3fac057f689feea57b340f7a8c0289630cc38cbc4dbf66",
+    "scope": "Runtime observation and passing frozen whole-package verification only; all qualification and rollout obligations remain open.",
+    "priorBeforeReviewRepair": "b120fc1bab3b11d5cc3eab57dfc775b602e5033705fbf738f686fa1828ea95ef"
+  },
+  "priorSpecSha256AtCurrentRuntimeBaseline": "bf920216aed78bfef9065e4129e12ac08356e88307cf7fcb03f0395d6c5a88a6",
+  "currentRuntimeBaselineCheckpoint": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-runtime-baseline-checkpoint.json",
+    "sha256": "747dce251c43af011311b34831831bac76d8d0de914086c180c2e66196ecfacd",
+    "scope": "Explicit observation profile/epoch only; no qualification or signed deployment."
+  },
+  "publicationGateRepair": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-publication-gate-repair-checkpoint.json",
+    "sha256": "7d10fc4c50a2f086c7315912ddc981d23201bf5cece9c38b571d10d26d95b6e2",
+    "scope": "Properties/catalog and current component checks; hosted publication and whole-goal acceptance remain pending.",
+    "priorBeforeReviewRepair": "ef5d83d08a083ca51cf059b26eb0a87a18aee2695d3d88459a08c07939560327"
+  },
+  "producerCoverageRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
+    "sha256": "7a37b77aef708c66b8480549569a47fa96496777a39b5f28fc423b2f71b506cd",
+    "scope": "Historical component proof at its recorded source; latest producer capture and graph changes are recorded separately.",
+    "priorBeforeReviewRepair": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997"
+  },
+  "producerReviewRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-review-repair-checkpoint.json",
+    "sha256": "93b602012d54e57aa9559e5df8bd8b53ae864d9f015e9ba6e3b9a0d2bfcb3fce",
+    "scope": "Historical component proof at its recorded source; latest producer capture and graph changes are recorded separately."
+  },
+  "producerPacketReviewCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-packet-review-checkpoint.json",
+    "sha256": "7974b7a10bb72a491e571b3aa1c01b431f9227a2d5f6bd9206e6d77411a264c5",
+    "scope": "Historical component proof at its recorded source; latest producer capture and graph changes are recorded separately."
+  },
+  "producerCaptureCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-capture-checkpoint.json",
+    "sha256": "80720e8a16af59057281fc433fd9d74a11b6c9a4aeb0349ef6d99d1086d60a25",
+    "scope": "Latest native request capture and whole-graph component proof; previous evidence retains its recorded source."
+  },
+  "privateSocketCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/private-socket-checkpoint.json",
+    "sha256": "10d79b69a052847f91aa48ed6652a1d2685c6a48b2faaf0ffdec36f7e70b0f01",
+    "authority": "Transport component only; no production or qualification authority.",
+    "scope": "Original production and native-test bytes unchanged; new test-only in-process coverage/control file passes51 cases per provider and quick verification. Prior complete package scope retained; fresh combined-source final still required. No full-goal acceptance."
+  },
+  "priorSpecSha256AtMutatingFixerReview": "7e7bd28c21dc6ddb46b29e62aefcc0f0f8d49c99da7bab4f1fa6d4a372b64ed3",
+  "priorSpecSha256AtPersistentServiceReview": "02e520db66390a5cb167d4604659e8b35ac809644e36fc238533c2c1cd533ac3",
+  "priorSpecSha256AtRemainingFixerReview": "f7fd00e00643a346a41e6f4b5f1fc3f4ca9cca07291859cf75936e70bf07a477",
+  "priorSpecSha256AtRemainingServiceReview": "15cee72051ba3b06cddc0ac1c39121b79072b969be51f4688e50544573a9f95c",
+  "priorSpecSha256BeforePublicationAdmissionWording": "3ce2ae7c88aa3a8d7e11fcb2eeb652b146f256fa6a7c73aa288e91b2c6180a47",
+  "priorSpecSha256AtGoApplicability": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "goWorkspaceFeatureReview": "research/go-workspace-feature-review.json",
+  "priorSpecSha256AtFutureFlagAvailability": "2a0493c5035ef207a9dc492fb27732485cf32b5d4a434dc7d376749a09a943b3",
+  "nativeFutureFlagAvailability": "research/native-future-flag-availability.json",
+  "nativeFutureFlagAvailabilityDriver": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+    "sha256": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
+    "scope": "Retained driver, fresh sixty-case replay, explicit raw-report hash and owned cleanup. Syntax only; no additional feature acceptance, task qualification or production activation."
+  },
+  "retainedDriverReplays": {
+    "nativeInputControls": {
+      "path": "research/native-input-controls.json",
+      "driverSha256": "fa9da8492570fbe75c956916bfbaa22706eafee32d74ea7870f4209aa3d0fb1b",
+      "cases": 22,
+      "priorDriverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+      "replayedAt": "2026-10-30T19:06:18.231530+00:00",
+      "bindingGeneratedByDriver": true,
+      "sourceRevision": "91322bf96426b34daaae6d0e4c577303d1847a7a"
+    },
+    "actualIgnoredInput": {
+      "path": "research/actual-ignored-input-observation.json",
+      "driverSha256": "48f955724c7c7ea13a6802355cbd1ca98d293cabcae695d094b88263b12a8fac",
+      "clients": 2,
+      "taskExecution": false,
+      "remoteUse": false,
+      "priorDriverSha256": "098afa7cd4088e7cc68f0dd2ad08cf06698c9c5423a89ee22885d8b2e5963c82",
+      "replayedAt": "2026-10-30T12:18:46.651280+00:00",
+      "bindingGeneratedByDriver": true
+    },
+    "authority": "Fresh retained-driver observations only. No acceptance criterion or qualification transition is completed."
+  },
+  "priorSpecSha256AtConstrainedPublication": "dde95da4ebd1978da6c29a6dc151f325287648d082dcf3fc6f7dde6abd7a5e65",
+  "constrainedPublicationReplay": {
+    "publisherJob": "c38ed02e-282f-4b24-bcf9-add48135149d",
+    "publisherResult": "deliberately cancelled after more than thirteen minutes; not a local pass",
+    "scope": "Use the standing hosted escape; current full proof, hosted acceptance and review remain required."
+  },
+  "priorSpecSha256AtPublishedHeadIdentity": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "publicationHeadIdentityCheckpoint": "research/published-head-identity-checkpoint.json",
+  "priorSpecSha256BeforePublicationRepairHostedEscape": "d1c909a293cfdecfb08dd544dc40d6f5c0af8b50add3eea31adcbd0eb1338ad4",
+  "priorSpecSha256BeforeProveFirstReview": "021bfb72be90e48429519d047dbb29be25474e13f10c54827ad3e1fc7c198d58",
+  "priorSpecSha256AtTaskDescriptions": "9ee8292499806305827411bea9e4f60358810c35fa84fcd20b7e08cfd52315c0",
+  "taskDescriptionsFeatureReview": "research/task-descriptions-feature-review.json",
+  "priorSpecSha256AtSelectionSemantics": "b5cc4ff0957ff16267722927f3870301597d660b177fd639a874685f3d0ac3d8",
+  "nativeSelectionSemanticsCheckpoint": "research/selection-semantics-checkpoint.json",
+  "priorSpecSha256AtPythonWorkspaceReview": "6dd4fa867db490b4ea34c99f1b3a69c0a765ad5006543c5c19912c31e36a87b8",
+  "pythonWorkspaceFeatureReview": "research/python-workspace-feature-review.json",
+  "priorSpecSha256AtExternalSecurityReview": "3801fef11d324f035903d5d217acd045f6c161bea28ab11b0027e9a80a6c3623",
+  "externalSecurityDispositionReview": "research/external-security-disposition-review.json",
+  "priorSpecSha256AtMarkdownIsolation": "c1ca04ceb9afeb4c353345ac349487ce3f03b28081a1724abe8f8eaff76903e6",
+  "markdownCoverageIsolationCheckpoint": "research/markdown-coverage-isolation-checkpoint.json",
+  "priorSpecSha256AtAcceptedConformanceMerge": {
+    "local": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
+    "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+  },
+  "priorRetainedDriverReplayAtTaskDescriptions": {
+    "nativeInputControls": {
+      "path": "research/native-input-controls.json",
+      "driverSha256": "8085f81aca6de135e1f5bcbf5a4b377ad4b95616e05cf5185c3987a00b2d8694",
+      "cases": 18,
+      "priorDriverSha256": "89151a8ee3f5127eacc513385cf05f6cf61adbd0025931974ad71bfca3c75d85",
+      "replayedAt": "2026-10-30T12:18:45.690570+00:00",
+      "bindingGeneratedByDriver": true,
+      "sourceRevision": "6958340c791e94e88eee64d56cf2aecfbeedfa2b",
+      "pathScope": "The relative artifact path binds bytes at sourceRevision, not the current working tree."
+    }
+  },
+  "priorSpecSha256AtExternalGeneratorReview": "8bd5c1c4151645d7a6829dae972793b35a3419ab0fbfef7bc49d7067a5e54bca",
+  "externalVerdictSourceReview": {
+    "path": "research/external-verdict-source-review.json",
+    "sha256": "ae85bba291a9cc1c408096051ef231b2f6e2c650850fc0b954c49190c823a7a1",
+    "scope": "One source-reviewed fresh external verdict boundary; 199 fresh boundaries and 2372 remaining final-disposition gaps. No advisory execution or qualification."
+  },
+  "generatorBoundarySourceReview": {
+    "path": "research/generator-boundary-source-review.json",
+    "sha256": "25109344bd6772a3d27ac4ab4f999de6b2a72a860041c5e647ee47a4b2cedcb1",
+    "scope": "Nine source-reviewed write/pure decomposition leads with 23 exact source bindings. No final exclusion, generator execution or reuse grant."
+  },
+  "priorSpecSha256AtAcceptedFeatureMerge": {
+    "producerBeforeJoin": "de743393b37e2e810547c01663d2d71d3c05bf5f1d3442410341e818399861ab",
+    "acceptedFeature": "a5c62133cbf7d74af84c17f3596edd067efab7d340d33a6cc809ceaa467d4b98",
+    "producerConformanceJoin": {
+      "local": "a7ffc01125a38900ef8ec40f1541303c61990ca56de643869b8b55681cdd5599",
+      "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+    },
+    "acceptedFeatureConformanceJoin": {
+      "local": "785a582f9f4407366c4884236b2c1ea7ccbb7e014c5457a1d664d79f9048a939",
+      "accepted": "242022902b8b77a9634f171b9c5a45bb900aa1f991aea62fddc7b861399a7b97"
+    },
+    "acceptedCommit": "0e601a3d55f88d875ca49d47931e216a5a328aa2"
+  },
+  "acceptedFeatureMergeCheckpoint": "research/accepted-feature-merge-checkpoint.json",
+  "priorSpecSha256AtCargoWorkspaceReview": "a5c62133cbf7d74af84c17f3596edd067efab7d340d33a6cc809ceaa467d4b98",
+  "cargoWorkspaceFeatureReview": {
+    "path": "research/cargo-workspace-feature-review.json",
+    "scope": "Current-tree no-change discovery decision; real Rust computations, qualification and all nine full acceptance criteria remain open.",
+    "sha256": "b260673a1b4eb2eff61b90e0462cc1b72cc91d974f5fa9a572f010de7f80502e"
+  },
+  "priorSpecSha256AtHeldReplyReadinessReview": "0260cefc164f9ad091c0a31d31463f04132bd04f3787dfe30ace9fe876b27a6c",
+  "priorSpecSha256AtAcceptedProducerMerge": {
+    "cargoBranch": "30b9232c085ccdf3c5bc545e2546eda27f9365f353fae883901714350be3562a",
+    "acceptedProducer": "dac9820e8e2517f97f503a05869b5424f663978dc50cf7dd815d3a4d0648f33f"
+  }
+}

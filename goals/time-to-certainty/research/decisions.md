@@ -1264,3 +1264,76 @@ unobservable); an agent declaring `completed-retained` with the outcome lines ca
 gate says "not achieved until"; closing with lines carried is the operator's call, as ship-velocity's
 2026-08-30 authorization was); keeping the packet `active` with nothing an agent can do; a calendar
 deadline for the flip (ruling 7 counts events, not days).
+
+## 2026-10-27 — RL review lane measurement (ruling 81, proposed by the lane; the merge of its PR is the lock)
+
+Inputs: Addy Osmani's 2026-10-26 account of the Claude Code team's review process (two measured
+levers: reviewer precision from how the author disposed of each finding, and cycles-to-pass, 2.08 →
+1.32 after capping cycles at three and re-reviewing only the diff; 59% of what their reviewer
+re-flagged was pre-existing), the 2026-10-06 autonomy charter's "review loops stop after round 2"
+(a rule with no number behind it), the four-state review-thread union
+(`ReviewThreadState.ts`), `yeet reply`, the 20-minute review window, the S32 re-request `yeet ready`
+pushes, and the monitor comment watermark (`yeet-monitor-comments/v2`). The packet's own doctrine is
+measure first; this ruling adds the measurement and changes no gate.
+
+**Ruling 81 (RL-1) — the review lane is measured as a verification lane with two numbers, from a
+per-clone append-only ledger, and `yeet economics` becomes `yeet-economics/v2` to carry them.**
+
+- *Rounds-to-ready* per pull request is the count of push → re-review cycles between the first
+  `yeet ready` flip and the first `merge-ready: yes` the monitor announces at or after it: the
+  distinct head commits a submitted review names (`commit_id` of a REST `pulls/N/reviews` row, any
+  state, body or no body) with `submitted_at` inside that window. A pull request with a flip and no
+  merge-ready is open: counted, never sampled. A review GitHub pins to no commit is unassigned,
+  never a round. A review the pull request author submitted is counted beside the rounds as
+  `authorReviews`, never as one: a reply on a thread is a review submission by its author, pinned
+  to the current head, and #2310's own ledger counted the author's replies as rounds (amended
+  2026-10-28). The author is the `flip` row's `author`, read once by `yeet ready` at flip time; a
+  flip without one excludes nothing. Percentiles are nearest rank over the closed pull requests
+  (ruling 75's estimator).
+- *Reviewer precision* is `fixed / (fixed + rejected + immaterial)` per reviewer kind
+  (`beep-reviewer`, `greptile`, `coderabbit`, `human`, `bot`), over the latest disposition of every
+  thread `yeet reply` answered; `intentional` and `unknown` are counted beside the ratio and enter
+  neither side; a zero denominator prints `n/a`. The disposition is the draft's declared
+  `disposition` (`fixed` / `rejected` / `intentional` / `immaterial`) carried onto the outcome and
+  the ledger row; a draft with none records `unknown`. Nothing reads a reply body to infer one. The
+  reviewer is the author of the thread's opening comment (`comments(first: 100)` lists oldest
+  first), classified from login and GitHub actor type alone.
+- *Where the facts live.* The watermark carries stream positions, not events, so the rounds cannot
+  be read off it; its stream is the source. Facts are appended as they happen to
+  `<owning clone>/.beep/yeet/review-lane.ndjson` (`yeet-review-lane/v1`, tagged rows: `flip` from
+  `yeet ready`, `head` and `merge-ready` from the monitor loop, `review` from the comment-stream
+  collector on every poll, `disposition` from `yeet reply`), under ruling 71's location rule, so
+  `yeet sweep --retire` of a lane never deletes the sample and every lane of one clone writes one
+  file. `O_APPEND`, no lock, torn lines counted as malformed, as the proof ledger. Every writer is
+  best effort: a failed append is one `[yeet] review lane ledger not updated` line, never a failed
+  command.
+- *Idempotency is the fold's.* Reviews deduplicate by review id, heads by sha, dispositions keep the
+  latest per thread, the first flip and the first merge-ready at or after it decide the window. The
+  writer also drops rows whose identity the ledger holds, which keeps the file small; the fold would
+  be correct without it. Must-fail fixtures locked with this ruling: an undeclared disposition stays
+  `unknown` and only a later declaration on the same thread moves it; the same review rows recorded
+  again (a v1→v2 watermark reseed re-emitting reviews, two monitors on one branch) change neither
+  the rounds nor the percentiles; a review pinned to no commit never becomes a round; a review by
+  the flip's author on a fresh head never forms a round, and a flip without an author excludes
+  nothing (added 2026-10-28).
+- *The surface.* `yeet economics` carries a `reviewLane` section beside the wrapper and inner lane
+  populations, with its own denominators (pull requests, threads) and never summed with them;
+  `yeet-economics/v1` becomes `v2` by the added section alone (ruling 73's shape otherwise
+  unchanged, the A1 field spellings kept). The text report prints the rounds p50/p95 and mix, one
+  precision row per reviewer kind in declared order, and the ledger quality (ledgers read and
+  unreadable, malformed rows, duplicate review rows deduplicated, pull requests without a flip,
+  unattributed dispositions). The `--branch` scope narrows to pull requests with a row recorded under
+  that branch; `--fleet` reads each distinct owning-clone ledger once.
+- *Not changed.* The merge gate, S11, the review window, `yeet ready`'s criteria and the thread-state
+  union are untouched; a disposition is optional on a draft because a measurement must not refuse
+  the reply it measures. Caps on rounds, diff-only re-review and no re-reporting are a later ruling
+  on the numbers this one produces.
+
+Rejected: carrying rounds inside the watermark artifact (per-consumer files would each hold a partial
+ledger, and a position artifact that is also an event log is two things); a per-branch run-directory
+artifact (deleted with the lane's `.beep/` on retire, which is exactly when the sample is wanted); a
+network read at `yeet economics` time (the report is a checkout fact over local journals, ruling 73,
+and a fleet read would spend the GraphQL budget); inferring dispositions from reply bodies ("Fixed in
+…" is prose, not a declaration; `unknown` is the honest value and the operator sees how many); keeping
+body-less reviews out because the comment stream drops them (an approval with nothing to say is still
+a review of that head); a closed reviewer set without `bot` (Copilot and GitHub Actions review too).

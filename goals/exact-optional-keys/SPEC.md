@@ -47,8 +47,9 @@ Higher sources outrank lower sources when they conflict.
   Unpaired residue is reported, never silently skipped.
 - Genuine undefined producers (third-party objects) become `S.optionalKey(S.UndefinedOr(X))`
   by hand, each with evidence in `research/classification-ledger.md`.
-- Construction sites broken by the stricter types use the repo idiom
-  `...(x === undefined ? {} : { x })`; no `as` casts, no `biome-ignore` of the new rule.
+- Construction sites broken by the stricter types follow the governing EF-2 /
+  EF-40 idiom `O.getSomesStruct({ x: O.fromUndefinedOr(x) })`, which omits absent
+  keys. No `as` casts and no `biome-ignore` of the new rule.
 - All affected packages are `private: true` and changesets skip private packages: no changeset.
 
 ## Acceptance Criteria
@@ -58,8 +59,8 @@ Higher sources outrank lower sources when they conflict.
 - [x] `prefer-exact-optional-key.grit` runs at severity error and fails on fixtures for every banned form (recall), with no hit on `optionalKey`, `withDecodingDefaultKey`, `OptionFromOptionalKey`, `optionalKey(UndefinedOr(X))` or `Flag.optional` (precision).
 - [x] The rule fails the hosted Biome lint job on a planted violation (proved locally via the same command the CI lane runs).
 - [x] EF-40 is in `standards/effect-first-development.md` and the schema-first repo-laws; EF-2/EF-17 no longer sanction `OptionFromOptional`.
-- [ ] Typecheck, tests and package-verify are green for every touched package.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Typecheck, tests and package-verify pass for touched packages, or unrelated failures are reproduced and recorded separately under the user goal's explicit allowance; see `research/package-verification-2026-10-28.md`.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -98,7 +99,13 @@ them and record each in the Decision Log.
 | 2026-10-23 | `ApiTransportDurationObject` keeps `UndefinedOr` | It mirrors effect's `Duration.DurationObject`, whose members admit `undefined` | Make exact once effect's `DurationObject` does |
 | 2026-10-23 | FileDiff's `optionalUndefined` helper deleted | Its only purpose was decoded-side `undefined` | Restore the helper from `9e3aff5de8^` |
 | 2026-10-23 | Publish past the cheap-gate `fallow:audit` red; attribute it under S11 | 19 duplication groups are pre-existing clones the codemod rename touched (0 hand-edited files; receipt in `research/OPPORTUNITIES.md`); operator ruling | Add reasoned `fallow-ignore-next-line code-duplication` suppressions, or land the dedupe follow-up first |
+| 2026-10-28 | Retain reproduced unrelated verification failures under the active user goal's allowance | 23 package verifiers pass; six CLI ambient-cache assertions pass in an explicit local-only control, and 443 scratchpad docgen diagnostics exactly match clean main | Re-run the default verifiers after their environment/backlog changes; retain the original failed receipts |
+| 2026-10-28 | Retain `O.getSomesStruct` construction fixes under EF-2 and EF-40 | The governing standard explicitly requires this absence-preserving idiom and outranks the packet's older conditional-spread example | Restore conditional spreads only if the governing standard changes |
+| 2026-10-28 | Inspect import/export source specifiers and lexical scopes | Whole-statement regexes confused exact exports renamed locally with banned exports, and imported namespace names can be shadowed | Revert the source-node and shadowing patterns with their regression fixtures |
+| 2026-10-28 | Bind the GritQL namespace reference to an effect/Schema import | Acceptance probe reproduced a missed arbitrary alias and a false positive on a local S object | Revert the import-binding pattern and its regression fixtures |
+| 2026-10-28 | Use closeout PR #2316 with its own retained readiness verdict | The original PR is merged and its 17 historical required checks verify, but the declared local verdict was not retained; no historical proof is fabricated | Restore the original declared verdict with independent provenance, then revert the closeout declaration |
 | 2026-10-23 | Codemod pairing covers companion interfaces, not only type aliases | Lexical companions are `interface Encoded`; found on the first run, fixed in the rule and re-run from a clean tree | n/a |
+| 2026-10-28 | Capture readiness in a final documentation closeout after PR #2316 merged during interruption | Completion refresh verifies the accepted head, all 15 merge-time required contexts and the elapsed window, but the interrupted monitor left no positive readiness verdict; the existing evidence gate stays unchanged | Recover an independently verifiable original readiness verdict and restore the previous closeout declaration |
 
 ## Exception Ledger
 

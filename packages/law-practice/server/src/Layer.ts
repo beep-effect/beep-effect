@@ -1,6 +1,8 @@
 /**
  * Law-practice server layer.
  *
+ * **Details**
+ *
  * Composes the slice's live service surface: the `IrToLaw` mapping (pure, no
  * dependencies), the file-processing capability backed by the P1 Tika engine,
  * the provider-neutral LangExtract service, and the `OfficeActionReview` loop

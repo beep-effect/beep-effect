@@ -41,7 +41,6 @@ import {
   decodeSchemaFirstPolicyFindingLine,
   encodeSchemaFirstPolicyFinding,
   envValue,
-  escapeRegexChar,
   GhPageInfo,
   GhPrView,
   globMatches,
@@ -232,8 +231,13 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       expect(re.test("src/a/b.ts")).toBe(false);
     });
 
+    it("lets a bare double star cross separators", () => {
+      const re = globPatternToRegExp("src/**");
+      expect(re.test("src/a/b/c.ts")).toBe(true);
+      expect(re.test("other/src/a.ts")).toBe(false);
+    });
+
     it("escapes regex metacharacters literally", () => {
-      expect(escapeRegexChar(".")).toBe("\\.");
       expect(globPatternToRegExp("a.b").test("a.b")).toBe(true);
       expect(globPatternToRegExp("a.b").test("axb")).toBe(false);
     });
@@ -425,6 +429,17 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(yield* overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
         expect(yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("resolves signing references only through the cache secret session", () =>
+      Effect.gen(function* () {
+        const environment = { TURBO_REMOTE_CACHE_SIGNATURE_KEY: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
+        const direct = yield* overridesFor(environment, "bunx", ["turbo", "run", "check"]);
+        expect(direct).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+        const wrapped = yield* overridesFor(environment, "op", ["run", "--", "bunx", "turbo", "run", "check"]);
+        expect(wrapped).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", OP_REFERENCE);
+        expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
+      })
     );
 
     it.effect("guards the TUI on a direct turbo spawn with resolved credentials", () =>

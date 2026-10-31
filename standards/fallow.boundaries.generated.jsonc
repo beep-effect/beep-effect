@@ -4424,6 +4424,7 @@
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
+          "@beep/repo-workspaces",
           "@beep/runpod",
           "@beep/runtime-env",
           "@beep/schema",
@@ -4436,10 +4437,12 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/tsconfig",
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ],
         "allowTypeOnly": [
           "@beep/ai-provider-cli",
@@ -4483,6 +4486,7 @@
           "@beep/repo-docgen",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
+          "@beep/repo-workspaces",
           "@beep/runpod",
           "@beep/runtime-env",
           "@beep/schema",
@@ -4495,10 +4499,12 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/tsconfig",
           "@beep/uspto",
           "@beep/utils",
           "@beep/walker",
-          "@beep/xdg"
+          "@beep/xdg",
+          "@beep/yaml"
         ]
       },
       {
@@ -4529,12 +4535,15 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -4542,12 +4551,15 @@
           "@beep/config-file",
           "@beep/identity",
           "@beep/md",
+          "@beep/memfs",
           "@beep/package-json",
           "@beep/repo-docgen",
+          "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/tsconfig",
           "@beep/utils"
         ]
       },

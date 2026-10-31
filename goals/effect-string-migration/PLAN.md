@@ -9,10 +9,10 @@ Status: `in-progress`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | in-progress | Migrate the census sites wave by wave, then arm the rule. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P1 Implement | complete | Migrate the census sites wave by wave, then arm the rule. | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and propose closure. | Evidence and reflection are current; the typed proposal retains active lifecycle until completion evidence verifies. |
 
 ## Waves
 
@@ -36,7 +36,7 @@ wave moves `@effect/tsgo` to 0.55+ and arms `preferEffectString` at `error`.
 | 6d | effected glob | 185 | merged (#2018) |
 | 6e | effected yaml sources | 286 | merged (#2014) |
 | 6f | effected yaml tests | 208 | merged (#2010) |
-| 7 | the last site (`epistemics/test/Claim.test.ts`), then the pin moves to 0.55.0 and the rule is armed at error | 1 | in review |
+| 7 | the last site (`epistemics/test/Claim.test.ts`), then the pin moves to 0.55.0 and the rule is armed at error | 1 | merged (#2027); completion requalification open |
 
 Wave proof, per package: the package's tests, `package-verify --quick`, and a
 temporary local `@effect/tsgo` 0.55.0 install with `preferEffectString` armed,
@@ -51,6 +51,26 @@ hunk that an open PR or lane changes, measured against each lane's merge
 base. Callback replacers use `replaceWith`/`replaceAllWith` from
 `@beep/utils/Str`, except in packages `@beep/utils` depends on (such as
 `@beep/identity`), which rewrite the call without it.
+
+## Current requalification
+
+The 2026-10-28 completion refresh rejects the historical #2027 proposal. Keep
+its failed merge-time evidence intact. The `chore/effect-string-closeout` lane
+must:
+
+1. Full Check and the root configuration program passed most recently at
+   `bf0990a3c1`: 337
+   successful Turbo tasks, including 187 package Check tasks, and zero
+   `preferEffectString` findings. The full graph had no affected-file filter.
+2. `quality tsgo-rules`, packet checks and reflection validation passed; rerun
+   the cheap packet validators after the evidence update.
+3. The audit and reflection are published in #2324, now named by
+   `proposedCloseout.finalPullRequest`; operative lifecycle stays active.
+4. Pass content-final checks and capture a head-bound `--until-ready` Yeet
+   verdict; merge only after required checks pass and review gates hold.
+5. Run completion refresh against the new final PR and require `verified`
+   before claiming completion. Retire the lane after preserving its readiness
+   evidence in the clone ledger.
 
 ## Closeout Checklist
 

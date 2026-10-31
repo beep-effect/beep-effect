@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "cache-python-workspace-feature-review/v1",
+  "recordedAt": "2026-10-30T21:13:26.478608+00:00",
+  "authority": "Final current-tree no-change feature disposition from owned source review. No uv discovery semantics, real computation qualification, signing activation, runtime change or whole-goal acceptance.",
+  "sourceBaseRevision": "daf68a6395be5dd329453c9f56f4a579de14e666",
+  "feature": "futureFlag:experimentalPythonWorkspaces",
+  "owner": "turborepo-quality-cache-adoption",
+  "disposition": "accepted-retain-current-absence",
+  "rationale": "Retain the absent experimental root uv discovery flag. The repository has one nested standalone uv project, beep-photo-face, and no root uv workspace. Its existing Python lint and test commands are explicitly owned by the Beep CLI package audit. Adding a root workspace and another discovery path has no demonstrated additional quality consumer or measured benefit; current ownership stays explicit. This does not classify Python work as absent, ineligible or already cache-qualified.",
+  "sourceEvidence": {
+    "base": "daf68a6395be5dd329453c9f56f4a579de14e666",
+    "trackedPaths": 43768,
+    "trackedPathInventorySha256": "3d577a529566338a06b2a89744126cfa2dcc8e6705304854c5afa15426326532",
+    "rootUvFilesPresent": {
+      "pyproject.toml": false,
+      "uv.lock": false,
+      "uv.toml": false
+    },
+    "trackedUvManifestAndLockPaths": [
+      "packages/tooling/tool/cli/python/photo-face/pyproject.toml",
+      "packages/tooling/tool/cli/python/photo-face/uv.lock"
+    ],
+    "nestedProjectName": "beep-photo-face",
+    "nestedUvWorkspaceDeclaration": false,
+    "allTrackedManifestScripts": 4544,
+    "scriptInventorySha256": "464f657d23e6d7cb9a8cca7eb1f5755414b1960065163ee023e0556a640c4822",
+    "manifestParseFailures": [],
+    "ownerPackage": "@beep/repo-cli",
+    "ownerManifest": "packages/tooling/tool/cli/package.json",
+    "pythonQualityScripts": {
+      "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:python && bun run beep:lint && bun run beep:lint:python",
+      "beep:lint:python": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff check python/photo-face && uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads ruff format --check python/photo-face",
+      "beep:test:python": "uv run --isolated --project python/photo-face --frozen --python 3.12 --no-python-downloads pytest"
+    },
+    "runtimeConsumer": "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts",
+    "rootFlagConfigured": "absent"
+  },
+  "sourceEvidenceAlgorithms": {
+    "trackedPaths": "SHA-256 of exact git ls-tree -rz --name-only sourceBaseRevision bytes. Read manifests from that clean source tree.",
+    "scriptInventorySha256": "SHA-256 of UTF-8 compact JSON for sorted [relative manifest path, script name, script text] rows, ensure_ascii=false.",
+    "scope": "Tracked owned tree and live root absence checked while clean. Ignored environments and external reference clones do not establish a new approved computation."
+  },
+  "sourceSha256": {
+    "package.json": "640d51eba1db211244fef7c066eaa179c2740a4bbe192e3d8b2e2afe37c6daeb",
+    "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+    "packages/tooling/tool/cli/package.json": "9f43e6fa5edfd4bea8663b41fb285fbeaac729ec6980b951d416039452bcd42e",
+    "packages/tooling/tool/cli/python/photo-face/pyproject.toml": "8ac903747698c40b4e4e3da66e5a9430784ff07ae1d03724a13f15e21e413391",
+    "packages/tooling/tool/cli/python/photo-face/uv.lock": "9f9cf1f36957909008df8cda5a53edd2f8568307b7b4a398c9038160999c62a7",
+    "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts": "c8b4ec961b0bcd30ba55d7e052e2dba99eb2b99d6ae37f38bda1526082b171bf",
+    "goals/turborepo-quality-cache-adoption/research/current-client-pins.json": "daf3cd0b53edf45e209a7be2f8eea93981a56d133d95ed81b7f929ed82683ae3"
+  },
+  "availabilityEvidence": {
+    "report": "native-future-flag-availability.json",
+    "sha256": "752c513a3ca8112ade0c1d6adfe6bfcc13dbb073ebb221ef428fe01da1145e9e",
+    "cases": [
+      {
+        "channel": "stable",
+        "kind": "flag",
+        "feature": "experimentalPythonWorkspaces",
+        "enabled": false,
+        "exit": 0,
+        "classification": "dry-run-accepted",
+        "dryRunTaskCount": 1,
+        "sentinelExecuted": false,
+        "stdoutSha256": "5fc4074370b3be42a4691b89aa5eeed45343d18a6b0bf2b143dd9df22737eda5",
+        "stderrSha256": "c29d1bee8b94c967ca9498a009aa6a65c5eb670825b37fff42865f34369ff2e0"
+      },
+      {
+        "channel": "stable",
+        "kind": "flag",
+        "feature": "experimentalPythonWorkspaces",
+        "enabled": true,
+        "exit": 0,
+        "classification": "dry-run-accepted",
+        "dryRunTaskCount": 1,
+        "sentinelExecuted": false,
+        "stdoutSha256": "311b57744b19a332a635a8edd17b9bd0a2eaf852af25c14915e4c2e4f2db8aed",
+        "stderrSha256": "c29d1bee8b94c967ca9498a009aa6a65c5eb670825b37fff42865f34369ff2e0"
+      },
+      {
+        "channel": "canary",
+        "kind": "flag",
+        "feature": "experimentalPythonWorkspaces",
+        "enabled": false,
+        "exit": 0,
+        "classification": "dry-run-accepted",
+        "dryRunTaskCount": 1,
+        "sentinelExecuted": false,
+        "stdoutSha256": "535dcade43ca3ed91ea7659c56b9036bcba15e20298cdc027d31d9062c3c32a3",
+        "stderrSha256": "c29d1bee8b94c967ca9498a009aa6a65c5eb670825b37fff42865f34369ff2e0"
+      },
+      {
+        "channel": "canary",
+        "kind": "flag",
+        "feature": "experimentalPythonWorkspaces",
+        "enabled": true,
+        "exit": 0,
+        "classification": "dry-run-accepted",
+        "dryRunTaskCount": 1,
+        "sentinelExecuted": false,
+        "stdoutSha256": "020f8ea564bad757aefb244e528a8506058d68e846852918112d9ce9b02c51e8",
+        "stderrSha256": "c29d1bee8b94c967ca9498a009aa6a65c5eb670825b37fff42865f34369ff2e0"
+      }
+    ],
+    "limit": "Both exact pinned clients accept false and true in the existing isolated Bun-only dry-run fixture. No sentinel ran. These four syntax cases do not prove actual uv workspace graph or execution behavior."
+  },
+  "currentFeatureMatrixPriorSha256": "1b76c39e126dce398dd7a7874927f9d3983f498414834f4df09b150f17d49194",
+  "correctnessCase": "Preserve absent root uv workspace/flag and existing generated quality scripts. Any proposal to introduce root uv discovery must prove exact-client real uv graph selection and task ownership without duplicate, missing or falsely successful execution.",
+  "expectedBenefit": "No measured benefit is claimed. The current Python lint and test commands remain in the computation census and must receive their own semantic decomposition and qualification evidence.",
+  "reopenWhen": [
+    "A concrete owner proposes a root uv workspace or Turbo Python graph consumer.",
+    "Python quality decomposition would benefit from independent uv package ownership.",
+    "A pinned client update changes root/nested discovery behavior or another Python project is added."
+  ],
+  "remainingPythonQualityWork": [
+    "Review the existing Python lint/test computations and their lockfile, interpreter, tool, source and environment input closure.",
+    "Qualify every eligible pure computation, outputs/log safety, concurrency and supported portability in its actual profile; do not cache person-matching external/model verdicts as whole tasks by inference."
+  ],
+  "runtimeOrConfigurationChanges": false,
+  "populationDispositionsChanged": 0,
+  "goalAcceptanceCriteriaCompleted": 0,
+  "verification": {
+    "sourceStructural": "passed before writing: clean exact base; root uv files and flag absent; nested project has no uv workspace; all tracked package manifests parse; four native availability cases retained.",
+    "packetChecks": {
+      "goalsDoctor": "passed",
+      "exploreCheck": "passed",
+      "biomeFormat": "passed",
+      "gitDiffCheck": "passed",
+      "structural": {
+        "exactOneFeatureRowChanged": true,
+        "other34RowsUnchanged": true,
+        "otherMatrixFieldsUnchangedExceptCounts": true,
+        "allAcceptanceStatesUnchanged": true,
+        "sourceHashesMatch": true,
+        "specHashMatches": true,
+        "allResearchReportsExist": true,
+        "noRuntimeOrPackageSourceChange": true
+      },
+      "checkedAt": "2026-10-30T21:14:25.471361+00:00"
+    }
+  }
+}

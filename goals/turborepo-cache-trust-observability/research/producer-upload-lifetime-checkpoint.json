@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "cache-producer-upload-lifetime-checkpoint/v1",
+  "recordedAt": "2026-10-30T16:01:20.961095+00:00",
+  "authority": "Focused component verification only; no complete goal, current hosted, qualification, credential or activation authority.",
+  "sourceParent": "1199506f8c3c6c9e7eaeeb38a0047ce083c17b30",
+  "specSha256": "e8f5fb1ba06b92ab6a9dcd291b3ae8f97291cce4e2569e92669ccec93357cf04",
+  "sourceSha256": {
+    "infra/r2-cache/policy_runtime.py": "e7bfdadc442e6652f31ea844790ebd3733ca66a2c789c0aaa3b9939005a9fe6c",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.ts": "a497282b1449567521e450f978686a28fa34d3bfd02fae2fbcb072851e7f64c9",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts": "a57d4505be1c39336e0db82daf66a2cd9e99807d52410d1938e306c8f0902bf2",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "00ff29ba5eed5952d27d2505c654539ee1364076281778210c79eb10da4fe1d8",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "4ced913e48589c0b6fe114704fbed90737d29c9b2aa5bad7c93d40744a2dd0bc",
+    "packages/tooling/tool/cli/src/test/Cache.test-kit.ts": "9d4480688b024d0180416c8bc6e6cb1de2c25e93e98b4339a74ae3efbe2e9f13",
+    "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "10dce234aae3a5e1e98df68a0472c2f7629fdba460029a65bbd6900be6076da5",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "7e1ccab543747f8596e490f2c77d832eef24d6c0bf7df2b2f7268722317d9fd6",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "3ae9f2bfaef574682a314b6b18bcf781d9cd65c7bfffd54e01d861d70b73ac0b"
+  },
+  "behavior": [
+    "One existing scheduler admission surrounds backend acquisition, private proxy/worker, upload join and backend verification/cleanup.",
+    "The shared worker no longer takes an admission inside the live owned backend; ordinary signed experiments retain their own admission.",
+    "The existing private supervisor storage helper moves to Cache.evidence with the same containment and permissions; no duplicated helper or import cycle.",
+    "The load callback gets540seconds after readiness; backend600seconds,20second readiness/post-load frames and10second unit stop remain fixed.",
+    "Workflow consumes the admitted upload and sanitized cleanup receipt together, then authenticates the unchanged complete bundle.",
+    "Each deterministic-clock regression has its own single-case TestClock.layer; no shared-clock exception was added."
+  ],
+  "verification": {
+    "node": {
+      "exit": 0,
+      "elapsedSeconds": 7.272,
+      "finishedAt": "2026-10-30T15:35:14.681515+00:00",
+      "tests": 70,
+      "files": 3
+    },
+    "bun": {
+      "exit": 0,
+      "elapsedSeconds": 9.447,
+      "finishedAt": "2026-10-30T15:27:32.367263+00:00",
+      "tests": 70,
+      "files": 3
+    },
+    "quick": {
+      "exit": 0,
+      "elapsedSeconds": 17.321,
+      "finishedAt": "2026-10-30T15:27:40.593775+00:00"
+    },
+    "effectVitest": {
+      "exit": 0,
+      "elapsedSeconds": 50.18,
+      "finishedAt": "2026-10-30T15:28:12.621692+00:00"
+    },
+    "fallow": {
+      "exit": 0,
+      "elapsedSeconds": 15.994,
+      "finishedAt": "2026-10-30T15:20:24.711658+00:00"
+    },
+    "catalog": {
+      "exit": 0,
+      "elapsedSeconds": 11.923,
+      "finishedAt": "2026-10-30T15:20:20.529907+00:00"
+    },
+    "canonicalInventory": {
+      "exit": 0,
+      "elapsedSeconds": 40.74,
+      "finishedAt": "2026-10-30T15:39:44.607404+00:00"
+    }
+  },
+  "causalControls": {
+    "recordedAt": "2026-10-30T15:44:51.546632+00:00",
+    "authority": "Controlled admission and physical inert peer regression controls; no live cache or credential changes.",
+    "rows": [
+      {
+        "mutation": "before-admission",
+        "sourceFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts",
+        "sourceSha256": "00ff29ba5eed5952d27d2505c654539ee1364076281778210c79eb10da4fe1d8",
+        "runtime": "node",
+        "exit": 1,
+        "oneIntendedAssertionFailed": true,
+        "logSha256": "8957b388239c67f6c4eaf0cb353ca658e8031dd58855391ba5b16bccb867bfe8"
+      },
+      {
+        "mutation": "no-load-timeout",
+        "sourceFile": "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.ts",
+        "sourceSha256": "a497282b1449567521e450f978686a28fa34d3bfd02fae2fbcb072851e7f64c9",
+        "runtime": "bun",
+        "exit": 1,
+        "oneIntendedAssertionFailed": true,
+        "logSha256": "c74bb9f965517c20105ffc8791c65c1b79a8d42985c09af235df3d87658b1734"
+      }
+    ],
+    "sourceRestoredExactly": true
+  },
+  "remaining": [
+    "Complete current package/final proof, normal publication, review replies, fresh hosted statuses and review window.",
+    "Consume the separately owned conformance-fixture bind fix from main; do not copy it into dependent lanes.",
+    "Actual R2 protected producer, immutable publication/acceptance, all adoption and real representative windows remain required."
+  ],
+  "priorFailureAttribution": [
+    "Initial extraction exposed scheduler errors at the public signed-pilot boundary; mapped them through the existing typed command error.",
+    "Initial timeout assertion used a different Effect version error name; current assertion uses the actual bounded timeout message.",
+    "Narrow writer/phase receipt fields require explicit literals after spreading the generic observation.",
+    "Two new shared-clock judgments were fixed by private single-case clock layers; all554 existing judgments remain identical and no new exception was added.",
+    "One overlapping Node/Bun replay hit an inherited direct-server EADDRINUSE in the test fixture. The failed run is retained; the unchanged serial Node replay passes70. A separate fixture fix will reuse the existing bind-event/retry helper."
+  ],
+  "productionChanges": false,
+  "generatedArtifacts": {
+    "instrumentation": {
+      "verification": {
+        "exit": 0,
+        "elapsedSeconds": 7.935,
+        "finishedAt": "2026-10-30T15:11:01.053534+00:00"
+      },
+      "sha256": {
+        "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc": "2b72f69bfee86114a21c2236809fde63e875f92cde9da63c5f62fac27be2aac8"
+      }
+    },
+    "documentation": {
+      "verification": {
+        "exit": 0,
+        "elapsedSeconds": 278.526,
+        "finishedAt": "2026-10-30T15:16:08.586910+00:00"
+      },
+      "sha256": {
+        "standards/jsdoc-documentation.inventory.jsonc": "49a03220066928ab4af578bc0eaaab9999abdf39167bcc9952871c3639331b22",
+        "standards/jsdoc-documentation.inventory.md": "f2478d5c0165dac9eac9792f18fef37f097e3281203d95df78eaf66afedafa6a"
+      }
+    }
+  },
+  "inventoryJudgmentComparison": {
+    "findingsBefore": 554,
+    "findingsAfter": 554,
+    "normalizedJudgmentsIdentical": true,
+    "newExceptions": 0,
+    "changedSourceAnchors": [
+      {
+        "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
+        "before": {
+          "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:30:@effect/platform-node@0#1",
+          "line": 30,
+          "endLine": 30
+        },
+        "after": {
+          "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:35:@effect/platform-node@0#1",
+          "line": 35,
+          "endLine": 35
+        }
+      }
+    ],
+    "sha256": "a414c34008e6d1adc6048f587248be16a6b739914937f2bcaee0a425f9792dde"
+  }
+}

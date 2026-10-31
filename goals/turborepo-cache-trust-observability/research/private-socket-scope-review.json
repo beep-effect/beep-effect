@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "cache-private-socket-test-review/v1",
+  "recordedAt": "2026-10-29T23:13:00.684564+00:00",
+  "authority": "Explicit source-bound test-rule judgments and actual intended-failure controls; no qualification, production activation or coverage floor change.",
+  "introducedFindingFixed": "The response tag assertion now uses assertSome with its exact expected payload.",
+  "retainedJudgments": [
+    {
+      "ruleId": "EV004",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "occurrence": "v2:2a38895468b2e3d49adf742eb92ea735d1c707d22755ea6b1ca744df60947219",
+      "class": "inner-helper-scope-lifetime-review",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "ruleId": "EV004",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "occurrence": "v2:db4cf937a3df2fd5caef4acc3acefc9635f79a2dc01c2a8afb63ed981bb00427",
+      "class": "shorter-scope-lifetime-review",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "ruleId": "EV004",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "occurrence": "v2:93b2a6b1ec2d881be310bff6a8615151cbb0c100f2f4f14327ec69c0bc236670",
+      "class": "inner-helper-scope-lifetime-review",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "ruleId": "EV004",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket.test.ts",
+      "occurrence": "v2:90ad850f0a3703b65651c460415c38e920788dcd6b2becb5ab75fec362157c31",
+      "class": "shorter-scope-lifetime-review",
+      "reason": "This deliberate shorter scope closes its allocated socket/directory before the same test asserts removal. Four actual scope-removal controls fail the intended cleanup assertions; extending lifetime to the test scope changes the tested behavior. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV004 recognizes deliberate cleanup-before-assertion scopes."
+    },
+    {
+      "ruleId": "EV010",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "reason": "This in-process constructor-control test uses the real filesystem to assert owner-only mode bits and cleanup of its allocated path; only the HTTP constructor is doubled. The separate native Bun case proves actual Unix transport. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV010 recognizes the explicit mode and removal subject, or the test changes its filesystem subject."
+    },
+    {
+      "ruleId": "EV010",
+      "file": "packages/tooling/tool/cli/test/cache-private-socket.test.ts",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "reason": "This test binds an actual Bun Unix socket, queries physical owner-only mode bits, connects through the Node Unix agent, and asserts deletion after shutdown. An in-memory filesystem cannot preserve that subject. Owner: @beep/repo-cli. Evidence: goals/turborepo-cache-trust-observability/research/private-socket-scope-review.json. Exit: retire when EV010 recognizes native Unix lifecycle tests."
+    }
+  ],
+  "scopeRemovalControls": {
+    "schemaVersion": "cache-private-socket-scope-controls/v1",
+    "recordedAt": "2026-10-29T23:09:27.780293+00:00",
+    "authority": "Actual scoped intended-failure test-source controls in the owned checkout; no production activation, qualification or floor change.",
+    "rows": [
+      {
+        "case": "constructor-cleanup",
+        "source": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+        "sourceSha256": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b",
+        "mutantSha256": "d550a2dfe9cabaf510b4f455bbb7675d1b46f8b5701919556690bf52e791e295",
+        "selectedTest": "owns socket modes and cleanup with an injected server constructor",
+        "runtime": "node",
+        "exit": 1,
+        "failedTests": 1,
+        "cleanupAssertionFailedForIntendedReason": true,
+        "reportSha256": "05a8c514f86066669914a22c08bfd7bff076e48cb4dbb2a2aeced61f9c65d609",
+        "seconds": 3.127
+      },
+      {
+        "case": "tcp-refusal-cleanup",
+        "source": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+        "sourceSha256": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b",
+        "mutantSha256": "028a6e2ef44b66fc24bae231fa172d94bd2a39607614c8138387423d44071f8e",
+        "selectedTest": "rejects a TCP address and removes the allocated directory",
+        "runtime": "node",
+        "exit": 1,
+        "failedTests": 1,
+        "cleanupAssertionFailedForIntendedReason": true,
+        "reportSha256": "cbbbee21ad6e83fbbadc73913a0548032da156c4ff3b61fb77dabee26c614e32",
+        "seconds": 2.916
+      },
+      {
+        "case": "bind-defect-cleanup",
+        "source": "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts",
+        "sourceSha256": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b",
+        "mutantSha256": "2561a5245c3d55f27dcb0152b2a0130823f87207b98a40d69d828106accf7c45",
+        "selectedTest": "preserves bind defects and removes the allocated directory",
+        "runtime": "node",
+        "exit": 1,
+        "failedTests": 1,
+        "cleanupAssertionFailedForIntendedReason": true,
+        "reportSha256": "76f1581238d470a49a78b47e48f7556c057f7bafcee1276fded0fef2b018ed31",
+        "seconds": 2.841
+      },
+      {
+        "case": "native-socket-cleanup",
+        "source": "packages/tooling/tool/cli/test/cache-private-socket.test.ts",
+        "sourceSha256": "1abd6e27ed1d78f5f91240788b80d08a88043a95bdea9121c3d53da0f37e1abe",
+        "mutantSha256": "243d8465fbabf9d139a49ca1cf1ebc9034c3122f3953c150f396b996aaa548f7",
+        "selectedTest": "preserves upstream policy, bounded capture and private socket lifetime in native Bun",
+        "runtime": "bun",
+        "exit": 1,
+        "failedTests": 1,
+        "cleanupAssertionFailedForIntendedReason": true,
+        "reportSha256": "65ff6fb0ee16a00ba3164487669bab54305f38993f7d7382677ef16b54ffba4e",
+        "seconds": 2.394
+      }
+    ],
+    "sourceRestoredExactly": true,
+    "conclusion": "Each inner scope ends the resource before its cleanup assertion. Moving its lifetime to the enclosing test scope leaves the owned path present and fails the selected assertion. These are intentional shorter scopes, not redundant whole-test scopes."
+  },
+  "sourceBindings": {
+    "packages/tooling/tool/cli/test/cache-private-socket.test.ts": "1abd6e27ed1d78f5f91240788b80d08a88043a95bdea9121c3d53da0f37e1abe",
+    "packages/tooling/tool/cli/test/cache-private-socket-controls.test.ts": "78d62f94315057a2782e3549aaf54b77c6d9247c9a0c83f738d48a9a32b5ce0b"
+  },
+  "currentFocused": {
+    "node": {
+      "testsPassed": 51,
+      "files": 4,
+      "exit": 0,
+      "seconds": 38.496
+    },
+    "bun": {
+      "testsPassed": 51,
+      "files": 4,
+      "exit": 0,
+      "seconds": 56.494
+    }
+  },
+  "priorInventoryFindingsUnchanged": true,
+  "coverageFloorChanged": false,
+  "limits": [
+    "The four negative controls change test source temporarily and restore the exact original bytes; they do not weaken production behavior.",
+    "Constructor controls assert filesystem bookkeeping with a doubled HTTP constructor; actual transport is proved only by the separate native Bun case.",
+    "These six exceptions are explicit judgments about necessary scopes and physical filesystem subjects, not permission to ignore unrelated findings."
+  ]
+}

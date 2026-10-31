@@ -1,6 +1,8 @@
 /**
  * Pretext driver typed errors.
  *
+ * **Details**
+ *
  * Centralized technical failures for the text-measurement boundary: capture
  * capability probes, font rejection, snapshot codec failures, and measurement
  * faults. No product vocabulary.

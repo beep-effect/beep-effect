@@ -2,6 +2,8 @@
  * Citation-base value object: the fields shared by every parsed legal-citation
  * subtype, ported from the eyecite `CitationBase` interface.
  *
+ * **Details**
+ *
  * These fields are spread via `{ ...CitationBase.fields }` into each concrete
  * citation subtype, so `CitationBase` is kept as a plain `S.Class` with no
  * `type` discriminant of its own.

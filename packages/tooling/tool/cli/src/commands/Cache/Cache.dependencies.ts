@@ -21,19 +21,58 @@ import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import {
   CacheDependencyLink,
   CacheDependencyMaterialization,
   CacheDependencyTree,
 } from "./Cache.dependencies.schemas.ts";
+import { decodeCacheExperimentText, readCacheEvidenceBytes } from "./Cache.evidence.ts";
 import { CacheCommandError, CacheExecutablePin } from "./Cache.schemas.ts";
+import type { CacheEvidenceReference } from "@beep/repo-configs/cache";
 import type { CacheCensusWorkspace } from "./Cache.schemas.ts";
 
 const tools = ["bash", "cp", "find", "tar", "sha256sum", "awk"];
 const countFields = S.Tuple([S.Natural, S.Natural, S.Natural, S.Natural, S.Natural]);
 const decodeCountFields = S.decodeUnknownEffect(countFields);
 const bound = OutputBound.make({ maxChars: 512 * 1024, truncatedNotice: "[dependency inspection overflow]" });
+const materializationCodec = JsonStringCodec(CacheDependencyMaterialization);
+
+/**
+ * Read a contained, digest-bound dependency descriptor as strict UTF-8.
+ *
+ * **Details**
+ * This verifies and decodes the descriptor, not the installed dependency tree.
+ * Consumers that execute its dependency closure still call verifyCacheDependencies.
+ *
+ * **Example** (Plan a digest-bound descriptor read)
+ * ```ts
+ * import { readCacheDependencyMaterialization } from "@beep/repo-cli/test/Cache"
+ * import { CacheEvidenceReference } from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as Effect from "effect/Effect"
+ *
+ * const reference = CacheEvidenceReference.make({
+ *   path: "evidence/dependencies.json",
+ *   sha256: Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * })
+ * const read = readCacheDependencyMaterialization("/repo", reference)
+ * console.assert(Effect.isEffect(read))
+ * ```
+ *
+ * @internal
+ * @category queries
+ * @since 0.0.0
+ */
+export const readCacheDependencyMaterialization = Effect.fn("CacheDependencies.readMaterialization")(
+  (root: string, reference: CacheEvidenceReference) =>
+    readCacheEvidenceBytes(root, reference).pipe(
+      Effect.flatMap(decodeCacheExperimentText),
+      Effect.flatMap(materializationCodec.decode)
+    ),
+  CacheCommandError.mapError("Cannot read verified dependency materialization.")
+);
 const digestScript =
   'set -euo pipefail; /usr/bin/tar --sort=name --format=posix --mtime=@0 --owner=0 --group=0 --numeric-owner --hard-dereference --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime -C "$1" -cf - -- node_modules | /usr/bin/sha256sum';
 const countsScript =

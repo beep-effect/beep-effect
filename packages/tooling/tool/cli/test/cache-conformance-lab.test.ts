@@ -21,6 +21,7 @@ import {
   runCacheConformanceNative,
 } from "@beep/repo-cli/commands/Cache";
 import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
+import * as ProtocolFixture from "@beep/repo-cli/commands/Cache/Cache.protocol.fixture";
 import { CacheRuntimeProcess } from "@beep/repo-cli/test/Cache";
 import { Sha256Hex } from "@beep/schema";
 import { NodeServices } from "@effect/platform-node";
@@ -29,19 +30,23 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Crypto from "effect/Crypto";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
   bearers,
@@ -54,11 +59,35 @@ import {
   targetFor,
   teamId,
 } from "./cache-conformance-server.ts";
+import type * as HttpServerResponse from "effect/http/HttpServerResponse";
 import type { ServerMode } from "./cache-conformance-server.ts";
 
 afterEach(() => vi.restoreAllMocks());
 
 const Services = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
+const observeProxyBody = Effect.fn("ConformanceTest.observeProxyBody")(function* () {
+  const started = yield* Deferred.make<void>();
+  const completed = yield* Deferred.make<void>();
+  const serve = ProtocolFixture.serveCacheLoopback;
+  vi.spyOn(ProtocolFixture, "serveCacheLoopback").mockImplementation(
+    <E, R>(app: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>, maxRequestBodySize: number) =>
+      serve(
+        Effect.gen(function* () {
+          const request = yield* HttpServerRequest.HttpServerRequest;
+          const watched = new Proxy(request, {
+            get(target, property) {
+              return property === "arrayBuffer"
+                ? Deferred.succeed(started, undefined).pipe(Effect.andThen(target.arrayBuffer))
+                : Reflect.get(target, property, target);
+            },
+          });
+          return yield* app.pipe(Effect.provideService(HttpServerRequest.HttpServerRequest, watched));
+        }).pipe(Effect.ensuring(Deferred.succeed(completed, undefined))),
+        maxRequestBodySize
+      )
+  );
+  return { started, completed };
+});
 // The fault proxy injects `reset` and `truncated-body` by failing the response
 // stream, which Bun.serve turns into a connection abort. The CLI only runs on
 // Bun; vitest's Node run serves through a Bun.serve shim that completes the
@@ -122,6 +151,290 @@ it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache 
 });
 
 it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache conformance fault proxy", (it) => {
+  it.effect("rejects later traffic and invalidates evidence when the request budget is exhausted", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxEvents: 2,
+        })
+      );
+      const put = HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+        HttpClient.execute,
+        Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+      );
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(503);
+      expect(yield* put).toBe(503);
+      expect((yield* server.tags).length).toBe(2);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("refuses an unreadable request body without forwarding an empty upload", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxBodyBytes: 4,
+        })
+      );
+      const response = yield* HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("large")),
+        HttpClient.execute
+      );
+      expect(response.status).toBe(413);
+      expect(yield* server.tags).toEqual([]);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("bounds retained replay bytes and rejects overflow before an upstream write", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxCaptureBytes: 10,
+        })
+      );
+      const put = HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+        HttpClient.execute,
+        Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+      );
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(200);
+      expect(yield* put).toBe(503);
+      expect((yield* server.tags).length).toBe(2);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("does not turn an interrupted upload into an empty upstream write", () =>
+    Effect.gen(function* () {
+      if (!abortsConnections) {
+        // The Node Bun.serve shim buffers the complete body before dispatching
+        // the handler. Run this streaming lifecycle control in the real runtime.
+        const root = yield* repoRoot;
+        const path = yield* Path.Path;
+        const native = yield* CacheRuntimeProcess.runCaptured({
+          command: "bun",
+          args: [
+            path.join(root, "node_modules/vitest/vitest.mjs"),
+            "run",
+            path.join(root, "packages/tooling/tool/cli/test/cache-conformance-lab.test.ts"),
+            "--testNamePattern",
+            "does not turn an interrupted upload into an empty upstream write",
+            "--fileParallelism=false",
+            "--maxWorkers=1",
+          ],
+          cwd: root,
+          bound: CacheRuntimeProcess.OutputBound.make({
+            maxChars: 16 * 1024,
+            truncatedNotice: "native interruption control exceeded its output bound",
+          }),
+          timeout: "45 seconds",
+          source: "merge",
+        });
+        expect(native.exitCode).toBe(0);
+        expect(native.truncated).toBe(false);
+        return;
+      }
+      const server = yield* makeConformanceServer(goodMode);
+      const { started, completed } = yield* observeProxyBody();
+      const release = yield* Deferred.make<void>();
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+      );
+      const upload = yield* HttpClientRequest.put(
+        `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`
+      ).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyStream(
+          Stream.concat(
+            Stream.make(new TextEncoder().encode("partial")),
+            Stream.fromEffect(release.pipe(Deferred.await, Effect.timeout("5 seconds"))).pipe(
+              Stream.drain,
+              Stream.concat(Stream.fail("synthetic request abort"))
+            )
+          )
+        ),
+        HttpClient.execute,
+        Effect.result,
+        Effect.forkChild
+      );
+      yield* started.pipe(Deferred.await, Effect.timeout("5 seconds"));
+      const pendingReceipt = yield* proxy.events.pipe(Effect.forkChild);
+      yield* Effect.yieldNow;
+      yield* Effect.sync(() => O.fromUndefinedOr(pendingReceipt.pollUnsafe()).pipe(assertNone));
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(upload);
+      yield* Deferred.await(completed).pipe(Effect.timeout("5 seconds"));
+      expect(yield* server.tags).toEqual([]);
+      (yield* Fiber.join(pendingReceipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("rejects an oversized upstream body and cannot return a complete receipt", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const path = `/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`;
+      yield* HttpClientRequest.put(`${server.url}${path}`).pipe(
+        HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+        HttpClientRequest.bodyUint8Array(new TextEncoder().encode("large")),
+        HttpClient.execute,
+        Effect.flatMap((response) => response.arrayBuffer)
+      );
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxBodyBytes: 4,
+        })
+      );
+      const response = yield* HttpClient.get(`${proxy.url}${path}`, {
+        headers: { authorization: `Bearer ${secrets.reader}` },
+      });
+      expect(response.status).toBe(503);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("reserves the request budget atomically across concurrent clients", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({
+          target: targetFor({ url: server.url }),
+          bearers,
+          holdMs: 400,
+          maxEvents: 2,
+        })
+      );
+      const statuses = yield* Effect.forEach(
+        A.range(1, 8),
+        () =>
+          HttpClientRequest.put(`${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`).pipe(
+            HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+            HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+            HttpClient.execute,
+            Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+          ),
+        { concurrency: 8 }
+      );
+      expect(A.filter(statuses, (status) => status === 200).length).toBeLessThanOrEqual(2);
+      expect(A.filter(statuses, (status) => status === 503).length).toBeGreaterThanOrEqual(6);
+      expect((yield* server.tags).length).toBeLessThanOrEqual(2);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("reserves the replay-entry limit before concurrent upstream writes", () =>
+    Effect.gen(function* () {
+      const server = yield* makeConformanceServer(goodMode);
+      const proxy = yield* makeCacheConformanceFaultProxy(
+        CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+      );
+      const statuses = yield* Effect.forEach(
+        A.range(1, 65),
+        (index) =>
+          HttpClientRequest.put(`${proxy.url}/v8/artifacts/${Str.padStart(32, "0")(`${index}`)}?teamId=${teamId}`).pipe(
+            HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "A" }),
+            HttpClientRequest.bodyUint8Array(new TextEncoder().encode("body")),
+            HttpClient.execute,
+            Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status)))
+          ),
+        { concurrency: 8 }
+      );
+      expect(statuses).toContain(503);
+      expect((yield* server.tags).length).toBe(64);
+      (yield* proxy.events.pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+
+  it.effect("preserves bounded backend claims through proxy capture and rejects secret text", () =>
+    Effect.gen(function* () {
+      for (const responseCacheResult of ["not-found", `${secrets.reader} /fixture/private/result body-canary-15ab`]) {
+        const server = yield* makeConformanceServer({ ...goodMode, readFault: O.some(404), responseCacheResult });
+        const proxy = yield* makeCacheConformanceFaultProxy(
+          CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+        );
+        const url = `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`;
+        yield* HttpClientRequest.put(url).pipe(
+          HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "fixture-tag" }),
+          HttpClientRequest.bodyUint8Array(new TextEncoder().encode("owned fixture body")),
+          HttpClient.execute,
+          Effect.flatMap((reply) => reply.arrayBuffer)
+        );
+        yield* HttpClient.get(url, {
+          headers: { authorization: `Bearer ${secrets.reader}` },
+        }).pipe(Effect.flatMap((reply) => reply.arrayBuffer));
+        const events = yield* proxy.events;
+        const reads = A.filter(events, (event) => event.exchange.method === "GET");
+        expect(reads.length).toBe(1);
+        for (const event of reads) {
+          assertSome(
+            event.exchange.backendResult,
+            responseCacheResult === "not-found" ? "not-found" : "invalid-evidence"
+          );
+          expect(event.exchange.outcome).toBe("not-found");
+        }
+        const encoded = yield* encodeProxyEvents(events);
+        for (const secret of [secrets.reader, "/fixture/private/result", "body-canary-15ab"])
+          expect(encoded).not.toContain(secret);
+      }
+    })
+  );
+
+  it.effect("redacts untrusted response media-type values from proxy receipts", () =>
+    Effect.gen(function* () {
+      const canary = "proxy-header-artifact-content-4ef2";
+      const privatePath = "/fixture/private/proxy-artifact";
+      for (const responseContentType of [
+        `application/octet-stream; token=${secrets.reader}; path=${privatePath}; body=${canary}`,
+        `application/x-${secrets.reader}`,
+      ]) {
+        const server = yield* makeConformanceServer({ ...goodMode, responseContentType });
+        const proxy = yield* makeCacheConformanceFaultProxy(
+          CacheConformanceProxyOptions.make({ target: targetFor({ url: server.url }), bearers, holdMs: 400 })
+        );
+        const url = `${proxy.url}/v8/artifacts/00112233445566778899aabbccddeeff?teamId=${teamId}`;
+        yield* HttpClientRequest.put(url).pipe(
+          HttpClientRequest.setHeaders({ authorization: `Bearer ${secrets.writer}`, "x-artifact-tag": "Atag-value" }),
+          HttpClientRequest.bodyUint8Array(new TextEncoder().encode("opaque fixture artifact")),
+          HttpClient.execute,
+          Effect.flatMap((reply) => reply.arrayBuffer)
+        );
+        yield* HttpClient.get(url, { headers: { authorization: `Bearer ${secrets.reader}` } }).pipe(
+          Effect.flatMap((reply) => reply.arrayBuffer)
+        );
+        const encoded = yield* encodeProxyEvents(yield* proxy.events);
+        for (const secret of [secrets.reader, privatePath, canary]) expect(encoded).not.toContain(secret);
+      }
+    })
+  );
+
   it.effect("forwards unchanged and injects each read fault with a direct receipt", () =>
     Effect.gen(function* () {
       const server = yield* makeConformanceServer(goodMode);
@@ -319,6 +632,8 @@ const makeNativeClient = (fs: FileSystem.FileSystem, path: Path.Path, client: Ht
     options: Parameters<typeof CacheRuntimeProcess.runCapturedStreams>[0]
   ) {
     expect(options.command).toBe("/usr/bin/bwrap");
+    expect(options.args).toContain("--skip-infer");
+    expect(options.args).toContain("--single-package");
     const run = simulatedRun(options);
     const { verified, stored } = yield* restore(run);
     // Restored from a verified remote hit, executed when allowed, or denied (exit 42).

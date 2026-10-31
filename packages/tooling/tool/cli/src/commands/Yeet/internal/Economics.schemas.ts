@@ -1,7 +1,8 @@
 /**
- * Schemas for the `yeet economics` surface: the `yeet-economics/v1` report
- * document, the normalized attempt model its fold consumes, and the command
- * options (time-to-certainty A3, rulings 73–75).
+ * Schemas for the `yeet economics` surface: the `yeet-economics/v2` report
+ * document, the normalized attempt model its fold consumes, the review lane
+ * section, and the command options (time-to-certainty A3, rulings 73–75 and
+ * 81).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -9,18 +10,24 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
+import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./Planner.ts";
+import { YeetReviewerKind } from "./ReviewLane.schemas.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
 
 /**
- * Schema version of the economics report document (ruling 73).
+ * Schema version of the economics report document (ruling 73; bumped to v2
+ * by ruling 81, which added the review lane section).
  *
  * **Example** (Tell an economics document from an A1 one)
  *
@@ -34,7 +41,25 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
  * @category constants
  * @since 0.0.0
  */
-export const YEET_ECONOMICS_SCHEMA_VERSION = "yeet-economics/v1";
+export const YEET_ECONOMICS_SCHEMA_VERSION = "yeet-economics/v2";
+
+/**
+ * How reviewer precision is computed (ruling 81), stated on the surface so a
+ * reader of the JSON never has to look it up.
+ *
+ * **Example** (Label the precision column)
+ *
+ * ```ts
+ * import { YEET_ECONOMICS_PRECISION_METHOD } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_ECONOMICS_PRECISION_METHOD.startsWith("fixed /")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const YEET_ECONOMICS_PRECISION_METHOD =
+  "fixed / (fixed + rejected + immaterial); intentional and unknown are counted beside it and enter neither side";
 
 /**
  * The percentile estimator every economics percentile uses (ruling 75).
@@ -123,6 +148,38 @@ export class EconomicsCountRow extends S.Opaque<EconomicsCountRow, { readonly br
     })
   )
 ) {}
+
+const countRowOrder = Order.combine(
+  Order.mapInput(Order.flip(Order.Number), (row: EconomicsCountRow) => row.count),
+  Order.mapInput(Order.String, (row: EconomicsCountRow) => row.key)
+);
+
+/**
+ * Count how often each key occurs: one row per distinct key, most frequent
+ * first, ties by key.
+ *
+ * **Example** (Mix of two outcomes)
+ *
+ * ```ts
+ * import { economicsCountMix } from "@beep/repo-cli/test/Yeet"
+ * import * as A from "effect/Array"
+ *
+ * const mix = economicsCountMix(["red", "green", "red"])
+ * console.log(A.map(mix, (row) => `${row.key}=${row.count}`)) // ["red=2", "green=1"]
+ * ```
+ *
+ * @param keys - One key per observation.
+ * @returns The sorted count rows.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const economicsCountMix = (keys: ReadonlyArray<string>): ReadonlyArray<EconomicsCountRow> =>
+  A.sort(
+    A.map(R.toEntries(A.groupBy(keys, identity)), ([key, members]) =>
+      EconomicsCountRow.make({ key, count: A.length(members) })
+    ),
+    countRowOrder
+  );
 
 /**
  * Whether a verdict lane is an outer wrapper lane or an inner lane a wrapper
@@ -807,22 +864,283 @@ export class EconomicsScope extends S.Opaque<EconomicsScope, { readonly brand: u
 ) {}
 
 /**
+ * One pull request's rounds-to-ready facts (ruling 81).
+ *
+ * **Details**
+ *
+ * `rounds` counts the distinct heads a review named between `flipAt` and
+ * `mergeReadyAt` (or to the end of the ledger while the pull request is
+ * open). `reviews` and `heads` count the deduplicated rows inside that window;
+ * `unassignedReviews` are reviews in the window that GitHub pins to no
+ * commit, which are never a round.
+ *
+ * **Example** (A pull request that passed on its second round)
+ *
+ * ```ts
+ * import { EconomicsReviewLanePullRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const pullRequest = EconomicsReviewLanePullRequest.make({
+ *   prNumber: 2300,
+ *   flipAt: "2026-10-27T10:00:00.000Z",
+ *   mergeReadyAt: O.some("2026-10-27T11:00:00.000Z"),
+ *   rounds: 2,
+ *   reviews: 3,
+ *   heads: 2,
+ *   unassignedReviews: 0,
+ *   authorReviews: 1,
+ * })
+ * console.log(pullRequest.rounds) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsReviewLanePullRequest extends S.Opaque<
+  EconomicsReviewLanePullRequest,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    prNumber: S.Int.check(S.isGreaterThan(0)),
+    flipAt: S.String,
+    mergeReadyAt: OptionalString,
+    rounds: EconomicsCount,
+    reviews: EconomicsCount,
+    heads: EconomicsCount,
+    unassignedReviews: EconomicsCount,
+    authorReviews: EconomicsCount,
+  }).pipe(
+    $I.annoteSchema("EconomicsReviewLanePullRequest", {
+      description:
+        "One pull request's flip, merge-ready instant when reached, the rounds, reviews, heads, and unassigned reviews inside that window, and the author's own review submissions counted beside them.",
+    })
+  )
+) {}
+
+/**
+ * Rounds-to-ready over the pull requests the ledger closed (ruling 81).
+ *
+ * **Details**
+ *
+ * The percentiles are nearest rank over the closed pull requests' round
+ * counts; an open pull request (a flip with no merge-ready yet) is counted
+ * and never sampled. `roundsMix` tallies the closed counts by value.
+ *
+ * **Example** (No closed pull request yet)
+ *
+ * ```ts
+ * import { EconomicsReviewLaneRounds } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const rounds = EconomicsReviewLaneRounds.make({
+ *   closedPullRequests: 0,
+ *   openPullRequests: 1,
+ *   p50Rounds: O.none(),
+ *   p95Rounds: O.none(),
+ *   roundsMix: [],
+ *   unassignedReviews: 0,
+ *   authorReviews: 0,
+ *   pullRequests: [],
+ * })
+ * console.log(rounds.openPullRequests) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsReviewLaneRounds extends S.Opaque<EconomicsReviewLaneRounds, { readonly brand: unique symbol }>()(
+  S.Struct({
+    closedPullRequests: EconomicsCount,
+    openPullRequests: EconomicsCount,
+    p50Rounds: S.OptionFromNullOr(EconomicsCount),
+    p95Rounds: S.OptionFromNullOr(EconomicsCount),
+    roundsMix: S.Array(EconomicsCountRow),
+    unassignedReviews: EconomicsCount,
+    authorReviews: EconomicsCount,
+    pullRequests: S.Array(EconomicsReviewLanePullRequest),
+  }).pipe(
+    $I.annoteSchema("EconomicsReviewLaneRounds", {
+      description:
+        "Closed and open pull request counts, nearest-rank p50/p95 of rounds to ready over the closed ones, the rounds mix, the author review submissions counted beside the rounds, and every pull request's facts.",
+    })
+  )
+) {}
+
+/**
+ * One reviewer kind's disposition tallies and precision (ruling 81).
+ *
+ * **Details**
+ *
+ * `precisionPct` is fixed / (fixed + rejected + immaterial) as a percentage
+ * rounded to two decimals, and none when that denominator is zero.
+ *
+ * **Example** (Three of five findings were real)
+ *
+ * ```ts
+ * import { EconomicsReviewLanePrecisionRow } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const row = EconomicsReviewLanePrecisionRow.make({
+ *   reviewer: "beep-reviewer",
+ *   fixed: 3,
+ *   rejected: 1,
+ *   intentional: 2,
+ *   immaterial: 1,
+ *   unknown: 1,
+ *   precisionPct: O.some(60),
+ * })
+ * console.log(row.precisionPct)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsReviewLanePrecisionRow extends S.Opaque<
+  EconomicsReviewLanePrecisionRow,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    reviewer: YeetReviewerKind,
+    fixed: EconomicsCount,
+    rejected: EconomicsCount,
+    intentional: EconomicsCount,
+    immaterial: EconomicsCount,
+    unknown: EconomicsCount,
+    precisionPct: S.OptionFromNullOr(S.Finite),
+  }).pipe(
+    $I.annoteSchema("EconomicsReviewLanePrecisionRow", {
+      description:
+        "One reviewer kind's fixed, rejected, intentional, immaterial, and unknown thread dispositions, and its precision when the denominator is non-zero.",
+    })
+  )
+) {}
+
+/**
+ * What the review lane ledgers contributed and what the fold set aside.
+ *
+ * **Example** (One clean ledger)
+ *
+ * ```ts
+ * import { EconomicsReviewLaneLedgerQuality } from "@beep/repo-cli/test/Yeet"
+ *
+ * const quality = EconomicsReviewLaneLedgerQuality.make({
+ *   ledgersRead: 1,
+ *   unreadableLedgers: 0,
+ *   rows: 12,
+ *   malformedRows: 0,
+ *   duplicateReviewRowsDeduplicated: 0,
+ *   pullRequestsWithoutFlip: 0,
+ *   unattributedDispositions: 0,
+ * })
+ * console.log(quality.rows) // 12
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsReviewLaneLedgerQuality extends S.Opaque<
+  EconomicsReviewLaneLedgerQuality,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    ledgersRead: EconomicsCount,
+    unreadableLedgers: EconomicsCount,
+    rows: EconomicsCount,
+    malformedRows: EconomicsCount,
+    duplicateReviewRowsDeduplicated: EconomicsCount,
+    pullRequestsWithoutFlip: EconomicsCount,
+    unattributedDispositions: EconomicsCount,
+  }).pipe(
+    $I.annoteSchema("EconomicsReviewLaneLedgerQuality", {
+      description:
+        "Ledgers read and unreadable, rows decoded and malformed, duplicate review rows the fold deduplicated, pull requests with reviews but no flip, and dispositions with no attributable reviewer.",
+    })
+  )
+) {}
+
+/**
+ * The review lane as a verification lane (ruling 81): rounds to ready and
+ * reviewer precision, measured from the review lane ledger.
+ *
+ * **Details**
+ *
+ * A section beside the wrapper and inner lane populations, never summed with
+ * them: its denominators are pull requests and review threads, not attempt
+ * minutes. `precision` carries one row per reviewer kind, in the kind's
+ * declared order, so a reviewer with no dispositions still prints `n/a`.
+ *
+ * **Example** (An empty review lane)
+ *
+ * ```ts
+ * import {
+ *   EconomicsReviewLane,
+ *   EconomicsReviewLaneLedgerQuality,
+ *   EconomicsReviewLaneRounds,
+ *   YEET_ECONOMICS_PRECISION_METHOD,
+ * } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const reviewLane = EconomicsReviewLane.make({
+ *   roundsToReady: EconomicsReviewLaneRounds.make({
+ *     closedPullRequests: 0,
+ *     openPullRequests: 0,
+ *     p50Rounds: O.none(),
+ *     p95Rounds: O.none(),
+ *     roundsMix: [],
+ *     unassignedReviews: 0,
+ *     pullRequests: [],
+ *   }),
+ *   precisionMethod: YEET_ECONOMICS_PRECISION_METHOD,
+ *   precision: [],
+ *   ledgerQuality: EconomicsReviewLaneLedgerQuality.make({
+ *     ledgersRead: 0,
+ *     unreadableLedgers: 0,
+ *     rows: 0,
+ *     malformedRows: 0,
+ *     duplicateReviewRowsDeduplicated: 0,
+ *     pullRequestsWithoutFlip: 0,
+ *     unattributedDispositions: 0,
+ *   }),
+ * })
+ * console.log(reviewLane.precision.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsReviewLane extends S.Opaque<EconomicsReviewLane, { readonly brand: unique symbol }>()(
+  S.Struct({
+    roundsToReady: EconomicsReviewLaneRounds,
+    precisionMethod: S.tag(YEET_ECONOMICS_PRECISION_METHOD),
+    precision: S.Array(EconomicsReviewLanePrecisionRow),
+    ledgerQuality: EconomicsReviewLaneLedgerQuality,
+  }).pipe(
+    $I.annoteSchema("EconomicsReviewLane", {
+      description:
+        "The review lane measured as a verification lane: rounds to ready per pull request, reviewer precision from thread dispositions, and ledger quality; never summed with the attempt lane populations.",
+    })
+  )
+) {}
+
+/**
  * The `yeet economics` report: where a checkout's proof minutes went
- * (ruling 73).
+ * (ruling 73), and how its review lane converged (ruling 81).
  *
  * **Details**
  *
  * Fields shared with the A1 script's `verification-economics/v1` keep its
  * spelling so rows compare by name. Wrapper and inner lanes are separate
- * populations with separate denominators (ruling 74). Nothing here is written
- * to disk; the committed A1 `economics.json` stays owned by the script.
+ * populations with separate denominators (ruling 74); the review lane is a
+ * third section with its own denominators and is never summed with them.
+ * Nothing here is written to disk; the committed A1 `economics.json` stays
+ * owned by the script.
  *
  * **Example** (Check the schema version)
  *
  * ```ts
  * import { YEET_ECONOMICS_SCHEMA_VERSION } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YEET_ECONOMICS_SCHEMA_VERSION) // "yeet-economics/v1"
+ * console.log(YEET_ECONOMICS_SCHEMA_VERSION) // "yeet-economics/v2"
  * ```
  *
  * @category models
@@ -836,6 +1154,7 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
     attempts: EconomicsAttempts,
     wrapperLanes: EconomicsLanePopulation,
     innerLanes: EconomicsLanePopulation,
+    reviewLane: EconomicsReviewLane,
     firstFailure: EconomicsFirstFailure,
     redToGreen: EconomicsRedToGreen,
     terminations: EconomicsTerminations,
@@ -844,7 +1163,7 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
   }).pipe(
     $I.annoteSchema("YeetEconomicsReport", {
       description:
-        "Checkout economics over live attempt journals: attempt mixes, wrapper and inner lane populations, first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), and data quality.",
+        "Checkout economics over live attempt journals: attempt mixes, wrapper and inner lane populations, the review lane (rounds to ready, reviewer precision), first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), and data quality.",
     })
   )
 ) {}

@@ -6,6 +6,7 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"Configuration.encodeExamplesTsconfig","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"Configuration.readDocgenConfig","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"Configuration.readPackageJson","owner":"@beep/repo-docgen","family":"tooling","conforms":true},
     {"name":"Configuration.readTSConfig","owner":"@beep/repo-docgen","family":"tooling","conforms":true},

@@ -1,0 +1,212 @@
+{
+  "schemaVersion": "cache-producer-publication-gate-repair/v1",
+  "recordedAt": "2026-10-29T11:37:22.183627+00:00",
+  "authority": "component-test-and-generated-catalog-repair-only",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts": "2f322dd3d9e02a2b6ea776b66804b9f5a9ed66010154585d776be38d906a7fc9",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "844a069abc54f36854d749cb0d4f7372fea98a5404e9081b4390aedb7ebbfaf8",
+    "packages/tooling/tool/cli/test/cache-producer-upload.test.ts": "80b663dcf128ff08293fd536bd94f3eab3fb356e5b15b2de16718a2f28e77311",
+    "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc": "3ab985f4eb83c14646b9d4f51189f425b0040ff38cd23a8fa5830cce149ebd20"
+  },
+  "originalAttempt": {
+    "sourceHead": "eccf78280e1bd33e8ceac83d23cb6212b2f434f6",
+    "exit": 1,
+    "logSha256": "ac04cc3f0ded0a232fa2e353b1ce08cc405ea083d064579a4d547838ab821865",
+    "failedChecks": ["observability:catalog-check", "lint:schema-first"],
+    "attribution": "Both introduced: generated CLI instrumentation shard stale; two new schema-heavy test files lacked schema-derived properties. Nothing was pushed."
+  },
+  "verification": {
+    "node": {
+      "passed": 361,
+      "files": 18,
+      "seconds": 39.22,
+      "logSha256": "fa7c1ec790f992f7d48f0442b5f7f7b53c339598388f3d40a31a1dc085e3c26a"
+    },
+    "bun": {
+      "passed": 361,
+      "files": 18,
+      "seconds": 27.09,
+      "logSha256": "57ca5ce760d2f6e8ecec41a1d9640687865937ea3170df6bf602af5ab701776c"
+    },
+    "quickPackage": {
+      "lintSeconds": 6.4,
+      "checkSeconds": 12.4,
+      "logSha256": "cff5434f76fdfc31932e8710a8f483e9e12615955766ffc9d162bce1c7879d61",
+      "scope": "Only two test files and generated inventory changed; focused Node/Bun integration covers the tests. Runtime implementation and exported examples remain unchanged."
+    }
+  },
+  "schemaFirst": {
+    "liveEntries": 263,
+    "missingEntries": 0,
+    "staleEntries": 0,
+    "arbitraryTestAdvisories": 0,
+    "inventoryChanged": false,
+    "logSha256": "6018614402519e5a7408f7dcc108875b72f9f20aae2fd2d2c437d4e4386036cf"
+  },
+  "instrumentationCatalog": {
+    "driftedShards": 0,
+    "canonicalWriterUsed": true,
+    "logSha256": "d7770de667f30929704958dff404bc534b83b19b15ef91f9642702770b499138"
+  },
+  "propertyCounterfactuals": {
+    "results": [
+      {
+        "control": "upload-hash",
+        "expectedFailure": true,
+        "exit": 1,
+        "sourceSha256": "2f322dd3d9e02a2b6ea776b66804b9f5a9ed66010154585d776be38d906a7fc9",
+        "restoredSha256": "2f322dd3d9e02a2b6ea776b66804b9f5a9ed66010154585d776be38d906a7fc9",
+        "logSha256": "d08b78800f2f1f7cd89c3b9da60c897adc392318046fb07d9a5765f3667a14fc"
+      },
+      {
+        "control": "hosted-artifact-id",
+        "expectedFailure": true,
+        "exit": 1,
+        "sourceSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+        "restoredSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+        "logSha256": "0f781a5a93e373f1f7269d5c0621ecfbc7ec74960dacfbf964367470ea2c71dd"
+      }
+    ],
+    "allSourceBytesRestored": true,
+    "controlParserCorrection": "The runtime reports Property falsified; the initial parser expected Property failed. Original expected failure log retained unchanged."
+  },
+  "population": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "sha256": "d3a7ac705438932c1b621ceb818d68538ad2181118b093175be69afa2f5405bd",
+    "sourcesVerified": 431,
+    "counts": {
+      "workspaces": 190,
+      "rootScripts": 113,
+      "configuredGraphNodes": 4586,
+      "executableComputations": 2571,
+      "graphOnlyNodes": 2015,
+      "cacheEnabledExecutableComputations": 1621,
+      "newSinceRetainedHandoff": 638,
+      "retainedCommandTextUnchanged": 1923,
+      "retainedQualificationRecordStates": {
+        "excluded": 5
+      }
+    },
+    "priorPopulationBeforeMainSync": "0ea49f7b903162d1ee7cdfa985d9caff0ab4573657e27b5156dc14a9f724b46f",
+    "priorPopulationBeforeScopeRepair": "bd81cef5053d4329d1547391b0387c45a32d90157f31809eb45812c23eb09d9e",
+    "inputMetadataChanges": {
+      "observedInputCountRows": 10,
+      "observedInputsDigestRows": 45,
+      "semanticReviewAndDispositionsUnchanged": true
+    },
+    "priorPopulationBeforeCoverageRepair": "1f21cbd2ff7d0a539a02abfbae5ed74c60d679a20262b3b8a44a59a9ff9ec00b",
+    "priorPopulationBeforeGuardHoist": "0f1823c9d647ef62f6412230ec4ed6b25d56c1f6d25d22cdaf328be80f27ff10",
+    "priorBeforeReviewRepair": "b869e63e32cbac1c52a4c1e22a943f55b782b98c94ad9696c0ff45729b9676b2"
+  },
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "runtimeImplementationChanged": false,
+  "historicalWholePackageScope": "Frozen2b295197c1 audit1118.9s/docgen36.4s retains its original test source. This test-only repair has current focused integration and quick package checks; no new whole-audit result is invented.",
+  "protectedProducerPublished": false,
+  "signedTrialActivated": false,
+  "qualified": false,
+  "postMainSync": {
+    "recordedAt": "2026-10-29T11:55:03.063127+00:00",
+    "mainCommit": "cb0a51ef298c62f06da66a53eee89ffae79978aa",
+    "mergeCommit": "95d8048422e721b78caa8e95025128422586b9da",
+    "mainChange": "Kimi account usage; no cache implementation or test byte changed.",
+    "ownFrozenFilesUnchanged": true,
+    "schemaCatalog": {
+      "path": "standards/schema-catalog/@beep/repo-cli.generated.jsonc",
+      "sha256": "ab216dbad43c4598aa22239f61c01621eb475fb074187d1df7e52087b410059d",
+      "entries": 9339,
+      "canonicalWriterAndCheckPassed": true
+    },
+    "instrumentationCatalogPassed": true,
+    "cacheAuditBlocking": 0,
+    "quickPackage": {
+      "lintSeconds": 6.7,
+      "checkSeconds": 12.8,
+      "logSha256": "ec74a966c39a2f7bf893181e35075bf58f20b5818ba622f77c5df96b69fcb43e"
+    },
+    "scope": "Base integration and package type/lint/catalog checks. The 361-test runtime observations retain their byte-identical cache implementation/test bindings; no new whole CLI audit is claimed."
+  },
+  "scopeRepair": {
+    "recordedAt": "2026-10-29T12:26:22.450133+00:00",
+    "sourceHeadBeforeRepair": "a20782a773200bb39590cb07fb3a9a650f0078a0",
+    "change": "Remove only two redundant whole-body Effect.scoped wrappers from it.effect.prop; preserve generated cases, assertions and imports.",
+    "sourceSha256": {
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts": "2f322dd3d9e02a2b6ea776b66804b9f5a9ed66010154585d776be38d906a7fc9",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+      "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "3e7f6870f4ea020060cf574be1b8e979896ce8780c67d0d158502dd6b66650a6",
+      "packages/tooling/tool/cli/test/cache-producer-upload.test.ts": "64ac0fed7ab9f7333bb5f719d1e96f032423a9c5818c19deed8d6bf34ecbf506",
+      "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc": "3ab985f4eb83c14646b9d4f51189f425b0040ff38cd23a8fa5830cce149ebd20"
+    },
+    "originalAttempt": {
+      "exit": 130,
+      "logSha256": "b797c91bb4e72c30770cb4397758fdbabf4b040b674b7b9756811116f72c82c6",
+      "attribution": "Stopped own pre-push publisher after two introduced EV004 redundant-whole-body-scope findings; no push occurred."
+    },
+    "verification": {
+      "node": {
+        "passed": 361,
+        "files": 18,
+        "elapsedSeconds": 38.93,
+        "logSha256": "9b85daec3b2ff91eb6f56df0824c43c9a51bb5b8ed759f874feb4e7235877fe3"
+      },
+      "bun": {
+        "passed": 361,
+        "files": 18,
+        "elapsedSeconds": 29.83,
+        "logSha256": "e2b2aba1c6948384d8ed4ca349b5a0d2d8ddfda2e37415a95e9b400cb03d0044"
+      }
+    },
+    "quickPackage": {
+      "lintSeconds": 5.7,
+      "checkSeconds": 11.9,
+      "logSha256": "ea9b519a2e90df34e7a333e381f629975eb65afdc0ca23c45616528c618def70"
+    },
+    "effectVitest": {
+      "files": 3015,
+      "retainedFindings": 547,
+      "introduced": 0,
+      "resolved": 0,
+      "inventoryChanged": false,
+      "logSha256": "79856024eda0481b85206bdd2c95241de07e84c2e628d3173b6bd93024500256"
+    },
+    "schemaFirst": {
+      "passed": true,
+      "inventoryChanged": false,
+      "logSha256": "6018614402519e5a7408f7dcc108875b72f9f20aae2fd2d2c437d4e4386036cf"
+    },
+    "instrumentationCatalog": {
+      "driftedShards": 0,
+      "logSha256": "d7770de667f30929704958dff404bc534b83b19b15ef91f9642702770b499138"
+    },
+    "propertyCounterfactuals": {
+      "results": [
+        {
+          "control": "upload-hash",
+          "expectedFailure": true,
+          "exit": 1,
+          "sourceSha256": "2f322dd3d9e02a2b6ea776b66804b9f5a9ed66010154585d776be38d906a7fc9",
+          "restoredSha256": "2f322dd3d9e02a2b6ea776b66804b9f5a9ed66010154585d776be38d906a7fc9",
+          "testSha256": "64ac0fed7ab9f7333bb5f719d1e96f032423a9c5818c19deed8d6bf34ecbf506",
+          "logSha256": "1c36775fcea37359fdd3a097a34d7980f221d4cc61a41afa1ab30c6181bd16da"
+        },
+        {
+          "control": "hosted-artifact-id",
+          "expectedFailure": true,
+          "exit": 1,
+          "sourceSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "restoredSha256": "319c2753046e614a8475ca164d4111066dae15ca797e39b046203bbdc3a8530f",
+          "testSha256": "3e7f6870f4ea020060cf574be1b8e979896ce8780c67d0d158502dd6b66650a6",
+          "logSha256": "3d676e73c2607c0d5aed28eb232e9195bf7a974d4a7a82dc36907f7478612f92"
+        }
+      ],
+      "allSourceBytesRestored": true
+    },
+    "historicalEvidence": "Prior source maps, positive test observations and guard-removal logs retain their original bindings above; this overlay binds the two current test files. Runtime implementation and all qualification/rollout states are unchanged."
+  },
+  "coverageRepairCheckpoint": {
+    "path": "goals/turborepo-cache-trust-observability/research/producer-coverage-repair-checkpoint.json",
+    "sha256": "7a37b77aef708c66b8480549569a47fa96496777a39b5f28fc423b2f71b506cd",
+    "scope": "Current producer cardinality/boundary repair; original failed full replay and current exact-file coverage remain distinct.",
+    "priorBeforeReviewRepair": "dba0c942aefb3c8ff0ce9185c75d3cb75a463656956e0f83fc4bf4983da40997"
+  }
+}

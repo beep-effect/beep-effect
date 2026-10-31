@@ -1,0 +1,662 @@
+[
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "central",
+    "policyDigest": "edb7f5df1b46ebf063d933253c91fd497dcb84a604f1d7e350b4860f5e97a2d0",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "hotThroughMillis-minus-10pct",
+    "policyDigest": "d9cea2153eeec0def87b00db2954663708233b53b37a8054643a48a91be70705",
+    "tiers": {
+      "hot": 3,
+      "warm": 10,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "hotThroughMillis-plus-10pct",
+    "policyDigest": "842b283bf83cdf02b11019db9d2557ec1c2e0e1f0419ca322cf7f690d1aca3eb",
+    "tiers": {
+      "hot": 8,
+      "warm": 5,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "warmThroughMillis-minus-10pct",
+    "policyDigest": "1e42a3b9e31eac837540cd48af0c695544e88456dad8a961db629e3b23cf85c9",
+    "tiers": {
+      "hot": 5,
+      "warm": 6,
+      "cold": 10,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "warmThroughMillis-plus-10pct",
+    "policyDigest": "e2d7f60be074c141bfa5430c162c4e3fa8d327e2dc7d0fcc82350419127a763d",
+    "tiers": {
+      "hot": 5,
+      "warm": 11,
+      "cold": 5,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "coldThroughMillis-minus-10pct",
+    "policyDigest": "bb813c3ccca3cb7a0a954ae0cb59d15364db2211804644cfeaf8ec39b8775f14",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 6,
+      "evictable": 7,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "coldThroughMillis-plus-10pct",
+    "policyDigest": "fea57d8432ccb03f7193e44d87621a4b558f8b6307962f766ff185f1541c1949",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 11,
+      "evictable": 2,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "decayScaleMillis-minus-10pct",
+    "policyDigest": "a335d90ffdac6b606577f5d1346720fa004d0f893cf0ea65fa5ec63fe1859938",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "decayScaleMillis-plus-10pct",
+    "policyDigest": "6a690f0d1c579135933d03c2c046cce6ffbb23616071d66747b2205d6db3c7a5",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "payloadBudgetBytes-minus-10pct",
+    "policyDigest": "f534c410a19d0bf8fb7a4cd2f66ceb2d5c979d50ee8da4596de618d0d38d718e",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 118.31304347826087,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-tuning",
+    "candidate": "payloadBudgetBytes-plus-10pct",
+    "policyDigest": "b4092ea46784a5a26ab7b4190009a8a6cba70818e62aebaa261398429fb85dfa",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 96.49645390070921,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "central",
+    "policyDigest": "edb7f5df1b46ebf063d933253c91fd497dcb84a604f1d7e350b4860f5e97a2d0",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "hotThroughMillis-minus-10pct",
+    "policyDigest": "d9cea2153eeec0def87b00db2954663708233b53b37a8054643a48a91be70705",
+    "tiers": {
+      "hot": 3,
+      "warm": 10,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "hotThroughMillis-plus-10pct",
+    "policyDigest": "842b283bf83cdf02b11019db9d2557ec1c2e0e1f0419ca322cf7f690d1aca3eb",
+    "tiers": {
+      "hot": 8,
+      "warm": 5,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "warmThroughMillis-minus-10pct",
+    "policyDigest": "1e42a3b9e31eac837540cd48af0c695544e88456dad8a961db629e3b23cf85c9",
+    "tiers": {
+      "hot": 5,
+      "warm": 6,
+      "cold": 10,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "warmThroughMillis-plus-10pct",
+    "policyDigest": "e2d7f60be074c141bfa5430c162c4e3fa8d327e2dc7d0fcc82350419127a763d",
+    "tiers": {
+      "hot": 5,
+      "warm": 11,
+      "cold": 5,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "coldThroughMillis-minus-10pct",
+    "policyDigest": "bb813c3ccca3cb7a0a954ae0cb59d15364db2211804644cfeaf8ec39b8775f14",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 6,
+      "evictable": 7,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "coldThroughMillis-plus-10pct",
+    "policyDigest": "fea57d8432ccb03f7193e44d87621a4b558f8b6307962f766ff185f1541c1949",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 11,
+      "evictable": 2,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "decayScaleMillis-minus-10pct",
+    "policyDigest": "a335d90ffdac6b606577f5d1346720fa004d0f893cf0ea65fa5ec63fe1859938",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "decayScaleMillis-plus-10pct",
+    "policyDigest": "6a690f0d1c579135933d03c2c046cce6ffbb23616071d66747b2205d6db3c7a5",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "payloadBudgetBytes-minus-10pct",
+    "policyDigest": "f534c410a19d0bf8fb7a4cd2f66ceb2d5c979d50ee8da4596de618d0d38d718e",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 118.31304347826087,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-1-held-out",
+    "candidate": "payloadBudgetBytes-plus-10pct",
+    "policyDigest": "b4092ea46784a5a26ab7b4190009a8a6cba70818e62aebaa261398429fb85dfa",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 96.49645390070921,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "central",
+    "policyDigest": "edb7f5df1b46ebf063d933253c91fd497dcb84a604f1d7e350b4860f5e97a2d0",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "hotThroughMillis-minus-10pct",
+    "policyDigest": "d9cea2153eeec0def87b00db2954663708233b53b37a8054643a48a91be70705",
+    "tiers": {
+      "hot": 3,
+      "warm": 10,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "hotThroughMillis-plus-10pct",
+    "policyDigest": "842b283bf83cdf02b11019db9d2557ec1c2e0e1f0419ca322cf7f690d1aca3eb",
+    "tiers": {
+      "hot": 8,
+      "warm": 5,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "warmThroughMillis-minus-10pct",
+    "policyDigest": "1e42a3b9e31eac837540cd48af0c695544e88456dad8a961db629e3b23cf85c9",
+    "tiers": {
+      "hot": 5,
+      "warm": 6,
+      "cold": 10,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "warmThroughMillis-plus-10pct",
+    "policyDigest": "e2d7f60be074c141bfa5430c162c4e3fa8d327e2dc7d0fcc82350419127a763d",
+    "tiers": {
+      "hot": 5,
+      "warm": 11,
+      "cold": 5,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "coldThroughMillis-minus-10pct",
+    "policyDigest": "bb813c3ccca3cb7a0a954ae0cb59d15364db2211804644cfeaf8ec39b8775f14",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 6,
+      "evictable": 7,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "coldThroughMillis-plus-10pct",
+    "policyDigest": "fea57d8432ccb03f7193e44d87621a4b558f8b6307962f766ff185f1541c1949",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 11,
+      "evictable": 2,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "decayScaleMillis-minus-10pct",
+    "policyDigest": "a335d90ffdac6b606577f5d1346720fa004d0f893cf0ea65fa5ec63fe1859938",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "decayScaleMillis-plus-10pct",
+    "policyDigest": "6a690f0d1c579135933d03c2c046cce6ffbb23616071d66747b2205d6db3c7a5",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "payloadBudgetBytes-minus-10pct",
+    "policyDigest": "f534c410a19d0bf8fb7a4cd2f66ceb2d5c979d50ee8da4596de618d0d38d718e",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 118.31304347826087,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-tuning",
+    "candidate": "payloadBudgetBytes-plus-10pct",
+    "policyDigest": "b4092ea46784a5a26ab7b4190009a8a6cba70818e62aebaa261398429fb85dfa",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 96.49645390070921,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "central",
+    "policyDigest": "edb7f5df1b46ebf063d933253c91fd497dcb84a604f1d7e350b4860f5e97a2d0",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "hotThroughMillis-minus-10pct",
+    "policyDigest": "d9cea2153eeec0def87b00db2954663708233b53b37a8054643a48a91be70705",
+    "tiers": {
+      "hot": 3,
+      "warm": 10,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "hotThroughMillis-plus-10pct",
+    "policyDigest": "842b283bf83cdf02b11019db9d2557ec1c2e0e1f0419ca322cf7f690d1aca3eb",
+    "tiers": {
+      "hot": 8,
+      "warm": 5,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "warmThroughMillis-minus-10pct",
+    "policyDigest": "1e42a3b9e31eac837540cd48af0c695544e88456dad8a961db629e3b23cf85c9",
+    "tiers": {
+      "hot": 5,
+      "warm": 6,
+      "cold": 10,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "warmThroughMillis-plus-10pct",
+    "policyDigest": "e2d7f60be074c141bfa5430c162c4e3fa8d327e2dc7d0fcc82350419127a763d",
+    "tiers": {
+      "hot": 5,
+      "warm": 11,
+      "cold": 5,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "coldThroughMillis-minus-10pct",
+    "policyDigest": "bb813c3ccca3cb7a0a954ae0cb59d15364db2211804644cfeaf8ec39b8775f14",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 6,
+      "evictable": 7,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "coldThroughMillis-plus-10pct",
+    "policyDigest": "fea57d8432ccb03f7193e44d87621a4b558f8b6307962f766ff185f1541c1949",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 11,
+      "evictable": 2,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "decayScaleMillis-minus-10pct",
+    "policyDigest": "a335d90ffdac6b606577f5d1346720fa004d0f893cf0ea65fa5ec63fe1859938",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "decayScaleMillis-plus-10pct",
+    "policyDigest": "6a690f0d1c579135933d03c2c046cce6ffbb23616071d66747b2205d6db3c7a5",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 106.296875,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "payloadBudgetBytes-minus-10pct",
+    "policyDigest": "f534c410a19d0bf8fb7a4cd2f66ceb2d5c979d50ee8da4596de618d0d38d718e",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 118.31304347826087,
+    "maxDecayError": 0
+  },
+  {
+    "stratum": "org-2-held-out",
+    "candidate": "payloadBudgetBytes-plus-10pct",
+    "policyDigest": "b4092ea46784a5a26ab7b4190009a8a6cba70818e62aebaa261398429fb85dfa",
+    "tiers": {
+      "hot": 5,
+      "warm": 8,
+      "cold": 8,
+      "evictable": 5,
+      "unclassified": 0
+    },
+    "canonicalPayloadBytes": 27212,
+    "pressureRatio": 96.49645390070921,
+    "maxDecayError": 0
+  }
+]

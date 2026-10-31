@@ -1,11 +1,11 @@
 /**
- * React bindings for the imperative graph-3d render handle: a mount hook that
- * owns the `renderGraph3D` lifecycle (StrictMode-safe cancel/destroy) and an
- * fps sampling hook driven by `requestAnimationFrame`.
+ * React bindings for the imperative graph-3d render handle: a mount hook that owns the `renderGraph3D`
+ * lifecycle (StrictMode-safe cancel/destroy) and an fps sampling hook driven by `requestAnimationFrame`.
  *
- * The driver core stays framework-free; these hooks are the one sanctioned
- * React adapter, shared by the Storybook demo and the desktop spike so the
- * mount contract lives in a single place.
+ * **Details**
+ *
+ * The driver core stays framework-free; these hooks are the one sanctioned React adapter,
+ * shared by the Storybook demo and the desktop spike so the mount contract lives in one place.
  *
  * @packageDocumentation
  * @since 0.0.0

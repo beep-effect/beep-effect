@@ -1,4 +1,5 @@
 import { Fmt } from "@beep/cli-kit/Fmt";
+import { TestTerminal } from "@beep/cli-kit/testing";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { accountsCommand } from "@beep/repo-cli";
 import {
@@ -39,6 +40,14 @@ import {
   JunieStoredCredentialJson,
   junieRefreshOutcome,
   junieUsageOutcome,
+  KimiProfileBody,
+  KimiUsageBody,
+  KimiUsageBodyJson,
+  kimiApiBase,
+  kimiCreditBalances,
+  kimiProfileIdentity,
+  kimiUsageOutcome,
+  kimiUsageWindows,
   layerAccountsUsageLive,
   loadAccountsReport,
   MuseKeyBodyJson,
@@ -66,6 +75,7 @@ import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -82,8 +92,8 @@ import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import * as Queue from "effect/Queue";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
@@ -92,7 +102,7 @@ import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
-import type * as Cause from "effect/Cause";
+import type { KeyInput } from "@beep/cli-kit/testing";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const now = DateTime.makeUnsafe("2026-01-05T00:00:00.000Z");
@@ -153,6 +163,11 @@ const claudeBody = `{
 }`;
 
 const codexBody = `{"plan_type":"pro","email":"work@example.com","rate_limit":{"primary_window":{"used_percent":38,"limit_window_seconds":604800,"reset_after_seconds":10,"reset_at":1767916800},"secondary_window":null}}`;
+
+// The live shape on 2026-10-29 for a Pro member: no seven-day limit, no wallet.
+const kimiBody = `{"limits":[{"window":{"duration":300,"timeUnit":"TIME_UNIT_MINUTE"},"detail":{"limit":"100","used":"1","remaining":"99","resetTime":"2026-01-05T05:00:00.653687Z"}}],"usages":{"limit_5h":{"used_ratio":0.0104,"reset_time":"2026-01-05T05:00:00Z"},"limit_month_total":{"used_ratio":"0.0006","reset_time":"2026-01-31T00:00:00Z"},"limit_month_code":{"used_ratio":0.0006,"reset_time":"2026-01-31T00:00:00Z"}}}`;
+
+const kimiProfile = `{"user_id":"u_1","nickname":"Someone","status":"USER_STATUS_NORMAL","region":"REGION_OVERSEA","user_level":25,"user_level_name":"Pro","email":"kimi@example.com"}`;
 
 describe("account usage wire mapping", () => {
   it.effect("reads Claude's normalized limits and skips kinds it does not know", () =>
@@ -265,6 +280,130 @@ describe("credits, resets, and the Muse and Grok providers", () => {
     })
   );
 
+  it.effect("reads Kimi's five-hour, legacy weekly, and monthly limits as windows", () =>
+    Effect.gen(function* () {
+      const body = yield* KimiUsageBodyJson.decode(kimiBody);
+      expect(
+        A.map(kimiUsageWindows(body), (window) => [
+          window.kind,
+          Math.round(window.usedPercent * 100) / 100,
+          O.getOrNull(window.scope),
+          O.getOrNull(O.map(window.resetsAt, DateTime.formatIso)),
+        ])
+      ).toEqual([
+        ["session", 1.04, null, "2026-01-05T05:00:00.000Z"],
+        ["cycle", 0.06, null, "2026-01-31T00:00:00.000Z"],
+        ["cycle-scoped", 0.06, "coding", "2026-01-31T00:00:00.000Z"],
+      ]);
+      const legacy = yield* KimiUsageBodyJson.decode(
+        `{"usages":{"limit_7d":{"used_ratio":0.5,"reset_time":""},"limit_5h":{"used_ratio":1}}}`
+      );
+      expect(
+        A.map(kimiUsageWindows(legacy), (window) => [window.kind, window.usedPercent, O.isNone(window.resetsAt)])
+      ).toEqual([
+        ["session", 100, true],
+        ["weekly", 50, true],
+      ]);
+      expect(kimiUsageWindows(KimiUsageBody.make({}))).toEqual([]);
+    })
+  );
+
+  it.effect("reads the Kimi extra-usage wallet in its own currency units", () =>
+    Effect.gen(function* () {
+      const wallet = yield* KimiUsageBodyJson.decode(
+        `{"usages":{},"boosterWallet":{"balance":{"type":"BOOSTER","amount":"2500000000","amountLeft":1000000000},"monthlyChargeLimitEnabled":false,"monthlyChargeLimit":{"priceInCents":0,"currency":"CNY"},"monthlyUsed":{"priceInCents":1500,"currency":"CNY"}}}`
+      );
+      expect(
+        A.map(kimiCreditBalances(wallet), (credit) => [
+          credit.label,
+          credit.unit,
+          credit.remaining,
+          O.getOrNull(credit.limit),
+        ])
+      ).toEqual([["extra usage (CNY)", "credits", 10, 25]]);
+      const dollars = yield* KimiUsageBodyJson.decode(
+        `{"boosterWallet":{"balance":{"type":"BOOSTER","amount":500000000},"monthlyUsed":{"currency":"USD"}}}`
+      );
+      expect(A.map(kimiCreditBalances(dollars), (credit) => [credit.label, credit.unit, credit.remaining])).toEqual([
+        ["extra usage", "usd", 0],
+      ]);
+      expect(
+        kimiCreditBalances(KimiUsageBody.make({ boosterWallet: { balance: { type: "GIFT", amount: 5 } } }))
+      ).toEqual([]);
+      const unlabelled = yield* KimiUsageBodyJson.decode(
+        `{"boosterWallet":{"balance":{"type":"BOOSTER","amount":100000000,"amountLeft":"50000000"},"monthlyChargeLimit":{"currency":""}}}`
+      );
+      expect(A.map(kimiCreditBalances(unlabelled), (credit) => [credit.label, credit.unit, credit.remaining])).toEqual([
+        ["extra usage", "usd", 0.5],
+      ]);
+      const unreadableReset = yield* KimiUsageBodyJson.decode(
+        `{"usages":{"limit_5h":{"used_ratio":0.5,"reset_time":"soon"}}}`
+      );
+      expect(A.map(kimiUsageWindows(unreadableReset), (window) => O.isNone(window.resetsAt))).toEqual([true]);
+    })
+  );
+
+  it("completes the proxy's Kimi API root with the version segment", () => {
+    expect(kimiApiBase("https://api.kimi.com/coding")).toBe("https://api.kimi.com/coding/v1");
+    expect(kimiApiBase("https://api.kimi.ai/coding/v1/")).toBe("https://api.kimi.ai/coding/v1");
+    expect(kimiApiBase("")).toBe("https://api.kimi.ai/coding/v1");
+    expect(kimiApiBase(undefined)).toBe("https://api.kimi.ai/coding/v1");
+  });
+
+  it("builds the Kimi outcome from the usages and the profile beside it", () => {
+    const identity = O.some("kimi-1761717000000");
+    const outcome = kimiUsageOutcome({ identity, status: 200, body: kimiBody }, O.some(kimiProfile));
+    expect(outcome._tag).toBe("Ok");
+    if (outcome._tag !== "Ok") return;
+    assertSome(outcome.identity, "kimi@example.com");
+    assertSome(outcome.plan, "Pro");
+    expect(A.length(outcome.windows)).toBe(3);
+    const usage = AccountUsage.make({
+      account: AccountRef.make({ provider: "kimi", label: "kimi-1761717000000", source: "synthetic" }),
+      outcome,
+    });
+    const ranked = rankAccount(usage, now);
+    expect(ranked.availability).toBe("ready");
+    expect(O.getOrElse(ranked.weeklyRemainingPercent, () => 0)).toBeCloseTo(99.94);
+    expect(plainBoard(reportOf([usage]))).toMatch(/Kimi Code[\s\S]*kimi@example\.com +ready/);
+    const unread = kimiUsageOutcome({ identity, status: 200, body: kimiBody }, O.some("<html>"));
+    expect(unread._tag === "Ok" ? [O.getOrNull(unread.identity), O.getOrNull(unread.plan)] : []).toEqual([
+      "kimi-1761717000000",
+      null,
+    ]);
+    assertSome(kimiProfileIdentity(KimiProfileBody.make({ email: O.none(), nickname: "Someone" })), "Someone");
+    const oddEmail = kimiUsageOutcome(
+      { identity, status: 200, body: kimiBody },
+      O.some(`{"user_id":"u_1","nickname":"Someone","user_level_name":"Plus","email":"not a label"}`)
+    );
+    expect(oddEmail._tag === "Ok" ? [O.getOrNull(oddEmail.identity), O.getOrNull(oddEmail.plan)] : []).toEqual([
+      "Someone",
+      "Plus",
+    ]);
+    expect(kimiUsageOutcome({ identity, status: 401, body: "" }, O.none())._tag).toBe("NeedsLogin");
+    expect(kimiUsageOutcome({ identity, status: 200, body: "not json" }, O.none())._tag).toBe("Failed");
+  });
+
+  it("names a Kimi row after its login file until a poll reads the profile", () => {
+    const kimiRow = (label: string, outcome: AccountUsageOutcome) =>
+      AccountUsage.make({ account: AccountRef.make({ provider: "kimi", label, source: "synthetic" }), outcome });
+    const board = plainBoard(
+      reportOf([
+        kimiRow("kimi-1761717000000", kimiUsageOutcome({ identity: O.none(), status: 401, body: "" }, O.none())),
+        kimiRow(
+          "kimi-ai-1761717000001",
+          kimiUsageOutcome({ identity: O.none(), status: 200, body: "not json" }, O.none())
+        ),
+        kimiRow("kimi-1761717000002", kimiUsageOutcome({ identity: O.none(), status: 200, body: kimiBody }, O.none())),
+      ])
+    );
+    expect(board).toContain("kimi-1761717000000");
+    expect(board).toContain("kimi-ai-1761717000001");
+    expect(board).toContain("kimi-1761717000002");
+    expect(board).toContain("needs login");
+    expect(board).toContain("unreadable");
+  });
+
   it("decodes the Grok weekly pool from a gRPC-web protobuf reply", () => {
     const windows = O.getOrElse(grokUsageWindows(grokReply), () => A.empty<UsageWindow>());
     expect(
@@ -373,15 +512,9 @@ describe("account ranking", () => {
 
 describe("provider panels", () => {
   it("places each provider in its panel", () => {
-    expect(A.map(["claude", "codex", "grok", "cursor", "grok-bot", "muse", "kimi"], accountSection)).toEqual([
-      "claude",
-      "codex",
-      "supergrok",
-      "supergrok",
-      "supergrok",
-      "muse",
-      "other",
-    ]);
+    expect(A.map(["claude", "codex", "grok", "cursor", "grok-bot", "muse", "kimi", "someone"], accountSection)).toEqual(
+      ["claude", "codex", "supergrok", "supergrok", "supergrok", "muse", "kimi", "other"]
+    );
   });
 
   it("groups ranked rows by panel in a fixed order and marks the signed-in account", () => {
@@ -590,6 +723,22 @@ describe("accounts board rendering", () => {
     expect(board).toContain(
       "$247 of $250 cloud session credits (expire Nov 5) · 62287 credits · 2 limit resets unused · plan pro"
     );
+    const single = plainBoard(
+      reportOf([
+        AccountUsage.make({
+          account: account("one@example.com", "codex"),
+          outcome: AccountUsageOutcome.cases.Ok.make({
+            identity: O.none(),
+            plan: O.none(),
+            windows: [weekly(40, inHours(10))],
+            credits: [],
+            limitResets: O.some(1),
+            asOf: O.none(),
+          }),
+        }),
+      ])
+    );
+    expect(single).toContain("1 limit reset unused");
   });
 
   it("keeps every line inside the board at the minimum width with a long label", () => {
@@ -693,7 +842,7 @@ const authFiles = {
   "claude-off.json": `{"type":"claude","email":"off@example.com","access_token":"off-token","disabled":true}`,
   "xai-me.json": `{"type":"xai","email":"me@example.com","access_token":"xai-token"}`,
   "meta-me.json": `{"type":"meta","email":"me@example.com","access_token":"muse-key","dca_token":"muse-device"}`,
-  "kimi-me.json": `{"type":"kimi","email":"me@example.com","access_token":"kimi-token"}`,
+  "kimi-1761717000000.json": `{"type":"kimi","access_token":"kimi-token","base_url":"https://api.kimi.com/coding","domain":"kimi.com"}`,
   "config.yaml": "port: 8317",
   "broken.json": "{",
 };
@@ -706,6 +855,8 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         if (Str.includes("anthropic")(request.url)) return respond(request, claudeBody);
         if (Str.includes("chatgpt")(request.url)) return respond(request, codexBody);
         if (Str.includes("meta.ai")(request.url)) return respond(request, `{"subs_tier_name":"Tier"}`);
+        if (Str.endsWith("/usages")(request.url)) return respond(request, kimiBody);
+        if (Str.endsWith("/me")(request.url)) return respond(request, kimiProfile);
         return HttpClientResponse.fromWeb(request, new Response(grokReply, { status: 200 }));
       };
       const client = HttpClient.make((request) =>
@@ -724,8 +875,14 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         ["claude", "me@example.com", "Ok"],
         ["codex", "work@example.com", "Ok"],
         ["grok", "me@example.com", "Ok"],
+        ["kimi", "kimi-1761717000000", "Ok"],
         ["muse", "me@example.com", "Ok"],
       ]);
+      const kimi = A.findFirst(usages, (usage) => usage.account.provider === "kimi");
+      assertSome(
+        O.map(kimi, (usage) => (usage.outcome._tag === "Ok" ? O.getOrNull(usage.outcome.identity) : null)),
+        "kimi@example.com"
+      );
       expect(
         A.sort(
           yield* Ref.get(seen),
@@ -733,10 +890,48 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("live account poller", (i
         )
       ).toEqual([
         ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
+        ["GET", "https://api.kimi.com/coding/v1/me", "Bearer kimi-token", undefined],
+        ["GET", "https://api.kimi.com/coding/v1/usages", "Bearer kimi-token", undefined],
         ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
         ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
         ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
       ]);
+    })
+  );
+
+  it.effect("keeps the Kimi usages when the profile request fails or never answers", () =>
+    Effect.gen(function* () {
+      const hung = yield* Deferred.make<void>();
+      const client = HttpClient.make((request) =>
+        Str.endsWith("/usages")(request.url)
+          ? Effect.succeed(respond(request, kimiBody))
+          : Str.endsWith("/me")(request.url) && Str.includes("Bearer kimi-token")(request.headers.authorization ?? "")
+            ? Deferred.succeed(hung, undefined).pipe(Effect.andThen(Effect.never))
+            : Effect.succeed(respond(request, "busy", 503))
+      );
+      // The profile timeout runs on the test clock: the hung /me is dropped at eight seconds.
+      const polling = yield* runLive(
+        {
+          "kimi-1761717000000.json": authFiles["kimi-1761717000000.json"],
+          "kimi-ai-1761717000001.json": `{"type":"kimi-ai","access_token":"kimi-other","base_url":"https://api.kimi.ai/coding/v1"}`,
+        },
+        client,
+        pollAccounts
+      ).pipe(Effect.forkChild);
+      yield* Deferred.await(hung);
+      yield* TestClock.adjust("8 seconds");
+      const usages = yield* Fiber.join(polling);
+      expect(A.map(usages, (usage) => [usage.account.label, usage.outcome._tag])).toEqual([
+        ["kimi-1761717000000", "Ok"],
+        ["kimi-ai-1761717000001", "Ok"],
+      ]);
+      for (const usage of usages) {
+        const outcome = usage.outcome;
+        if (outcome._tag !== "Ok") continue;
+        assertNone(outcome.identity);
+        assertNone(outcome.plan);
+        expect(A.length(outcome.windows)).toBe(3);
+      }
     })
   );
 
@@ -943,24 +1138,15 @@ describe("accounts command", () => {
   });
 });
 
-const keyPress = (name: string): Terminal.UserInput => ({
-  input: O.some(name),
-  key: { name, ctrl: false, meta: false, shift: false },
-});
+// A key the screen reads: a typed character, or a key press such as Ctrl+C.
+type ScreenKey = string | KeyInput.Encoded;
 
 const runScreen = Effect.fnUntraced(function* (
   usage: Effect.Effect<ReadonlyArray<AccountUsage>, AccountsError>,
-  keys: ReadonlyArray<Terminal.UserInput>
+  keys: ReadonlyArray<ScreenKey>
 ) {
-  const shown = yield* Ref.make(A.empty<string>());
-  const input = yield* Queue.unbounded<Terminal.UserInput, Cause.Done>();
-  const terminal = Terminal.make({
-    columns: Effect.succeed(90),
-    rows: Effect.succeed(40),
-    readInput: Effect.succeed(input),
-    readLine: Effect.succeed(""),
-    display: (text) => Ref.update(shown, A.append(text)),
-  });
+  const terminal = yield* TestTerminal.make({ columns: 90, rows: 40 });
+  const screenTerminal = Context.get(yield* Layer.build(terminal.layer), Terminal.Terminal);
   const poller = AccountsUsage.of({
     accounts: Effect.succeed([]),
     poll: Effect.fn("AccountsUsage.poll")(function* (ref: AccountRef) {
@@ -970,26 +1156,29 @@ const runScreen = Effect.fnUntraced(function* (
     signedIn: Effect.succeed([]),
   });
   const screen = yield* watchAccounts(Duration.seconds(30)).pipe(
-    Effect.provideService(Terminal.Terminal, terminal),
+    Effect.provideService(Terminal.Terminal, screenTerminal),
     Effect.provideService(AccountsUsage, poller),
     Effect.forkChild
   );
   // Let a second of screen time pass before each key: the first poll lands,
   // and a poll asked for with `r` starts on the next tick.
-  yield* Effect.forEach(keys, (key) => TestClock.adjust("1 second").pipe(Effect.andThen(Queue.offer(input, key))), {
-    discard: true,
-  });
+  yield* Effect.forEach(
+    keys,
+    (key) =>
+      TestClock.adjust("1 second").pipe(Effect.andThen(P.isString(key) ? terminal.type(key) : terminal.input([key]))),
+    { discard: true }
+  );
   yield* Fiber.join(screen);
-  return A.join(yield* Ref.get(shown), "");
+  return yield* terminal.output;
 });
 
 describe("live accounts screen", () => {
   it.effect("draws the board, polls again on r, and restores the screen on q", () =>
     Effect.gen(function* () {
       const output = yield* runScreen(Effect.succeed([ok("me@example.com", [weekly(10, inHours(5))])]), [
-        keyPress("x"),
-        keyPress("r"),
-        keyPress("q"),
+        "x",
+        "r",
+        "q",
       ]);
       expect(Str.startsWith("\u001b[?1049h")(output)).toBe(true);
       expect(Str.endsWith("\u001b[?25h\u001b[?1049l")(output)).toBe(true);
@@ -1002,7 +1191,7 @@ describe("live accounts screen", () => {
   it.effect("keeps waiting when a poll fails, and quits on Ctrl+C or a closed input", () =>
     Effect.gen(function* () {
       const output = yield* runScreen(Effect.fail(AccountsError.make({ reason: "io", message: "disk gone" })), [
-        { input: O.none(), key: { name: "c", ctrl: true, meta: false, shift: false } },
+        { name: "c", ctrl: true },
       ]);
       expect(output).toContain("polling every account");
       expect(output).toContain("poll failed: disk gone (showing the last reading)");

@@ -249,6 +249,8 @@ type PrincipalSchemaBase = typeof PrincipalBase;
 /**
  * Named schema surface for {@link Principal}.
  *
+ * **Details**
+ *
  * Declaration emit references this interface by name instead of serializing
  * the derived tagged-union schema structurally at every consumer position.
  *

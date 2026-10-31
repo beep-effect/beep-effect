@@ -3,11 +3,12 @@ import { AST, ASTError, ExtglobType } from "@beep/glob/internal/ast";
 import { MAX_NESTING_DEPTH } from "@beep/glob/internal/limits";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { AST as OracleAST } from "minimatch";
+import { legacyFragment, legacyOracle } from "../legacyOracle.ts";
 
 const matches = (pattern: RegExp | string, candidate: string) =>
-  typeof pattern === "string" ? pattern === candidate : pattern.test(candidate);
+  P.isString(pattern) ? pattern === candidate : pattern.test(candidate);
 
 const normalizationCandidates = ["", "a", "b", "ab", "x", "y", "zaz", ".", "..", ".a", "a.b", "other"];
 
@@ -22,7 +23,7 @@ const assertNormalizationParity = (text: string) => {
   for (const dot of [false, true]) {
     const tree = AST.fromGlob(text, { dot });
     const actual = tree.toMMPattern();
-    const expected = OracleAST.fromGlob(text, { dot }).toMMPattern();
+    const expected = legacyFragment(text, { dot });
     for (const candidate of normalizationCandidates) {
       assert.strictEqual(matches(actual, candidate), matches(expected, candidate), `${text}: ${candidate}`);
     }
@@ -64,7 +65,7 @@ const escapeTexts = [
 
 const assertEscapeCandidates = (text: string, dot: boolean, noext: boolean) => {
   const actual = AST.fromGlob(text, { dot, noext }).toMMPattern();
-  const expected = OracleAST.fromGlob(text, { dot, noext }).toMMPattern();
+  const expected = legacyFragment(text, { dot, noext });
   for (const candidate of [text, "a", "b", "abc", "", ".", "..", ".a", "a.b", "c", "aizb", "aib"]) {
     assert.strictEqual(matches(actual, candidate), matches(expected, candidate), `${text}: ${candidate}`);
   }
@@ -75,6 +76,16 @@ const assertEscapeParity = (text: string) => {
 };
 
 describe("AST coverage", () => {
+  it.effect("preserves every independently recorded legacy fragment on boundary candidates", () =>
+    Effect.sync(() => {
+      for (const [text, options, isRegex, source, flags] of legacyOracle.fragments) {
+        const actual = AST.fromGlob(text, options).toMMPattern();
+        const expected = isRegex ? new RegExp(source, flags) : source;
+        for (const candidate of ["", "a", "b", "aa", "abc", ".", "..", ".a", "a.b", "A", "a/b", "α"])
+          assert.strictEqual(matches(actual, candidate), matches(expected, candidate), `${text}: ${candidate}`);
+      }
+    })
+  );
   it.effect("operator normalization preserves oracle matching across adoption and usurp maps", () =>
     Effect.sync(() => {
       for (const outer of ExtglobType.literals)
@@ -167,7 +178,7 @@ describe("AST coverage", () => {
       assert.throws(() => AST.fromGlob("a", { maxExtglobRecursion: Number.NaN }));
       for (const text of ["@(a|!(!(b)))", "@(@(@(a)))", "!(!(!(a)))"]) {
         const actual = AST.fromGlob(text, { maxExtglobRecursion: 1 }).toMMPattern();
-        const expected = OracleAST.fromGlob(text, { maxExtglobRecursion: 1 }).toMMPattern();
+        const expected = legacyFragment(text, { maxExtglobRecursion: 1 });
         for (const candidate of ["a", "b", text])
           assert.strictEqual(matches(actual, candidate), matches(expected, candidate));
       }

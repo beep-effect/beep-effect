@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "cache-producer-policy-review/v1",
+  "authority": "Source-bound local repair/review only. All full-goal acceptance remains unproven. No protected producer, qualification or runtime activation.",
+  "sourceParent": "c76902d99d77c1bb675834410f8a532cf7ed76bb",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "32efcf4590598c90d4e72bd2800f8d75ccfffe5c16467014d21ff875dc34bbb8",
+    "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts": "aeafeaaab986d6ad14f7f99bda21114b46db9b4075bc77534edea5083d1318aa",
+    "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts": "166efdf40ac5eb8884097095c3f39de1be46cac501e458faee0d8faa16def469",
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "3cad5fb2f004fa92c1b47f7f80cd2ccb076995ded528c23ccc588184d0bb76a7",
+    "standards/effect-vitest.inventory.jsonc": "c0124510ccbef6979ff7298ff5e8479bda4e96cf737d3c0996f2515ecd06e075",
+    "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc": "0f52167070ebd63527461dac36a6fbf232fd88af7c69c034463ea6c4c14615e5"
+  },
+  "repairs": [
+    "Hoisted the identical R2 hostname constraint and three test codecs to compile once.",
+    "Preserved dynamic Boolean Exit expectations using canonical assertion branches; retained all payload, callback and cleanup assertions.",
+    "Regenerated instrumentation through the canonical catalog writer."
+  ],
+  "reviewedPlatformJudgment": {
+    "rule": "EV010",
+    "file": "packages/tooling/tool/cli/test/cache-producer-adapter.test.ts",
+    "reason": "The subject is an actual Python child pipe and filesystem/process lifetime. The child reads its helper, writes a marker visible to the parent, and the parent checks /proc disappearance. A memory filesystem would change that subject. Shared platform services do not own the per-use child scope.",
+    "owner": "@beep/repo-cli",
+    "exit": "Retire this judgment if the suite stops exercising real child filesystem/process lifetime.",
+    "newJudgments": 1,
+    "unreviewedOpenFindings": 0
+  },
+  "verification": {
+    "node142": {
+      "exit": 0,
+      "elapsedSeconds": 27.067,
+      "finishedAt": "2026-10-30T04:38:25.876948+00:00"
+    },
+    "bun142": {
+      "exit": 0,
+      "elapsedSeconds": 17.901,
+      "finishedAt": "2026-10-30T04:38:17.126259+00:00"
+    },
+    "currentQuick": {
+      "exit": 0,
+      "elapsedSeconds": 12.255,
+      "finishedAt": "2026-10-30T04:39:21.669385+00:00"
+    },
+    "schemaFirst": {
+      "exit": 0,
+      "elapsedSeconds": 42.89,
+      "finishedAt": "2026-10-30T04:36:01.753000+00:00"
+    },
+    "rootInlineLint": {
+      "exit": 0,
+      "elapsedSeconds": 6.034,
+      "finishedAt": "2026-10-30T04:35:10.324884+00:00"
+    },
+    "effectPolicy": {
+      "exit": 0,
+      "elapsedSeconds": 40.447,
+      "finishedAt": "2026-10-30T04:39:50.391874+00:00"
+    }
+  },
+  "scopeLimits": [
+    "The 142-test runtime replays passed the repaired assertions before two formatter-only edits; the current default package audit and canonical final/hosted gates remain required.",
+    "The first complete package attempt was deliberately interrupted after 515.948 seconds before repairing source; it is not a passing receipt.",
+    "The first normal publication was stopped after its introduced pre-push failures; no PR or hosted pass is claimed."
+  ],
+  "productionChanges": false
+}

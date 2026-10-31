@@ -1,0 +1,183 @@
+{
+  "schemaVersion": "cache-producer-review-repair/v1",
+  "recordedAt": "2026-10-29T15:22:38.242280+00:00",
+  "authority": "source-bound-review-regression-only",
+  "sourceState": "working-tree-with-exact-file-digests",
+  "sourceHeadBeforeRepair": "e596e169f93e1f28ece81458748c1f21e9174e99",
+  "sourceSha256": {
+    "infra/r2-cache/trial-grants.py": "71d91c11e6d9251c2a750c1d897a8e8a13ac4f3fbb9b13513bc91b166ee998c7",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts": "065dbb6cbb3261fb7917241e5a0247b5f04eb7114bd33d304af5af03da207047",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts": "94ee2d848e168d0e3a84c77a6aadbfe8adf072695516a28ca2a0c38afd9166a6",
+    "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts": "9c1b0515109de8bc5ec48108e07db2055b648cfdb940ea9b5704123d2368461c",
+    "packages/tooling/tool/cli/test/cache-producer-upload.test.ts": "64ac0fed7ab9f7333bb5f719d1e96f032423a9c5818c19deed8d6bf34ecbf506",
+    "standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc": "3ab985f4eb83c14646b9d4f51189f425b0040ff38cd23a8fa5830cce149ebd20",
+    "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "ab216dbad43c4598aa22239f61c01621eb475fb074187d1df7e52087b410059d"
+  },
+  "reviewThreads": [
+    "https://github.com/beep-effect/beep-effect/pull/2358#discussion_r4413966186",
+    "https://github.com/beep-effect/beep-effect/pull/2358#discussion_r4413966201"
+  ],
+  "changes": [
+    "Refuse optimized Python before third-party imports, credential reads or cloud operations; preserve all normal grant assertions.",
+    "Use CacheCommandError.mapError to preserve an existing typed error and retain other failures as internal runtime causes. No cause is added to a producer observation or logged by this verifier."
+  ],
+  "optimizationControls": {
+    "sourceSha256": "71d91c11e6d9251c2a750c1d897a8e8a13ac4f3fbb9b13513bc91b166ee998c7",
+    "cloudCallsPossible": false,
+    "credentialReadsPossible": false,
+    "cases": [
+      {
+        "case": "normal",
+        "exit": 99,
+        "expectedExit": 99,
+        "refusedBeforeThirdPartyImport": false,
+        "stdout": ""
+      },
+      {
+        "case": "dash-O",
+        "exit": 64,
+        "expectedExit": 64,
+        "refusedBeforeThirdPartyImport": true,
+        "stdout": "Trial grant verification requires Python assertions; optimized execution is refused."
+      },
+      {
+        "case": "environment",
+        "exit": 64,
+        "expectedExit": 64,
+        "refusedBeforeThirdPartyImport": true,
+        "stdout": "Trial grant verification requires Python assertions; optimized execution is refused."
+      }
+    ]
+  },
+  "focusedCoverage": {
+    "node": {
+      "tests": 30,
+      "files": 2,
+      "provider": "v8",
+      "coveragePercent": {
+        "Cache.workflow.github.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100
+        },
+        "Cache.workflow.upload.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100
+        }
+      },
+      "logSha256": "a866f723dadd8d977b3cf9315021c2081cb1505fb600f8a3ccb5bc32d66c2e73",
+      "summarySha256": "6cc6d39f05796c56f37e2e495ece5d73afc7a7bc8ab6a191a2db89a61597a765"
+    },
+    "bun": {
+      "tests": 30,
+      "files": 2,
+      "provider": "istanbul",
+      "coveragePercent": {
+        "Cache.workflow.github.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100
+        },
+        "Cache.workflow.upload.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100
+        }
+      },
+      "logSha256": "c9be97ca506f74bd1f0894fcb954377310854576f343374d171473d78ca7447d",
+      "summarySha256": "6cc6d39f05796c56f37e2e495ece5d73afc7a7bc8ab6a191a2db89a61597a765"
+    }
+  },
+  "priorImplementationControl": {
+    "exit": 1,
+    "intendedAssertionsFailed": 2,
+    "sourceRestored": true,
+    "sourceSha256": "065dbb6cbb3261fb7917241e5a0247b5f04eb7114bd33d304af5af03da207047"
+  },
+  "policyChecks": [
+    {
+      "check": "quick",
+      "exit": 0,
+      "logSha256": "b43a72dc6c264cf162cc58ca7f2cae61155511f454f859b8fd134108f2517726"
+    },
+    {
+      "check": "oxlint",
+      "exit": 0,
+      "logSha256": "791d07af8cbc0f877891014d9d00510118c7e3e4edeeb1e1af342d7a78778d9b"
+    },
+    {
+      "check": "instrumentation-write",
+      "exit": 0,
+      "logSha256": "f7ebd33c01e0418d05be4d6c00f46e3cbfbec89ba4ec8426ab795aac039259d1"
+    },
+    {
+      "check": "instrumentation-check",
+      "exit": 0,
+      "logSha256": "d7770de667f30929704958dff404bc534b83b19b15ef91f9642702770b499138"
+    },
+    {
+      "check": "schema-catalog-write",
+      "exit": 0,
+      "logSha256": "b377b13b9fc05048e4eb9ff29a66859c244bf9c888872c3ccf18038899cb38eb"
+    },
+    {
+      "check": "schema-catalog-check",
+      "exit": 0,
+      "logSha256": "ef2d2e03d04a17db212002a223d6dc466b429acacead803804ca72fd83961536"
+    },
+    {
+      "check": "effect-vitest",
+      "exit": 0,
+      "logSha256": "824ef5632ff533d639e68b886d0ede71863991c42dbed9ce67ad3f3ef1075ae4"
+    },
+    {
+      "check": "schema-first",
+      "exit": 0,
+      "logSha256": "6018614402519e5a7408f7dcc108875b72f9f20aae2fd2d2c437d4e4386036cf"
+    }
+  ],
+  "currentPopulation": {
+    "path": "goals/turborepo-quality-cache-adoption/research/current-population.json",
+    "sha256": "d3a7ac705438932c1b621ceb818d68538ad2181118b093175be69afa2f5405bd",
+    "counts": {
+      "workspaces": 190,
+      "rootScripts": 113,
+      "configuredGraphNodes": 4586,
+      "executableComputations": 2571,
+      "graphOnlyNodes": 2015,
+      "cacheEnabledExecutableComputations": 1621,
+      "newSinceRetainedHandoff": 638,
+      "retainedCommandTextUnchanged": 1923,
+      "retainedQualificationRecordStates": {
+        "excluded": 5
+      }
+    },
+    "sourcesVerified": 431,
+    "observedMetadataChanges": {
+      "observedInputCount": 12,
+      "observedInputsDigest": 58
+    },
+    "semanticReviewsAndDispositionsChanged": false
+  },
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "qualified": false,
+  "protectedProducerPublished": false,
+  "signedTrialActivated": false,
+  "cloudOperationsDuringRepair": 0,
+  "credentialHandoff": "User confirmed the helper has not run; selecting a chat option is not credential-handoff evidence.",
+  "historicalFinalReplay": {
+    "sourceHead": "f709aabeefcb59a339cb005206f4581e01991b1e",
+    "verdict": "pass",
+    "receiptSha256": "5f4e9da5daba6e0f70787eca2eaa87fe0e10661c3023914bd51b890c2836deb5",
+    "scope": "Historical passing proof. This changed repair needs its own publish, final-check and hosted acceptance."
+  },
+  "limitations": [
+    "Earlier guard-hoist, runtime and native observations keep their original source identities. This checkpoint supersedes them only for the changed review-repair source above.",
+    "Both goals, real-computation qualification/adoption, closed protected execution/publication, deployed signing, rotation/rollback and representative7/7/14-day windows remain incomplete."
+  ]
+}
