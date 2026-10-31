@@ -10,39 +10,47 @@ import { replaceNodeVersionWithFile, updateYamlValue } from "@beep/repo-cli/test
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Str from "effect/String";
 
-const compose = [
-  "services:",
-  "  redis:",
-  "    image: redis:8.10.3 # pinned",
-  "    ports:",
-  '      - "6379:6379"',
-  "  postgres:",
-  "    image: pgvector/pgvector:pg17",
-  "    healthcheck:",
-  '      test: [ "CMD-SHELL", "pg_isready -U postgres" ]',
-  "    command: >-",
-  "      postgres",
-  "      -c wal_level=logical",
-  "",
-].join("\n");
+const compose = A.join(
+  [
+    "services:",
+    "  redis:",
+    "    image: redis:8.10.3 # pinned",
+    "    ports:",
+    '      - "6379:6379"',
+    "  postgres:",
+    "    image: pgvector/pgvector:pg17",
+    "    healthcheck:",
+    '      test: [ "CMD-SHELL", "pg_isready -U postgres" ]',
+    "    command: >-",
+    "      postgres",
+    "      -c wal_level=logical",
+    "",
+  ],
+  "\n"
+);
 
-const workflow = [
-  "name: Check # the workflow",
-  "jobs:",
-  "  test:",
-  "    steps:",
-  "      # pin the runtime",
-  "      - uses: actions/setup-node@v4",
-  "        with:",
-  '          node-version: "22.23.4"',
-  "          cache: bun",
-  "",
-].join("\n");
+const workflow = A.join(
+  [
+    "name: Check # the workflow",
+    "jobs:",
+    "  test:",
+    "    steps:",
+    "      # pin the runtime",
+    "      - uses: actions/setup-node@v4",
+    "        with:",
+    '          node-version: "22.23.4"',
+    "          cache: bun",
+    "",
+  ],
+  "\n"
+);
 
 const writeFixture = Effect.fnUntraced(function* (name: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -59,7 +67,7 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
       const fs = yield* FileSystem.FileSystem;
       const file = yield* writeFixture("docker-compose.yml", compose);
       assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
-      strictEqual(yield* fs.readFileString(file), compose.replace("redis:8.10.3", "redis:8.12.0"));
+      strictEqual(yield* fs.readFileString(file), Str.replace("redis:8.10.3", "redis:8.12.0")(compose));
     })
   );
 
@@ -89,18 +97,21 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
       );
       strictEqual(
         yield* fs.readFileString(file),
-        [
-          "name: Check # the workflow",
-          "jobs:",
-          "  test:",
-          "    steps:",
-          "      # pin the runtime",
-          "      - uses: actions/setup-node@v4",
-          "        with:",
-          "          cache: bun",
-          "          node-version-file: .nvmrc",
-          "",
-        ].join("\n")
+        A.join(
+          [
+            "name: Check # the workflow",
+            "jobs:",
+            "  test:",
+            "    steps:",
+            "      # pin the runtime",
+            "      - uses: actions/setup-node@v4",
+            "        with:",
+            "          cache: bun",
+            "          node-version-file: .nvmrc",
+            "",
+          ],
+          "\n"
+        )
       );
     })
   );
