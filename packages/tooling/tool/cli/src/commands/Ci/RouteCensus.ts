@@ -519,7 +519,9 @@ export interface RouteHeadFetchShape {
  *
  * **Details**
  *
- * One pull-ref fetch brings every head a `refs/pull/<n>/head` still names. A
+ * Heads already in the object store need no fetch, so a report over local
+ * commits runs offline. Otherwise one pull-ref fetch brings every head a
+ * `refs/pull/<n>/head` still names. A
  * head a force-push replaced has no such ref, so each head still missing is
  * fetched by its own sha, and whatever is missing after that is returned: the
  * census routes those heads as `unknown` rather than failing.
@@ -548,6 +550,10 @@ export const ensureRouteHeads = (
 ): ((shas: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<string>, RouteError>) =>
   Effect.fn("RouteGit.ensureHeads")(function* (shas: ReadonlyArray<string>) {
     if (A.isReadonlyArrayEmpty(shas)) {
+      return A.empty<string>();
+    }
+    // Every head already local means no network at all: a local report runs offline.
+    if (A.isReadonlyArrayEmpty(yield* git.missingCommits(shas))) {
       return A.empty<string>();
     }
     yield* git.fetchPullHeads;

@@ -194,7 +194,7 @@ describe("route joins", () => {
 });
 
 describe("route head fetch", () => {
-  it.effect("fetches each head missing after the pull-ref fetch individually and returns the ones still missing", () =>
+  it.effect("fetches only when a head is missing, then each head still missing by sha, and returns the rest", () =>
     Effect.gen(function* () {
       const calls = yield* Ref.make<ReadonlyArray<string>>([]);
       const present = yield* Ref.make(HashSet.fromIterable(["a1", "c3"]));
@@ -217,7 +217,7 @@ describe("route head fetch", () => {
 
       expect(yield* ensure(["a1", "b2", "c3", "d4"])).toEqual(["d4"]);
       const log = yield* Ref.get(calls);
-      expect(A.take(log, 2)).toEqual(["fetch pull refs", "check a1,b2,c3,d4"]);
+      expect(A.take(log, 3)).toEqual(["check a1,b2,c3,d4", "fetch pull refs", "check a1,b2,c3,d4"]);
       expect(
         A.sort(
           A.filter(log, (call) => Str.startsWith("fetch ")(call) && call !== "fetch pull refs"),
@@ -225,7 +225,12 @@ describe("route head fetch", () => {
         )
       ).toEqual(["fetch b2", "fetch d4"]);
       assertSome(A.last(log), "check b2,d4");
-      expect(log).toHaveLength(5);
+      expect(log).toHaveLength(6);
+
+      // Every head already local: one object-store check, no network.
+      yield* Ref.set(calls, []);
+      expect(yield* ensure(["a1", "b2", "c3"])).toEqual([]);
+      expect(yield* Ref.get(calls)).toEqual(["check a1,b2,c3"]);
 
       yield* Ref.set(calls, []);
       expect(yield* ensure([])).toEqual([]);
