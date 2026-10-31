@@ -12,31 +12,31 @@
   },
   "lanes": {
     "hub-auth": {
-      "status": "in-progress",
+      "status": "complete",
       "findings": ["CSF-001", "CSF-004"]
     },
     "pdf-discovery": {
-      "status": "in-progress",
+      "status": "complete",
       "findings": ["CSF-002"]
     },
     "docx-bounds": {
-      "status": "in-progress",
+      "status": "complete",
       "findings": ["CSF-003"]
     },
     "snapshot-bounds": {
-      "status": "in-progress",
+      "status": "complete",
       "findings": ["CSF-005"]
     },
     "credential-redaction": {
-      "status": "in-progress",
+      "status": "complete",
       "findings": ["CSF-006"]
     },
     "redaction-bounds": {
-      "status": "in-progress",
+      "status": "complete",
       "findings": ["CSF-007"]
     },
     "claim-work-budget": {
-      "status": "in-progress",
+      "status": "complete",
       "findings": ["CSF-008"]
     }
   },
