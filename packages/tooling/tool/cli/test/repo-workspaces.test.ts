@@ -5,7 +5,8 @@
 // absent selects nothing, a root without workspaces has no members, a member
 // link that leaves the checkout is skipped, a bad root fails closed (a strictly
 // invalid manifest or an escaping pattern), generated directories hold no
-// members, and a self-dependency is no edge.
+// members and are skipped before their manifests are read, and a
+// self-dependency is no edge.
 
 import {
   DecodedWorkspaceMember,
@@ -150,6 +151,25 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
         deepStrictEqual(
           A.map(yield* workspaceMembers(root), (pkg) => pkg.name),
           ["@beep/app", "@beep/core"]
+        );
+      })
+    );
+
+    it.effect("skips a malformed generated manifest under a matched pattern before reading it", () =>
+      Effect.gen(function* () {
+        const root = yield* repository({
+          ...twoMembers,
+          "package.json": json({
+            name: "root",
+            workspaces: ["packages/*", "packages/*/coverage", "dist/*", "packages/core/build"],
+          }),
+          "packages/core/coverage/package.json": "{}\n",
+          "packages/core/build/package.json": "{\n",
+          "dist/out/package.json": "not json\n",
+        });
+        deepStrictEqual(
+          A.map(yield* workspacePackages(root), (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@beep/app=packages/app", "@beep/core=packages/core"]
         );
       })
     );

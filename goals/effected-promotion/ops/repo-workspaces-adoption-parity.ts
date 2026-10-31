@@ -161,12 +161,14 @@ const legacySort = (edges: ReadonlyArray<readonly [string, ReadonlyArray<string>
 
 // --- the kit side, as the adopters read it --------------------------------------------------------------------
 
-// repo-cli `internal/RepoWorkspaces.ts`: the root pinned as start and ceiling, `containWithinRoot` and
-// `skipMissingBaseDirs`, members beneath a generated directory dropped; its directory readers report each
-// member's real path. Its fail-closed root guard (strict root decode, unsafe-pattern refusal) never fires on the
-// live root and is pinned by `test/repo-workspaces.test.ts` instead. Inlined rather than imported so the same
-// script runs on the base revision, where the reader does not exist yet.
-const GENERATED_DIRECTORIES = HashSet.make("node_modules", "dist", "build", "coverage", ".turbo");
+// repo-cli `internal/RepoWorkspaces.ts`: the root pinned as start and ceiling, `containWithinRoot`,
+// `skipMissingBaseDirs` and `skipDirectoryNames` (generated directories skipped before their manifests are read);
+// its directory readers report each member's real path. Its fail-closed root guard (strict root decode,
+// unsafe-pattern refusal) never fires on the live root and is pinned by `test/repo-workspaces.test.ts` instead.
+// Inlined rather than imported so the same script runs on the base revision, where the reader does not exist yet;
+// the generated-directory filter below repeats the skip there, where the kit has no `skipDirectoryNames`.
+const GENERATED_DIRECTORY_NAMES = ["node_modules", "dist", "build", "coverage", ".turbo"];
+const GENERATED_DIRECTORIES = HashSet.fromIterable(GENERATED_DIRECTORY_NAMES);
 const kitMembers = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const discovery = yield* WorkspaceDiscovery.make({
@@ -174,6 +176,7 @@ const kitMembers = Effect.gen(function* () {
     stopAt: repoRoot,
     containWithinRoot: true,
     skipMissingBaseDirs: true,
+    skipDirectoryNames: GENERATED_DIRECTORY_NAMES,
   });
   const packages = A.filter(
     yield* discovery.listPackages,

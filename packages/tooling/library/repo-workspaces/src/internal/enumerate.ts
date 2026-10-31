@@ -2,6 +2,7 @@ import { $RepoWorkspacesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -173,8 +174,8 @@ export const EnumerationFailure = EnumerationFailureKind.mapMembers(
 export type EnumerationFailure = typeof EnumerationFailure.Type;
 
 /**
- * Controls the descent bound, root containment and missing-base tolerance for
- * {@link enumerate}.
+ * Controls the descent bound, root containment, missing-base tolerance and
+ * skipped directory names for {@link enumerate}.
  *
  * **Example** (Leave enumeration defaults unresolved)
  *
@@ -207,6 +208,15 @@ export class EnumerateOptions extends S.Opaque<EnumerateOptions, { readonly bran
       $I.annoteKey("EnumerateOptions.skipMissingBaseDirs", {
         description:
           "Whether a wildcard whose enumeration base directory is absent selects nothing instead of failing.",
+      })
+    ),
+    /** Directory names that hold no member at any depth. Defaults to none. */
+    skipDirectoryNames: S.String.pipe(
+      S.Array,
+      S.optionalKey,
+      $I.annoteKey("EnumerateOptions.skipDirectoryNames", {
+        description:
+          "Directory names that hold no member: a candidate with such a segment is skipped before its package.json is probed, and no traversal descends into one.",
       })
     ),
   }).pipe(
@@ -246,11 +256,26 @@ interface EnumerationScope {
   readonly path: Path.Path;
   readonly root: string;
   readonly skipMissingBaseDirs: boolean;
+  readonly skipsPath: (relative: string) => boolean;
 }
 
 /** Whether `absolute` holds a `package.json`; an unreadable probe is `false`. */
 const isPackageAt = (scope: EnumerationScope, absolute: string): Effect.Effect<boolean> =>
   scope.fs.exists(scope.path.join(absolute, "package.json")).pipe(Effect.orElseSucceed(() => false));
+
+/**
+ * Whether a root-relative path has a segment the enumeration skips.
+ *
+ * **Details**
+ *
+ * Without skipped names nothing is skipped and no path is split.
+ */
+const skipsPathOf = (names: ReadonlyArray<string>): ((relative: string) => boolean) => {
+  const skipped = HashSet.fromIterable(names);
+  return HashSet.isEmpty(skipped)
+    ? () => false
+    : (relative) => A.some(Str.split(relative, "/"), (segment) => HashSet.has(skipped, segment));
+};
 
 /** Whether `absolute` is a directory; an unreadable probe is `false`. */
 const isDirectoryAt = (scope: EnumerationScope, absolute: string): Effect.Effect<boolean> =>
@@ -314,7 +339,7 @@ const literalHit = Effect.fnUntraced(function* (
   scope: EnumerationScope,
   literal: string
 ): Effect.fn.Return<O.Option<readonly [string, string]>> {
-  if (scope.isExcluded(literal)) return O.none();
+  if (scope.isExcluded(literal) || scope.skipsPath(literal)) return O.none();
   const absolute = scope.path.join(scope.root, literal);
   if (!(yield* scope.contains(absolute))) return O.none();
   return (yield* isPackageAt(scope, absolute)) ? O.some([literal, absolute] as const) : O.none();
@@ -388,7 +413,7 @@ const visitEntry = Effect.fnUntraced(function* (
   frame: TraversalFrame,
   entry: string
 ) {
-  if (isPruned(entry)) return;
+  if (isPruned(entry) || scope.skipsPath(entry)) return;
   const relative = joinRelative(frame.relative, entry);
   const absolute = scope.path.join(frame.absolute, entry);
   if (!(yield* isAdmittedDirectoryAt(scope, absolute))) return;
@@ -412,6 +437,36 @@ const missingBase = (
     : Effect.fail({ kind: "missingBaseDir", pattern: wildcard.source, detail: base === "" ? scope.root : base });
 
 /**
+ * Whether the wildcard base `absolute` is a directory.
+ *
+ * **Details**
+ *
+ * Only a confirmed absence reads as "no directory": a `stat` that fails
+ * `NotFound`, or an entry that is not a directory. Any other `stat` failure
+ * (permission denied, an I/O error) fails `unreadableDirectory`, as an
+ * unreadable frame does, so `skipMissingBaseDirs` cannot turn an unreadable
+ * base into an empty selection.
+ */
+const isBaseDirectoryAt = (
+  scope: EnumerationScope,
+  wildcard: GlobPattern,
+  base: string,
+  absolute: string
+): Effect.Effect<boolean, EnumerationFailure> =>
+  scope.fs.stat(absolute).pipe(
+    Effect.map((info) => info.type === "Directory"),
+    Effect.catch((error) =>
+      error.reason._tag === "NotFound"
+        ? Effect.succeed(false)
+        : Effect.fail<EnumerationFailure>({
+            kind: "unreadableDirectory",
+            pattern: wildcard.source,
+            detail: base === "" ? scope.root : base,
+          })
+    )
+  );
+
+/**
  * One wildcard include, walked with THE shared traversal — the same state
  * machine `WorkspacesSync` drives.
  *
@@ -421,12 +476,16 @@ const missingBase = (
  * `packages:` instead of silently discovering nothing. With
  * `skipMissingBaseDirs` it selects nothing instead, as a filesystem glob
  * does: git keeps no empty directory, so a base whose last member was
- * deleted is absent from a fresh checkout.
+ * deleted is absent from a fresh checkout. A base that cannot be read fails
+ * `unreadableDirectory` either way, and a base under a skipped directory name
+ * selects nothing before it is probed.
  */
 const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, wildcard: GlobPattern) {
   const base = baseOf(wildcard);
+  if (scope.skipsPath(base)) return;
   const absoluteBase = scope.path.join(scope.root, base);
-  if (!(yield* isDirectoryAt(scope, absoluteBase))) return yield* missingBase(scope, wildcard, base);
+  if (!(yield* isBaseDirectoryAt(scope, wildcard, base, absoluteBase)))
+    return yield* missingBase(scope, wildcard, base);
   // A base that exists but leaves the root is not a typo: there is simply
   // nothing inside the root to enumerate under it.
   if (!(yield* scope.contains(absoluteBase))) return;
@@ -452,8 +511,12 @@ const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, 
  * relative path. With `containWithinRoot`, a literal member, a wildcard base or
  * a listed directory whose real path leaves the root's real path is skipped
  * before it is probed for a `package.json` or descended into. With
- * `skipMissingBaseDirs`, a wildcard whose base directory is absent selects
- * nothing instead of failing with `missingBaseDir`.
+ * `skipMissingBaseDirs`, a wildcard whose base directory is absent (its
+ * `stat` fails `NotFound`, or it is not a directory) selects nothing instead
+ * of failing with `missingBaseDir`; any other base `stat` failure fails
+ * `unreadableDirectory` whatever the option says. With `skipDirectoryNames`,
+ * a literal, a wildcard base or a listed directory with a segment of that
+ * list is skipped before it is probed for a `package.json` or descended into.
  *
  * **Gotchas**
  *
@@ -512,6 +575,7 @@ export const enumerate: {
       included: MutableHashMap.empty<string, string>(),
       isExcluded: excludedBy(globs.excludes),
       skipMissingBaseDirs: options?.skipMissingBaseDirs ?? false,
+      skipsPath: skipsPathOf(options?.skipDirectoryNames ?? []),
     };
     yield* includeLiterals(scope, globs.literals);
     yield* Effect.forEach(globs.wildcards, (wildcard) => enumerateWildcard(scope, wildcard), { discard: true });

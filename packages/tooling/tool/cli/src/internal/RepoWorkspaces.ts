@@ -9,13 +9,16 @@
  * member whose real path leaves the checkout is skipped before its manifest
  * is read, and with `skipMissingBaseDirs`, so a wildcard whose base directory
  * is absent (git keeps no empty directory) selects nothing instead of failing
- * every command. A repository root that declares no workspaces has no
+ * every command, while a base that exists but cannot be read still fails
+ * typed. A repository root that declares no workspaces has no
  * members; one whose `package.json` is missing, not JSON or rejected by the
  * strict repo-utils model fails typed, and so does a root pattern that could
  * reach outside the checkout (empty, absolute or carrying a `..` segment), so
- * a bad root never reads as an empty workspace. A member under a generated
- * `dist`, `build`, `coverage`, `.turbo` or `node_modules` directory is not a
- * member. The root package itself is never a member.
+ * a bad root never reads as an empty workspace. A directory under a
+ * generated `dist`, `build`, `coverage`, `.turbo` or `node_modules` directory
+ * is skipped by the kit's `skipDirectoryNames` before its manifest is read,
+ * so a generated `package.json` is never a member and never fails discovery.
+ * The root package itself is never a member.
  *
  * The directory readers return each member's real path, as the retired
  * repo-utils reader did, so a member reached through a link inside the
@@ -38,7 +41,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -145,11 +147,8 @@ const JsonText = S.fromJsonString(S.Unknown);
 // A drive (`C:/`), UNC (`//host`) or POSIX (`/`) absolute pattern, after backslashes become slashes.
 const absolutePattern = /^(?:[A-Za-z]:\/|\/\/|\/)/;
 
-// Generated directories the retired repo-utils glob ignored; a member beneath one is not a member.
-const GENERATED_DIRECTORIES = HashSet.make("node_modules", "dist", "build", "coverage", ".turbo");
-
-const isUnderGeneratedDirectory = (member: WorkspacePackage): boolean =>
-  A.some(Str.split(member.relativePath, "/"), (segment) => HashSet.has(GENERATED_DIRECTORIES, segment));
+// Generated directories the retired repo-utils glob ignored; nothing beneath one is read or is a member.
+const GENERATED_DIRECTORIES: ReadonlyArray<string> = ["node_modules", "dist", "build", "coverage", ".turbo"];
 
 /**
  * The reason a root pattern is unsafe, if it is.
@@ -210,9 +209,10 @@ const guardRoot = Effect.fn("RepoWorkspaces.guardRoot")(function* (
  * under `repoRoot` as enumerated. Before anything is enumerated the root
  * manifest is strictly decoded and each root pattern is checked: an empty,
  * absolute or `..`-carrying pattern fails with
- * {@link UnsafeWorkspacePatternError}. Members beneath a generated
- * directory (`dist`, `build`, `coverage`, `.turbo`, `node_modules`) are
- * dropped.
+ * {@link UnsafeWorkspacePatternError}. A directory beneath a generated
+ * directory (`dist`, `build`, `coverage`, `.turbo`, `node_modules`) is
+ * skipped before its manifest is read, so it is neither a member nor a
+ * discovery failure.
  *
  * @param repoRoot - Absolute repository root.
  * @returns The root package and every member.
@@ -229,12 +229,12 @@ export const workspacePackages = Effect.fn("RepoWorkspaces.workspacePackages")(f
     stopAt: repoRoot,
     containWithinRoot: true,
     skipMissingBaseDirs: true,
+    skipDirectoryNames: GENERATED_DIRECTORIES,
   }).pipe(Effect.provideService(WorkspaceRoot, roots));
   // The root is pinned as the ceiling, so "no root" means `repoRoot` holds no workspace marker.
-  const packages = yield* discovery.listPackages.pipe(
+  return yield* discovery.listPackages.pipe(
     Effect.catchTag("WorkspaceRootNotFoundError", () => Effect.succeed(A.empty<WorkspacePackage>()))
   );
-  return A.filter(packages, (pkg) => !isUnderGeneratedDirectory(pkg));
 });
 
 /**

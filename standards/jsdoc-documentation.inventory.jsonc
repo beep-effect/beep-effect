@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T22:42:36.210Z",
+  "generatedAt": "2026-10-31T23:21:18.943Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -313812,8 +313812,8 @@
           "exportKind": "namespace",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 529,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-529-workspacediscoveryoptions",
+          "line": 552,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-552-workspacediscoveryoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -313834,8 +313834,8 @@
           "exportKind": "interface",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 546,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-546-workspacediscoveryshape",
+          "line": 569,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-569-workspacediscoveryshape",
           "currentTags": [
             "@public",
             "@category",
@@ -313857,8 +313857,8 @@
           "exportKind": "class",
           "filePath": "src/WorkspaceDiscovery.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
-          "line": 662,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-662-workspacediscovery",
+          "line": 685,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacediscovery-ts-685-workspacediscovery",
           "currentTags": [
             "@public",
             "@category",
