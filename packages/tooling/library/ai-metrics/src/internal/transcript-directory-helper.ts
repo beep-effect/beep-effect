@@ -11,6 +11,7 @@ export const transcriptDirectoryHelper = `
 import json, os, stat, sys
 root, max_depth, max_entries = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 stack = []
+skipped = False
 
 def emit(kind, relative=""):
     print(json.dumps({"kind": kind, "relative": relative}, ensure_ascii=True), flush=True)
@@ -64,14 +65,20 @@ try:
             if len(stack) >= max_depth:
                 emit("overflow")
                 break
-            enter(entry.path)
+            try:
+                enter(entry.path)
+            except OSError:
+                # An unreadable child keeps the root incomplete without hiding readable siblings.
+                skipped = True
+                emit("other")
+                continue
             emit("directory")
         elif entry.is_file(follow_symlinks=False):
             emit("file", relative)
         else:
             emit("other")
     else:
-        emit("complete")
+        emit("unavailable" if skipped else "complete")
 except ValueError:
     emit("changed")
 except (OSError, UnicodeError):

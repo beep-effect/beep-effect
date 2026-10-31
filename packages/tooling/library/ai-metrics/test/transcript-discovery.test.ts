@@ -236,6 +236,33 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
   )
 );
 it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("keeps scanning readable siblings past an unreadable child and marks the root incomplete", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      for (const child of ["a-blocked", "m-open", "z-open"]) {
+        yield* f.fs.makeDirectory(`${f.dir}/${child}`);
+        yield* f.fs.writeFileString(`${f.dir}/${child}/rollout-${child}.jsonl`, line);
+      }
+      const d = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({ ...f.input([f.dir]), maxEntries: 64, maxFiles: 32 })
+      );
+      yield* Effect.acquireUseRelease(
+        f.fs.chmod(`${f.dir}/a-blocked`, 0),
+        () =>
+          Effect.gen(function* () {
+            const result = yield* d.next;
+            expect(result.report.roots[0]?.state).toBe("unavailable");
+            expect(A.map(result.sources, (source) => source.path).sort()).toEqual([
+              `${f.dir}/m-open/rollout-m-open.jsonl`,
+              `${f.dir}/z-open/rollout-z-open.jsonl`,
+            ]);
+          }),
+        () => f.fs.chmod(`${f.dir}/a-blocked`, 0o700)
+      );
+    })
+  )
+);
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("closes owned helper processes with its scope and rejects reopening", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
