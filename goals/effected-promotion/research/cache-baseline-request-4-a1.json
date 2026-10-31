@@ -1,5 +1,5 @@
 {
-  "previous": "d9376177110c2e43f810b16b9658cb546b0205fb2677bd58dc2bf5d425506e9e",
+  "previous": "1b8a9e66553c922ce33218a24bcd1ceeb2fae2aafbd2c82fe3bbca1521d93af6",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion 4-A1, refactor/qas-discovery-workspace-kit)",
     "reason": "Record the @beep/repo-cli manifest edit that adds the @beep/repo-workspaces workspace dependency for the QAS discovery adoption (map site #143); the task graphs gain only repo-workspaces build/transit, and the policy-tool fingerprint closure gains that one package, as measured in the review; no qualification is granted.",
