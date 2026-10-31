@@ -5,13 +5,11 @@
  * @since 0.0.0
  */
 
-/// <reference path="./markdown-toc.d.ts" />
-
 import chalk from "@beep/chalk";
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { MarkdownToc } from "@beep/markdown/MarkdownToc";
 import { FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
-import markdownToc from "@effect/markdown-toc";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
@@ -748,13 +746,56 @@ const getModuleMarkdownOutputPath = Effect.fn("getModuleMarkdownOutputPath")(fun
   return path.normalize(path.join(config.outDir, "modules", `${modulePath}.md`));
 });
 
+/**
+ * Renders the table of contents of one printed module page through
+ * `MarkdownToc.render`, attributing a parse failure to the module.
+ *
+ * **Details**
+ *
+ * `MarkdownToc.render` fails with a `MarkdownParseError` when the printed
+ * module exceeds the parser's nesting depth guard (for example a JSDoc
+ * description holding a 300-deep blockquote). The kit error names no module,
+ * so this wrapper maps it to a `DocgenError` whose message carries the
+ * module path and the kit diagnostic, the way `createExamplesTsConfigJson`
+ * attributes its encoding failures.
+ *
+ * **Example** (A failing module names its path)
+ *
+ * ```ts
+ * import * as Core from "@beep/repo-docgen/Core"
+ * import * as Effect from "effect/Effect"
+ * import * as Str from "effect/String"
+ *
+ * const tooDeep = `${Str.repeat(300)(">")} foo\n`
+ * const program = Core.renderModuleToc(["src", "Deep.ts"], tooDeep).pipe(
+ *   Effect.flip,
+ *   Effect.map((error) => error.message.includes("src/Deep.ts"))
+ * )
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renderModuleToc = Effect.fn("Core.renderModuleToc")(function* (
+  modulePath: ReadonlyArray<string>,
+  moduleContent: string
+) {
+  return yield* MarkdownToc.render(moduleContent, { bullet: "-" }).pipe(
+    Effect.mapError((cause) =>
+      Domain.DocgenError.make({
+        message: `[Core.renderModuleToc] Failed to render the table of contents of '${A.join(modulePath, "/")}'\n${String(cause)}`,
+      })
+    )
+  );
+});
+
 const getModuleMarkdownFiles = (modules: ReadonlyArray<Domain.Module>) =>
   Effect.forEach(
     modules,
     Effect.fnUntraced(function* (module, index) {
       const outputPath = yield* getModuleMarkdownOutputPath(module);
       const moduleContent = yield* Printer.printModule(module);
-      const toc = markdownToc(moduleContent, { bullets: "-" }).content;
+      const toc = yield* renderModuleToc(module.path, moduleContent);
       const frontMatter = Printer.printFrontMatter(module, index + 1);
       const content = pipe(
         `${frontMatter}\n\n${moduleContent}`,

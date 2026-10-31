@@ -27,7 +27,6 @@
     "@effect/ai-openai": "4.1.0",
     "@effect/atom-react": "4.1.0",
     "@effect/doctest": "4.1.0",
-    "@effect/markdown-toc": "0.1.0",
     "@effect/openapi-generator": "4.1.0",
     "@effect/opentelemetry": "4.1.0",
     "@effect/platform-browser": "4.1.0",
