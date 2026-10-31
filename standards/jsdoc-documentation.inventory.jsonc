@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T19:21:32.626Z",
+  "generatedAt": "2026-10-31T20:59:09.698Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -59304,8 +59304,8 @@
           "exportKind": "class",
           "filePath": "src/MarkdownFence.ts",
           "repoPath": "packages/foundation/modeling/markdown/src/MarkdownFence.ts",
-          "line": 152,
-          "anchor": "packages-foundation-modeling-markdown-src-markdownfence-ts-152-markdownfence",
+          "line": 156,
+          "anchor": "packages-foundation-modeling-markdown-src-markdownfence-ts-156-markdownfence",
           "currentTags": [
             "@public",
             "@category",

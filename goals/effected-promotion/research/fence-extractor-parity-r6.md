@@ -8,17 +8,18 @@ Recorded 2026-10-31 for roadmap PR R6 of `goals/effected-promotion` (map site
 ## The W4-q gate
 
 W4-q keeps R6 in the packet only if the `@beep/markdown` code-node-span
-extension stays under about 400 lines. As built (commits `92a85ef710` and the
-class example added at content-final):
+extension stays under about 400 lines. As built (commits `92a85ef710`, the
+class example added at content-final, and the fenced-node guard and
+constructed-fence test that bring `MarkdownFence.ts` to 100% branch coverage):
 
 | Part | Lines |
 | --- | --- |
-| `src/MarkdownFence.ts` (`CodeFence` schema, `MarkdownFence.fences`, JSDoc) | 184 |
+| `src/MarkdownFence.ts` (`CodeFence` schema, `MarkdownFence.fences`, JSDoc) | 185 |
 | `Code.unterminated` (schema key, encoded type, docs) in `src/internal/nodes.ts` | 9 |
 | the parser flag (`internal/blocks/code.ts`, `internal/blockTypes.ts`) | 5 |
 | `src/index.ts` barrel export and module note | 3 |
-| `test/MarkdownFence.test.ts` | 143 |
-| total | 344 |
+| `test/MarkdownFence.test.ts` | 164 |
+| total | 366 |
 
 The gate passes, so R6 adopts rather than defers.
 
