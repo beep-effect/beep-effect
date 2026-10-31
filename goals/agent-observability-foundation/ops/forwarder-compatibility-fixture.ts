@@ -8,12 +8,25 @@ import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 
 const root = process.argv[2];
-const old = await import(process.argv[3]);
+const previousModulePath = process.argv[3];
 if (!root || !root.includes("forwarder-compatibility-")) throw new Error("Owned synthetic root required");
-const fields = {
+if (!previousModulePath) throw new Error("Previous forwarder module required");
+const old = S.decodeUnknownSync(
+  S.Struct({
+    AiMetricsForwarderInput: S.declare<typeof AiMetricsForwarderInput>(
+      (value): value is typeof AiMetricsForwarderInput => P.hasProperty(value, "make") && P.isFunction(value.make)
+    ),
+    runAiMetricsForwarder: S.declare<typeof runAiMetricsForwarder>((value): value is typeof runAiMetricsForwarder =>
+      P.isFunction(value)
+    ),
+  })
+)(await import(previousModulePath));
+const fields = AiMetricsForwarderInput.make({
   homeDir: `${root}/home`,
   repoRoot: `${root}/repo`,
   dataRoot: O.some(`${root}/data`),
@@ -25,7 +38,8 @@ const fields = {
   maxFiles: 1,
   parquetExportMode: "none",
   target: "local",
-};
+});
+const countRow = S.Tuple([S.Struct({ n: S.Int.check(S.isGreaterThanOrEqualTo(0)) })]);
 const db = DuckDb.makeNodeLayer(
   DuckDbConnectionOptions.make({ databasePath: `${root}/data/derived/ai-metrics.duckdb` })
 );
@@ -36,12 +50,16 @@ const result = await Effect.runPromise(
     const before = yield* database.query(
       "SELECT scope_id,cursor_hash FROM ai_metrics_discovery_cursors ORDER BY scope_id"
     );
-    const records = yield* database.query("SELECT CAST(COUNT(*) AS INTEGER) AS n FROM ai_metrics_source_files");
+    const records = yield* S.decodeUnknownEffect(countRow)(
+      yield* database.query("SELECT CAST(COUNT(*) AS INTEGER) AS n FROM ai_metrics_source_files")
+    );
     const previous = yield* old.runAiMetricsForwarder(old.AiMetricsForwarderInput.make(fields));
     const after = yield* database.query(
       "SELECT scope_id,cursor_hash FROM ai_metrics_discovery_cursors ORDER BY scope_id"
     );
-    const retained = yield* database.query("SELECT CAST(COUNT(*) AS INTEGER) AS n FROM ai_metrics_source_files");
+    const retained = yield* S.decodeUnknownEffect(countRow)(
+      yield* database.query("SELECT CAST(COUNT(*) AS INTEGER) AS n FROM ai_metrics_source_files")
+    );
     if (
       first.sourceFileCount !== 1 ||
       previous.sourceFileCount !== 1 ||

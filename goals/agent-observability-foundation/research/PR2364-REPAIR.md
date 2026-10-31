@@ -225,3 +225,36 @@ pass separately under Node 22 and Bun 1.4.4. See the
 [scoped repair receipt](../ops/history/http-layer-repair-proof-20261031.json).
 The inherited Fallow graph/writer complexity belongs to consolidated main repair
 PR2399; this delivery consumes accepted main rather than creating a second repair.
+
+## Accepted lazy dispatch and goal-script compiler integration
+
+Accepted main e733 adds lazy command dispatch and a compiler gate for goal
+operation scripts. The new gate found nine errors in the synthetic forwarder
+rollback fixture. The repair validates the required historical-module argument
+and callable capabilities, constructs a typed input, and decodes each count query
+as exactly one nonnegative-integer row. Every prior compatibility assertion,
+execution order, dependency layer and result measurement remains intact.
+
+The whole goal-script compiler passes. A fresh formatted-fixture replay uses an
+actual synthetic Git root and fresh storage: one current and one historical
+selection, one unchanged cursor row, source rows increased from 1 to 2. The old forwarder blob is
+verified against its recorded Git SHA; only 15 relative import specifiers bind
+current dependencies. This qualifies file-local compatibility with current
+dependencies, not an entire historical binary or dependency rollback. Earlier
+roots, databases, results and receipts remain preserved.
+
+The full CLI source/scripts/tests check and 35 selected Node tests pass, covering
+observation deployment, managed observation, dispatch, goal-script reachability
+and the Unix-socket shim. Canonical JSDoc remains 183 packages / 97 open exports. The incoming
+root cache seals already match, so only the reviewed AI-metrics dependency
+subject is re-recorded: 8 projections, 188 other reviews preserved, zero audit blocks
+and no qualification/cache-flag change. A host-reserve stop left an empty mutex;
+the exact terminated owned writer, absent live writers and unchanged baseline
+were inspected before its mutex was quarantined. Interrupted and declined
+attempts remain incomplete. See the
+[integration receipt](../ops/history/e733-integration-proof-20261031.json).
+
+Neither operation fixture belongs to the accepted 88/87 canary source sets; every
+bound source still matches. Production collector state and recovery hold stay
+unchanged. Final-head hosted results, review/window, merge and canonical goal
+completion remain required.

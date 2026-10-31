@@ -368,3 +368,25 @@ green. The coordinator assigned the shared repair to G1/PR2405. Consume accepted
 main once, rerun the actual census, and preserve the failed diagnostic instead
 of weakening isolation or opening a competing unblocker. See the
 [scoped integration receipt](../ops/history/post-main-runtime-proof-20261031.json).
+
+## Interrupted writer ownership needs a durable receipt — 2026-10-31
+
+A host-reserve stop interrupted the qualification writer before its atomic
+baseline replacement. The old baseline stayed byte-identical, but the empty
+writer mutex remained. A retry correctly refused it. Inspection confirmed the
+exact owned unit was terminated, no matching writer was live and the baseline
+was unchanged; its empty mutex was then quarantined with a private inspection
+receipt before the successful retry. No concurrent writer or ledger was changed.
+A future canonical recovery operation should bind mutex ownership to process
+start/nonce and expose inspection plus an observation-bound recovery receipt,
+so routine recovery can preserve provenance without guessing or deleting locks.
+
+## Frozen fixture scripts still benefit from compilation — 2026-10-31
+
+The accepted goals-ops compiler found nine errors in a previously executed
+rollback fixture: an unchecked module argument, widened literal inputs, unknown
+Effect context and unchecked nullable count rows. Capability validation and an
+exact count-row schema retain its original assertions while checking those
+boundaries. Fresh synthetic execution preserves the original measurements.
+Compile the proof scripts before running them, and validate a positive Git root
+in preparation; a directory name alone is not root qualification.
