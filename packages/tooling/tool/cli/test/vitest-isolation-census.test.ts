@@ -11,10 +11,12 @@ import * as Str from "effect/String";
 const leakPatterns = [
   /process\.chdir\(/,
   /\b(?:temporaryWorkingDirectory|withTempWorkingDirectory)\b/,
-  /^\s*process\.(?!exitCode\b)[A-Za-z_$][\w$]*\s*=(?!=)/m,
-  /\bvi\.spyOn\(process,\s*"cwd"\)/,
+  // Any reassignment, anywhere on a line; `exitCode` only appears in child-process scripts.
+  /(?<![\w$.])process\.(?!exitCode\b|env\b)[A-Za-z_$][\w$]*\s*=(?!=)/,
+  /(?<![\w$.])globalThis\.[A-Za-z_$][\w$]*\s*=(?!=)/,
+  /\bObject\.defineProperty\(\s*(?:process|globalThis)\b/,
+  /\bvi\.spyOn\(\s*process\s*,/,
   /\bvi\.(?:mock|doMock|stubGlobal|stubEnv)\(/,
-  /^\s*globalThis\.[A-Za-z_$][\w$]*\s*=(?!=)/m,
   /process\.env(?:\.[A-Za-z_$][\w$]*|\[[^\]]+\])\s*=(?!=)/,
   /\bdelete\s+process\.env\b/,
 ];

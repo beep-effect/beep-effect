@@ -12,8 +12,8 @@ instead of one serial, isolated run:
 
 | Project | Files | `isolate` | Workers |
 | --- | --- | --- | --- |
-| `shared` | 304 | `false` (one worker evaluates many files) | parallel |
-| `isolated` | 83 | `true` (fresh worker per file) | parallel |
+| `shared` | 305 | `false` (one worker evaluates many files) | parallel |
+| `isolated` | 85 | `true` (fresh worker per file) | parallel |
 
 Both share the root `maxWorkers = min(8, availableParallelism - 1)`. Tests
 inside one file stay sequential (`sequence.concurrent: false`). Doctest mode and
@@ -27,15 +27,20 @@ longer matches:
 
 | Hazard | Pattern | Files |
 | --- | --- | --- |
-| Working directory | `process.chdir`, `temporaryWorkingDirectory` / `withTempWorkingDirectory` (`test/support/CommandTest.ts`), `process.<name> =` (`cwd`, `argv`), `vi.spyOn(process, "cwd")` | 64 |
+| Process state | `process.chdir`, `temporaryWorkingDirectory` / `withTempWorkingDirectory` (`test/support/CommandTest.ts`), any `process.<name> =` (`cwd`, `argv`, ...), `vi.spyOn(process, ...)`, `Object.defineProperty(process, ...)` | 66 |
 | Module mocks | `vi.mock`, `vi.doMock` | 6 |
-| Global and env stubs | `vi.stubGlobal`, `vi.stubEnv`, top-level `globalThis.<name> =` | 13 |
+| Global and env stubs | `vi.stubGlobal`, `vi.stubEnv`, `globalThis.<name> =`, `Object.defineProperty(globalThis, ...)` | 14 |
 | Env writes | `process.env.<NAME> =`, `delete process.env.<NAME>` | 2 |
 
-(Files can match more than one row; 83 files in total.) The first grep census
-missed 7 files that swap `process.cwd` (a `process.cwd = () => root` getter or
-`vi.spyOn(process, "cwd")`) instead of calling `chdir`; the guard test caught
-them.
+(Files can match more than one row; 85 files in total, counted on `main` at
+b30cd9e6dd.) The first grep census missed 7 files that swap `process.cwd` (a
+`process.cwd = () => root` getter or `vi.spyOn(process, "cwd")`) instead of
+calling `chdir`; the guard test caught them. Review on #2395 then widened the
+patterns to any mid-line reassignment, any `vi.spyOn(process, ...)` and
+`Object.defineProperty`, which added `process-identity` (spies on
+`process.kill`) and `research-library-views` (a `globalThis.pwned=` inside an
+XSS fixture string, a harmless false positive). The timings below ran with 83
+isolated files.
 
 The isolated project runs its files in parallel, not serially as the PLAN row
 first said: each file gets its own forked worker, so a `chdir` or stub cannot

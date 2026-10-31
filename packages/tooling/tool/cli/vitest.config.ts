@@ -9,9 +9,10 @@ import shared, { fcDeepSweepActive, packageTestTimeout, vitestDoctestActive } fr
  *
  * The list is a census, not a guess: `test/vitest-isolation-census.test.ts` scans every test file
  * for the hazards below and fails when a match is missing here or an entry no longer matches.
- * - cwd and argv: `process.chdir`, directly or through `temporaryWorkingDirectory` /
- *   `withTempWorkingDirectory` from `test/support/CommandTest.ts`; `process.<name> =`
- *   reassignment (`cwd`, `argv`); `vi.spyOn(process, "cwd")`
+ * - process state: `process.chdir`, directly or through `temporaryWorkingDirectory` /
+ *   `withTempWorkingDirectory` from `test/support/CommandTest.ts`; any `process.<name> =`
+ *   reassignment (`cwd`, `argv`, ...); `vi.spyOn(process, ...)`;
+ *   `Object.defineProperty(process | globalThis, ...)`
  * - module mocks: `vi.mock`, `vi.doMock`
  * - global and env stubs: `vi.stubGlobal`, `vi.stubEnv`, `globalThis.<name> =`
  * - env writes: `process.env.<NAME> =`, `delete process.env.<NAME>`
@@ -78,11 +79,13 @@ const isolatedSuites = [
   "test/native-runtime.test.ts",
   "test/observability-catalog.test.ts",
   "test/package-verify.test.ts",
+  "test/process-identity.test.ts",
   "test/proof-job.test.ts",
   "test/quality-command-dispatch.test.ts",
   "test/quality-tasks.test.ts",
   "test/reflection-lint.test.ts",
   "test/research-library-acquisition.test.ts",
+  "test/research-library-views.test.ts",
   "test/reviewer-bootstrap.test.ts",
   "test/schema-catalog.test.ts",
   "test/schema-first-parity.test.ts",
