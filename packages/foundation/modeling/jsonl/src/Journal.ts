@@ -1460,10 +1460,11 @@ const makeEngine: {
         yield* (yield* exists) ? followJournal : watchForCreation;
         immediateCompletions = consumed === startedAt ? immediateCompletions + 1 : 0;
         if (immediateCompletions > MAX_IMMEDIATE_REARMS) {
-          yield* Effect.logWarning("Journal watcher stopped after immediate completions").pipe(
+          // Returned in one statement: the log line is the observable stop, so
+          // nothing may remain to run after it.
+          return yield* Effect.logWarning("Journal watcher stopped after immediate completions").pipe(
             Effect.annotateLogs({ path: config.path, rearms: immediateCompletions })
           );
-          return;
         }
       }
     });
