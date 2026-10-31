@@ -22,8 +22,8 @@ adaface-cpu = [
 ]
 
 [tool.uv]
-# Reproducible security pins for transitive transport, trust roots and image decoding.
-constraint-dependencies = ["urllib3==2.8.0", "certifi==2026.10.19", "pillow==13.0.0"]
+# Reproducible security pins for transport, trust roots, image decoding and tooling.
+constraint-dependencies = ["urllib3==2.8.0", "certifi==2026.10.19", "pillow==13.0.0", "filelock==4.2.5", "setuptools==84.2.1"]
 conflicts = [
   [
     { extra = "adaface" },

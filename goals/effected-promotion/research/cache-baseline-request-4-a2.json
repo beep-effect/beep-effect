@@ -1,5 +1,5 @@
 {
-  "previous": "1925e9340d0698c084b0a381ffb3b355616155f0da0eb08dd69ed0ab7eade6aa",
+  "previous": "921f97055f51a6e6117576e7929b872b7f1de1122ed7315b2083352a7aa7a119",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion 4-A2, refactor/workspace-patterns-leaf-adoption)",
     "reason": "Record the root policy-fingerprint seals after the 4-A2 source move: internal/patterns.ts becomes the public WorkspacePatterns leaf (six seals swap that one input path) and TsconfigSync now reads its patterns through it, so the tsconfig-sync seal gains repo-workspaces and @beep/yaml sources, as measured in the review; no manifest changes and no qualification is granted.",

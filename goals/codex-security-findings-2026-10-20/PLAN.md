@@ -4,19 +4,15 @@
 
 Status: `active`.
 
-PR [#1930](https://github.com/beep-effect/beep-effect/pull/1930) is published; the parent-confirmed remote head is
-`02b5bd3f47`. It contains the eight Cloud remediations and scoped remediation for
-all 123 captured Dependabot alerts. PR #1928 merged at
-`426d494b3433ccddf797a2d896984f1ad23c81ad`; its execution hold is released.
-Focused regressions, dependency/runtime proof and affected package receipts
-are recorded in `research/`. Hosted checks and review remain in progress.
-The initial-head coverage gap now has additional tests and passing local proof
-(205 tests across 15 files); see `research/law-practice-coverage-proof.md`.
-Coverage baselines and security controls remain unchanged. The consolidated
-repair still requires publication and exact-next-head hosted proof.
-
-No Cloud or Dependabot status has been changed. Merge, merged-revision proof
-and exact-ID external closure remain mandatory; lifecycle stays `active`.
+The original eight Cloud findings and 123 dependency alert IDs are resolved:
+all eight Cloud IDs are Fixed, 121 dependency alerts are fixed, and two are
+explicitly withdrawn. Original remediation merged in PR #1930; the seven
+linked October 28 Cloud findings merged in PR #2333 and are also Fixed.
+Final reconciliation and 20 supplemental dependency fixes are published in
+PR [#2389](https://github.com/beep-effect/beep-effect/pull/2389).
+See [current evidence](research/2026-10-31-revalidation.md). The remaining
+acceptance work is the final PR's hosted readiness, merge, supplemental alert
+closure, and derived completion receipts for both packets.
 
 ## Phases
 
@@ -54,19 +50,17 @@ git diff --check -- goals/codex-security-findings-2026-10-20
 
 ## Expanded dependency work
 
-All 123 captured alert IDs in `ops/dependabot.json` remain in scope, alongside
-and separate from the eight complete `commit:` Cloud identities. Scoped
-fixture, Python and Rust remediation/proof is recorded and published in PR
-#1930. Hosted coverage repair passed locally; use one consolidated next push and
-retain the current baselines. No externally open alert is declared resolved.
+All 123 captured alert IDs in `ops/dependabot.json` have been revalidated as
+resolved, separately from the eight Cloud identities. Twenty additional
+Dependency alerts (#450–#469) are tracked in the October 28 packet and fixed
+by PR #2389; their external closure remains post-merge.
 
 ## Closeout ordering
 
-P4 records implementation and scoped regression proof, not external closure.
-P5/P7 stay in progress while the locally passing coverage repair awaits publication and next-head checks
-remain pending. P6 records actual publication; it does not imply readiness or merge.
-P8 requires the merged revision plus observed closure for all eight Cloud IDs
-and 123 Dependabot IDs. P9 remains pending: the existing same-PR reflection is
-interim, and the final reflection/addendum and lifecycle flip land together
-only after the acceptance criteria are actually satisfied. Do not pre-flip
-completion merely to satisfy the same-PR documentation convention.
+The original remediation and external closure are complete. P5/P7 represent
+final reconciliation proof for PR #2389. P8 also includes the supplemental
+dependency merge and external closure; publication alone does not satisfy it.
+P9 records final exact-ID evidence and runs `goals completion refresh` after
+merge. The manifest's prospective closeout derives `completed-retained` from
+verified head-bound acceptance evidence; do not prematurely flip its declared
+active status. The October 31 reflection is retained with this final PR.
