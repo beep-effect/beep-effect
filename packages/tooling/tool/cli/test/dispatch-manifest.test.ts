@@ -39,19 +39,21 @@ const helpFields = (command: {
 });
 
 // Run a root with argv and return everything it logged, so two roots can be compared byte for byte.
-const renderedOutput = (root: Command.Command<string, {}, {}, never, never>, argv: ReadonlyArray<string>) =>
-  Effect.gen(function* () {
-    const logged = A.length(yield* TestConsole.logLines);
-    const errored = A.length(yield* TestConsole.errorLines);
-    yield* Command.runWith(root, { version: "0.0.0" })(argv).pipe(Effect.ignore);
-    const lines = A.appendAll(
-      A.drop(yield* TestConsole.logLines, logged),
-      A.drop(yield* TestConsole.errorLines, errored)
-    );
-    return A.join(A.filter(lines, P.isString), "\n");
-  });
+const renderedOutput = Effect.fnUntraced(function* <Name extends string>(
+  root: Command.Command<Name, {}, {}, never, never>,
+  argv: ReadonlyArray<string>
+) {
+  const logged = A.length(yield* TestConsole.logLines);
+  const errored = A.length(yield* TestConsole.errorLines);
+  yield* Command.runWith(root, { version: "0.0.0" })(argv).pipe(Effect.ignore);
+  const lines = A.appendAll(
+    A.drop(yield* TestConsole.logLines, logged),
+    A.drop(yield* TestConsole.errorLines, errored)
+  );
+  return A.join(A.filter(lines, P.isString), "\n");
+});
 
-const realRoot = rootCommand as Command.Command<string, {}, {}, never, never>;
+const realRoot = rootCommand;
 
 describe("lazy dispatch manifest", () => {
   it("registers every group of the real command tree, in root help order", () => {
@@ -78,23 +80,27 @@ describe("lazy dispatch manifest", () => {
       });
     })
   );
+});
 
-  it.effect("renders root help and every group's help identically to the eager tree", () =>
-    Effect.gen(function* () {
-      expect(yield* renderedOutput(makeRootCommand(HashMap.empty()), ["--help"])).toBe(
-        yield* renderedOutput(realRoot, ["--help"])
-      );
-      expect(yield* renderedOutput(makeRootCommand(HashMap.empty()), ["no-such-group"])).toBe(
-        yield* renderedOutput(realRoot, ["no-such-group"])
-      );
-      for (const real of realGroups) {
-        const lazyRoot = makeRootCommand(HashMap.make([real.name, real]));
-        expect(yield* renderedOutput(lazyRoot, [real.name, "--help"]), `beep ${real.name} --help`).toBe(
-          yield* renderedOutput(realRoot, [real.name, "--help"])
+it.layer(NodeServices.layer)((it) => {
+  describe("lazy dispatch help rendering", () => {
+    it.effect("renders root help and every group's help identically to the eager tree", () =>
+      Effect.gen(function* () {
+        expect(yield* renderedOutput(makeRootCommand(HashMap.empty()), ["--help"])).toBe(
+          yield* renderedOutput(realRoot, ["--help"])
         );
-      }
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), Effect.provide(NodeServices.layer))
-  );
+        expect(yield* renderedOutput(makeRootCommand(HashMap.empty()), ["no-such-group"])).toBe(
+          yield* renderedOutput(realRoot, ["no-such-group"])
+        );
+        for (const real of realGroups) {
+          const lazyRoot = makeRootCommand(HashMap.make([real.name, real]));
+          expect(yield* renderedOutput(lazyRoot, [real.name, "--help"]), `beep ${real.name} --help`).toBe(
+            yield* renderedOutput(realRoot, [real.name, "--help"])
+          );
+        }
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });
 
 describe("argv-first dispatch target", () => {
