@@ -1854,46 +1854,6 @@
       "reason": "Per-source compiler operation context: ts-morph node identities, WeakMap and MutableHashMap caches, and a lexical binding resolver closure are live handles created by collectEffectVitestImports. They are neither decoded nor persisted and must retain identity for one immutable parse-tree pass; the emitted finding, census and graph data have annotated schemas."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
-      "symbol": "PolicyCliLayout",
-      "kind": "exported-interface",
-      "status": "candidate",
-      "owner": "@beep/repo-cli",
-      "reason": "Exported pure-data interface should be modeled as an annotated schema."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
-      "symbol": "PolicyClosure",
-      "kind": "exported-interface",
-      "status": "candidate",
-      "owner": "@beep/repo-cli",
-      "reason": "Exported pure-data interface should be modeled as an annotated schema."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
-      "symbol": "PolicyCommandNode",
-      "kind": "exported-interface",
-      "status": "candidate",
-      "owner": "@beep/repo-cli",
-      "reason": "Exported pure-data interface should be modeled as an annotated schema."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
-      "symbol": "PolicyGraphOptions",
-      "kind": "exported-interface",
-      "status": "candidate",
-      "owner": "@beep/repo-cli",
-      "reason": "Exported pure-data interface should be modeled as an annotated schema."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
-      "symbol": "PolicyWorkspace",
-      "kind": "exported-interface",
-      "status": "candidate",
-      "owner": "@beep/repo-cli",
-      "reason": "Exported pure-data interface should be modeled as an annotated schema."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
       "symbol": "CodexCacheEntry",
       "kind": "object-struct-schema",
