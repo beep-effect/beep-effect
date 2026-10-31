@@ -156,6 +156,34 @@ describe("Git", () => {
         assert.deepStrictEqual(result, O.none());
       })
     );
+
+    it.effect("classifies the first fatal path diagnostic after warnings", () =>
+      Effect.gen(function* () {
+        for (const diagnostic of [
+          "fatal: path 'missing.txt' does not exist in 'HEAD'\n",
+          "fatal: path 'unknown revision' exists on disk, but not in 'HEAD'\n",
+          "fatal: path 'prefix\nnot a git repository' does not exist in 'HEAD'\n",
+        ]) {
+          const result = yield* run(
+            Effect.flatMap(Git, (git) => git.show(cwd, "HEAD", "missing.txt")),
+            () => ({ stderr: `warning: core.fsyncObjectFiles is deprecated\n${diagnostic}`, exit: 128 })
+          );
+          assert.deepStrictEqual(result, O.none());
+        }
+      })
+    );
+
+    it.effect("keeps an invalid ref whose later lines imitate a missing path as an error", () =>
+      Effect.gen(function* () {
+        const stderr =
+          "warning: configuration warning\nfatal: invalid object name 'missing\nfatal: path 'spoof' does not exist in 'HEAD''\n";
+        const failure = yield* run(
+          Effect.flatMap(Git, (git) => git.show(cwd, "missing", "a.txt")),
+          () => ({ stderr, exit: 128 })
+        ).pipe(Effect.flip);
+        assert.instanceOf(failure, UnknownRefError);
+      })
+    );
   });
 
   describe("lsTree", () => {

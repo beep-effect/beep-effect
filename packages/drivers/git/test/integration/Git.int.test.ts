@@ -210,6 +210,36 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       })
     );
 
+    it.effect("show recognizes missing paths after Git configuration warnings", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        yield* Effect.acquireUseRelease(
+          runFixtureGit(fixture.dir, ["config", "--local", "core.fsyncObjectFiles", "true"]),
+          () =>
+            Effect.gen(function* () {
+              const raw = yield* runCollected(
+                ChildProcess.setCwd(
+                  ChildProcess.make("git", ["show", `${fixture.commit1}:missing.txt`], {
+                    env: FIXTURE_ENV,
+                    extendEnv: true,
+                  }),
+                  fixture.dir
+                )
+              );
+              assert.strictEqual(raw.exitCode, 128);
+              assert.isTrue(Str.startsWith("warning: core.fsyncObjectFiles is deprecated")(raw.stderr));
+              assert.isTrue(Str.includes("\nfatal: path 'missing.txt' does not exist in")(raw.stderr));
+              yield* Effect.forEach(
+                ["missing.txt", "unknown revision", "prefix\nnot a git repository"],
+                (path) => git.show(fixture.dir, fixture.commit1, path).pipe(Effect.map(assertNone)),
+                { discard: true }
+              );
+            }),
+          () => runFixtureGit(fixture.dir, ["config", "--local", "--unset", "core.fsyncObjectFiles"])
+        );
+      })
+    );
+
     it.effect("show keeps diagnostic-like missing filenames in the absent-at-ref case", () =>
       Effect.gen(function* () {
         const git = yield* Git;
@@ -240,8 +270,10 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
     it.effect("show does not turn an invalid ref containing absence wording into a missing file", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        const failure = yield* git.show(fixture.dir, "does not exist in", "a.txt").pipe(Effect.flip);
-        assert.instanceOf(failure, UnknownRefError);
+        for (const ref of ["does not exist in", "missing\nfatal: path 'spoof' does not exist in 'HEAD'"]) {
+          const failure = yield* git.show(fixture.dir, ref, "a.txt").pipe(Effect.flip);
+          assert.instanceOf(failure, UnknownRefError);
+        }
       })
     );
 

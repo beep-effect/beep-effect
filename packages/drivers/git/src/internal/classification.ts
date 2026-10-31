@@ -10,6 +10,7 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
@@ -179,7 +180,13 @@ const classifyMerge = ({ stderr, stdout }: Collected): Classified | undefined =>
 /** The method-specific classification rows; `undefined` falls through to the generic failure. */
 const KIND_ROWS: { readonly [K in ClassifyKind]: (outcome: Collected) => Classified | undefined } = {
   show: ({ stderr }) =>
-    Str.startsWith("fatal: path '")(stderr) && matchesAny(stderr, ABSENT_AT_REF_PATTERNS)
+    O.exists(Str.search(stderr, /^fatal: /m), (start) => {
+      // Warnings may precede Git's primary fatal diagnostic. Keep its full tail
+      // for newline-bearing filenames, but never select a later fake fatal line
+      // embedded in the quoted text of an earlier invalid-ref diagnostic.
+      const diagnostic = Str.slice(start)(stderr);
+      return Str.startsWith("fatal: path '")(diagnostic) && matchesAny(diagnostic, ABSENT_AT_REF_PATTERNS);
+    })
       ? { _tag: "absent" }
       : undefined,
   refExists: ({ exitCode }) => (exitCode === 1 ? { _tag: "refMissing" } : undefined),
