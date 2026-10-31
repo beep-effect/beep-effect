@@ -403,21 +403,6 @@ const runPilot = Effect.fn("CachePilot.run")(
       A.map(dependencyNodes, (node) => node.id),
       Order.String
     );
-    const census = yield* collectCacheCensus(root);
-    const needsProfile = A.some(
-      census.nodes,
-      (node) =>
-        node.id === identityTask &&
-        O.isSome(node.command) &&
-        A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
-    );
-    const profileObservation = Effect.fn("CachePilot.profileObservation")(function* (guest: string) {
-      return `BIOME_CONFIG_PATH=${yield* hashText(path.join(guest, "biome.identity.jsonc"))}`;
-    });
-    if (needsProfile) {
-      yield* verifyCacheIdentityLintProfile(root);
-      yield* collectCacheTaskSelection(root, ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"]);
-    }
     const context = yield* resolveWorktreeContext(root);
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
@@ -466,6 +451,25 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
     });
     yield* verifyTools();
+    const census = yield* collectCacheCensus(root, O.some(turbo));
+    const needsProfile = A.some(
+      census.nodes,
+      (node) =>
+        node.id === identityTask &&
+        O.isSome(node.command) &&
+        A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
+    );
+    const profileObservation = Effect.fn("CachePilot.profileObservation")(function* (guest: string) {
+      return `BIOME_CONFIG_PATH=${yield* hashText(path.join(guest, "biome.identity.jsonc"))}`;
+    });
+    if (needsProfile) {
+      yield* verifyCacheIdentityLintProfile(root);
+      yield* collectCacheTaskSelection(
+        root,
+        ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"],
+        O.some(turbo)
+      );
+    }
     const runtimeExecutables = { bun, biome, node, turbo, bash: "/usr/bin/bash", sh: "/usr/bin/sh" };
     const reviewedLinker = yield* current.source.toolchain.runtimeLinker.pipe(
       Effect.fromOption(() => CacheCommandError.new("Pilot qualification requires startup library identity."))

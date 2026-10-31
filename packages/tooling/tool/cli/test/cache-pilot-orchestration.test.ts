@@ -816,6 +816,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     request,
     calls,
     preview,
+    census,
     sourceRoots,
     profileMutations,
     privateDirectories,
@@ -883,6 +884,45 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
           expect.arrayContaining(A.map(pair.producer.dependencies, (dependency) => dependency.computation))
         );
       }
+    })
+  );
+  it.effect("uses the verified client census without accepting divergent native inputs", () =>
+    Effect.gen(function* () {
+      const { root, run, request, census } = yield* fixture("none", linker, true);
+      const otherDigest = Sha256Hex.make(Str.repeat(64)("b"));
+      const installedCensus = CacheCensusReport.make({
+        ...census,
+        nodes: A.map(census.nodes, (node) => CacheCensusNode.make({ ...node, inputsDigest: otherDigest })),
+      });
+      const collect = vi
+        .spyOn(Census, "collectCacheCensus")
+        .mockImplementation((_, executable = O.none()) =>
+          Effect.succeed(O.contains(request.executable)(executable) ? census : installedCensus)
+        );
+      const selected = CachePilotRequest.make({ ...request, selection: "controls" });
+      const receipt = yield* run(selected);
+      expect(A.every(receipt.checks, (check) => check.passed)).toBe(true);
+      expect(collect).toHaveBeenCalledWith(root, O.some(request.executable));
+      expect(Census.collectCacheTaskSelection).toHaveBeenCalledWith(
+        root,
+        ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"],
+        O.some(request.executable)
+      );
+      vi.spyOn(Census, "joinCacheCensusPlan").mockReturnValue(Effect.succeed(A.fromIterable(installedCensus.nodes)));
+      const failure = yield* run(selected).pipe(Effect.flip);
+      expect(failure.message).toContain("inputs or configuration differ from the live census");
+    })
+  );
+  it.effect("rejects an executable pin mismatch before collecting native observations", () =>
+    Effect.gen(function* () {
+      const { run, request } = yield* fixture();
+      vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(
+        Effect.succeed(Sha256Hex.make(Str.repeat(64)("b")))
+      );
+      const failure = yield* run(CachePilotRequest.make({ ...request, selection: "controls" })).pipe(Effect.flip);
+      expect(failure.message).toContain("executable differs from its exact content pin");
+      expect(Census.collectCacheCensus).not.toHaveBeenCalled();
+      expect(Census.collectCacheTaskSelection).not.toHaveBeenCalled();
     })
   );
   it.effect("rejects issuer material under either mounted source before native execution", () =>
