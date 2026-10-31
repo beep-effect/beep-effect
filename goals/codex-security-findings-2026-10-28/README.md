@@ -32,8 +32,12 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P2 validate` - all 7 findings are captured and untriaged. Reproduce each
-report at current HEAD, then record a verdict, disposition, and owner surface.
+The fixes for the seven Cloud findings merged in PR #2333 and individually verified Fixed
+on 2026-10-31. The live Cloud view shows zero open findings. Twenty newer
+Dependabot alerts are appended separately in `ops/dependabot.json`; their
+upstream dependency updates, qualification, merge and closure are in progress.
+
+See [current closure evidence](research/2026-10-31-closeout.md).
 
 ## Findings at a glance
 
@@ -55,3 +59,27 @@ Controls and focused regressions are implemented. See
 remaining repository proof, publication, merge and exact-ID closure are pending.
 This supplemental packet is part of the resumed
 [October 20 goal](../codex-security-findings-2026-10-20/GOAL.md).
+
+## Final acceptance — October 31
+
+PR [#2389](https://github.com/beep-effect/beep-effect/pull/2389) contains the
+final dependency remediation and packet reconciliation. Historical source fixes
+remain in merged PRs #1930 and #2333. The
+[closeout reflection](history/reflections/2026-10-31-codex.md) records the current
+qualification and tooling lessons.
+
+The manifest deliberately retains active declared status with prospective
+`completed-retained` closeout. After the final PR merges, exact external alert
+closure and head-bound readiness are verified before `goals completion refresh`
+records the clone-scoped acceptance receipt and derives the retained lifecycle.
+An implementation snapshot showing open dependency alerts is not a closure
+claim; the post-merge receipt is the final evidence.
+
+## Supplemental scanning acceptance — October 31
+
+The broader authenticated inventory also found four stale CodeQL alerts and
+five secret-scanning alerts. Their separate sanitized catalog is
+`ops/scanning.json`, with source validation and exact closure reasons in
+`research/2026-10-31-scanning.md`. All nine must be resolved with evidence,
+without accepted risk, before final completion. Preserve the original seven
+Cloud IDs and twenty dependency IDs.

@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (graft retirement, chore/retire-graft)",
-      "reason": "Record the root turbo.json drift after the retired graft env names and graft/ input exclusions are removed; no qualification is granted.",
+      "reviewer": "GPT-6.1-Sol medium independent dependency review",
+      "reason": "Preserve main retirement and reconcile six root seal closures with current helpers; retain existing cache posture and qualification.",
       "basis": {
-        "path": "docs/reports/graft-retirement/cache-baseline-review.md",
-        "sha256": "047f9af01941510edd3b182ceae76cd75a5355453b23343b06d384d8542e2087"
+        "path": "goals/codex-security-findings-2026-10-28/research/2026-10-31-cache-baseline-main-merge-review.md",
+        "sha256": "1965fce8d84aef470a88805b8ff4e10a35f4edaa789433198ac3081ac3bce443"
       }
     },
     "@beep/acp": {
@@ -3499,7 +3499,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -3822,7 +3821,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -4272,7 +4270,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
             "packages/tooling/tool/cli/src/internal/Codeowners.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -4696,7 +4693,6 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -5469,7 +5465,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
@@ -5761,7 +5756,6 @@
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
             "packages/foundation/modeling/schema/src/Percentage.ts",
-            "packages/foundation/modeling/schema/src/UnitInterval.ts",
             "packages/foundation/modeling/skill-contract/package.json",
             "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
             "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
@@ -5903,12 +5897,12 @@
             "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Aggregate.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocAnalysis.ts",
+            "packages/tooling/tool/cli/src/commands/Docgen/internal/JsDocNodes.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-            "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -5989,7 +5983,6 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
-            "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/PathContainment.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
@@ -133856,7 +133849,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "28bc7d83ec1ffa4b7401fd63364c8be877581535c0fa2487ecf68b630038d1dc"
+        "sha256": "2ebdf15eb9d7965d5318c8e078ac9069c7e827a488d740de056868072a0c29b8"
       }
     ]
   }

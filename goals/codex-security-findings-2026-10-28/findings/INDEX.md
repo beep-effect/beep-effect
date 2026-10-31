@@ -16,13 +16,13 @@ auth values, email addresses, and raw local paths.
 
 | ID | Severity | Status | Title | Owner area |
 | --- | --- | --- | --- | --- |
-| [CSF-001](./CSF-001.md) | Low | implemented; closure pending | Named\-pipe replacement can expose the hub bearer token | pipe-owner |
-| [CSF-002](./CSF-002.md) | Informational | implemented; closure pending | Skill recovery follows symlinked parents outside the repository | skill-containment |
-| [CSF-003](./CSF-003.md) | Informational | implemented; closure pending | Abandoned recovery journals bypass backup path containment | abandoned-backup |
-| [CSF-004](./CSF-004.md) | Informational | implemented; closure pending | Quadratic link\-fragment scan enables repository\-content DoS | link-scanner |
-| [CSF-005](./CSF-005.md) | Informational | implemented; closure pending | Post\-capture settling can delete unarchived worktree changes | post-capture-walker |
-| [CSF-006](./CSF-006.md) | Informational | implemented; closure pending | Underscore\-containing keys bypass new stderr redaction | stderr-redaction |
-| [CSF-007](./CSF-007.md) | Informational | implemented; closure pending | Bridge clients send bearer tokens over non\-loopback plaintext | bridge-transport |
+| [CSF-001](./CSF-001.md) | Low | Fixed | Named\-pipe replacement can expose the hub bearer token | pipe-owner |
+| [CSF-002](./CSF-002.md) | Informational | Fixed | Skill recovery follows symlinked parents outside the repository | skill-containment |
+| [CSF-003](./CSF-003.md) | Informational | Fixed | Abandoned recovery journals bypass backup path containment | abandoned-backup |
+| [CSF-004](./CSF-004.md) | Informational | Fixed | Quadratic link\-fragment scan enables repository\-content DoS | link-scanner |
+| [CSF-005](./CSF-005.md) | Informational | Fixed | Post\-capture settling can delete unarchived worktree changes | post-capture-walker |
+| [CSF-006](./CSF-006.md) | Informational | Fixed | Underscore\-containing keys bypass new stderr redaction | stderr-redaction |
+| [CSF-007](./CSF-007.md) | Informational | Fixed | Bridge clients send bearer tokens over non\-loopback plaintext | bridge-transport |
 
 ## Closeout Mapping
 
@@ -33,4 +33,4 @@ auth values, email addresses, and raw local paths.
 - Record missing detail evidence explicitly and hold unsupported verdicts; the CSV contains Summary only.
 - Accepted risk / `Won't fix` does not satisfy this packet's completion gate.
 
-All seven full reports were reviewed. The captured Cloud state is New; no external status was changed.
+All seven full reports were reviewed. All exact Cloud identities were observed Fixed on 2026-10-31 after merged-revision verification. The live all-repository open view contains zero findings.
