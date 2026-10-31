@@ -1,0 +1,20 @@
+{
+  "previous": "1b8a9e66553c922ce33218a24bcd1ceeb2fae2aafbd2c82fe3bbca1521d93af6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (G4 follow-up, claude/g4-fingerprint-lint-fixes)",
+    "reason": "Re-record the legacy cache posture of the root subject after regenerating six policy fingerprint seals whose inputs moved when later merges changed their command closures; no qualification is granted.",
+    "basis": {
+      "path": "goals/beep-cli-composition/research/g4-cache-baseline-review-3.md",
+      "sha256": "40065ce4e31162554b9db6f556ccf340ed12fa721bfe672a40a2c5e47e3f0510"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
