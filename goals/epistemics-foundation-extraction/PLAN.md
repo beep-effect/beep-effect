@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (closeout PR #2325; #2017 remains historical implementation evidence)
+Status: `in-progress` (closeout PR #2334; #2017 remains historical implementation evidence)
 
 ## Phases
 
@@ -12,7 +12,7 @@ Status: `in-progress` (closeout PR #2325; #2017 remains historical implementatio
 | P1 Implement | complete (2026-10-22) | 1) `bun run beep create-package` for `@beep/epistemics`; 2) move the value modules listed in `SPEC.md` with transitional re-exports; 3) add `ValidInterval`/`KnowledgeInterval` and repoint `EdgeVersion` with a row round-trip test; 4) add the `Claim<P>` and evidence-signal envelopes; 5) repoint every external importer and delete the re-exports. | Acceptance criteria are met. |
 | P2 Verify | complete (2026-10-22) | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | complete (2026-10-22, #2017 merged `ab6000add2`) | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | in-progress: reflection, acceptance audit and private-workspace migration note prepared; PR #2325 must pass hosted readiness and merge verification | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P4 Close | in-progress: reflection, acceptance audit and private-workspace migration note prepared; PR #2334 must pass hosted readiness and merge verification | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Closeout Checklist
 

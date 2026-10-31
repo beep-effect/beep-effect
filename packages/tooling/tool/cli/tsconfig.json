@@ -144,6 +144,9 @@
       "path": "../../../foundation/modeling/utils/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/yaml/tsconfig.json"
+    },
+    {
       "path": "../../library/ai-metrics/tsconfig.json"
     },
     {
@@ -160,6 +163,9 @@
     },
     {
       "path": "../../library/repo-utils/tsconfig.json"
+    },
+    {
+      "path": "../../library/repo-workspaces/tsconfig.json"
     },
     {
       "path": "../../policy-pack/repo-configs/tsconfig.json"

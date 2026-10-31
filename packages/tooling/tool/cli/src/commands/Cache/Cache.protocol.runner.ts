@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -30,12 +29,14 @@ import {
   hashCacheExperimentExecutable,
   readCacheExperimentBytes,
   requireCacheLinuxX64,
+  requireCacheSupervisorCapture,
 } from "./Cache.evidence.ts";
 import { CacheFixtureCredentials, CacheFixtureScenario } from "./Cache.protocol.fixture.schemas.ts";
 import { makeCacheProtocolFixture } from "./Cache.protocol.fixture.ts";
 import {
   CacheProtocolExecution,
   CacheProtocolIsolationRoot,
+  CacheProtocolNativeSummary,
   CacheProtocolReadFailure,
   CacheProtocolRequest,
 } from "./Cache.protocol.runner.schemas.ts";
@@ -43,7 +44,8 @@ import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { validateCacheProtocolExecution } from "./Cache.protocol.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
-const $I = $RepoCliId.create("commands/Cache/Cache.protocol.runner");
+export { CacheProtocolNativeSummary } from "./Cache.protocol.runner.schemas.ts";
+
 const CacheProtocolJson = S.fromJsonString(S.Json);
 
 const cases = CacheProtocolIsolationRoot.fields.case;
@@ -85,41 +87,6 @@ export const cacheProtocolSandboxMounts: ReadonlyArray<string> = [
   "--tmpfs",
   "/tmp",
 ];
-/**
- * External Turbo `--summarize` boundary: select evidence, never trust an asserted hit.
- *
- * **Example** (Inspect the summary task fields)
- * ```ts
- * import { CacheProtocolNativeSummary } from "@beep/repo-cli/commands/Cache"
- * console.assert("tasks" in CacheProtocolNativeSummary.fields)
- * ```
- *
- * @internal
- * @category schemas
- * @since 0.0.0
- */
-export class CacheProtocolNativeSummary extends S.Opaque<
-  CacheProtocolNativeSummary,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    turboVersion: S.NonEmptyString,
-    tasks: S.Array(
-      S.Struct({
-        taskId: S.NonEmptyString,
-        hash: S.NonEmptyString,
-        cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), source: S.OptionFromOptionalKey(S.String) }),
-        execution: S.Struct({ exitCode: S.Int }),
-      })
-    ),
-  }).pipe(
-    $I.annoteSchema("CacheProtocolNativeSummary", {
-      description:
-        "Selected fields of one native Turbo run summary; a reported hit is evidence only with wire receipts.",
-    })
-  )
-) {}
-
 const verifyPrivateNetwork = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const interfaces = A.filter(
@@ -276,6 +243,8 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
           "--chdir",
           "/work",
           "/tools/turbo",
+          "--skip-infer",
+          "--single-package",
           "run",
           "build",
           "--cache=remote:rw",
@@ -518,8 +487,7 @@ export const runCacheProtocolExperiment = Effect.fn("CacheProtocol.experiment")(
           env: { PATH: "/usr/bin", HOME: "/tmp", CI: "1", NO_COLOR: "1" },
           bound,
         }).pipe(Effect.timeout(Duration.minutes(15)));
-        if (captured.exitCode !== 0 || captured.truncated)
-          return yield* CacheCommandError.new("Protocol supervisor failed or exceeded its capture bound.");
+        yield* requireCacheSupervisorCapture(captured, "Protocol");
         const report = yield* readCacheExperimentBytes(directory, "report.json", 256 * 1024).pipe(
           Effect.flatMap(decodeCacheExperimentText),
           Effect.flatMap(JsonStringCodec(CacheProtocolExecution).decode)

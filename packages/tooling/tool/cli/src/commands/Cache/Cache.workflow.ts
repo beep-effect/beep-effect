@@ -4,36 +4,51 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { $RepoCliId } from "@beep/identity/packages";
+import { CacheClientPin } from "@beep/repo-configs/cache";
+import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
+import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
 import { gitPathListFromNulOutput } from "../../internal/repo-run/GitExec.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
-import { readCacheExperimentBytes } from "./Cache.evidence.ts";
+import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
+import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
+import { decodeCacheExperimentText, readCacheEvidenceBytes, readCacheExperimentBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain } from "./Cache.fingerprint.ts";
 import { inspectCacheLinkedFile } from "./Cache.linker.ts";
-import { runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
+import { runCacheProducerUploadExperiment, runCacheSignedPilotExperiment } from "./Cache.pilot.runner.ts";
+import { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import { CacheProducerBinding, CacheProducerBundle } from "./Cache.producer.schemas.ts";
 import { openCacheProducerIssuer } from "./Cache.producer.ts";
 import { CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
 import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
+import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
 import {
   CacheProducerObservation,
+  CacheProducerUploadRuntime,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
 } from "./Cache.workflow.schemas.ts";
-import type { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
+import { CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
 
+const $I = $RepoCliId.create("commands/Cache/Cache.workflow");
+const R2StorageEndpoint = S.String.check(S.isPattern(/^https:\/\/[a-f0-9]{32}\.r2\.cloudflarestorage\.com\/$/)).pipe(
+  $I.annoteSchema("R2StorageEndpoint", {
+    description: "Canonical account-specific R2 storage URL allowed for producer uploads.",
+  })
+);
+const isR2StorageEndpoint = S.is(R2StorageEndpoint);
 const bindingCodec = JsonStringCodec(CacheProducerBinding);
 const digest = S.decodeEffect(Sha256HexFromBytes);
 const decodeRevision = S.decodeUnknownEffect(GitObjectId);
@@ -56,6 +71,7 @@ const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args:
 const declaredSourcePaths = [
   "packages",
   "scripts",
+  "infra/r2-cache",
   "package.json",
   "bun.lock",
   "bunfig.toml",
@@ -223,7 +239,15 @@ export const inspectCacheProducerWorkflow = Effect.fn("CacheWorkflow.inspect")(f
   const files = yield* collectCacheProducerWorkflowFiles(root);
   const toolchain = yield* collectCacheToolchain(root);
   const inspectionTools = yield* Effect.forEach(
-    ["/usr/bin/git", "/usr/bin/bwrap", "/usr/bin/find", "/usr/bin/tar", "/usr/bin/sha256sum", "/usr/bin/awk"],
+    [
+      "/usr/bin/git",
+      "/usr/bin/bwrap",
+      "/usr/bin/find",
+      "/usr/bin/tar",
+      "/usr/bin/sha256sum",
+      "/usr/bin/awk",
+      "/usr/bin/python3",
+    ],
     inspectCacheLinkedFile,
     { concurrency: 2 }
   );
@@ -252,6 +276,115 @@ export const hashCacheProducerWorkflow = Effect.fn("CacheWorkflow.hash")(functio
 });
 
 /**
+ * Hash the approved upload target without serializing any runtime credential.
+ *
+ * **Example** (Reference target identity hashing)
+ * ```ts
+ * import { hashCacheProducerUploadTarget } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof hashCacheProducerUploadTarget === "function")
+ * ```
+ *
+ * @internal
+ * @category queries
+ * @since 0.0.0
+ */
+export const hashCacheProducerUploadTarget = Effect.fn("CacheWorkflow.hashUploadTarget")(function* (
+  target: CacheConformanceTarget
+) {
+  const text = yield* JsonStringCodec(CacheConformanceTarget).encode(target);
+  return yield* digest(new TextEncoder().encode(`beep/cache-producer-upload-target/v1\0${text}`));
+});
+
+/**
+ * Derive the artifact-key identity without retaining or publishing its value.
+ *
+ * **Example** (Reference the key identity boundary)
+ * ```ts
+ * import { hashCacheProducerUploadKey } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof hashCacheProducerUploadKey === "function")
+ * ```
+ *
+ * @internal
+ * @category queries
+ * @since 0.0.0
+ */
+export const hashCacheProducerUploadKey = Effect.fn("CacheWorkflow.hashUploadKey")((key: Redacted.Redacted<string>) =>
+  digest(new TextEncoder().encode(`beep/cache-producer-artifact-key/v1\0${Redacted.value(key)}`))
+);
+
+/**
+ * Require independent approval of the exact bounded pilot upload destination.
+ *
+ * **Details**
+ * Approval contains paired descriptor and artifact-key digests. Runtime bearers
+ * and the key value never enter it. Historical bindings without an upload target can execute
+ * their original isolated matrix but cannot perform an external upload.
+ *
+ * **Example** (Reference the pre-network approval gate)
+ * ```ts
+ * import { assertCacheProducerUploadRuntime } from "@beep/repo-cli/test/Cache"
+ * console.assert(typeof assertCacheProducerUploadRuntime === "function")
+ * ```
+ *
+ * @internal
+ * @category validation
+ * @since 0.0.0
+ */
+export const assertCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertUploadRuntime")(function* (
+  binding: CacheProducerBinding,
+  runtime: O.Option<CacheProducerUploadRuntime>
+) {
+  if (O.isSome(binding.uploadApproval) !== O.isSome(runtime))
+    return yield* CacheCommandError.new("Producer upload runtime differs from independent target approval.");
+  if (O.isNone(runtime)) return runtime;
+  const targetCodec = JsonStringCodec(CacheConformanceTarget);
+  const target = yield* targetCodec.encode(runtime.value.target).pipe(Effect.flatMap(targetCodec.decode));
+  const supplied = runtime.value;
+  const owned = CacheProducerUploadRuntime.make({
+    target,
+    bearers: CacheConformanceBearers.make({
+      reader: supplied.bearers.reader.pipe(Redacted.value, Redacted.make),
+      writer: supplied.bearers.writer.pipe(Redacted.value, Redacted.make),
+      foreign: supplied.bearers.foreign.pipe(Redacted.value, Redacted.make),
+      unknown: supplied.bearers.unknown.pipe(Redacted.value, Redacted.make),
+    }),
+    signing: supplied.signing.pipe(Redacted.value, Redacted.make),
+    adapter: O.map(supplied.adapter, (adapter) =>
+      CacheProducerAdapterLaunch.make({
+        executable: adapter.executable,
+        accessKey: adapter.accessKey.pipe(Redacted.value, Redacted.make),
+        secretKey: adapter.secretKey.pipe(Redacted.value, Redacted.make),
+      })
+    ),
+  });
+  if (O.isNone(owned.adapter) || O.isNone(target.storage))
+    return yield* CacheCommandError.new("Producer upload requires approved storage and an owned adapter capability.");
+  const storage = target.storage.value;
+  const endpoint = storage.endpoint;
+  const url = target.baseUrl;
+  const targetDigest = yield* hashCacheProducerUploadTarget(target);
+  const keyDigest = yield* hashCacheProducerUploadKey(owned.signing);
+  if (
+    url.href !== "http://127.0.0.1:19427/" ||
+    !S.is(Sha256Hex)(target.backend.digest) ||
+    !Str.startsWith("/")(owned.adapter.value.executable) ||
+    !isR2StorageEndpoint(endpoint.href) ||
+    storage.bucket !== "beep-turbo-r2-pilot" ||
+    target.namespace.teamId !== "team_beep_signed_canary_v1" ||
+    target.namespace.teamId !== binding.client.namespace ||
+    target.namespace.teamId === target.namespace.foreignTeamId ||
+    !target.policy.readerWriterSplit ||
+    !target.policy.tenantBinding ||
+    !O.containsWith(S.toEquivalence(CacheProducerUploadApproval))(
+      binding.uploadApproval,
+      CacheProducerUploadApproval.make({ targetSha256: targetDigest, artifactKeySha256: keyDigest })
+    )
+  )
+    return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
+  return O.some(owned);
+});
+
+/**
  * Execute the owned signed pilot and authenticate only its supervised observation.
  *
  * **Details**
@@ -275,11 +408,20 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
   root: string,
   request: CacheSignedPilotRequest,
   directory: string,
-  expected: CacheProducerBinding
+  expected: CacheProducerBinding,
+  uploadRuntime: O.Option<CacheProducerUploadRuntime> = O.none()
 ) {
   const path = yield* Path.Path;
+  const requestCodec = JsonStringCodec(CacheSignedPilotRequest);
+  const ownedRequest = yield* requestCodec.encode(request).pipe(Effect.flatMap(requestCodec.decode));
   yield* assertCacheProducerWorkflowLocation(root);
   const trusted = yield* bindingCodec.encode(expected).pipe(Effect.flatMap(bindingCodec.decode));
+  if (
+    ownedRequest.pilot.channel !== trusted.channel ||
+    !S.toEquivalence(CacheClientPin)(ownedRequest.pilot.client, trusted.client)
+  )
+    return yield* CacheCommandError.new("Producer request differs from its independently approved client or channel.");
+  const runtime = yield* assertCacheProducerUploadRuntime(trusted, uploadRuntime);
   const issuer = yield* openCacheProducerIssuer(directory, trusted);
   const verifyWorkflow = withQualityAdmission(
     AdmissionRequest.make({
@@ -294,6 +436,13 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
     noAdmissionOriginGate,
     Effect.gen(function* () {
       const workflow = yield* inspectCacheProducerWorkflow(root);
+      yield* assertCacheProducerWorkflowProfile(ownedRequest.sourceRoot);
+      const sourceRevision = yield* captureGit(ownedRequest.sourceRoot, ["rev-parse", "HEAD"]).pipe(
+        Effect.map(Str.trim),
+        Effect.flatMap(decodeRevision)
+      );
+      if (sourceRevision !== trusted.sourceRevision)
+        return yield* CacheCommandError.new("Live producer source differs from its independently approved revision.");
       if (
         workflow.revision !== trusted.workflowRevision ||
         (yield* hashCacheProducerWorkflow(workflow)) !== trusted.workflowImplementation
@@ -302,17 +451,43 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
     })
   );
   yield* verifyWorkflow;
-  const pilot = yield* runCacheSignedPilotExperiment(root, request, O.some(path.join(directory, "issuer.key")));
+  const pilot = yield* runCacheSignedPilotExperiment(root, ownedRequest, O.some(path.join(directory, "issuer.key")));
   yield* verifyWorkflow;
   const protocol = yield* runCacheProtocolExperiment(
     root,
     CacheProtocolRequest.make({
       channel: trusted.channel,
       client: trusted.protocolClient,
-      executable: request.pilot.executable,
+      executable: ownedRequest.pilot.executable,
     })
   );
-  const observation = CacheProducerBundle.make({ pilot, protocol });
+  const uploadObservation = yield* O.match(runtime, {
+    onNone: () => Effect.succeedNone,
+    onSome: Effect.fn("CacheWorkflow.executeOwnedUpload")(function* (runtime) {
+      yield* verifyWorkflow;
+      const activation = yield* readCacheEvidenceBytes(ownedRequest.sourceRoot, ownedRequest.pilot.activation).pipe(
+        Effect.flatMap(decodeCacheExperimentText),
+        Effect.flatMap(JsonStringCodec(CacheActivationPreview).decode)
+      );
+      if (activation.source.configurationDigest !== trusted.configurationDigest)
+        return yield* CacheCommandError.new("Producer task closure differs from independent configuration approval.");
+      const expectedTasks = A.map(activation.source.configuration.nodes, (node) => node.id);
+      return yield* runCacheProducerUploadExperiment(
+        root,
+        ownedRequest,
+        runtime,
+        trusted,
+        expectedTasks,
+        path.join(directory, "issuer.key")
+      ).pipe(Effect.asSome);
+    }),
+  });
+  const observation = CacheProducerBundle.make({
+    pilot,
+    protocol,
+    upload: O.map(uploadObservation, Tuple.get(0)),
+    adapterRuntime: O.map(uploadObservation, Tuple.get(1)),
+  });
   yield* verifyWorkflow;
   return CacheProducerObservation.make({ observation, envelope: yield* issuer.issue(observation) });
 }, CacheCommandError.mapError("Cannot issue an observation from the approved producer workflow."));

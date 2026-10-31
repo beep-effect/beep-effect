@@ -263,6 +263,30 @@ describe("knowledge doctor span extraction", () => {
   );
 
   it.effect(
+    "reads the frontmatter citation only from a closed YAML block, numbering the key as a document line",
+    Effect.fnUntraced(function* () {
+      const documentMarkers = (text: string) =>
+        A.map(
+          A.filter(
+            extractKnowledgeDocumentSpans("docs/guide.md", text, HashSet.empty()).markers,
+            (marker) => marker.form === "document"
+          ),
+          (marker) => [marker.commit, marker.line]
+        );
+      assert.deepStrictEqual(documentMarkers(doc("---", "title: t", `beep-historical: "${FOREIGN}"`, "---")), [
+        [FOREIGN, 3],
+      ]);
+      assert.deepStrictEqual(documentMarkers(`---\r\ntitle: t\r\nbeep-historical: ${FOREIGN}\r\n---\r\n`), [
+        [FOREIGN, 3],
+      ]);
+      // No closing fence is no frontmatter block (the shared FrontmatterSource grammar).
+      assert.deepStrictEqual(documentMarkers(doc("---", `beep-historical: ${FOREIGN}`, "", "Body.")), []);
+      assert.deepStrictEqual(documentMarkers(doc("---json", `beep-historical: ${FOREIGN}`, "---")), []);
+      assert.deepStrictEqual(documentMarkers(doc("---", "title: t", "---", `beep-historical: ${FOREIGN}`)), []);
+    })
+  );
+
+  it.effect(
     "reads an assertion only from a whole comment line: quoted, fenced, and mid-line markers are syntax",
     Effect.fnUntraced(function* () {
       const quoted = "Write `<!-- beep:assert path-exists docs/quoted.md -->` to assert a path.";

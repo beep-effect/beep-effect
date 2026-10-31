@@ -12,3 +12,16 @@
   as successful.
 - **Prevention:** plan the exact acceptance command at launch; distinguish the
   full compiler census from affected-file readiness and whole-repository proof.
+
+## 2026-10-28 — Retain canonical publication provenance
+
+- **Work:** recover verified goal completion after constrained publication.
+- **Evidence:** terminal readiness passed on the earlier head, but direct push
+  supplied no publish-mode verdict; the generic closeout command wrote a
+  closeout-mode verdict. Completion recovery requires the actual successful
+  publisher record and the status snapshot created during its readiness job.
+- **Resolution:** synchronize main, repeat full Check and root configuration
+  qualification, then use canonical publication and a new readiness monitor.
+  Preserve the old records and never synthesize replacement proof.
+- **Prevention:** use the monitor's automatic closeout and preserve the canonical
+  publisher verdict through merge and completion refresh.

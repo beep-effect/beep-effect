@@ -305,6 +305,8 @@
     }
   },
   "overrides": {
+    "glob": "14.0.3",
+    "minimatch": "11.0.3",
     "@effect/platform-node-shared": "catalog:",
     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",
     "basic-ftp": "6.2.1",

@@ -29,6 +29,8 @@ export {
 } from "../commands/Yeet/internal/FallowFeedback.ts";
 export * from "../commands/Yeet/internal/FinalCheck.schemas.ts";
 export * from "../commands/Yeet/internal/FinalCheck.ts";
+export * from "../commands/Yeet/internal/FinalCheckRefresh.schemas.ts";
+export * from "../commands/Yeet/internal/FinalCheckRefresh.ts";
 export * from "../commands/Yeet/internal/GateStaleness.ts";
 export * from "../commands/Yeet/internal/GhCall.ts";
 export * from "../commands/Yeet/internal/GhOps.ts";

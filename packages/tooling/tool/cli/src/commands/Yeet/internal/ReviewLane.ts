@@ -25,7 +25,10 @@
  *
  * Nothing here imputes. A thread answered without a declared disposition is
  * `unknown`, a review with no commit is unassigned, a pull request with
- * reviews and no flip is counted as such and never sampled.
+ * reviews and no flip is counted as such and never sampled. A review the
+ * pull request author submitted (a reply on a thread is one) is counted
+ * beside the rounds, never as one; a flip that carries no author excludes
+ * nothing.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -45,6 +48,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { nearestRank } from "../../../internal/stats/NearestRank.ts";
@@ -599,6 +603,7 @@ const earliestInstant = (values: ReadonlyArray<string>): O.Option<Instant> =>
   );
 
 interface ReviewWindow {
+  readonly author: O.Option<string>;
   readonly flip: Instant;
   readonly mergeReady: O.Option<Instant>;
 }
@@ -609,6 +614,12 @@ const reviewWindow = (facts: PullRequestFacts): O.Option<ReviewWindow> =>
     earliestInstant(A.map(facts.flips, (flip) => flip.at)),
     (flip): ReviewWindow => ({
       flip,
+      // The author the opening flip recorded; absent when `yeet ready` could
+      // not read it, which excludes nothing.
+      author: O.flatMap(
+        A.findFirst(facts.flips, (row) => row.at === flip.at),
+        (row) => row.author
+      ),
       mergeReady: earliestInstant(
         A.filter(
           A.map(facts.mergeReadies, (ready) => ready.at),
@@ -627,7 +638,13 @@ const inWindow = (window: ReviewWindow, at: string): boolean =>
   );
 
 const pullRequestFacts = (facts: PullRequestFacts, window: ReviewWindow): EconomicsReviewLanePullRequest => {
-  const reviews = A.filter(HashMap.toValues(facts.reviews), (review) => inWindow(window, review.submittedAt));
+  const inWindowReviews = A.filter(HashMap.toValues(facts.reviews), (review) => inWindow(window, review.submittedAt));
+  // A reply on a thread is a review submission by its author, so the pull
+  // request author's own submissions are counted beside the rounds, never
+  // inside them.
+  const authored = (review: ReviewLaneReviewRow): boolean =>
+    O.exists(window.author, (author) => Str.toLowerCase(author) === Str.toLowerCase(review.reviewer.login));
+  const reviews = A.filter(inWindowReviews, P.not(authored));
   const heads = A.filter(HashMap.toValues(facts.heads), (head) =>
     inWindow(
       window,
@@ -643,6 +660,7 @@ const pullRequestFacts = (facts: PullRequestFacts, window: ReviewWindow): Econom
     reviews: A.length(reviews),
     heads: A.length(heads),
     unassignedReviews: A.length(A.filter(reviews, (review) => O.isNone(review.commitSha))),
+    authorReviews: A.length(A.filter(inWindowReviews, authored)),
   });
 };
 
@@ -656,6 +674,7 @@ const roundsToReady = (pullRequests: ReadonlyArray<EconomicsReviewLanePullReques
     p95Rounds: nearestRank(rounds, 0.95),
     roundsMix: economicsCountMix(A.map(rounds, String)),
     unassignedReviews: Num.sumAll(A.map(pullRequests, (pullRequest) => pullRequest.unassignedReviews)),
+    authorReviews: Num.sumAll(A.map(pullRequests, (pullRequest) => pullRequest.authorReviews)),
     pullRequests,
   });
 };
@@ -807,7 +826,7 @@ const renderPrecisionRow = (row: EconomicsReviewLanePrecisionRow): string =>
 export const renderYeetEconomicsReviewLane = (section: EconomicsReviewLane): ReadonlyArray<string> => {
   const { roundsToReady: rounds, ledgerQuality: quality } = section;
   return [
-    `review lane (rounds to ready; its own denominators, never summed with the lane populations): ${rounds.closedPullRequests} closed PR(s), ${rounds.openPullRequests} open; rounds p50 ${formatCount(rounds.p50Rounds)}, p95 ${formatCount(rounds.p95Rounds)}; mix: ${formatMix(rounds.roundsMix)}; unassigned reviews ${rounds.unassignedReviews}`,
+    `review lane (rounds to ready; its own denominators, never summed with the lane populations): ${rounds.closedPullRequests} closed PR(s), ${rounds.openPullRequests} open; rounds p50 ${formatCount(rounds.p50Rounds)}, p95 ${formatCount(rounds.p95Rounds)}; mix: ${formatMix(rounds.roundsMix)}; unassigned reviews ${rounds.unassignedReviews}; author reviews ${rounds.authorReviews}`,
     `  precision (${section.precisionMethod}): ${A.join(A.map(section.precision, renderPrecisionRow), "; ")}`,
     `  ledger: ${quality.rows} row(s) from ${quality.ledgersRead} ledger(s), ${quality.unreadableLedgers} unreadable, ${quality.malformedRows} malformed; ${quality.duplicateReviewRowsDeduplicated} duplicate review row(s) deduplicated; ${quality.pullRequestsWithoutFlip} PR(s) without a flip; ${quality.unattributedDispositions} unattributed disposition(s)`,
   ];

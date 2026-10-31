@@ -1,0 +1,184 @@
+{
+  "schemaVersion": "cache-generator-boundary-source-review/v1",
+  "recordedAt": "2026-10-30T04:29:05.169386+00:00",
+  "sourceRevision": "c76902d99d77c1bb675834410f8a532cf7ed76bb",
+  "authority": "Current source-only write-boundary and pure-decomposition review. No generator execution, final exclusion, qualification, output declaration or activation is granted.",
+  "sourceSha256": {
+    "packages/drivers/acp/package.json": "2f402463d9f4fa91ced4af77d91140976e1e7268acbacd3c577dd8d0be25f0a2",
+    "packages/drivers/acp/scripts/generate.ts": "65b4af65632dba0ce0d0c451a2679e8132b23bf07ad7f93579d6ad8016370c2e",
+    "packages/drivers/box/package.json": "f0230012bf9dbfd40b9ed3f5883b204c586a1b89b7a67e4905d8457f0b0c336b",
+    "packages/drivers/box/scripts/generate.ts": "835889f33e6b4ce2b2ee83e455fba14ad3d4e77e93feb996a65b6a3a40ed881f",
+    "packages/drivers/ecfr/package.json": "16e2dc800818444a9768d63c6ff527232cb0f8c3ec1b6b4af8d23a787b16eab8",
+    "packages/drivers/ecfr/scripts/generate.ts": "005405885b7707cb6e310dd6bb9df17544813c5d2ef5e51d337c1159da60cb57",
+    "packages/drivers/gov-legal-mcp/package.json": "6e65ab5690724cfb7df024e7596a4a479abb815b6e20e1c9dadcdd65ba8ce48c",
+    "packages/drivers/gov-legal-mcp/scripts/generate.ts": "27ea1b45d240e232369d862a5cfcd6f60c9edb4c71db13001f2fd978d92fbf5b",
+    "packages/drivers/govinfo/package.json": "daa3adbd6a9ff548972465a43d04392b8e9ccedae5296ce7948737f589bb0d55",
+    "packages/drivers/govinfo/scripts/generate.ts": "87c951a7619e05a9ab31a242d174581ddd7ee9985abf0381405696a131a0f710",
+    "packages/foundation/modeling/identity/package.json": "a874bd2cd6311956727b3db0117212eabcd9538521552da79af3cdcec9c05d5c",
+    "packages/tooling/tool/cli/src/commands/Codegen/Codegen.command.ts": "a98a2679ad94e484f9df5ead3728a48e0339e68e4016df73a77b3dfceff875d4",
+    "apps/professional-desktop/package.json": "05cffe9aa228fe7c6c9dd56db79192b306c61b001c6f0634099a3114208a411c",
+    "apps/professional-desktop/scripts/sync-migration-bundle.ts": "d6449f25851d87ba845c36995ad2ac95233955e9919b3ef12eca06d34711bbf1",
+    "packages/tooling/policy-pack/repo-configs/package.json": "f2856ac7b26cb4fcdad35c73443d82962519e89cacf4391f4d2347603ab22a3f",
+    "packages/tooling/policy-pack/repo-configs/scripts/GenerateEffectLawsAllowlistSnapshot.ts": "9f73e2028b812de26bdca1954a31376c70a632edb255b009584ddd654e662589",
+    "packages/drivers/runpod/package.json": "6b13ff1a57fff77f3efc44be5d63d097b93ae3b56f26fa2bfa6e60be45337cbb",
+    "packages/drivers/runpod/scripts/generate.ts": "10c139fe150ac1eedd59d612bf16c53aa5c6748ad4ef0c9101bcd3aba332a3f0",
+    "turbo.json": "e1fdc840e70992359d20318b3841fb0c0bcbd18802ad76bf5879c45ebcfcb8cf",
+    "packages/tooling/library/codegen-kit/src/CodegenKit.cli.ts": "54ca6aa95744cbbcd7d54f98d5b3eba4adc917d10e912c501b554e1da88db9e9",
+    "packages/tooling/library/codegen-kit/src/CodegenKit.service.ts": "578e87b0ccf9c9fed465bb0843610139c425ef8449c34d46273af612793a1ce0",
+    "packages/drivers/box/scripts/box.surface.ts": "cc44efa6082ede67074f1390c6616949638d9840fdf5815bfc4b1def9eb50dad",
+    "packages/drivers/runpod/scripts/operations.renderer.ts": "12feb3debfc261c1307de6d6d29af04e00e5d8bece04065c18fe3fef3022a75b"
+  },
+  "rows": [
+    {
+      "computation": "@beep/acp#codegen",
+      "manifest": "packages/drivers/acp/package.json",
+      "command": "bun run generate",
+      "relatedScripts": {
+        "generate": "bun run scripts/generate.ts",
+        "generate:check": "bun run scripts/generate.ts --check"
+      },
+      "configurationId": "dd8d3d1ff0b269505645ac13842209d42e92b633d8b1fe70677434dd9e4f416a",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Two pinned local schema releases and metadata caches feed the shared generator and extra renderer; default write mode emits three generated source modules.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Offline --check already exists in the shared generator; independently qualify its complete spec, renderer, formatter, toolchain and generated-target comparison inputs."
+    },
+    {
+      "computation": "@beep/box#codegen",
+      "manifest": "packages/drivers/box/package.json",
+      "command": "bun run generate",
+      "relatedScripts": {
+        "generate": "bun run scripts/generate.ts"
+      },
+      "configurationId": "dd8d3d1ff0b269505645ac13842209d42e92b633d8b1fe70677434dd9e4f416a",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Reads the installed Box SDK declaration surface, curated managers/operations and handwritten source roots, then writes generated models and operations.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Review a separately bounded render/drift computation with SDK content identity, curated surface, handwritten roots, parser/runtime and deterministic ordering; no blanket source exclusion."
+    },
+    {
+      "computation": "@beep/ecfr#codegen",
+      "manifest": "packages/drivers/ecfr/package.json",
+      "command": "bun run generate",
+      "relatedScripts": {
+        "generate": "bun run scripts/generate.ts",
+        "generate:check": "bun run scripts/generate.ts --check"
+      },
+      "configurationId": "dd8d3d1ff0b269505645ac13842209d42e92b633d8b1fe70677434dd9e4f416a",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Reads the local OpenAPI document through CodegenKit and writes the generated HttpApi module.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Existing offline --check can be reviewed separately; include local spec, generator transformations and formatting plus compared generated module."
+    },
+    {
+      "computation": "@beep/gov-legal-mcp#codegen",
+      "manifest": "packages/drivers/gov-legal-mcp/package.json",
+      "command": "bun run generate",
+      "relatedScripts": {
+        "generate": "bun run scripts/generate.ts"
+      },
+      "configurationId": "dd8d3d1ff0b269505645ac13842209d42e92b633d8b1fe70677434dd9e4f416a",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Reads package version and the imported production tool-name report; writes collision JSON and a generated version module.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Rendering and comparison may be split from writes; imported production report closure and package version must remain semantic inputs."
+    },
+    {
+      "computation": "@beep/govinfo#codegen",
+      "manifest": "packages/drivers/govinfo/package.json",
+      "command": "bun run generate",
+      "relatedScripts": {
+        "generate": "bun run scripts/generate.ts",
+        "generate:check": "bun run scripts/generate.ts --check"
+      },
+      "configurationId": "dd8d3d1ff0b269505645ac13842209d42e92b633d8b1fe70677434dd9e4f416a",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Default generation reads the checked-in local OpenAPI cache; only explicit --refresh selects live fetching. The normal command writes the generated drift-oracle module.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Qualify offline --check/rendering separately; preserve explicit refresh as fresh external work and bind cache bytes, not only the declared upstream version."
+    },
+    {
+      "computation": "@beep/identity#codegen",
+      "manifest": "packages/foundation/modeling/identity/package.json",
+      "command": "beep-cli codegen barrel",
+      "relatedScripts": {},
+      "configurationId": "878d69ed81a218e24f9d2aff29c6c80d4ae6dc05180c432bcdb414adbe5d2a1b",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Discovers package source modules, preserves authored documentation from the existing barrel and writes src/index.ts by default.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Existing --dry-run renders a preview but is not a drift verdict. Complete discovery, previous barrel documentation, tool identity and path/log safety need review before a pure comparison or portable output is qualified."
+    },
+    {
+      "computation": "@beep/professional-desktop#codegen",
+      "manifest": "apps/professional-desktop/package.json",
+      "command": "bun run scripts/sync-migration-bundle.ts --write",
+      "relatedScripts": {
+        "codegen:check": "bun run scripts/sync-migration-bundle.ts --check"
+      },
+      "configurationId": "97d41668a86ca0c1991310a640eb34063b084f66df060c0c546aa66a99ecd629",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Sorts migration folders from the separate db-admin workspace, reads SQL and compares then writes the generated runtime bundle.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Existing --check is a separate no-write path. Qualification must include cross-workspace migration membership/content and rendering/escaping/order semantics."
+    },
+    {
+      "computation": "@beep/repo-configs#codegen",
+      "manifest": "packages/tooling/policy-pack/repo-configs/package.json",
+      "command": "bun run ./scripts/GenerateEffectLawsAllowlistSnapshot.ts",
+      "relatedScripts": {},
+      "configurationId": "878d69ed81a218e24f9d2aff29c6c80d4ae6dc05180c432bcdb414adbe5d2a1b",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Reads the root allowlist, renders a snapshot with diagnostics and writes the generated module when content differs.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Existing renderer is a pure decomposition lead; review allowlist bytes, diagnostics/path portability, schema/render implementation and any explicit time dependencies before qualification."
+    },
+    {
+      "computation": "@beep/runpod#codegen",
+      "manifest": "packages/drivers/runpod/package.json",
+      "command": "bun run generate",
+      "relatedScripts": {
+        "generate": "bun run scripts/generate.ts",
+        "generate:check": "bun run scripts/generate.ts --check"
+      },
+      "configurationId": "dd8d3d1ff0b269505645ac13842209d42e92b633d8b1fe70677434dd9e4f416a",
+      "currentCache": false,
+      "archivedOutputs": [],
+      "observedSourceBehavior": "Reads local OpenAPI and patch JSON, applies transforms and an additional operations renderer, and writes generated model/operation modules.",
+      "sourceReview": "Default write boundary reviewed; candidate pure/output decomposition remains unfinished.",
+      "finalDisposition": null,
+      "qualificationOrReuseGranted": false,
+      "pureDecompositionLead": "Offline --check already exists; bind patch semantics, additional renderer closure, generator/formatter/toolchain and compared outputs before qualification."
+    }
+  ],
+  "counts": {
+    "writeBoundariesReviewed": 9,
+    "newFinalDispositions": 0,
+    "qualifiedOrAdopted": 0,
+    "publicPopulationRowsChanged": 0
+  },
+  "remaining": "Review and qualify eligible pure computation/output boundaries; a logs-only hit cannot perform current required source writes. Preserve all eligible-work obligations."
+}

@@ -24,7 +24,8 @@ untracked `sst-env.d.ts` files remain outside this change.
 | Historical merge | REST PR #2017 confirms accepted head `62fdeb3680c711f6218655ae8ef8d35f6b0ae71d` and merge `ab6000add2e779508f5b76e6c774a872cf3e629a` at `2026-10-22T06:00:03Z`. |
 | Historical readiness | Unsatisfied. Completion refresh observes required Docgen failure, pending/missing required contexts and a failed required-check merge-push suite. The declared verdict is absent. |
 | Implementation repair readiness | #2315 merged as `559dcb6d2e777e6df3494560e91085ad25ca6631`; completion refresh verifies 15 required contexts and passing merge-time rule suite `4773338508`. Its interrupted monitor left the declared verdict absent. |
-| Final closeout readiness | Pending documentation-only #2325, exact-head hosted checks, retained readiness verdict, review window and strict merge. |
+| Documentation closeout #2325 | Merged as `b9c9223f4c94c8d9ec599e383d38cb80933a38e6` with required contexts green; coverage passed afterward. Its genuine monitor verdict is negative because the PR had already merged. Completion remains unknown. |
+| Final closeout readiness | Pending documentation-only #2334, exact-head hosted checks, retained readiness verdict before merge, review window and strict merge. The operator has held other merges. |
 
 ## Boundaries
 

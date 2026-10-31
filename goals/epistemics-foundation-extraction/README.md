@@ -33,14 +33,16 @@ Use this command for execution-capable sessions:
 
 P0-P3 extraction work shipped in #2017 (`ab6000add2`); #2019 and #2021
 fixed its Docgen, Lint Policy and JSDoc failures. The implementation repair
-shipped in #2315 (`559dcb6d2e`). P4 closeout verification
-continues in documentation-only PR #2325. Achievement requires
-verified readiness and merge evidence.
+shipped in #2315 (`559dcb6d2e`). Documentation PR #2325 also merged, but its
+readiness verdict was not retained before merge. P4 closeout verification
+continues in documentation-only PR #2334, with other merges held by the operator.
+Achievement requires verified readiness and merge evidence.
 
 The 2026-10-28 acceptance audit found the claim factory lacked the logical-key
-function required by `SPEC.md`. The #2315 implementation repair supplies it, rejects
-inconsistent keys, and includes a private-workspace migration note. Both required package audits
-and documentation checks pass on the revised implementation.
+function required by `SPEC.md`. The #2315 implementation repair supplies it,
+rejects inconsistent keys, and includes a private-workspace migration note.
+Both required package audits and documentation checks pass on the revised
+implementation.
 
 ## Latest evidence
 
@@ -57,8 +59,13 @@ and documentation checks pass on the revised implementation.
 - Reflections: the original `history/reflections/2026-10-22-claude.md` and the
   recovery reflection `history/reflections/2026-10-28-codex.md`.
 - PR [#2315](https://github.com/beep-effect/beep-effect/pull/2315) passed all 15 required hosted contexts before merge. Its interrupted monitor did not retain a readiness verdict; completion refresh therefore returned `unknown`. See [`history/2026-10-28-hosted-acceptance.md`](history/2026-10-28-hosted-acceptance.md).
-- Final closeout PR [#2325](https://github.com/beep-effect/beep-effect/pull/2325) must supply passing accepted-head hosted checks and a
-  retained Yeet readiness verdict. Until completion refresh verifies that merge,
+- Documentation PR [#2325](https://github.com/beep-effect/beep-effect/pull/2325)
+  merged as `b9c9223f4c`. Its coverage follow-up passed after merge, and the
+  normal monitor could only record a negative post-merge verdict. See
+  [`history/2026-10-28-readiness-retention.md`](history/2026-10-28-readiness-retention.md).
+- Final closeout PR [#2334](https://github.com/beep-effect/beep-effect/pull/2334)
+  must supply passing accepted-head hosted checks and a retained Yeet readiness
+  verdict before its owner merges it. Until completion refresh verifies that merge,
   `initiative.status` stays `active`; a proposal is not achievement.
 
 ## Local proof disposition

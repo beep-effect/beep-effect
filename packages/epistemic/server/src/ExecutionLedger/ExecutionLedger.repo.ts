@@ -1,6 +1,8 @@
 /**
  * Execution ledger repository adapter.
  *
+ * **Details**
+ *
  * Every method here is an append or a read — the adapter has no vocabulary for
  * update or delete, and the tables would reject both by trigger if it did. What
  * the database rejects it rejects by NAME — the chain primary key, the

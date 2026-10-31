@@ -1,6 +1,8 @@
 /**
  * Claim disposition repository adapters.
  *
+ * **Details**
+ *
  * The surface is append and read only in both variants, because a disposition
  * exists to remember a decision: editing one would erase the very thing it was
  * written down for. A claim resolved again gets a NEW row, and the earlier row

@@ -260,6 +260,8 @@ const encodeWorkerResultResult = S.encodeResult(WorkerResult);
 /**
  * The worker boundary is a `structuredClone`, not a channel that carries types.
  *
+ * **Details**
+ *
  * A clone copies own enumerable properties and drops prototypes. Effect's
  * `Option.none()` keeps `_tag`/`_id` on its *prototype*, so posting a decoded
  * `WorkerCommand` sends `options.focusIri` as the bare object `{}` — a key that
@@ -309,6 +311,8 @@ export const decodeWorkerCommand: (input: unknown) => Result.Result<WorkerComman
 /**
  * Encode a `WorkerResult` for the trip back across the worker boundary.
  *
+ * **Details**
+ *
  * The return path had the same defect in mirror image: the worker posted the
  * decoded result and the parent never decoded it, so the projection arrived
  * de-prototyped — a plain object wearing the shape of a domain value.
@@ -348,6 +352,8 @@ export const decodeWorkerResult: (input: unknown) => Result.Result<WorkerResult,
 
 /**
  * A command the graph worker could not decode.
+ *
+ * **Details**
  *
  * Dropping such a command is what made the graph inexplicable: the worker was alive
  * and being messaged, it answered nothing, and the workbench sat on "pending" with no
