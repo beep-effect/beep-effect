@@ -59,7 +59,7 @@ with rg/ls at mining time):
 | PracticeKg projections + BM25 FTS | `PracticeKg.projections.ts`, `PracticeKg.fts.ts:142-170` | reuse (BM25 SQL NOT portable verbatim to stdlib sqlite3 — refuted) |
 | patent-prosecution domain schemas (OfficeAction, Rejection, Claim, PriorArtReference, IdsSubmissionFact, PatentAsset, Matter+`fixtureKey`) | `packages/law-practice/domain/src/entities/` | reuse |
 | qa judge machinery (JudgePack/Ingest/Check, `qa-inventory/v1`) | `Qa/Inventory.schemas.ts`, `JudgeCheck.ts` | extend (per-criterion scoping, all-pass split, closure criterion, neutral band) |
-| per-criterion scoped judge call shape | `docgen quality-worker-eval` (`QualityWorkerEval.ts:607`) | reuse as pattern |
+| per-criterion scoped judge call shape | `docgen quality-worker-eval`, retired in beep-cli-composition W0 ([`QualityWorkerEval.ts:639` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts#L639)) | reuse as pattern |
 | Pandoc AST mapping/codec (no binary driver) | `Pandoc.mapping.ts:1271`, `Pandoc.codec.ts:1595` | extend — docx render lane owned by `explorations/docx-roundtrip-interop` (`pandoc-driver-sidecar`) |
 | pptx/eml in `FileFormatFamily` | `file-processing/src/Strategy/index.ts:99-133` | NET-NEW (gap: 660/9,288 C&H files unroutable) |
 | adverse-party + matter lifecycle modeling | `law-practice` (zero rg hits) | NET-NEW |

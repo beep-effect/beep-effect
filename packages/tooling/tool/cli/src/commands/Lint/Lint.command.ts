@@ -15,7 +15,6 @@ import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { lintJudgeRubricCommand } from "./JudgeRubric.ts";
 import { lintCircularCommand } from "./LintCircular.command.ts";
 import { lintDeprecatedApisCommand } from "./LintDeprecatedApis.command.ts";
-import { lintGoalPacketsCommand } from "./LintGoalPackets.command.ts";
 import { lintJsdocCommand } from "./LintJsdoc.command.ts";
 import { lintLawsCommand } from "./LintLaws.command.ts";
 import { lintPolicyCommand } from "./LintPolicy.command.ts";
@@ -44,7 +43,6 @@ const lintSubcommands = [
   lintEffectSchemaInventoryCommand,
   lintEffectVitestCommand,
   lintOpaqueRoundtripsCommand,
-  lintGoalPacketsCommand,
   lintIdentityRegistryCommand,
   lintJudgeRubricCommand,
   lintPackageTestImportsCommand,
