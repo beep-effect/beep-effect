@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6.1-Sol independent parent review (PR2413)",
-      "reason": "Record only the five drift-named generated policy seal input closures after extracting six Git owner modules; no qualification granted.",
+      "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 main sync)",
+      "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
       "basis": {
-        "path": "docs/reports/git-owner-extraction-cache-review-2026-10-31.md",
-        "sha256": "29035ff9a05bd39d6e1dea1b35369b97d1031a2b409ba320dcd762d91dc0ed68"
+        "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
+        "sha256": "7dfbaf2b7ca92b6531aa7baa0103f4b43cdd2b343b8283c083470ba96471ab9d"
       }
     },
     "@beep/acp": {
@@ -490,11 +490,11 @@
       }
     },
     "@beep/git": {
-      "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 doctest scripts)",
-      "reason": "Record only nine audit-named Git computations after canonical doctest script generation, including one new unassessed doctest task; existing script values unchanged and no qualification granted.",
+      "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 main sync)",
+      "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
       "basis": {
-        "path": "docs/reports/git-doctest-scripts-cache-review-2026-10-31.md",
-        "sha256": "dce3a2fe8e715662b5e46387f14f97b003384ba86e56c298397b9a9770465dff"
+        "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
+        "sha256": "7dfbaf2b7ca92b6531aa7baa0103f4b43cdd2b343b8283c083470ba96471ab9d"
       }
     },
     "@beep/github": {
@@ -6199,6 +6199,7 @@
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
+            "packages/drivers/github/src/GitHubContent.ts",
             "packages/drivers/github/src/GitHubError.ts",
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
@@ -6502,7 +6503,10 @@
             "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts",
             "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
@@ -134537,7 +134541,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "eea934db1d9ce34d91a64ef43688736939e56d369b3baee117d21a0ee92d47c0"
+        "sha256": "c5ea04b76cb0d14c85e30f0af0e907e30b78c51594c1d49eb0b1734675677e34"
       }
     ]
   }

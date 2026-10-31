@@ -287,7 +287,19 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
           }),
         },
         bound,
-      }).pipe(Effect.timeout(O.isSome(upload) ? Duration.minutes(10) : Duration.minutes(20)));
+      }).pipe(
+        Effect.timeoutOrElse({
+          duration: O.isSome(upload) ? Duration.minutes(10) : Duration.minutes(20),
+          orElse: () =>
+            Effect.fail(
+              CacheCommandError.new(
+                O.isSome(upload)
+                  ? "Signed pilot upload exceeded its ten-minute execution limit."
+                  : "Signed pilot comparison exceeded its twenty-minute execution limit."
+              )
+            ),
+        })
+      );
       yield* requireCacheSupervisorCapture(captured, "Signed pilot");
       const text = yield* readCacheExperimentBytes(directory, "report.json", 256 * 1024).pipe(
         Effect.flatMap(decodeCacheExperimentText)

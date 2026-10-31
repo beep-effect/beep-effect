@@ -169,6 +169,14 @@
     "remainingPersistentServiceDisposition": {
       "path": "research/remaining-persistent-service-disposition-review.json",
       "scope": "Ten additional source-only persistent-service keep-fresh dispositions. All twelve current persistent computations are classified; 198 reviewed fresh boundaries and 2373 remaining gaps. Finite builds and all acceptance criteria remain unfinished."
+    },
+    "credentialBootstrap": {
+      "path": "goals/turborepo-cache-trust-observability/research/normal-source-worker-observation.json",
+      "scope": "Seven exact suppressed reads and four reference-file wrappers verified. Bootstrap complete; no further human credential step at this checkpoint. Runtime signing and CI secret activation remain separate."
+    },
+    "signedWorkerObservation": {
+      "path": "goals/turborepo-cache-trust-observability/research/normal-source-worker-observation.json",
+      "scope": "Complete stable worker and actual-CLI matrices under completion observers. No worker/native launch changes. Earlier uninstrumented failures retained; fresh uninstrumented stable/current-canary proof remains open."
     }
   },
   "remainingExplicitGates": [
