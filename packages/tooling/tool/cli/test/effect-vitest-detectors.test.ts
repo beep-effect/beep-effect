@@ -3724,6 +3724,8 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'it.effect("pure", Fx.fnUntraced(function* () { const value = yield* Fx.scoped(Fx.succeed(1)); expect(value).toBe(1); }));',
         'it.effect("inner", Fx.fnUntraced(function* () { yield* Fx.scoped(Fx.gen(function* () { yield* acquire; expect(open).toBe(true); })); }));',
         'it.effect("built", Fx.fnUntraced(function* () { const work = Fx.scoped(acquire); expect(ready).toBe(true); yield* work; }));',
+        'it.effect("built pipe", Fx.fnUntraced(function* () { const later = acquire.pipe(Fx.scoped); expect(ready).toBe(true); yield* later; }));',
+        'it.effect("if false", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); if (false) { expect(released).toBe(true); } }));',
         'it.effect("bare", Fx.fnUntraced(function* () { Fx.scoped(acquire); expect(ready).toBe(true); }));',
         'it.effect("pure stage", Fx.fnUntraced(function* () { yield* Fx.succeed(1).pipe(Fx.scoped); expect(ready).toBe(true); }));',
         'it.effect("method", Fx.fnUntraced(function* () { yield* Fx.scoped(acquire); const observer = { check() { expect(released).toBe(true); } }; yield* use(observer); }));',
