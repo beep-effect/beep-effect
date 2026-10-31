@@ -219,6 +219,22 @@ do not purge a shared cache or relax inputs to conceal a regression.
 
 ## Decision log
 
+### Native storage test readiness and reply correctness, 2026-10-31 UTC
+
+- Repair the inherited CI held-message test in its focused test-only PR2374.
+  Reuse the existing layer-start and storage reply-notification boundaries;
+  retain the virtual-clock timeline, both count assertions and 15-second limit.
+  Require a successful WithExit response and join the reply reader so a failure
+  response or listener failure cannot satisfy the regression assertion.
+- The actual CI zero-reply failure and the review's count-only false-success
+  case justify this change. Keep its current-source package/runtime checks and
+  bounded decoded-reply fault controls separate from cache qualification. The
+  first handler-defect control restarted the entity and timed out; it proves
+  nothing about the success assertion and remains retained as a failed approach.
+- Reversal is a reviewed Git revert of the scoped test repair. No production
+  storage behavior, cache policy, credential, runtime budget or proof floor
+  changes. Fresh complete and hosted/review gates precede acceptance.
+
 | Date | Decision and reason | Reversal |
 | --- | --- | --- |
 | 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |
@@ -459,3 +475,22 @@ review is `research/current-runtime-baseline-review.md`.
 - Reverse the one-package override after equivalent mock isolation and reliable
   branch evidence are shown. No runtime parser, coverage floor, required check,
   task qualification, credential or production cache setting changes.
+
+
+### Standalone Cargo workspace feature decision, 2026-10-31
+
+- Retain the absent experimental Cargo discovery flag. The two Tauri crates are
+  standalone and the repository has no root Cargo workspace. Both exact native
+  clients produce the same complete ninety-node Bun build graph with the flag
+  disabled and enabled. Rust work remains owned by its existing native and
+  sidecar commands; it is neither absent nor already cache-qualified.
+- Preserve the positive synthetic root-workspace discovery and exact executable
+  restoration controls. Explicit cache/output configuration is required in this
+  fixture. The undeclared external-input negative case reproduces stale reuse;
+  declaring the input restores invalidation. Do not generalize that fixture to
+  Tauri build scripts, system libraries, signing or shared target directories.
+- Reopen for a proposed root Cargo workspace, a direct Turbo Rust consumer or
+  changed client/native ownership. Before adoption, review all actual toolchain,
+  target, source, lockfile, vendored ABI patch, C/sidecar and external inputs.
+  Reverse this decision by returning its matrix row to pending and removing the
+  report links together. Runtime settings and qualification state are unchanged.

@@ -370,3 +370,86 @@ workstation's memory protection policy.
 - The superseded local proof was stopped through its exact owned launcher
   before changing tracked files. No current full pass or cache qualification
   is inferred from its completed gates.
+
+
+### 2026-10-31: real Cargo applicability graphs exceed the synthetic capture cap
+
+The current-source dry graph was 1,199,745 bytes, exceeding the synthetic
+selection helper's one-MiB output bound. The native process had completed; its
+fixture was cleaned. A separate applicability capture retains the ten-second
+process deadline and caps stdout at eight MiB and stderr at one MiB. It records
+actual byte counts and both original/adapted invoke hashes; no canonical verifier
+or production policy changed.
+
+The first applicability assertion also wrongly expected only the two selected
+apps. Native `--only` preserves same-name prerequisites: the real graph has
+ninety build nodes. Preserve that entire graph and compare its full inputs,
+commands and configuration across the Cargo flag contrast. Four current-source
+calls now pass with identical graphs. The failed attempts remain in private
+evidence; this correction does not remove prerequisites or claim execution.
+
+
+### 2026-10-31: fresh CI exposed a virtual-clock/native-I/O test race
+
+The content-final dependency-repair head has the identical tree as its passing
+pre-flip head. Its fresh Property Laws job failed at the DuckDB held-message
+case: expected one reply, received zero. The test and storage implementation
+are unchanged from accepted main. Source inspection shows a reply assertion
+immediately after virtual clock adjustment, without waiting for the native
+asynchronous reply write. Keep cache and performance conclusions separate from
+this failure; do not retry it blindly or relax the assertion/timeout.
+
+Prepare a separate small main repair using the suite's existing reply-handler
+latch pattern and explicit layer-start readiness. Retain both zero-before/
+one-after assertions and the original timing contract. The failing job log and
+source comparison are retained privately; fresh hosted proof remains required.
+
+
+### 2026-10-31: setup descriptions are weaker than exact-runtime evidence
+
+The packaged stable schema and native help describe experimental setup as not
+implemented, but both pinned executables reach provisioning preconditions when
+the flag is enabled. A first empty fixture had no Bun lock: Bun removes an
+empty lockfile. A local workspace dependency produces a real lock offline and
+reaches the next checks. Do not classify early refusals as setup implementation
+or non-implementation proof.
+
+Private network-isolated probes, with only the selected executables, libraries,
+fixture and shell mounted, retain six exact-client refusals without changing
+fixture files or running the task sentinel. Stable requires resolution data or
+a Turbo lock; canary reports a system-configuration refusal. These are exploratory
+results, not a completed setup feature decision or a diagnosed upstream defect.
+The partial first isolation omitted the shell needed for libc detection; the
+corrected isolation includes it. Continue from those actual preconditions and
+pinned source before proposing a bootstrap change. No repository bootstrap,
+cache setting, feature disposition or qualification status changed.
+
+
+### 2026-10-31: current heavy waiting is runner capacity
+
+PR2374's required heavy contexts remain queued after admission. The Check job
+has no assigned runner and selects the heavy label. The organization inventory
+shows one online busy runner and one offline runner, with no idle online runner;
+the repository-only inventory is empty. The workflow depends on admission,
+not on the earlier quality lanes. Keep this queue time distinct from computation
+and cache time. The exact API job and runner-inventory receipts are retained
+privately. No runner-cap change, cancellation, pending-check waiver or scaler
+defect conclusion follows from this observation.
+
+
+### 2026-10-31: a reply count does not prove held-message delivery succeeded
+
+PR2374 review found that the completion latch opens for a failure reply as well
+as a successful reply. Preserve both original count assertions and the virtual
+clock/15-second timeout, then require the final decoded reply to be WithExit
+with a successful void result and join the reply-reader fiber to propagate its
+failure. The current fix passes Node29 tests,20 Bun whole-file replays580 tests,
+and the complete DuckDB package audit/docgen.
+
+An initial handler-defect control restarted the entity and hit the watchdog;
+it was restored exactly and is not success-assertion evidence. The corrected
+control changes only the decoded exit after a real stored response: the new
+assertion rejects failure, and removing only that assertion lets the former
+count-only behavior pass. Both bounded cases restore the source exactly. This
+is synthetic decoded-reply fault injection, not a reproduced registration-timeout
+defect. Publish/prove the new source and answer the review before acceptance.

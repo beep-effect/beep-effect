@@ -678,8 +678,8 @@
       "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
       "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
       "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "disposition": "Retain absent root Cargo discovery; preserve the two standalone Tauri crates and explicit sidecar/native CI ownership.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -691,6 +691,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "sourceApplicability": {
+        "report": "cargo-workspace-feature-review.json",
+        "nativeReport": "native-cargo-controls.json",
+        "currentGraphReport": "native-cargo-applicability.json",
+        "scope": "Final no-change discovery decision only; all real Rust computation qualification remains open."
       }
     },
     {

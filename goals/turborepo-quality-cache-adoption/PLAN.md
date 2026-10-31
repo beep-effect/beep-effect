@@ -348,3 +348,17 @@ standalone controls, the package's explicit test-file isolation and its measured
 cost. Node and Bun each pass 4,501 existing tests with full parser coverage, and
 default package verification passes. This is a verification-reliability component;
 current final/hosted/review/merge proof and the full adoption goal remain open.
+
+
+### Cargo discovery disposition, 2026-10-31
+
+The source-bound Cargo review retains the absent root discovery flag. Four
+current-source exact-client contrasts preserve the ninety-node prerequisite
+graph; eight synthetic graph cases and sixteen runtime controls pass. Both
+drivers refuse optimized Python that would remove assertions. See
+[the review](research/cargo-workspace-feature-review.json).
+
+Four feature decisions are now final current-tree no-change decisions; the other
+thirty-one feature reviews remain pending. The 199 fresh whole-command
+dispositions and 2,372 gaps are retained from their existing source snapshot,
+not refreshed or requalified here. No phase or whole-goal criterion is completed.

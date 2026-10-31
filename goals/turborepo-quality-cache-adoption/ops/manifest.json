@@ -67,7 +67,12 @@
     "research/selection-semantics-checkpoint.json",
     "research/python-workspace-feature-review.json",
     "research/external-security-disposition-review.json",
-    "research/markdown-coverage-isolation-checkpoint.json"
+    "research/markdown-coverage-isolation-checkpoint.json",
+    "research/cargo-workspace-feature-review.json",
+    "research/native-cargo-controls.py",
+    "research/native-cargo-controls.json",
+    "research/native-cargo-applicability.py",
+    "research/native-cargo-applicability.json"
   ],
   "agentLaunchers": [
     {

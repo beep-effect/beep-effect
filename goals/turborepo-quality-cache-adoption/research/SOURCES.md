@@ -387,3 +387,35 @@ or deployment authority.
   cases and full parser coverage. The extra local runtime is recorded explicitly.
 - Default package verification passes; current final/hosted/review acceptance
   and all full-goal obligations remain separately unproven.
+
+
+### Cargo applicability and exact-client controls, 2026-10-31
+
+- [Current-tree decision](cargo-workspace-feature-review.json): three Cargo
+  manifests, two standalone Tauri crates, existing native/sidecar CI ownership
+  and explicit reopen conditions. Rust remains in the computation review.
+- [Native controls](native-cargo-controls.json) and
+  [replay driver](native-cargo-controls.py): the two recorded binary pins, eight
+  graph contrasts and sixteen isolated offline runtime controls. The deliberate
+  undeclared-input stale hit is a successful negative test, not safe adoption.
+- [Current-source graphs](native-cargo-applicability.json) and
+  [driver](native-cargo-applicability.py): 354 source bindings and four native dry
+  graphs retain all ninety prerequisite nodes. Raw bounded summaries remain
+  private; compact graph digests, node ids and selected-task details are retained.
+
+These prove the discovery decision and fixture semantics, not real Rust task
+qualification, a production setting change, measured savings or final acceptance.
+
+Replay on the recorded Linux x64 profile with Bun 1.4.4, Rust 1.99.1 and the two
+SHA-bound native Turbo clients provisioned at their declared paths:
+
+```bash
+python3 goals/turborepo-quality-cache-adoption/research/native-cargo-controls.py
+python3 goals/turborepo-quality-cache-adoption/research/native-cargo-applicability.py
+```
+
+Each driver has a three-minute total budget and ten-second native-call deadline.
+The current graph capture has an eight-MiB stdout cap; the synthetic controls use
+one MiB. Both cap stderr at one MiB. Their default raw outputs stay under the
+ignored `.beep/cargo-feature-review/` directory. They use finite credential-free
+child environments and require active Python assertions.
