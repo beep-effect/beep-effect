@@ -1,27 +1,27 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/jsonc-owner-switch-differential.ts",
-  "codeRev": "c25981bba415540aa1ba0f011b3b9924770516f9",
+  "codeRev": "421f6a924cbfc148945b73ed84a089a068c9c7bc",
   "codeDirty": false,
   "corpus": {
     "legacy": "jsonc-parser",
     "scope": "git ls-files: every *.jsonc, plus tsconfig*.json, turbo.json, biome.json, vercel.json, package.json and docgen.json",
-    "files": 1438,
+    "files": 1439,
     "byKind": {
       "jsonc": 372,
       "docgen.json": 170,
       "package.json": 200,
-      "tsconfig": 670,
+      "tsconfig": 671,
       "turbo.json": 23,
       "vercel.json": 3
     },
-    "equal": 1438,
+    "equal": 1439,
     "bothReject": 0,
     "unclassified": 0,
     "encode": {
       "legacy": "legacy-encode-unsupported",
-      "kitEncoded": 1438,
-      "roundTrip": 1438,
+      "kitEncoded": 1439,
+      "roundTrip": 1439,
       "failures": []
     },
     "differences": []
