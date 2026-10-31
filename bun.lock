@@ -2991,7 +2991,6 @@
         "effect": "catalog:",
         "fast-xml-parser": "catalog:",
         "fast-xml-validator": "catalog:",
-        "jsonc-parser": "catalog:",
         "micromark": "catalog:",
         "micromark-extension-gfm": "catalog:",
       },
@@ -3861,6 +3860,7 @@
       "version": "0.1.0",
       "devDependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
@@ -3998,6 +3998,7 @@
         "@beep/github-reporting": "workspace:^",
         "@beep/glob": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/libpff": "workspace:^",
         "@beep/lockfiles": "workspace:^",
         "@beep/m365": "workspace:^",

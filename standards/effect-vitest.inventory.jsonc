@@ -4321,13 +4321,13 @@
       "reason": "Cleanup failure is the subject: the scope runs inside Effect.exit, and after it closes the test asserts the observed removal error, the combined body-and-release Cause and whether the root still exists. Trial without the scope (#1855 wave 8): 4 of 5 tests fail (expected true to be false), because release then runs at test teardown. Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:61:scoped@31#1",
+      "id": "EV004:packages/tooling/tool/cli/test/process-attachment.test.ts:62:scoped@31#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
-      "line": 61,
-      "endLine": 66,
+      "line": 62,
+      "endLine": 67,
       "symbol": "scoped",
       "occurrence": "v2:0d047e0692f9688179ca33f3fe9bf8d73fdb13e4f88c922550acfc7823f20cb4",
       "class": "shorter-scope-lifetime-review",
@@ -4629,13 +4629,13 @@
       "reason": "A descriptor's close is the subject: retirement must refuse while the descriptor is open and succeed once the scope has closed it. Trial without the scope (#1855 wave 8): \"refuses archive retirement while a process holds the checkout\" fails (Refusing to retire instead of retired). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/docgen/test/Core.test.ts:104:scoped@35#1",
+      "id": "EV004:packages/tooling/tool/docgen/test/Core.test.ts:125:scoped@35#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-docgen",
       "file": "packages/tooling/tool/docgen/test/Core.test.ts",
-      "line": 104,
-      "endLine": 160,
+      "line": 125,
+      "endLine": 181,
       "symbol": "scoped",
       "occurrence": "v2:ea13e320348a1d3494832c751eb5f675c4e5172bdc343dc97385f95120971ff3",
       "class": "shorter-scope-lifetime-review",
@@ -5771,48 +5771,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The failure-variant assertion is followed by typed driver, phase and cause assertions; the complete Cause of a native provision failure is deliberately unspecified, and assertExitFailure would need a fabricated or self-extracted Cause. Owner: @beep/test-utils. Exit: retire when the harness exposes its exact failure Cause, or EV006 accepts an Exit predicate followed by typed failure assertions (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:905:expect@6#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
-      "line": 905,
-      "endLine": 905,
-      "symbol": "expect",
-      "occurrence": "v2:bbcd9d33b7b04b0b37df622d936c1ddda06576e790dcee7ed0b8e77814536d3e",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(collect).toHaveBeenCalledWith(root, O.some(request.executable))",
-      "replacement": {
-        "primitive": "utils.deepStrictEqual",
-        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:906:expect@6#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
-      "line": 906,
-      "endLine": 910,
-      "symbol": "expect",
-      "occurrence": "v2:b4d7d80295d1800db297f350a91ae2986cfc9bbfaf62cf5e994cd27419ca8987",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(Census.collectCacheTaskSelection).toHaveBeenCalledWith( root, [\"run\", \"lint\", \"--filter=@beep/identity\", \"--env-mode=strict\"], O.some(request.executable) )",
-      "replacement": {
-        "primitive": "utils.deepStrictEqual",
-        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV006:packages/workspace/use-cases/test/ThreadTimeline.test.ts:86:expect@6#1",
@@ -12149,69 +12107,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The closed-issuer suite is concurrent: false, every test creates a new issuer and envelope from its current Clock, and the expiry test advances 25 hours to reject its own envelope; no issuer or fiber survives into another test (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when each clock-adjusting test owns its TestClock, for example a single-case it.layer(TestClock.layer()) block (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:378:TestClock.adjust@15#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
-      "line": 378,
-      "endLine": 378,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:8c466609ec41a7b93b3087a832dbde960a96b7b20f87c452e1c762ba1b4ea7b3",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"21 minutes\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:411:TestClock.adjust@15#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
-      "line": 411,
-      "endLine": 411,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:f28ae959999831df106d6324f8e81c5a77258a5b17b33d4e5de4a004611025eb",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"11 minutes\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:445:TestClock.adjust@15#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
-      "line": 445,
-      "endLine": 445,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:fe51633fb21e85f8d4605b786fc8ac3bd3bf84a587f81225a667558f3610b144",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"11 minutes\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV015:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:1808:TestClock.adjust@13#1",
