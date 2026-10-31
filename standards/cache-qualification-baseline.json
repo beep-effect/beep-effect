@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-qualification-baseline/v2",
-  "profile": "local-linux-x64-bun1.4.2",
-  "epoch": "qualification-v2",
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy)",
-      "reason": "Re-record // policy-fingerprint seals (inputs removed by #2381/#2376, JsDocNodes.ts and the new app manifest added) and the seven @beep/beep-effect-web scaffold tasks after taking main baseline at 3fbb6e614b. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
+      "reason": "Re-record //#lint:policy-fingerprint (new app manifest input) and the seven @beep/beep-effect-web scaffold tasks after taking main baseline at e733f61bbb. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-3.md",
-        "sha256": "f4a7d19b1b336b04830d90428e40ea627a6cffef33c82c1224c53f9f195e3838"
+        "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-4.md",
+        "sha256": "6c01a2f6290d495b1dbba55074a2b50b9535aa89fa3086b25dfa38f986990319"
       }
     },
     "@beep/acp": {
@@ -171,10 +171,10 @@
     },
     "@beep/beep-effect-web": {
       "reviewer": "Claude Fable 5.1 (beep-effect-web-alchemy, feat/beep-effect-web-alchemy)",
-      "reason": "Re-record // policy-fingerprint seals (inputs removed by #2381/#2376, JsDocNodes.ts and the new app manifest added) and the seven @beep/beep-effect-web scaffold tasks after taking main baseline at 3fbb6e614b. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
+      "reason": "Re-record //#lint:policy-fingerprint (new app manifest input) and the seven @beep/beep-effect-web scaffold tasks after taking main baseline at e733f61bbb. Commands, outputs, cache flags and edges are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-3.md",
-        "sha256": "f4a7d19b1b336b04830d90428e40ea627a6cffef33c82c1224c53f9f195e3838"
+        "path": "goals/beep-effect-web-alchemy/research/cache-baseline-review-2026-10-31-4.md",
+        "sha256": "6c01a2f6290d495b1dbba55074a2b50b9535aa89fa3086b25dfa38f986990319"
       }
     },
     "@beep/box": {
@@ -6744,6 +6744,9 @@
             "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
             "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
             "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.manifest.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/dispatch/Dispatch.ts",
             "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/AttemptTerminationJournal.ts",
@@ -134411,7 +134414,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "8551b065da976491ee8ba98c674ed55c7b5c313c9c817fdeaa60503fd870d7f9"
+        "sha256": "1ad882228e36882c139c2335b8cf4078140e62d0fa0cabbdfc73dd174887fe48"
       }
     ]
   }

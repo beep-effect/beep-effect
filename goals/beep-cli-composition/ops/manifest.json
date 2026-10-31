@@ -30,11 +30,13 @@
     "goals/beep-cli-composition/GOAL.md",
     "goals/beep-cli-composition/research/SOURCES.md",
     "goals/beep-cli-composition/research/design-record.md",
+    "goals/beep-cli-composition/research/g3-lazy-dispatch.md",
     "standards/architecture/DECISIONS.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
     "research/design-record.md",
+    "research/g3-lazy-dispatch.md",
     "research/g4-task-fingerprint.md"
   ],
   "agentLaunchers": [
