@@ -48,10 +48,10 @@ const computeDefault = (): string => "fallback";
 `;
 
 /** Materialize an in-repo temp dir (subject.ts + tsconfig.json), run body, always clean up. */
-const withSubject = <A>(
+const withSubject = <A, R>(
   label: string,
   source: string,
-  body: (subjectPath: string) => Effect.Effect<A, unknown, FileSystem.FileSystem | Path.Path>
+  body: (subjectPath: string) => Effect.Effect<A, unknown, R>
 ) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;

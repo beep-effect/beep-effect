@@ -42,7 +42,6 @@ import {
   readQualityTaskManifest,
   readRootCatalogs,
   readWorkspacePackageText,
-  workspacePatternsFrom,
   workspacePatternsFromPackageJson,
 } from "@beep/repo-cli/test/Quality";
 import { applyJsoncModification, JsoncModification } from "@beep/repo-cli/test/SharedInternals";
@@ -110,6 +109,21 @@ const flagValue = (flag: string): O.Option<string> =>
     A.findFirstIndex(process.argv, (arg) => arg === flag),
     (index) => A.get(process.argv, index + 1)
   );
+
+// --- frozen retired reader -----------------------------------------------------
+
+// Frozen copy of repo-cli `workspacePatternsFrom` as it stood when this 3-A4 record was made.
+// 4-A1 (#2380) retired it from `@beep/repo-cli/test/Quality` when QAS discovery moved onto
+// `@beep/repo-workspaces`; the parity record keeps the reader it measured.
+const workspacePatternsFrom = (workspaces: unknown): ReadonlyArray<string> => {
+  if (A.isArray(workspaces)) {
+    return A.filter(workspaces, P.isString);
+  }
+  if (P.isObject(workspaces) && P.hasProperty(workspaces, "packages") && A.isArray(workspaces.packages)) {
+    return A.filter(workspaces.packages, P.isString);
+  }
+  return [];
+};
 
 // --- verdicts -----------------------------------------------------------------
 
