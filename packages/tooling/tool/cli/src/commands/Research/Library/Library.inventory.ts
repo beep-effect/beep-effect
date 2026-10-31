@@ -48,7 +48,7 @@ const classifyTopics = (evidence: string): ReadonlyArray<string> =>
     [
       /\b(?:law|legal|patent|uspto|docket|citation|citator)\b/i.test(evidence) ? "law-practice" : "",
       /\b(?:effect|evolu|drizzle)\b/i.test(evidence) ? "effect" : "",
-      /\b(?:tooling|turborepo|quality|beep|repo|typescript)\b/i.test(evidence) ? "repo-tooling" : "",
+      /\b(?:tooling|turborepo|quality|graft|beep|repo|typescript)\b/i.test(evidence) ? "repo-tooling" : "",
       /\b(?:agent|agents|harness|memory|mcp|skills|oversight)\b/i.test(evidence) ? "agent-harness" : "",
       /\b(?:arxiv|paper|papers|preprint|benchmark|bench)\b/i.test(evidence) ? "papers" : "",
       /\b(?:local.first|sync|offline|crdt|pglite|jazz)\b/i.test(evidence) ? "local-first" : "",
