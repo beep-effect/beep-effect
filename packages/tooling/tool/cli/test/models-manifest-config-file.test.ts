@@ -188,6 +188,14 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
       })
     );
 
+    it.effect("still rejects a target that is not a target shape after pruning", () =>
+      Effect.gen(function* () {
+        const seed = yield* encodeManifest(seedModelsManifest);
+        const error = yield* Effect.flip(decodeManifest({ ...seed, targets: [...seed.targets, "not-a-target"] }));
+        expect(error._tag).toBe("SchemaError");
+      })
+    );
+
     it.effect("reports a YAML syntax error as a typed parse failure", () =>
       Effect.gen(function* () {
         const store = yield* ModelsManifestStore;
