@@ -1444,6 +1444,7 @@
         "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
         "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
+        "packages/tooling/tool/cli/src/internal/Codeowners.ts",
         "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
         "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
         "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",

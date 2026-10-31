@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reason": "Re-record the legacy cache posture of the root subject after a main merge added one generated input to the //#lint:policy-fingerprint:knowledge seal; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review-2.md",
+        "sha256": "e2df2b079fa631d5eb0e43850e5802ff5ea5dda3b1f5301b3dfce3db6ba0809b"
       }
     },
     "@beep/acp": {
@@ -4274,6 +4274,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
+            "packages/tooling/tool/cli/src/internal/Codeowners.ts",
             "packages/tooling/tool/cli/src/internal/GlobPattern.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
@@ -133862,7 +133863,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "14d95bccf85a1333b754885f7cc922281730d28c0a6357bdc6f00360f3a8aa0d"
+        "sha256": "c9ea6cdde0ba65a1d58dbc21c8f3323e47669114948cf24715a87ae8fab8aed1"
       }
     ]
   }

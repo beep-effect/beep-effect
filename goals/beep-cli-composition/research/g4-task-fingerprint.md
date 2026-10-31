@@ -221,8 +221,11 @@ task, 188 subjects) and 34 `unreviewed-expansion` rows (the new seal tasks).
 The reviewed request [`g4-cache-baseline-request.json`](g4-cache-baseline-request.json)
 names exactly those subjects against the basis
 [`g4-cache-baseline-review.md`](g4-cache-baseline-review.md); scope, profile and
-epoch are unchanged and no qualification is granted. The audit then reports 0
-blocking findings.
+epoch are unchanged and no qualification is granted. A later `main` merge added
+one input to the `knowledge` seal; the addendum
+[`g4-cache-baseline-review-2.md`](g4-cache-baseline-review-2.md) and
+[`g4-cache-baseline-request-2.json`](g4-cache-baseline-request-2.json) re-record
+that one root task. The audit then reports 0 blocking findings.
 
 ## What is left
 
