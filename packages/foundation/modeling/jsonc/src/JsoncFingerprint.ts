@@ -44,7 +44,7 @@ const $I = $JsoncId.create("JsoncFingerprint");
  * **Details**
  *
  * - `UnrepresentableValue`: an `undefined`, function or symbol anywhere in the
- *   value, an array hole, or a property getter that threw during the read.
+ *   value, an array hole, or a property getter or Proxy trap that threw during inspection.
  * - `BigIntValue`: a `bigint` anywhere.
  * - `NonFiniteNumber`: `NaN` or an infinity, which RFC 8785 forbids.
  * - `LoneSurrogate`: a string value or member key with an unpaired UTF-16
@@ -364,16 +364,26 @@ const emitContainer = (
   return A.isArray(value) ? emitArray(value, path, depth) : emitRecord(value, path, depth);
 };
 
-// Arrays and objects (functions included, which then fail as non-plain
-// objects) are containers; null, booleans, numbers, strings, bigints and the
-// rest are never objects, so the dispatch order is free.
+// Inspect each container inside its own boundary: Proxy metadata traps can
+// throw before member reads, including Array.isArray on a revoked Proxy. Keep
+// the current path and preserve an existing typed failure from a nested emit.
 const emit: {
   (value: unknown, path: string, depth: number): Emit;
   (path: string, depth: number): (value: unknown) => Emit;
 } = dual(
   3,
   (value: unknown, path: string, depth: number): Emit =>
-    A.isArray(value) || P.isObject(value) ? emitContainer(value, path, depth) : emitPrimitive(value, path)
+    P.isObjectOrArray(value)
+      ? Result.try({
+          try: () => emitContainer(value, path, depth),
+          catch: () =>
+            JsoncCanonicalizeError.make({
+              code: "UnrepresentableValue",
+              path,
+              detail: "inspecting this value's metadata threw; canonicalization requires inspectable JSON values",
+            }),
+        }).pipe(Result.flatMap(identity))
+      : emitPrimitive(value, path)
 );
 
 const encoder = new TextEncoder();

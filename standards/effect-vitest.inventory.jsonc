@@ -4827,13 +4827,13 @@
       "reason": "The filing-decision cases share the documents-server native fixture: materialized bytes and atomic updates in scoped temporary directories. Owner: @beep/documents-server. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
-      "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:packages/documents/server/test/VaultSyncDrift.test.ts:33:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
-      "line": 19,
-      "endLine": 19,
+      "line": 33,
+      "endLine": 33,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
@@ -4893,13 +4893,13 @@
       "reason": "Native filesystem identity, path containment, descriptor failures and real file preservation are the tested contract. Tests use it.layer with explicit acquisition budgets. Owner: @beep/documents-server. Exit: retire when an in-memory filesystem faithfully models inode/device identity and descriptor-to-path races."
     },
     {
-      "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:22:@effect/platform-bun/BunFileSystem@0#1",
+      "id": "EV010:packages/documents/server/test/VaultSyncReviewRegressions.test.ts:34:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
-      "line": 22,
-      "endLine": 22,
+      "line": 34,
+      "endLine": 34,
       "symbol": "@effect/platform-bun/BunFileSystem",
       "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
       "class": "platform-filesystem-candidate",
