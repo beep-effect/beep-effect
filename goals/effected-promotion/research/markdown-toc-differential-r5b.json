@@ -1,6 +1,6 @@
 {
   "tool": "goals/effected-promotion/ops/markdown-toc-differential.ts",
-  "commit": "5f8c8b0c16902fb7d94ec51948ed3c3a98a7836b",
+  "commit": "9b108a66dcf49705a6be448d5ff52be859c32ccd",
   "dirty": false,
   "oracle": {
     "dir": "~/.cache/beep/markdown-toc-oracle",

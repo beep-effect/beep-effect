@@ -1,8 +1,8 @@
 # Markdown TOC differential: roadmap PR R5b
 
 Run 2026-10-31 on lane `refactor/markdown-toc-onto-beep-markdown` at commit
-5f8c8b0c16, a clean tree after the lane merged `origin/main` c67424f9e2 and took the #2407 review fixes
-(`MarkdownDocument.headingContent` drops continuation-line container prefixes by inline positions;
+9b108a66dc, a clean tree after the lane merged `origin/main` c67424f9e2 and took the #2407 review fixes
+(`MarkdownDocument.headingContent` reads the parse pass's own inline text, container prefixes stripped;
 `MarkdownSlug.headingLine` joins the lines with one space), by
 `ops/markdown-toc-differential.ts` against a
 disposable `@effect/markdown-toc@0.1.0` install (`remarkable` 1.7.4) under
