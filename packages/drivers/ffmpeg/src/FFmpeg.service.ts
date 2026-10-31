@@ -852,6 +852,22 @@ const parkPreviousManifest = Effect.fn("FFmpeg.parkPreviousManifest")(function* 
     );
 });
 
+const commitFrameOutput = Effect.fn("FFmpeg.commitFrameOutput")(
+  (
+    fs: FileSystem.FileSystem,
+    sourcePath: string,
+    targetPath: string,
+    operation: string,
+    onFailure: (cause: Cause.Cause<FFmpegError>) => Effect.Effect<never, FFmpegError>
+  ) =>
+    fs.rename(sourcePath, targetPath).pipe(
+      Effect.mapError((cause) =>
+        FFmpegError.fromUnknown(operation, `Failed to commit frame output: "${targetPath}"`, { cause })
+      ),
+      Effect.catchCause(onFailure)
+    )
+);
+
 const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
   fs: FileSystem.FileSystem,
   path: Path.Path,
@@ -896,11 +912,12 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
   );
   // Once any frame changes, the previous manifest no longer describes the batch.
   for (const frame of planned) {
-    yield* fs.rename(frame.sourcePath, frame.targetPath).pipe(
-      Effect.mapError((cause) =>
-        FFmpegError.fromUnknown("extractFrames", `Failed to commit frame output: "${frame.targetPath}"`, { cause })
-      ),
-      Effect.catchCause((cause) => (A.isArrayEmpty(committed) ? restoreManifest(cause) : Effect.failCause(cause)))
+    yield* commitFrameOutput(
+      fs,
+      frame.sourcePath,
+      frame.targetPath,
+      "extractFrames",
+      A.isArrayEmpty(committed) ? restoreManifest : Effect.failCause
     );
     committed = A.append(
       committed,
@@ -995,31 +1012,30 @@ const parseLuminanceSamples = (stdout: string): ReadonlyArray<LuminanceSample> =
   return samples;
 };
 
-const withStagingDirectory = <A2>(
+const withStagingDirectory = Effect.fn("FFmpeg.withStagingDirectory")(function* <A2>(
   fs: FileSystem.FileSystem,
   directory: string,
   operation: string,
   use: (tempDir: string, preserveStaging: Effect.Effect<void>) => Effect.Effect<A2, FFmpegError>
-): Effect.Effect<A2, FFmpegError> =>
-  Effect.gen(function* () {
-    const preserveStaging = yield* Ref.make(false);
-    return yield* Effect.acquireUseRelease(
-      fs.makeTempDirectory({ directory, prefix: `.beep-ffmpeg-${operation}-` }).pipe(
-        Effect.mapError((cause) =>
-          FFmpegError.fromUnknown(operation, `Failed to create temporary staging directory in "${directory}".`, {
-            cause,
-          })
+): Effect.fn.Return<A2, FFmpegError> {
+  const preserveStaging = yield* Ref.make(false);
+  return yield* Effect.acquireUseRelease(
+    fs.makeTempDirectory({ directory, prefix: `.beep-ffmpeg-${operation}-` }).pipe(
+      Effect.mapError((cause) =>
+        FFmpegError.fromUnknown(operation, `Failed to create temporary staging directory in "${directory}".`, {
+          cause,
+        })
+      )
+    ),
+    (tempDir) => use(tempDir, Ref.set(preserveStaging, true)),
+    (tempDir) =>
+      Ref.get(preserveStaging).pipe(
+        Effect.flatMap((preserve) =>
+          preserve ? Effect.void : fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
         )
-      ),
-      (tempDir) => use(tempDir, Ref.set(preserveStaging, true)),
-      (tempDir) =>
-        Ref.get(preserveStaging).pipe(
-          Effect.flatMap((preserve) =>
-            preserve ? Effect.void : fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
-          )
-        )
-    );
-  });
+      )
+  );
+});
 
 const useMetadataTagsExtensions = HashSet.make(".m4v", ".mov", ".mp4");
 
@@ -1128,11 +1144,12 @@ const commitTimestampedFrames = Effect.fn("FFmpeg.commitTimestampedFrames")(func
   let committed = A.empty<TimestampedFrame>();
   for (const frame of staged) {
     const targetPath = path.join(context.outDir, frame.fileName);
-    yield* fs.rename(frame.tempPath, targetPath).pipe(
-      Effect.mapError((cause) =>
-        FFmpegError.fromUnknown("extractFramesAt", `Failed to commit frame output: "${targetPath}"`, { cause })
-      ),
-      Effect.catchCause((cause) => (A.isArrayEmpty(committed) ? restoreManifest(cause) : Effect.failCause(cause)))
+    yield* commitFrameOutput(
+      fs,
+      frame.tempPath,
+      targetPath,
+      "extractFramesAt",
+      A.isArrayEmpty(committed) ? restoreManifest : Effect.failCause
     );
     committed = A.append(
       committed,

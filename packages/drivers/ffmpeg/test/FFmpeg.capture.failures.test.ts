@@ -13,6 +13,7 @@ import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -416,7 +417,7 @@ describe("@beep/ffmpeg capture failures", () => {
                       .extractFramesAt(ExtractFramesAtRequest.make({ ...request, timestampsSeconds: [0.25] }))
                       .pipe(Effect.asVoid)
               );
-              expect(Exit.isFailure(exit)).toBe(true);
+              assertTrue(Exit.isFailure(exit));
               const recoveryDirectory = yield* Effect.fromOption(
                 A.findFirst(yield* fs.readDirectory(outDir), Str.startsWith(".beep-ffmpeg-"))
               );

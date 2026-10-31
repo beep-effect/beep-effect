@@ -2186,6 +2186,7 @@
       "inputs": [
         "packages/drivers/ffmpeg/package.json",
         "packages/drivers/ffmpeg/src/FFmpeg.capture.models.ts",
+        "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
         "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
         "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
         "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
