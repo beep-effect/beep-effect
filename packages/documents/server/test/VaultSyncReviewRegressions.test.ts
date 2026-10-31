@@ -421,3 +421,69 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
     );
   });
 });
+
+for (const previousKind of ["file", "folder"] as const) {
+  describe(`Vault kind replacement from ${previousKind}`, () => {
+    it.layer(Layer.fresh(RegressionTestLayer))((it) => {
+      it.effect(
+        "supersedes incompatible queued work and converges the replacement kind",
+        Effect.fnUntraced(function* () {
+          const engine = yield* VaultSyncEngine;
+          const items = yield* SyncItemRepository;
+          const operations = yield* SyncOperationRepository;
+          const mirror = yield* DmsMirrorFixtureHandle;
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* makeVaultRoot();
+          const target = "replaced";
+          const replacementKind = previousKind === "file" ? "folder" : "file";
+          const seeded = yield* items.create(
+            SyncItemSeed.make({
+              itemKind: previousKind,
+              localGeneration: S.Natural.make(1),
+              localRelPath: VaultRelPath.make(target),
+              provider: "box",
+              syncState: "pending",
+              workspaceId,
+            })
+          );
+          const oldOperation = yield* operations.enqueue(
+            SyncOperationSeed.make({
+              attemptCount: S.Natural.make(0),
+              idempotencyKey: `replace-${previousKind}`,
+              inputGeneration: S.Natural.make(1),
+              operationType: previousKind === "file" ? "uploadFile" : "createFolder",
+              provider: "box",
+              status: "queued",
+              syncItemId: seeded.id,
+              targetName: target,
+              targetRelPath: VaultRelPath.make(target),
+              workspaceId,
+            })
+          );
+          if (replacementKind === "folder") {
+            yield* fs.makeDirectory(path.join(root, target));
+          } else {
+            yield* writeVaultFile(root, target, "replacement bytes");
+          }
+          const status = yield* engine.syncOnce(syncInput(root));
+          const failed = yield* listOperationsByStatus("failed");
+          expect(A.map(failed, (operation) => operation.id)).toEqual([oldOperation.id]);
+          expect(O.getOrNull(failed[0]?.lastError ?? O.none())).toBe(
+            `superseded: ${target} changed kind to ${replacementKind}`
+          );
+          const replacement = yield* findTrackedItem(target);
+          expect(replacement.id).toBe(seeded.id);
+          expect(replacement.itemKind).toBe(replacementKind);
+          expect(replacement.localGeneration).toBe(2);
+          expect(replacement.syncState).toBe("current");
+          expect((yield* mirror.snapshotTree)[target]?.itemKind).toBe(replacementKind);
+          expect(status.queuedOperations).toBe(0);
+          const again = yield* engine.syncOnce(syncInput(root));
+          expect(again.failedOperations).toBe(1);
+          expect(again.queuedOperations).toBe(0);
+        })
+      );
+    });
+  });
+}

@@ -1,3 +1,4 @@
+import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import { RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
   DMS_MIRROR_FIXTURE_ROOT_ID,
@@ -11,6 +12,7 @@ import {
   MarkConflictReviewedInput,
   SyncOnceInput,
   VaultSyncEngine,
+  VaultSyncStatusInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { FindSyncCursorInput, SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import { FindSyncItemByPathInput, SyncItemRepository } from "@beep/documents-use-cases/entities/SyncItem/server";
@@ -318,4 +320,121 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
       })
     );
   });
+});
+
+describe("Vault review ownership and detached conflicts", () => {
+  it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+    it.effect(
+      "rejects another workspace review and permits an unattached conflict to be reviewed once",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        yield* engine.syncOnce(syncInput(root));
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "unattached-review",
+            eventType: "created",
+            parentRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID),
+            remoteId: O.some(RemoteItemId.make("foreign-unattached")),
+            payload: {},
+          })
+        );
+        yield* engine.syncOnce(syncInput(root));
+        const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+        expect(O.isNone(conflict.syncItemId)).toBe(true);
+        const foreign = MarkConflictReviewedInput.make({
+          conflictId: conflict.id,
+          workspaceId: WorkspaceIdentity.WorkspaceId.make(12),
+        });
+        const rejection = yield* Effect.flip(engine.markConflictReviewed(foreign));
+        expect(rejection).toMatchObject({ _tag: "SyncConflictRepositoryNotFound", conflictId: conflict.id });
+        expect(A.map(yield* engine.listOpenConflicts(listConflictsInput), (entry) => entry.id)).toEqual([conflict.id]);
+        const own = MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId });
+        expect((yield* engine.markConflictReviewed(own)).resolutionStatus).toBe("reviewed");
+        expect(yield* engine.listOpenConflicts(listConflictsInput)).toEqual([]);
+        expect(yield* Effect.flip(engine.markConflictReviewed(own))).toMatchObject({
+          _tag: "SyncConflictRepositoryNotFound",
+        });
+        const status = yield* engine.status(VaultSyncStatusInput.make({ workspaceId, forceProbe: true }));
+        expect(status.connected).toBe(true);
+        expect(status.queuedOperations).toBe(0);
+      })
+    );
+  });
+  it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+    it.effect(
+      "preserves a current item when reviewing an earlier conflict",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const repository = yield* SyncItemRepository;
+        const root = yield* makeVaultRoot();
+        yield* writeVaultFile(root, "current.txt", "local");
+        yield* engine.syncOnce(syncInput(root));
+        const tracked = yield* findTrackedItem("current.txt");
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "old-conflict",
+            eventType: "unknown",
+            remoteId: tracked.remoteId,
+            payload: {},
+          })
+        );
+        yield* engine.syncOnce(syncInput(root));
+        const conflicted = yield* findTrackedItem("current.txt");
+        expect(conflicted.syncState).toBe("conflict");
+        const current = yield* repository.update(DomainSyncItem.SyncItem.make({ ...conflicted, syncState: "current" }));
+        const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+        yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId }));
+        const after = yield* findTrackedItem("current.txt");
+        expect(after).toEqual(current);
+        expect((yield* engine.status(VaultSyncStatusInput.make({ workspaceId }))).queuedOperations).toBe(0);
+      })
+    );
+  });
+  it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+    it.effect(
+      "classifies a conflicting remote create for an already tracked item as an edit",
+      Effect.fnUntraced(function* () {
+        const engine = yield* VaultSyncEngine;
+        const handle = yield* DmsMirrorFixtureHandle;
+        const root = yield* makeVaultRoot();
+        yield* writeVaultFile(root, "tracked.txt", "local");
+        yield* engine.syncOnce(syncInput(root));
+        const tracked = yield* findTrackedItem("tracked.txt");
+        yield* handle.injectRemoteEvent(
+          DmsRemoteEvent.make({
+            eventId: "foreign-recreate",
+            eventType: "created",
+            remoteId: tracked.remoteId,
+            payload: {},
+          })
+        );
+        yield* engine.syncOnce(syncInput(root));
+        const conflict = yield* Effect.fromOption(A.head(yield* engine.listOpenConflicts(listConflictsInput)));
+        expect(conflict.conflictKind).toBe("remoteEdit");
+        expect(O.getOrNull(conflict.syncItemId)).toBe(tracked.id);
+      })
+    );
+  });
+});
+
+it.layer(Layer.fresh(SyncDriftTestLayer))((it) => {
+  it.effect(
+    "recovers when the first remote poll fails before a cursor exists",
+    Effect.fnUntraced(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const cursors = yield* SyncCursorRepository;
+      const root = yield* makeVaultRoot();
+      yield* handle.failNext("pollEvents", false);
+      const failedBootstrap = yield* engine.syncOnce(syncInput(root));
+      expect(O.isNone(failedBootstrap.cursorPosition)).toBe(true);
+      expect(O.isNone(yield* cursors.find(FindSyncCursorInput.make({ provider: "box", workspaceId })))).toBe(true);
+      const recovered = yield* engine.syncOnce(syncInput(root));
+      expect(O.isSome(recovered.cursorPosition)).toBe(true);
+      expect(recovered.failedOperations).toBe(0);
+    })
+  );
 });
