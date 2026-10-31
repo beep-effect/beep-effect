@@ -171,7 +171,7 @@ const lastLine = (text: string): string =>
  * console.log(outcome._tag) // "Reproduced"
  * ```
  *
- * @category probes
+ * @category utilities
  * @since 0.0.0
  */
 export const classifyProbeOutput =

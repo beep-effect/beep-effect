@@ -36,7 +36,7 @@ export * from "./Holds.service.ts";
 /**
  * Public hold probe verdict rules.
  *
- * @category verdicts
+ * @category policies
  * @since 0.0.0
  */
 export * from "./Holds.verdict.ts";

@@ -31,7 +31,7 @@ import type { HoldVerdict, ProbeOutcome, ProbeRun, ProbeRunVerdict } from "./Hol
  * console.log(verdict) // "candidate-passed"
  * ```
  *
- * @category verdicts
+ * @category policies
  * @since 0.0.0
  */
 export const judgeProbeRun: {
@@ -66,7 +66,7 @@ const verdictOf = (run: ProbeRun): ProbeRunVerdict => run.verdict;
  * console.log(confirmHoldVerdict(["candidate-passed", "still-holds"])) // "Unconfirmed"
  * ```
  *
- * @category verdicts
+ * @category policies
  * @since 0.0.0
  */
 export const confirmHoldVerdict = (newestFirst: ReadonlyArray<ProbeRunVerdict>): HoldVerdict =>
@@ -90,7 +90,7 @@ export const confirmHoldVerdict = (newestFirst: ReadonlyArray<ProbeRunVerdict>):
 /**
  * {@link confirmHoldVerdict} over recorded runs, newest first.
  *
- * @category verdicts
+ * @category policies
  * @since 0.0.0
  */
 export const confirmHoldRuns = (newestFirst: ReadonlyArray<ProbeRun>): HoldVerdict =>

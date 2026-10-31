@@ -74,6 +74,8 @@
     "packages/foundation/capability/walker/src/**",
     "packages/foundation/capability/xdg/package.json",
     "packages/foundation/capability/xdg/src/**",
+    "packages/foundation/modeling/epistemics/package.json",
+    "packages/foundation/modeling/epistemics/src/**",
     "packages/foundation/modeling/github-commands/package.json",
     "packages/foundation/modeling/github-commands/src/**",
     "packages/foundation/modeling/github-reporting/package.json",
