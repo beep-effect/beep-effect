@@ -768,7 +768,7 @@ The same-file Fallow audit also exposed one inherited-adjacent clone in the
 baseline/transition review readers. Consolidate it without borrowing the local
 experiment reader's different containment policy. A regression preserves
 external review paths and malformed/missing-input typed failures. The refreshed
-98-case Node/Bun suites, quick lint/check, Effect/inline policies, scoped Docgen
+98-case Node and Bun suites, quick lint/check, Effect/inline policies, scoped Docgen
 and Fallow audit/health pass; both Fallow finding counts are zero. No threshold
 or policy exemption changes. Keep complete accepted-source proof pending.
 
@@ -812,7 +812,7 @@ the entire observation digest, independent binding and upload. Legacy upload-onl
 reports remain readable but cannot satisfy the complete join. A private snapshot
 prevents caller mutation during metadata reads.
 
-All32 focused tests pass under each runtime; removing the digest, upload or
+All 32 focused tests pass under each runtime; removing the digest, upload or
 snapshot guard makes the intended case fail, with exact source restoration.
 Quick verification, Effect Vitest (zero introduced findings) and Fallow pass.
 [The source-bound checkpoint](research/complete-observation-publication-checkpoint.json)
@@ -822,7 +822,7 @@ verification, and pass fresh combined-source/hosted proof after the parent lands
 
 The report builder now takes only run/attempt identity before upload; authenticated
 verification still requires the actual artifact ID returned afterward. The refined
-source again passes32 cases per runtime and all three causal guard controls.
+source again passes 32 cases per runtime and all three causal guard controls.
 Current source inspection confirms issuer exclusion already covers the actual
 worker mounts and `/usr`; the owned protected workflow must also stage and clear
 its temporary raw provisioning transfer before launching workers.
@@ -912,11 +912,11 @@ trust and adoption acceptance criterion remains unproven.
 ### Private producer output repair, 2026-10-30
 
 The [file-output checkpoint](research/producer-private-output-checkpoint.json)
-records a real0644 creation failure under a child-only022 umask and an intended
+records a real 0644 creation failure under a child-only 022 umask and an intended
 exclusivity-removal failure with exact source restoration. Producer file outputs
-now use existing Effect exclusive creation with mode0600; physical file, symlink
+now use existing Effect exclusive creation with mode 0600; physical file, symlink
 and hardlink controls preserve prior data. The output pair remains sequential,
-so fresh per-run private paths are required. Final formatted-source Node/Bun replay passes96 cases per runtime and quick
+so fresh per-run private paths are required. Final formatted-source Node/Bun replay passes 96 cases per runtime and quick
 checking passes. Canonical metadata and Fallow pass with zero introduced
 findings. The new complete default package proof remains pending.
 No protected run, R2 activation, credential or qualification change occurred.
@@ -925,7 +925,7 @@ The first private-output implementation at `c99a60cb49` passed the complete
 default audit and Docgen in1068.659 seconds. A subsequent explicit type-contract
 check exposed an unintended filesystem dependency on public warming. The
 producer now selects that capability at its own boundary; both typed warming
-examples compile again. The refined source passes the current96-case Node/Bun replay, quick checking,
+examples compile again. The refined source passes the current 96-case Node/Bun replay, quick checking,
 canonical metadata and the repeated exclusivity control. Its complete package
 evidence remains pending; the earlier pass retains its exact source scope.
 

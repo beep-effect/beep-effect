@@ -904,7 +904,7 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
 ### Private producer output creation, 2026-10-30
 
 - Create producer observation and compact publication files with the existing
-  Effect filesystem exclusive-create pattern and explicit mode0600. Generic
+  Effect filesystem exclusive-create pattern and explicit mode 0600. Generic
   report defaults must not determine these private file permissions or replace
   existing files, final symlinks or hardlinked peers. Use fresh caller-owned
   output directories and paths for each run; ordinary report callers retain

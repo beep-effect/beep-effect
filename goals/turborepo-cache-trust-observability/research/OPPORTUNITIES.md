@@ -221,7 +221,7 @@ the exact older block-buffer archive. Its source assessment has one expiring
 advisory exception, an archive/version-set guard and an exhaustive256-value
 caught-panic regression; changed or mixed locks get no exception. The configured
 scan and all32 final-binary process controls pass. Make this independent Cargo
-scan part of each candidate build. A first scan could not read a mode0600 public
+scan part of each candidate build. A first scan could not read a mode 0600 public
 lock through a capability-dropped container; copying only that public input to a
 mode0444 read-only bind preserved the private source cache permissions.
 
@@ -1483,9 +1483,9 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   observation as 0644; both observation-only and hosted-output cases failed
   the physical mode assertion. No actual credential or signed trial was used.
 - Prevention: reuse the existing Effect filesystem exclusive-create pattern
-  with explicit mode0600 for producer output files. Preserve existing files,
+  with explicit mode 0600 for producer output files. Preserve existing files,
   symlink targets and hardlink peers; keep ordinary report callers unchanged.
-- Evidence: the focused before-fix run fails on actual mode420 versus384.
+- Evidence: the focused before-fix run fails on actual mode 420 versus 384.
   Positive physical file/link controls and current package proof must pass
   before this repair is published. No live R2 configuration changed.
 

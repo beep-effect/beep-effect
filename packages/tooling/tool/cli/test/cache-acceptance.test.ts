@@ -737,6 +737,8 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
         '#!/bin/sh\nprintf used > "$0.used"\nprintf "%s\\n" synthetic-test-github-token\n',
         { mode: 0o700 }
       );
+      const opBinary = path.join(root, "op");
+      yield* fs.writeFileString(opBinary, '#!/bin/sh\nprintf used > "$0.used"\nexit 73\n', { mode: 0o700 });
       const priorPath = yield* Config.String("PATH");
       const released = yield* Ref.make(0);
       const network = vi
@@ -749,10 +751,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
         )
       );
       vi.stubEnv("PATH", `${root}:${priorPath}`);
+      vi.stubEnv("GITHUB_TOKEN_REF", "op://synthetic-only/unavailable/field");
       yield* Effect.gen(function* () {
-        const context = yield* Layer.build(CacheHostedProducerVerifierLive).pipe(
-          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
-        );
+        const context = yield* Layer.build(CacheHostedProducerVerifierLive);
         const live = Context.get(context, CacheHostedProducerVerifier);
         const legacy = CacheProducerImportRequest.make({ observations: published.request.observations });
         expect((yield* previewCacheProducerImport(legacy, trust)).failures).toContain(
@@ -784,7 +785,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
         ).toBe(true);
         expect(yield* Ref.get(released)).toBe(3);
         expect(network).not.toHaveBeenCalled();
+        expect(yield* fs.exists(`${opBinary}.used`)).toBe(false);
       }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.ensuring(
           Effect.sync(() => {
             client.mockRestore();
