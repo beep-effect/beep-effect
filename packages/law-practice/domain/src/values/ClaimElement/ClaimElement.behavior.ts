@@ -29,7 +29,12 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimTermDeterminer } from "./ClaimElement.model.ts";
 import { ClaimElementTree } from "./ClaimElement.tree.model.ts";
-import { isDesignatedHead, isExplicitAbbreviatedHead, isSingleModifiedHead } from "./ClaimTerm.compatibility.ts";
+import {
+  isCountedHead,
+  isDesignatedHead,
+  isExplicitAbbreviatedHead,
+  isSingleModifiedHead,
+} from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
 import type { ClaimElement, ClaimElementKind, ClaimTerm } from "./ClaimElement.model.ts";
@@ -351,14 +356,19 @@ const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean =
     HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word)
   );
   const finite = O.exists(current, (word) =>
-    HashSet.has(HashSet.make("display", "extend", "mesh", "embed"), pipe(word, Str.replace(/(?:es|s)$/u, "")))
+    A.some([word, Str.replace(/s$/u, "")(word), Str.replace(/es$/u, "")(word)], (base) =>
+      HashSet.has(HashSet.make("display", "extend", "mesh", "embed", "include", "incorporate"), base)
+    )
   );
   const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
-  const purposeParticiple = O.contains(current, "used") && O.contains(next, "for");
+  const purposeParticiple =
+    O.contains(next, "for") && (O.contains(current, "used") || (participle && O.contains(previous, "be")));
+  const relational = O.contains(current, "responsive") && O.contains(next, "to");
   return (
     (O.exists(current, (word) => HashSet.has(predicateWords, word)) ||
       finite ||
       purposeParticiple ||
+      relational ||
       (participle && complement)) &&
     (!O.exists(next, (word) => HashSet.has(nominalFollowers, word)) || clauseVerb) &&
     !nominal
@@ -692,6 +702,7 @@ const antecedentEdges = (
           );
       const exact = A.filter(eligible, ({ term }) => term.head === referring.term.head);
       const abbreviated = A.filter(eligible, ({ term }) => isExplicitAbbreviatedHead(referring.term.head)(term.head));
+      const counted = A.filter(eligible, ({ term }) => isCountedHead(referring.term.head)(term.head));
       const modified = A.filter(eligible, ({ term }) => isSingleModifiedHead(referring.term.head)(term.head));
       // A unique exact earlier mention is a structural back-reference, even if its
       // original definite wording still requires a legal antecedent-basis warning.
@@ -726,6 +737,7 @@ const antecedentEdges = (
             localDesignated,
             exact,
             abbreviated,
+            counted,
             designated,
             rootShortened,
             modified,

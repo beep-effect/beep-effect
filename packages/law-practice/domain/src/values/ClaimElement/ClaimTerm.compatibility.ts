@@ -61,3 +61,24 @@ export const isDesignatedHead =
   (head: string) =>
   (candidate: string): boolean =>
     O.exists(Str.match(/^(.+)\s+[a-z]{1,4}\d+[a-z0-9]*$/u)(candidate), (match) => O.contains(A.get(match, 1), head));
+
+/**
+ * Match an exact plural head under an explicit number-of quantity wrapper.
+ *
+ * **Example** (Retain the complete source phrase while resolving its contents)
+ *
+ * ```ts
+ * import { isCountedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
+ * console.log(isCountedHead("packets")("specified number of packets")) // true
+ * console.log(isCountedHead("sensor")("number of sensors")) // false
+ * ```
+ *
+ * @category domain-logic
+ * @since 0.0.0
+ */
+export const isCountedHead =
+  (head: string) =>
+  (candidate: string): boolean =>
+    O.exists(Str.match(/^(?:(?:specified|predetermined|selected|fixed)\s+)?number of (.+)$/u)(candidate), (match) =>
+      O.contains(A.get(match, 1), head)
+    );
