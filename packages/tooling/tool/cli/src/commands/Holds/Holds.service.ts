@@ -274,6 +274,116 @@ export const classifyProbeOutput =
           ? ProbeOutcome.cases.Passed.make({})
           : ProbeOutcome.cases.Inconclusive.make({ detail: `exit ${result.exitCode} without the failure signature` });
 
+type ScriptedFalsifier = Extract<HoldProposition["falsifier"], { readonly _tag: "Scripted" }>;
+
+type ProbeSide = "control" | "candidate";
+
+const writeProbeManifest = Effect.fn("HoldProbe.writeManifest")(function* (
+  directory: string,
+  proposition: HoldProposition,
+  side: ProbeSide,
+  version: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs
+    .makeDirectory(directory, { recursive: true })
+    .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
+  const manifest = yield* encodeProbeManifest({
+    name: `hold-probe-${proposition.holdId}-${side}`,
+    private: true,
+    dependencies: R.fromEntries(A.map(proposition.subject.packages, (name) => [name, version] as const)),
+  }).pipe(
+    Effect.mapError((cause) =>
+      HoldsError.make({ reason: "decode", message: "Could not encode the probe manifest.", cause })
+    )
+  );
+  yield* fs
+    .writeFileString(path.join(directory, "package.json"), manifest)
+    .pipe(Effect.mapError(holdsPlatformError("Could not write the probe manifest")));
+});
+
+const installedVersionOf = Effect.fn("HoldProbe.installedVersion")(function* (
+  directory: string,
+  packageName: string,
+  requested: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs.readFileString(path.join(directory, "node_modules", packageName, "package.json")).pipe(
+    Effect.flatMap(decodeInstalledVersion),
+    Effect.map((pkg) => pkg.version),
+    Effect.orElseSucceed(() => requested)
+  );
+});
+
+const runProbeSide = Effect.fn("HoldProbe.runSide")(function* (
+  runDirectory: string,
+  proposition: HoldProposition,
+  falsifier: ScriptedFalsifier,
+  side: ProbeSide,
+  version: string
+) {
+  const path = yield* Path.Path;
+  const directory = path.join(runDirectory, side);
+  yield* writeProbeManifest(directory, proposition, side, version);
+  const outcome = yield* runCaptured({
+    command: A.headNonEmpty(falsifier.command),
+    args: A.tailNonEmpty(falsifier.command),
+    cwd: directory,
+    bound: repoRunOutputBound,
+    source: "merge",
+    trim: true,
+    timeout: "10 minutes",
+    forceKillAfter: "10 seconds",
+  }).pipe(
+    Effect.map(classifyProbeOutput(falsifier.failureSignature)),
+    Effect.orElseSucceed(() => ProbeOutcome.cases.Inconclusive.make({ detail: "the probe command could not run" }))
+  );
+  const installed = yield* installedVersionOf(directory, A.headNonEmpty(proposition.subject.packages), version);
+  return { outcome, version: installed } as const;
+});
+
+// Each invocation gets its own directory, removed when the run ends, so concurrent probes never share files.
+const runScriptedProbe = Effect.fn("HoldProbe.scripted")(function* (
+  scratchRoot: string,
+  request: HoldProbeRequest,
+  falsifier: ScriptedFalsifier
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const { proposition } = request;
+  const holdDirectory = path.join(scratchRoot, proposition.holdId);
+  yield* fs
+    .makeDirectory(holdDirectory, { recursive: true })
+    .pipe(Effect.mapError(holdsPlatformError(`Could not create ${holdDirectory}`)));
+  const { control, candidate } = yield* Effect.scoped(
+    Effect.gen(function* () {
+      const runDirectory = yield* fs
+        .makeTempDirectoryScoped({ directory: holdDirectory, prefix: "run-" })
+        .pipe(Effect.mapError(holdsPlatformError(`Could not create a run directory under ${holdDirectory}`)));
+      const control = yield* runProbeSide(runDirectory, proposition, falsifier, "control", falsifier.controlVersion);
+      const candidate = yield* runProbeSide(runDirectory, proposition, falsifier, "candidate", falsifier.candidate);
+      return { control, candidate } as const;
+    })
+  );
+  const ranAt = yield* DateTime.now;
+  return ProbeRun.make({
+    schemaVersion: "hold-probe-run/v1",
+    id: ProbeRunId.make(`${proposition.holdId}@${DateTime.toEpochMillis(ranAt)}`),
+    holdId: proposition.holdId,
+    holdVersionId: request.holdVersionId,
+    ranAt,
+    commitSha: request.commitSha,
+    runtime: falsifier.runtime,
+    controlVersion: control.version,
+    control: control.outcome,
+    candidateVersion: candidate.version,
+    candidate: candidate.outcome,
+    verdict: judgeProbeRun(control.outcome, candidate.outcome),
+  });
+});
+
 /**
  * Build the scratch-install probe. Each side runs in its own directory under
  * `scratchRoot` whose `package.json` depends on every subject package at the
@@ -292,116 +402,18 @@ export const classifyProbeOutput =
  * @since 0.0.0
  */
 export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const context = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto>();
-
-  const runSide = Effect.fn("HoldProbe.runSide")(function* (
-    runDirectory: string,
-    proposition: HoldProposition,
-    command: A.NonEmptyReadonlyArray<string>,
-    failureSignature: string,
-    side: "control" | "candidate",
-    version: string
-  ) {
-    const directory = path.join(runDirectory, side);
-    yield* fs
-      .makeDirectory(directory, { recursive: true })
-      .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
-    const dependencies = R.fromEntries(A.map(proposition.subject.packages, (name) => [name, version] as const));
-    const manifest = yield* encodeProbeManifest({
-      name: `hold-probe-${proposition.holdId}-${side}`,
-      private: true,
-      dependencies,
-    }).pipe(
-      Effect.mapError((cause) =>
-        HoldsError.make({ reason: "decode", message: "Could not encode the probe manifest.", cause })
-      )
-    );
-    yield* fs
-      .writeFileString(path.join(directory, "package.json"), manifest)
-      .pipe(Effect.mapError(holdsPlatformError("Could not write the probe manifest")));
-    const outcome = yield* runCaptured({
-      command: A.headNonEmpty(command),
-      args: A.tailNonEmpty(command),
-      cwd: directory,
-      bound: repoRunOutputBound,
-      source: "merge",
-      trim: true,
-      timeout: "10 minutes",
-      forceKillAfter: "10 seconds",
-    }).pipe(
-      Effect.provide(context),
-      Effect.map(classifyProbeOutput(failureSignature)),
-      Effect.orElseSucceed(() => ProbeOutcome.cases.Inconclusive.make({ detail: "the probe command could not run" }))
-    );
-    const installedVersion = yield* fs
-      .readFileString(
-        path.join(directory, "node_modules", A.headNonEmpty(proposition.subject.packages), "package.json")
-      )
-      .pipe(
-        Effect.flatMap(decodeInstalledVersion),
-        Effect.map((pkg) => pkg.version),
-        Effect.orElseSucceed(() => version)
-      );
-    return { outcome, version: installedVersion } as const;
-  });
-
-  const probe = Effect.fn("HoldProbe.probe")(function* (request: HoldProbeRequest) {
-    const { proposition } = request;
-    if (proposition.falsifier._tag === "Judgement") {
-      return yield* HoldsError.make({
-        reason: "usage",
-        message: `${proposition.holdId} is a Judgement hold; a judge run, not beep holds probe, re-checks it.`,
-      });
-    }
-    const falsifier = proposition.falsifier;
-    const holdDirectory = path.join(scratchRoot, proposition.holdId);
-    yield* fs
-      .makeDirectory(holdDirectory, { recursive: true })
-      .pipe(Effect.mapError(holdsPlatformError(`Could not create ${holdDirectory}`)));
-    // Each invocation gets its own directory, removed when the run ends, so concurrent probes never share files.
-    const { control, candidate } = yield* Effect.scoped(
-      Effect.gen(function* () {
-        const runDirectory = yield* fs
-          .makeTempDirectoryScoped({ directory: holdDirectory, prefix: "run-" })
-          .pipe(Effect.mapError(holdsPlatformError(`Could not create a run directory under ${holdDirectory}`)));
-        const control = yield* runSide(
-          runDirectory,
-          proposition,
-          falsifier.command,
-          falsifier.failureSignature,
-          "control",
-          falsifier.controlVersion
-        );
-        const candidate = yield* runSide(
-          runDirectory,
-          proposition,
-          falsifier.command,
-          falsifier.failureSignature,
-          "candidate",
-          falsifier.candidate
-        );
-        return { control, candidate } as const;
-      })
-    );
-    const ranAt = yield* DateTime.now;
-    return ProbeRun.make({
-      schemaVersion: "hold-probe-run/v1",
-      id: ProbeRunId.make(`${proposition.holdId}@${DateTime.toEpochMillis(ranAt)}`),
-      holdId: proposition.holdId,
-      holdVersionId: request.holdVersionId,
-      ranAt,
-      commitSha: request.commitSha,
-      runtime: falsifier.runtime,
-      controlVersion: control.version,
-      control: control.outcome,
-      candidateVersion: candidate.version,
-      candidate: candidate.outcome,
-      verdict: judgeProbeRun(control.outcome, candidate.outcome),
-    });
-  });
-
+  const context = yield* Effect.context<
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto
+  >();
+  const probe = (request: HoldProbeRequest): Effect.Effect<ProbeRun, HoldsError> =>
+    request.proposition.falsifier._tag === "Judgement"
+      ? Effect.fail(
+          HoldsError.make({
+            reason: "usage",
+            message: `${request.proposition.holdId} is a Judgement hold; a judge run, not beep holds probe, re-checks it.`,
+          })
+        )
+      : runScriptedProbe(scratchRoot, request, request.proposition.falsifier).pipe(Effect.provide(context));
   return HoldProbe.of({ probe });
 });
 
