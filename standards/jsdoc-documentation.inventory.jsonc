@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T22:40:06.793Z",
+  "generatedAt": "2026-10-31T22:59:27.990Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -1633,8 +1633,8 @@
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 76,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-76-identityauthority",
+          "line": 77,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-77-identityauthority",
           "currentTags": [
             "@category",
             "@since"
@@ -1655,8 +1655,8 @@
           "exportKind": "class",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 170,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-170-identityinterpolationerror",
+          "line": 140,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-140-identityinterpolationerror",
           "currentTags": [
             "@since",
             "@category"
@@ -1677,8 +1677,8 @@
           "exportKind": "class",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 204,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-204-identitysegmentcounterror",
+          "line": 174,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-174-identitysegmentcounterror",
           "currentTags": [
             "@since",
             "@category"
@@ -1699,8 +1699,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 245,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-245-segmentvalue",
+          "line": 215,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-215-segmentvalue",
           "currentTags": [
             "@since",
             "@category"
@@ -1721,8 +1721,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 381,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-381-titlefromidentifier",
+          "line": 351,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-351-titlefromidentifier",
           "currentTags": [
             "@since",
             "@category"
@@ -1743,8 +1743,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 406,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-406-irifromidentity",
+          "line": 376,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-376-irifromidentity",
           "currentTags": [
             "@since",
             "@category"
@@ -1765,8 +1765,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 435,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-435-curiefromidentity",
+          "line": 405,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-405-curiefromidentity",
           "currentTags": [
             "@since",
             "@category"
@@ -1787,8 +1787,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 465,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-465-slugfromidentifier",
+          "line": 435,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-435-slugfromidentifier",
           "currentTags": [
             "@since",
             "@category"
@@ -1809,8 +1809,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 508,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-508-modulesegmentvalue",
+          "line": 478,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-478-modulesegmentvalue",
           "currentTags": [
             "@since",
             "@category"
@@ -1831,8 +1831,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 529,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-529-moduleaccessor",
+          "line": 499,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-499-moduleaccessor",
           "currentTags": [
             "@since",
             "@category"
@@ -1853,8 +1853,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 550,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-550-taggedaccessor",
+          "line": 520,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-520-taggedaccessor",
           "currentTags": [
             "@since",
             "@category"
@@ -1875,8 +1875,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 569,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-569-identitystring",
+          "line": 539,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-539-identitystring",
           "currentTags": [
             "@since",
             "@category"
@@ -1897,8 +1897,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 590,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-590-identitysymbol",
+          "line": 560,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-560-identitysymbol",
           "currentTags": [
             "@since",
             "@category"
@@ -1919,8 +1919,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 613,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-613-schemaannotationextras",
+          "line": 583,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-583-schemaannotationextras",
           "currentTags": [
             "@since",
             "@category"
@@ -1941,8 +1941,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 639,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-639-declarationannotationextras",
+          "line": 609,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-609-declarationannotationextras",
           "currentTags": [
             "@category",
             "@since"
@@ -1963,8 +1963,8 @@
           "exportKind": "interface",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 674,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-674-errorannotationrecord",
+          "line": 644,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-644-errorannotationrecord",
           "currentTags": [
             "@category",
             "@since"
@@ -1985,8 +1985,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 696,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-696-keyannotationextras",
+          "line": 666,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-666-keyannotationextras",
           "currentTags": [
             "@since",
             "@category"
@@ -2007,8 +2007,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 719,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-719-skosclassification",
+          "line": 689,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-689-skosclassification",
           "currentTags": [
             "@since",
             "@category"
@@ -2029,8 +2029,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 742,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-742-ontologykeyoptions",
+          "line": 712,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-712-ontologykeyoptions",
           "currentTags": [
             "@since",
             "@category"
@@ -2051,8 +2051,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 773,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-773-ontologyclassextras",
+          "line": 743,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-743-ontologyclassextras",
           "currentTags": [
             "@since",
             "@category"
@@ -2073,8 +2073,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 807,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-807-httpannotationextras",
+          "line": 777,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-777-httpannotationextras",
           "currentTags": [
             "@since",
             "@category"
@@ -2095,8 +2095,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 833,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-833-identityanyannotationextras",
+          "line": 803,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-803-identityanyannotationextras",
           "currentTags": [
             "@since",
             "@category"
@@ -2117,8 +2117,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 860,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-860-identityannotation",
+          "line": 830,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-830-identityannotation",
           "currentTags": [
             "@since",
             "@category"
@@ -2139,8 +2139,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 928,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-928-identityannotationresult",
+          "line": 898,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-898-identityannotationresult",
           "currentTags": [
             "@since",
             "@category"
@@ -2161,11 +2161,11 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 963,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-963-annotatedschema",
+          "line": 931,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-931-annotatedschema",
           "currentTags": [
-            "@since",
-            "@category"
+            "@category",
+            "@since"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -2183,11 +2183,11 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 980,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-980-taggedmodulerecord",
+          "line": 948,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-948-taggedmodulerecord",
           "currentTags": [
-            "@since",
-            "@category"
+            "@category",
+            "@since"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -2205,8 +2205,8 @@
           "exportKind": "interface",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1043,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1043-identitycomposer",
+          "line": 1011,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1011-identitycomposer",
           "currentTags": [
             "@since",
             "@category"
@@ -2227,8 +2227,8 @@
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1656,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1656-baseidentityinput",
+          "line": 1628,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1628-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -2249,8 +2249,8 @@
           "exportKind": "type",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 1685,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-1685-baseidentityinput",
+          "line": 1657,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-1657-baseidentityinput",
           "currentTags": [
             "@category",
             "@since"
@@ -2271,8 +2271,8 @@
           "exportKind": "const",
           "filePath": "src/Id.ts",
           "repoPath": "packages/foundation/modeling/identity/src/Id.ts",
-          "line": 2201,
-          "anchor": "packages-foundation-modeling-identity-src-id-ts-2201-make",
+          "line": 2173,
+          "anchor": "packages-foundation-modeling-identity-src-id-ts-2173-make",
           "currentTags": [
             "@since",
             "@category"
