@@ -138,6 +138,9 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-10-31 | The ledger lives in a top-level `hold-ledger/` directory: `claims.jsonl` holds append-only `HoldClaimVersion` rows and `runs.jsonl` holds `ProbeRun` rows. | `harness-ledger/` is the precedent for a tracked top-level ledger. A goal packet is temporary; `research/ledger/` belongs to the nightly routine as its single writer. | Move the two files and update the `Holds` paths. |
+| 2026-10-31 | A probe run has three outcomes: `Reproduced` (the signature appeared), `Passed` (exit 0, no signature) and `Inconclusive` (anything else). A passing control gives `probe-broken`. A flip needs the two newest runs to both be `candidate-passed`. | An inconclusive run must never count as a pass, the same rule as skulk's "a failed check is never a change". | Change `judgeProbeRun` and `confirmHoldVerdict` and their tests. |
+| 2026-10-31 | `@beep/repo-cli` depends on `@beep/epistemics` for the claim envelope. | Tooling may depend on foundation; the envelope is reused, not copied. | Drop the dependency and inline a hold-only version schema. |
 | 2026-10-31 | The unit is a hold on `makeClaimEnvelope`; the ledger lives in the repo; wave 1 is dependency-shaped holds; renewal needs evidence plus a 180-day maximum; probes need a control and two passes; the `Holds` command group lives in the repo CLI; `deps:update` re-checks holds; the first slice is jsdom. | Settled in the exploration align and shape rounds, [`DECISIONS.md`](../../explorations/expiring-repo-facts/DECISIONS.md). | Reopen the exploration at `align`. |
 
 ## Exception Ledger
