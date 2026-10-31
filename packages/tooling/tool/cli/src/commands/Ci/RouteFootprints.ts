@@ -95,6 +95,14 @@ export const ROUTE_FOOTPRINTS = {
 /**
  * The footprints in lane-id declaration order.
  *
+ * **Example** (One footprint per lane)
+ *
+ * ```ts
+ * import { CI_LANE_ID_VALUES, routeFootprintList } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(routeFootprintList().length === CI_LANE_ID_VALUES.length) // true
+ * ```
+ *
  * @returns One {@link CheckFootprint} per lane, in `CI_LANE_ID_VALUES` order.
  * @category queries
  * @since 0.0.0
@@ -207,6 +215,14 @@ export const requiredLanes = (
 /**
  * The lanes a set of atoms does not require, in lane-id declaration order.
  *
+ * **Example** (An empty change skips every non-external lane)
+ *
+ * ```ts
+ * import { CI_LANE_ID_VALUES, requiredLanes, skippedLanes } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(skippedLanes(requiredLanes([])).length === CI_LANE_ID_VALUES.length - 1) // true
+ * ```
+ *
  * @param required - The output of {@link requiredLanes}.
  * @returns Every lane id absent from `required`.
  * @category queries
@@ -218,6 +234,14 @@ export const skippedLanes = (
 
 /**
  * The footprint record as a plain record keyed by lane id, for JSON output.
+ *
+ * **Example** (Security is the external lane)
+ *
+ * ```ts
+ * import { routeFootprintRecord } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(routeFootprintRecord().security.external) // true
+ * ```
  *
  * @returns The same rows as {@link ROUTE_FOOTPRINTS}, typed as a plain record.
  * @category queries

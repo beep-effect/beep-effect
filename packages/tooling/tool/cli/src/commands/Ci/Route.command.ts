@@ -57,6 +57,14 @@ import type { RouteCensusShape, RouteCorpusLoaded } from "./Route.service.ts";
 /**
  * Default corpus directory, relative to the repository root.
  *
+ * **Example** (Read the default corpus directory)
+ *
+ * ```ts
+ * import { ROUTE_CORPUS_DEFAULT_DIR } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ROUTE_CORPUS_DEFAULT_DIR) // "goals/verification-route/research/corpus"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -65,6 +73,14 @@ export const ROUTE_CORPUS_DEFAULT_DIR = "goals/verification-route/research/corpu
 /**
  * First UTC date of the default capture window: the time-to-certainty
  * post-baseline start, so the corpus and M1 share a window edge.
+ *
+ * **Example** (Read the default capture start)
+ *
+ * ```ts
+ * import { ROUTE_CORPUS_DEFAULT_SINCE } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ROUTE_CORPUS_DEFAULT_SINCE) // "2026-09-01"
+ * ```
  *
  * @category constructors
  * @since 0.0.0

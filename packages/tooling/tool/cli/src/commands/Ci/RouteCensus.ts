@@ -241,12 +241,14 @@ export const hostedLaneJobs = (runs: ReadonlyArray<HostedRun>): ReadonlyArray<re
  * **Example** (Order a selection with the identity order)
  *
  * ```ts
+ * import type { CiLaneId } from "@beep/repo-cli/commands/Ci"
  * import { orderSelectedLanes } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import { githubCheckPrePushLanes } from "@beep/repo-cli/test/Quality"
  * import * as HashSet from "effect/HashSet"
  *
+ * const selected: ReadonlyArray<CiLaneId> = ["labs", "lint"]
  * const ordered = orderSelectedLanes(
- *   HashSet.fromIterable(["labs", "lint"] as const),
+ *   HashSet.fromIterable(selected),
  *   (lanes) => lanes,
  *   githubCheckPrePushLanes("/repo", [])
  * )

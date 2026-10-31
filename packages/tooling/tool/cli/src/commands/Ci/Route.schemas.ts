@@ -32,6 +32,15 @@ const OptionalText = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDef
 /**
  * Literal values of {@link ChangeAtomKind}, in census order.
  *
+ * **Example** (The domain ends with the catch-all)
+ *
+ * ```ts
+ * import { CHANGE_ATOM_KIND_VALUES } from "@beep/repo-cli/commands/Ci"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.contains(CHANGE_ATOM_KIND_VALUES, "unknown")) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -255,6 +264,15 @@ export class CheckFootprint extends S.Opaque<CheckFootprint, { readonly brand: u
 /**
  * One selected lane of a route plan and the atom kinds that selected it.
  *
+ * **Example** (A lane selected by one atom kind)
+ *
+ * ```ts
+ * import { RouteSelection } from "@beep/repo-cli/commands/Ci"
+ *
+ * const row = RouteSelection.make({ lane: "lint", selectedBy: ["cfg:biome"] })
+ * console.log(row.lane) // "lint"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -312,6 +330,16 @@ export class RoutePlan extends S.Opaque<RoutePlan, { readonly brand: unique symb
 
 /**
  * One hosted job of a captured run.
+ *
+ * **Example** (A finished hosted job)
+ *
+ * ```ts
+ * import { HostedJob } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const job = HostedJob.make({ name: "Lint", conclusion: O.some("success") })
+ * console.log(O.isNone(job.startedAt)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -375,6 +403,25 @@ export class HostedRun extends S.Opaque<HostedRun, { readonly brand: unique symb
  * The receipt pinning a captured corpus: window, counts and the sha256 of the
  * corpus file.
  *
+ * **Example** (An empty corpus receipt)
+ *
+ * ```ts
+ * import { RouteCorpusReceipt } from "@beep/repo-cli/commands/Ci"
+ *
+ * const receipt = RouteCorpusReceipt.make({
+ *   schemaVersion: "route-corpus/v1",
+ *   capturedAt: "2026-10-31T00:00:00Z",
+ *   since: "2026-09-01",
+ *   until: "2026-10-30",
+ *   workflows: ["Check", "Heavy"],
+ *   runs: 0,
+ *   heads: 0,
+ *   path: "goals/verification-route/research/corpus/hosted-runs.ndjson.gz",
+ *   sha256: "00",
+ * })
+ * console.log(receipt.runs) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -400,6 +447,14 @@ export class RouteCorpusReceipt extends S.Opaque<RouteCorpusReceipt, { readonly 
  * Where a lane's cost estimate comes from: the A1 gate-order seed row for its
  * `quality:*` twin, or nothing.
  *
+ * **Example** (Guard a cost basis)
+ *
+ * ```ts
+ * import { RouteCostBasis } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(RouteCostBasis.is["gate-order-seed"]("gate-order-seed")) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -419,6 +474,16 @@ export type RouteCostBasis = typeof RouteCostBasis.Type;
 
 /**
  * The cost estimate the census uses for one lane and where it comes from.
+ *
+ * **Example** (A lane with no cost estimate)
+ *
+ * ```ts
+ * import { RouteLaneCost } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const cost = RouteLaneCost.make({ lane: "lint", basis: "none" })
+ * console.log(O.isNone(cost.p50Ms)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -448,6 +513,22 @@ export class RouteLaneCost extends S.Opaque<RouteLaneCost, { readonly brand: uni
  * Purity is judged over the head's tree kinds (its kinds without `commits`):
  * a tree kind is pure when it is the head's only tree kind, and `commits` is
  * pure only on a head with no tree kind; every other occurrence is mixed.
+ *
+ * **Example** (One pure head on one lane)
+ *
+ * ```ts
+ * import { RouteCensusRow } from "@beep/repo-cli/commands/Ci"
+ *
+ * const row = RouteCensusRow.make({
+ *   kind: "packet",
+ *   lane: "test-unit",
+ *   pureHeads: 1,
+ *   pureMs: 60000,
+ *   mixedHeads: 0,
+ *   mixedMs: 0,
+ * })
+ * console.log(row.pureMs) // 60000
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -519,6 +600,22 @@ export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique 
  * The replay of one hosted head under the route: what was skipped and whether
  * a skipped lane went red while green on the base.
  *
+ * **Example** (A head with nothing skipped)
+ *
+ * ```ts
+ * import { RouteReplayHead } from "@beep/repo-cli/commands/Ci"
+ *
+ * const head = RouteReplayHead.make({
+ *   headSha: "bbbb",
+ *   mergeBase: "aaaa",
+ *   selected: ["lint"],
+ *   skipped: [],
+ *   skippedReds: [],
+ *   baseUnknown: false,
+ * })
+ * console.log(head.skippedReds.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -547,6 +644,26 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  * against the route (fail-closed) and is reported in `baseUnknownHeads`.
  * `unresolvedHeads` counts heads whose commit stayed missing after fetching; each selects every lane and is base-unknown.
  *
+ * **Example** (An empty replay has full recall)
+ *
+ * ```ts
+ * import { RouteReplay } from "@beep/repo-cli/commands/Ci"
+ *
+ * const replay = RouteReplay.make({
+ *   schemaVersion: "route-replay/v1",
+ *   corpusSha256: "00",
+ *   footprintDigest: "00",
+ *   heads: 0,
+ *   skippedLaneRuns: 0,
+ *   skippedReds: 0,
+ *   baseUnknownHeads: 0,
+ *   unresolvedHeads: 0,
+ *   recall: 1,
+ *   perHead: [],
+ * })
+ * console.log(replay.recall) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -571,6 +688,14 @@ export class RouteReplay extends S.Opaque<RouteReplay, { readonly brand: unique 
 
 /**
  * Why a route operation failed.
+ *
+ * **Example** (Guard an error reason)
+ *
+ * ```ts
+ * import { RouteErrorReason } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(RouteErrorReason.is["corpus-pin"]("corpus-pin")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0

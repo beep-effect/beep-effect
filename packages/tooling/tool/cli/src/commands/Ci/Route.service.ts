@@ -93,6 +93,19 @@ export interface VerificationRouteShape {
 /**
  * The verification route service.
  *
+ * **Example** (Read the route service)
+ *
+ * ```ts
+ * import { VerificationRoute } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const route = yield* VerificationRoute
+ *   return typeof route.plan
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -138,6 +151,28 @@ export class RouteCorpusCaptureOptions extends S.Opaque<RouteCorpusCaptureOption
 /**
  * A loaded corpus: its receipt (verified against the file bytes) and its runs.
  *
+ * **Example** (A loaded corpus with no runs)
+ *
+ * ```ts
+ * import { RouteCorpusLoaded, RouteCorpusReceipt } from "@beep/repo-cli/commands/Ci"
+ *
+ * const loaded = RouteCorpusLoaded.make({
+ *   receipt: RouteCorpusReceipt.make({
+ *     schemaVersion: "route-corpus/v1",
+ *     capturedAt: "2026-10-31T00:00:00Z",
+ *     since: "2026-09-01",
+ *     until: "2026-10-30",
+ *     workflows: ["Check"],
+ *     runs: 0,
+ *     heads: 0,
+ *     path: "hosted-runs.ndjson.gz",
+ *     sha256: "00",
+ *   }),
+ *   runs: [],
+ * })
+ * console.log(loaded.runs.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -170,6 +205,19 @@ export interface RouteCorpusShape {
 /**
  * The hosted corpus service.
  *
+ * **Example** (Read the corpus service)
+ *
+ * ```ts
+ * import { RouteCorpus } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const corpus = yield* RouteCorpus
+ *   return typeof corpus.load
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -190,6 +238,19 @@ export interface RouteCensusShape {
 
 /**
  * The census and replay service.
+ *
+ * **Example** (Read the census service)
+ *
+ * ```ts
+ * import { RouteCensusReader } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const reader = yield* RouteCensusReader
+ *   return typeof reader.census
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
  *
  * @category services
  * @since 0.0.0
