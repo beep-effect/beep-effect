@@ -41,11 +41,8 @@ import {
   decodeSchemaFirstPolicyFindingLine,
   encodeSchemaFirstPolicyFinding,
   envValue,
-  escapeRegexChar,
   GhPageInfo,
   GhPrView,
-  globMatches,
-  globPatternToRegExp,
   intEnvValue,
   isUnresolvedSecretReference,
   JsoncModification,
@@ -215,34 +212,6 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(yield* decode('{"x":3,"y":4}')).toEqual({ x: 3, y: 4 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
-  });
-
-  describe("GlobPattern", { concurrent: false }, () => {
-    it("compiles ** across segments and * within a segment", () => {
-      const re = globPatternToRegExp("src/**/*.ts");
-      expect(re.test("src/a/b/c.ts")).toBe(true);
-      expect(re.test("src/a.ts")).toBe(true);
-      expect(re.test("src/a/b.tsx")).toBe(false);
-      expect(re.test("other/a.ts")).toBe(false);
-    });
-
-    it("matches a single segment wildcard without crossing slashes", () => {
-      const re = globPatternToRegExp("src/*.ts");
-      expect(re.test("src/a.ts")).toBe(true);
-      expect(re.test("src/a/b.ts")).toBe(false);
-    });
-
-    it("escapes regex metacharacters literally", () => {
-      expect(escapeRegexChar(".")).toBe("\\.");
-      expect(globPatternToRegExp("a.b").test("a.b")).toBe(true);
-      expect(globPatternToRegExp("a.b").test("axb")).toBe(false);
-    });
-
-    it("globMatches curries a predicate", () => {
-      const matchesTests = globMatches("**/*.test.ts");
-      expect(matchesTests("src/a.test.ts")).toBe(true);
-      expect(matchesTests("src/a.ts")).toBe(false);
-    });
   });
 
   describe("Jsonc editing", { concurrent: false }, () => {
@@ -425,6 +394,17 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(yield* overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
         expect(yield* overridesFor({}, "op", ["run", "--", "bun", "run", "build"])).toEqual({});
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("resolves signing references only through the cache secret session", () =>
+      Effect.gen(function* () {
+        const environment = { TURBO_REMOTE_CACHE_SIGNATURE_KEY: OP_REFERENCE, APPLICATION_TOKEN: OP_REFERENCE };
+        const direct = yield* overridesFor(environment, "bunx", ["turbo", "run", "check"]);
+        expect(direct).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", undefined);
+        const wrapped = yield* overridesFor(environment, "op", ["run", "--", "bunx", "turbo", "run", "check"]);
+        expect(wrapped).toHaveProperty("TURBO_REMOTE_CACHE_SIGNATURE_KEY", OP_REFERENCE);
+        expect(wrapped).not.toHaveProperty("APPLICATION_TOKEN");
+      })
     );
 
     it.effect("guards the TUI on a direct turbo spawn with resolved credentials", () =>

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { parseComment } from "@beep/repo-docgen/Parser";
 import { ContentHashFromSourceText, DomainError, findRepoRoot } from "@beep/repo-utils";
@@ -20,11 +21,13 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Regex from "effect/RegExp";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
 import { boundedText, firstLine } from "../../../../internal/cli/Timing.ts";
-import { escapeRegexChar, globPatternToRegExp } from "../../../../internal/GlobPattern.ts";
 import { DocgenConfigDocument } from "../../Docgen.schemas.ts";
+import { getDeclaredJsDocs } from "../JsDocNodes.ts";
 import { loadDocgenConfigDocument } from "../Workspace.ts";
 import {
   DocgenQualityDiagnostic,
@@ -41,7 +44,6 @@ import type {
   ExportSpecifier,
   FunctionDeclaration,
   InterfaceDeclaration,
-  JSDoc,
   ModuleDeclaration,
   SourceFile,
   Statement,
@@ -71,6 +73,15 @@ const EXCLUDED_SOURCE_SEGMENTS = [
 const EXCLUDED_SOURCE_SUFFIXES = [".stories.ts", ".stories.tsx"] as const;
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
+
+// docgen.json exclude patterns are developer configuration: a guard trip is a
+// wiring defect. The dot dialect keeps the previous matcher's behaviour, which
+// let `*` match a dot-leading segment; negation and comment prefixes stay the
+// literal characters they were to it.
+// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
+// minimatch magic here where the old compiler read them literally; no live
+// pattern uses them (R2b oracle, `dialectMagic` section).
+const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 
 /**
  * Wall-clock budget used while collecting package quality subjects.
@@ -220,31 +231,17 @@ const sourceFileMatchesExclude = (
 
   const srcRelative = Str.startsWith(`${srcDir}/`)(normalized) ? Str.slice(srcDir.length + 1)(normalized) : normalized;
 
-  return A.some(exclude, (pattern) =>
-    A.some([normalized, srcRelative], (candidate) =>
-      globPatternToRegExp(normalizeSlashes(Str.replace(/^\.\//, "")(pattern))).test(candidate)
-    )
-  );
-};
-
-const getJsDocs = (node: Node): ReadonlyArray<JSDoc> => {
-  if (Node.isJSDocable(node)) {
-    return node.getJsDocs();
-  }
-
-  if (Node.isVariableDeclaration(node)) {
-    const statement = node.getVariableStatement();
-    if (statement !== undefined) {
-      return statement.getJsDocs();
-    }
-  }
-
-  return A.empty();
+  return A.some(exclude, (pattern) => {
+    const compiled = Result.getOrThrow(
+      GlobPattern.compileResult(normalizeSlashes(Str.replace(/^\.\//, "")(pattern)), excludeGlob)
+    );
+    return A.some([normalized, srcRelative], (candidate) => compiled.matches(candidate));
+  });
 };
 
 const getLastJsDocText = (node: Node): string =>
   pipe(
-    getJsDocs(node),
+    getDeclaredJsDocs(node),
     A.last,
     O.map((doc) => doc.getText()),
     O.getOrElse(thunkEmptyStr)
@@ -268,7 +265,8 @@ const isFileoverviewJsDoc = (rawJsDoc: string): boolean => /@(packageDocumentati
 
 const isInternalJsDoc = (rawJsDoc: string): boolean => /@internal\b/.test(rawJsDoc);
 
-const hasInternalJsDoc = (node: Node): boolean => A.some(getJsDocs(node), (doc) => isInternalJsDoc(doc.getText()));
+const hasInternalJsDoc = (node: Node): boolean =>
+  A.some(getDeclaredJsDocs(node), (doc) => isInternalJsDoc(doc.getText()));
 
 const normalizeTags = (rawJsDoc: string): Record<string, ReadonlyArray<string>> => {
   if (Str.trim(rawJsDoc).length === 0) {
@@ -293,19 +291,19 @@ const hasInheritDoc = (rawJsDoc: string): boolean => /\{@inheritDoc\s+[^}]+\}/.t
 const isSchemaCompanionTypeAlias = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "type" &&
   (new RegExp(
-    `^export\\s+type\\s+${escapeRegexChar(exportName)}\\s+=\\s+typeof\\s+${escapeRegexChar(exportName)}\\.Type\\b`
+    `^export\\s+type\\s+${Regex.escape(exportName)}\\s+=\\s+typeof\\s+${Regex.escape(exportName)}\\.Type\\b`
   ).test(signature) ||
     new RegExp(
-      `^export\\s+type\\s+${escapeRegexChar(exportName)}\\s+=\\s+\\w+\\.Schema\\.Type<\\s*typeof\\s+${escapeRegexChar(exportName)}\\s*>`
+      `^export\\s+type\\s+${Regex.escape(exportName)}\\s+=\\s+\\w+\\.Schema\\.Type<\\s*typeof\\s+${Regex.escape(exportName)}\\s*>`
     ).test(signature));
 
 const isCompanionNamespace = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "namespace" &&
-  new RegExp(`^export\\s+declare\\s+namespace\\s+${escapeRegexChar(exportName)}\\b`).test(signature);
+  new RegExp(`^export\\s+declare\\s+namespace\\s+${Regex.escape(exportName)}\\b`).test(signature);
 
 const isSchemaCompanionInterface = (exportName: string, declarationKind: string, signature: string): boolean =>
   declarationKind === "interface" &&
-  new RegExp(`^export\\s+interface\\s+${escapeRegexChar(exportName)}\\b[\\s\\S]*\\bextends\\s+\\w+\\.`).test(signature);
+  new RegExp(`^export\\s+interface\\s+${Regex.escape(exportName)}\\b[\\s\\S]*\\bextends\\s+\\w+\\.`).test(signature);
 
 const descriptionFromRawJsDoc = (rawJsDoc: string): string | null => {
   if (Str.trim(rawJsDoc).length === 0) {

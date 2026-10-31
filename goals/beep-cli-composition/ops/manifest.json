@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "beep-cli-composition",
+    "packetId": "goal-packet/v1:2cee09c1667016edbd486a7cd321f05d7a2509eaa3b1a09714a004aab79e5657",
+    "title": "beep CLI composition",
+    "status": "active",
+    "created": "2026-10-28",
+    "updated": "2026-10-31",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/beep-cli-composition",
+  "lifecycle": "active",
+  "mission": "Split @beep/repo-cli into apps/beep over beep-* command tools and repo-* libraries, after the gate fixes land",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/beep-cli-composition/README.md",
+    "goals/beep-cli-composition/SPEC.md",
+    "goals/beep-cli-composition/PLAN.md",
+    "goals/beep-cli-composition/GOAL.md",
+    "goals/beep-cli-composition/research/SOURCES.md",
+    "goals/beep-cli-composition/research/design-record.md",
+    "standards/architecture/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/design-record.md",
+    "research/g4-task-fingerprint.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/beep-cli-composition/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/beep-cli-composition/GOAL.md)\" -le 4000",
+    "jq . goals/beep-cli-composition/ops/manifest.json",
+    "rg -n \"beep-cli-composition|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/beep-cli-composition",
+    "git diff --check -- goals/beep-cli-composition",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "P0 complete 2026-10-28: operator grill settled D1-D20 and an adversarial pass verified the package map (research/design-record.md); DECISIONS 2026-10-28 records the doctrine. Next: gate fix lanes G1-G4 and W0 retirements; W1 waits for goals/effected-promotion to close (D16)."
+}

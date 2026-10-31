@@ -81,6 +81,7 @@ import {
   resolveAnalyzeTargets,
   resolveGenerateTargets,
   resolvePackageSelector,
+  resolvePackageSelectors,
   resolveQualityWorkerEvalSource,
   targetHasCurrentDocgenProofManifest,
   verifyDocgenCheckProofManifests,
@@ -91,7 +92,13 @@ import type { DocgenPackageAnalysis, DocgenWorkspacePackage } from "./internal/O
 const packageFlag = Flag.String("package").pipe(
   Flag.withAlias("p"),
   Flag.withDescription("Target a workspace package by name or repo-relative path"),
-  Flag.optional
+  Flag.atMost(1),
+  Flag.map(A.head)
+);
+const packagesFlag = Flag.String("package").pipe(
+  Flag.withAlias("p"),
+  Flag.withDescription("Target a workspace package by name or repo-relative path; repeat to target several in order"),
+  Flag.atLeast(0)
 );
 const filterFlag = Flag.String("filter").pipe(
   Flag.withDescription('Compatibility selector for commands like "bun run docgen --filter=@beep/schema"'),
@@ -99,7 +106,9 @@ const filterFlag = Flag.String("filter").pipe(
 );
 const requiredPackageFlag = Flag.String("package").pipe(
   Flag.withAlias("p"),
-  Flag.withDescription("Target a workspace package by name or repo-relative path")
+  Flag.withDescription("Target a workspace package by name or repo-relative path"),
+  Flag.between(1, 1),
+  Flag.filterMap(A.head, () => "Expected exactly one --package value")
 );
 const outputFlag = Flag.String("output").pipe(
   Flag.withAlias("o"),
@@ -393,7 +402,7 @@ const docgenStatusCommand = Command.make(
 const docgenGenerateCommand = Command.make(
   "generate",
   {
-    package: packageFlag,
+    package: packagesFlag,
     filter: filterFlag,
     include: includeFlag,
     validateExamples: validateExamplesFlag,
@@ -403,8 +412,8 @@ const docgenGenerateCommand = Command.make(
   Effect.fn(
     function* ({ package: packageSelector, filter: filterSelector, include, validateExamples, parallel, json }) {
       void validateExamples;
-      const selector = yield* resolvePackageSelector(packageSelector, filterSelector);
-      const targets = yield* resolveGenerateTargets(selector);
+      const selectors = yield* resolvePackageSelectors(packageSelector, filterSelector);
+      const targets = yield* resolveGenerateTargets(selectors);
       const includePatterns = includePatternsFromFlag(include);
 
       if (targets.length === 0) {
@@ -440,7 +449,7 @@ const docgenGenerateCommand = Command.make(
   )
 ).pipe(
   Command.withDescription(
-    "Run the repo-local @beep/repo-docgen implementation for one package or every configured package"
+    "Run the repo-local @beep/repo-docgen implementation for each named package or every configured package"
   )
 );
 
@@ -458,7 +467,7 @@ const docgenRunCommand = Command.make(
     function* ({ package: packageSelector, filter: filterSelector, include, validateExamples, parallel, clean }) {
       void validateExamples;
       const selector = yield* resolvePackageSelector(packageSelector, filterSelector);
-      const targets = yield* resolveGenerateTargets(selector);
+      const targets = yield* selector.pipe(O.toArray, resolveGenerateTargets);
       const includePatterns = includePatternsFromFlag(include);
 
       if (targets.length === 0) {
@@ -629,7 +638,7 @@ const docgenAnalyzeCommand = Command.make(
   },
   Effect.fn(
     function* ({ package: selector, output, json, fixMode }) {
-      const targets = yield* resolveAnalyzeTargets(selector);
+      const targets = yield* selector.pipe(O.toArray, resolveAnalyzeTargets);
 
       if (targets.length === 0) {
         yield* Console.log("docgen: no packages selected for analysis");
@@ -690,14 +699,14 @@ const renderDocgenCheckAnalysis = Effect.fn("Docgen.renderCheckAnalysis")(functi
 const docgenCheckCommand = Command.make(
   "check",
   {
-    package: packageFlag,
+    package: packagesFlag,
     parallel: parallelFlag,
     json: jsonFlag,
     reuseProofManifest: reuseProofManifestFlag,
   },
   Effect.fn(
-    function* ({ package: selector, parallel, json, reuseProofManifest }) {
-      const targets = yield* resolveAnalyzeTargets(selector);
+    function* ({ package: selectors, parallel, json, reuseProofManifest }) {
+      const targets = yield* resolveAnalyzeTargets(selectors);
 
       if (targets.length === 0) {
         yield* Console.log("docgen: no packages selected for check");

@@ -1,3 +1,4 @@
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { extractFencedCodeBlocks } from "@beep/repo-docgen/Core";
 import { LiteralKit } from "@beep/schema";
@@ -11,11 +12,12 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Regex from "effect/RegExp";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.ts";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
-import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
 import {
   jsDocSectionBodyText,
   jsDocSectionOrder,
@@ -28,7 +30,6 @@ import {
   declarationKind,
   defaultRepoRoot,
   discoverWorkspacePackages,
-  escapeRegExp,
   getDocNode,
   getJsDocText,
   JsonRecord,
@@ -326,8 +327,16 @@ const resolveJSDocInventoryOptions = Effect.fn("JSDocDocumentationInventory.reso
 const markdownAnchor = (value: string): string =>
   Str.replace(/^-+|-+$/g, "")(Str.replace(/[^a-z0-9]+/g, "-")(Str.replace(/`/g, "")(Str.toLowerCase(value))));
 
-const globPatternToRegExp = (pattern: string): RegExp =>
-  sharedGlobPatternToRegExp(normalizeSlashes(Str.replace(/^\.\//, "")(pattern)));
+// docgen.json exclude patterns are developer configuration: a guard trip is a
+// wiring defect. The dot dialect keeps the previous matcher's behaviour, which
+// let `*` match a dot-leading segment; negation and comment prefixes stay the
+// literal characters they were to it.
+// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
+// minimatch magic here where the old compiler read them literally; no live
+// pattern uses them (R2b oracle, `dialectMagic` section).
+const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
+const compileExcludePattern = (pattern: string): GlobPattern =>
+  Result.getOrThrow(GlobPattern.compileResult(normalizeSlashes(Str.replace(/^\.\//, "")(pattern)), excludeGlob));
 
 const packageSourceMatchesExclude = (
   packagePath: string,
@@ -340,9 +349,9 @@ const packageSourceMatchesExclude = (
   const srcRelative = Str.startsWith(`${srcDir}/`)(packageRelative)
     ? Str.slice(srcDir.length + 1)(packageRelative)
     : packageRelative;
-  const matcher = globPatternToRegExp(pattern);
+  const matcher = compileExcludePattern(pattern);
 
-  return matcher.test(packageRelative) || matcher.test(srcRelative);
+  return matcher.matches(packageRelative) || matcher.matches(srcRelative);
 };
 
 const extractExamples = (commentText: string): ReadonlyArray<string> => {
@@ -555,7 +564,7 @@ const requiredNamespaceImportViolations = (
   exampleNumber: number,
   required: (typeof requiredNamespaceImports)[number]
 ): ReadonlyArray<DocumentationIssue> => {
-  const escapedModule = escapeRegExp(required.module);
+  const escapedModule = Regex.escape(required.module);
   const namedImportPattern = new RegExp(`import\\s*\\{[^}]+\\}\\s*from\\s*["']${escapedModule}["']`);
   const namespaceImportPattern = new RegExp(
     `import\\s*\\*\\s*as\\s+${required.alias}\\s*from\\s*["']${escapedModule}["']`

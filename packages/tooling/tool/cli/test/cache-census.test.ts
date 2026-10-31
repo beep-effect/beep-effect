@@ -12,6 +12,7 @@ import {
 } from "@beep/repo-cli/commands/Cache";
 import {
   fingerprintCacheComputation,
+  forwardsBiomeConfigPath,
   joinCacheCensusPlan,
   projectCacheActivation,
   projectCacheSignedActivation,
@@ -28,9 +29,10 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertDefined, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -325,6 +327,33 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("executable cache census",
 });
 
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration fingerprint", (it) => {
+  it.effect("observes the current pinned Bun without inheriting historical profile qualification", () =>
+    Effect.gen(function* () {
+      const census = yield* fingerprintFixture();
+      const encoded = yield* S.encodeEffect(CacheToolchainSnapshot)(toolchain);
+      const current = yield* S.decodeEffect(CacheToolchainSnapshot)({
+        ...encoded,
+        profile: "local-linux-x64-bun1.4.4",
+        bun: { ...encoded.bun, version: "1.4.4", sha256: changedDigest },
+      });
+      const currentKey = CacheQualificationKey.make({ ...key, profile: current.profile });
+      const historical = yield* fingerprintCacheComputation(key, census, toolchain);
+      const observed = yield* fingerprintCacheComputation(currentKey, census, current);
+      expect(observed.configurationDigest).toBe(historical.configurationDigest);
+      expect(observed.toolchainDigest).not.toBe(historical.toolchainDigest);
+      (yield* fingerprintCacheComputation(key, census, current).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      const changedBinary = yield* fingerprintCacheComputation(
+        currentKey,
+        census,
+        CacheToolchainSnapshot.make({
+          ...current,
+          bun: CacheExecutablePin.make({ ...current.bun, sha256: digest }),
+        })
+      );
+      expect(changedBinary.toolchainDigest).not.toBe(observed.toolchainDigest);
+    })
+  );
+
   it.effect(
     "invalidates runtime identity for library bytes, alias targets, loader and selected client linkage",
     Effect.fnUntraced(function* () {
@@ -706,6 +735,33 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) => {
           rootSigned
         ).pipe(Effect.isFailure)
       ).toBe(true);
+    })
+  );
+});
+
+describe("Turbo env forwarding", () => {
+  it.effect(
+    "reads a `!`-prefixed Turbo exclusion as forwarding nothing and a positive glob as forwarding",
+    Effect.fnUntraced(function* () {
+      // The old compiler read the `!` as a literal character (matching no env name); the kit is told the
+      // same through `nonegate`, and the exclusion is skipped before compiling, so neither spelling counts.
+      assertFalse(yield* forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH"]));
+      assertFalse(yield* forwardsBiomeConfigPath(["!BIOME_*", "BEEP_*"]));
+      assertFalse(yield* forwardsBiomeConfigPath([]));
+      assertTrue(yield* forwardsBiomeConfigPath(["BIOME_*"]));
+      assertTrue(yield* forwardsBiomeConfigPath(["!BIOME_CONFIG_PATH", "BIOME_CONFIG_PATH"]));
+    })
+  );
+
+  it.effect(
+    "fails typed when an entry trips the glob compiler's guards",
+    Effect.fnUntraced(function* () {
+      const result = yield* forwardsBiomeConfigPath([pipe("a", Str.repeat(65_537))]).pipe(Effect.result);
+      result.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(result)) {
+        expect(result.failure._tag).toBe("CacheCommandError");
+        expect(result.failure.message).toContain("is not a glob pattern");
+      }
     })
   );
 });

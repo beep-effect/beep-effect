@@ -216,3 +216,303 @@ do not purge a shared cache or relax inputs to conceal a regression.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None approved | This goal | Goal executor | Record real exceptions before using them. | Every temporary exception needs a bounded removal condition. |
+
+## Decision log
+
+| Date | Decision and reason | Reversal |
+| --- | --- | --- |
+| 2026-10-28 | Resume in the dedicated `codex/turborepo-goals-completion` lane. Refresh current source, client pins and population before promoting anything; older qualification remains bound to its original tuple. | Retain the previous approved configuration and remove only this lane's changes through a reviewed revert. |
+| 2026-10-28 | Treat the already approved R2 fleet as the current consumer path and retain AWS as its rollback. The user approved named trusted workstation writers; this grants upload capability, not protected-workflow producer identity. Refresh both boundaries before claiming production trust. | Disable affected remote reuse, stop mixed writes and restore the prior approved endpoint and epoch through a rehearsed path. |
+| 2026-10-28 | Pin native experiment execution with `--skip-infer --single-package`; a zero-task fixture is a failure. Keep supervisor failures bounded to exit code or capture truncation without attaching private worker streams. | Revert the runner change through Yeet; keep promotion closed when exact native execution is unproven. |
+
+
+### Native storage test readiness and reply correctness, 2026-10-31 UTC
+
+- Repair the inherited CI held-message test in its focused test-only PR2374.
+  Reuse the existing layer-start and storage reply-notification boundaries;
+  retain the virtual-clock timeline, both count assertions and 15-second limit.
+  Require a successful WithExit response and join the reply reader so a failure
+  response or listener failure cannot satisfy the regression assertion.
+- The actual CI zero-reply failure and the review's count-only false-success
+  case justify this change. Keep its current-source package/runtime checks and
+  bounded decoded-reply fault controls separate from cache qualification. The
+  first handler-defect control restarted the entity and timed out; it proves
+  nothing about the success assertion and remains retained as a failed approach.
+- Reversal is a reviewed Git revert of the scoped test repair. No production
+  storage behavior, cache policy, credential, runtime budget or proof floor
+  changes. Fresh complete and hosted/review gates precede acceptance.
+
+
+### Current pinned runtime observation, 2026-10-29
+
+Admit Bun1.4.4 as an observed Linux x64 toolchain identity because it is the
+current repository pin. Retain historical identities and reject a declared-pin
+mismatch. A current snapshot does not inherit qualification from either older
+profile; actual binary changes still alter the runtime digest. Leave task cache
+flags and the qualification ledger unchanged. Reversal removes this additional
+observation profile before any current-profile reuse is admitted; an activated
+profile would first need its own disable/rollback procedure.
+
+
+### Explicit current-runtime qualification baseline
+
+2026-10-29: Use the existing reviewed baseline writer to move observation scope
+from Bun1.4.2/qualification-v2 to Bun1.4.4/qualification-v3. The old public
+fingerprint refusal demonstrates its profile guard. Name only the root review
+subject and require unchanged effective configuration, cache flags, scope,
+carried package reviews and ledger. This creates no qualification or signed
+production epoch. Reversal uses the same compare-and-swap writer against the
+retained prior baseline after checking current-epoch state. The immutable
+review is `research/current-runtime-baseline-review.md`.
+
+
+### Current mutating-fixer disposition, 2026-10-29
+
+- Keep the 136 exact reviewed `lint:fix` commands fresh. Each delegates to
+  Biome check with `--write`, has no archived outputs, and has an existing
+  separate read-only `lint` computation. Native stable/canary controls show a
+  logs-only hit skips the required rewrite; cache-disabled controls perform it.
+  Bind this source review to full script maps, manifests and configuration
+  files. A changed binding requires a fresh review.
+- These are final whole-command exclusions for the reviewed semantics, not
+  qualification transitions. The 136 read-only counterparts and every remaining
+  population row retain their independent qualification/adoption obligations.
+  Reversal removes only the review/dispositions; no task flag, script, ledger
+  entry, production cache or required hosted status changes.
+
+
+### Persistent development service disposition, 2026-10-29
+
+- Keep the exact reviewed OIP Web and Todox `dev` commands fresh. Both start
+  named Portless Next development services and already declare persistent,
+  cache-disabled tasks with no output archive. Their existing application and
+  dependency build computations retain separate review and qualification work.
+- Bind this source-only exclusion to current manifests, complete script maps,
+  configuration and runtime declarations. Reversal removes only the review
+  records; no service, script, flag, ledger entry or hosted status changes.
+
+
+### Remaining source-rewriting lint commands, 2026-10-29
+
+- Review all 50 remaining `lint:fix` commands from exact current manifest, full
+  script-map and effective-configuration bindings. Forty-nine delegate to the
+  same `biome check . --write` implementation. Storybook's existing shell
+  wrapper also writes cross-workspace story sources. Keep each whole command
+  fresh; all 50 already disable caching and archive no outputs.
+- The population now has 186 reviewed source-rewriting fixers and two reviewed
+  persistent services. Their separate read-only lint/build computations keep
+  their own qualification obligations; 2,383 population dispositions remain
+  unfinished. This source review changes no script, task flag or qualification
+  ledger. Reversal removes only these additional review/disposition records.
+
+
+### Remaining persistent service boundaries, 2026-10-29
+
+- Keep the ten additional exact current Portless service commands fresh: four
+  Bun watchers, four Vite development servers, Storybook development and Vite
+  static preview. This completes source review of all twelve configured
+  persistent executable computations; each already disables caching and has
+  no archived outputs. A restored cache result cannot supply a live service.
+- Bind each disposition to exact manifests, complete script maps and effective
+  configuration. Finite application/dependency builds and Storybook static
+  build keep their independent qualification obligations. The population now
+  had 198 reviewed fresh boundaries and 2,373 remaining disposition gaps at that checkpoint.
+  No service is launched and no script, flag or ledger changes. Reversal
+  removes only these additional review/disposition records.
+
+
+### Publication memory guard and documentation consistency
+
+- 2026-10-29: Preserve the current weighted admission around cheap publication
+  gates: source and tests deliberately protect the schema-catalog scan's measured
+  memory demand. Correct the stale no-ticket claim in the Yeet skill. Attribute
+  local admission wait separately from remote-cache latency and hosted queues.
+  The existing ten-minute constrained-compute escape remains unchanged; record
+  local proof scope and require fresh hosted acceptance. Reversal changes only
+  the documentation wording; no scheduler capacity, proof floor or cache flag
+  is altered by this correction.
+
+
+### Current external verdict and generator source review
+
+Keep `repo-sanity:bun-audit` fresh at its whole-command boundary because its
+verdict depends on live advisories and clock-expiring exceptions. Its separate
+pure policy prerequisite remains eligible for independent qualification. The
+source review now gives 199 fresh boundaries and 2,372 final-disposition gaps.
+All nine generator write commands have explicit source-reviewed pure rendering
+or drift-check leads; none receives a final exclusion or reuse grant here.
+No configuration, qualification state or production consumer changes.
+### Go workspace discovery applicability, 2026-10-30
+
+- Retain the disabled Go workspace flag. The accepted tree has no root go.work,
+  Go modules or Go source, and none of its tracked manifest scripts directly
+  invokes the enumerated Go build/module commands. No computation or graph
+  edge in this repository can benefit from this discovery feature today.
+- Record this feature as accepted-not-applicable with its exact source and
+  client identities. Canary documentation absence does not establish runtime
+  non-support. Existing Cargo and Python consumers keep their separate reviews.
+- Reopen when a Go consumer or discovery-contract change appears. Require
+  exact-client positive/negative evidence before any proposed activation.
+  Reversal sets this review back to pending; it changes no runtime setting.
+
+
+### Exact-native future-flag availability observations, 2026-10-30
+
+- Add isolated configuration observations for every schema-listed future flag
+  on each exact pinned native client. Set one flag false/true per case, keep
+  cache local/read-only, and use dry-run with a command that would leave a
+  marker and exit 37 if accidentally executed. Require both baseline acceptance
+  and an unknown-key refusal control on each client.
+- All 56 flag cases parse on these pins; both unknown controls refuse and no
+  sentinel executes. This proves the observed configuration boundary only.
+  It grants no feature semantics, task qualification, production safety or
+  performance claim. Applicable features still need their complete regressions.
+- Retain the recorded observations if later semantic cases fail. Reverse the
+  matrix annotation by removing its observation links; no runtime setting changes.
+
+### Constrained publication replay, 2026-10-30
+
+- Use the existing hosted escape after the generator-repair publisher spends
+  more than thirteen minutes in admission and local gates. Cancel that owned
+  publisher, retain the scoped native proofs, push the completed repair wave
+  and let current hosted checks provide the broad proof.
+- The interrupted publisher is not a passing local proof. Keep the PR in draft
+  until its current content-final requirements are met; preserve all existing
+  acceptance and review gates. Reversal is an ordinary repair/revert PR.
+
+### Attempt and publication identities, 2026-10-30
+
+- Preserve the attempt's starting head, resolved source and diff fingerprint.
+  Publishing staged changes may create a different commit within that attempt.
+- Add an optional published-head identity to the existing verdict. Record it
+  only around a successful owned Git push with unchanged head; an unsuccessful
+  push or head drift grants no such identity. This is transport provenance,
+  not qualification, hosted status or proof reuse authority.
+- Keep older verdicts readable when the append-optional field is absent. No
+  new proof store, scheduler or ledger is introduced.
+- Exercise the standard prove-first route against the same disposable Git
+  remote as the push-first route. A commit created during full pre-push proof
+  must refuse publication; moving the prepared-head capture after that proof
+  must make the regression test fail. This adds no production authority.
+- Reverse by removing the new writer path while retaining backward-compatible
+  decoding of already emitted records. Do not rewrite historical attempts.
+
+### Publication-repair hosted escape, 2026-10-30
+
+- The first canonical publisher stopped on an introduced duplication after
+  roughly ten minutes of local gates. Repair that duplication in the existing
+  shared phase, rerun focused checks and use the standing hosted escape to
+  open the reviewable draft under constrained local compute.
+- Preserve the failed publisher and deliberately interrupted old-source package
+  audit. Neither grants current proof. Current full package/final, hosted checks,
+  review threads and the review window remain required before completion.
+- Reverse through an ordinary repair/revert PR; keep historical attempt facts.
+
+
+### Task descriptions feature disposition, 2026-10-30
+
+- Retain the current absence of optional task descriptions. The current canonical
+  census covers 190 workspaces and 22 Turbo configuration files; none of 101
+  explicit task definitions declares this field. This feature supplies human
+  metadata, not an execution or caching benefit that warrants a second source
+  of task documentation in the current repository.
+- Both pinned native clients exclude description from resolved task definitions
+  while including raw `turbo.json` in task inputs. Assert addition/edit misses and
+  exact earlier-hash reuse after removal. Never exclude a real configuration
+  input merely to make a documentation edit hit.
+- Reopen this current-tree decision for a concrete task-inspection/UI consumer
+  with reviewed maintenance and invalidation costs. This is a final no-change
+  feature decision, not a qualification exception or a deferred eligible task.
+  All computation, trust, hosted status and observation requirements remain.
+
+### Native task-selection semantics, 2026-10-30
+
+- Retain a bounded native selection driver beside the existing input and
+  availability drivers. The existing entrypoint attachment owner establishes
+  source identity, not this runtime behavior; do not add another runtime owner
+  or qualification state store. Use the exact two pins, finite environments,
+  offline fixture setup, local-only execution and explicit process budgets.
+- Compare strict selection false/true without changing the three fixed flags.
+  Assert transit preservation, explicit missing tasks, graph-only requests,
+  empty selection, filter refusals and actual native execution records. A zero
+  native exit alone must never become successful selected-task evidence.
+- Treat `--only` according to the observed named-task semantics: other-name
+  prerequisites disappear, while same-name transit dependencies remain. Keep
+  real inputs and graph closure intact in any later task qualification.
+- Preserve the current production setting and all 33 unfinished feature reviews
+  until real consumers, remaining selector families and qualified changes are
+  reviewed. Reverse this evidence addition by removing its driver/report and
+  matrix links together; no production setting changes in this component.
+
+### Nested Python workspace feature decision, 2026-10-30
+
+- Retain the absent experimental root uv discovery flag. The tracked nested
+  `beep-photo-face` project is standalone; there is no root uv workspace. Its
+  lint and test commands remain explicitly owned by the Beep CLI package audit.
+  Do not add another discovery path without a concrete consumer and measured
+  benefit, or mistake a missing root workspace for missing Python quality work.
+- This final no-change feature decision grants no task qualification. Review
+  the Python quality computations and their complete source, lockfile, tool and
+  interpreter inputs independently. Never infer whole-task reuse for external
+  person-matching or model verdicts from this discovery decision.
+- Reopen for a proposed root uv workspace, independent Python quality ownership
+  or a changed client/discovery contract. Exact-client real uv graph and
+  execution controls precede any activation. Reverse this decision by restoring
+  the feature row to pending; runtime configuration is unchanged.
+
+### Existing external-security boundary review, 2026-10-30
+
+- Preserve fresh `repo-sanity:bun-audit` execution. The current command combines
+  current vulnerability information with wall-clock expiry of OSV exceptions;
+  an unchanged tree cannot prove a current verdict. Retain its existing
+  `cache: false`, empty outputs and explicit local proof-reuse exclusion.
+- Record one final whole-task keep-fresh disposition without running the audit
+  or asserting a vulnerability outcome. Any pure parser decomposition needs
+  independent qualification and cannot replace the external verdict. Reverse
+  only the review projection to pending; existing safety behavior stays fresh.
+### Markdown test-resource isolation, 2026-10-30
+
+- Keep the Markdown parser unchanged and preserve the per-file 100% coverage
+  floor. A root proof reported two uncovered default-metadata branches while
+  all tests passed; existing focused and standalone full tests cover both.
+  Standalone checks do not reproduce the original measurement failure or prove
+  a particular V8 internal cause.
+- Apply the shared harness rule for module-replacing tests to this package's
+  registry spies: use an isolated module context per file during coverage too.
+  Both native profiles pass all 4,501 cases and retain full parser coverage.
+  The measured local coverage cost is about 45 extra Node seconds and 29 Bun
+  seconds; these single co-running observations are not a speedup claim.
+- Reverse the one-package override after equivalent mock isolation and reliable
+  branch evidence are shown. No runtime parser, coverage floor, required check,
+  task qualification, credential or production cache setting changes.
+
+### Accepted feature review join, 2026-10-30
+
+The accepted feature-review commit `0e601a3d55` is consumed before the next
+producer publication. Both external-advisory source reviews remain evidence for
+the same single computation. Its current disposition uses the accepted security
+review; the existing structural fingerprint counterpart remains a decomposition
+lead, without qualification or reuse authority. The population stays at 199
+whole-command fresh dispositions and 2,372 final-disposition gaps. Branch-local
+SPEC digests remain preserved as historical provenance, while the current audit
+binds this merged SPEC. The preceding producer commit is the reversal point;
+this documentation join deploys nothing and satisfies no whole-goal criterion.
+
+
+### Standalone Cargo workspace feature decision, 2026-10-31
+
+- Retain the absent experimental Cargo discovery flag. The two Tauri crates are
+  standalone and the repository has no root Cargo workspace. Both exact native
+  clients produce the same complete ninety-node Bun build graph with the flag
+  disabled and enabled. Rust work remains owned by its existing native and
+  sidecar commands; it is neither absent nor already cache-qualified.
+- Preserve the positive synthetic root-workspace discovery and exact executable
+  restoration controls. Explicit cache/output configuration is required in this
+  fixture. The undeclared external-input negative case reproduces stale reuse;
+  declaring the input restores invalidation. Do not generalize that fixture to
+  Tauri build scripts, system libraries, signing or shared target directories.
+- Reopen for a proposed root Cargo workspace, a direct Turbo Rust consumer or
+  changed client/native ownership. Before adoption, review all actual toolchain,
+  target, source, lockfile, vendored ABI patch, C/sidecar and external inputs.
+  Reverse this decision by returning its matrix row to pending and removing the
+  report links together. Runtime settings and qualification state are unchanged.

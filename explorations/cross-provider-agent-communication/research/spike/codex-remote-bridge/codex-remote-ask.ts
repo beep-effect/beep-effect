@@ -31,6 +31,9 @@
 // protocol error; 6 socket closed or errored (interrupt attempted over a fresh connection); 7 effective
 // policy differs from the requested one; 8 turn ended without completing; 9 thread busy (a turn is
 // already running; use codex queue).
+import * as O from "effect/Option";
+import { protectedBridgeUrl } from "./transport.ts";
+
 const argv = Bun.argv.slice(2);
 const opt = (name: string, dflt?: string) => {
   const i = argv.indexOf(name);
@@ -46,6 +49,10 @@ const flag = (name: string) => {
   return true;
 };
 const url = opt("--url", "ws://127.0.0.1:48123")!;
+if (O.isNone(protectedBridgeUrl(url))) {
+  console.error("--url requires wss:// remotely, or ws:// on a loopback SSH tunnel endpoint");
+  process.exit(2);
+}
 const tokenEnv = opt("--token-env", "CODEX_TOMPC_WS_TOKEN")!;
 const threadId = opt("--thread");
 const isNew = flag("--new");

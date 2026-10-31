@@ -2,6 +2,8 @@
  * Citation-warning value object: a diagnostic emitted while parsing a legal
  * citation, ported from the eyecite `Warning` interface.
  *
+ * **Details**
+ *
  * A warning pairs a severity `level` with a human-readable `message`, the
  * `position` of the offending region in the source text, and optional free-form
  * `context`.

@@ -1,8 +1,10 @@
 import {
   RetentionPolicy,
   RetentionPolicyAdmission,
+  retentionDecayAtAge,
   retentionPayloadBytes,
   retentionPolicyDigest,
+  retentionTierAtAge,
 } from "@beep/epistemic-domain/values/Retention";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -43,6 +45,19 @@ describe("retention policy domain", () => {
         const changed = RetentionPolicy.make({ ...policy, payloadBudgetBytes: policy.payloadBudgetBytes + 1 });
         expect(yield* retentionPolicyDigest(changed)).not.toBe(digest);
       })
+  );
+  it.effect.prop("uses inclusive policy boundaries in both call forms", [PolicyArbitrary], ([policy]) =>
+    Effect.sync(() => {
+      expect(retentionTierAtAge(0, policy)).toBe("hot");
+      expect(retentionTierAtAge(policy.hotThroughMillis, policy)).toBe("hot");
+      expect(retentionTierAtAge(policy)(policy.hotThroughMillis + 1)).toBe("warm");
+      expect(retentionTierAtAge(policy.warmThroughMillis, policy)).toBe("warm");
+      expect(retentionTierAtAge(policy)(policy.warmThroughMillis + 1)).toBe("cold");
+      expect(retentionTierAtAge(policy.coldThroughMillis, policy)).toBe("cold");
+      expect(retentionTierAtAge(policy)(policy.coldThroughMillis + 1)).toBe("evictable");
+      expect(retentionDecayAtAge(0, policy)).toBe(1);
+      expect(retentionDecayAtAge(policy)(policy.decayScaleMillis)).toBe(0.5);
+    })
   );
   it("does not represent calibrated admission without a policy and receipt", () => {
     assertNone(S.decodeUnknownOption(RetentionPolicyAdmission)({ state: "calibrated" }));

@@ -1,0 +1,1070 @@
+{
+  "schemaVersion": "cache-adoption-feature-matrix-refresh/v1",
+  "authority": "Source-backed applicability decisions and remaining feature-test obligations; no computation qualification or activation.",
+  "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
+  "clients": "current-client-pins.json",
+  "rows": [
+    {
+      "feature": "graph-and-transit",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/configuring-tasks.mdx",
+          "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/configuring-tasks.mdx",
+          "sha256": "090b1851ddd0d330ffe0d72850d4fa3fe6bcb71d7531bb79042472763596bebc",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Preserve prerequisite execution and transitive invalidation.",
+      "expectedBenefit": "Preserve prerequisite execution and transitive invalidation.",
+      "correctnessCase": "Mutate upstream source and compare dependent and unrelated task hashes.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "dependsOn",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Commandless transit dependency retained in the real-task fixture; graph-only behavior compared with strict selection false/true.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
+    },
+    {
+      "feature": "entrypoint-selection",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Select real computations without inventing successful missing-script tasks.",
+      "expectedBenefit": "Select real computations without inventing successful missing-script tasks.",
+      "correctnessCase": "Missing-script and strict-entrypoint fixtures must not emit successful execution evidence.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "--only",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Package-filtered missing command, explicit missing command, graph-only requests and actual selected execution records.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
+    },
+    {
+      "feature": "affected-selection",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Avoid recomputing unchanged task inputs while preserving semantic reachability.",
+      "expectedBenefit": "Avoid recomputing unchanged task inputs while preserving semantic reachability.",
+      "correctnessCase": "Change a semantic input outside direct package source and verify the affected set.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "--affected"
+    },
+    {
+      "feature": "filter-selection",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Bound legitimate cohorts without dropping required prerequisites.",
+      "expectedBenefit": "Bound legitimate cohorts without dropping required prerequisites.",
+      "correctnessCase": "Compare positive, empty and invalid filter selection with the root graph.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "--filter",
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Positive package filter, complete negation, missing package/path, unresolved selector and malformed regex refusals.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
+    },
+    {
+      "feature": "global-and-child-config",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Keep root/child configuration and task hash identity aligned.",
+      "expectedBenefit": "Keep root/child configuration and task hash identity aligned.",
+      "correctnessCase": "Mutate child task config and assert required hash change and inherited behavior.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "extends",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Global input invalidation only; child configuration remains untested.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
+    },
+    {
+      "feature": "task-inputs",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Reduce avoidable work only after complete input review.",
+      "expectedBenefit": "Reduce avoidable work only after complete input review.",
+      "correctnessCase": "One mutation per semantic source/config/tool/dependency class; unrelated mutations stay stable.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "inputs",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "One synthetic task: declared input and implementation-byte invalidation.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
+    },
+    {
+      "feature": "environment-and-passthrough",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/using-environment-variables.mdx",
+          "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/using-environment-variables.mdx",
+          "sha256": "49ce6d27b0a6d30731a94c8cac3c683a797e6e08a8c3f0129cf9063542b3b959",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Make semantic environment values hashed and transport-only values safe.",
+      "expectedBenefit": "Make semantic environment values hashed and transport-only values safe.",
+      "correctnessCase": "Change semantic env and passthrough values independently; capture no secret values.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "passThroughEnv",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "One synthetic strict task: semantic variables invalidate; benign passthrough changes reuse.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
+    },
+    {
+      "feature": "outputs-and-portability",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Restore complete portable output trees without stale or cross-worktree writes.",
+      "expectedBenefit": "Restore complete portable output trees without stale or cross-worktree writes.",
+      "correctnessCase": "Cold/replay tree equality, missing output and absolute-root cross-worktree controls.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "outputs",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Output removal and local restoration agree; cross-machine portability remains untested.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
+    },
+    {
+      "feature": "task-descriptions",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/configuration.mdx",
+          "sha256": "f8777a3f7e60730da8cff4ea6950c71deb8643cc3200f627db876698ff454074",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Make generated task intent inspectable without altering correctness.",
+      "expectedBenefit": "Make generated task intent inspectable without altering correctness.",
+      "correctnessCase": "Add/edit invalidates the implicit raw turbo.json task input on both pins; removing the field restores the exact earlier hash and HIT while definition/global digests stay unchanged.",
+      "disposition": "Retain absent optional descriptions in current Turbo config; no execution benefit or requested metadata consumer justifies adding another documentation source.",
+      "acceptanceStatus": "accepted-retain-current-absence",
+      "availabilityTerm": "description",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Six asserted description add/edit/remove cases across both pinned clients; raw config is a task input while description is absent from resolved definition.",
+        "authority": "Synthetic native feature evidence only; no real computation qualification."
+      },
+      "finalReview": {
+        "report": "task-descriptions-feature-review.json",
+        "sourceBaseRevision": "d39e9ee2945c4d8e2dda46767f3400a49426f661",
+        "reopenWhen": "A concrete task-inspection or UI consumer needs descriptions and a reviewed source/configuration change justifies their maintenance and invalidation cost."
+      }
+    },
+    {
+      "feature": "persistence-and-watch",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/watch.mdx",
+          "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/watch.mdx",
+          "sha256": "6a6c3d016a90c8cb6f7bc3f96d0fc8486cf7a9305d7d5d4365b62f4d0a283f84",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Keep persistent services fresh and watch invalidation correct.",
+      "expectedBenefit": "Keep persistent services fresh and watch invalidation correct.",
+      "correctnessCase": "Persistent tasks remain non-reusable; change a watched input and inspect invalidation.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "watch"
+    },
+    {
+      "feature": "concurrency",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Bound memory/CPU and prevent output races.",
+      "expectedBenefit": "Bound memory/CPU and prevent output races.",
+      "correctnessCase": "Concurrent same-input runs and independent-output controls under scheduler limits.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "--concurrency"
+    },
+    {
+      "feature": "worktree-sharing",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "crafting-your-repository/caching.mdx",
+          "sha256": "1f03b1364b79590eb128649c21939ba99011765625df21b324fea7d37b9b9c5e",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Share reusable artifacts while preserving path portability.",
+      "expectedBenefit": "Share reusable artifacts while preserving path portability.",
+      "correctnessCase": "Both cross-worktree directions with empty local directories and complete output/log comparison.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "worktree"
+    },
+    {
+      "feature": "remote-artifacts-and-signatures",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "core-concepts/remote-caching.mdx",
+          "sha256": "96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "core-concepts/remote-caching.mdx",
+          "sha256": "96dd2390be45fd2dbc312b1175d9836b0b39e114dd470d9fa050ce9e046b6052",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Restore only correctly signed artifacts inside an approved epoch.",
+      "expectedBenefit": "Restore only correctly signed artifacts inside an approved epoch.",
+      "correctnessCase": "Valid control, missing/invalid tag, corrupt bytes, wrong team/key and no-materialization negatives.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "signature"
+    },
+    {
+      "feature": "summaries",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/run.mdx",
+          "sha256": "31447baa8071390c403b47c41885eb3579a1f8a695cf61e57befd838aba67731",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Attribute actual task hashes, executions and cache sources.",
+      "expectedBenefit": "Attribute actual task hashes, executions and cache sources.",
+      "correctnessCase": "Join every invocation to actual tasks and distinguish task hits from archive transport.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "--summarize",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Executed task, cache status, hash and restored output are observed together.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      }
+    },
+    {
+      "feature": "query",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/query.mdx",
+          "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/query.mdx",
+          "sha256": "f566af0c9acd7ce4b32d891a9adccd2cfdee481e0882917bb844f903e7d26c65",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Inspect graph and task relationships without treating a query as execution.",
+      "expectedBenefit": "Inspect graph and task relationships without treating a query as execution.",
+      "correctnessCase": "Compare query results with census and actual executed task identities.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "query"
+    },
+    {
+      "feature": "pruning",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Produce correct smaller deployment inputs when a consumer needs them.",
+      "expectedBenefit": "Produce correct smaller deployment inputs when a consumer needs them.",
+      "correctnessCase": "Pruned install/build with global files and a deliberately missing input control.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "prune"
+    },
+    {
+      "feature": "boundaries",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/boundaries.mdx",
+          "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/boundaries.mdx",
+          "sha256": "2abbea2b157fef9e517cc1975a3cc68cab99a56730846ed2c0c033ab23dfb380",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Detect package boundary violations rather than hiding input edges.",
+      "expectedBenefit": "Detect package boundary violations rather than hiding input edges.",
+      "correctnessCase": "Allowed and forbidden imports/config boundaries in controlled fixtures.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "boundaries"
+    },
+    {
+      "feature": "deployment-workflows",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        },
+        "canary": {
+          "page": "reference/prune.mdx",
+          "sha256": "759b4abb61a90cfe5b6d542fe2f6a7f163ca7936f495d1720231b0cbaabd805a",
+          "termObserved": true
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Reduce deployment preparation only for named supported build consumers.",
+      "expectedBenefit": "Reduce deployment preparation only for named supported build consumers.",
+      "correctnessCase": "Named deployment prerequisite and portable output proof; no generic deployment claim.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending",
+      "availabilityTerm": "docker"
+    },
+    {
+      "feature": "actions-archive-transport",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "availability": "repo-owned integration; not an upstream feature"
+        },
+        "canary": {
+          "availability": "repo-owned integration; not an upstream feature"
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Keep archive keys/save timing aligned with child config and output ownership.",
+      "expectedBenefit": "Keep archive keys/save timing aligned with child config and output ownership.",
+      "correctnessCase": "Mutate child config, prevent concurrent ownership collisions, separate restore from qualified task HIT.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending"
+    },
+    {
+      "feature": "protected-demand-warming",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "availability": "repo-owned integration; not an upstream feature"
+        },
+        "canary": {
+          "availability": "repo-owned integration; not an upstream feature"
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Spend bounded warming resources on proven protected-source demand.",
+      "expectedBenefit": "Spend bounded warming resources on proven protected-source demand.",
+      "correctnessCase": "Qualified-tuple selection, excluded/suspended refusal and time/bytes/requests/concurrency budget tests.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending"
+    },
+    {
+      "feature": "quality-and-yeet-ownership",
+      "owner": "turborepo-quality-cache-adoption",
+      "availabilityEvidence": {
+        "stable": {
+          "availability": "repo-owned integration; not an upstream feature"
+        },
+        "canary": {
+          "availability": "repo-owned integration; not an upstream feature"
+        }
+      },
+      "prerequisites": [
+        "Current computation semantic review",
+        "Tuple-specific qualification before new reuse",
+        "Trust readiness before production remote rollout"
+      ],
+      "beepUseCase": "Preserve fresh required statuses and existing proof authorities.",
+      "expectedBenefit": "Preserve fresh required statuses and existing proof authorities.",
+      "correctnessCase": "Exact source/resolved reusable-workflow SHA and no cache-to-hosted-status substitution.",
+      "disposition": "review existing use and qualify applicable changes",
+      "acceptanceStatus": "pending"
+    },
+    {
+      "feature": "futureFlag:affectedUsingTaskInputs",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Use task-level `inputs` globs to determine which tasks are affected by changed files when running with `--affected`. When enabled, only tasks whose declared inputs match the changed files are selected, rather than selecting all tasks in changed packages. `turbo query`'s `affectedPackages` reports the owners of affected tasks, including dependents connected only by explicit task dependencies. `turbo prune` retains task dependency owners and their package dependencies, including across enabled toolchains, in addition to its package-based closure.",
+      "enabledInObservedRoot": true,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "retain observed setting pending current evidence",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:errorsOnlyShowHash",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "When using `outputLogs: \"errors-only\"`, show task hashes when tasks complete successfully. This provides visibility into which tasks are running without showing full output logs.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:experimentalCargoWorkspaces",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Treat the crates of a Cargo workspace as Turborepo packages.\n\nWhen enabled, Rust crates are discovered via `cargo metadata` and participate in the package graph: they resolve in `--filter` expressions, propagate `--affected`, and appear in `turbo query`. Filtered builds execute each selected crate. Unfiltered builds prefer entrypoints, falling back to libraries when no entrypoints exist. Entrypoints also expose `run` and `dev`. The `test`, `check`, `lint`, and `format` tasks are selectable per crate with `--filter`. An unfiltered run executes one workspace-wide Cargo verification command; filtered runs use the selected crates, or the workspace command when the workspace package is selected directly.\n\nAll crates implicitly register `build` and the verification tasks; entrypoints with one binary also register `run` and `dev`. The workspace package registers the verification tasks. Normal task definitions configure or override these defaults, and package configuration can exclude them with `extends: false`.\n\nTask caching uses Cargo-derived inputs and caches entrypoint build deliverables. Library builds and formatting default to uncached. This feature is experimental.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": false,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "Retain absent root Cargo discovery; preserve the two standalone Tauri crates and explicit sidecar/native CI ownership.",
+      "acceptanceStatus": "accepted-retain-current-absence",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "sourceApplicability": {
+        "report": "cargo-workspace-feature-review.json",
+        "nativeReport": "native-cargo-controls.json",
+        "currentGraphReport": "native-cargo-applicability.json",
+        "scope": "Final no-change discovery decision only; all real Rust computation qualification remains open."
+      }
+    },
+    {
+      "feature": "futureFlag:experimentalGoWorkspaces",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Treat the modules listed in a `go.work` file as Turborepo packages.\n\nWhen enabled, Go modules are discovered from the repository-root `go.work` via the Go toolchain and participate in the package graph: they resolve in `--filter` expressions, propagate `--affected`, and appear in `turbo query`. This feature is experimental.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": false,
+      "prerequisites": [
+        "Reopen applicability if a Go consumer or discovery-contract change appears.",
+        "Exact-client regression evidence remains required before any future activation."
+      ],
+      "beepUseCase": "No Go workspace or computation exists in the current accepted source tree.",
+      "expectedBenefit": "Zero current Go-workspace computations or graph edges can benefit; no time saving is claimed.",
+      "correctnessCase": "Verify the clean accepted-tree absence census, exact pinned binary identities and schema false default; preserve absent root setting. Do not enable the feature or substitute a synthetic Go task for a repository consumer.",
+      "disposition": "not-applicable-current-repository; retain disabled",
+      "acceptanceStatus": "accepted-not-applicable",
+      "applicabilityReason": "There is no root go.work, Go module manifest or tracked Go source. No tracked package.json script directly invokes the enumerated Go build/module commands. The current accepted source has no Go workspace graph for this discovery feature to enroll.",
+      "finalReview": "go-workspace-feature-review.json",
+      "reopenWhen": [
+        "A root Go workspace, module, tracked source or actual consumer is introduced.",
+        "A client update changes the discovery or applicability contract.",
+        "A proposal would enable Go workspace discovery; exact-client positive and negative regression evidence is then required before activation."
+      ],
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:experimentalObservability",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Enable experimental OpenTelemetry exporter support.\n\nWhen enabled, Turborepo will honor the `experimentalObservability` configuration block (if present) to send run summaries to an observability backend.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:experimentalPythonWorkspaces",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Treat the members of a uv workspace as Turborepo packages.\n\nWhen enabled, Python packages are discovered from the root `pyproject.toml`'s `[tool.uv.workspace]` members and participate in the package graph, resolve in `--filter` expressions, and appear in `turbo query`. uv is the only supported Python package manager. This feature is experimental.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": false,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "No measured benefit is claimed. The current Python lint and test commands remain in the computation census and must receive their own semantic decomposition and qualification evidence.",
+      "correctnessCase": "Preserve absent root uv workspace/flag and existing generated quality scripts. Any proposal to introduce root uv discovery must prove exact-client real uv graph selection and task ownership without duplicate, missing or falsely successful execution.",
+      "disposition": "Retain absent root uv discovery; preserve the existing nested standalone project and explicit Beep CLI quality-command ownership.",
+      "acceptanceStatus": "accepted-retain-current-absence",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "finalReview": {
+        "report": "python-workspace-feature-review.json",
+        "sourceBaseRevision": "daf68a6395be5dd329453c9f56f4a579de14e666",
+        "reopenWhen": [
+          "A concrete owner proposes a root uv workspace or Turbo Python graph consumer.",
+          "Python quality decomposition would benefit from independent uv package ownership.",
+          "A pinned client update changes root/nested discovery behavior or another Python project is added."
+        ]
+      }
+    },
+    {
+      "feature": "futureFlag:experimentalSetup",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Opt into experimental setup features that are still in progress.\n\nSetup invocation requires this flag; help is available without it. The `turbo.lock` format is unstable. Only parsing and help are implemented; provisioning, planning, and checking return a diagnostic. Setup does not interpret `turbo.lock` or change run or hash behavior.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": false,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:filterUsingTasks",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Resolve `--filter` at the task level instead of the package level. Git-range filters (e.g. `--filter=[main]`) will match against task `inputs` globs, and the `...` dependency/dependent syntax will traverse the task graph in addition to the package graph.",
+      "enabledInObservedRoot": true,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "retain observed setting pending current evidence",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:githubActionsRemoteBaseRefFallback",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "When GitHub Actions reports a base branch that is not available as a local ref, fall back to `origin/<branch>`. This supports detached checkouts where only remote-tracking refs are present.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:globalConfiguration",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Move global configuration keys (like `globalDependencies`, `ui`, `envMode`, etc.) under a top-level `global` key for clarity.\n\nWhen enabled, keys are renamed: `globalDependencies` becomes `global.inputs`, `globalEnv` becomes `global.env`, and `globalPassThroughEnv` becomes `global.passThroughEnv`.",
+      "enabledInObservedRoot": true,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "retain observed setting pending current evidence",
+      "acceptanceStatus": "pending",
+      "runtimeObservation": {
+        "report": "native-input-controls.json",
+        "scope": "Pinned local globalConfiguration profile; no other future flag is inferred.",
+        "authority": "synthetic feature observation only; real computation qualification remains pending"
+      },
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:longerSignatureKey",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Enforce a minimum length of 32 bytes for `TURBO_REMOTE_CACHE_SIGNATURE_KEY` when `remoteCache.signature` is enabled. Short keys weaken the HMAC-SHA256 signature, making brute-force tag collision feasible.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:pruneIncludesGlobalFiles",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Include files matching `globalDependencies` globs in the `turbo prune` output. Without this flag, `globalDependencies` entries are preserved in the pruned `turbo.json` but the actual files are not copied.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    },
+    {
+      "feature": "futureFlag:strictTaskEntrypointSelection",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Select requested task entrypoints according to whether the task resolves a command in the repository. When any package can run a requested task, packages without a command are not used as entrypoints. Tasks with no command anywhere remain available for graph-only orchestration, and missing tasks reached as dependencies remain in the Task Graph.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "nativeSelectionObservation": {
+        "checkpoint": "selection-semantics-checkpoint.json",
+        "report": "native-selection-controls.json",
+        "scope": "Only this flag varies across the44 cases; all three observed current root flags stay fixed. Real repository adoption remains pending.",
+        "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      }
+    },
+    {
+      "feature": "futureFlag:watchUsingTaskInputs",
+      "owner": "turborepo-quality-cache-adoption",
+      "stableSchemaDescription": "Use task-level `inputs` globs to determine which tasks to re-run when files change in `turbo watch`. When enabled, only tasks whose declared inputs match the changed files are re-executed, rather than re-running all tasks in changed packages.",
+      "enabledInObservedRoot": false,
+      "canaryDocumentationObserved": true,
+      "prerequisites": [
+        "Exact-client regression evidence",
+        "Change only one experimental flag at a time"
+      ],
+      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
+      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
+      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
+      "disposition": "disabled; determine applicability before proposing activation",
+      "acceptanceStatus": "pending",
+      "nativeConfigurationObservation": {
+        "report": "native-future-flag-availability.json",
+        "stable": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "canary": {
+          "false": "dry-run-accepted",
+          "true": "dry-run-accepted"
+        },
+        "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      }
+    }
+  ],
+  "counts": {
+    "featureFamilies": 21,
+    "stableFutureFlags": 14,
+    "entries": 35
+  },
+  "sourceEvidence": {
+    "stableSchemaSha256": "e3042f9184a5e53260af50b724cbcbbb375f23d53bc1abdc6a3894216f10efaa"
+  },
+  "limits": [
+    "Documented availability is not runtime correctness proof.",
+    "Research-only upstream main is not a production or canary lane.",
+    "Feature rows carry current dispositions; reviewCounts records their totals. Native fixture evidence alone grants no real computation qualification."
+  ],
+  "reviewCounts": {
+    "acceptedNotApplicable": 1,
+    "acceptedRetainCurrentAbsence": 3,
+    "pending": 31
+  },
+  "nativeAvailabilityCounts": {
+    "flagCasesAccepted": 56,
+    "baselineCasesAccepted": 2,
+    "unknownControlsRefused": 2,
+    "sentinelsExecuted": 0,
+    "featuresSemanticallyQualified": 0
+  },
+  "nativeSelectionEvidence": {
+    "cases": 44,
+    "strictVariants": 2,
+    "semanticFlagsQualifiedForRepository": 0,
+    "checkpoint": "selection-semantics-checkpoint.json",
+    "clientChannels": 2
+  }
+}

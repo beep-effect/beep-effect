@@ -20,7 +20,7 @@ import { $TsconfigId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
-import { CompilerOptions } from "./CompilerOptions.ts";
+import { ClosedCompilerOptions, CompilerOptions } from "./CompilerOptions.ts";
 import { caseInsensitiveLiterals } from "./internal/caseInsensitiveLiterals.ts";
 
 const $I = $TsconfigId.create("TsconfigJson");
@@ -501,6 +501,117 @@ export declare namespace TsconfigJson {
    * @since 0.0.0
    */
   export type Encoded = typeof TsconfigJson.Encoded;
+}
+
+// The closed sections: the typed fields of each passthrough section, no rest record.
+const ClosedReference = ReferenceFields.pipe(
+  $I.annoteSchema("ClosedReference", {
+    description: "A referenced TypeScript project with no passthrough: an unknown key is an excess property.",
+  })
+);
+const ClosedWatchOptions = WatchOptionsFields.pipe(
+  $I.annoteSchema("ClosedWatchOptions", {
+    description: "The typed watch options with no passthrough: an unknown key is an excess property.",
+  })
+);
+const ClosedTypeAcquisition = TypeAcquisitionFields.pipe(
+  $I.annoteSchema("ClosedTypeAcquisition", {
+    description: "The typed type-acquisition settings with no passthrough: an unknown key is an excess property.",
+  })
+);
+
+/**
+ * The closed view of {@link (TsconfigJson:variable)}: the same typed top-level
+ * fields with no passthrough record, and every nested section (`compilerOptions`,
+ * `references[]`, `watchOptions`, `typeAcquisition`) closed the same way.
+ *
+ * **Details**
+ *
+ * The passthrough schema admits `buildOptions`, `ts-node` and any other key
+ * tsc ignores; here each is an excess property. Decoding with
+ * `onExcessProperty: "error"` rejects it; the default `"ignore"` drops it.
+ * `@beep/repo-tsconfig` `TsconfigValidator` layers tsc's cross-field and
+ * uniqueness checks over this view.
+ *
+ * **Example** (Reject an unknown top-level key)
+ *
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { ClosedTsconfigJson } from "@beep/tsconfig/TsconfigJson";
+ *
+ * const strict = S.decodeUnknownExit(ClosedTsconfigJson);
+ * console.log(strict({ compileOnSave: true }, { onExcessProperty: "error" })._tag); // Success
+ * console.log(strict({ "ts-node": { transpileOnly: true } }, { onExcessProperty: "error" })._tag); // Failure
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ClosedTsconfigJson = S.Struct({
+  ...TsconfigJsonFields.fields,
+  compilerOptions: S.optionalKey(ClosedCompilerOptions).pipe(
+    $I.annoteKey("ClosedTsconfigJson.compilerOptions", {
+      description: "The compilation options for this project, closed to the typed options.",
+    })
+  ),
+  references: ClosedReference.pipe(
+    S.Array,
+    S.optionalKey,
+    $I.annoteKey("ClosedTsconfigJson.references", {
+      description: "The projects referenced by this configuration, each closed to `path`.",
+    })
+  ),
+  watchOptions: S.optionalKey(ClosedWatchOptions).pipe(
+    $I.annoteKey("ClosedTsconfigJson.watchOptions", {
+      description: "The filesystem watch settings, closed to the typed options.",
+    })
+  ),
+  typeAcquisition: S.optionalKey(ClosedTypeAcquisition).pipe(
+    $I.annoteKey("ClosedTsconfigJson.typeAcquisition", {
+      description: "The automatic type-acquisition settings, closed to the typed options.",
+    })
+  ),
+}).pipe(
+  $I.annoteSchema("ClosedTsconfigJson", {
+    description:
+      "A tsconfig.json document closed to its typed fields at every level: an unknown key is an excess property.",
+  })
+);
+
+/**
+ * Decoded value accepted by {@link (ClosedTsconfigJson:variable)}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClosedTsconfigJson = typeof ClosedTsconfigJson.Type;
+
+/**
+ * Type-only companion namespace for {@link (ClosedTsconfigJson:variable)}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ClosedTsconfigJson {
+  /**
+   * The decoded closed tsconfig.json shape: every typed field optional, no index signature at any level.
+   *
+   * @public
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Type = ClosedTsconfigJson;
+  /**
+   * The encoded (on-disk JSON) closed tsconfig.json shape.
+   *
+   * @public
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ClosedTsconfigJson.Encoded;
 }
 
 /**

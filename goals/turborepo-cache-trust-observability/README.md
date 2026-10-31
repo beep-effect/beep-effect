@@ -36,12 +36,17 @@ Refresh the checked-in and applicable deployed trust boundary, then define the c
 
 ## Latest evidence
 
-The [supervised workflow checkpoint](./research/owned-producer-workflow.json)
+The [current native checkpoint](./research/current-native-checkpoint.json)
+records the exact stable/canary signing and transport controls, source hashes
+and limits. The [completion audit](./research/current-completion-audit.json)
+keeps all remaining requirement-level evidence open.
+
+The retained [supervised workflow checkpoint](./research/owned-producer-workflow.json)
 records live workflow identity checks and closed signed-observation issuance.
 The [stable](./research/actual-persistent-issuer-stable.json) and
 [canary](./research/actual-persistent-issuer-canary.json) controls record actual
 persistent issuer material denial. These are local component observations;
-accepted operational qualification and production readiness remain incomplete.
+current-profile operational qualification and production readiness remain incomplete.
 
 ## Notes
 

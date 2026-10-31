@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "expiring-repo-facts",
+    "title": "Expiring Repo Facts",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/hold-ledger", "goals/wake-service"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-28",
+    "updated": "2026-10-31"
+  }
+}

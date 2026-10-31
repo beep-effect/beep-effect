@@ -71,6 +71,10 @@
       "purpose": "R5a parity: reflection, SKILL.md, KnowledgeDoctor beep-historical and delete-package changeset-prune verdicts over the live corpus and git history, before and after the @beep/markdown switch, plus classified probe shifts."
     },
     {
+      "path": "ops/ecosystem-polarity-differential.ts",
+      "purpose": "4-A4 differential: runEcosystemPolarityCheck over the live repo and a synthetic ecosystem of import forms, recorded before the SourceBoundary.scan switch and compared at the head with every difference classified into an intended shift class."
+    },
+    {
       "path": "ops/git-adoption-differential.ts",
       "purpose": "R10 differential: the pre-R10 repo-cli merge-base read, worktree probes and origin/labels config reads compared with their @beep/git adoptions over scratch repositories."
     },
@@ -81,6 +85,10 @@
     {
       "path": "ops/glob-shim-census.ts",
       "purpose": "R2a parity: recomputes the Bun.Glob shim matcher census (every `new Bun.Glob` pattern, the vitest include globs and semantics probes over the tracked-path universe) with `@beep/glob` GlobPattern (dot: true) and compares it with the recorded `research/glob-shim-census-r2a.json`."
+    },
+    {
+      "path": "ops/glob-adoption-parity.ts",
+      "purpose": "R2b parity: the pre-R2b repo-cli glob compiler frozen and compared with @beep/glob GlobPattern over every live caller pattern and candidate, plus fingerprints of the three EffectImports discovery sets before and after the @beep/walker switch."
     },
     {
       "path": "ops/lockfiles-adoption-parity.ts",
@@ -137,6 +145,10 @@
     {
       "path": "ops/tsconfig-sync-parity.ts",
       "purpose": "3-A7 parity: tsconfig-sync dry-run and write outputs (stdout, exit codes, sha256 of every file) over fixed mutations, before and after the @beep/tsconfig schema switch, plus a TsconfigJson decode of every tracked tsconfig."
+    },
+    {
+      "path": "ops/tsconfig-validator-parity.ts",
+      "purpose": "3-A6 parity: records the strict tsconfig verdict over every tracked tsconfig*.json and docgen's resolved compiler options for every docgen.json, and compares a before/after pair against the intended TsconfigValidator verdict shifts."
     },
     {
       "path": "ops/xdg-systemd-differential.ts",
