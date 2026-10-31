@@ -11,7 +11,7 @@ const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   const equivalent = S.toEquivalence(schema);
   it.effect.prop(
-    name + " decodes its encoded values without failure",
+    `${name} decodes its encoded values without failure`,
     [Arbitrary.schema(schema)],
     ([value]) =>
       Effect.gen(function* () {

@@ -33,8 +33,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LiteralKit, normalizePath } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, O, pipe, R, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -252,7 +252,7 @@ export class TsconfigOverlayViolation extends S.Opaque<TsconfigOverlayViolation,
 // The overlay is judged by its raw key set, so the document is decoded as an
 // open record rather than a struct that would silently drop unknown keys.
 const TsconfigOverlayRawDocument = S.Record(S.String, S.Unknown);
-const decodeOverlayDocument = decodeJsoncTextAs(TsconfigOverlayRawDocument);
+const decodeOverlayDocument = Jsonc.bind(TsconfigOverlayRawDocument).decode;
 const isRawDocument = S.is(TsconfigOverlayRawDocument);
 const isAllowedDocumentKey = S.is(TsconfigOverlayDocumentKey);
 const isAllowedCompilerOptionKey = S.is(TsconfigOverlayCompilerOptionKey);
@@ -262,7 +262,7 @@ const TsconfigReferenceList = S.Struct({
   references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
 });
 const decodeReferenceList = S.decodeUnknownEffect(TsconfigReferenceList);
-const decodeCanonicalReferenceList = decodeJsoncTextAs(TsconfigReferenceList);
+const decodeCanonicalReferenceList = Jsonc.bind(TsconfigReferenceList).decode;
 const referencePathsOf = (document: typeof TsconfigReferenceList.Type): ReadonlyArray<string> =>
   A.map(document.references ?? A.empty(), (entry) => entry.path);
 const referenceListEquivalence = A.makeEquivalence(Str.equivalence);

@@ -507,11 +507,82 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   cases per runtime and exact-restored regression controls. The inert peer and
   controlled admission do not prove actual R2 grants or protected publication.
 
-- [Owned approval refusal checkpoint](producer-approval-refusal-checkpoint.json):
-  immutable hosted gap, current exact source hashes, admission-order negative
-  control, and 176-case Node/Bun runner coverage. Local controlled evidence only.
 
-- [Dependency security compatibility checkpoint](dependency-security-compatibility-checkpoint.json):
-  patched dependency identities, independent legacy-reference provenance,
-  complete package and cross-runtime test/coverage proof, and restored negative
-  controls. This component repair grants no signed reuse or whole-goal acceptance.
+
+### Complete observation and immutable publication, 2026-10-30
+
+- [Local source-bound checkpoint](complete-observation-publication-checkpoint.json):
+  the existing hosted-report schema/verifier now supports a bounded v2 report
+  that hashes the complete canonical observation and binds its exact owned
+  upload. V1 remains upload-only; no new trust store or qualification authority.
+- Thirty-two Node tests and thirty-two Bun tests use physical local ZIPs with
+  mocked authenticated metadata. Three source-removal controls prove the full
+  digest, upload equality and private snapshot guards are causal. These are
+  component observations, not an actual protected workflow or native R2 run.
+- The existing issuer, acceptance importer and live-source policy owners remain
+  required; actual publisher/consumer wiring, renewal and production observations
+  are explicitly unfinished.
+
+- The publisher input separates run/attempt from the artifact identity allocated
+  after upload. The current report builder needs no invented future artifact ID;
+  authenticated verification retains that required identity. Fresh Node/Bun
+  replays and digest/upload/snapshot controls cover the refined source.
+
+
+### Publication-bound acceptance consumer, 2026-10-30
+
+- [Source-bound acceptance checkpoint](acceptance-publication-join-checkpoint.json):
+  local implementation joins immutable publication with existing issuer/MAC
+  acceptance, persistence and operational reads. The combined 222 cases pass
+  under each runtime; three exact-restored source-removal controls demonstrate
+  strict verification, final publication-approval reads and final issuer checks.
+- Tests use real private files, physical ZIPs, the real CLI command and controlled
+  metadata services. They prove refusal and scope behavior, not actual GitHub
+  producer execution, deployed credentials or signed R2 performance.
+- The unpublished continuation uses the committed lifecycle repair as its local
+  parent. Accepted-parent replay, canonical combined proof and protected hosted
+  execution are still required. All full-goal acceptance remains unproven.
+
+
+### Manual inspection governance, 2026-10-30
+
+- [Policy repair receipt](inspection-governance-checkpoint.json): introduced
+  missing-context mapping was found by the full package proof. The explicit
+  operational mapping preserves the workflow checker and required contexts.
+- Both native runtimes pass 127 security/lane cases, including dispatch/main,
+  read-only permission, disabled capability and retention checks. Actual protected
+  execution and complete combined proof remain separate requirements.
+
+- 2026-10-30: The inspection-governance repair at `c5ae8bf81934a7d62ffce440c88b2a8a2e3e80bc` passed default `@beep/repo-cli` package verification, including audit and Docgen (exit 0; 1,085.848 seconds). Source hashes in `inspection-governance-checkpoint.json` remain exact. This is component verification, not accepted-parent, hosted or live producer proof.
+
+- 2026-10-30: `producer-command-publication-checkpoint.json` binds current closed-command publication wiring to two source digests, 71 passing cases per runtime and quick package proof. Existing complete report builder, schema identifiers and bounded writer are reused. CLI spies isolate execution; authenticated metadata remains a fixture. No real protected publication, credential bootstrap or signed activation is claimed.
+
+- 2026-10-30: The command-publication checkpoint now binds the adjacent one-pass severity consolidation and 96 passing cases per runtime. The two Fallow clone fingerprints are inherited; `dup:b1fc01a4` is consolidated, while `dup:624ca7d8` has an explicit source-backed non-defect judgment and remains in raw reports without suppression.
+
+- 2026-10-30: Publication command source `1395a7aa8b6322d2a68b879d1ffd2aba6d13097e` passed the full default package audit and Docgen (exit 0, 1,055.828 seconds). The exact three code/test digests in `producer-command-publication-checkpoint.json` still match. This is component proof; it does not establish accepted-parent, hosted or live R2 producer acceptance.
+
+- 2026-10-30: `producer-private-output-checkpoint.json` binds the unpublished command repair. The original writer fails two physical mode assertions under a child-only 022 umask. Removing exclusive creation while retaining mode 0600 fails the existing-output refusal assertion; exact source bytes are restored. Nine real filesystem refusal checks cover both producer modes. Current default package, accepted-parent combined and actual protected publication proof remain required.
+
+- The private-output checkpoint also retains the complete c99 package pass and an independent API-contract counterexample. Typed public warming examples fail when the shared writer acquires FileSystem implicitly, then compile after producer-only capability selection. No new public dependency or live activation is retained; refined-source package proof remains required.
+
+
+### Accepted-source worker replay observation, 2026-10-31
+
+- [Worker observation](normal-source-worker-observation.json): stable 2.11.10,
+  accepted source `b30cd9e6dd96bcb7426a6a69c8f3be2c6f370c94`, unchanged worker
+  and native launch options, complete source-validated matrix under an outer
+  capture observer. The ordinary CLI attempts are retained as failures.
+- A private read-only native Biome overlay isolates the initial proposal's
+  formatting defect. Equivalent formatted JSON passes; unchanged source passes.
+  Invalid stdin controls are excluded from the negative/pass evidence.
+- Scope: diagnostic worker observation, without a production, protected
+  publication, ordinary CLI success or operational qualification claim.
+
+## Producer quality-seal input closure, 2026-10-31
+
+- [Reviewed closure](producer-quality-closure-baseline-review-2026-10-31.md) and
+  [bounded compare-and-swap request](producer-quality-closure-baseline-request-2026-10-31.json):
+  four added policy inputs, root-only acknowledgement, unchanged runtime scope
+  and byte-identical qualification ledger. No qualification or activation.
+
+Accepted-main R5b integration uses the [root-scoped review](producer-accepted-r5b-baseline-review-2026-10-31.md) and [CAS request](producer-accepted-r5b-baseline-request-2026-10-31.json). The accepted current-runtime v3 profile and all non-root reviews are preserved; no qualification or rollout is granted.

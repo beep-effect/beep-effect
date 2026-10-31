@@ -34,7 +34,9 @@
     "goals/turborepo-cache-trust-observability/GOAL.md",
     "goals/turborepo-cache-trust-observability/research/SOURCES.md",
     "explorations/turborepo-quality-cache/DECISIONS.md",
-    "explorations/turborepo-quality-cache/MAP.md"
+    "explorations/turborepo-quality-cache/MAP.md",
+    "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-review-2026-10-31.md",
+    "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-request-2026-10-31.json"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -103,7 +105,17 @@
     "research/producer-execution-coverage-repair.json",
     "research/producer-upload-lifetime-checkpoint.json",
     "research/producer-approval-refusal-checkpoint.json",
-    "research/dependency-security-compatibility-checkpoint.json"
+    "research/dependency-security-compatibility-checkpoint.json",
+    "research/protected-producer-entrypoint-checkpoint.json",
+    "research/producer-provisioning-checkpoint.json",
+    "research/complete-observation-publication-checkpoint.json",
+    "research/acceptance-publication-join-checkpoint.json",
+    "research/inspection-governance-checkpoint.json",
+    "research/producer-command-publication-checkpoint.json",
+    "research/producer-private-output-checkpoint.json",
+    "research/normal-source-worker-observation.json",
+    "research/producer-quality-closure-baseline-review-2026-10-31.md",
+    "research/producer-quality-closure-baseline-request-2026-10-31.json"
   ],
   "agentLaunchers": [
     {

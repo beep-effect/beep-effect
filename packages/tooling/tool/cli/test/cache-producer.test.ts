@@ -8,6 +8,7 @@ import {
   CacheAdapterRuntimeObservation,
   CacheHostedProducerUpload,
   CacheProducerAdapterReceipt,
+  CacheProducerExecutionProfile,
   CacheProducerUploadApproval,
   CacheRuntimeFileGuards,
   hashCacheProducerContract,
@@ -16,6 +17,8 @@ import {
   makeCacheProducerIssuer,
   openCacheProducerIssuer,
   openCacheProducerVerifier,
+  readCacheProducerExecutionProfile,
+  readCacheProducerProvisioning,
   revokeCacheProducerIssuer,
   validateCacheProducerApproval,
 } from "@beep/repo-cli/test/Cache";
@@ -24,22 +27,26 @@ import { Sha256Hex } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
-import { assertTrue, strictEqual } from "@effect/vitest/utils";
+import { assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { targetFor } from "./cache-conformance-server.ts";
 import { input as bundleInput, contractInput, pilot as input } from "./helpers/cache-producer-bundle-fixture.ts";
 
 const ProducerApprovalJson = S.fromJsonString(CacheProducerApproval);
 const ProducerBindingJson = S.fromJsonString(CacheProducerBinding);
+const encodeExecutionProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
 
 const decodeContract = S.decodeUnknownEffect(CacheTaskContract);
 const setup = Effect.fn("ProducerTest.setup")(function* () {
@@ -609,6 +616,221 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         yield* revokeCacheProducerIssuer(directory);
         (yield* verifier.verify(envelope, receipt).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
         (yield* openCacheProducerVerifier(directory).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+      })
+    );
+  }
+);
+
+const executionProfileSetup = Effect.fn("ProducerTest.executionProfileSetup")(function* (
+  adapterExecutable = "/fixture/adapter"
+) {
+  const state = yield* persistentSetup();
+  const profile = CacheProducerExecutionProfile.make({
+    target: targetFor({ url: "http://127.0.0.1:19427/" }),
+    adapterExecutable,
+  });
+  const file = state.path.join(state.directory, "runtime.json");
+  yield* state.fs.writeFileString(file, yield* encodeExecutionProfile(profile), { mode: 0o600 });
+  return { ...state, profile, file };
+});
+
+const provisioningInputsSetup = Effect.fn("ProducerTest.provisioningInputsSetup")(function* () {
+  const state = yield* executionProfileSetup();
+  const inputs = state.path.join(state.path.dirname(state.directory), "provisioning-inputs");
+  yield* state.fs.makeDirectory(inputs, { mode: 0o700 });
+  yield* state.fs.writeFileString(
+    state.path.join(inputs, "approval.json"),
+    yield* state.fs.readFileString(state.path.join(state.directory, "approval.json")),
+    { mode: 0o600 }
+  );
+  yield* state.fs.writeFileString(
+    state.path.join(inputs, "runtime.json"),
+    yield* encodeExecutionProfile(state.profile),
+    { mode: 0o600 }
+  );
+  return { ...state, inputs };
+});
+
+it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 seconds" })(
+  "independently selected producer execution profile",
+  (it) => {
+    it.effect("installs transferred material without generating a key and preserves independent verification", () =>
+      Effect.gen(function* () {
+        const f = yield* provisioningInputsSetup();
+        yield* f.fs.writeFile(
+          f.path.join(f.inputs, "issuer.material"),
+          yield* f.fs.readFile(f.path.join(f.directory, "issuer.key")),
+          { flag: "wx", mode: 0o600 }
+        );
+        const [approval, , material] = yield* readCacheProducerProvisioning(f.inputs, process.cwd());
+        assertSome(
+          O.map(material, (value) => Redacted.value(value).byteLength),
+          96
+        );
+        const crypto = yield* Crypto.Crypto;
+        const peer = yield* initializeCacheProducerIssuer(
+          f.path.join(f.path.dirname(f.directory), "peer"),
+          approval.binding,
+          approval.contract,
+          material
+        ).pipe(
+          Effect.provideService(Crypto.Crypto, {
+            ...crypto,
+            randomBytes: () => Effect.die("Installation generated replacement material."),
+          })
+        );
+        const envelope = yield* peer.issue(f.receipt);
+        const verifier = yield* openCacheProducerVerifier(f.directory);
+        expect((yield* verifier.verify(envelope, f.receipt)).binding).toEqual(f.binding);
+      })
+    );
+    it.effect("refuses malformed or differently bound transferred material before reserving a store", () =>
+      Effect.gen(function* () {
+        const f = yield* provisioningInputsSetup();
+        for (const length of [0, 64, 95, 97]) {
+          const directory = f.path.join(f.path.dirname(f.directory), `bad-${length}`);
+          expect(
+            yield* initializeCacheProducerIssuer(
+              directory,
+              f.binding,
+              f.contract,
+              O.some(Redacted.make(new Uint8Array(length)))
+            ).pipe(Effect.isFailure)
+          ).toBe(true);
+          expect(yield* f.fs.exists(directory)).toBe(false);
+        }
+        const directory = f.path.join(f.path.dirname(f.directory), "wrong-binding");
+        const material = Redacted.make(yield* f.fs.readFile(f.path.join(f.directory, "issuer.key")));
+        const binding = CacheProducerBinding.make({
+          ...f.binding,
+          workflowImplementation: Sha256Hex.make(Str.repeat(64)("e")),
+        });
+        expect(
+          yield* initializeCacheProducerIssuer(directory, binding, f.contract, O.some(material)).pipe(Effect.isFailure)
+        ).toBe(true);
+        expect(yield* f.fs.exists(directory)).toBe(false);
+      })
+    );
+    it.effect("applies private metadata and fixed byte bounds to optional transferred material", () =>
+      Effect.gen(function* () {
+        const f = yield* provisioningInputsSetup();
+        const materialFile = f.path.join(f.inputs, "issuer.material");
+        const bytes = yield* f.fs.readFile(f.path.join(f.directory, "issuer.key"));
+        yield* f.fs.writeFile(materialFile, bytes, { flag: "wx", mode: 0o600 });
+        yield* f.fs.chmod(materialFile, 0o644);
+        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        yield* f.fs.chmod(materialFile, 0o600);
+        for (const length of [0, 64, 95, 97]) {
+          yield* f.fs.writeFile(materialFile, new Uint8Array(length));
+          expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        }
+        yield* f.fs.writeFile(materialFile, bytes);
+        yield* f.fs.link(materialFile, f.path.join(f.inputs, "material-alias"));
+        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+    it.effect("refuses provisioning inputs within the loaded checkout", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const inputs = yield* fs.makeTempDirectoryScoped({ directory: process.cwd(), prefix: ".producer-input-test-" });
+        expect(yield* readCacheProducerProvisioning(inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+    it.effect("reads separate private provisioning inputs without issuer material", () =>
+      Effect.gen(function* () {
+        const f = yield* provisioningInputsSetup();
+        const [approval, profile] = yield* readCacheProducerProvisioning(f.inputs, process.cwd());
+        expect(approval.binding).toEqual(f.binding);
+        expect(profile).toEqual(f.profile);
+        expect(yield* f.fs.exists(f.path.join(f.inputs, "issuer.key"))).toBe(false);
+        expect(yield* f.fs.readDirectory(f.inputs)).toEqual(["approval.json", "runtime.json"]);
+      })
+    );
+    it.effect.each(["issuer.key", "revoked"])("refuses provisioning input directories containing %s", (marker) =>
+      Effect.gen(function* () {
+        const f = yield* provisioningInputsSetup();
+        yield* f.fs.symlink(f.path.join(f.inputs, "missing-marker"), f.path.join(f.inputs, marker));
+        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+    it.effect("retains private-record metadata, bounds and strict decoding for provisioning inputs", () =>
+      Effect.gen(function* () {
+        const f = yield* provisioningInputsSetup();
+        const file = f.path.join(f.inputs, "runtime.json");
+        const original = yield* f.fs.readFile(file);
+        yield* f.fs.chmod(file, 0o644);
+        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        yield* f.fs.chmod(file, 0o600);
+        for (const bytes of [
+          new Uint8Array(),
+          new Uint8Array([255]),
+          new Uint8Array(16385),
+          new TextEncoder().encode("{"),
+        ]) {
+          yield* f.fs.writeFile(file, bytes);
+          expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+        }
+        yield* f.fs.writeFile(file, original);
+        yield* f.fs.link(file, f.path.join(f.inputs, "runtime-alias.json"));
+        expect(yield* readCacheProducerProvisioning(f.inputs, process.cwd()).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+    it.effect.prop(
+      "roundtrips schema-generated executable selections through the private record",
+      { executable: S.NonEmptyString },
+      ({ executable }) =>
+        Effect.gen(function* () {
+          const { directory, binding, profile } = yield* executionProfileSetup(executable);
+          const [approved, observed] = yield* readCacheProducerExecutionProfile(directory);
+          expect(approved).toEqual(binding);
+          expect(observed).toEqual(profile);
+        }),
+      { arbitrary: fcRuns(20) }
+    );
+    it.effect("does not create a missing profile or replace existing issuer material", () =>
+      Effect.gen(function* () {
+        const { fs, path, directory } = yield* persistentSetup();
+        const key = path.join(directory, "issuer.key");
+        const before = yield* fs.readFile(key);
+        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+        expect(yield* fs.exists(path.join(directory, "runtime.json"))).toBe(false);
+        expect(yield* fs.readFile(key)).toEqual(before);
+      })
+    );
+    it.effect("rejects a world-readable runtime profile", () =>
+      Effect.gen(function* () {
+        const { fs, file, directory } = yield* executionProfileSetup();
+        yield* fs.chmod(file, 0o644);
+        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+      })
+    );
+    it.effect("rejects a symbolic runtime profile", () =>
+      Effect.gen(function* () {
+        const { fs, path, directory, file } = yield* executionProfileSetup();
+        const original = path.join(directory, "original-runtime.json");
+        yield* fs.rename(file, original);
+        yield* fs.symlink(original, file);
+        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+      })
+    );
+    it.effect("rejects a hard-linked runtime profile", () =>
+      Effect.gen(function* () {
+        const { fs, path, directory, file } = yield* executionProfileSetup();
+        yield* fs.link(file, path.join(directory, "runtime-alias.json"));
+        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+      })
+    );
+    it.effect("bounds an otherwise valid oversized runtime profile", () =>
+      Effect.gen(function* () {
+        const { directory } = yield* executionProfileSetup(`/${Str.repeat(16384)("a")}`);
+        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
+      })
+    );
+    it.effect("honors revocation before opening the execution profile", () =>
+      Effect.gen(function* () {
+        const { directory } = yield* executionProfileSetup();
+        yield* revokeCacheProducerIssuer(directory);
+        assertTrue(yield* readCacheProducerExecutionProfile(directory).pipe(Effect.isFailure));
       })
     );
   }

@@ -435,6 +435,14 @@ one MiB. Both cap stderr at one MiB. Their default raw outputs stay under the
 ignored `.beep/cargo-feature-review/` directory. They use finite credential-free
 child environments and require active Python assertions.
 
+
+### Stable signed-worker diagnostic, 2026-10-31
+
+[Trust-owner checkpoint](../../turborepo-cache-trust-observability/research/normal-source-worker-observation.json):
+accepted-source stable worker matrix under a transparent outer observer, with
+the complete private receipt retained by digest. Ordinary CLI failures remain
+separate. No computation, current-canary command or production profile is promoted.
+
 ### Quiet-log hash option, fresh canary snapshot (2026-10-31)
 
 - The [turbo registry tags](https://registry.npmjs.org/-/package/turbo/dist-tags)
@@ -461,3 +469,16 @@ child environments and require active Python assertions.
 - [Prior controls](native-log-controls-before-pin-default-fix.json): byte-identical
   retained execution with the original driver bindings; matching driver source
   content is available at `70145eb55b`. This is historical, not current replay.
+
+
+### GitHub base-ref fallback, current frozen native clients
+
+- [Applicability review](base-ref-feature-review.json) binds the exact hosted,
+  CI-lane, Quality and Yeet sources separately from native fixture execution.
+- [Current driver](native-base-ref-controls.py) and [36 selection cases](native-base-ref-controls.json)
+  bind the executed source revision and file digest, accepted frozen client
+  digests, private raw receipt digest and three exact refusal controls.
+- The native subprocesses clear ambient environment, run in an isolated network
+  namespace and mount only synthetic work plus read-only executable dependencies.
+  Explicit invalid bases fail; unknown implicit bases conservatively select all.
+  No Beep task, protected workflow, remote cache or production speedup is proven.
