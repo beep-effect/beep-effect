@@ -14,6 +14,7 @@ import { constant, flow, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PosInt } from "../../internal/PosInt.ts";
@@ -338,6 +339,10 @@ const parseClaimTransition: (value: string) => PatentClaimTransition = flow(
   O.getOrThrow
 );
 
+const byMatchIndex = Order.mapInput(Num.Order, (match: RegExpMatchArray) =>
+  O.getOrElse(O.fromUndefinedOr(match.index), constant(0))
+);
+
 const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> => {
   const matches = A.filter(A.fromIterable(Str.matchAll(transitionPattern)(claimText)), (match) => {
     const transition = pipe(A.get(match, 0), O.getOrThrow, Str.toLowerCase);
@@ -363,7 +368,9 @@ const transitionFromClaimText = (claimText: string): O.Option<RegExpMatchArray> 
         )
       );
     });
-  const first = A.head(matches).pipe(O.orElse(implicit));
+  // An eligible source comma competes with later lexical transitions: whichever starts
+  // first splits the claim, so a component "includes" cannot swallow the dependent limitation.
+  const first = pipe(A.getSomes([A.head(matches), implicit()]), A.sort(byMatchIndex), A.head);
   const subject = first.pipe(
     O.map((match) => Str.slice(0, match.index)(claimText)),
     O.flatMap(

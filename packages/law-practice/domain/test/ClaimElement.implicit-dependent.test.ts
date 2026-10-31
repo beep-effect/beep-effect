@@ -14,6 +14,7 @@ describe("source comma introducing a dependent limitation", () => {
         "the support being formed as a cone.",
         "the housing is further caused to: receive a signal.",
         "operating across a frequency range.",
+        "the housing being a casing that includes a cover.",
       ]) {
         const text = `The fixture of claim 1, ${body}`;
         const claims = yield* normalizePatentClaims([
