@@ -144,8 +144,9 @@ export const updateYamlValue: {
       onNone: () => restructured,
       onSome: (node) =>
         modifyYamlFile(filePath, original, yamlPath, options.value, spliceOptions).pipe(
-          Effect.flatMap((spliced) =>
-            changesOnlySpan(original, spliced, node) ? Effect.succeed(spliced) : restructured
+          Effect.filterOrElse(
+            (spliced) => changesOnlySpan(original, spliced, node),
+            () => restructured
           )
         ),
     });

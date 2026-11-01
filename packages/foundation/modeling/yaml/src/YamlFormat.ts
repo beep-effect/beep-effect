@@ -385,16 +385,25 @@ function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T>
  * spans, impossible double→single escapes — keeps its node untouched, and
  * the surrounding diff keeps the edit surgical per scalar span.
  */
+/** The quote character and scalar style a re-quote of `scalar` targets under `quoteStyle`. */
+const requoteTarget = (
+  scalar: YamlScalar,
+  quoteStyle: QuoteStyle
+): { readonly quote: '"' | "'"; readonly style: "double-quoted" | "single-quoted" } =>
+  fallbackQuoteStyle(P.isString(scalar.value) ? scalar.value : "", quoteStyle) === "double"
+    ? { quote: '"', style: "double-quoted" }
+    : { quote: "'", style: "single-quoted" };
+
 const requoteNode: {
   (node: YamlNode, text: string, quoteStyle: QuoteStyle): YamlNode;
   (text: string, quoteStyle: QuoteStyle): (node: YamlNode) => YamlNode;
 } = dual(3, (node: YamlNode, text: string, quoteStyle: QuoteStyle): YamlNode => {
   if (isYamlScalar(node)) {
-    const quote = fallbackQuoteStyle(P.isString(node.value) ? node.value : "", quoteStyle) === "double" ? '"' : "'";
-    if (O.isNone(requoteScalarText(text, node, quote, "escaping"))) return node;
+    const target = requoteTarget(node, quoteStyle);
+    if (O.isNone(requoteScalarText(text, node, target.quote, "escaping"))) return node;
     return YamlScalar.make({
       value: node.value,
-      style: quote === '"' ? "double-quoted" : "single-quoted",
+      style: target.style,
       ...definedFields({
         commentBefore: node.commentBefore,
         comment: node.comment,
