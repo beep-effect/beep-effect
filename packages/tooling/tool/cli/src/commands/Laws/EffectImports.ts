@@ -1569,7 +1569,12 @@ const transformFencedContent = (
       warnings = A.append(warnings, transformed.failure);
       continue;
     }
-    const { summary: sourceSummary, replacement } = transformed.success;
+    const { summary: sourceSummary } = transformed.success;
+    // A Markdown fence's `code` is the CommonMark value, which uses LF only; a CRLF body keeps its line endings.
+    const writtenBody = Str.slice(fence.codeStart, fence.codeEnd)(rewrittenContent);
+    const replacement = Str.includes("\r\n")(writtenBody)
+      ? Str.replace(/\r?\n/gu, "\r\n")(transformed.success.replacement)
+      : transformed.success.replacement;
     rootImportsRewritten += sourceSummary.rootImportsRewritten;
     rootExportsRewritten += sourceSummary.rootExportsRewritten;
     emittedImports += sourceSummary.emittedImports;

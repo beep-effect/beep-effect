@@ -803,6 +803,26 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("keeps CRLF line endings when it rewrites a CRLF markdown fence", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          yield* writeProjectFile(
+            "docs/crlf.md",
+            '```ts\r\nimport { Command as Cmd } from "effect/cli";\r\nconst value = 1;\r\n```\r\n'
+          );
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({ mode: "markdown", write: true, effectOnly: true, excludePaths: [] })
+          );
+          expect(summary.rootImportsRewritten).toBe(1);
+          const written = yield* readProjectFile("docs/crlf.md");
+          expect(written).toContain('import * as Cmd from "effect/cli/Command";\r\nconst value = 1;\r\n');
+          expect(/[^\r]\n/u.test(written)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("rewrites commented module specifiers in markdown and JSDoc fences", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
