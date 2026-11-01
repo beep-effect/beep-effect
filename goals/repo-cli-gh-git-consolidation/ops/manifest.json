@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "repo-cli-gh-git-consolidation",
+    "packetId": "goal-packet/v1:676200a5a873b8b0c1e94aa4e1a2a3cc4fc0faf54dbc51a12181fc3781a76ed0",
+    "title": "repo-cli gh/git consolidation",
+    "status": "paused",
+    "created": "2026-11-01",
+    "updated": "2026-11-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/repo-cli-gh-git-consolidation",
+  "lifecycle": "paused",
+  "mission": "Move repo-cli and its tests off hand-rolled gh and git spawning onto @beep/github, @beep/git and @beep/commands, extending the kits where they lack the feature",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/repo-cli-gh-git-consolidation/README.md",
+    "goals/repo-cli-gh-git-consolidation/SPEC.md",
+    "goals/repo-cli-gh-git-consolidation/PLAN.md",
+    "goals/repo-cli-gh-git-consolidation/GOAL.md",
+    "goals/repo-cli-gh-git-consolidation/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/repo-cli-gh-git-consolidation/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/repo-cli-gh-git-consolidation/GOAL.md)\" -le 4000",
+    "jq . goals/repo-cli-gh-git-consolidation/ops/manifest.json",
+    "rg -n \"repo-cli-gh-git-consolidation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/repo-cli-gh-git-consolidation",
+    "git diff --check -- goals/repo-cli-gh-git-consolidation",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
