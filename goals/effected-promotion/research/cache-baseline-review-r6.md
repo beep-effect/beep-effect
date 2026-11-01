@@ -3,8 +3,8 @@
 Reviewed 2026-10-31 for roadmap PR R6 of `goals/effected-promotion` (one fence
 extractor on `@beep/markdown` `MarkdownFence`; SPEC W4-q, W4-h and W4-i, R6
 parts), on a lane cut from `origin/main` `adedee335a` and merged with `origin/main`
-`c7eed00930` and then `d4e134f672` (review round 1; the root subject is
-re-recorded against main's baseline from that merge, with the same reason:
+`c7eed00930`, then `d4e134f672` and `52ef8f05df` (review round 1; the root
+subject is re-recorded against main's baseline from the last merge, with the same reason:
 review round 1 changes no import edge a policy tool reaches, so the seven
 generated input lists are the ones described below) (profile
 `local-linux-x64-bun1.4.4`, epoch `qualification-v3`); every generated file
