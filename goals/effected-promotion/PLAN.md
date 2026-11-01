@@ -127,9 +127,13 @@ that is `bb2134fcb952e07580c4cebf2586c901f090ef5b`, the parent of C's deletion c
 nothing). Each row names its restore command. A restored module also needs the lab wiring that C's unwiring commit
 (`dc35c67219` on the C branch, squashed into C's merge commit) removed, all present at the pin:
 `git checkout bb2134fcb952e07580c4cebf2586c901f090ef5b -- scratchpad/effected/tsconfig.lab.json scratchpad/effected/audit.ts
-scratchpad/vitest.effected.config.ts .oxlintrc.effected.json`, then the `*:effected` scripts and the module's
-lab-only dependencies from the pin's `scratchpad/package.json`, then `bun install` and
-`bun run beep tsconfig-sync` for the scratchpad references.
+scratchpad/effected/runner scratchpad/test/runner scratchpad/effected/.canary scratchpad/effected/PORT_LEDGER.json
+scratchpad/vitest.effected.config.ts scratchpad/docgen.effected.template.json .oxlintrc.effected.json` (`audit.ts`
+runs the port runner, whose gates read `.canary` and `PORT_LEDGER.json` and whose docs command reads the docgen
+template), then the `*:effected` scripts and the module's lab-only dependencies from the pin's
+`scratchpad/package.json`, then `bun install` and `bun run beep tsconfig-sync` for the scratchpad references.
+Restoring `cli/ui*` also needs the `ink-8-zero-width-markers` hold back in `hold-ledger/claims.jsonl` (C tombstoned it
+when `ink` left the last manifest).
 
 | Module | Future package | Trigger consumer | Last sha holding it | Restore |
 | --- | --- | --- | --- | --- |
