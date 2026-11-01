@@ -32442,27 +32442,27 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts": {
-          "lines": 33.33,
-          "statements": 27.63,
-          "branches": 0,
-          "functions": 2.94,
+          "lines": 96.96,
+          "statements": 97.46,
+          "branches": 88.88,
+          "functions": 94.28,
           "uncovered": {
-            "lines": 42,
-            "statements": 55,
-            "branches": 18,
-            "functions": 33
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts": {
-          "lines": 82.62,
-          "statements": 84.7,
-          "branches": 68.29,
-          "functions": 84.8,
+          "lines": 96.25,
+          "statements": 96.7,
+          "branches": 93.02,
+          "functions": 95.23,
           "uncovered": {
-            "lines": 41,
-            "statements": 41,
-            "branches": 13,
-            "functions": 19
+            "lines": 9,
+            "statements": 9,
+            "branches": 3,
+            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/RouteClassify.ts": {

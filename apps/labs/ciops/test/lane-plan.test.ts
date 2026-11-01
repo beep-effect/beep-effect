@@ -155,6 +155,10 @@ const dyingDigest = Layer.mock(Digest.Digest)({
 });
 const FailingDigestProjectionLive = CiOpsProjectionLive.pipe(Layer.provide(dyingDigest));
 
+// A digest that returns too few bytes: the SHA-256 decode rejects it, and planEpisode reports a typed read error.
+const shortDigest = Layer.mock(Digest.Digest)({ digest: () => Effect.succeed(new Uint8Array([1, 2, 3])) });
+const ShortDigestProjectionLive = CiOpsProjectionLive.pipe(Layer.provide(shortDigest));
+
 // Contract §8.3: none of these may touch a lane plan, in either namespace.
 const forbiddenLanePlanTerms = [
   "hasCurrentProposal",
@@ -620,6 +624,17 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
           pinnedHandoffSha256,
           turtle.sha256,
         ]);
+      })
+    );
+  });
+
+  it.layer(ShortDigestProjectionLive, { timeout: "10 seconds" })((it) => {
+    it.effect("reports a malformed SHA-256 digest as a typed HandoffReadError", () =>
+      Effect.gen(function* () {
+        const service: CiOpsProjectionShape = yield* CiOpsProjection;
+        const failure = yield* Effect.flip(service.planEpisode(fixtureInput(pinnedHandoffSha256)));
+        assertInstanceOf(failure, HandoffReadError);
+        expect(failure.message).toContain("SHA-256 digest failed");
       })
     );
   });
