@@ -353,6 +353,25 @@ describe("Yaml", () => {
         assert.strictEqual(yield* doc.stringify(), "a: 1\nb: 2\n# tail\n");
       })
     );
+
+    it.effect("a BOM opens the document prefix: directives and --- behind it stay in one document", () =>
+      Effect.gen(function* () {
+        // The BOM used to land in the body, so a following %YAML was a
+        // misplaced directive and a following --- opened a second document.
+        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF%YAML 1.2\n---\na: 1\n"), { a: 1 });
+        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF%YAML 1.2\r\n--- # c\r\na: 1\r\n"), { a: 1 });
+        assert.deepStrictEqual(yield* Yaml.parse("\uFEFF\n%TAG !e! tag:example.com,2000:\n---\na: !e!x 1\n"), {
+          a: "1",
+        });
+        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF---\na: 1\n"), [{ a: 1 }]);
+        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF# c\n--- [1, 2]\n"), [[1, 2]]);
+        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF--- \n"), [null]);
+        assert.deepStrictEqual(yield* Yaml.parseAll("\uFEFF%YAML 1.2\n---\na: 1\n...\n%YAML 1.2\n---\nb: 2\n"), [
+          { a: 1 },
+          { b: 2 },
+        ]);
+      })
+    );
   });
 
   describe("parseAll", () => {

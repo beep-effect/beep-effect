@@ -869,11 +869,15 @@ function isPrologueTrivia(state: ParserState, token: YamlToken.Data): boolean {
   return nextNonTrivia?.kind === "directive" || nextNonTrivia?.kind === "document-start";
 }
 
-/** Consume leading directives and their trivia, then the document-start marker if present. */
+/**
+ * Consume leading directives and their trivia, then the document-start marker
+ * if present. A byte-order mark opens the document prefix (YAML 1.2 §9.1.1), so
+ * the directives and `---` behind it stay in the same document.
+ */
 function parseDocumentPrologue(state: ParserState, children: CstNode[]): void {
   while (!atEnd(state)) {
     const token = peek(state);
-    if (token.kind === "directive") children.push(consumeLeafToken(state));
+    if (token.kind === "directive" || token.kind === "byte-order-mark") children.push(consumeLeafToken(state));
     else if (isPrologueTrivia(state, token)) children.push(...consumeTrivia(state));
     else break;
   }
