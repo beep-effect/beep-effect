@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   initializeObservationClaims,
   makeObservationClaims,
@@ -7,11 +8,12 @@ import {
 import { ObservationLaunchFact } from "@beep/repo-ai-metrics/observation-launch-facts";
 import { ObservationLaunchSubmission } from "@beep/repo-ai-metrics/observation-launch-http";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import { claimFileFault } from "./fixtures/claim-file-fault.ts";
@@ -21,7 +23,10 @@ import {
   claimSubmission as submission,
 } from "./fixtures/observation-claims.ts";
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
+// The claim store checks owner, mode and link metadata, which the memory filesystem models.
+const TestFileSystem = Layer.merge(MemoryFileSystem.layer, Path.layer);
+
+it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
   it.effect("consumes one attempt across service reopen and epochs, even when its operation fails", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -49,7 +54,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
   )
 );
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
+it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
   it.effect("permits at most one concurrent owner and never exceeds fixed claim capacity", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1);
@@ -73,7 +78,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
   )
 );
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
+it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
   it.effect("preserves claims when unrelated collector state is replaced with older data", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -93,7 +98,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
   )
 );
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
+it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
   it.effect("refuses torn claims, exposed files, substituted roots and changed enrollment", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -122,7 +127,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
   )
 );
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
+it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
   it.effect("refuses overlapping directories, missing stores and non-Prepared submissions", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
@@ -154,7 +159,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
 );
 
 for (const phase of ["file", "directory"] as const) {
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
+  it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
     it.effect(`does not run an operation after ${phase} synchronization fails and retains the claim`, () =>
       Effect.gen(function* () {
         const f = yield* fixture();
@@ -193,7 +198,7 @@ for (const phase of ["file", "directory"] as const) {
   );
 }
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) =>
+it.layer(TestFileSystem, { timeout: "30 seconds" })((it) =>
   it.effect("refuses claim initialization before writes when owner metadata and caller UID are unavailable", () =>
     Effect.gen(function* () {
       const f = yield* fixture();

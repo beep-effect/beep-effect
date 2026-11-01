@@ -1,18 +1,23 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { isPrivateObservationFile, readBoundedMetadata } from "@beep/repo-ai-metrics/observation-file";
 import { ObservationLaunchError } from "@beep/repo-ai-metrics/observation-launch";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+
+// The memory filesystem models the owner, mode and link metadata these checks read.
+const TestFileSystem = Layer.merge(MemoryFileSystem.layer, Path.layer);
 
 const errors = {
   readFailed: ObservationLaunchError.make({ reason: "directory" }),
   oversize: ObservationLaunchError.make({ reason: "configuration" }),
   encodingFailed: ObservationLaunchError.make({ reason: "namespace" }),
 };
-it.layer(NodeServices.layer, { timeout: "20 seconds" })((it) => {
+it.layer(TestFileSystem, { timeout: "20 seconds" })((it) => {
   it.effect("enforces the byte ceiling before decoding and preserves each caller-owned refusal", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

@@ -8,6 +8,7 @@ import { ObservationLaunchSubmission } from "@beep/repo-ai-metrics/observation-l
 import { Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import * as Str from "effect/String";
 
 export const claimId = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
@@ -48,7 +49,8 @@ export const claimFixture = Effect.fn("ClaimTest.fixture")(function* (maxClaims 
       maxClaims,
     }),
   });
-  const uid = process.geteuid?.() ?? -1;
+  // The owner of the fresh root, so the fixture runs on the native and the memory filesystem alike.
+  const uid = O.getOrElse((yield* fs.stat(root)).uid, () => -1);
   yield* initializeObservationClaims(policy, uid);
   return { fs, root, policy, uid };
 });
