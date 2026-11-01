@@ -529,20 +529,24 @@ export function renderSingleQuoted(s: string): string {
  * ```ts
  * import { fallbackQuoteStyle } from "@beep/yaml/internal/stringifier"
  *
- * console.log(fallbackQuoteStyle("auto", 'say "hi"')) // single
- * console.log(fallbackQuoteStyle("auto", "it's")) // double
- * console.log(fallbackQuoteStyle("single", "it's")) // single
+ * console.log(fallbackQuoteStyle('say "hi"', "auto")) // single
+ * console.log(fallbackQuoteStyle("it's", "auto")) // double
+ * console.log(fallbackQuoteStyle("it's", "single")) // single
  * ```
  *
  * @category formatting
  * @since 0.0.0
  */
-export const fallbackQuoteStyle = (quoteStyle: QuoteStyle, s: string): "single" | "double" =>
+export const fallbackQuoteStyle: {
+  (quoteStyle: QuoteStyle): (s: string) => "single" | "double";
+  (s: string, quoteStyle: QuoteStyle): "single" | "double";
+} = dual(2, (s: string, quoteStyle: QuoteStyle): "single" | "double" =>
   QuoteStyle.match(quoteStyle, {
     single: () => "single" as const,
     double: () => "double" as const,
     auto: () => (Str.includes('"')(s) && !Str.includes("'")(s) ? ("single" as const) : ("double" as const)),
-  });
+  })
+);
 
 const ParentPosition = LiteralKit(["block-map-value", "block-seq-item"]).pipe(
   $I.annoteSchema("ParentPosition", { description: "The block parent position that controls scalar header rendering." })
@@ -616,7 +620,7 @@ const stringStyleRenderers: Record<ScalarStyle, (input: StringRenderContext) => 
       // Otherwise the caller's fallback preference decides: single-quoted
       // by default (the released byte-compatible form), double-quoted
       // when `quoteStyle` asks for it, and chosen per value under "auto".
-      return fallbackQuoteStyle(quoteStyle, s) === "double" ? renderDoubleQuoted(s, canonical) : renderSingleQuoted(s);
+      return fallbackQuoteStyle(s, quoteStyle) === "double" ? renderDoubleQuoted(s, canonical) : renderSingleQuoted(s);
     }
     return s;
   },

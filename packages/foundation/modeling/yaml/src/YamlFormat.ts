@@ -390,7 +390,7 @@ const requoteNode: {
   (text: string, quoteStyle: QuoteStyle): (node: YamlNode) => YamlNode;
 } = dual(3, (node: YamlNode, text: string, quoteStyle: QuoteStyle): YamlNode => {
   if (isYamlScalar(node)) {
-    const quote = fallbackQuoteStyle(quoteStyle, P.isString(node.value) ? node.value : "") === "double" ? '"' : "'";
+    const quote = fallbackQuoteStyle(P.isString(node.value) ? node.value : "", quoteStyle) === "double" ? '"' : "'";
     if (O.isNone(requoteScalarText(text, node, quote, "escaping"))) return node;
     return YamlScalar.make({
       value: node.value,
