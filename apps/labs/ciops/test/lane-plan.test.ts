@@ -4,7 +4,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
-import { assertExitFailure, assertInstanceOf } from "@effect/vitest/utils";
+import { assertExitFailure, assertInstanceOf, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -629,8 +629,8 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
       Effect.gen(function* () {
         const service: CiOpsProjectionShape = yield* CiOpsProjection;
         const exit = yield* Effect.exit(service.planEpisode(fixtureInput(pinnedHandoffSha256)));
-        expect(Exit.isFailure(exit) && Exit.hasDies(exit)).toBe(true);
-        expect(Exit.isFailure(exit) && Exit.hasFails(exit)).toBe(false);
+        exit.pipe(Exit.hasDies, assertTrue);
+        exit.pipe(Exit.findErrorOption, assertNone);
       })
     );
   });

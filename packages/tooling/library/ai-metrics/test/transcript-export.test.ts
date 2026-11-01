@@ -340,10 +340,18 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         const scheduler = yield* f.reopen();
         for (let n = 0; n < 3; n++) yield* scheduler.tick;
         expect(yield* Ref.get(f.posts)).toBe(2);
-        for (const frame of f.frames)
-          expect(yield* f.sender.ledger.state(frame.occurrenceId)).toMatchObject({
-            value: { state: "accepted-unverified", attempts: 1 },
-          });
+        yield* Effect.forEach(
+          f.frames,
+          (frame) =>
+            f.sender.ledger
+              .state(frame.occurrenceId)
+              .pipe(
+                Effect.map((state) =>
+                  expect(state).toMatchObject({ value: { state: "accepted-unverified", attempts: 1 } })
+                )
+              ),
+          { discard: true }
+        );
       })
   )
 );
