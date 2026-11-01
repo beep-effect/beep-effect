@@ -832,7 +832,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
           )
         );
 
-        const globs = yield* GlobSet.compile(patterns).pipe(
+        const globs = yield* GlobSet.compile(WorkspacePatterns.forMatching(patterns)).pipe(
           Effect.mapError((error) =>
             WorkspacePatternError.make({
               root,

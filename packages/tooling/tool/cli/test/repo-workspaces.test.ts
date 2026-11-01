@@ -174,6 +174,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
       })
     );
 
+    it.effect("reads a slashed wildcard and a slashed literal root pattern as their unslashed forms", () =>
+      Effect.gen(function* () {
+        const root = yield* repository({
+          ...twoMembers,
+          "package.json": json({ name: "root", workspaces: ["packages/*/", "packages/core/"] }),
+        });
+        // The literal names a member the wildcard also selects: one member, at the unslashed path.
+        deepStrictEqual(
+          A.map(yield* workspacePackages(root), (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@beep/app=packages/app", "@beep/core=packages/core"]
+        );
+      })
+    );
+
     it.effect("skips a member link whose real path leaves the checkout", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

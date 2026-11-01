@@ -34,6 +34,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoWorkspacesId.create("WorkspacePatterns");
 
@@ -145,6 +146,12 @@ const stringsOf = (value: unknown): O.Option<ReadonlyArray<string>> =>
 // `stringsOf`, with a non-array read as no strings.
 const stringsOrEmpty = (value: unknown): ReadonlyArray<string> => O.getOrElse(stringsOf(value), () => []);
 
+/** `pattern` without its trailing slashes; a pattern that is nothing but slashes (or `!` and slashes) is kept. */
+const withoutTrailingSlashes = (pattern: string): string => {
+  const stripped = Str.replace(/\/+$/, "")(pattern);
+  return stripped === "" || stripped === "!" ? pattern : stripped;
+};
+
 // Reads `path` and fails with a typed `read` failure instead of the platform error.
 const readConfigText = Effect.fnUntraced(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -247,6 +254,37 @@ export class WorkspacePatterns {
         : []
     );
   };
+
+  /**
+   * The patterns as the enumerators match them: each without its trailing slashes.
+   *
+   * **Details**
+   *
+   * A package manager reads `packages/*` followed by a slash as `packages/*`:
+   * it drops the trailing slash before appending `/package.json`. A glob
+   * matcher does not, so the compiled slashed form would select no member
+   * directory, and a literal `packages/core/` would report `packages/core/`
+   * as its relative path. Every kit reader compiles this form;
+   * {@link WorkspacePatterns.read} and the projections still return the
+   * declared text verbatim. A pattern that is only slashes keeps them, so it
+   * is still matched (or refused) as written.
+   *
+   * **Example** (Normalize declared patterns for matching)
+   *
+   * ```ts
+   * import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
+   *
+   * console.log(WorkspacePatterns.forMatching(["packages/core/", "!packages/legacy//", "tools/cli"]).join(","));
+   * // packages/core,!packages/legacy,tools/cli
+   * ```
+   *
+   * @param patterns - The declared patterns.
+   * @returns The patterns without trailing slashes, in declaration order.
+   * @category parsing
+   * @since 0.0.0
+   */
+  static readonly forMatching = (patterns: ReadonlyArray<string>): ReadonlyArray<string> =>
+    A.map(patterns, withoutTrailingSlashes);
 
   /**
    * Reads the workspace `packages:` patterns for `root`, preferring `pnpm-workspace.yaml` over the root `package.json` `workspaces` field.

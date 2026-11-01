@@ -417,6 +417,32 @@ describe("WorkspaceDiscovery — skipDirectoryNames skips a directory before rea
   );
 });
 
+// Declared with trailing slashes, as package managers accept them.
+const trailingSlashes: Tree = {
+  "/repo/package.json": rootManifest(["packages/*/", "packages/alpha/", "tools/core/", "apps//"]),
+  "/repo/packages/alpha/package.json": manifest("@x/alpha"),
+  "/repo/packages/beta/package.json": manifest("@x/beta"),
+  "/repo/tools/core/package.json": manifest("@x/core"),
+  "/repo/apps/package.json": manifest("@x/apps"),
+};
+
+describe("WorkspaceDiscovery — a trailing slash on a pattern is dropped before matching", () => {
+  layer(discoveryOver(trailingSlashes), { timeout: "30 seconds" })((it) => {
+    it.effect("a slashed wildcard and slashed literals select their members at unslashed paths", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const packages = yield* discovery.listPackages;
+        assert.deepStrictEqual(
+          A.map(packages, (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@x/apps=apps", "@x/alpha=packages/alpha", "@x/beta=packages/beta", "@x/core=tools/core"]
+        );
+        const info = yield* discovery.info;
+        assert.deepStrictEqual(info.patterns, ["packages/*/", "packages/alpha/", "tools/core/", "apps//"]);
+      })
+    );
+  });
+});
+
 const malformed: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/packages/bad/package.json": "{ not json",
