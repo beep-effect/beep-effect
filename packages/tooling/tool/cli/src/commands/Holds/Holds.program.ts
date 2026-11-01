@@ -26,11 +26,11 @@ import {
   lintHolds,
   liveAnchorValues,
 } from "./Holds.inventory.ts";
-import { HoldFalsifier, HoldId, HoldVersionId } from "./Holds.schemas.ts";
+import { HoldExitAction, HoldFalsifier, HoldId, HoldVersionId } from "./Holds.schemas.ts";
 import { HoldLedger, HoldProbe, HoldProbeRequest } from "./Holds.service.ts";
 import { HoldSites } from "./Holds.sites.ts";
 import { confirmHoldRuns } from "./Holds.verdict.ts";
-import type { HoldClaimVersion, HoldLintFinding, ProbeOutcome } from "./Holds.schemas.ts";
+import type { HoldClaimVersion, HoldLintFinding, ProbeOutcome, ProbeRun } from "./Holds.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.program");
 
@@ -301,22 +301,36 @@ export class HoldsUpdateInput extends S.Opaque<HoldsUpdateInput, { readonly bran
   )
 ) {}
 
-const probeDue = Effect.fn("Holds.probeDue")(function* (version: HoldClaimVersion, input: HoldsUpdateInput) {
-  const ledger = yield* HoldLedger;
+const exitText = (version: HoldClaimVersion): string =>
+  HoldExitAction.match(version.proposition.exitAction, {
+    Unpin: () => "Unpin",
+    Rewrite: ({ path }) => `Rewrite ${path}`,
+    EscalateToGoal: ({ slug }) => `EscalateToGoal goals/${slug}`,
+  });
+
+// A probe that cannot run returns no run, so its hold keeps whatever it had and cannot be retired this time.
+const probeNow = Effect.fn("Holds.probeNow")(function* (version: HoldClaimVersion, commitSha: string) {
   const probe = yield* HoldProbe;
-  const run = yield* probe.probe(
-    HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha: input.commitSha })
-  );
-  if (!input.dryRun) {
-    yield* ledger.appendRun(run);
-  }
-  return `[holds] probed ${version.proposition.holdId}: ${run.verdict} (candidate ${run.candidateVersion})`;
+  return yield* probe
+    .probe(HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha }))
+    .pipe(
+      Effect.map((run) => ({
+        run: O.some(run),
+        line: `[holds] probed ${version.proposition.holdId}: ${run.verdict} (candidate ${run.candidateVersion})`,
+      })),
+      Effect.catchTag("HoldsError", (error) =>
+        Effect.succeed({
+          run: O.none<ProbeRun>(),
+          line: `[holds] probe of ${version.proposition.holdId} did not run; the hold stays: ${error.message}`,
+        })
+      )
+    );
 });
 
 const flipLine = (version: HoldClaimVersion, unpinned: boolean, dryRun: boolean): string =>
   unpinned
     ? `[holds] ${dryRun ? "would unpin" : "unpinned"} ${version.proposition.holdId}: flipped; dropped from the held list for this catalog bump`
-    : `[holds] flipped ${version.proposition.holdId}: its exit (${version.proposition.exitAction._tag}) needs a reviewed change to the files it anchors`;
+    : `[holds] flipped ${version.proposition.holdId}: its exit (${exitText(version)}) needs a reviewed change`;
 
 const maxLifetimeMillis = 180 * 24 * 60 * 60 * 1000;
 
@@ -333,24 +347,28 @@ const escalationLine = (all: ReadonlyArray<HoldClaimVersion>, now: DateTime.Utc)
   const lifetimeOver = DateTime.toEpochMillis(now) - firstRecorded > maxLifetimeMillis;
   return leaseOver || lifetimeOver
     ? O.some(
-        `[holds] escalate ${version.proposition.holdId}: ${lifetimeOver ? "older than 180 days" : "lease ended"}; exit ${version.proposition.exitAction._tag}, or renew with fresh evidence`
+        `[holds] escalate ${version.proposition.holdId}: ${lifetimeOver ? "older than 180 days" : "lease ended"}; exit ${exitText(version)}, or renew with fresh evidence`
       )
     : O.none();
 };
 
 /**
- * The `deps:update` pre-step: probe every due scripted hold, then retire each
- * hold whose probe history is confirmed `Flipped` and whose exit a catalog bump
- * completes.
+ * The `deps:update` pre-step: probe every due scripted hold and every flipped
+ * one, then retire each hold whose history, including today's run, is confirmed
+ * `Flipped` and whose exit a catalog bump completes.
  *
  * **Details**
  *
- * A probe that fails to run is reported and leaves its hold in place. A flipped
+ * A probe that fails to run is reported and leaves its hold in place, whatever
+ * its earlier runs said. Retirement needs today's run to be one of the two
+ * passing runs, so a `latest` that moved since the last probe is re-checked
+ * before the bump installs it. A dry run plans with the fresh runs in memory and
+ * writes nothing. A flipped
  * hold that anchors an override, patch, OSV exception or version group is
  * reported instead of retired. Retired holds get a `Retracted` tombstone and the
  * syncpack held list is regenerated, so the catalog bump that follows moves the
  * package in the same change. A hold past its lease or 180 days after its first
- * version is reported for escalation. `dryRun` records nothing.
+ * version is reported for escalation.
  *
  * **Example** (Build the update program)
  *
@@ -370,40 +388,56 @@ const escalationLine = (all: ReadonlyArray<HoldClaimVersion>, now: DateTime.Utc)
 export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input: HoldsUpdateInput) {
   const ledger = yield* HoldLedger;
   const now = yield* DateTime.now;
-  const due = A.filter(
-    yield* ledger.currentVersions,
-    (version) => version.proposition.falsifier._tag === "Scripted" && isProbeDue(version, now)
-  );
-  const probed = yield* Effect.forEach(due, (version) =>
-    probeDue(version, input).pipe(
-      Effect.catchTag("HoldsError", (error) =>
-        Effect.succeed(`[holds] probe of ${version.proposition.holdId} did not run: ${error.message}`)
-      )
-    )
-  );
   const live = yield* ledger.currentVersions;
-  const flipped = yield* Effect.filter(live, (version) =>
-    Effect.map(ledger.runsFor(version), (runs) => confirmHoldRuns(runs) === "Flipped")
+  const stored = yield* Effect.forEach(live, (version) =>
+    Effect.map(ledger.runsFor(version), (runs) => [version, runs] as const)
   );
-  const unpinned = A.filter(flipped, isUnpinnedByCatalogBump);
+  // A flipped hold is probed again, so its retirement rests on a run against the version the bump will install.
+  const toProbe = A.filter(
+    stored,
+    ([version, runs]) =>
+      version.proposition.falsifier._tag === "Scripted" &&
+      (isProbeDue(version, now) || confirmHoldRuns(runs) === "Flipped")
+  );
+  const probed = yield* Effect.forEach(toProbe, ([version, runs]) =>
+    Effect.map(probeNow(version, input.commitSha), (result) => ({ version, runs, ...result }))
+  );
+  // Plan on the fresh runs in memory, so a dry run previews what a real run would do.
+  const verdicts = A.map(stored, ([version, runs]) => {
+    const fresh = A.findFirst(probed, (entry) => entry.version.id === version.id);
+    const freshRun = O.flatMap(fresh, (entry) => entry.run);
+    const failed = O.isSome(fresh) && O.isNone(freshRun);
+    return { version, freshRun, flipped: !failed && confirmHoldRuns([...O.toArray(freshRun), ...runs]) === "Flipped" };
+  });
+  const flipped = A.filter(verdicts, (entry) => entry.flipped);
+  const unpinned = A.filter(flipped, (entry) => O.isSome(entry.freshRun) && isUnpinnedByCatalogBump(entry.version));
   if (!input.dryRun) {
+    yield* Effect.forEach(A.getSomes(A.map(probed, (entry) => entry.run)), ledger.appendRun, { discard: true });
     const tombstone = retract(yield* ledger.allVersions, now);
     yield* ledger.appendVersions(
-      A.map(unpinned, (version) => tombstone(version, "Flipped: the candidate passed twice; unpinned by deps:update."))
+      A.map(unpinned, ({ version }) =>
+        tombstone(version, "Flipped: the candidate passed twice, the newest run today; unpinned by deps:update.")
+      )
     );
     yield* ledger.writeHeldList(heldListFor(yield* ledger.currentVersions));
   }
   const escalate = escalationLine(yield* ledger.allVersions, now);
   return [
-    ...probed,
-    ...A.map(flipped, (version) => flipLine(version, isUnpinnedByCatalogBump(version), input.dryRun)),
+    ...A.map(probed, (entry) => entry.line),
+    ...A.map(flipped, ({ version }) =>
+      flipLine(
+        version,
+        A.some(unpinned, (entry) => entry.version.id === version.id),
+        input.dryRun
+      )
+    ),
     ...A.getSomes(
       A.map(
-        A.filter(live, (version) => !A.contains(unpinned, version)),
+        A.filter(live, (version) => !A.some(unpinned, (entry) => entry.version.id === version.id)),
         escalate
       )
     ),
-    `[holds] update ${input.dryRun ? "planned (dry run)" : "done"}: ${A.length(due)} probed, ${A.length(unpinned)} unpinned.`,
+    `[holds] update ${input.dryRun ? "planned (dry run)" : "done"}: ${A.length(probed)} probed, ${A.length(unpinned)} unpinned.`,
   ];
 });
 
@@ -433,7 +467,7 @@ const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaimVersion, 
     `[holds] ${proposition.holdId} (${proposition.kind}, ${A.join(proposition.subject.packages, ", ")}): ${status}`,
     `  assertion: ${proposition.assertion}`,
     `  probe: ${falsifierText(head)}`,
-    `  exit: ${proposition.exitAction._tag}; anchors: ${A.join(A.map(proposition.subject.anchors, anchorKey), ", ")}`,
+    `  exit: ${exitText(head)}; anchors: ${A.join(A.map(proposition.subject.anchors, anchorKey), ", ")}`,
     `  evidence: ${A.join(head.supportedBy, ", ")}; ${versionCount} version(s)`,
   ];
 });

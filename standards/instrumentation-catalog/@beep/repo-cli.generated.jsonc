@@ -1848,7 +1848,7 @@
     {"name":"Holds.headCommitSha","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Holds.lintProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Holds.lintSnapshot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"Holds.probeDue","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Holds.probeNow","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Holds.probeProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Holds.scratchRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Holds.tombstones","owner":"@beep/repo-cli","family":"tooling","conforms":true},

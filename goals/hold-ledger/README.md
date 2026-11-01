@@ -45,8 +45,9 @@ acceptance criteria.
 ## Latest Evidence
 
 - 2026-11-01: [sweep slice](history/receipts/2026-11-01-sweep-slice.md).
-  `holds update --dry-run` on main reports statelyai as confirmed `Flipped` and
-  unpinnable, so the next `deps:update` retires it and bumps the catalog.
+  `holds update --dry-run` re-probes statelyai (0.15.0 still 404s, `latest`
+  0.19.0 installs) and plans its unpin, so the next `deps:update` retires it and
+  bumps the catalog to the release it just tested.
 - 2026-10-31: [inventory slice](history/receipts/2026-10-31-inventory-slice.md).
   30 live holds cover every root override, patch and OSV package override;
   syncpack's update dry run is identical with the ledger-derived held list, and

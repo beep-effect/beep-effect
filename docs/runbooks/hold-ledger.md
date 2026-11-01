@@ -65,14 +65,19 @@ a scratch directory under `~/.cache/beep/holds/` and appends a run to
   same candidate version.
 
 `bun run deps:update` runs `beep holds update` before the catalog bump. It
-probes every scripted hold whose lease is two-thirds spent and tombstones each
-hold that is confirmed `Flipped`, exits by `Unpin`, and is anchored only in
-the catalog, workspace manifests or the held list. The held list is
-regenerated, so the same `syncpack update` moves the package. Commit the
-ledger, the held list and the version bump together. A flipped hold that also
-anchors an override, patch, OSV exception or version group is reported, not
-retired: make that change by hand in a reviewed PR, then let
-`holds lint --write` tombstone the record once its anchors are gone.
+probes every scripted hold whose lease is two-thirds spent, and probes every
+flipped hold again so its retirement rests on a run against today's candidate.
+It then tombstones each hold whose history, today's run included, is confirmed
+`Flipped`, that exits by `Unpin`, that was probed against npm `latest`, and
+that is anchored only in the catalog and the held list. The held list is
+regenerated, so the same `syncpack update --target=latest` installs the
+version the probe just tested. Commit the ledger, the held list and the version
+bump together. If `latest` moved since the earlier passes, the new release has
+to pass twice before the hold ends. A probe that cannot run keeps its hold. A
+flipped hold pinned in a workspace manifest, or anchored to an override, patch,
+OSV exception or version group, is reported, not retired: make that change in a
+reviewed PR, then let `holds lint --write` tombstone the record once its
+anchors are gone. `--dry-run` plans with the fresh runs and writes nothing.
 
 ## Renew
 

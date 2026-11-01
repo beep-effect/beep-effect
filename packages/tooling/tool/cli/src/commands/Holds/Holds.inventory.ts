@@ -254,11 +254,12 @@ export const isProbeDue: {
  *
  * **Details**
  *
- * Only an `Unpin` exit whose anchors are all catalog entries, manifest
- * dependencies or held-list patterns qualifies: tombstoning the record drops
- * the pattern from the held list and the catalog bump does the rest. A hold
- * that also anchors an override, patch, OSV exception or version group needs
- * a reviewed change to those files.
+ * Only an `Unpin` exit whose anchors are all catalog entries or held-list
+ * patterns, probed against npm `latest`, qualifies: tombstoning the record
+ * drops the pattern from the held list, and `syncpack update --target=latest`
+ * installs the version the probe tested. A direct workspace-manifest pin is
+ * not moved by the catalog bump, and an override, patch, OSV exception or
+ * version group is a file edit, so those holds need a reviewed change.
  *
  * **Example** (Check a hold record)
  *
@@ -275,9 +276,11 @@ export const isProbeDue: {
  */
 export const isUnpinnedByCatalogBump = (version: HoldClaimVersion): boolean =>
   version.proposition.exitAction._tag === "Unpin" &&
+  version.proposition.falsifier._tag === "Scripted" &&
+  version.proposition.falsifier.candidate === "latest" &&
   A.every(
     version.proposition.subject.anchors,
-    (anchor) => anchor._tag === "CatalogEntry" || anchor._tag === "ManifestDependency" || anchor._tag === "SyncpackHeld"
+    (anchor) => anchor._tag === "CatalogEntry" || anchor._tag === "SyncpackHeld"
   );
 
 /**
