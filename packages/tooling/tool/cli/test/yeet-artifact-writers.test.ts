@@ -103,6 +103,7 @@ const extrasWith = (mergeReady: O.Option<YeetMergeReady>): YeetVerdictExtrasForT
   mergeReady,
   stash: O.none(),
   publishedHeadSha: O.none(),
+  committedHeadSha: O.none(),
 });
 
 // Resolved through the same path helper the writer uses, so the bytes read back
