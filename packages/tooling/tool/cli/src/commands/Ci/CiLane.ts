@@ -12,7 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, jsonStringifyPretty, resolveWorkspacePackages } from "@beep/repo-utils";
+import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -45,6 +45,7 @@ import {
 } from "../../internal/cli/Labs/index.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
@@ -2212,7 +2213,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     A.sort(Order.String)
   );
 
-  const workspaces = yield* resolveWorkspacePackages(repoRoot).pipe(
+  const workspaces = yield* workspaceManifests(repoRoot).pipe(
     Effect.mapError((cause) =>
       ciLanePartitionError(
         "workspace-read",

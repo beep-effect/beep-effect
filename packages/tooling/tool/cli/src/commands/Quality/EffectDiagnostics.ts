@@ -11,7 +11,6 @@
  */
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
-import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import * as A from "effect/Array";
 import * as Cache from "effect/Cache";
 import * as Effect from "effect/Effect";
@@ -24,6 +23,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { workspaceDependentOwners } from "./internal/CoverageScope.ts";
 import { testTsgoPrograms } from "./internal/TestTsgoPrograms.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
@@ -223,7 +223,7 @@ const collectDiagnosticsInventory = Effect.fn("EffectDiagnostics.inventory")(fun
   resolveProject: ResolveProject
 ) {
   const path = yield* Path.Path;
-  const workspaces = yield* resolveWorkspacePackages(repoRoot);
+  const workspaces = yield* workspaceManifests(repoRoot);
   const root = yield* readPackageJsonFile(path.join(repoRoot, "package.json"));
   const owners = A.append(
     A.map(

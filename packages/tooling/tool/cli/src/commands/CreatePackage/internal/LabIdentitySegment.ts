@@ -18,7 +18,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { DomainError, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { DomainError } from "@beep/repo-utils";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -29,6 +29,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
+import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { CreatePackageIdentityRegistration } from "./IdentityRegistration.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/internal/LabIdentitySegment");
@@ -284,7 +285,7 @@ const replaceLabRegions = Effect.fnUntraced(function* (content: string, slugs: R
  */
 const expectedLabSlugs = Effect.fn("LabIdentitySegment.expectedLabSlugs")(function* (repoRoot: string) {
   const path = yield* Path.Path;
-  const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+  const workspaces = yield* workspaceDirectories(repoRoot);
   let slugs = A.empty<string>();
 
   for (const [name, dir] of workspaces) {

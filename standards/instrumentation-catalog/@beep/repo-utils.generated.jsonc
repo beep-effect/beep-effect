@@ -6,7 +6,6 @@
   "attributes": [],
   "instruments": [],
   "spans": [
-    {"name":"Dependencies.sortWorkspacePackages","owner":"@beep/repo-utils","family":"tooling","conforms":true},
     {"name":"FsUtils.globFiles","owner":"@beep/repo-utils","family":"tooling","conforms":true},
     {"name":"ProcessArgs.guardLiteralArg","owner":"@beep/repo-utils","family":"tooling","conforms":true},
     {"name":"ProcessArgs.guardLiteralArgs","owner":"@beep/repo-utils","family":"tooling","conforms":true},

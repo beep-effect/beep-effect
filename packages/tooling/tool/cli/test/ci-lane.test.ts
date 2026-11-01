@@ -27,8 +27,9 @@ import {
   readTurboCacheEnvironment,
   resolveTurboCachePlan,
   turboCachePlanArgs,
+  workspaceManifests,
 } from "@beep/repo-cli/test/SharedInternals";
-import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-utils";
+import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -315,7 +316,7 @@ const lanePackages = (laneId: "lint" | "test-unit"): ReadonlyArray<string> =>
 const liveTaskPackages = Effect.fn(function* (task: "lint" | "test") {
   const repoRoot = yield* findRepoRoot();
   const path = yield* Path.Path;
-  const workspaces = yield* resolveWorkspacePackages(repoRoot);
+  const workspaces = yield* workspaceManifests(repoRoot);
   return pipe(
     A.fromIterable(HashMap.entries(workspaces)),
     A.filter(([, workspace]) => {
@@ -845,7 +846,7 @@ describe("CI lane partitions", () => {
       Effect.gen(function* () {
         const repoRoot = yield* findRepoRoot();
         const path = yield* Path.Path;
-        const workspaces = yield* resolveWorkspacePackages(repoRoot);
+        const workspaces = yield* workspaceManifests(repoRoot);
         const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
         const workspacePackageNames = A.map(workspaceEntries, ([name]) => name);
 
@@ -2164,7 +2165,7 @@ describe("public CI coverage lane dispatch", () => {
       Effect.gen(function* () {
         const repoRoot = yield* findRepoRoot();
         const path = yield* Path.Path;
-        const workspaces = yield* resolveWorkspacePackages(repoRoot);
+        const workspaces = yield* workspaceManifests(repoRoot);
         const packageName = firstOf(partitionPackages("unit-a"));
         const workspace = O.getOrThrow(HashMap.get(workspaces, packageName));
         const selectedOwner = CoverageScopeOwner.make({

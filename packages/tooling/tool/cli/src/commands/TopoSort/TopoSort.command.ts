@@ -5,17 +5,22 @@
  * @since 0.0.0
  */
 
-import { buildRepoDependencyIndex, findRepoRoot, sortWorkspacePackages } from "@beep/repo-utils";
-import { A } from "@beep/utils";
+import { findRepoRoot } from "@beep/repo-utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
-import * as HashMap from "effect/HashMap";
-import { isRootDepIndexKey } from "../TsconfigSync/TsconfigSync.schemas.ts";
+import { workspaceDependencyGraph } from "../../internal/RepoWorkspaces.ts";
 
 /**
  * CLI command that builds the workspace dependency graph and prints package names
  * in topological order (leaf dependencies first, dependents last).
+ *
+ * **Details**
+ *
+ * The order is `@beep/repo-workspaces` `DependencyGraph.sort()`: Kahn levels
+ * over the workspace members (root excluded), each level sorted by name, so
+ * the output is deterministic for a given dependency graph. A cycle prints
+ * its members to stderr and fails.
  *
  * **Example** (Reference topo sort command)
  *
@@ -31,16 +36,12 @@ export const topoSortCommand = Command.make(
   {},
   Effect.fn(function* () {
     const rootDir = yield* findRepoRoot();
-    const depIndex = yield* buildRepoDependencyIndex(rootDir);
-    const workspaceIndex = HashMap.filter(depIndex, (_deps, name) => !isRootDepIndexKey(name));
+    const graph = yield* workspaceDependencyGraph(rootDir);
     const sorted = yield* Effect.catchTag(
-      sortWorkspacePackages(workspaceIndex),
+      graph.sort(),
       "CyclicDependencyError",
       Effect.fn(function* (err) {
-        yield* Console.error(`Error: Cyclic dependencies detected`);
-        for (const cycle of err.cycles) {
-          yield* Console.error(`  ${A.join(cycle, " -> ")}`);
-        }
+        yield* Console.error(`Error: ${err.message}`);
         return yield* err;
       })
     );

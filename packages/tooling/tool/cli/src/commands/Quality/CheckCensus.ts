@@ -9,7 +9,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Cache from "effect/Cache";
 import * as Console from "effect/Console";
@@ -31,6 +30,7 @@ import { renderTruncatedLines } from "../../internal/artifacts/index.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runCaptured } from "../../internal/process/index.ts";
+import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { resolveGitCommit, runGitLines } from "../../internal/repo-run/GitExec.ts";
 import {
   CHECK_CENSUS_BASELINE_PATH,
@@ -884,7 +884,7 @@ export const selectCheckCensusPackages = Effect.fn("CheckCensus.selectPackages")
   QualityScriptCommandError,
   FileSystem.FileSystem | Path.Path | FsUtils
 > {
-  const workspaces = yield* resolveWorkspacePackages(repoRoot).pipe(
+  const workspaces = yield* workspaceManifests(repoRoot).pipe(
     QualityScriptCommandError.mapError("Failed to resolve workspace packages.")
   );
   const candidates = pipe(

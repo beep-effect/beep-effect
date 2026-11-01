@@ -50,60 +50,6 @@ export const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 export const CHECK_TSCONFIG_FILENAME = "tsconfig.check.json" as const;
 
 /**
- * Synthetic root key in repo-utils dependency maps.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { ROOT_DEP_INDEX_KEY } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * console.log(typeof ROOT_DEP_INDEX_KEY !== "undefined") // true
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const ROOT_DEP_INDEX_KEY = "@beep/root" as const;
-/**
- * Schema for the synthetic root dependency-index key.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { RootDepIndexKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- * import * as S from "effect/Schema"
- *
- * const value = "sync"
- * console.log(S.is(RootDepIndexKey)(value)) // true
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const RootDepIndexKey = S.Literal(ROOT_DEP_INDEX_KEY).pipe(
-  $I.annoteSchema("RootDepIndexKey", {
-    description: "Synthetic root dependency index key from repo-utils dependency maps.",
-  })
-);
-
-/**
- * Synthetic root dependency-index key.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import type { RootDepIndexKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * const key: RootDepIndexKey = "@beep/root"
- * console.log(key) // "@beep/root"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type RootDepIndexKey = typeof RootDepIndexKey.Type;
-
-/**
  * Canonical alias key matcher managed by this command.
  *
  * Matches exactly:
@@ -231,21 +177,6 @@ export const isCanonicalAliasKey = S.is(CanonicalAliasKey);
  * @since 0.0.0
  */
 export const isBeepScopedPackageName = S.is(BeepScopedPackageName);
-/**
- * Predicate for the synthetic root dependency-index key.
- *
- * **Example** (Use tsconfig-sync schemas)
- *
- * ```ts
- * import { isRootDepIndexKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * console.log(isRootDepIndexKey("@beep/root")) // true
- * ```
- *
- * @category guards
- * @since 0.0.0
- */
-export const isRootDepIndexKey = S.is(RootDepIndexKey);
 /**
  * Equivalence relation for arrays of strings.
  *
