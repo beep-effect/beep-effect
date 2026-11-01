@@ -121,6 +121,7 @@
     "packages/foundation/modeling/jsonc/src/index.ts",
     "packages/foundation/modeling/jsonc/src/internal/accumulation.ts",
     "packages/foundation/modeling/jsonc/src/internal/limits.ts",
+    "packages/foundation/modeling/jsonc/src/internal/lines.ts",
     "packages/foundation/modeling/jsonc/src/internal/navigate.ts",
     "packages/foundation/modeling/jsonc/src/internal/parser.ts",
     "packages/foundation/modeling/jsonc/src/internal/scanner.ts",

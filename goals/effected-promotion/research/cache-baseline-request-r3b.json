@@ -1,0 +1,20 @@
+{
+  "previous": "96e4861063a6c5500bc61e3a50e7c114eb35be4fe08f1c0251c7991b9ea31183",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R3b, refactor/jsonc-parser-out)",
+    "reason": "Record the R3b manifest edits: @beep/repo-configs drops the npm jsonc-parser dependency and adds the @beep/jsonc workspace dependency (its closure gains exactly @beep/jsonc), and the root gains the @beep/jsonc devDependency for the schema-opaque-default codemod while the policy-fingerprint shared seal gains @beep/jsonc internal/lines.ts; measured in the review; no qualification is granted.",
+    "basis": {
+      "path": "goals/effected-promotion/research/cache-baseline-review-r3b.md",
+      "sha256": "00c909fc4124603632cf4574f4dfe960486ab93a2be6264ac5cad3a236c76fbc"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["@beep/repo-configs", "//"]
+}
