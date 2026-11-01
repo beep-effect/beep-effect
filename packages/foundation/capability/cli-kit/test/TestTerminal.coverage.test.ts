@@ -1,9 +1,11 @@
 import { TestTerminal } from "@beep/cli-kit/TestTerminal";
 import { assert, it } from "@effect/vitest";
-import { assertFailure } from "@effect/vitest/utils";
+import { assertFailure, assertTrue } from "@effect/vitest/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as Queue from "effect/Queue";
 import * as Terminal from "effect/Terminal";
 import type { TestTerminalHandle } from "@beep/cli-kit/TestTerminal";
 
@@ -40,3 +42,19 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
     })
   );
 });
+
+it.effect("TestTerminal size subscriptions start at the fixed size and end with their scope", () =>
+  Effect.gen(function* () {
+    const handle = yield* TestTerminal.make({ columns: 72, rows: 18 });
+    const sizes = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const terminal = yield* Terminal.Terminal;
+        const subscription = yield* terminal.size;
+        const first = yield* Queue.take(subscription);
+        return { first, subscription };
+      }).pipe(Effect.provide(handle.layer))
+    );
+    assert.deepStrictEqual(sizes.first, { columns: 72, rows: 18 });
+    assertTrue(Exit.isFailure(yield* Effect.exit(Queue.take(sizes.subscription))));
+  })
+);

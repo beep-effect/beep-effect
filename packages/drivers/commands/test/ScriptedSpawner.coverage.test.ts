@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as Stream from "effect/Stream";
 
 const withLayer =
@@ -30,5 +31,24 @@ it.effect("scripted handles accept kill, drain additional input fds and expose e
       ),
       "outerr"
     );
+  }).pipe(withLayer(spawner.layer));
+});
+
+it.effect("scripted spawns record and script redacted args and env values unwrapped", () => {
+  const seen: Array<ReadonlyArray<string>> = [];
+  const spawner = ScriptedSpawner.make((_command, args) => {
+    seen.push(args);
+    return { stdout: "" };
+  });
+  return Effect.gen(function* () {
+    const service = yield* ChildProcessSpawner.ChildProcessSpawner;
+    yield* service.spawn(
+      ChildProcess.make("tool", ["--token", Redacted.make("secret")], {
+        env: { TOKEN: Redacted.make("hidden"), PLAIN: "visible", UNSET: undefined },
+      })
+    );
+    assert.deepStrictEqual(seen, [["--token", "secret"]]);
+    assert.deepStrictEqual(spawner.spawns[0]?.args, ["--token", "secret"]);
+    assert.deepStrictEqual(spawner.spawns[0]?.env, { TOKEN: "hidden", PLAIN: "visible", UNSET: undefined });
   }).pipe(withLayer(spawner.layer));
 });
