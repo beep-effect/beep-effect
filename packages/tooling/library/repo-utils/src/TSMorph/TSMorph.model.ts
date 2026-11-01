@@ -16,7 +16,7 @@ import * as SchemaGetter from "effect/SchemaGetter";
 import * as Tuple from "effect/Tuple";
 import { Project, SourceFile, Node as TsMorphNode } from "ts-morph";
 import { TSSyntaxKind } from "../TypeScript/index.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $RepoUtilsId.create("TSMorph/TSMorph.model");
 const TS_CONFIG_FILE_PATTERN = /(?:^|[\\/])tsconfig(?:\.[^\\/]+)?\.json$/;
@@ -1239,7 +1239,7 @@ const decodeSha256HexFromBytesEffect = S.decodeUnknownEffect(Sha256HexFromBytes)
  */
 export const ContentHashFromBytes = S.Uint8Array.pipe(
   S.decodeTo(ContentHash, {
-    decode: SchemaGetter.transformEffect<ContentHash, Uint8Array, Crypto.Crypto>((value) =>
+    decode: SchemaGetter.transformEffect<ContentHash, Uint8Array, Digest.Digest>((value) =>
       decodeSha256HexFromBytesEffect(value).pipe(
         Effect.flatMap(S.decodeEffect(ContentHash)),
         Effect.mapError((error) => error.issue)
@@ -1272,7 +1272,7 @@ const textEncoder = new TextEncoder();
  */
 export const ContentHashFromSourceText = SourceText.pipe(
   S.decodeTo(ContentHash, {
-    decode: SchemaGetter.transformEffect<ContentHash, SourceText, Crypto.Crypto>((value) =>
+    decode: SchemaGetter.transformEffect<ContentHash, SourceText, Digest.Digest>((value) =>
       S.decodeEffect(ContentHashFromBytes)(textEncoder.encode(value)).pipe(Effect.mapError((error) => error.issue))
     ),
     encode: SchemaGetter.forbidden(

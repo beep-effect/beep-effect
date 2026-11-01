@@ -103,6 +103,7 @@ const failingSpawner = ChildProcessSpawner.make(() =>
 const terminal = Terminal.make({
   columns: Effect.succeed(80),
   rows: Effect.succeed(24),
+  size: Effect.die("holds commands never prompt"),
   readInput: Effect.die("holds commands never prompt"),
   readLine: Effect.die("holds commands never prompt"),
   display: () => Effect.void,

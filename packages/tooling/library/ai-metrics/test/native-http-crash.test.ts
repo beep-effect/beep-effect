@@ -164,7 +164,7 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
         ? { boundary: mode, pages: [{ n: 1 }], events: [{ n: 1 }], receipts: [{ n: 0 }] }
         : { boundary: mode, stats: { pages: 1, frames: 1, payloadBytes: expect.any(Number) } }
     );
-    expect(yield* Effect.sync(request.pollUnsafe)).toBeUndefined();
+    expect(yield* Effect.sync(() => request.pollUnsafe())).toBeUndefined();
     yield* child.kill({ killSignal: "SIGKILL" });
     expect(Exit.isFailure(yield* Effect.exit(child.exitCode))).toBe(true);
     expect(Exit.isFailure(yield* request.pipe(Fiber.join, Effect.exit))).toBe(true);

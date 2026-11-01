@@ -10,7 +10,7 @@
  */
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -138,13 +138,9 @@ export const normalizeUrl = (rawUrl: string): Effect.Effect<string, ResearchComm
  */
 export const sha256HexOf = Effect.fn("ResearchVault.sha256HexOf")(function* (
   content: string
-): Effect.fn.Return<string, ResearchCommandError, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(
-    yield* crypto
-      .digest("SHA-256", new TextEncoder().encode(content))
-      .pipe(ResearchCommandError.mapError("Failed hashing UTF-8 content."))
-  );
+): Effect.fn.Return<string, never, Digest.Digest> {
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(content)));
 });
 
 /**
@@ -161,7 +157,7 @@ export const sha256HexOf = Effect.fn("ResearchVault.sha256HexOf")(function* (
 export const slugFor = Effect.fn("ResearchVault.slugFor")(function* (
   title: string,
   urlNorm: string
-): Effect.fn.Return<string, ResearchCommandError, Crypto.Crypto> {
+): Effect.fn.Return<string, ResearchCommandError, Digest.Digest> {
   const base = pipe(
     title,
     Str.toLowerCase,

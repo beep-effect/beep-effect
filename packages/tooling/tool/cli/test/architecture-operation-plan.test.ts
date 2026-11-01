@@ -15,7 +15,7 @@ import {
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -118,9 +118,10 @@ const dbAdminTopLevelManifestFiles = [
 ] as const;
 const CommandTestLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 const runArchitectureCommand = Command.runWith(architectureCommand, {
   version: "0.0.0",
@@ -253,7 +254,7 @@ describe("architecture operation plan", () => {
     })
   );
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "decodes older v1 operation JSON with metadata defaults",
       Effect.fnUntraced(function* () {
@@ -305,7 +306,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "reports idempotency from the decoded operation list",
       Effect.fnUntraced(function* () {
@@ -329,7 +330,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "generates every manifest-included WorkItem proof file and second apply is a no-op",
       Effect.fnUntraced(function* () {
@@ -374,7 +375,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "generates a complete non-default aggregate slice plan with package scaffolds",
       Effect.fnUntraced(function* () {
@@ -399,7 +400,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "rejects operation paths that escape the repository root before writing files",
       Effect.fnUntraced(function* () {
@@ -432,7 +433,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "keeps global db-admin state out of non-default persistence slice plans",
       Effect.fnUntraced(function* () {
@@ -461,7 +462,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "generates the accepted Worker entity archetype without aggregate-only roles",
       Effect.fnUntraced(function* () {
@@ -495,7 +496,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "keeps existing entity and value archetype plans idempotent against the accepted checkout",
       Effect.fnUntraced(function* () {
@@ -520,7 +521,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "generates the accepted WorkPriority value archetype as domain-only",
       Effect.fnUntraced(function* () {
@@ -549,7 +550,7 @@ describe("architecture operation plan", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "rejects roles that are outside the selected domain-kind archetype",
       Effect.fnUntraced(function* () {
@@ -662,7 +663,7 @@ describe("architecture operation plan", () => {
     })
   );
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "applies a shell-only slice role package twice with a no-op second apply",
       Effect.fnUntraced(function* () {

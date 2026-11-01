@@ -27,7 +27,7 @@ import {
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import { AgentEffectivenessEvalLaneReport, AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.ts";
 import { LawEvaluation, sortViolations } from "./EvalScoring.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
@@ -209,7 +209,7 @@ const runSubprocess = Effect.fn("AgentEffectivenessEvalScorer.runSubprocess")(fu
 ): Effect.fn.Return<
   SubprocessResult,
   AgentEffectivenessEvalScorerError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const commandText = formatCommandLine(command, args);
   const result = yield* runCapturedStreams({
@@ -239,7 +239,7 @@ const runLaneSubprocess = (
   args: ReadonlyArray<string>,
   cwd: string,
   measure: (result: SubprocessResult) => LawLaneOutcome
-): Effect.Effect<LawLaneOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<LawLaneOutcome, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   runSubprocess(command, args, cwd).pipe(
     Effect.result,
     Effect.map(
@@ -451,7 +451,11 @@ const evaluateSchemaFirst = Effect.fn("AgentEffectivenessEvalScorer.evaluateSche
   sandbox: LawSandbox,
   repoRoot: string,
   sourceFiles: ReadonlyArray<string>
-): Effect.fn.Return<LawLaneOutcome, never, Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  LawLaneOutcome,
+  never,
+  SecureRandom.SecureRandom | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const path = yield* Path.Path;
   const cliEntrypoint = path.join(repoRoot, "packages", "tooling", "tool", "cli", "src", "bin.ts");
   return yield* runLaneSubprocess(
@@ -556,7 +560,11 @@ const evaluateTsgo = Effect.fn("AgentEffectivenessEvalScorer.evaluateTsgo")(func
   sandbox: LawSandbox,
   repoRoot: string,
   sourceFiles: ReadonlyArray<string>
-): Effect.fn.Return<LawLaneOutcome, never, Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  LawLaneOutcome,
+  never,
+  SecureRandom.SecureRandom | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const path = yield* Path.Path;
   const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
   // tsgo rejects an empty `files` list (TS18002), so with nothing to type-check
@@ -762,7 +770,7 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
 ): Effect.fn.Return<
   LawLaneOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const biomePath = path.join(repoRoot, "node_modules", ".bin", "biome");
@@ -831,7 +839,7 @@ export const evaluateLaw = Effect.fn("AgentEffectivenessEvalScorer.evaluateLaw")
 ): Effect.fn.Return<
   LawEvaluation,
   AgentEffectivenessEvalScorerError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.scoped(
     Effect.gen(function* () {

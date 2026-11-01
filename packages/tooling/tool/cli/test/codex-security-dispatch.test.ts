@@ -34,6 +34,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { NodeTestLayer } from "./support/CommandTest.ts";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const runCommand = Command.runWith(securityCommand, { version: "test", renderErrors: false });
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -91,7 +92,7 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
       if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected pipeline");
       yield* Ref.update(calls, A.append(command));
       if (command.command === "git") {
-        const key = A.join(command.args, " ");
+        const key = A.join(commandArgs(command), " ");
         return yield* Match.value(key).pipe(
           Match.when("remote get-url origin", () =>
             Effect.succeed(handle(options.remote ?? "git@github.com:example/project.git\n"))
@@ -104,7 +105,7 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
         );
       }
       expect(command.command).toBe("node");
-      expect(command.args[0]).toBe(cli);
+      expect(commandArgs(command)[0]).toBe(cli);
       if (options.swapOutput === true) {
         yield* fs.remove(output, { recursive: true });
         yield* fs.symlink(path.join(repo, "src"), output);

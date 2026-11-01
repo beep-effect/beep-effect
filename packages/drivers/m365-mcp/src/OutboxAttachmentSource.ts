@@ -19,7 +19,7 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -323,7 +323,7 @@ const sum = A.reduce(0, (total: number, size: number) => total + size);
 const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
 
   const realRoot = Effect.fnUntraced(function* (root: string) {
     if (!path.isAbsolute(root)) {
@@ -398,7 +398,7 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
       return yield* refuse("too-large", `Attachment changed size while it was read: ${located.candidate}`);
     }
     const digest = yield* crypto
-      .digest("SHA-256", content)
+      .digest(Digest.sha256, content)
       .pipe(Effect.mapError(() => refusal("unreadable", `Attachment cannot be hashed: ${located.candidate}`)));
     const name = path.basename(located.real);
     return OutboxAttachment.make({
@@ -480,6 +480,6 @@ export class OutboxAttachmentSource extends Context.Service<OutboxAttachmentSour
    */
   static readonly layer = (
     policy: OutboxAttachmentPolicy
-  ): Layer.Layer<OutboxAttachmentSource, OutboxAttachmentError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> =>
+  ): Layer.Layer<OutboxAttachmentSource, OutboxAttachmentError, FileSystem.FileSystem | Path.Path | Digest.Digest> =>
     Layer.effect(OutboxAttachmentSource, makeSource(policy));
 }

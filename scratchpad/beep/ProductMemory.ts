@@ -10,7 +10,7 @@
  */
 import { sql } from "drizzle-orm";
 import { $ScratchpadId } from "@beep/identity";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import { dual } from "effect/Function";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
@@ -1333,13 +1333,10 @@ export const sourceIds = (item: MemoryItem): ReadonlyArray<string> =>
  */
 export const memoryItemHasLifecycleMetadata = (item: MemoryItem): boolean => O.isSome(item.promotion);
 
-const memoryIds = Crypto.make({
-  randomBytes: (size) => {
-    const bytes = new Uint8Array(size);
-    globalThis.crypto.getRandomValues(bytes);
-    return bytes;
-  },
-  digest: (_algorithm, data) => Effect.succeed(data),
+const memoryIds = SecureRandom.make((size) => {
+  const bytes = new Uint8Array(size);
+  globalThis.crypto.getRandomValues(bytes);
+  return bytes;
 });
 
 /**
@@ -1360,7 +1357,7 @@ const memoryIds = Crypto.make({
  * @since 0.0.0
  */
 export const newMemoryId = (): string =>
-  `mem_${memoryIds.randomUUIDv4().pipe(Effect.runSync, Str.replaceAll("-", ""))}`;
+  `mem_${memoryIds.uuidV4().pipe(Effect.runSync, Str.replaceAll("-", ""))}`;
 
 /**
  * Add the 48-hour short-term policy window to a capture instant.

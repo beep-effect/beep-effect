@@ -1071,7 +1071,7 @@ export const hashFileChunkBytes = 1024 * 1024;
  *
  * Streams the file in {@link hashFileChunkBytes}-sized chunks through an
  * incremental SHA-256 state, so memory stays bounded by one chunk whatever
- * the file size and no `Crypto.Crypto` service is needed. The digest equals
+ * the file size and no `Digest` service is needed. The digest equals
  * the one the `Sha256HexFromBytes` schema derives from the whole byte array.
  * The returned digest is the bare hex string; callers that persist a
  * `sha256:` prefix add it themselves.

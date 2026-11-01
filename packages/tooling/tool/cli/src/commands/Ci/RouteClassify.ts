@@ -48,7 +48,8 @@ import {
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
 import { CHANGE_ATOM_KIND_VALUES, ChangeAtom, ChangeSet, RouteError } from "./Route.schemas.ts";
 import { ChangeClassifier } from "./Route.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { ChangeAtomKind } from "./Route.schemas.ts";
@@ -757,7 +758,7 @@ const classifyEntry = Effect.fnUntraced(function* <R>(
   diff: ClassifyDiff,
   workspace: RefWorkspace,
   entry: ChangedPathEntry
-): Effect.fn.Return<ReadonlyArray<ChangeAtom>, RouteError, Crypto.Crypto | R> {
+): Effect.fn.Return<ReadonlyArray<ChangeAtom>, RouteError, Digest.Digest | SecureRandom.SecureRandom | R> {
   const owner = yield* ownerOf(read, workspace, entry.path);
   const specs =
     baseName(entry.path) === MANIFEST_NAME
@@ -863,7 +864,7 @@ const shortSha = Str.slice(0, 12);
 export const classifyChangedPaths = Effect.fn("RouteClassify.classifyChangedPaths")(function* <R>(
   diff: ClassifyDiff,
   readAt: RouteReadAt<R>
-): Effect.fn.Return<ChangeSet, RouteError, Crypto.Crypto | R> {
+): Effect.fn.Return<ChangeSet, RouteError, Digest.Digest | SecureRandom.SecureRandom | R> {
   const read = yield* memoizeReadAt(readAt);
   const base = yield* readWorkspace(read, diff.base);
   const head = yield* readWorkspace(read, diff.head);
@@ -900,7 +901,9 @@ const routeGitErrors: GitCommandErrorAdapter<RouteError> = {
 
 // Read a blob at a commit: `ls-tree` decides presence (an absent path is not a git failure), `cat-file` reads it.
 const gitReadAt =
-  (repoRoot: string): RouteReadAt<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+  (
+    repoRoot: string
+  ): RouteReadAt<Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   (ref, path) =>
     Effect.gen(function* () {
       const listing = yield* runGitRawOutput(
@@ -965,11 +968,13 @@ const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(funct
 export const ChangeClassifierLive: Layer.Layer<
   ChangeClassifier,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > = Layer.effect(
   ChangeClassifier,
   Effect.gen(function* () {
-    const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+    const context = yield* Effect.context<
+      Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    >();
     return ChangeClassifier.of({
       classify: Effect.fn("ChangeClassifier.classify")((input: ClassifyInput) =>
         classifyCommitRange(input).pipe(Effect.provide(context))

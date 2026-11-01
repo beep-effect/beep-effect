@@ -8,7 +8,7 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -101,17 +101,17 @@ const readHandoffBytes = (fs: FileSystem.FileSystem, input: PlanEpisodeInput) =>
     .readFile(`${input.repoRoot}/${input.handoff.path}`)
     .pipe(Effect.mapError((error) => HandoffReadError.make({ path: input.handoff.path, message: error.message })));
 
-// The digest is over the raw bytes, never a re-encoded string. A Uint8Array always decodes, so the only failure is
-// the platform digest's (Sha256HexFromBytes wraps it as a schema issue); it stays typed inside the §8.1 union.
-const digestHandoff = (crypto: Crypto.Crypto, input: PlanEpisodeInput, bytes: Uint8Array) =>
+// The digest is over the raw bytes, never a re-encoded string. A Uint8Array always decodes and the digest cannot
+// fail, but the decode still types a schema issue; it stays typed inside the §8.1 union.
+const digestHandoff = (crypto: Digest.Digest["Service"], input: PlanEpisodeInput, bytes: Uint8Array) =>
   digestHandoffBytes(bytes).pipe(
-    Effect.provideService(Crypto.Crypto, crypto),
+    Effect.provideService(Digest.Digest, crypto),
     Effect.mapError((error) =>
       HandoffReadError.make({ path: input.handoff.path, message: `SHA-256 digest failed: ${error.message}` })
     )
   );
 
-const makePlanEpisode = (fs: FileSystem.FileSystem, crypto: Crypto.Crypto) =>
+const makePlanEpisode = (fs: FileSystem.FileSystem, crypto: Digest.Digest["Service"]) =>
   Effect.fn("CiOpsProjection.planEpisode")(function* (
     input: PlanEpisodeInput
   ): Effect.fn.Return<LanePlanProposal, PlanEpisodeError> {
@@ -131,12 +131,12 @@ const makePlanEpisode = (fs: FileSystem.FileSystem, crypto: Crypto.Crypto) =>
 const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
   CiOpsProjectionShape,
   never,
-  FileSystem.FileSystem | Crypto.Crypto
+  FileSystem.FileSystem | Digest.Digest
 > {
   // Contract §8: the layer captures the platform services at construction so
   // planEpisode keeps a requirement-free signature.
   const fs = yield* FileSystem.FileSystem;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const current = yield* TxRef.make<O.Option<ScheduleProposal>>(O.none());
   const proposals = yield* TxQueue.unbounded<ScheduleProposal>();
 
@@ -184,7 +184,7 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
  *
  * **Details**
  *
- * The layer captures `FileSystem` and `Crypto` at construction for the lane
+ * The layer captures `FileSystem` and `Digest` at construction for the lane
  * planner, so providers add the platform layers (for Bun, `BunFileSystem.layer`
  * and `BunCrypto.layer`) while every service method stays requirement-free.
  *
@@ -207,5 +207,5 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
  * @category layers
  * @since 0.0.0
  */
-export const CiOpsProjectionLive: Layer.Layer<CiOpsProjection, never, FileSystem.FileSystem | Crypto.Crypto> =
+export const CiOpsProjectionLive: Layer.Layer<CiOpsProjection, never, FileSystem.FileSystem | Digest.Digest> =
   Layer.effect(CiOpsProjection, makeCiOpsProjection());

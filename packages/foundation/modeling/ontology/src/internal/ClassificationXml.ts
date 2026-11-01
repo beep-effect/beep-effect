@@ -37,7 +37,9 @@ const IpcEntryFields = S.Struct({
   textBody: IpcTitle.pipe(S.ArrayEnsure, S.OptionFromOptionalKey),
 });
 
-interface IpcEntryEncoded extends S.Codec.Encoded<typeof IpcEntryFields> {
+type IpcEntryFieldsEncoded = typeof IpcEntryFields.Encoded;
+
+interface IpcEntryEncoded extends IpcEntryFieldsEncoded {
   readonly ipcEntry?: IpcEntryEncoded | readonly IpcEntryEncoded[];
 }
 
@@ -61,7 +63,9 @@ const CpcEntryFields = S.Struct({
   "class-title": CpcTitle.pipe(S.ArrayEnsure, S.OptionFromOptionalKey),
 });
 
-interface CpcEntryEncoded extends S.Codec.Encoded<typeof CpcEntryFields> {
+type CpcEntryFieldsEncoded = typeof CpcEntryFields.Encoded;
+
+interface CpcEntryEncoded extends CpcEntryFieldsEncoded {
   readonly "classification-item"?: CpcEntryEncoded | readonly CpcEntryEncoded[];
 }
 

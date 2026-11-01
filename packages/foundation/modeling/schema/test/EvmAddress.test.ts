@@ -29,21 +29,21 @@ describe("EvmAddress", () => {
     Effect.fnUntraced(function* () {
       const failure1 = yield* Effect.exit(decodeUnknownEvmAddressEffect(Str.toUpperCase(evmChecksummed)));
       pipe(failure1, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure1)) {
+      if (Exit.isFailure(failure1) && Exit.hasFails(failure1)) {
         expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EvmAddress must be a canonical mainnet EVM address"
         );
       }
       const failure2 = yield* Effect.exit(decodeUnknownEvmAddressEffect("52908400098527886e0f7030069857d2e4169ee7"));
       pipe(failure2, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure2)) {
+      if (Exit.isFailure(failure2) && Exit.hasFails(failure2)) {
         expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EvmAddress must be a canonical mainnet EVM address"
         );
       }
       const failure3 = yield* Effect.exit(decodeUnknownEvmAddressEffect("bc1qqypqxpq9qcrsszg2pvxq6rs0zqg3yyc5fcj4z3"));
       pipe(failure3, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure3)) {
+      if (Exit.isFailure(failure3) && Exit.hasFails(failure3)) {
         expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EvmAddress must be a canonical mainnet EVM address"
         );

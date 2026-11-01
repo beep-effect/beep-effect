@@ -25,8 +25,8 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -74,8 +74,8 @@ const competitor = 'model = "competitor"\nnew_native_key = true\n';
 const deadOwner = ModelsPublicationOwner.make({ bootId: "retired-boot", pid: 1, startTicks: "1" });
 
 const sha256 = Effect.fnUntraced(function* (bytes: Uint8Array) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", bytes));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
 });
 const textSha = (text: string) => sha256(new TextEncoder().encode(text));
 const fileSha = Effect.fnUntraced(function* (file: string) {

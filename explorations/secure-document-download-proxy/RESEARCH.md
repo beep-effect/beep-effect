@@ -222,7 +222,7 @@ Already present to compose against (verified via `rg`/`ls`, 2026-06-29):
   composer (`packages/foundation/modeling/identity/src/Id.ts`).
 - **Crypto/id primitives present** —
   `@noble/hashes@^2.4.0` (HMAC-SHA256/BLAKE2b, `package.json:70`) and the
-  `effect/Crypto` service (`randomUUIDv4` / `randomUUIDv7` over the platform CSPRNG
+  `effect/crypto/SecureRandom` service (`uuidV4` / `uuidV7` over the platform CSPRNG
   that `BunCrypto.layer` / `NodeCrypto.layer` provide). The `uuid` package is not a
   repository dependency, and the root and effect-ontology biome configs reject
   importing it. Do not start from a bare id generator alone (Codex gate-1).
@@ -362,7 +362,7 @@ own a desktop serve route); (d) `apps/professional-desktop` is the *wiring host*
   `Schema` decode *and* the store lookup; never let the regex stand alone.
 - `iron-webcrypto` PBKDF2 iterations default to 1 — acceptable only with a
   high-entropy 32+ byte server key; never feed it a low-entropy secret.
-- `effect/Crypto` `randomUUIDv4` draws its bytes from the provided `Crypto` layer
+- `effect/crypto/SecureRandom` `uuidV4` draws its bytes from the provided `SecureRandom` layer
   (`node:crypto` `randomBytes` under `BunCrypto.layer` / `NodeCrypto.layer`); confirm
   the sidecar runtime provides that layer — UNVERIFIED for the exact Bun-sidecar
   runtime.

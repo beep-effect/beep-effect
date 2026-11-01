@@ -24,7 +24,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertExitSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -103,7 +103,9 @@ const expectGolden = Effect.fn("expectGolden")(function* (name: string, plan: Ma
   const golden = yield* fs.readFileString(goldenPath);
   expect(rendered).toBe(golden);
 });
-const commandTestLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
+const commandTestLayer = PacketEventStoreLive.pipe(
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 
 it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("goals bootstrap --plan golden fixtures", { concurrent: false }, () => {

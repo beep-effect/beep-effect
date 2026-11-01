@@ -71,7 +71,7 @@ import {
   SkillReviewSkill,
   SkillReviewSkip,
 } from "./SkillsReview.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -189,7 +189,7 @@ const readBaseRevisions = Effect.fn("SkillReviewBaseSource.readBaseRevisions")(f
 export const SkillReviewBaseSourceLive = Layer.effect(
   SkillReviewBaseSource,
   Effect.gen(function* () {
-    const runtime = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto>();
+    const runtime = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner | Digest.Digest>();
     return SkillReviewBaseSource.of({
       baseRevisions: Effect.fn("SkillReviewBaseSource.baseRevisions")(function* (repoRoot) {
         return yield* readBaseRevisions(repoRoot).pipe(Effect.provide(runtime));
@@ -728,7 +728,7 @@ const skillStates = (
     });
   });
 
-type ReviewRequirements = SkillUpdateTrain | SkillReviewBaseSource | FileSystem.FileSystem | Path.Path | Crypto.Crypto;
+type ReviewRequirements = SkillUpdateTrain | SkillReviewBaseSource | FileSystem.FileSystem | Path.Path | Digest.Digest;
 
 const runReview = Effect.fn("SkillsReview.runReview")(function* (
   repoRoot: string,

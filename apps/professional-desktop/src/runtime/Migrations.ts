@@ -20,7 +20,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { migrationBundle } from "./Migrations.gen.ts";
 import type { PostgresError } from "@beep/postgres";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $ProfessionalDesktopId.create("runtime/Migrations");
 
@@ -124,7 +124,7 @@ export class ProfessionalDesktopMigrationOptions extends S.Opaque<
  */
 export const migrateProfessionalDesktopDatabase = Effect.fn("professional_desktop.database.migrate")(function* (
   options: (typeof ProfessionalDesktopMigrationOptions)["~type.make.in"] = {}
-): Effect.fn.Return<void, PostgresError, Crypto.Crypto | PostgresDrizzle> {
+): Effect.fn.Return<void, PostgresError, Digest.Digest | PostgresDrizzle> {
   const db = yield* PostgresDrizzle;
   const schema = ProfessionalDesktopMigrationOptions.make(options).migrationsSchema;
 
@@ -172,7 +172,7 @@ export const SidecarReadyMarker = "BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY";
  * @category constructors
  * @since 0.0.0
  */
-export const migrateOnBoot: Effect.Effect<void, PostgresError, Crypto.Crypto | PostgresDrizzle> = profilePhase(
+export const migrateOnBoot: Effect.Effect<void, PostgresError, Digest.Digest | PostgresDrizzle> = profilePhase(
   migrateProfessionalDesktopDatabase(),
   { phase: "professional_desktop.database.migrate" }
 ).pipe(

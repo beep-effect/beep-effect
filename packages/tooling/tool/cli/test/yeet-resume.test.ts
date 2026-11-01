@@ -16,7 +16,7 @@ import {
   yeetCommand,
 } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -36,10 +36,12 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
 
 const TestLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
   Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
 );
@@ -514,7 +516,7 @@ describe("yeet resume", () => {
         const spawnCwd = yield* Ref.make(O.none<string>());
         const spawner = ChildProcessSpawner.make((command) => {
           const argv =
-            command._tag === "StandardCommand" ? A.prepend(command.args, command.command) : A.empty<string>();
+            command._tag === "StandardCommand" ? A.prepend(commandArgs(command), command.command) : A.empty<string>();
           const cwd = command._tag === "StandardCommand" ? O.fromUndefinedOr(command.options.cwd) : O.none<string>();
           return Effect.all([Ref.set(spawned, argv), Ref.set(spawnCwd, cwd)], { discard: true }).pipe(
             Effect.as(stubHandle(0))

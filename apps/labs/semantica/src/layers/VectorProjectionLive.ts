@@ -1,7 +1,7 @@
 import { DuckDb } from "@beep/duckdb";
 import { $SemanticaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -37,11 +37,11 @@ const decodeUnknownKnnRowArray = S.decodeUnknownEffect(S.Array(KnnRow));
 const failed = (message: string): ProjectionFailed => ProjectionFailed.make({ message, reason: "vector-failed" });
 
 const makeVectorProjection = Effect.fn("VectorProjection.make")(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const db = yield* DuckDb;
   const modelKey = (model: ModelIdentity) =>
     contentDigest(ModelIdentity)(model).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.mapError(() => failed("The embedding model identity could not be hashed."))
     );
 

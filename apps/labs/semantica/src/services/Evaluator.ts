@@ -1,6 +1,6 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as Effect from "effect/Effect";
 import type { GoldUnavailable, ReportInvalid } from "@/schema/Errors";
 import type { EvalReport, EvalRun } from "@/schema/Eval";
@@ -20,7 +20,7 @@ interface EvaluatorShape {
     run: EvalRun,
     snapshot: LedgerSnapshot,
     outcomes: ReadonlyArray<ExtractOutcome>
-  ) => Effect.Effect<EvalReport, GoldUnavailable | ReportInvalid, Crypto.Crypto>;
+  ) => Effect.Effect<EvalReport, GoldUnavailable | ReportInvalid, Digest.Digest>;
 }
 
 /**

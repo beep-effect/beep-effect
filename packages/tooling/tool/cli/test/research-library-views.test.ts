@@ -31,7 +31,7 @@ import {
   runLibraryCommand,
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -42,6 +42,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { constant } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -56,7 +57,7 @@ const libraryArtifactEquivalent = S.toEquivalence(LibraryArtifact);
 const webSourceKinds: ReadonlyArray<LibrarySource["kind"]> = ["web", "docs", "registry", "endpoint"];
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
 
-const services = NodeServices.layer;
+const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const transcriptApiVariation = (scenario: string) => {
   const captionKind: Record<string, string> = { kind: "asr" };
   const base = {

@@ -21,10 +21,11 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
  *
  * @since 0.0.0
  */
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
@@ -4152,9 +4153,9 @@ const program = Effect.gen(function* () {
   const languageSubtagRegistrySource = yield* fs.readFileString(
     path.join(dataDir, "iana/language-subtag-registry.txt")
   );
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const registryHash = Hex.encode(
-    yield* crypto.digest("SHA-256", new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
+    yield* crypto.digest(Digest.sha256, new TextEncoder().encode(languageSubtagRegistrySource)).pipe(
       Effect.mapError((cause) =>
         HtmlGenerationError.make({
           cause,
@@ -4202,7 +4203,7 @@ const program = Effect.gen(function* () {
   );
 });
 
-const runtimeLayer = Layer.mergeAll(Logger.layer([Logger.consolePretty()]), NodeServices.layer);
+const runtimeLayer = Layer.mergeAll(Logger.layer([Logger.consolePretty()]), NodeServices.layer, NodeCrypto.layerDigest);
 
 const main = runtimeLayer.pipe(
   Layer.build,

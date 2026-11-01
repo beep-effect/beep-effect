@@ -307,10 +307,12 @@ export class Person extends S.Class<Person, { readonly brand: unique symbol }>($
       SchemaTransformation.transformEffect({
         decode: (raw: { readonly [k: string]: unknown }) =>
           decodePersonFields(raw).pipe(
-            Effect.mapError((error) => error.issue),
-            Effect.map((fields) => {
-              const rest = restOf(raw, KNOWN_KEYS);
-              return rememberWire(Person.make({ ...fields, ...(!R.isEmptyRecord(rest) ? { rest } : {}) }), raw);
+            Effect.mapBoth({
+              onFailure: (error) => error.issue,
+              onSuccess: (fields) => {
+                const rest = restOf(raw, KNOWN_KEYS);
+                return rememberWire(Person.make({ ...fields, ...(!R.isEmptyRecord(rest) ? { rest } : {}) }), raw);
+              },
             })
           ),
         encode: (person: Person) => Effect.succeed(encodePersonObject(person)),

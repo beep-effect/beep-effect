@@ -49,7 +49,8 @@ import { ghOutput } from "../../internal/github/index.ts";
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
 import { HostedJob, HostedRun, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhCommandFailure } from "../../internal/github/index.ts";
 import type { RouteCorpusCaptureOptions, RouteCorpusShape } from "./Route.service.ts";
@@ -335,7 +336,9 @@ const ghFailure = Match.type<GhCommandFailure>().pipe(
 );
 
 const routeGhRunner = Effect.gen(function* () {
-  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<
+    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  >();
   const runGh: RouteGhRunner = (args, cwd) =>
     ghOutput({
       args,
@@ -464,10 +467,14 @@ type CapturePlan = {
  */
 export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   runGh: RouteGhRunner
-): Effect.fn.Return<RouteCorpusShape, never, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<
+  RouteCorpusShape,
+  never,
+  FileSystem.FileSystem | Path.Path | Digest.Digest | SecureRandom.SecureRandom
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const context = yield* Effect.context<Crypto.Crypto>();
+  const context = yield* Effect.context<Digest.Digest | SecureRandom.SecureRandom>();
 
   const digest = (bytes: Uint8Array, file: string) =>
     sha256HexBytes(bytes).pipe(
@@ -851,5 +858,9 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
 export const RouteCorpusLive: Layer.Layer<
   RouteCorpus,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | Digest.Digest
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
 > = Layer.effect(RouteCorpus, Effect.flatMap(routeGhRunner, makeRouteCorpus));

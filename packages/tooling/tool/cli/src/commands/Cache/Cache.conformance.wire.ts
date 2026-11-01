@@ -9,7 +9,7 @@ import { MimeType, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
@@ -35,6 +35,7 @@ import {
   CacheConformanceTarget,
 } from "./Cache.conformance.schemas.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type {
   CacheConformanceBearers,
@@ -550,7 +551,7 @@ const header = (reply: WireReply, name: string) => Headers.get(reply.headers, na
 const text = (reply: WireReply) => new TextDecoder().decode(reply.body);
 
 const randomBytes = (bytes: number) =>
-  Crypto.Crypto.use((crypto) => crypto.randomBytes(bytes)).pipe(
+  SecureRandom.SecureRandom.use((crypto) => crypto.randomBytes(bytes)).pipe(
     CacheCommandError.mapError("Cannot draw conformance randomness.")
   );
 const randomHex = (bytes: number) => randomBytes(bytes).pipe(Effect.map(Hex.encode));
@@ -565,7 +566,11 @@ const claimNote = (claimed: boolean, claim: string) =>
 type WireCase = (
   context: WireContext,
   recorder: Recorder
-) => Effect.Effect<void, CacheCommandError | S.SchemaError, HttpClient.HttpClient | Crypto.Crypto>;
+) => Effect.Effect<
+  void,
+  CacheCommandError | S.SchemaError,
+  HttpClient.HttpClient | Digest.Digest | SecureRandom.SecureRandom
+>;
 
 const putStep = (
   label: string,
@@ -742,7 +747,10 @@ const metadata: WireCase = Effect.fnUntraced(function* (context: WireContext, re
 const optionalRoute = (
   label: string,
   route: "/v8/artifacts" | "/v8/artifacts/events",
-  payload: (written: string, unwritten: string) => Effect.Effect<string, never, Crypto.Crypto>,
+  payload: (
+    written: string,
+    unwritten: string
+  ) => Effect.Effect<string, never, Digest.Digest | SecureRandom.SecureRandom>,
   verify: (
     recorder: Recorder,
     reply: WireReply,
@@ -811,7 +819,7 @@ const cacheEvents = optionalRoute(
   "reader-post-events",
   "/v8/artifacts/events",
   (written) =>
-    Crypto.Crypto.use((crypto) => crypto.randomUUIDv4()).pipe(
+    SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()).pipe(
       Effect.orDie,
       Effect.flatMap((sessionId) =>
         S.encodeEffect(EventsRequest)([{ sessionId, source: "REMOTE", event: "HIT", hash: written, duration: 10 }])
@@ -1248,7 +1256,11 @@ type LabCase = (
   recorder: Recorder,
   proxy: FaultProxy,
   envelope: CacheConformanceLoadEnvelope
-) => Effect.Effect<void, CacheCommandError | S.SchemaError, HttpClient.HttpClient | Crypto.Crypto>;
+) => Effect.Effect<
+  void,
+  CacheCommandError | S.SchemaError,
+  HttpClient.HttpClient | Digest.Digest | SecureRandom.SecureRandom
+>;
 
 const expectObservable = (recorder: Recorder, id: string, ok: boolean, detail: string) =>
   recorder.observability.push(CacheConformanceWireCheck.make({ id, ok, detail }));

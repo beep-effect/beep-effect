@@ -25,7 +25,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { DocStructureOutcome, OfficeActionRecognizedPair } from "@beep/law-practice-domain";
 import type { VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { OfficeActionStructureStorageError } from "./OfficeActionStructure.errors.ts";
 
 const $I = $LawPracticeUseCasesId.create("OfficeActionStructure/OfficeActionStructure.ports");
@@ -276,11 +276,11 @@ export interface OfficeActionDocketIntakeShape {
   readonly deliver: (outcome: DocStructureOutcome) => Effect.Effect<void>;
   readonly record: (
     request: OfficeActionAttemptRequest
-  ) => Effect.Effect<DocStructureOutcome, VerifiedTextAnchorError | OfficeActionStructureStorageError, Crypto.Crypto>;
+  ) => Effect.Effect<DocStructureOutcome, VerifiedTextAnchorError | OfficeActionStructureStorageError, Digest.Digest>;
   readonly replay: (
     attempt: OfficeActionStructureAttempt,
     verification: VerifySourceTextIdentityInput
-  ) => Effect.Effect<DocStructureOutcome, VerifiedTextAnchorError | OfficeActionStructureStorageError, Crypto.Crypto>;
+  ) => Effect.Effect<DocStructureOutcome, VerifiedTextAnchorError | OfficeActionStructureStorageError, Digest.Digest>;
 }
 /**
  * Names the docketing evidence adapter with no epistemic admission behavior.

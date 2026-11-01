@@ -61,6 +61,7 @@ import * as Pglite from "@beep/pglite";
 import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
@@ -254,7 +255,7 @@ const normalizedPatentFixture = Md.make([
   Md.p("Not applicable."),
 ]);
 
-const testLayer = NodeServices.layer;
+const testLayer = Layer.merge(NodeServices.layer, NodeCrypto.layer);
 const realCorpusConfig = Config.option(Config.Boolean("BEEP_TEST_OPPOLD_CORPUS"));
 
 const withDuckDb =

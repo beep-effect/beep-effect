@@ -29,7 +29,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
 import { assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -669,15 +669,15 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
           O.map(material, (value) => Redacted.value(value).byteLength),
           96
         );
-        const crypto = yield* Crypto.Crypto;
+        const secureRandom = yield* SecureRandom.SecureRandom;
         const peer = yield* initializeCacheProducerIssuer(
           f.path.join(f.path.dirname(f.directory), "peer"),
           approval.binding,
           approval.contract,
           material
         ).pipe(
-          Effect.provideService(Crypto.Crypto, {
-            ...crypto,
+          Effect.provideService(SecureRandom.SecureRandom, {
+            ...secureRandom,
             randomBytes: () => Effect.die("Installation generated replacement material."),
           })
         );

@@ -46,6 +46,8 @@ import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
 import { ProviderCache } from "@/services/ProviderCache";
 
+const BunPlatformLive = Layer.merge(BunServices.layer, BunCrypto.layer);
+
 const model = ModelIdentity.make({
   artifactHash: sha256TextSync("provider-cache-test-artifact"),
   name: "stub-2026-08-26",
@@ -67,7 +69,7 @@ const encodeProviderCacheEntryPrettyJson = S.encodeEffect(ProviderCacheEntryPret
 const encodeProviderCacheEntry = Effect.fn("ProviderCacheTest.encodeProviderCacheEntry")((entry: ProviderCacheEntry) =>
   encodeProviderCacheEntryPrettyJson(entry)
 );
-const CacheTestServices = Layer.mergeAll(BunServices.layer, TestClock.layer());
+const CacheTestServices = Layer.mergeAll(BunPlatformLive, TestClock.layer());
 
 const makeCacheWaitProbe = Effect.fn("ProviderCacheTest.makeWaitProbe")(function* (fs: FileSystem.FileSystem) {
   const clock = yield* TestClock.testClockWith(Effect.succeed);
@@ -176,7 +178,7 @@ const noOpProviderCache = Layer.succeed(
 );
 
 describe("C0 provider cache and language-model boundary", () => {
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("is write-once, caches misses, replays hits, and keeps offline misses typed", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -388,7 +390,7 @@ describe("C0 provider cache and language-model boundary", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("lets exactly one contender reclaim a stale lock and reconciles the loser with its published entry", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -484,7 +486,7 @@ describe("C0 provider cache and language-model boundary", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect.each([
       ["restores the displaced replacement", false],
       ["preserves a newer replacement when rename-back is blocked", true],
@@ -578,7 +580,7 @@ describe("C0 provider cache and language-model boundary", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("abandons stale-lock recovery when the sampled owner is replaced before deletion", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -635,7 +637,7 @@ describe("C0 provider cache and language-model boundary", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("does not publish after its acquired lock is stolen and reconciles with the winner", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -747,7 +749,7 @@ describe("C0 provider cache and language-model boundary", () => {
   ] as const)("acquires the Anthropic extraction layer with model identity %s", ([env, expectedModel]) =>
     Effect.gen(function* () {
       const layer = AnthropicExtractionLanguageModelLive(model.artifactHash).pipe(
-        Layer.provide(BunServices.layer),
+        Layer.provide(BunPlatformLive),
         Layer.provide(noOpProviderCache),
         Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env })))
       );
@@ -775,7 +777,7 @@ describe("C0 provider cache and language-model boundary", () => {
   it.effect("refuses an unversioned Anthropic override with AI_ANTHROPIC_MODEL", () =>
     Effect.gen(function* () {
       const layer = AnthropicExtractionLanguageModelLive(model.artifactHash).pipe(
-        Layer.provide(BunServices.layer),
+        Layer.provide(BunPlatformLive),
         Layer.provide(noOpProviderCache),
         Layer.provide(
           ConfigProvider.layer(

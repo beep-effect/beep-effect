@@ -38,7 +38,8 @@ import {
 } from "./ProofFact.ts";
 import { ProofLedger } from "./ProofLedger.ts";
 import { captureRepoCommandStrict, readYeetChangedPathsStrict } from "./Settle.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
@@ -558,7 +559,11 @@ const WORKTREE_STATUS_ARGS = ["status", "--porcelain=v1", "-z", "--untracked-fil
 const readWorktreeChangedPaths = Effect.fn("Yeet.ProofShadow.readWorktreeChangedPaths")(function* (
   context: RepoRunContext,
   capture: typeof runRepoCommandCapture
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const output = yield* captureRepoCommandStrict({
     repoRoot: context.repoRoot,
     command: "git",
@@ -575,7 +580,7 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
 ): Effect.fn.Return<
   ProofChangedPackages,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
 > {
   const fs = yield* FileSystem.FileSystem;
   // The workspace reader canonicalises every directory it returns, so the root
@@ -673,7 +678,7 @@ export const changedPackagesForAttempt = Effect.fn("Yeet.changedPackagesForAttem
 ): Effect.fn.Return<
   ProofChangedPackages,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
 > {
   return yield* readChangedPackages(context, capture).pipe(
     Effect.catch((error) =>
@@ -874,7 +879,7 @@ const shadowInputDigest = Effect.fn("Yeet.ProofShadow.inputDigest")(function* (
   candidate: ShadowableLane,
   facts: ProofShadowAttemptFacts,
   epoch: ProofEpoch
-): Effect.fn.Return<ProofInputDigest, YeetCommandError, Crypto.Crypto> {
+): Effect.fn.Return<ProofInputDigest, YeetCommandError, Digest.Digest> {
   const commandDigest = yield* proofCommandDigest(candidate.commandText);
   const declared = O.filter(candidate.lane.inputDigest, Str.isNonEmpty);
   const inputDigest = O.getOrElse(declared, () => UNDECLARED_INPUT_DIGEST);
@@ -999,7 +1004,7 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
   facts: ProofShadowAttemptFacts,
   reports: ReadonlyArray<QualityTaskLaneRunReport>,
   changed: ProofChangedPackages
-): Effect.fn.Return<ProofShadowAttemptSummary, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ProofShadowAttemptSummary, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const candidates = shadowableLaneRuns(reports);
   if (A.isReadonlyArrayEmpty(candidates)) {
     return ProofShadowAttemptSummary.make({

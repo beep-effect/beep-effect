@@ -12,14 +12,14 @@ binary; the Effect-patched tsrs is the build/check gate.
 | `typescript` | `^7.0.2` | Native TypeScript 7 package; no classic `lib/typescript.js` API. |
 | `@typescript/native` | `npm:typescript@^7.0.2` | The same TypeScript 7 package under the retained alias, used by patching and unstable API consumers. Alias consolidation is a separate follow-up. |
 | `@typescript/typescript6` | `6.0.2` (exact) | Microsoft’s classic JS API bridge for the schema-opaque codemod/fixup, scratchpad JSDoc census; declared at root and in scratchpad. |
-| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.59.0` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
-| `tsrs` + seven `@tsrs/<platform>` optional packages | `0.20.0-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.59.0 ships for linux-x64, linux-arm64 and darwin-arm64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
+| `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.63.0` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
+| `tsrs` + seven `@tsrs/<platform>` optional packages | `0.20.1-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.63.0 ships for linux-x64, linux-arm64 and darwin-arm64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
 
 The root `prepare` script (`effect-tsgo unpatch --tsrs && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch --tsrs`)
 copies the Effect binaries over the native package's Go binary and over the
 `@tsrs/<platform>` binary, keeping the stock ones beside them as `tsc.original`
 and `tsrs.original`. After install, both of these print
-`Version 7.0.2+effect-tsgo.0.59.0`:
+`Version 7.0.2+effect-tsgo.0.63.0`:
 
 ```text
 node_modules/.bin/tsc      -> @typescript/native/bin/tsc  (patched Go binary)
@@ -35,7 +35,7 @@ the current one (`tools/tsgo-shim/tsgo.js`).
 
 The typecheck and build gates run on the Effect-patched `tsrs` (adopted in
 `goals/tsrs-gates`, which succeeded the tsc-rs gates of 2026-10-14), which
-prints `Version 7.1.0-beta+effect-tsgo.0.59.0 (tsrs 0.20.0-ts7.1.0-beta, …)`:
+prints `Version 7.1.0-beta+effect-tsgo.0.63.0 (tsrs 0.20.1-ts7.1.0-beta, …)`:
 
 ```text
 node_modules/.bin/tsrs     -> tsrs/bin/tsrs  (tsrs's JS launcher; execs the patched @tsrs/<platform>/tsrs)
@@ -100,7 +100,7 @@ patches an installed `tsrs` of that version, so:
 
 ## Binary paths (Linux x64)
 
-Verified at 0.59.0. Substitute the platform triple on other machines.
+Verified at 0.63.0. Substitute the platform triple on other machines.
 
 - `node_modules/@effect/tsgo-linux-x64/lib/tsc` is the latest TypeScript (7.0.2)
   Effect artifact. Since 0.52 it is shipped once in `lib`, not duplicated under
@@ -131,8 +131,8 @@ the copied profiles match the root map exactly (effect-drizzle's former
 `missedPipeableOpportunity` exception was retired 2026-10-31), and that the
 documented plugin options are explicit.
 
-The root map in `tsconfig.base.json` holds all 130 rules of the installed
-`@effect/tsgo` (125 errors, five declared off: `apiStabilityLeak`,
+The root map in `tsconfig.base.json` holds all 135 rules of the installed
+`@effect/tsgo` (130 errors, five declared off: `apiStabilityLeak`,
 `experimentalApiUsage`, `unstableApiUsage`, `preferBarrelImport`,
 `preferNamespaceImport`). `preferBarrelImport` stays off because Effect barrel
 imports violate the module-path law. `preferNamespaceImport` stays off because

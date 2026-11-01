@@ -758,7 +758,7 @@ export const GetPackagesByDateIssuedParams = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY)[n|e|w|s]?[d|b|a]|(cofc|jpml)",
           "u",
         ),
@@ -771,7 +771,7 @@ export const GetPackagesByDateIssuedParams = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -781,7 +781,7 @@ export const GetPackagesByDateIssuedParams = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),
@@ -825,7 +825,9 @@ export type GetPackagesByDateIssuedPathParams = {
  */
 export const GetPackagesByDateIssuedPathParams = S.Struct({
   dateIssuedStartDate: S.String.check(
-    S.isPattern(new RegExp("\\d{4}-\\d{1,2}-\\d{1,2}", "u")).annotate({
+    S.isPattern(
+      new globalThis.RegExp("\\d{4}-\\d{1,2}-\\d{1,2}", "u"),
+    ).annotate({
       expected: "a string matching the RegExp \\d{4}-\\d{1,2}-\\d{1,2}",
     }),
   ),
@@ -1007,7 +1009,7 @@ export const GetPackagesByDateIssuedQuery = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY)[n|e|w|s]?[d|b|a]|(cofc|jpml)",
           "u",
         ),
@@ -1020,7 +1022,7 @@ export const GetPackagesByDateIssuedQuery = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -1030,7 +1032,7 @@ export const GetPackagesByDateIssuedQuery = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),
@@ -1243,7 +1245,7 @@ export const GetPackagesByDateIssued1Params = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY)[n|e|w|s]?[d|b|a]|(cofc|jpml)",
           "u",
         ),
@@ -1256,7 +1258,7 @@ export const GetPackagesByDateIssued1Params = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -1266,7 +1268,7 @@ export const GetPackagesByDateIssued1Params = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),
@@ -1311,12 +1313,16 @@ export type GetPackagesByDateIssued1PathParams = {
  */
 export const GetPackagesByDateIssued1PathParams = S.Struct({
   dateIssuedStartDate: S.String.check(
-    S.isPattern(new RegExp("\\d{4}-\\d{1,2}-\\d{1,2}", "u")).annotate({
+    S.isPattern(
+      new globalThis.RegExp("\\d{4}-\\d{1,2}-\\d{1,2}", "u"),
+    ).annotate({
       expected: "a string matching the RegExp \\d{4}-\\d{1,2}-\\d{1,2}",
     }),
   ),
   dateIssuedEndDate: S.String.check(
-    S.isPattern(new RegExp("\\d{4}-\\d{1,2}-\\d{1,2}", "u")).annotate({
+    S.isPattern(
+      new globalThis.RegExp("\\d{4}-\\d{1,2}-\\d{1,2}", "u"),
+    ).annotate({
       expected: "a string matching the RegExp \\d{4}-\\d{1,2}-\\d{1,2}",
     }),
   ),
@@ -1498,7 +1504,7 @@ export const GetPackagesByDateIssued1Query = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY)[n|e|w|s]?[d|b|a]|(cofc|jpml)",
           "u",
         ),
@@ -1511,7 +1517,7 @@ export const GetPackagesByDateIssued1Query = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -1521,7 +1527,7 @@ export const GetPackagesByDateIssued1Query = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),
@@ -1972,7 +1978,7 @@ export const GetModifiedCollectionsParams = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:(?:al|ak|as|az|ar|ca|co|ct|de|dc|fl|ga|gu|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|mp|oh|ok|or|pa|pr|ri|sc|sd|tn|tx|ut|vt|va|vi|wa|wv|wi|wy)[n|e|w|s]?[d|b|a])|(cit|ca\\d{1,2})|(cofc|jpml)",
           "u",
         ),
@@ -1985,7 +1991,7 @@ export const GetModifiedCollectionsParams = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -1995,7 +2001,7 @@ export const GetModifiedCollectionsParams = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),
@@ -2123,7 +2129,10 @@ export const GetModifiedCollectionsPathParams = S.Struct({
   ]),
   lastModifiedStartDate: S.String.check(
     S.isPattern(
-      new RegExp("\\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z", "u"),
+      new globalThis.RegExp(
+        "\\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z",
+        "u",
+      ),
     ).annotate({
       expected:
         "a string matching the RegExp \\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z",
@@ -2303,7 +2312,7 @@ export const GetModifiedCollectionsQuery = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:(?:al|ak|as|az|ar|ca|co|ct|de|dc|fl|ga|gu|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|mp|oh|ok|or|pa|pr|ri|sc|sd|tn|tx|ut|vt|va|vi|wa|wv|wi|wy)[n|e|w|s]?[d|b|a])|(cit|ca\\d{1,2})|(cofc|jpml)",
           "u",
         ),
@@ -2316,7 +2325,7 @@ export const GetModifiedCollectionsQuery = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -2326,7 +2335,7 @@ export const GetModifiedCollectionsQuery = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),
@@ -2535,7 +2544,7 @@ export const GetModifiedCollections1Params = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:(?:al|ak|as|az|ar|ca|co|ct|de|dc|fl|ga|gu|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|mp|oh|ok|or|pa|pr|ri|sc|sd|tn|tx|ut|vt|va|vi|wa|wv|wi|wy)[n|e|w|s]?[d|b|a])|(cit|ca\\d{1,2})|(cofc|jpml)",
           "u",
         ),
@@ -2548,7 +2557,7 @@ export const GetModifiedCollections1Params = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -2558,7 +2567,7 @@ export const GetModifiedCollections1Params = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),
@@ -2687,7 +2696,10 @@ export const GetModifiedCollections1PathParams = S.Struct({
   ]),
   lastModifiedStartDate: S.String.check(
     S.isPattern(
-      new RegExp("\\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z", "u"),
+      new globalThis.RegExp(
+        "\\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z",
+        "u",
+      ),
     ).annotate({
       expected:
         "a string matching the RegExp \\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z",
@@ -2695,7 +2707,10 @@ export const GetModifiedCollections1PathParams = S.Struct({
   ),
   lastModifiedEndDate: S.String.check(
     S.isPattern(
-      new RegExp("\\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z", "u"),
+      new globalThis.RegExp(
+        "\\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z",
+        "u",
+      ),
     ).annotate({
       expected:
         "a string matching the RegExp \\d{4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}Z",
@@ -2875,7 +2890,7 @@ export const GetModifiedCollections1Query = S.Struct({
   courtCode: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "(?:(?:al|ak|as|az|ar|ca|co|ct|de|dc|fl|ga|gu|hi|id|il|in|ia|ks|ky|la|me|md|ma|mi|mn|ms|mo|mt|ne|nv|nh|nj|nm|ny|nc|nd|mp|oh|ok|or|pa|pr|ri|sc|sd|tn|tx|ut|vt|va|vi|wa|wv|wi|wy)[n|e|w|s]?[d|b|a])|(cit|ca\\d{1,2})|(cofc|jpml)",
           "u",
         ),
@@ -2888,7 +2903,7 @@ export const GetModifiedCollections1Query = S.Struct({
   courtType: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp("District|Bankruptcy|Appellate|National", "u"),
+        new globalThis.RegExp("District|Bankruptcy|Appellate|National", "u"),
       ).annotate({
         expected:
           "a string matching the RegExp District|Bankruptcy|Appellate|National",
@@ -2898,7 +2913,7 @@ export const GetModifiedCollections1Query = S.Struct({
   state: S.optionalKey(
     S.String.check(
       S.isPattern(
-        new RegExp(
+        new globalThis.RegExp(
           "AL|AK|AS|AZ|AR|CA|CO|CT|DE|DC|FL|GA|GU|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|MP|OH|OK|OR|PA|PR|RI|SC|SD|TN|TX|UT|VT|VA|VI|WA|WV|WI|WY",
           "u",
         ),

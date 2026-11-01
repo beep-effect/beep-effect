@@ -2,6 +2,7 @@
 
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -44,6 +45,8 @@ import { GoldSource } from "@/services/GoldSource";
 import { CanaryOptions } from "../src/canary/Command.ts";
 import { LabConfigValue } from "../src/runtime/Config.ts";
 
+const BunPlatformLive = Layer.merge(BunServices.layer, BunCrypto.layer);
+
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
 const ManifestJson = S.fromJsonString(CorpusManifest);
@@ -68,7 +71,7 @@ describe("C0 F1 live-to-replay slice", () => {
     { arbitrary: fcRuns(100) }
   );
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("runs real F1-only sources without a corpus root and replays to an equal report digest", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -129,12 +132,12 @@ describe("C0 F1 live-to-replay slice", () => {
             })
           )
         );
-        const manifestBuilder = CorpusManifestBuilderLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
-        const fixtureCatalog = F1CatalogLive.pipe(Layer.provide(BunServices.layer));
-        const documentSource = DocumentSourceLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
-        const canonicalizer = CanonicalizerLive.pipe(Layer.provide(BunServices.layer));
-        const chunker = ChunkerLive.pipe(Layer.provide(canonicalizer), Layer.provide(BunServices.layer));
-        const providerCache = ProviderCacheLive.pipe(Layer.provide(config), Layer.provide(BunServices.layer));
+        const manifestBuilder = CorpusManifestBuilderLive.pipe(Layer.provide(config), Layer.provide(BunPlatformLive));
+        const fixtureCatalog = F1CatalogLive.pipe(Layer.provide(BunPlatformLive));
+        const documentSource = DocumentSourceLive.pipe(Layer.provide(config), Layer.provide(BunPlatformLive));
+        const canonicalizer = CanonicalizerLive.pipe(Layer.provide(BunPlatformLive));
+        const chunker = ChunkerLive.pipe(Layer.provide(canonicalizer), Layer.provide(BunPlatformLive));
+        const providerCache = ProviderCacheLive.pipe(Layer.provide(config), Layer.provide(BunPlatformLive));
         const providerCalls = yield* Ref.make(0);
         const hostedProvider = Layer.effect(
           LanguageModel.LanguageModel,
@@ -152,7 +155,7 @@ describe("C0 F1 live-to-replay slice", () => {
             GoldSource.of({ load: Effect.fn("GoldSource.slice")(() => Effect.succeed(goldFiles)) })
           );
         const dependencies = Layer.mergeAll(
-          BunServices.layer,
+          BunPlatformLive,
           canonicalizer,
           chunker,
           config,

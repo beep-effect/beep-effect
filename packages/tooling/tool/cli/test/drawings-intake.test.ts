@@ -22,7 +22,7 @@ import {
 } from "@beep/repo-cli/commands/Drawings";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe } from "@effect/vitest";
 import {
   assertFalse,
@@ -290,7 +290,7 @@ const pullWith = (fields: {
 
 const conversation = OutlookItemRef.cases.conversation.make({ id: CONVERSATION });
 
-const Platform = Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer);
+const Platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, MemoryFileSystem.layer);
 const ServiceLayer = DrawingIntake.layer.pipe(Layer.provide(FakeM365), Layer.provideMerge(Platform));
 
 describe("DrawingIntake over a fake mailbox", () => {

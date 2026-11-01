@@ -67,7 +67,7 @@ import {
 } from "./ReviewThreadState.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type {
@@ -600,7 +600,7 @@ export const withYeetGh =
   (tokenRef: O.Option<string>) =>
   <A, E>(
     program: Effect.Effect<A, E, GithubRest | GraphqlBudget | GitHubClient | Repo>
-  ): Effect.Effect<A, E | GithubIdentityError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+  ): Effect.Effect<A, E | GithubIdentityError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
     Effect.flatMap(Layer.build(layerYeetGh(YeetGhCommonOptions.make({ tokenRef }))), (context) =>
       Effect.provideContext(program, context)
     ).pipe(Effect.scoped);
@@ -860,7 +860,7 @@ const runGh = <A>(
     GitHubError | GraphqlBudgetExhausted | CliReportedExit,
     GithubRest | GraphqlBudget | GitHubClient | Repo
   >
-): Effect.Effect<A, CliReportedExit, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<A, CliReportedExit, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   withYeetGh(options.tokenRef)(program).pipe(
     Effect.catchTags({
       GithubIdentityError: (error) => report(1)(`[gh] ${error.message}`),

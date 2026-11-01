@@ -25,7 +25,8 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import type { DocketIntakeState, DocketLedgerRecord } from "@beep/law-practice-use-cases/DocketIntake";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 
@@ -133,7 +134,11 @@ export const questionInput = ({ outcome }: DocketLedgerRecord): DocketQuestionIn
  */
 export const makeDocketQuestionPublisherLayer = (
   directory: string
-): Layer.Layer<DocketQuestionPublisher, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
+): Layer.Layer<
+  DocketQuestionPublisher,
+  never,
+  Digest.Digest | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+> =>
   Layer.effect(
     DocketQuestionPublisher,
     Effect.gen(function* () {

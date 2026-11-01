@@ -137,12 +137,13 @@ const readSourceFiles = Effect.gen(function* () {
     paths,
     (filePath) =>
       fs.readFileString(filePath).pipe(
-        Effect.map((content) => Domain.File.new(filePath, content, { isOverwritable: false })),
-        Effect.mapError((cause) =>
-          Domain.DocgenError.make({
-            message: `[Core.readSourceFiles] Failed to read '${filePath}'\n${String(cause)}`,
-          })
-        )
+        Effect.mapBoth({
+          onFailure: (cause) =>
+            Domain.DocgenError.make({
+              message: `[Core.readSourceFiles] Failed to read '${filePath}'\n${String(cause)}`,
+            }),
+          onSuccess: (content) => Domain.File.new(filePath, content, { isOverwritable: false }),
+        })
       ),
     { concurrency: "unbounded" }
   );

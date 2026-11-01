@@ -72,8 +72,9 @@ import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -554,9 +555,9 @@ describe("last good reading", () => {
     const kept = retainLastGood([failed("me"), ok("other", [])], [ok("me", [weekly(20, inHours(5))])], previousAt);
     const readings = A.map(kept, (usage): readonly [DateTime.Utc | null, number] =>
       AccountUsageOutcome.match(usage.outcome, {
-        Ok: ({ asOf, windows }) => [O.getOrNull(asOf), A.length(windows)],
-        NeedsLogin: () => [null, 0],
-        Failed: () => [null, -1],
+        Ok: ({ asOf, windows }): readonly [DateTime.Utc | null, number] => [O.getOrNull(asOf), A.length(windows)],
+        NeedsLogin: (): readonly [DateTime.Utc | null, number] => [null, 0],
+        Failed: (): readonly [DateTime.Utc | null, number] => [null, -1],
       })
     );
     expect(readings).toEqual([
@@ -796,12 +797,12 @@ describe("accounts board rendering", () => {
 const respond = (request: HttpClientRequest.HttpClientRequest, body: string, status = 200) =>
   HttpClientResponse.fromWeb(request, new Response(body, { status }));
 
-const testCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    randomBytes: (size) => new Uint8Array(size),
-    digest: (_algorithm, data) => Effect.succeed(data),
-  })
+const testCrypto = Layer.mergeAll(
+  Layer.succeed(
+    SecureRandom.SecureRandom,
+    SecureRandom.make((size) => new Uint8Array(size))
+  ),
+  Layer.mock(Digest.Digest)({ digest: (_algorithm, data) => Effect.succeed(data) })
 );
 const inheritedPlatform = Layer.mergeAll(NodeServices.layer, testCrypto);
 
@@ -1545,10 +1546,7 @@ const junieTestLayer = (
         },
       })
     ),
-    Layer.succeed(
-      Crypto.Crypto,
-      Crypto.make({ randomBytes: (size) => new Uint8Array(size), digest: (_algorithm, data) => Effect.succeed(data) })
-    ),
+    testCrypto,
     Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, {
       ...ChildProcessSpawner.make(() => Effect.die("Unexpected process spawn")),
       string: Effect.fnUntraced(function* () {

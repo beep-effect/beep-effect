@@ -33,7 +33,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInclude, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -60,12 +60,14 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
 const commandTestLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
 );
 
@@ -263,9 +265,9 @@ describe("yeet merge-loop command wiring", () => {
           });
         const spawner = ChildProcessSpawner.make((command) => {
           if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected planner pipe");
-          const line = A.join([command.command, ...command.args], " ");
+          const line = A.join([command.command, ...commandArgs(command)], " ");
           const responseFor = (responses: ReadonlyArray<readonly [string, string]>) =>
-            A.findFirst(responses, ([argument]) => A.contains(command.args, argument)).pipe(
+            A.findFirst(responses, ([argument]) => A.contains(commandArgs(command), argument)).pipe(
               O.map(([, output]) => output)
             );
           const response = Match.value(command.command).pipe(

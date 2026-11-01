@@ -8,7 +8,7 @@ import {
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Command from "effect/cli/Command";
@@ -28,9 +28,10 @@ const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const exampleShard = "standards/schema-catalog/@beep/example.generated.jsonc";
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const writeSchemaCatalogFixture = Effect.fn("SchemaCatalogTest.writeFixture")(function* () {

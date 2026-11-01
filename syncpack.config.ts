@@ -148,7 +148,7 @@ const config = {
       // before this pin moves.
       // tsrs (oxc-project/tsrs) is held with it: `effect-tsgo patch --tsrs` only
       // has an Effect build for the tsrs versions the installed @effect/tsgo
-      // packages ship (0.59.0 ships 0.20.0-ts7.1.0-beta), so the two pins move
+      // packages ship (0.63.0 ships 0.20.1-ts7.1.0-beta), so the two pins move
       // together in one reviewed bump (goals/tsrs-gates).
       // Every Effect rule gates inside the Effect-patched tsrs: the three
       // ignoreEffect*InTscExitCode flags are false and the standalone

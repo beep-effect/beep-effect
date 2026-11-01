@@ -13,38 +13,23 @@
  * the worktree was removed.
  */
 
-import { WorktreeRemovalServiceLive, worktreeCommand } from "@beep/repo-cli/commands/Worktree";
-import { NodeServices } from "@effect/platform-node";
+import { worktreeCommand } from "@beep/repo-cli/commands/Worktree";
 import * as A from "effect/Array";
-import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
-import * as S from "effect/Schema";
+import { FenceInvokerLayer, reportFenceOutcome } from "./FenceInvoker.ts";
 
 const name = O.getOrThrow(A.get(process.argv, 2));
 
 const failureMessage = (error: unknown): string =>
   P.hasProperty(error, "message") && P.isString(error.message) ? error.message : String(error);
 
-const layer = Layer.mergeAll(NodeServices.layer, WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer)));
-await using runtime = ManagedRuntime.make(layer);
-
-const program = Effect.result(
-  Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", name, "--archive", "--delete-branch"])
-).pipe(
-  Effect.map(
-    Result.match({
-      onFailure: (error) => ({ ok: false, message: failureMessage(error) }),
-      onSuccess: () => ({ ok: true, message: "removed" }),
-    })
+await using runtime = ManagedRuntime.make(FenceInvokerLayer);
+const ok = await runtime.runPromise(
+  Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", name, "--archive", "--delete-branch"]).pipe(
+    reportFenceOutcome({ onFailure: failureMessage, onSuccess: () => "removed" })
   )
 );
-
-const outcome = await runtime.runPromise(program);
-await Effect.runPromise(S.encodeEffect(S.fromJsonString(S.Unknown))(outcome).pipe(Effect.flatMap(Console.log)));
-process.exitCode = outcome.ok ? 0 : 1;
+process.exitCode = ok ? 0 : 1;

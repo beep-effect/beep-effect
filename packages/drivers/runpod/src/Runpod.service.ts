@@ -713,14 +713,29 @@ const rawResponseBody = Effect.fnUntraced(function* (
 
   if (Str.includes("application/json")(contentType)) {
     return yield* response.json.pipe(
-      Effect.map((body) =>
-        RunpodRawResponse.make({
-          body,
-          headers: response.headers,
-          status: response.status,
-        })
-      ),
-      Effect.mapError((cause) =>
+      Effect.mapBoth({
+        onFailure: (cause) =>
+          RunpodError.raw(
+            RunpodRawErrorOptions.make({
+              cause,
+              method: request.method,
+              path: request.path,
+              reason: "response decoding",
+            })
+          ),
+        onSuccess: (body) =>
+          RunpodRawResponse.make({
+            body,
+            headers: response.headers,
+            status: response.status,
+          }),
+      })
+    );
+  }
+
+  return yield* response.text.pipe(
+    Effect.mapBoth({
+      onFailure: (cause) =>
         RunpodError.raw(
           RunpodRawErrorOptions.make({
             cause,
@@ -728,30 +743,15 @@ const rawResponseBody = Effect.fnUntraced(function* (
             path: request.path,
             reason: "response decoding",
           })
-        )
-      )
-    );
-  }
-
-  return yield* response.text.pipe(
-    Effect.map((text) =>
-      RunpodRawResponse.make({
-        body: text,
-        headers: response.headers,
-        status: response.status,
-        text,
-      })
-    ),
-    Effect.mapError((cause) =>
-      RunpodError.raw(
-        RunpodRawErrorOptions.make({
-          cause,
-          method: request.method,
-          path: request.path,
-          reason: "response decoding",
-        })
-      )
-    )
+        ),
+      onSuccess: (text) =>
+        RunpodRawResponse.make({
+          body: text,
+          headers: response.headers,
+          status: response.status,
+          text,
+        }),
+    })
   );
 });
 

@@ -78,7 +78,7 @@ import {
 import { YeetRunMode } from "./Planner.ts";
 import { buildYeetEconomicsReviewLane, readYeetReviewLaneLedger, renderYeetEconomicsReviewLane } from "./ReviewLane.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { EconomicsCountRow } from "./Economics.schemas.ts";
 import type { ReviewLaneLedger } from "./ReviewLane.schemas.ts";
 
@@ -777,7 +777,7 @@ const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<EconomicsJournal>,
   YeetEconomicsError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const checkouts = yield* resolveCheckouts(request);
   const runId = yield* Effect.transposeOption(O.map(request.branch, repoRunArtifactId)).pipe(
@@ -818,8 +818,8 @@ export interface YeetEconomicsSourceShape {
 const makeYeetEconomicsSource: Effect.Effect<
   YeetEconomicsSourceShape,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
-> = Effect.map(Effect.context<Crypto.Crypto | FileSystem.FileSystem | Path.Path>(), (context) => ({
+  Digest.Digest | FileSystem.FileSystem | Path.Path
+> = Effect.map(Effect.context<Digest.Digest | FileSystem.FileSystem | Path.Path>(), (context) => ({
   read: (request: EconomicsScopeRequest) => readEconomicsJournals(request).pipe(Effect.provide(context)),
 }));
 
@@ -866,8 +866,8 @@ export class YeetEconomicsSource extends Context.Service<YeetEconomicsSource, Ye
   $I`YeetEconomicsSource`,
   { make: makeYeetEconomicsSource }
 ) {
-  /** Live source over the filesystem; `Crypto` derives a branch's run id. */
-  static readonly layer: Layer.Layer<YeetEconomicsSource, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =
+  /** Live source over the filesystem; `Digest` derives a branch's run id. */
+  static readonly layer: Layer.Layer<YeetEconomicsSource, never, Digest.Digest | FileSystem.FileSystem | Path.Path> =
     Layer.effect(YeetEconomicsSource, YeetEconomicsSource.make);
 }
 
@@ -1774,7 +1774,7 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
  */
 export const runYeetEconomicsCommand = (
   options: Parameters<typeof YeetEconomicsOptions.make>[0]
-): Effect.Effect<void, YeetEconomicsError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<void, YeetEconomicsError, FileSystem.FileSystem | Path.Path | Digest.Digest> =>
   runYeetEconomics(YeetEconomicsOptions.make(options)).pipe(
     Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make),
     Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make)

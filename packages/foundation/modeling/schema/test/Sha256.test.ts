@@ -51,7 +51,7 @@ describe("Sha256Hex", () => {
     Effect.fnUntraced(function* () {
       const failure1 = yield* Effect.exit(decodeUnknownSha256HexEffect(Str.toUpperCase(knownDigest)));
       pipe(failure1, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure1)) {
+      if (Exit.isFailure(failure1) && Exit.hasFails(failure1)) {
         expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "SHA-256 digest must contain only lowercase hexadecimal characters"
         );
@@ -64,7 +64,7 @@ describe("Sha256Hex", () => {
     Effect.fnUntraced(function* () {
       const failure2 = yield* Effect.exit(decodeUnknownSha256HexEffect("abc123"));
       pipe(failure2, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure2)) {
+      if (Exit.isFailure(failure2) && Exit.hasFails(failure2)) {
         expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "SHA-256 digest must be exactly 64 characters long"
         );
@@ -77,7 +77,7 @@ describe("Sha256Hex", () => {
     Effect.fnUntraced(function* () {
       const failure3 = yield* Effect.exit(decodeUnknownSha256HexEffect(`${Str.repeat("g", 63)}z`));
       pipe(failure3, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure3)) {
+      if (Exit.isFailure(failure3) && Exit.hasFails(failure3)) {
         expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "SHA-256 digest must contain only lowercase hexadecimal characters"
         );
@@ -126,7 +126,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("Sha256HexFromHexBytes", (it
     Effect.fnUntraced(function* () {
       const result = yield* Effect.exit(decodeUnknownSha256HexFromHexBytes("0"));
       pipe(result, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(result)) {
+      if (Exit.isFailure(result) && Exit.hasFails(result)) {
         expect(pipe(result.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "Expected a valid hexadecimal string"
         );

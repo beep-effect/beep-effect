@@ -38,6 +38,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 // `gh run view --job <id> --log-failed` emits `<job>\t<step>\t<timestamp> <line>`
 // and sometimes an `##[error]` workflow-command marker. These fixtures keep that
@@ -497,7 +498,7 @@ const monitorSpawner = (script: MonitorGhScript) =>
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("the merge loop never spawns a piped command");
     }
-    const line = A.join([command.command, ...command.args], " ");
+    const line = A.join([command.command, ...commandArgs(command)], " ");
     script.spawned?.push(line);
     if (Str.includes("run list")(line)) {
       return Effect.succeed(stubHandle(0, script.runList));
@@ -826,7 +827,7 @@ const jobLogFallbackSpawnerLayer = Layer.mergeAll(
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the merge loop never spawns a piped command");
       }
-      const line = A.join([command.command, ...command.args], " ");
+      const line = A.join([command.command, ...commandArgs(command)], " ");
       if (Str.includes("run list")(line)) {
         return Effect.succeed(
           stubHandle(0, runListJson([{ conclusion: null, databaseId: 7, headSha: "abc123", status: "in_progress" }]))

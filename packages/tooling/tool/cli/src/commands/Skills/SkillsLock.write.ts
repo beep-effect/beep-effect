@@ -42,7 +42,7 @@ import { SkillsCommandError, SkillsLockWriteRefusal } from "./Skills.errors.ts";
 import { compileSkillsLockMigration } from "./Skills.service.ts";
 import { SkillsLockDocument, SkillsLockWriteReceipt, SkillsLockWrittenFile } from "./SkillsLock.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { SkillPatchOwnerSource } from "./Skills.patches.ts";
 import type { SkillUpstreamContentSource } from "./Skills.service.ts";
 import type {
@@ -214,7 +214,7 @@ export const publishSkillsLockEntry = Effect.fn("SkillsLock.publishSkillsLockEnt
 ): Effect.fn.Return<
   SkillsLockWrittenFile,
   SkillsCommandError | SkillsLockWriteRefusal,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const lockText = yield* renderSkillsLockDocumentText(
     SkillsLockDocument.make({ version: 2, skills: R.set(lock.document.skills, skill, entry) })
@@ -502,7 +502,7 @@ export const writeSkillsLockMigration = Effect.fn("SkillsLock.writeSkillsLockMig
 ): Effect.fn.Return<
   SkillsLockWriteReceipt,
   SkillsCommandError | SkillsLockWriteRefusal,
-  SkillUpstreamContentSource | SkillPatchOwnerSource | FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  SkillUpstreamContentSource | SkillPatchOwnerSource | FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const artifacts = yield* compileSkillsLockMigration(repoRoot);
   const plan = artifacts.plan;

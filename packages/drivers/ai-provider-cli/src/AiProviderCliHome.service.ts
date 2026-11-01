@@ -245,38 +245,35 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
       )
     );
 
-    yield* LinkState.match<Effect.Effect<void, AiProviderCliHomeFileSystemError | AiProviderCliHomeEntryConflictError>>(
-      state,
-      {
-        Missing: () => createLink,
-        NotSymlink: () =>
-          Effect.fail(
-            AiProviderCliHomeEntryConflictError.make({
-              effectiveHomePath: input.context.effectiveHomePath,
-              entryName: input.entryName,
-              linkPath: link,
-              sharedHomePath: input.context.sharedHomePath,
-              targetPath: target,
-            })
-          ),
-        Symlink: ({ target: existingTarget }) =>
-          path.resolve(path.dirname(link), existingTarget) === target
-            ? Effect.void
-            : fs.remove(link).pipe(
-                Effect.catchTag(
-                  "PlatformError",
-                  fsFailure({
-                    context: input.context,
-                    entryName: O.some(input.entryName),
-                    operation: "remove",
-                    path: link,
-                    targetPath: O.none(),
-                  })
-                ),
-                Effect.andThen(createLink)
+    yield* LinkState.match(state, {
+      Missing: () => createLink,
+      NotSymlink: () =>
+        Effect.fail(
+          AiProviderCliHomeEntryConflictError.make({
+            effectiveHomePath: input.context.effectiveHomePath,
+            entryName: input.entryName,
+            linkPath: link,
+            sharedHomePath: input.context.sharedHomePath,
+            targetPath: target,
+          })
+        ),
+      Symlink: ({ target: existingTarget }) =>
+        path.resolve(path.dirname(link), existingTarget) === target
+          ? Effect.void
+          : fs.remove(link).pipe(
+              Effect.catchTag(
+                "PlatformError",
+                fsFailure({
+                  context: input.context,
+                  entryName: O.some(input.entryName),
+                  operation: "remove",
+                  path: link,
+                  targetPath: O.none(),
+                })
               ),
-      }
-    );
+              Effect.andThen(createLink)
+            ),
+    });
   });
 
   const removePrivateSymlink = Effect.fn("AiProviderCliHome.removePrivateSymlink")(function* (input: {
@@ -290,7 +287,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
       linkPath: privatePath,
     });
 
-    yield* LinkState.match<Effect.Effect<void, AiProviderCliHomeFileSystemError>>(state, {
+    yield* LinkState.match(state, {
       Missing: () => Effect.void,
       NotSymlink: () => Effect.void,
       Symlink: () =>
@@ -316,7 +313,7 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
     const authPath = path.join(context.effectiveHomePath, entryName);
     const state = yield* readLinkState({ context, entryName, linkPath: authPath });
 
-    yield* LinkState.match<Effect.Effect<void, AiProviderCliHomePrivateEntrySymlinkError>>(state, {
+    yield* LinkState.match(state, {
       Missing: () => Effect.void,
       NotSymlink: () => Effect.void,
       Symlink: () =>

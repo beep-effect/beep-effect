@@ -994,10 +994,11 @@ export const resolveForwarderEvidenceRoot = Effect.fn("AiMetrics.resolveForwarde
     return configured.value;
   }
   const stateHome = yield* Config.option(Config.String("XDG_STATE_HOME")).pipe(
-    Effect.map((value) =>
-      aiMetricsStateHome(AiMetricsStateHomeInput.make({ homeDir: O.some(homeDir), stateHome: value }))
-    ),
-    Effect.mapError((cause) => forwarderFailure("Cannot resolve XDG state home.", cause))
+    Effect.mapBoth({
+      onFailure: (cause) => forwarderFailure("Cannot resolve XDG state home.", cause),
+      onSuccess: (value) =>
+        aiMetricsStateHome(AiMetricsStateHomeInput.make({ homeDir: O.some(homeDir), stateHome: value })),
+    })
   );
   return yield* O.match(stateHome, {
     onNone: () =>

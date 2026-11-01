@@ -12,7 +12,7 @@ import {
 } from "@beep/repo-cli/commands/Worktree";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -24,8 +24,10 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const removalLayer = WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer));
-const testLayer = Layer.merge(NodeServices.layer, removalLayer);
+const removalLayer = WorktreeRemovalServiceLive.pipe(
+  Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
+const testLayer = Layer.merge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), removalLayer);
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 
 const verdictProber =

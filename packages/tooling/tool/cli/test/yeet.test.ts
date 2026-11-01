@@ -155,7 +155,7 @@ import { assertDefined, assertFalse, assertNone, assertSome, assertTrue, deepStr
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -236,8 +236,8 @@ const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: 
   return { attemptIds, lines };
 });
 const proofLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedText: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedText));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(observedText));
   return `${lockPath}.reap-${Hex.encode(digest)}.claim`;
 });
 const proofLockReapClaimTombstonePath = proofLockReapClaimPath;

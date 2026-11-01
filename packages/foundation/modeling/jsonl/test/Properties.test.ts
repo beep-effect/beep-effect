@@ -138,11 +138,12 @@ const unterminatedLine = (text: string): LineSlice =>
 // ---------------------------------------------------------------------------
 const rejectAll = S.decodeUnknownResult(S.Never);
 const schemaError = Arbitrary.schema(S.Json).pipe(Arbitrary.map(flow(rejectAll, Result.merge)));
+// `InvalidData.make` is called through the class: since effect 4.1.0 a static `make` reads `this`.
 const invalidData = Arbitrary.all({
   line: Arbitrary.schema(LineSlice),
   event: S.String.pipe(S.Option, Arbitrary.schema),
   error: schemaError,
-}).pipe(Arbitrary.map(InvalidData.make));
+}).pipe(Arbitrary.map((fields) => InvalidData.make(fields)));
 const invalidJournalConfig = schemaError.pipe(Arbitrary.map((error) => InvalidJournalConfig.make({ error })));
 const invalidSlice = schemaError.pipe(Arbitrary.map((error) => InvalidSlice.make({ error })));
 const jsonlError = oneOf<JsonlError>([

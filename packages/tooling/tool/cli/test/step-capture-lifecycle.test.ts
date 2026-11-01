@@ -12,15 +12,13 @@ import {
 import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
-import * as Crypto from "effect/Crypto";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -58,20 +56,6 @@ const ActiveAdmissionWorkload = S.fromJsonString(
   })
 );
 const decodeActiveAdmissionWorkload = S.decodeEffect(ActiveAdmissionWorkload);
-
-// A crypto service that mints no UUIDs, standing in for a platform whose
-// random-UUID source is unavailable.
-const uuidlessCrypto: Crypto.Crypto = {
-  ...NodeCrypto.make,
-  randomUUIDv4: () =>
-    Effect.fail(
-      PlatformError.badArgument({
-        module: "Crypto",
-        method: "randomUUIDv4",
-        description: "admission workload identity refusal",
-      })
-    ),
-};
 
 const processGroupFromStat = (text: string): number | undefined => {
   const commandEnd = O.getOrElse(constant(-1))(Str.lastIndexOf(") ")(text));
@@ -209,7 +193,7 @@ describe("StepExec capture pipe lifecycle", () => {
     })
   );
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
     it.effect("tees captured chunks to the parent stdout while still capturing them", () =>
       Effect.gen(function* () {
         const stdout = yield* Effect.acquireRelease(
@@ -230,7 +214,7 @@ describe("StepExec capture pipe lifecycle", () => {
 
   // Teeing and bounding are independent: a bounded capture still echoes every
   // chunk to the parent stdout while the fold enforces the cap.
-  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
     it.effect("tees a bounded capture while the bound still clips the output", () =>
       Effect.gen(function* () {
         const stdout = yield* Effect.acquireRelease(
@@ -252,7 +236,7 @@ describe("StepExec capture pipe lifecycle", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
     it.effect("fails a deadline-hit capture even when the child traps the signal, flushes, and exits zero", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
@@ -351,26 +335,6 @@ describe("StepExec capture pipe lifecycle", () => {
       );
     }
   );
-
-  // The workload file is named by a fresh UUID, so a platform that cannot mint
-  // one fails the spawn with that cause instead of writing to a guessed path.
-  it.layer(BunCrypto.layer, { excludeTestServices: true })((it) => {
-    it.effect("names the identity failure when the workload token cannot be minted", () =>
-      Effect.gen(function* () {
-        const blocked = yield* makeStuckSpawner({ output: "", killEndsStream: false });
-        yield* Deferred.succeed(blocked.closed, void 0);
-
-        const failure = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-          withAdmissionWorkloadBinding("/tmp/unmintable.workload", "lease-identity"),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, blocked.spawner),
-          Effect.provideService(Crypto.Crypto, uuidlessCrypto),
-          Effect.flip
-        );
-
-        expect(failure.message).toContain("Failed to create admission workload identity lease-identity");
-      })
-    );
-  });
 
   // Registration reads the child's start time to fence the generation. When
   // that read fails, the liveness probe decides between "already gone" and a
@@ -525,7 +489,7 @@ describe("StepExec capture pipe lifecycle", () => {
     }
   );
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
     it.effect(
       "keeps a cross-process nested StepExec child in the registered outer process group",
       () =>

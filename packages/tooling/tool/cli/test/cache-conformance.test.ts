@@ -11,7 +11,7 @@ import {
   runCacheConformance,
   syncCacheConformanceCorpus,
 } from "@beep/repo-cli/commands/Cache";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -73,7 +73,7 @@ const recoverAfterBindCollisions = Effect.fn("test.recoverAfterBindCollisions")(
   }).pipe(Effect.ensuring(Effect.sync(() => serve.mockRestore())));
 });
 
-const Services = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
+const Services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
 
 it.layer(Services, { timeout: "60 seconds", excludeTestServices: true })("cache conformance corpus", (it) => {
   it.effect("regenerates byte-identically and matches the committed corpus", () =>

@@ -20,7 +20,7 @@ import * as Str from "effect/String";
 import { repoRunArtifactId, repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { perUserRuntimeRoot } from "../../../internal/repo-run/RuntimeRoot.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
@@ -133,9 +133,7 @@ const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
 export const safeArtifactName: (value: string) => string = repoRunSafeArtifactName;
 
 const artifactNameHash = Effect.fnUntraced(function* (value: string) {
-  return Str.takeLeft(12)(
-    yield* sha256Hex(value).pipe(Effect.mapError(YeetCommandError.new("Failed to hash proof coordinator identity.")))
-  );
+  return Str.takeLeft(12)(yield* sha256Hex(value));
 });
 
 const effectiveUserId = (): number => NodeOS.userInfo().uid;
@@ -186,7 +184,7 @@ const proofCoordinatorDirectoryName = Effect.fnUntraced(function* () {
  */
 export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath")(function* (
   repositoryIdentity: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const path = yield* Path.Path;
   const runtimeRoot = yield* proofCoordinatorRuntimeRoot();
   return path.join(
@@ -481,7 +479,7 @@ export const proofLedgerPathForCheckout = Effect.fn("Yeet.proofLedgerPathForChec
 export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForContext")(function* (
   context: RepoRunContext,
   fileName: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, Path.Path | Digest.Digest> {
   const path = yield* Path.Path;
   const artifactDir = yield* artifactDirForContext(context);
   const runId = yield* runIdForContext(context);
@@ -507,5 +505,5 @@ export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForConte
  */
 export const runStatePathForContext = (
   context: RepoRunContext
-): Effect.Effect<string, YeetCommandError, Crypto.Crypto | Path.Path> =>
+): Effect.Effect<string, YeetCommandError, Path.Path | Digest.Digest> =>
   runArtifactPathForContext(context, "state.json");

@@ -11,7 +11,7 @@ import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -28,6 +28,7 @@ import { publishJournalTextAtomically } from "./JournalFile.ts";
 import { ProcessIdentityStatus, processIdentityStatus } from "./ProcessIdentity.ts";
 import { attemptInputFactFields, QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { repoRunArtifactId } from "./RepoRunArtifacts.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type { UUID } from "../schema/Uuid.ts";
 import type { YeetAdmissionLease, YeetAdmissionTicket } from "./QualityScheduler.schemas.ts";
 
@@ -39,10 +40,8 @@ const PID_ONLY_OWNER_MAX_AGE = Duration.hours(24);
 const textEncoder = new TextEncoder();
 
 const attemptJournalLockToken = Effect.fnUntraced(function* () {
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto
-    .randomUUIDv4()
-    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create an attempt journal lock identity.")));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   return `${process.pid}:${token}`;
 });
 
@@ -206,7 +205,7 @@ const encodeSchedulerTermination = S.encodeUnknownEffect(S.fromJsonString(Schedu
 export const attemptJournalPathForCheckout = Effect.fn("AttemptTerminationJournal.pathForCheckout")(function* (
   checkoutRoot: string,
   branch: string
-): Effect.fn.Return<string, QualitySchedulerError, Crypto.Crypto | Path.Path> {
+): Effect.fn.Return<string, QualitySchedulerError, Path.Path | Digest.Digest> {
   const path = yield* Path.Path;
   const runId = yield* repoRunArtifactId(branch);
   return path.join(checkoutRoot, ".beep", "yeet", "runs", runId, JOURNAL_FILE_NAME);
@@ -400,7 +399,7 @@ const normalizeJournal = Effect.fn("AttemptTerminationJournal.normalize")(functi
   journalPath: string,
   retainRows: boolean,
   protectedAttemptIds: ReadonlyArray<UUID> = A.empty()
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, QualitySchedulerError, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(journalPath)
@@ -523,8 +522,10 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
                 envProfile: started.envProfile,
                 stage: started.stage,
               }).pipe(
-                Effect.mapError(QualitySchedulerError.new("Failed to encode reconciled attempt terminal event.")),
-                Effect.map((line) => O.some({ attemptId: started.attemptId, line }))
+                Effect.mapBoth({
+                  onFailure: QualitySchedulerError.new("Failed to encode reconciled attempt terminal event."),
+                  onSuccess: (line) => O.some({ attemptId: started.attemptId, line }),
+                })
               ),
           })
         )
@@ -562,7 +563,11 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
  */
 export const reconcileAttemptJournal = Effect.fn("AttemptTerminationJournal.reconcile")(function* (
   journalPath: string
-): Effect.fn.Return<number, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  number,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   if (!(yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false))))) {
     return 0;
@@ -602,7 +607,11 @@ export const reconcileAttemptJournal = Effect.fn("AttemptTerminationJournal.reco
  */
 export const reconcileAttemptJournalsForCheckout = Effect.fn("AttemptTerminationJournal.reconcileCheckout")(function* (
   checkoutRoot: string
-): Effect.fn.Return<number, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  number,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runsRoot = path.join(checkoutRoot, ".beep", "yeet", "runs");
@@ -653,7 +662,11 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
   line: string,
   eventTag: AttemptJournalRetentionEvent["_tag"],
   retryAttempts = LOCK_RETRY_ATTEMPTS
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockPath = `${journalPath}.lock`;
@@ -674,13 +687,13 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
     );
     const currentEvents = journalExists
       ? knownJournalEvents(
-          yield* fs
-            .readFileString(journalPath)
-            .pipe(
-              Effect.mapError(QualitySchedulerError.new(`Failed to read Yeet attempt journal "${journalPath}".`)),
-              Effect.map(flow(Str.split("\n"), A.filter(Str.isNonEmpty))),
-              Effect.flatMap(decodeJournalLines)
-            )
+          yield* fs.readFileString(journalPath).pipe(
+            Effect.mapBoth({
+              onFailure: QualitySchedulerError.new(`Failed to read Yeet attempt journal "${journalPath}".`),
+              onSuccess: flow(Str.split("\n"), A.filter(Str.isNonEmpty)),
+            }),
+            Effect.flatMap(decodeJournalLines)
+          )
         )
       : A.empty<AttemptJournalRetentionEvent>();
     const appendedTerminal = AttemptJournalRetentionEvent.isAnyOf(["attempt-finished", "attempt-terminated"])(
@@ -728,7 +741,11 @@ export const appendSchedulerAttemptTerminated = Effect.fn("AttemptTerminationJou
     owner: YeetAdmissionLease | YeetAdmissionTicket,
     attemptId: UUID,
     reason: "lease-eviction" | "queued-submitter-death"
-  ): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  ): Effect.fn.Return<
+    void,
+    QualitySchedulerError,
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+  > {
     const journalPath = yield* attemptJournalPathForCheckout(owner.checkoutRoot, owner.branch);
     const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
     const line = yield* encodeSchedulerTermination({
@@ -763,7 +780,11 @@ export const appendProofJobAttemptTerminated = Effect.fn("AttemptTerminationJour
   journalPath: string,
   attemptId: UUID,
   reason: YeetAttemptTerminationReason
-): Effect.fn.Return<boolean, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  boolean,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const fs = yield* FileSystem.FileSystem;
   if (
     !(yield* fs.exists(journalPath).pipe(Effect.mapError(QualitySchedulerError.new("Failed to inspect job journal."))))

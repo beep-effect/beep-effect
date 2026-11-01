@@ -15,7 +15,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -31,6 +31,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import { commandArgs } from "./support/commandArgs.ts";
 import { nativePlatform } from "./support/host.ts";
 import { json, resultsEnv, runtimeToken, twirpFetch } from "./support/results.ts";
 import type { FileBlobTransfer } from "@beep/github-actions";
@@ -106,7 +107,7 @@ const protocolZip = Layer.effect(
   Effect.map(FileSystem.FileSystem, (fs) =>
     ChildProcessSpawner.make(
       Effect.fnUntraced(function* (command) {
-        const destination = "args" in command ? command.args[2] : undefined;
+        const destination = "args" in command ? commandArgs(command)[2] : undefined;
         if (destination === undefined) {
           return yield* Effect.die("expected a zip destination");
         }
@@ -362,7 +363,7 @@ describe("Artifact", () => {
           // finalize the backend accepts and an artifact it later refuses to serve.
           assert.strictEqual(
             finalize?.body.hash,
-            `sha256:${Buffer.from(yield* (yield* Crypto.Crypto).digest("SHA-256", uploaded ?? new Uint8Array())).toString("hex")}`
+            `sha256:${Buffer.from(yield* (yield* Digest.Digest).digest(Digest.sha256, uploaded ?? new Uint8Array())).toString("hex")}`
           );
           assert.strictEqual(finalize?.body.size, String(uploaded?.byteLength));
           assert.strictEqual(result.id, 4242);
@@ -612,11 +613,11 @@ describe("Artifact", () => {
         ChildProcessSpawner.make((command) =>
           Effect.gen(function* () {
             if ("args" in command) {
-              const script = command.args[3] ?? "";
+              const script = commandArgs(command)[3] ?? "";
               const manifestPath = /ReadAllLines\('([^']*)'\)/.exec(script)?.[1] ?? "";
               spawns.push({
                 command: command.command,
-                args: [...command.args],
+                args: [...commandArgs(command)],
                 manifest: Buffer.from(yield* fs.readFile(manifestPath)),
               });
             }

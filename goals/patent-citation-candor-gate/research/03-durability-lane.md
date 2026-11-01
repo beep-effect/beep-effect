@@ -697,7 +697,7 @@ import { TikaFileProcessingEngine } from "@beep/tika";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import type * as Config from "effect/Config";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as LanguageModel from "effect/ai/LanguageModel";
 
 const IrToLawLayer = Layer.succeed(IrToLaw, IrToLaw.of(makeIrToLaw()));
@@ -720,7 +720,7 @@ const OfficeActionReviewLayer = Layer.effect(
 export const LawPracticeServerLive: Layer.Layer<
   OfficeActionReview | IrToLaw,
   Config.ConfigError,
-  LanguageModel.LanguageModel | Crypto.Crypto
+  LanguageModel.LanguageModel | Digest.Digest
 > = OfficeActionReviewLayer.pipe(
   // `provideMerge` satisfies the loop's `IrToLaw` dependency while keeping
   // `IrToLaw` in the output surface (a sibling `mergeAll` would race the
@@ -2295,7 +2295,7 @@ must be added to.
 31. **[EDIT]** `packages/law-practice/server/src/Layer.ts` — widen the
     `LawPracticeServerLive` output union and add `PostgresDrizzle` to the
     requirement channel (third type parameter). Today it is
-    `Layer.Layer<OfficeActionReview | IrToLaw, Config.ConfigError, LanguageModel.LanguageModel | Crypto.Crypto>`.
+    `Layer.Layer<OfficeActionReview | IrToLaw, Config.ConfigError, LanguageModel.LanguageModel | Digest.Digest>`.
 32. **[EDIT]** `packages/law-practice/server/src/index.ts` — add the new
     `export * from` lines (currently exports `./Layer.ts` + eight `PracticeKg.*`
     modules + `./Tools.ts`).

@@ -108,24 +108,40 @@ parse_timestamp_epoch() {
 }
 
 active_ack_ids() {
-  loaded_ack_ids='[]'
-  if [ -d "$acks" ]; then
-    for loaded_ack_path in "$acks"/*; do
-      [ -e "$loaded_ack_path" ] || continue
-      [ -f "$loaded_ack_path" ] && [ ! -L "$loaded_ack_path" ] || continue
-      loaded_waive_expiry="$(jq -r 'select(.resolution.kind == "waive") | .resolution.expiresAt // empty' "$loaded_ack_path" 2>/dev/null || true)"
-      if [ -n "$loaded_waive_expiry" ]; then
-        loaded_expiry_epoch="$(parse_timestamp_epoch "$loaded_waive_expiry" || true)"
-        loaded_now_epoch="$(date +%s)"
-        if [ -z "$loaded_expiry_epoch" ] || [ "$loaded_expiry_epoch" -le "$loaded_now_epoch" ]; then
-          continue
-        fi
-      fi
-      loaded_ack_id="${loaded_ack_path##*/}"
-      loaded_ack_ids="$(printf '%s' "$loaded_ack_ids" | jq -c --arg id "$loaded_ack_id" '. + [$id]')"
-    done
-  fi
-  printf '%s' "$loaded_ack_ids"
+  # Two jq processes in total, not two per ack file: with hundreds of acks the
+  # per-file loop alone outran the 2s UserPromptSubmit hook budget.
+  # `find -type f` skips symlinks, matching the old `-f && ! -L` guard, and
+  # `find -exec ... {} +` stays portable to BSD userlands (no `xargs -d`).
+  [ -d "$acks" ] || { printf '[]'; return 0; }
+  ack_list="$(cd "$acks" && find . -mindepth 1 -maxdepth 1 -type f 2>/dev/null)"
+  [ -n "$ack_list" ] || { printf '[]'; return 0; }
+  # A waiver whose expiry is past or unparseable no longer acknowledges its row.
+  # Non-waive acks, waivers without an expiry and unreadable files still count.
+  # Expiries are RFC 3339: `Z` or a numeric offset, with optional fractions.
+  expired_ack_ids="$(cd "$acks" && find . -mindepth 1 -maxdepth 1 -type f -exec jq -nRc --argjson now "$(date +%s)" '
+    def epoch:
+      sub("\\.[0-9]+"; "")
+      | if test("Z$") then fromdateiso8601
+        else capture("^(?<base>.+T[0-9:]+)(?<sign>[+-])(?<hh>[0-9]{2}):?(?<mm>[0-9]{2})$")
+          | ((.base + "Z") | fromdateiso8601)
+            - ((if .sign == "+" then 1 else -1 end) * ((.hh | tonumber) * 3600 + (.mm | tonumber) * 60))
+        end;
+    [inputs | {f: input_filename, l: .}]
+    | group_by(.f)
+    | map(
+        (map(.l) | join("\n") | try fromjson catch null) as $doc
+        | select(
+            ($doc | type) == "object"
+            and $doc.resolution.kind? == "waive"
+            and $doc.resolution.expiresAt? != null
+            and (([$doc.resolution.expiresAt | tostring | try epoch catch null] | .[0]) as $expiry
+                 | $expiry == null or $expiry <= $now)
+          )
+        | .[0].f | ltrimstr("./")
+      )' {} + 2>/dev/null | jq -sc 'add // []' 2>/dev/null || printf '[]')"
+  [ -n "$expired_ack_ids" ] || expired_ack_ids='[]'
+  printf '%s\n' "$ack_list" | jq -Rsc --argjson expired "$expired_ack_ids" \
+    'split("\n") | map(select(length > 0) | ltrimstr("./")) | . - $expired' 2>/dev/null || printf '[]'
 }
 
 # Serialize per-session seen-state updates when possible. A busy or unavailable

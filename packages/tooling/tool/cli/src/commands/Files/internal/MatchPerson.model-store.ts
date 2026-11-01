@@ -10,7 +10,7 @@ import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { sha256 } from "@noble/hashes/sha2.js";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -163,7 +163,7 @@ export class PreparedAdaFaceArtifacts extends S.Opaque<PreparedAdaFaceArtifacts,
   )
 ) {}
 
-type ModelStoreRequirements = FileSystem.FileSystem | Path.Path | Crypto.Crypto | HttpClient.HttpClient;
+type ModelStoreRequirements = SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | HttpClient.HttpClient;
 
 const { modelAcquisition: acquisitionError, modelIntegrity: integrityError } = MatchPersonError;
 
@@ -322,17 +322,13 @@ const acquireModelStoreLock = Effect.fn("Files.PersonMatchModelStore.acquireLock
 ): Effect.fn.Return<
   readonly [lockPath: string, token: string],
   MatchPersonModelAcquisitionError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
 > {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockPath = path.join(modelRoot, modelStoreLockName);
-  const token = yield* crypto
-    .randomUUIDv4()
-    .pipe(
-      Effect.mapError((cause) => acquisitionError("Failed to generate the AdaFace model-store lock token.", cause))
-    );
+  const token = yield* crypto.uuidV4();
   yield* fs
     .writeFileString(lockPath, token, { flag: "wx", mode: 0o600 })
     .pipe(
