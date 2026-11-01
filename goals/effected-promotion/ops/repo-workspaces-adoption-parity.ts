@@ -290,7 +290,9 @@ const runCli = Effect.fn("runCli")(function* (args: ReadonlyArray<string>) {
       return {
         command: `beep ${A.join(args, " ")}`,
         exitCode: Number(exitCode),
-        stdoutSha256: sha256(stdout),
+        // Output that names the checkout (fallow boundaries prints its absolute path) is fingerprinted
+        // with the repository root replaced, so reports recorded in different checkouts compare equal.
+        stdoutSha256: sha256(Str.replaceAll(repoRoot, "<repo>")(stdout)),
         stdoutLines: A.length(A.filter(Str.split(stdout, "\n"), Str.isNonEmpty)),
       };
     })
