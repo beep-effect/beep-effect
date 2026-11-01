@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildBackfillManifestText,
   GOAL_MANIFEST_BACKFILLS,
@@ -22,9 +23,9 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constant } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { parse } from "jsonc-parser";
 
 const decodeManifest = S.decodeUnknownEffect(GoalManifest);
 const encodePrettyJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
@@ -142,14 +143,15 @@ describe("planGoalPacketMigration", () => {
       expect(plan.manifestText).toBeDefined();
       expect(plan.readmeText).toBeDefined();
 
-      const migrated = yield* decodeManifest(parse(plan.manifestText ?? ""));
+      const migrated = yield* decodeManifest(yield* Jsonc.parse(plan.manifestText ?? ""));
       expect(migrated.initiative.status).toBe("completed-retained");
       expect(migrated.lifecycle).toBe("completed-retained");
       expect(migrated.statusNote).toBe("legacy status: complete");
       expect(migrated.mission).toBe("Ship the demo thing.");
       expect(O.getOrNull(readmeLifecycleToken(plan.readmeText ?? ""))).toBe("completed-retained");
 
-      const phases = parse(plan.manifestText ?? "").phases as ReadonlyArray<{ status: string }>;
+      const phases = (Result.getOrThrow(Jsonc.parseResult(plan.manifestText ?? "")) as { readonly phases: unknown })
+        .phases as ReadonlyArray<{ status: string }>;
       expect(A.map(phases, (phase) => phase.status)).toEqual(["complete", "pending"]);
     })
   );
@@ -176,7 +178,7 @@ describe("planGoalPacketMigration", () => {
         phases: { landed: { name: "Landed", status: "DONE" } },
       })}\n`;
       const plan = planGoalPacketMigration(packetRecord({ slug: "bare-demo", manifestText: bareManifest }));
-      const migratedJson = parse(plan.manifestText ?? "") as Record<string, unknown>;
+      const migratedJson = Result.getOrThrow(Jsonc.parseResult(plan.manifestText ?? "")) as Record<string, unknown>;
       expect(migratedJson.status).toBeUndefined();
 
       const migrated = yield* decodeManifest(migratedJson);
@@ -198,7 +200,7 @@ describe("planGoalPacketMigration", () => {
         completionGate: COMPLETION_GATE,
       })}\n`;
       const plan = planGoalPacketMigration(packetRecord({ slug: "sup-demo", manifestText: manifest }));
-      const migrated = yield* decodeManifest(parse(plan.manifestText ?? ""));
+      const migrated = yield* decodeManifest(yield* Jsonc.parse(plan.manifestText ?? ""));
       expect(migrated.supersededBy).toBe("standards-remediation");
       expect(migrated.supersededNote).toBe("remaining ledger (2026-07-07)");
     })
@@ -230,7 +232,7 @@ describe("planGoalPacketMigration", () => {
           backfill,
           O.some(`# Title Of ${backfill.slug}\n\n## Mission\n\nDo it.\n`)
         );
-        const manifest = yield* decodeManifest(parse(text));
+        const manifest = yield* decodeManifest(yield* Jsonc.parse(text));
         expect(manifest.schemaVersion).toBe("initiative-manifest/v2");
         expect(manifest.initiative.status).toBe(backfill.status);
         expect(manifest.lifecycle).toBe(backfill.status);

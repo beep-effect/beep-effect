@@ -5,15 +5,15 @@
  * @since 0.0.0
  */
 
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as DateTime from "effect/DateTime";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { parse } from "jsonc-parser";
-import type { ParseError } from "jsonc-parser";
 
 const OSV_IGNORED_VULNS_HEADER = "[[IgnoredVulns]]";
 const OSV_PACKAGE_OVERRIDE_HEADER = "[[PackageOverrides]]";
@@ -149,9 +149,8 @@ export const selectOsvPackageOverrideIdsForAudit: {
   (configText: string, lockfileText: string, now: DateTime.DateTime): ReadonlyArray<string>;
   (lockfileText: string, now: DateTime.DateTime): (configText: string) => ReadonlyArray<string>;
 } = dual(3, (configText: string, lockfileText: string, now: DateTime.DateTime): ReadonlyArray<string> => {
-  const errors: Array<ParseError> = [];
-  const parsed: unknown = parse(lockfileText, errors, { allowTrailingComma: true, disallowComments: false });
-  if (A.isReadonlyArrayNonEmpty(errors) || !S.is(bunAuditLock)(parsed)) return [];
+  const parsed = Result.getOrUndefined(Jsonc.parseResult(lockfileText));
+  if (!S.is(bunAuditLock)(parsed)) return [];
 
   return pipe(
     Str.split(configText, OSV_PACKAGE_OVERRIDE_HEADER),

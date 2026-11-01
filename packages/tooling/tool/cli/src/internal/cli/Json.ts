@@ -5,6 +5,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { JsoncFormatter } from "@beep/jsonc/JsoncFormatter";
 import { P } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -12,9 +13,9 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as jsonc from "jsonc-parser";
 import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
 import { noteProcessStreamWriteFailure, writeChunkOnce } from "./Stdout.ts";
+import type { JsoncFormattingOptionsLike } from "@beep/jsonc/JsoncEdit";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
@@ -57,7 +58,7 @@ const writeCommandJsonStdout = (text: string): Effect.Effect<void> =>
   });
 
 /**
- * Default `jsonc.format` options shared by repo-cli pretty JSON renderers.
+ * Default `JsoncFormatter` options shared by repo-cli pretty JSON renderers.
  *
  * **Example** (Read the shared indent width)
  *
@@ -70,7 +71,7 @@ const writeCommandJsonStdout = (text: string): Effect.Effect<void> =>
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_JSON_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
+export const DEFAULT_JSON_FORMATTING_OPTIONS: JsoncFormattingOptionsLike = {
   tabSize: 2,
   insertSpaces: true,
 };
@@ -79,7 +80,7 @@ export const DEFAULT_JSON_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
  * Default byte cap above which pretty JSON rendering is skipped.
  *
  * Encoded payloads longer than this are returned single-line with a trailing
- * newline instead of being handed to `jsonc.format`, which degrades badly on
+ * newline instead of being handed to the formatter, which degrades badly on
  * very large documents.
  *
  * **Example** (Guard a payload before pretty-rendering it)
@@ -195,21 +196,21 @@ export const encodeCommandJson = Effect.fn("RepoCli.Json.encodeCommandJson")(fun
   return yield* encodeJson(value);
 });
 
-/** Size guard and `jsonc.format` overrides accepted by {@link renderPrettyCommandJson}. */
+/** Size guard and formatting overrides accepted by {@link renderPrettyCommandJson}. */
 type RenderPrettyCommandJsonOptions = {
   readonly maxLength?: number;
-  readonly formattingOptions?: jsonc.FormattingOptions;
+  readonly formattingOptions?: JsoncFormattingOptionsLike;
 };
 
 /**
  * Pretty-render an already-encoded JSON string with a size guard.
  *
- * Reproduces the `jsonc.format` + `applyEdits` renderer copied across the
- * package: when `maxLength` is supplied and the encoded payload exceeds it, the
- * input is returned single-line with a trailing newline; otherwise it is
- * reformatted with the supplied (or default) formatting options. Callers keep
- * their own encode step and error strategy, so the output stays byte-identical
- * to each hand-rolled copy.
+ * The one owner of the format-and-apply renderer the Skills renderers and the
+ * other command adapters once copied: when `maxLength` is supplied and the
+ * encoded payload exceeds it, the input is returned single-line with a trailing
+ * newline; otherwise it is reformatted by `JsoncFormatter` (the byte-compatible
+ * port of `jsonc-parser`'s `format`) with the supplied (or default) formatting
+ * options. Callers keep their own encode step and error strategy.
  *
  * **Example** (Pretty-render an encoded payload)
  *
@@ -245,8 +246,12 @@ export const renderPrettyCommandJson: {
     if (maxLength !== undefined && encoded.length > maxLength) {
       return `${encoded}\n`;
     }
-    const edits = jsonc.format(encoded, undefined, options?.formattingOptions ?? DEFAULT_JSON_FORMATTING_OPTIONS);
-    return `${jsonc.applyEdits(encoded, edits)}\n`;
+    const formatted = JsoncFormatter.formatToString(
+      encoded,
+      undefined,
+      options?.formattingOptions ?? DEFAULT_JSON_FORMATTING_OPTIONS
+    );
+    return `${formatted}\n`;
   }
 );
 

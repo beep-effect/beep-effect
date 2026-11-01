@@ -24,7 +24,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
-import { parse as parseJsonc } from "jsonc-parser";
+import { Jsonc } from "@beep/jsonc/Jsonc";
+import * as Result from "effect/Result";
 import { familyOf, runCodemod } from "./codemod.ts";
 import type { KeepEntry } from "./codemod.ts";
 
@@ -128,7 +129,11 @@ const listPackageDirs = (): ReadonlyMap<string, string> => {
 const readKeepClass = (): ReadonlyArray<KeepEntry> => {
   const file = path.join(repoRoot, KEEP_CLASS_FILE);
   if (!existsSync(file)) return [];
-  const parsed: unknown = parseJsonc(readFileSync(file, "utf8"));
+  // A keep list that does not parse aborts the run: an empty list would strip every protection.
+  const parsed: unknown = Result.getOrThrowWith(
+    Jsonc.parseResult(readFileSync(file, "utf8")),
+    (error) => new Error(`${KEEP_CLASS_FILE} is not valid JSONC: ${String(error)}`)
+  );
   const entries: ReadonlyArray<unknown> = Array.isArray(parsed) ? parsed : [];
   return entries.filter(
     (entry): entry is KeepEntry =>

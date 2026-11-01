@@ -24,7 +24,6 @@ import * as Regex from "effect/RegExp";
 import * as Tuple from "effect/Tuple";
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
-import { getNodeValue } from "jsonc-parser";
 import { ModelsLocatorError } from "./Models.errors.ts";
 import { extractGeneratedBlock } from "./Models.render.ts";
 import {
@@ -216,7 +215,7 @@ const readJsonPointer = (
 ) =>
   modelsParseJson(text).pipe(
     Effect.map((tree) => {
-      const json = getNodeValue(tree);
+      const json = tree.toValue();
       return A.reduce(fallbacks, walkPointer(json, pointer), (found, fallback) =>
         O.orElse(found, () => walkPointer(json, fallback))
       );

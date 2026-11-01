@@ -13,6 +13,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { LiteralKit, SchemaUtils, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -24,9 +25,9 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
 import { ts } from "ts-morph";
 import { repoRunSafeArtifactName } from "../../internal/repo-run/RepoRunArtifacts.ts";
 import { decodeGoalManifest } from "../Goals/Goals.schemas.ts";
@@ -39,8 +40,8 @@ import {
 } from "../Lint/Lint.schemas.ts";
 import { KnowledgeOperationalError } from "./Knowledge.errors.ts";
 import { KnowledgeFindingLocation } from "./Knowledge.schemas.ts";
+import type { JsoncNode } from "@beep/jsonc/JsoncNode";
 import type * as AST from "effect/SchemaAST";
-import type { Node as JsonNode, ParseError } from "jsonc-parser";
 import type { EffectVitestFinding } from "../Lint/Lint.schemas.ts";
 import type { KnowledgeTrackedEntry } from "./Knowledge.schemas.ts";
 
@@ -2523,7 +2524,7 @@ type GeneratedEvidenceSource = {
 const generatedRowsPrefix = "goals/effect-vitest-canon/ops/inventory/detector/";
 const evidenceWhitespace = /\s+/gu;
 
-const uniqueJsonProperties = (node: JsonNode): boolean => {
+const uniqueJsonProperties = (node: JsoncNode): boolean => {
   const children = node.children ?? [];
   if (node.type === "object") {
     const names = A.map(children, (property) => property.children?.[0]?.value);
@@ -2532,11 +2533,8 @@ const uniqueJsonProperties = (node: JsonNode): boolean => {
   return A.every(children, uniqueJsonProperties);
 };
 
-const parsedEvidenceDocument = (text: string): O.Option<JsonNode> => {
-  const errors = A.empty<ParseError>();
-  const tree = parseTree(text, errors, { allowTrailingComma: true });
-  return tree !== undefined && errors.length === 0 && uniqueJsonProperties(tree) ? O.some(tree) : O.none();
-};
+const parsedEvidenceDocument = (text: string): O.Option<JsoncNode> =>
+  Jsonc.parseTreeResult(text).pipe(Result.getSuccess, O.flatten, O.filter(uniqueJsonProperties));
 
 const closedSourceLiteral = (node: ts.Node, source: ts.SourceFile): node is ts.StringLiteralLike => {
   if (!ts.isStringLiteral(node) && !ts.isNoSubstitutionTemplateLiteral(node)) return false;
@@ -2621,7 +2619,7 @@ const sourceEvidenceAnchor = (
   );
 };
 
-const serializedStringOffsets = (text: string, node: JsonNode): ReadonlyArray<number> => {
+const serializedStringOffsets = (text: string, node: JsoncNode): ReadonlyArray<number> => {
   const offsets = A.empty<number>();
   for (let index = node.offset + 1; index < node.offset + node.length - 1; index++) {
     offsets.push(index);
@@ -2630,8 +2628,8 @@ const serializedStringOffsets = (text: string, node: JsonNode): ReadonlyArray<nu
   return offsets;
 };
 
-const generatedEvidenceRow = (node: JsonNode, finding: EffectVitestFinding, base: number) =>
-  O.fromNullishOr(findNodeAtLocation(node, ["evidence"])).pipe(
+const generatedEvidenceRow = (node: JsoncNode, finding: EffectVitestFinding, base: number) =>
+  node.find(["evidence"]).pipe(
     O.filter((evidence) => evidence.type === "string"),
     O.filter(() => extractKnowledgeHostAnchors(finding.evidence).length > 0),
     O.map((evidence) => ({ finding, evidence, base }))
@@ -2661,9 +2659,12 @@ const generatedEvidenceRows = Effect.fnUntraced(function* (documentPath: string,
   }
   const tree = parsedEvidenceDocument(text);
   if (O.isNone(tree)) return [];
-  const document = yield* Effect.option(decodeEffectVitestInventoryDocument(getNodeValue(tree.value)));
+  const document = yield* Effect.option(decodeEffectVitestInventoryDocument(tree.value.toValue()));
   if (O.isNone(document)) return [];
-  const nodes = findNodeAtLocation(tree.value, ["findings"])?.children ?? [];
+  const nodes = tree.value.find(["findings"]).pipe(
+    O.flatMap((findings) => O.fromUndefinedOr(findings.children)),
+    O.getOrElse(A.empty<JsoncNode>)
+  );
   return A.getSomes(
     A.map(document.value.findings, (finding, index) =>
       A.get(nodes, index).pipe(O.flatMap((node) => generatedEvidenceRow(node, finding, 0)))
@@ -2692,7 +2693,7 @@ const generatedEvidenceSource = Effect.fnUntraced(function* (
 
 const generatedEvidenceAnchorPositions = (
   finding: EffectVitestFinding,
-  evidence: JsonNode,
+  evidence: JsoncNode,
   base: number,
   text: string,
   source: GeneratedEvidenceSource

@@ -99,6 +99,10 @@
       "purpose": "R3a parity (W4-o): every tracked *.jsonc and facade-consumed JSON document decoded by the frozen @beep/schema/Jsonc facade and by @beep/jsonc with 0 unclassified differences, plus byte parity of every JSONC-reading repo-cli generator's check or dry mode against one fixed input tree before and after the owner switch."
     },
     {
+      "path": "ops/jsonc-parser-drop-differential.ts",
+      "purpose": "R3b parity (W4-o): renderPrettyCommandJson, the JSONC editing facade and the policy-fingerprint JSON writer byte-identical to frozen jsonc-parser copies over every tracked *.json and *.jsonc file, every parse profile and tree reading the retired sites used, and every changed generator's check or dry mode byte-identical before and after the drop."
+    },
+    {
       "path": "ops/lockfiles-adoption-parity.ts",
       "purpose": "3-A1 parity: frozen copies of the legacy repo-cli bun.lock readers compared with the adopted @beep/lockfiles Lockfile.parse expression over the live lockfile."
     },

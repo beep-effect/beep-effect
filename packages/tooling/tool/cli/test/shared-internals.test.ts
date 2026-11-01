@@ -47,7 +47,6 @@ import {
   isUnresolvedSecretReference,
   JsoncModification,
   JsonStringCodec,
-  jsonText,
   localOnlyTurboCacheArgs,
   nextCursor,
   RemoteReadTurboCache,
@@ -224,10 +223,21 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       expect(Str.includes('"b": 2')(next)).toBe(true);
     });
 
-    it("formats with 2-space indentation", () => {
-      const formatted = jsonText('{"a":1,"b":{"c":2}}');
-      expect(Str.includes('  "a": 1')(formatted)).toBe(true);
-      expect(Str.includes('    "c": 2')(formatted)).toBe(true);
+    // Parity pins: the bytes jsonc-parser 3.3.1 `modify` + `applyEdits` produced for the same
+    // requests before R3b moved the facade onto @beep/jsonc.
+    it("appends, deletes and creates exactly as jsonc-parser did", () => {
+      const source = '{\n  "workspaces": ["a"], // keep\n  "b": {}\n}\n';
+      expect(
+        applyJsoncModification(
+          JsoncModification.make({ content: source, path: ["workspaces", 1], value: "c", isArrayInsertion: true })
+        )
+      ).toBe('{\n  "workspaces": [\n    "a",\n    "c"\n  ], // keep\n  "b": {}\n}\n');
+      expect(applyJsoncModification(JsoncModification.make({ content: source, path: ["b"], value: undefined }))).toBe(
+        '{\n  "workspaces": [\n    "a"\n  ]\n}\n'
+      );
+      expect(
+        applyJsoncModification(JsoncModification.make({ content: source, path: ["b", "x"], value: { y: [] } }))
+      ).toBe('{\n  "workspaces": ["a"], // keep\n  "b": {\n    "x": {\n      "y": []\n    }\n  }\n}\n');
     });
   });
 

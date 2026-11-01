@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -14,13 +15,13 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Regex from "effect/RegExp";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
 import { decodeTomlTextWith } from "../../internal/schema/TextCodec.ts";
 import { ModelsLocatorError } from "./Models.errors.ts";
 import { ModelsEligibilityResult, ModelsWriteSpan } from "./Models.manifest.schemas.ts";
-import type { Node as JsonNode, ParseError } from "jsonc-parser";
+import type { JsoncNode } from "@beep/jsonc/JsoncNode";
 import type { Locator, ModelsLocatorWrite } from "./Models.manifest.schemas.ts";
 
 const decodeToml = decodeTomlTextWith(S.decodeUnknownEffect(S.Record(S.String, S.Unknown)));
@@ -54,8 +55,10 @@ const removalShapeEligibility = (owned: O.Option<unknown>, remove: boolean | und
 const encodeString = S.encodeEffect(S.fromJsonString(S.String));
 const error = (message: string) => ModelsLocatorError.make({ message });
 
+const strictJson = JsoncParseOptions.make({ disallowComments: true, allowTrailingComma: false });
+
 // Duplicate keys are ambiguous ownership, including in unowned subtrees.
-const duplicateJsonKeys = (node: JsonNode): boolean => {
+const duplicateJsonKeys = (node: JsoncNode): boolean => {
   const children = O.getOrElse(O.fromUndefinedOr(node.children), () => []);
   const names = A.map(children, (child) =>
     O.map(A.head(O.getOrElse(O.fromUndefinedOr(child.children), () => [])), (key) => key.value)
@@ -81,17 +84,16 @@ const duplicateJsonKeys = (node: JsonNode): boolean => {
  * @category parsing
  * @since 0.0.0
  */
-export const modelsParseJson = (content: string) =>
-  Effect.try({
-    try: () => {
-      const errors: Array<ParseError> = [];
-      const tree = parseTree(content, errors, { disallowComments: true, allowTrailingComma: false });
-      if (tree === undefined || A.isReadonlyArrayNonEmpty(errors)) throw error("Invalid JSON target.");
-      if (duplicateJsonKeys(tree)) throw error("Unsupported JSON form: duplicate keys.");
-      return tree;
-    },
-    catch: (cause) => (S.is(ModelsLocatorError)(cause) ? cause : error("Invalid JSON target.")),
-  });
+export const modelsParseJson = (content: string): Effect.Effect<JsoncNode, ModelsLocatorError> =>
+  Jsonc.parseTreeResult(content, strictJson).pipe(
+    Result.getSuccess,
+    O.flatten,
+    O.match({
+      onNone: () => Effect.fail(error("Invalid JSON target.")),
+      onSome: (tree) =>
+        duplicateJsonKeys(tree) ? Effect.fail(error("Unsupported JSON form: duplicate keys.")) : Effect.succeed(tree),
+    })
+  );
 
 /**
  * Read a decoded native leaf through a sequence of property names.
@@ -261,7 +263,7 @@ export const modelsEligibility = Effect.fn("Models.eligibility")(function* (
       Effect.mapError(({ message }) => cases["invalid-bytes"].make({ message }))
     );
     const parsed = yield* Match.value(path.extname(actual)).pipe(
-      Match.when(".json", () => modelsParseJson(content).pipe(Effect.map(getNodeValue))),
+      Match.when(".json", () => modelsParseJson(content).pipe(Effect.map((tree) => tree.toValue()))),
       Match.orElse(() => modelsParseToml(content)),
       Effect.mapError(({ message }) => cases["parse-error"].make({ message }))
     );
@@ -632,7 +634,7 @@ const jsonSpans = Effect.fnUntraced(function* (
     O.flatMap(current, (parent) => {
       const address: O.Option<string | number> =
         parent.type === "array" ? S.decodeOption(S.FiniteFromString)(segment) : O.some(segment);
-      return O.flatMap(address, (key) => O.fromUndefinedOr(findNodeAtLocation(parent, [key])));
+      return O.flatMap(address, (key) => parent.find([key]));
     })
   );
   if (O.isNone(node) || node.value.type !== "string")

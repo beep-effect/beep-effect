@@ -2,7 +2,7 @@
  * Root config file updater for `create-package`.
  *
  * Adds project references to `tsconfig.packages.json` and path aliases
- * to `tsconfig.json` (JSONC-safe via `jsonc-parser`). All operations are
+ * to `tsconfig.json` (JSONC-safe through the `@beep/jsonc` editing facade). All operations are
  * idempotent — existing entries are silently skipped.
  *
  * @packageDocumentation
