@@ -2924,22 +2924,77 @@ const appendCalledHelpers = (
   }
 };
 
+type HarnessEvidence = {
+  readonly services: ReadonlyArray<VariableDeclaration>;
+  readonly calls: ReadonlyArray<CallExpression>;
+};
+
+// The callback plus every same-file helper it reaches by name, each visited once;
+// for-of also visits the helpers appended while it runs.
+const harnessEvidence = (callback: MorphNode, imports: EffectVitestImports): HarnessEvidence => {
+  const services = A.empty<VariableDeclaration>();
+  const calls = A.empty<CallExpression>();
+  const regions: Array<MorphNode> = [callback];
+  for (const region of regions) {
+    const known = calls.length;
+    collectFileSystemEvidence(region, imports, services, calls);
+    appendCalledHelpers(A.drop(calls, known), region, regions, imports);
+  }
+  return { services, calls };
+};
+
 const harnessProvesNativeFileSystem = (flow: HarnessFlow, imports: EffectVitestImports): boolean =>
   O.exists(harnessCallback(flow.harness), (callback) => {
-    const services = A.empty<VariableDeclaration>();
-    const calls = A.empty<CallExpression>();
-    // The callback plus every same-file helper it reaches by name, each visited once;
-    // for-of also visits the helpers appended while it runs.
-    const regions: Array<MorphNode> = [callback];
-    for (const region of regions) {
-      const known = calls.length;
-      collectFileSystemEvidence(region, imports, services, calls);
-      appendCalledHelpers(A.drop(calls, known), region, regions, imports);
-    }
+    const { services, calls } = harnessEvidence(callback, imports);
     return (
       !A.isReadonlyArrayEmpty(services) &&
       (flow.subject || A.some(calls, (call) => isNativeFileSystemOperation(call, services, imports)))
     );
+  });
+
+const isChildProcessMake = (node: MorphNode | undefined, imports: EffectVitestImports): boolean =>
+  Node.isCallExpression(node) &&
+  isProvenanceCall(node, imports, ["effect/process/ChildProcess"], "ChildProcess", ["make"]);
+
+// `const child = yield* ChildProcess.make(...)`, or `yield* run(...)` through a same-file
+// `const run = (...) => ChildProcess.make(...)`: a handle to a process the platform spawner started.
+const isChildProcessHandle = (binding: MorphNode, imports: EffectVitestImports): boolean => {
+  if (!Node.isVariableDeclaration(binding) || binding.getVariableStatement()?.getDeclarationKind() !== "const")
+    return false;
+  const initializer = binding.getInitializer();
+  if (!Node.isYieldExpression(initializer) || initializer.getAsteriskToken() === undefined) return false;
+  const spawned = initializer.getExpression();
+  if (isChildProcessMake(spawned, imports)) return true;
+  const factory = Node.isCallExpression(spawned) ? spawned.getExpression() : undefined;
+  return (
+    Node.isIdentifier(factory) &&
+    O.exists(imports.resolveBinding(factory), (declaration) => {
+      if (
+        !Node.isVariableDeclaration(declaration) ||
+        declaration.getVariableStatement()?.getDeclarationKind() !== "const"
+      )
+        return false;
+      const body = declaration.getInitializerIfKind(SyntaxKind.ArrowFunction)?.getBody();
+      return isChildProcessMake(body, imports);
+    })
+  );
+};
+
+// A harness that kills a process it spawned tests that process's death (crash recovery,
+// SIGKILL boundaries). Only the native spawner produces a killable process, so the platform
+// bundle is the subject; a scripted spawner or memory filesystem cannot stand in for it.
+const harnessKillsChildProcess = (harness: CallExpression, imports: EffectVitestImports): boolean =>
+  O.exists(harnessCallback(harness), (callback) => {
+    const { calls } = harnessEvidence(callback, imports);
+    return A.some(calls, (call) => {
+      const callee = call.getExpression();
+      if (!Node.isPropertyAccessExpression(callee) || callee.getName() !== "kill") return false;
+      const receiver = callee.getExpression();
+      return (
+        Node.isIdentifier(receiver) &&
+        O.exists(imports.resolveBinding(receiver), (binding) => isChildProcessHandle(binding, imports))
+      );
+    });
   });
 
 // Imported values can carry filesystem effects even when passed without calling them.
@@ -3057,6 +3112,7 @@ const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: E
             (!readsFileSystem &&
               O.isSome(harnessCallback(harness)) &&
               !harnessHasOpaquePlatformReferences(harness, imports)) ||
+            harnessKillsChildProcess(harness, imports) ||
             harnessProvesNativeFileSystem(
               { harness, subject: A.some(flows, (flow) => flow.harness === harness && flow.subject) },
               imports
