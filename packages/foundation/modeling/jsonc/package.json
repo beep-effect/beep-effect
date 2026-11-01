@@ -74,6 +74,7 @@
     "@beep/fc-runs": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:"
+    "bun-types": "catalog:",
+    "jsonc-parser": "catalog:"
   }
 }

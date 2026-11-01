@@ -224,7 +224,7 @@ MIT. The package [LICENSE](LICENSE) carries both the beep-effect notice and the 
 
 ## Port notes
 
-The notes below are kept from the port. "Lab" names the port's behaviour, which this package keeps unchanged.
+The notes below are kept from the port. "Lab" names the port's behaviour, which this package keeps unchanged apart from deviation 15.
 
 ### Attribution
 
@@ -238,6 +238,7 @@ The notes below are kept from the port. "Lab" names the port's behaviour, which 
 New in this package (not exported upstream):
 
 - `JsoncEditOverlapError` (value and type): the tagged error `JsoncEdit.applyAll` throws and `JsoncEdit.applyAllResult` returns for overlapping edits.
+- `JsoncModifier.modifyWithFormatting` and `JsoncModifier.modifyWithFormattingResult`, with `JsoncFormattedModifyOptions`, `JsoncPlacementError` and `JsoncPlacementFailure`: a port of `jsonc-parser` 3.3.1 `modify` (`setProperty` plus `withFormatting`), so a value is written as compact JSON and the lines the edit touches are formatted. `isArrayInsertion` and a numeric `insertionIndex` (upstream's `getInsertionIndex` callback, resolved by the caller) carry over; upstream's thrown `Error`s are typed (`JsoncModificationError` for a container of the wrong kind, `JsoncPlacementError` for a delete under a missing parent or an index past the end). Added for the repo-cli JSONC editing facade (R3b).
 
 Facets widened from upstream (upstream exports a type only; this package exports a schema value and its type under the same name):
 
@@ -336,6 +337,12 @@ Each entry gives the test that pins it, upstream behaviour, this package's behav
    - Upstream: with `insertSpaces` left `true`, `JsoncFormatter.format`, `formatToString` and `JsoncModifier.modify` build the indent unit with `" ".repeat(tabSize)`, which throws a `RangeError` for a width of `-1` or below. `modify` builds it before navigating, so every call dies, deletions and no-ops included. `Jsonc.stringify` is unaffected: `JSON.stringify` reads a negative width as compact.
    - Lab: `Str.repeat` clamps the unit to the empty string, so the formatter breaks lines without indenting and `modify` inserts unindented entries around a compact value. Widths between `-1` and `0`, fractional widths and `insertSpaces: false` behave exactly as upstream.
    - Reason: `upstream-bug:` a `RangeError` defect escapes `format` and `formatToString`, which upstream documents as pure and total, and `modify`, on an option value upstream's own schema accepts. The same family as deviation 6.
+
+15. **The formatter is Microsoft's `jsonc-parser` 3.3.1 `format`, token for token.**
+   - Test: `test/JsoncFormatter.test.ts` ("keeps blank lines between tokens with keepLines", "appends a final newline only when requested and missing", "applies the final-newline edit only without a range"), plus the repository-wide differential `goals/effected-promotion/ops/jsonc-parser-drop-differential.ts` (every tracked `*.json` and `*.jsonc` file, whole and ranged, under two option sets, 0 differences).
+   - Upstream: `@effected/jsonc` reflows each gap from its neighbours with its own rules: an empty `{}` or `[]` opens onto two lines, a line comment after a comma moves to its own line, a gap before a colon or a comma is kept, `keepLines` keeps any gap holding a line break, and a range keeps only the edits it fully contains.
+   - Lab: `format` follows `jsonc-parser`: empty containers stay compact, a comment on the same line stays there one space after its token, the gap before a colon or a comma is removed, the first structural error (`1 2`, `] [`) suppresses the edit it would make, a range formats the whole lines it touches from the indentation of its first line and keeps the edits that overlap it, and the document's own line ending wins over `eol`. The indent unit keeps deviations 13 and 14.
+   - Reason: `upstream-bug:` upstream's own idempotence law fails on `JSON.stringify(value, null, 2)` output holding an empty container (`{}` reformats to `{\n}`), and the repository's generators (the repo-cli pretty JSON renderer and its JSONC editing facade) need `jsonc-parser`'s bytes to drop that dependency without rewriting committed files (R3b, SPEC W4-o).
 
 ### Dependency backlog
 

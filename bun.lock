@@ -2719,6 +2719,7 @@
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
+        "jsonc-parser": "catalog:",
       },
     },
     "packages/foundation/modeling/jsonl": {

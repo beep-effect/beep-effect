@@ -194,7 +194,14 @@ export class JsoncEditOverlapError extends S.TaggedError<JsoncEditOverlapError, 
   }
 }
 
-const byOffsetDescending = Order.flip(Order.mapInput(Order.Number, (edit: JsoncEdit) => edit.offset));
+// Latest offset first; at one offset the longer edit first, so an insertion
+// lands before a replacement that starts there (jsonc-parser's applyEdits order).
+const byOffsetDescending = Order.flip(
+  Order.combine(
+    Order.mapInput(Order.Number, (edit: JsoncEdit) => edit.offset),
+    Order.mapInput(Order.Number, (edit: JsoncEdit) => edit.length)
+  )
+);
 
 /**
  * A non-mutating text edit: replace the span `[offset, offset + length)` with
@@ -232,7 +239,8 @@ export class JsoncEdit extends S.Opaque<JsoncEdit, { readonly brand: unique symb
    *
    * Edits are applied in reverse-offset order so earlier offsets stay valid;
    * the input array is not mutated. Touching edits (one ending exactly where
-   * the next begins) are fine.
+   * the next begins) are fine, and at one offset the longer edit applies first,
+   * so an insertion there lands before the replacement that starts there.
    *
    * **Example** (Receive an overlap as a value)
    *
