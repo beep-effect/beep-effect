@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T02:04:05.269Z",
+  "generatedAt": "2026-11-01T02:47:36.155Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 166,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
-    "publicModules": 3637,
-    "publicExports": 25738,
+    "publicModules": 3639,
+    "publicExports": 25757,
     "openModules": 161,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -314728,8 +314728,8 @@
           "exportKind": "class",
           "filePath": "src/WorkspacePatterns.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
-          "line": 204,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-204-workspacepatterns",
+          "line": 217,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-217-workspacepatterns",
           "currentTags": [
             "@category",
             "@since"
@@ -447561,9 +447561,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 498,
-        "publicModuleCount": 495,
-        "publicExportCount": 4605
+        "sourceFileCount": 500,
+        "publicModuleCount": 497,
+        "publicExportCount": 4624
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -452672,7 +452672,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -452699,6 +452699,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
           "line": 1,
@@ -452716,7 +452738,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -452738,7 +452760,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 30,
+          "exportCount": 34,
           "remediationStatus": "resolved"
         },
         {
@@ -452760,7 +452782,29 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 12,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.sites.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-sites-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -452804,7 +452848,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 6,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         },
         {
@@ -504612,8 +504656,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
-          "line": 63,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-63-holdslistcommand",
+          "line": 66,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-66-holdslistcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -504634,8 +504678,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
-          "line": 84,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-84-holdsprobecommand",
+          "line": 87,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-87-holdsprobecommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdsLintCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-122-holdslintcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -504656,8 +504722,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
-          "line": 118,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-118-holdscommand",
+          "line": 150,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-150-holdscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -504764,12 +504830,156 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "anchorKey",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 33,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-33-anchorkey",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "liveHoldVersions",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 67,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-67-liveholdversions",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "heldListFor",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 94,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-94-heldlistfor",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "liveAnchorValues",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 121,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-121-liveanchorvalues",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "lintHolds",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 156,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-156-lintholds",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdLintFindingText",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 204,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-204-holdlintfindingtext",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "runHoldsList",
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
-          "line": 42,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-42-runholdslist",
+          "line": 47,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-47-runholdslist",
           "currentTags": [
             "@category",
             "@since"
@@ -504790,8 +505000,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
-          "line": 72,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-72-holdsprobeinput",
+          "line": 77,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-77-holdsprobeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -504812,9 +505022,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
-          "line": 103,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-103-runholdsprobe",
+          "line": 108,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-108-runholdsprobe",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runHoldsLint",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 249,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-249-runholdslint",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -504900,8 +505134,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 68,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-68-holdkind",
+          "line": 73,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-73-holdkind",
           "currentTags": [
             "@category",
             "@since"
@@ -504919,11 +505153,33 @@
         },
         {
           "symbolName": "HoldAnchor",
-          "exportKind": "class",
+          "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 85,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-85-holdanchor",
+          "line": 96,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-96-holdanchor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldAnchor",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-116-holdanchor",
           "currentTags": [
             "@category",
             "@since"
@@ -504944,8 +505200,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 114,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-114-holdsubject",
+          "line": 136,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-136-holdsubject",
           "currentTags": [
             "@category",
             "@since"
@@ -504966,8 +505222,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-139-proberuntime",
+          "line": 161,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-161-proberuntime",
           "currentTags": [
             "@category",
             "@since"
@@ -504988,8 +505244,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 149,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-149-proberuntime",
+          "line": 171,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-171-proberuntime",
           "currentTags": [
             "@category",
             "@since"
@@ -505010,8 +505266,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 179,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-179-holdfalsifier",
+          "line": 201,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-201-holdfalsifier",
           "currentTags": [
             "@category",
             "@since"
@@ -505032,8 +505288,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-199-holdfalsifier",
+          "line": 221,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-221-holdfalsifier",
           "currentTags": [
             "@category",
             "@since"
@@ -505054,8 +505310,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 216,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-216-holdwatchtarget",
+          "line": 238,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-238-holdwatchtarget",
           "currentTags": [
             "@category",
             "@since"
@@ -505076,8 +505332,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 228,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-228-holdwatchtarget",
+          "line": 250,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-250-holdwatchtarget",
           "currentTags": [
             "@category",
             "@since"
@@ -505098,8 +505354,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 244,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-244-holdexitaction",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-266-holdexitaction",
           "currentTags": [
             "@category",
             "@since"
@@ -505120,8 +505376,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-256-holdexitaction",
+          "line": 278,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-278-holdexitaction",
           "currentTags": [
             "@category",
             "@since"
@@ -505142,8 +505398,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 273,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-273-holdproposition",
+          "line": 295,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-295-holdproposition",
           "currentTags": [
             "@category",
             "@since"
@@ -505164,8 +505420,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 293,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-293-holdproposition",
+          "line": 315,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-315-holdproposition",
           "currentTags": [
             "@category",
             "@since"
@@ -505186,8 +505442,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 310,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-310-holdversionid",
+          "line": 332,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-332-holdversionid",
           "currentTags": [
             "@category",
             "@since"
@@ -505208,8 +505464,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 330,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-330-proberunid",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-352-proberunid",
           "currentTags": [
             "@category",
             "@since"
@@ -505230,8 +505486,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 341,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-341-proberunid",
+          "line": 363,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-363-proberunid",
           "currentTags": [
             "@category",
             "@since"
@@ -505252,8 +505508,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 358,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-358-holdactivityid",
+          "line": 380,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-380-holdactivityid",
           "currentTags": [
             "@category",
             "@since"
@@ -505274,8 +505530,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 378,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-378-holdprincipalid",
+          "line": 400,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-400-holdprincipalid",
           "currentTags": [
             "@category",
             "@since"
@@ -505296,8 +505552,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 411,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-411-holdclaimversion",
+          "line": 433,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-433-holdclaimversion",
           "currentTags": [
             "@category",
             "@since"
@@ -505318,8 +505574,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 419,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-419-holdclaimversion",
+          "line": 441,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-441-holdclaimversion",
           "currentTags": [
             "@category",
             "@since"
@@ -505340,8 +505596,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 442,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-442-probeoutcome",
+          "line": 464,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-464-probeoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -505362,8 +505618,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 454,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-454-probeoutcome",
+          "line": 476,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-476-probeoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -505384,8 +505640,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 470,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-470-proberunverdict",
+          "line": 492,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-492-proberunverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -505406,8 +505662,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 480,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-480-proberunverdict",
+          "line": 502,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-502-proberunverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -505428,8 +505684,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 498,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-498-proberun",
+          "line": 520,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-520-proberun",
           "currentTags": [
             "@category",
             "@since"
@@ -505450,8 +505706,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 539,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-539-holdverdict",
+          "line": 561,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-561-holdverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -505472,8 +505728,74 @@
           "exportKind": "type",
           "filePath": "src/commands/Holds/Holds.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
-          "line": 549,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-549-holdverdict",
+          "line": 571,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-571-holdverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldSiteSnapshot",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 595,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-595-holdsitesnapshot",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldLintFinding",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 624,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-624-holdlintfinding",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldLintFinding",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 640,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-640-holdlintfinding",
           "currentTags": [
             "@category",
             "@since"
@@ -505494,8 +505816,30 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 53,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-53-holdledgerdirectory",
+          "line": 54,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-54-holdledgerdirectory",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "syncpackHeldListFile",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 70,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-70-syncpackheldlistfile",
           "currentTags": [
             "@category",
             "@since"
@@ -505516,8 +505860,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 73,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-73-holdledgershape",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-91-holdledgershape",
           "currentTags": [
             "@category",
             "@since"
@@ -505538,8 +505882,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 101,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-101-holdledger",
+          "line": 125,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-125-holdledger",
           "currentTags": [
             "@category",
             "@since"
@@ -505560,8 +505904,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 118,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-118-makeholdledger",
+          "line": 142,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-142-makeholdledger",
           "currentTags": [
             "@category",
             "@since"
@@ -505582,8 +505926,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 192,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-192-holdproberequest",
+          "line": 238,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-238-holdproberequest",
           "currentTags": [
             "@category",
             "@since"
@@ -505604,8 +505948,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 223,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-223-holdprobeshape",
+          "line": 269,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-269-holdprobeshape",
           "currentTags": [
             "@category",
             "@since"
@@ -505626,8 +505970,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 246,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-246-holdprobe",
+          "line": 292,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-292-holdprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -505648,8 +505992,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 277,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-277-classifyprobeoutput",
+          "line": 323,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-323-classifyprobeoutput",
           "currentTags": [
             "@param",
             "@returns",
@@ -505672,8 +506016,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 415,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-415-makeholdprobe",
+          "line": 461,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-461-makeholdprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -505694,8 +506038,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 448,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-448-layerholdledger",
+          "line": 494,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-494-layerholdledger",
           "currentTags": [
             "@param",
             "@returns",
@@ -505718,8 +506062,100 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
-          "line": 467,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-467-layerholdprobe",
+          "line": 513,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-513-layerholdprobe",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldSitesShape",
+          "exportKind": "interface",
+          "filePath": "src/commands/Holds/Holds.sites.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
+          "line": 97,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-sites-ts-97-holdsitesshape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldSites",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.sites.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
+          "line": 121,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-sites-ts-121-holdsites",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeHoldSites",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.sites.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
+          "line": 146,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-sites-ts-146-makeholdsites",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerHoldSites",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.sites.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
+          "line": 254,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-sites-ts-254-layerholdsites",
           "currentTags": [
             "@param",
             "@returns",
@@ -505852,12 +506288,31 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./Holds.inventory.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 28,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-28-export-from-holds-inventory-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./Holds.program.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Holds/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
-          "line": 34,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-34-export-from-holds-program-ts",
+          "line": 35,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-35-export-from-holds-program-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -505878,8 +506333,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Holds/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
-          "line": 35,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-35-export-from-holds-schemas-ts",
+          "line": 36,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-36-export-from-holds-schemas-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -505897,8 +506352,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Holds/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
-          "line": 42,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-42-export-from-holds-service-ts",
+          "line": 43,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-43-export-from-holds-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -505915,12 +506370,31 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./Holds.sites.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 44,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-44-export-from-holds-sites-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * from \"./Holds.verdict.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Holds/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
-          "line": 49,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-49-export-from-holds-verdict-ts",
+          "line": 51,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-51-export-from-holds-verdict-ts",
           "currentTags": [
             "@category",
             "@since"

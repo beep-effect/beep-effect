@@ -34,12 +34,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — in progress. Schemas and verdict rules landed on `feat/hold-ledger`; `beep holds probe` and the statelyai record are next.
+P1 Implement — in progress. Slice 1 (`beep holds list` and `probe`, the
+statelyai record) merged in #2404. Slice 2 (`feat/hold-ledger-inventory`) records
+every dependency-shaped site, derives the syncpack held list from the ledger and
+adds `beep holds lint` to the cheap gate. Slice 3 is `deps:update`, `holds why`
+and agent guidance.
 
 ## Latest Evidence
 
+- 2026-10-31: [inventory slice](history/receipts/2026-10-31-inventory-slice.md).
+  30 live holds cover every root override, patch and OSV package override;
+  syncpack's update dry run is identical with the ledger-derived held list, and
+  a control without statelyai lists `0.14.3 → 0.19.0`.
 - 2026-10-31: [first manual probes](history/receipts/2026-10-31-first-manual-probes.md). The jsdom hold is `probe-broken` (control no longer reproduces; repo jsdom suites pass on 30.1.3 under `--bun`). The statelyai control reproduces the npm 404 deterministically, and latest installs.
 
 ## Notes
 
-Holds come first: start with the statelyai slice in `SPEC.md` (moved from jsdom on 2026-10-31). The wake service depends on this ledger.
+The jsdom record is due: its control no longer reproduces, so its unpin PR is
+the next consumer of the ledger. The wake service depends on this ledger.

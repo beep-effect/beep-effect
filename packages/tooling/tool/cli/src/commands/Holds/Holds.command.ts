@@ -18,8 +18,9 @@ import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { HoldsError } from "./Holds.errors.ts";
-import { HoldsProbeInput, runHoldsList, runHoldsProbe } from "./Holds.program.ts";
+import { HoldsProbeInput, runHoldsLint, runHoldsList, runHoldsProbe } from "./Holds.program.ts";
 import { HoldLedger, HoldProbe, makeHoldLedger, makeHoldProbe } from "./Holds.service.ts";
+import { HoldSites, makeHoldSites } from "./Holds.sites.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 
 const gitAdapter: GitCommandErrorAdapter<HoldsError> = {
@@ -43,6 +44,8 @@ const scratchRootFor = Effect.fn("Holds.scratchRoot")(function* () {
 });
 
 const layerHoldLedgerLive = Layer.effect(HoldLedger, Effect.flatMap(resolveRoot, makeHoldLedger));
+
+const layerHoldSitesLive = Layer.effect(HoldSites, Effect.flatMap(resolveRoot, makeHoldSites));
 
 const layerHoldProbeLive = Layer.effect(HoldProbe, Effect.flatMap(scratchRootFor(), makeHoldProbe));
 
@@ -102,6 +105,35 @@ export const holdsProbeCommand = Command.make(
 );
 
 /**
+ * `beep holds lint [--write]`: check that every hold-shaped config site has a
+ * live record and every record's anchors still exist.
+ *
+ * **Example** (Read the command name)
+ *
+ * ```ts
+ * import { holdsLintCommand } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(holdsLintCommand.name) // "lint"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const holdsLintCommand = Command.make(
+  "lint",
+  {
+    write: Flag.Boolean("write").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Tombstone orphaned records and regenerate the syncpack held list first")
+    ),
+  },
+  ({ write }) => Effect.flatMap(runHoldsLint(write), (lines) => Console.log(A.join(lines, "\n")))
+).pipe(
+  Command.withDescription("Check hold-shaped config sites against the hold ledger"),
+  Command.provide(Layer.mergeAll(layerHoldLedgerLive, layerHoldSitesLive))
+);
+
+/**
  * `beep holds`: the hold ledger command group.
  *
  * **Example** (Read the command name)
@@ -116,8 +148,10 @@ export const holdsProbeCommand = Command.make(
  * @since 0.0.0
  */
 export const holdsCommand = Command.make("holds", {}, () =>
-  Console.log("Hold ledger commands: bun run beep holds list | bun run beep holds probe <hold-id> [--dry-run]")
+  Console.log(
+    "Hold ledger commands: bun run beep holds list | bun run beep holds probe <hold-id> [--dry-run] | bun run beep holds lint [--write]"
+  )
 ).pipe(
   Command.withDescription("Temporary repo decisions as probe-backed holds"),
-  Command.withSubcommands([holdsListCommand, holdsProbeCommand])
+  Command.withSubcommands([holdsListCommand, holdsProbeCommand, holdsLintCommand])
 );

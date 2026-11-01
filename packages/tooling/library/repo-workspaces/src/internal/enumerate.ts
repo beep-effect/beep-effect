@@ -393,6 +393,25 @@ const readFrame = (
     )
   );
 
+/** Whether a listed entry is never visited: an unconditional prune or a skipped directory name. */
+const skipsEntry = (scope: EnumerationScope, entry: string): boolean => isPruned(entry) || scope.skipsPath(entry);
+
+/**
+ * Whether the admitted directory at `relative` is a package `wildcard` selects.
+ *
+ * **Details**
+ *
+ * The `package.json` probe runs only for a directory the wildcard matches and
+ * no exclude rejects.
+ */
+const isSelectedPackageAt = (
+  scope: EnumerationScope,
+  wildcard: GlobPattern,
+  relative: string,
+  absolute: string
+): Effect.Effect<boolean> =>
+  wildcard.matches(relative) && !scope.isExcluded(relative) ? isPackageAt(scope, absolute) : Effect.succeed(false);
+
 /**
  * One listed entry: include it when it is a selected package, and descend
  * into it when the pattern crosses segments.
@@ -413,14 +432,14 @@ const visitEntry = Effect.fnUntraced(function* (
   frame: TraversalFrame,
   entry: string
 ) {
-  if (isPruned(entry) || scope.skipsPath(entry)) return;
+  if (skipsEntry(scope, entry)) return;
   const relative = joinRelative(frame.relative, entry);
   const absolute = scope.path.join(frame.absolute, entry);
   if (!(yield* isAdmittedDirectoryAt(scope, absolute))) return;
   if (wildcard.crossesSegments && !traversal.admits(frame)) {
     return yield* Effect.fail(failureOf(traversal.depthStop(), wildcard.source));
   }
-  if (wildcard.matches(relative) && !scope.isExcluded(relative) && (yield* isPackageAt(scope, absolute))) {
+  if (yield* isSelectedPackageAt(scope, wildcard, relative, absolute)) {
     MutableHashMap.set(scope.included, relative, absolute);
   }
   if (wildcard.crossesSegments) traversal.push(frame, relative, absolute);
@@ -502,6 +521,21 @@ const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, 
 });
 
 /**
+ * Every enumeration option with its default applied.
+ *
+ * **Details**
+ *
+ * `maxDepth` is defaulted here but validated by {@link enumerate}, so an
+ * invalid bound stays a defect rather than a typed failure.
+ */
+const resolvedOptionsOf = (options: EnumerateOptions.Encoded = {}) => ({
+  maxDepth: options.maxDepth ?? MAX_ENUMERATION_DEPTH,
+  containWithinRoot: options.containWithinRoot ?? false,
+  skipMissingBaseDirs: options.skipMissingBaseDirs ?? false,
+  skipDirectoryNames: options.skipDirectoryNames ?? A.empty<string>(),
+});
+
+/**
  * Enumerates the workspace directories a compiled `packages:` set selects.
  *
  * **Details**
@@ -557,7 +591,7 @@ export const enumerate: {
     globs: GlobSet,
     options?: EnumerateOptions.Encoded
   ): Effect.fn.Return<ReadonlyArray<EnumeratedDirectory>, EnumerationFailure, FileSystem.FileSystem | Path.Path> {
-    const maxDepth = options?.maxDepth ?? MAX_ENUMERATION_DEPTH;
+    const { maxDepth, containWithinRoot, skipMissingBaseDirs, skipDirectoryNames } = resolvedOptionsOf(options);
     // A bad bound is a PROGRAMMER error, not a data condition — a defect, not a
     // typed failure. The predicate is shared with the sync hatch so the two
     // entry points cannot disagree about what a valid bound is.
@@ -567,15 +601,15 @@ export const enumerate: {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const scope: EnumerationScope = {
-      contains: yield* containmentOf(fs, path, root, options?.containWithinRoot ?? false),
+      contains: yield* containmentOf(fs, path, root, containWithinRoot),
       fs,
       path,
       root,
       maxDepth,
       included: MutableHashMap.empty<string, string>(),
       isExcluded: excludedBy(globs.excludes),
-      skipMissingBaseDirs: options?.skipMissingBaseDirs ?? false,
-      skipsPath: skipsPathOf(options?.skipDirectoryNames ?? []),
+      skipMissingBaseDirs,
+      skipsPath: skipsPathOf(skipDirectoryNames),
     };
     yield* includeLiterals(scope, globs.literals);
     yield* Effect.forEach(globs.wildcards, (wildcard) => enumerateWildcard(scope, wildcard), { discard: true });

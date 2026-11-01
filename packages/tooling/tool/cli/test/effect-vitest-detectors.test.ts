@@ -774,6 +774,27 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         'import * as BunPath from "@effect/platform-bun/BunPath"; it.layer(L.merge(BunPath.layer, L.succeed(A, {})))("x", it => {});',
       ])
         assertFalse(yield* hasRule(body, "EV014"));
+    })
+  );
+
+  it.effect("permits the per-family crypto layers effect 4.1 ships and keeps impostors judged", () =>
+    Effect.gen(function* () {
+      for (const body of [
+        'import { NodeCrypto, NodeServices } from "@effect/platform-node"; it.layer(L.mergeAll(NodeServices.layer, NodeCrypto.layerDigest))("x", it => {});',
+        'import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"; it.layer(NodeCrypto.layer)("x", it => {});',
+        'import * as BunCrypto from "@effect/platform-bun/BunCrypto"; it.layer(L.merge(BunCrypto.layerSecureRandom, BunCrypto.layerMac))("x", it => {});',
+        'import * as Platform from "@effect/platform-node"; it.layer(Platform.NodeCrypto.layerKdf)("x", it => {});',
+        'import * as Digest from "effect/crypto/Digest"; import * as SecureRandom from "effect/crypto/SecureRandom"; const WebCrypto = L.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto); it.layer(WebCrypto)("x", it => {});',
+      ])
+        assertFalse(yield* hasRule(body, "EV014"));
+      for (const body of [
+        'import * as NodeCrypto from "@effect/platform-node/NodeCrypto"; it.layer(NodeCrypto.layerOther)("x", it => {});',
+        'import * as NodeCrypto from "@beep/fake/NodeCrypto"; it.layer(NodeCrypto.layerDigest)("x", it => {});',
+        'import * as Digest from "effect/crypto/Digest"; it.layer(Digest.layer)("x", it => {});',
+        'import * as Digest from "@beep/fake/Digest"; it.layer(Digest.layerWebCrypto)("x", it => {});',
+        'import * as Digest from "effect/crypto/Digest"; it.layer(L.mergeAll(Digest.layerWebCrypto, ImportedLive))("x", it => {});',
+      ])
+        assertTrue(A.some(yield* findings(body), (row) => row.ruleId === "EV014" && row.mechanization === "judgment"));
       for (const body of [
         'it.layer(L.scoped(Service, acquire))("x", it => {});',
         'it.layer(NodeServices.layer)("x", it => {});',

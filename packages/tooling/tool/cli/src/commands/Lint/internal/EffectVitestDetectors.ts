@@ -204,17 +204,51 @@ const platformServiceLayerModules = A.flatMap(
     { runtime: "Bun", root: "@effect/platform-bun" },
   ],
   ({ runtime, root }) =>
-    A.map(["Services", "FileSystem", "Path", "Crypto", "ChildProcessSpawner", "Stdio", "Terminal"], (service) => ({
+    A.map(["Services", "FileSystem", "Path", "ChildProcessSpawner", "Stdio", "Terminal"], (service) => ({
       name: `${runtime}${service}`,
       root,
     }))
 );
 
+// Effect 4.1 splits crypto into per-family services: the platform `NodeCrypto`/`BunCrypto` modules
+// export one `Layer.succeed` per family beside the bundle, and each `effect/crypto/<Family>` module
+// exports a `layerWebCrypto` over the runtime's `crypto.subtle`. None acquires anything.
+const cryptoFamilies = [
+  "SecureRandom",
+  "Digest",
+  "Mac",
+  "Kdf",
+  "Aead",
+  "Cipher",
+  "Signature",
+  "KeyAgreement",
+  "KeyWrap",
+];
+const platformCryptoMembers = ["layer", ...A.map(cryptoFamilies, (family) => `layer${family}`)];
+
+const isPlatformCryptoLayer: LayerLeaf = (expression, imports) =>
+  A.some(["NodeCrypto", "BunCrypto"], (name) =>
+    isProvenanceExpression(
+      expression,
+      imports,
+      A.flatMap(["@effect/platform-node", "@effect/platform-bun", "@effect/platform-node-shared"], (root) => [
+        root,
+        `${root}/${name}`,
+      ]),
+      name,
+      [...platformCryptoMembers, ...A.map(platformCryptoMembers, (member) => `${name}.${member}`)]
+    )
+  ) ||
+  A.some(cryptoFamilies, (family) =>
+    isProvenanceExpression(expression, imports, [`effect/crypto/${family}`], family, ["layerWebCrypto"])
+  );
+
 const isPlatformServiceLayer: LayerLeaf = (expression, imports) =>
   !Node.isCallExpression(expression) &&
-  A.some(platformServiceLayerModules, ({ name, root }) =>
-    isProvenanceExpression(expression, imports, [root, `${root}/${name}`], name, ["layer", `${name}.layer`])
-  );
+  (isPlatformCryptoLayer(expression, imports) ||
+    A.some(platformServiceLayerModules, ({ name, root }) =>
+      isProvenanceExpression(expression, imports, [root, `${root}/${name}`], name, ["layer", `${name}.layer`])
+    ));
 
 // --- EV014 test-layer acquisition (#1855 wave 6) -----------------------------------------------
 //

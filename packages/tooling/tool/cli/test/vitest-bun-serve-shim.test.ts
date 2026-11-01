@@ -299,10 +299,10 @@ it.layer(NodeServices.layer, { excludeTestServices: true })("vitest Bun.serve Un
           Effect.flatMap((response) => response.text)
         );
         assert.strictEqual(posted, "synthetic-post");
-      }, Effect.scoped);
-      yield* serve("first");
+      });
+      yield* Effect.scoped(serve("first"));
       assert.strictEqual(yield* fs.exists(socket), false);
-      yield* serve("rebound");
+      yield* Effect.scoped(serve("rebound"));
       assert.strictEqual(yield* fs.exists(socket), false);
     })
   );

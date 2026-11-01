@@ -102,6 +102,7 @@ const nonReusableTasks: ReadonlyArray<string> = [
   "lint:retired-effect-paths",
   "lint:retired-iri-authorities",
   "lint:schema-tag-idioms",
+  "lint:holds",
 ];
 
 const directInputs: Readonly<Record<string, string>> = {
@@ -120,6 +121,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:retired-effect-paths": "explorations/fixture/c3-probe.json",
   "lint:retired-iri-authorities": "goals/fixture/c3-probe.ttl",
   "lint:schema-tag-idioms": "scratchpad/fixture/c3-probe.cts",
+  "lint:holds": "hold-ledger/claims.jsonl",
   "lint:tsgo-rules": "tooling/c3-probe.cts",
   "lint:oxlint": "scripts/c3-probe.ts",
   "lint:shadcn": ".oxlintrc.shadcn.json",

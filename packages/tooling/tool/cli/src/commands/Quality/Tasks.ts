@@ -2986,6 +2986,7 @@ const policyMediumTasks = [
   "lint:retired-effect-paths",
   "lint:retired-iri-authorities",
   "lint:schema-tag-idioms",
+  "lint:holds",
   "lint:tsconfig-overlay",
   "lint:package-test-typecheck",
   "lint:effect-vitest",
