@@ -475,11 +475,11 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       expect(metrics).toContain("beep_observation_delivery_pass_age_sampled_events 1");
       expect(metrics).not.toContain("max_accepted_age_seconds");
       expect(metrics).not.toContain("max_source_age_seconds");
-      yield* Ref.set(f.nextTick, completeTick([visible, sent(DeliveryOutcome.cases.Accepted.make({}))]));
+      yield* Ref.set(f.nextTick, completeTick([visible, sent(DeliveryOutcome.cases.Accepted.make({})), held]));
       yield* TestClock.adjust(150);
       expect(yield* f.runtime.health).toMatchObject({
         phase: "active",
-        lastCycle: { value: { result: { summary: { examined: 2, unhealthy: false } } } },
+        lastCycle: { value: { result: { summary: { examined: 3, held: 1, unhealthy: false } } } },
       });
       yield* Ref.set(f.nextTick, completeTick([sent(DeliveryOutcome.cases.Retryable.make({ status: 503 }))]));
       yield* TestClock.adjust(150);
@@ -506,7 +506,9 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const deadline = yield* g.runtime.run.pipe(Effect.forkChild);
       const health = yield* waitForCycle(g.runtime);
       expect(health).toMatchObject({ phase: "degraded", lastCycle: { value: { result: { _tag: "Deadline" } } } });
-      expect(renderObservationRuntimeMetrics(health)).not.toContain("beep_observation_retained_pages");
+      const metrics = renderObservationRuntimeMetrics(health);
+      expect(metrics).not.toContain("beep_observation_retained_pages");
+      expect(metrics).not.toContain("beep_observation_delivery_pass_");
       yield* Fiber.interrupt(deadline);
     })
   )
