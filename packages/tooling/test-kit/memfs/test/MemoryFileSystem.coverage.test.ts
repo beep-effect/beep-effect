@@ -28,7 +28,9 @@ it.effect("invalid seed times retain the BadArgument-to-EINVAL translation", () 
   })
 );
 
-it.layer(MemoryFileSystem.layerWith({ "/dir/file.txt": "x", "/dir/nested/inner.txt": "y" }))((it) =>
+it.layer(MemoryFileSystem.layerWith({ "/dir/file.txt": "x", "/dir/nested/inner.txt": "y" }), {
+  timeout: "30 seconds",
+})((it) =>
   it.effect("readDirectoryEntries reports each entry's own type and refuses a file path", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

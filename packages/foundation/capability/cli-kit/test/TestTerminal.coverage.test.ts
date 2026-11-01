@@ -43,18 +43,21 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
   );
 });
 
-it.effect("TestTerminal size subscriptions start at the fixed size and end with their scope", () =>
-  Effect.gen(function* () {
-    const handle = yield* TestTerminal.make({ columns: 72, rows: 18 });
-    const sizes = yield* Effect.scoped(
-      Effect.gen(function* () {
-        const terminal = yield* Terminal.Terminal;
-        const subscription = yield* terminal.size;
-        const first = yield* Queue.take(subscription);
-        return { first, subscription };
-      }).pipe(Effect.provide(handle.layer))
-    );
-    assert.deepStrictEqual(sizes.first, { columns: 72, rows: 18 });
-    assertTrue(Exit.isFailure(yield* Effect.exit(Queue.take(sizes.subscription))));
-  })
-);
+const sizedLayer = Layer.unwrap(Effect.map(TestTerminal.make({ columns: 72, rows: 18 }), (handle) => handle.layer));
+
+it.layer(sizedLayer, { timeout: "30 seconds" })((it) => {
+  it.effect("TestTerminal size subscriptions start at the fixed size and end with their scope", () =>
+    Effect.gen(function* () {
+      const terminal = yield* Terminal.Terminal;
+      const subscription = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const sizes = yield* terminal.size;
+          assert.deepStrictEqual(yield* Queue.take(sizes), { columns: 72, rows: 18 });
+          return sizes;
+        })
+      );
+      const ended = yield* Queue.take(subscription).pipe(Effect.exit);
+      ended.pipe(Exit.isFailure, assertTrue);
+    })
+  );
+});
