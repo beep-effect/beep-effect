@@ -20,7 +20,7 @@ manifests with 0 full-schema failures.
 | skill-contract `EvidenceReceipt.ts` | #138 | excluded | Stricter than the kit (a typed `{ sha256 }` digest, a literal `predicateType` per schema, a `NonEmptyArray` subject) and already thin; adopting `InTotoStatement` would loosen it. |
 | `@beep/github` `Attestation.ts` `predicateType` literal | - | excluded | A string in a JSDoc example and a test; a driver-to-modeling edge for one constant is not worth it. |
 | lab `github-actions` `ActionsIdentityToken`, `ActionsProvenance` move | - | W5 (done) | They moved with `@beep/github-actions` (`src/ActionsIdentityToken.ts`, `src/ActionsProvenance.ts`) and import the `@beep/sbom` leaves they already used; their suites pass in the package. |
-| lab `sbom` `SigstoreSigner.ts` | - | deferred (D-05, W4-m) | `@beep/sigstore` with its first consumer (a release attestation step), or deleted at C and recoverable by sha. |
+| lab `sbom` `SigstoreSigner.ts` | - | deleted at C (D-05, W4-m) | Pinned at `bb2134fcb952e07580c4cebf2586c901f090ef5b` (PLAN "Deferred"); `@beep/sigstore` waits for its first consumer, a release attestation step. Its port reviews are archived under `history/port-reviews/sbom/`. |
 
 ## `@beep/xdg` (wave 4, PRs 4-X and 4-X-A, SPEC W4-c)
 
@@ -74,7 +74,7 @@ manifests with 0 full-schema failures.
 | repo-cli `Accounts/Accounts.tui.ts` alternate-screen TUI | #206 | excluded | Needs the deferred `./ui` half (W4-m) and its Bun proof; the trigger consumer named in PLAN "Deferred". |
 | repo-cli `Files/Files.progress.ts` progress runner | #208 | excluded | Repaints through `CliUi.live` only once repo-cli adopts Ink and React (the deferred `./ui` half). |
 | repo-cli `Knowledge/Knowledge.service.ts` probe-diagnostic escape patterns | #198 | excluded | A third copy with different semantics: it also strips `\p{Cf}` and reports the disallowed controls it found, which `Fmt.stripControls` does not. Revisit with an option on `Fmt` if a second caller needs it. |
-| lab `cli` `./ui` half (`ui/**`, `ui.ts`, `ui-testing*.ts`) | - | retargeted in 4-C | Imports the root through `@beep/cli-kit` leaves; deleted at C, pinned by sha (W4-m). |
+| lab `cli` `./ui` half (`ui/**`, `ui.ts`, `ui-testing*.ts`) | - | retargeted in 4-C; deleted at C | Imported the root through `@beep/cli-kit` leaves; deleted at C, pinned at `bb2134fcb952e07580c4cebf2586c901f090ef5b` (W4-m, PLAN "Deferred"). |
 
 ## `@beep/config-file` (wave 3, sub-wave 3-3, SPEC W3-e)
 
@@ -339,12 +339,12 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | Site | Map id | Verdict | Status | Notes |
 | --- | --- | --- | --- | --- |
 | docgen Configuration.ts | #11 | confirmed | migrated (3-3, W3-e) | docgen `readJsoncFile` onto `ConfigFile.read`. |
-| repo-cli Quality/CatalogUsage.ts | #129 | partial | queued: 3-A1 | `CatalogUsage` onto `@beep/lockfiles` with `ResolvedPackage.installName`. |
-| repo-cli VersionSync/internal/resolvers/RootCatalog.ts | #155 | partial | queued: 3-A1 | `RootCatalog` bun.lock half onto `Lockfile.parse`; no `CatalogSet` for one catalog. |
-| repo-cli Quality/CatalogUsage.ts | #156 | partial | queued: 3-A1 | `CatalogUsage` onto `@beep/lockfiles` with `ResolvedPackage.installName`. |
-| repo-cli Quality/CatalogUsage.ts | #233 | partial | queued: 3-A1 | `CatalogUsage` onto `@beep/lockfiles` with `ResolvedPackage.installName`. |
-| repo-cli VersionSync/internal/resolvers/RootCatalog.ts | #289 | partial | queued: 3-A1 | `RootCatalog` bun.lock half onto `Lockfile.parse`; no `CatalogSet` for one catalog. |
-| repo-cli VersionSync/internal/resolvers/RootCatalog.ts | #269 | partial | queued: 3-A1 | Lockfile half with 3-A1; the Docker semver half is #43, migrated in R1. |
+| repo-cli Quality/CatalogUsage.ts | #129 | partial | adopted (3-A1) | `CatalogUsage` onto `@beep/lockfiles` with `ResolvedPackage.installName` (lockfile part; see the `@beep/lockfiles` section above). |
+| repo-cli VersionSync/internal/resolvers/RootCatalog.ts | #155 | partial | adopted (3-A1) | `RootCatalog` bun.lock half onto `Lockfile.parse`; no `CatalogSet` for one catalog (see the `@beep/lockfiles` section above). |
+| repo-cli Quality/CatalogUsage.ts | #156 | partial | adopted (3-A1) | `CatalogUsage` onto `@beep/lockfiles` with `ResolvedPackage.installName` (see the `@beep/lockfiles` section above). |
+| repo-cli Quality/CatalogUsage.ts | #233 | partial | adopted (3-A1) | `CatalogUsage` onto `@beep/lockfiles` with `ResolvedPackage.installName` (see the `@beep/lockfiles` section above). |
+| repo-cli VersionSync/internal/resolvers/RootCatalog.ts | #289 | partial | adopted (3-A1) | `RootCatalog` bun.lock half onto `Lockfile.parse`; no `CatalogSet` for one catalog (see the `@beep/lockfiles` section above). |
+| repo-cli VersionSync/internal/resolvers/RootCatalog.ts | #269 | partial | adopted (3-A1) | Lockfile half adopted in 3-A1 (see the `@beep/lockfiles` section above); the Docker semver half is #43, migrated in R1. |
 
 ### Wave 4 promotions and adoptions (4-X, 4-X-A, 4-C, 4-C-A, 4-A1 to 4-A4)
 
@@ -361,14 +361,14 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-utils Dependencies.ts | #239 | partial | adopted (4-A3) | Deleted with the `WorkspaceDeps` schema; `beep topo-sort` prints `DependencyGraph.sort()`. |
 | repo-utils Workspaces.ts, Dependencies.ts, Graph.ts | #268 | partial | adopted (4-A3) | Umbrella of #238, #239 and #240; `Graph.ts` is not retargeted (TsconfigSync keeps its `topologicalSort` and `detectCycles` over the kit's adjacency, so the reference order is unchanged). Counted there. The cost is two cycle reports: `topo-sort` prints the kit's member list (`Cyclic workspace dependencies among: …`), `tsconfig-sync` one path per cycle (`TsconfigSyncCycleError.cycles`). Trigger to retarget: at packet close (C), or earlier when either command's cycle output is next edited, replace the `detectCycles` call with a `DependencyGraph.sort()` cycle check so both commands share one report; the per-package `topologicalSort` order stays. |
 | repo-cli Lint/EcosystemPolarity.ts | #154 | partial | adopted (4-A4) | `sourceViolations` scans each member `src` through `SourceBoundary.scan` from `@beep/repo-workspaces/SourceBoundary` (`forbidImports: ["@beep/*"]`, the lint's extensions); `Offence` converts to `EcosystemPolarityViolation` at the boundary. The ts-morph walk (`isSourceFile`, `collectSourceFiles`, `literalSpecifier`, `collectSourceViolations`, the `Project`) is deleted; ts-morph stays for its other repo-cli importers. Parity: `ops/ecosystem-polarity-differential.ts` over the live repo and a synthetic ecosystem (16 scenarios), baseline `research/ecosystem-polarity-differential-4-a4.json`, head `...-4-a4-head.json`: 102 differences, all in the five intended classes, 0 unclassified. Inverted tests in `test/ecosystem-polarity.test.ts`: position order, declaration files skipped, literal line for a multi-line call, template heads not read (accepted in SPEC 2026-10-28 W4-f, 4-A4 part, with a guard over every live member `src`), declaration files skipped (same row, same guard shape), `node_modules` and symlink cycles skipped. |
-| ai-metrics agent-effectiveness.ts | #197 | partial | queued: 4-C | `Fmt.stripControls` (W4-d) replaces the private sanitizer. |
-| repo-cli Accounts/Accounts.view.ts | #205 | partial | queued: 4-C | `fit`/`fitRight` onto `Fmt.truncate`/`Fmt.width`, pinned by a CJK and emoji row (A4). |
+| ai-metrics agent-effectiveness.ts | #197 | partial | adopted (4-C) | `Fmt.stripControls` (W4-d) replaces the private sanitizer (see the `@beep/cli-kit` section above). |
+| repo-cli Accounts/Accounts.view.ts | #205 | partial | adopted (4-C) | `fit`/`fitRight` onto `Fmt.truncate`/`Fmt.width`, pinned by a CJK and emoji row (A4; see the `@beep/cli-kit` section above). |
 | repo-cli bin-main.ts | #199 | partial | migrated (4-C-A) | `CliRuntime.main` in `bin-main.ts`/`FailureRendering.ts`, EPIPE latching kept (L1). |
 | repo-cli internal/cli/FailureRendering.ts | #200 | partial | migrated (4-C-A) | The `render` hook for `CliRuntime.main`; `shouldRenderFailureCause` stays as its verbosity switch (L1). |
 | repo-cli Skills/SkillsReview.service.ts | #209 | partial | migrated (4-C-A) | `CliPrompt.gateTerminal` in SkillsReview (L2). |
 | repo-cli test session-continuity.test.ts | #210 | partial | migrated (4-C-A, partial) | One `TestTerminal` swap in `accounts-usage.test.ts`; the session-continuity stubs stay (they fail on unexpected input as an assertion). |
-| repo-cli internal/state/WorkstationState.ts | #167 | partial | queued: 4-X | `resolveWorkstationStateDir` onto `@beep/xdg` (W4-c named importer). |
-| m365-mcp OutboxConfig.ts | #180 | partial | queued: 4-X | `OutboxConfig` `stateRoot` onto `@beep/xdg` (W4-c named importer). |
+| repo-cli internal/state/WorkstationState.ts | #167 | partial | adopted (4-X) | `resolveWorkstationStateDir` onto `@beep/xdg` (W4-c named importer; see the `@beep/xdg` section above). |
+| m365-mcp OutboxConfig.ts | #180 | partial | adopted (4-X) | `OutboxConfig` `stateRoot` onto `@beep/xdg` (W4-c named importer; see the `@beep/xdg` section above). |
 | ai-metrics forwarder.ts | #176 | partial | migrated (4-X-A) | ai-metrics `forwarder.ts`/`data-root.ts` onto `@beep/xdg`. |
 | repo-cli Files/internal/MatchPerson.ts | #178 | partial | migrated (4-X-A) | `MatchPerson` cache root after the `--cache-dir` branch; Windows branch kept. |
 | apps | #310 | partial | migrated (4-X-A) | apps docket-intake and practice-m365-contacts; practice-mail-tagging excluded (#183). |
@@ -499,10 +499,10 @@ end-to-end suite in `test/ci-runner-security.test.ts` reads the new blocks uncha
 
 | Site | Map id | Verdict | Status | Notes |
 | --- | --- | --- | --- | --- |
-| nlp-mcp bin.ts | #195 | partial | deferred (W4-m) | `engine` ProcessGuard; trigger consumer: an MCP server ProcessGuard. |
-| repo-cli Accounts/Accounts.tui.ts | #206 | partial | deferred (W4-m) | `cli/ui*` stays in the lab until C; trigger consumer: the Accounts TUI. |
-| repo-cli Files/Files.progress.ts | #208 | partial | deferred (W4-m) | `cli/ui*` stays in the lab until C; trigger consumer: the Accounts TUI. |
-| mcpb-kit internal/steps.ts | #295 | partial | deferred (W4-m) | npm registry/publish half; trigger consumer: the mcpb-kit tarball. |
+| nlp-mcp bin.ts | #195 | partial | deferred (W4-m) | `engine` ProcessGuard, deleted at C (pin `bb2134fcb952e07580c4cebf2586c901f090ef5b`); trigger consumer: an MCP server ProcessGuard. |
+| repo-cli Accounts/Accounts.tui.ts | #206 | partial | deferred (W4-m) | `cli/ui*` deleted at C (pin `bb2134fcb952e07580c4cebf2586c901f090ef5b`); trigger consumer: the Accounts TUI. |
+| repo-cli Files/Files.progress.ts | #208 | partial | deferred (W4-m) | `cli/ui*` deleted at C (pin `bb2134fcb952e07580c4cebf2586c901f090ef5b`); trigger consumer: the Accounts TUI. |
+| mcpb-kit internal/steps.ts | #295 | partial | deferred (W4-m) | npm registry/publish half, deleted at C (pin `bb2134fcb952e07580c4cebf2586c901f090ef5b`); trigger consumer: the mcpb-kit tarball. |
 
 ### Excluded, with reasons
 

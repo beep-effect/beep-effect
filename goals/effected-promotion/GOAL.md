@@ -8,6 +8,10 @@ Outcome: every promotable `scratchpad/effected` module lives in its own
 `@beep/*` package (wave plan in PLAN.md), the duplicates it replaces are
 retired, and `@effected/github` is gone.
 
+Status: the closing PR C proposes the closeout (SPEC D-60); the packet stays
+`active` until `bun run beep goals completion refresh --slug effected-promotion`
+verifies it. A resumed session finishes C's open gate work.
+
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
 
@@ -45,7 +49,7 @@ Acceptance:
 - [ ] `SPEC.md` acceptance criteria are satisfied.
 - [ ] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 Verification:
 

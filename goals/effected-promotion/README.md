@@ -34,29 +34,38 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — waves 1a (#1956), 1b (#1981), 2a (#1988), 2b (#1992, #1994,
-#2002), 2c (#2016, D-37) and 2d-1 (#2102, `@beep/markdown`, D-38..D-46)
-merged. 2d-A (four adopter sites, D-47) merged in #2114. Wave 2d-2 (`@beep/md`
-`Md.syntax`/`Md.parse`, D-48..D-51) merged in #2121; the evidence-gated 2d-3
-writer fixes (D-52, `math` on by default) merged in #2141 and D-53 in #2143.
-Wave 3 (W3-a..W3-n) is in progress; everything left is sequenced by
-[`research/wave-4-plan-2026-10-23.md`](./research/wave-4-plan-2026-10-23.md)
-(W4-a..W4-u, mirrored in [`PLAN.md`](./PLAN.md)). P0
-research is complete:
-see [`research/promotion-map-2026-10-20.md`](./research/promotion-map-2026-10-20.md),
-[`research/wave-2b-plan-2026-10-21.md`](./research/wave-2b-plan-2026-10-21.md)
-and [`research/wave-2d-plan-2026-10-22.md`](./research/wave-2d-plan-2026-10-22.md).
+P1 Implement and P2 Verify are complete: every wave and adoption row of
+[`PLAN.md`](./PLAN.md) merges before C, R3b (the `jsonc-parser` drop) last.
+C, the closing PR, carries P3 and P4: it deletes
+and unwires the `scratchpad/effected` lab, archives its notes, the deferred
+modules' port reviews and canon exceptions under [`history/`](./history/),
+pins the deferred modules by sha (PLAN "Deferred") and proposes the closeout
+(`proposedCloseout` in [`ops/manifest.json`](./ops/manifest.json), SPEC D-60).
+The packet stays `active` until
+`bun run beep goals completion refresh --slug effected-promotion` verifies the
+proposal against exact-head hosted readiness and merge evidence. P0 research:
+[`research/promotion-map-2026-10-20.md`](./research/promotion-map-2026-10-20.md),
+[`research/wave-2b-plan-2026-10-21.md`](./research/wave-2b-plan-2026-10-21.md),
+[`research/wave-2d-plan-2026-10-22.md`](./research/wave-2d-plan-2026-10-22.md)
+and [`research/wave-4-plan-2026-10-23.md`](./research/wave-4-plan-2026-10-23.md)
+(its "Closeout definition of done" is C's checklist).
 
 ## Latest Evidence
 
 - 2026-10-20 discovery workflow: 34-row package map (30 now, 4 deferred), 6
   waves, 312 deduplicated reuse sites (29 confirmed, 209 partial, 74 refuted),
   three scored `@beep/md` merge designs.
-- Decisions D-01..D-53, W3-a..W3-n and W4-a..W4-u are in [`SPEC.md`](./SPEC.md).
+- Decisions D-01..D-60, W3-a..W3-n and W4-a..W4-aa are in [`SPEC.md`](./SPEC.md).
+- 2026-11-01 C: the lab (`scratchpad/effected/**`, 164 files) and its six
+  `scratchpad/test` directories (143 files) are deleted with their wiring;
+  every deferred module and `PORT_LEDGER.json` is pinned at
+  `bb2134fcb952e07580c4cebf2586c901f090ef5b` (SPEC D-60).
 
 ## Notes
 
-- Port provenance: `scratchpad/EFFECTED_PORT_GOAL.md`, `scratchpad/effected/PORT_LEDGER.json`,
-  and the per-module review reports archived under `history/port-reviews/`.
-- Deferred modules leave the lab at C, pinned by the last sha that holds them (D-05 as amended by
-  W4-m; see the PLAN "Deferred" section).
+- Port provenance: `bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/EFFECTED_PORT_GOAL.md` and
+  `bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json` (read with `git show`), the
+  per-module review reports under `history/port-reviews/`, the canon exceptions under
+  `history/canon-exceptions/` and the lab notes under `history/lab-archive/`.
+- Deferred modules left the lab at C, pinned by the last sha that holds them (D-05 as amended by
+  W4-m; see the PLAN "Deferred" section for each restore command).
