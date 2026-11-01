@@ -3086,6 +3086,27 @@ const harnessHasOpaquePlatformReferences = (harness: CallExpression, imports: Ef
 
 // A services bundle used only by the shared harness is not filesystem evidence.
 // Keep portable filesystem candidates unless the existing native-subject proof succeeds.
+const SQLITE_CLIENT_MODULES = ["@effect/sql-sqlite-node/SqliteClient", "@effect/sql-sqlite-bun/SqliteClient"];
+
+// `SqliteClient.make({ filename })` or `.layer({ filename })` over anything but the `":memory:"` literal.
+const opensSqliteFile = (call: CallExpression, imports: EffectVitestImports): boolean => {
+  if (!isProvenanceCall(call, imports, SQLITE_CLIENT_MODULES, "SqliteClient", ["make", "layer"])) return false;
+  const options = call.getArguments()[0];
+  if (!Node.isObjectLiteralExpression(options)) return false;
+  const filename = options.getProperty("filename");
+  if (!Node.isPropertyAssignment(filename)) return false;
+  const value = filename.getInitializer();
+  return value !== undefined && !(Node.isStringLiteral(value) && value.getLiteralValue() === ":memory:");
+};
+
+// A harness that opens a SQLite database file reads bytes the engine wrote through the native
+// filesystem; SQLite never goes through the Effect FileSystem, so no memory filesystem can hold
+// that file and the platform bundle is the subject.
+const harnessOpensSqliteFile = (harness: CallExpression, imports: EffectVitestImports): boolean =>
+  O.exists(harnessCallback(harness), (callback) =>
+    A.some(harnessEvidence(callback, imports).calls, (call) => opensSqliteFile(call, imports))
+  );
+
 const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean =>
   O.exists(platformBundleLayers(declaration, imports, servicesBundle), (layers) => {
     const visited: FlowCache = MutableHashMap.empty();
@@ -3113,6 +3134,7 @@ const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: E
               O.isSome(harnessCallback(harness)) &&
               !harnessHasOpaquePlatformReferences(harness, imports)) ||
             harnessKillsChildProcess(harness, imports) ||
+            harnessOpensSqliteFile(harness, imports) ||
             harnessProvesNativeFileSystem(
               { harness, subject: A.some(flows, (flow) => flow.harness === harness && flow.subject) },
               imports
