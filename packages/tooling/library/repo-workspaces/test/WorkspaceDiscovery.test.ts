@@ -443,6 +443,31 @@ describe("WorkspaceDiscovery — a trailing slash on a pattern is dropped before
   });
 });
 
+// A `/**` include selects its base, and a `./` exclusion (or a `/**` one) excludes its directory.
+const globstarBases: Tree = {
+  "/repo/package.json": rootManifest(["tools/core/**", "packages/*", "!./packages/beta", "!packages/legacy/**"]),
+  "/repo/tools/core/package.json": manifest("@x/core"),
+  "/repo/tools/core/nested/package.json": manifest("@x/nested"),
+  "/repo/packages/alpha/package.json": manifest("@x/alpha"),
+  "/repo/packages/beta/package.json": manifest("@x/beta"),
+  "/repo/packages/legacy/package.json": manifest("@x/legacy"),
+};
+
+describe("WorkspaceDiscovery — a /** pattern covers its base and a ./ exclusion applies", () => {
+  layer(discoveryOver(globstarBases), { timeout: "30 seconds" })((it) => {
+    it.effect("selects tools/core itself, and excludes packages/beta and packages/legacy", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const packages = yield* discovery.listPackages;
+        assert.deepStrictEqual(
+          A.map(packages, (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@x/alpha=packages/alpha", "@x/core=tools/core", "@x/nested=tools/core/nested"]
+        );
+      })
+    );
+  });
+});
+
 const malformed: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/packages/bad/package.json": "{ not json",

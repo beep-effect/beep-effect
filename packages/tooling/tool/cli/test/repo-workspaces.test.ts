@@ -188,6 +188,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
       })
     );
 
+    it.effect("selects the base of a /** pattern and applies a ./ exclusion", () =>
+      Effect.gen(function* () {
+        const root = yield* repository({
+          ...twoMembers,
+          "package.json": json({ name: "root", workspaces: ["packages/core/**", "packages/*", "!./packages/app"] }),
+        });
+        deepStrictEqual(
+          A.map(yield* workspacePackages(root), (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@beep/core=packages/core"]
+        );
+      })
+    );
+
     it.effect("skips a member link whose real path leaves the checkout", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
