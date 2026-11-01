@@ -2449,6 +2449,9 @@
       "@beep/epistemic-use-cases/Retention": [
         "./packages/epistemic/use-cases/src/Retention/index.ts"
       ],
+      "@beep/law-practice-domain/test": [
+        "./packages/law-practice/domain/src/test.ts"
+      ],
       "@beep/repo-cli/commands/Holds": [
         "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
       ]

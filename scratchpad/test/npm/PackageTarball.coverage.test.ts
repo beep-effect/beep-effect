@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
@@ -14,10 +14,9 @@ import { scripted } from "./publish-fixtures.ts";
 const denied = PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method: "writeFile" });
 const http = Layer.succeed(HttpClient.HttpClient, HttpClient.make((request) =>
   Effect.succeed(HttpClientResponse.fromWeb(request, new Response(new Uint8Array([1, 2, 3]))))));
-const crypto = Layer.succeed(Crypto.Crypto, Crypto.make({
-  randomBytes: (size) => new Uint8Array(size),
+const crypto = Layer.mock(Digest.Digest)({
   digest: () => Effect.succeed(new Uint8Array([0])),
-}));
+});
 
 describe("PackageTarball remaining service paths", () => {
   for (const integrity of ["sha1-AA==", "sha256-AA==", "sha384-AA==", "sha224.ab", "sha512.ab", "1/ab"]) {

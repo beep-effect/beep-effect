@@ -631,8 +631,8 @@ export const observationRouteStatus: {
   if (ObservationPolicy.isAnyOf(["Excluded"])(route.policy)) return "excluded";
   if (ObservationCapability.isAnyOf(["Unsupported"])(route.capability)) return "unsupported";
   return ObservationHeartbeat.match(route.heartbeat, {
-    Unknown: () => "unknown",
-    Observed: (heartbeat) => {
+    Unknown: (): ObservationRouteStatus => "unknown",
+    Observed: (heartbeat): ObservationRouteStatus => {
       const clock = DateTime.toEpochMillis(now);
       if (clock < DateTime.toEpochMillis(heartbeat.observedAt)) return "unknown";
       if (clock > DateTime.toEpochMillis(heartbeat.validUntil)) return "stale";

@@ -54,7 +54,6 @@ import * as A from "effect/Array";
 import * as McpSchema from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
 import * as ConfigProvider from "effect/ConfigProvider";
-import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -74,6 +73,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 import type * as Context from "effect/Context";
+import type * as Digest from "effect/crypto/Digest";
 
 const decodeEcfrDatedTitleParams = S.decodeEffect(EcfrDatedTitleParams);
 const decodeEcfrListTitlesParams = S.decodeEffect(EcfrListTitlesParams);
@@ -301,8 +301,12 @@ const containsSensitiveValue = (value: unknown): boolean =>
     Match.orElse(() => false)
   );
 
-const withToolNameCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
-  effect.pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make));
+const withToolNameCrypto = <A, E>(effect: Effect.Effect<A, E, Digest.Digest>) =>
+  NodeCrypto.layerDigest.pipe(
+    Layer.build,
+    Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+    Effect.scoped
+  );
 
 const assertCollision = (
   result: Result.Result<ToolNameCollisionReport, ToolNameCollisionError | unknown>,

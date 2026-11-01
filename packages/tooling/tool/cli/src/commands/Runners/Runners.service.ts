@@ -43,7 +43,7 @@ import {
   DEFAULT_RUNNER_BASE_AMI_PARAMETER,
   RUNNER_AMI_PIN_PARAMETER,
 } from "./Runners.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { BakeConfig } from "./Runners.schemas.ts";
 
@@ -237,7 +237,7 @@ const awsArgs = (region: string, args: ReadonlyArray<string>): ReadonlyArray<str
 const runAws = Effect.fn("Runners.runAws")(function* (
   region: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<string, RunnersCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, RunnersCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const argv = awsArgs(region, args);
   const result = yield* runCaptured({ command: "aws", args: argv, source: "all", trim: true }).pipe(
     RunnersCommandError.mapError(`Failed to spawn ${formatCommandLine("aws", argv)}.`)
@@ -260,7 +260,7 @@ const runAws = Effect.fn("Runners.runAws")(function* (
 const assertRevisionPushed = Effect.fn("Runners.assertRevisionPushed")(function* (
   repoRoot: string,
   revision: string
-): Effect.fn.Return<void, RunnersCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, RunnersCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const remotes = yield* runCaptured({
     command: "git",
     args: ["remote", "-v"],
@@ -303,7 +303,7 @@ const assertRevisionPushed = Effect.fn("Runners.assertRevisionPushed")(function*
 
 const runGitRevision = Effect.fn("Runners.gitRevision")(function* (
   repoRoot: string
-): Effect.fn.Return<string, RunnersCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, RunnersCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCaptured({
     command: "git",
     args: ["rev-parse", "HEAD"],
@@ -322,7 +322,7 @@ const runGitRevision = Effect.fn("Runners.gitRevision")(function* (
 
 const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(function* (
   repoRoot: string
-): Effect.fn.Return<void, RunnersCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, RunnersCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const args = [
     "status",
     "--porcelain=v1",
@@ -356,7 +356,7 @@ const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(functio
 const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effect.fn.Return<
   BakeLocalInputs,
   RunnersCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -399,7 +399,11 @@ const getParameter = Effect.fn("Runners.getParameter")(function* (region: string
 
 const getPriorPin = (
   region: string
-): Effect.Effect<O.Option<string>, RunnersCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<
+  O.Option<string>,
+  RunnersCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> =>
   getParameter(region, RUNNER_AMI_PIN_PARAMETER).pipe(
     Effect.asSome,
     Effect.catchTag("RunnersCommandError", (error) =>
@@ -882,7 +886,7 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
 
 const makeRunnersService = Effect.fn("RunnersService.make")(function* () {
   const context = yield* Effect.context<
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >();
   return RunnersService.of({
     plan: makePlan().pipe(Effect.provide(context)),

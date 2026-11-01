@@ -27,7 +27,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -55,10 +55,10 @@ const FILE_ATTACHMENT = "#microsoft.graph.fileAttachment";
 
 export const digestOf = (seed: number): Sha256Hex => Sha256Hex.make(Str.repeat(64)(`${seed % 10}`));
 
-export const sha256Of = (content: Uint8Array): Effect.Effect<Sha256Hex, never, Crypto.Crypto> =>
+export const sha256Of = (content: Uint8Array): Effect.Effect<Sha256Hex, never, Digest.Digest> =>
   Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
-    return Sha256Hex.make(Hex.encode(yield* Effect.orDie(crypto.digest("SHA-256", content))));
+    const crypto = yield* Digest.Digest;
+    return Sha256Hex.make(Hex.encode(yield* crypto.digest(Digest.sha256, content)));
   });
 
 export const recipients = (addresses: ReadonlyArray<string>): ReadonlyArray<GraphRecipient> =>
@@ -329,12 +329,12 @@ export const sourceContent = (index: number): Uint8Array => new Uint8Array(16).f
 const StubAttachmentSourceLayer = Layer.effect(
   OutboxAttachmentSource,
   Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     return OutboxAttachmentSource.of({
       resolve: Effect.fn("StubAttachmentSource.resolve")(function* (paths) {
         return yield* Effect.forEach(paths, (path, index) =>
           sha256Of(sourceContent(index)).pipe(
-            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.provideService(Digest.Digest, crypto),
             Effect.map((sha256) =>
               OutboxAttachment.make({
                 content: sourceContent(index),

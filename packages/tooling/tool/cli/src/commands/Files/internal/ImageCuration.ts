@@ -7,7 +7,7 @@
 
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -168,7 +168,7 @@ const maxAuditPixels = 40_000_000;
 
 const fileSha256 = Effect.fn("Files.imageCurationFileSha256")(function* (
   filePath: string
-): Effect.fn.Return<FileSha256Hash, FilesCommandError, FileSystem.FileSystem | Crypto.Crypto> {
+): Effect.fn.Return<FileSha256Hash, FilesCommandError, FileSystem.FileSystem | Digest.Digest> {
   const hex = yield* hashFileSha256Hex(filePath, (cause) =>
     FilesCommandError.new(cause, `Failed to hash image source "${filePath}"`)
   );
@@ -463,7 +463,7 @@ const imageAuditMetadataPresence = (metadata: SharpMetadata): ImageAuditMetadata
 
 const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
   source: AuditSourceFile
-): Effect.fn.Return<AuditedPixels, FilesCommandError, Crypto.Crypto> {
+): Effect.fn.Return<AuditedPixels, FilesCommandError, Digest.Digest> {
   const metadata = yield* Effect.tryPromise({
     try: () => sharp(source.path, { failOn: "error", limitInputPixels: maxAuditPixels }).metadata(),
     catch: FilesCommandError.new(`Failed to decode image audit pixels for "${source.path}"`),
@@ -519,10 +519,10 @@ const analyzePixels = Effect.fn("Files.analyzeImageAuditPixels")(function* (
   const decodedHeader = new TextEncoder().encode(
     `${decoded.info.width}x${decoded.info.height}x${decoded.info.channels}:`
   );
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const decodedHash = Hex.encode(
     yield* crypto
-      .digest("SHA-256", concatBytes([decodedHeader, decoded.data]))
+      .digest(Digest.sha256, concatBytes([decodedHeader, decoded.data]))
       .pipe(FilesCommandError.mapError(`Failed to hash decoded pixels for "${source.path}"`))
   );
 
@@ -786,7 +786,7 @@ export const auditImagesImpl = Effect.fn("FilesCommandService.auditImages")(func
 ): Effect.fn.Return<
   ImageAuditManifest,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Digest.Digest | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const sources = yield* collectAuditSources(options.dir);
@@ -1038,7 +1038,7 @@ const requireExactDecisionCoverage = Effect.fn("Files.requireExactImageCurationD
 const validateSourceDecisionHashes = Effect.fn("Files.validateImageCurationSourceHashes")(function* (
   sources: ReadonlyArray<AuditSourceFile>,
   decisionsByName: MutableHashMap.MutableHashMap<string, ImageCurationDecision>
-): Effect.fn.Return<ReadonlyArray<ValidatedSourceDecision>, FilesCommandError, FileSystem.FileSystem | Crypto.Crypto> {
+): Effect.fn.Return<ReadonlyArray<ValidatedSourceDecision>, FilesCommandError, FileSystem.FileSystem | Digest.Digest> {
   let validated = A.empty<ValidatedSourceDecision>();
   for (const source of sources) {
     const decision = MutableHashMap.get(decisionsByName, source.name);
@@ -1181,7 +1181,7 @@ const requireSafeCurationDestinations = Effect.fn("Files.requireSafeImageCuratio
 
 const validateDecisionLedger = Effect.fn("Files.validateImageCurationDecisionLedger")(function* (
   options: ImageCurationOptions
-): Effect.fn.Return<ValidatedDecisionLedger, FilesCommandError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<ValidatedDecisionLedger, FilesCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const path = yield* Path.Path;
   const sources = yield* collectAuditSources(options.dir);
   yield* requireCleanCurationSources(sources);
@@ -1450,7 +1450,7 @@ export const curateImagesImpl = Effect.fn("FilesCommandService.curateImages")(fu
 ): Effect.fn.Return<
   ImageCurationSummary,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Digest.Digest | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

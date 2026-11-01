@@ -1,6 +1,6 @@
 import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -32,7 +32,7 @@ const unavailable = (reason: GoldUnavailable["reason"], message: string): GoldUn
 const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
 
   const readReference = Effect.fn("GoldSource.readReference")(function* () {
     const referencePath = path.join(directory, "gold.json");
@@ -119,7 +119,7 @@ const makeGoldSource = Effect.fn("GoldSource.make")(function* (directory: string
         GoldArtifactSemantics.fileOrder
       );
       const digest = yield* contentDigest(S.Array(GoldFileEncoded))(files).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.mapError(() => unavailable("digest-failed", "The covered gold-v1 files could not be hashed."))
       );
       const encodedProposer = yield* encodeModelIdentity(reference.proposer).pipe(Effect.orDie);

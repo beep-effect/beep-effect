@@ -10,13 +10,13 @@ import { Str } from "@beep/utils";
 import { DateTimes } from "@beep/utils/DateTime";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type * as PlatformError from "effect/PlatformError";
 
 const $I = $SchemaId.create("Cuid");
 
@@ -37,12 +37,12 @@ const $I = $SchemaId.create("Cuid");
  * ```
  *
  * @effects
- * Reads the `Crypto` service to compute a digest; it performs no writes.
+ * Reads the `Digest` service to compute a digest; it performs no writes.
  * @category utilities
  * @since 0.0.0
  */
-export const sha512 = (data: Uint8Array): Effect.Effect<Uint8Array, PlatformError.PlatformError, Crypto.Crypto> =>
-  Effect.flatMap(Crypto.Crypto, (crypto) => crypto.digest("SHA-512", data));
+export const sha512 = (data: Uint8Array): Effect.Effect<Uint8Array, never, Digest.Digest> =>
+  Effect.flatMap(Digest.Digest, (digest) => digest.digest(Digest.sha512, data));
 
 // Constants
 const DEFAULT_LENGTH = 24;
@@ -160,7 +160,7 @@ export class CuidSeed extends S.Opaque<CuidSeed, { readonly brand: unique symbol
 export class CuidState extends Context.Service<CuidState>()("@beep/schema/Cuid/CuidState", {
   make: Effect.fn("CuidState.make")(function* (envData: string) {
     const { now } = yield* DateTimes;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* SecureRandom.SecureRandom;
     const initialBytes = yield* crypto.randomBytes(4);
     const initialValue = pipe(
       initialBytes,
@@ -209,15 +209,12 @@ export class CuidState extends Context.Service<CuidState>()("@beep/schema/Cuid/C
  * console.log(id.length)
  * ```
  *
- * @effects Requires {@link CuidState} and `effect/Crypto`; `CuidState.Default`
+ * @effects Requires {@link CuidState}, `Digest` and `SecureRandom`; `CuidState.Default`
  * provides the clock-backed seed state while callers provide platform crypto.
  * @category constructors
  * @since 0.0.0
  */
-export const cuid: Effect.Effect<Cuid, PlatformError.PlatformError, CuidState | Crypto.Crypto> = Effect.flatMap(
-  CuidState.next,
-  cuidFromSeed
-);
+export const cuid: Effect.Effect<Cuid, never, CuidState | Digest.Digest> = Effect.flatMap(CuidState.next, cuidFromSeed);
 
 // Utilities
 const ALPHABET_LENGTH = 26;
@@ -237,7 +234,7 @@ function createEntropy(length: number, random: Uint8Array): string {
   return entropy;
 }
 
-function hash(input: string): Effect.Effect<string, PlatformError.PlatformError, Crypto.Crypto> {
+function hash(input: string): Effect.Effect<string, never, Digest.Digest> {
   return Effect.map(sha512(encoder.encode(input)), (buffer) => {
     const view = new Uint8Array(buffer);
     let value = BigInt(0);
@@ -249,7 +246,7 @@ function hash(input: string): Effect.Effect<string, PlatformError.PlatformError,
   });
 }
 
-function cuidFromSeed(seed: CuidSeed): Effect.Effect<Cuid, PlatformError.PlatformError, Crypto.Crypto> {
+function cuidFromSeed(seed: CuidSeed): Effect.Effect<Cuid, never, Digest.Digest> {
   return makeCuidFromSeed(seed);
 }
 

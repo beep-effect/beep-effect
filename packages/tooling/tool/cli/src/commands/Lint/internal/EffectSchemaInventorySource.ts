@@ -26,7 +26,7 @@ import {
   EffectSchemaInventoryReferenceMissingError,
 } from "../Lint.errors.ts";
 import { parseEffectSchemaInventoryPin } from "./EffectSchemaInventoryModules.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 import type { EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";
@@ -79,7 +79,7 @@ const gitAdapter = <E>(onFailure: (commandLine: string, detail: string) => E): G
 const makeEffectSchemaInventorySource = Effect.fn("EffectSchemaInventorySource.make")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
   const reference = path.join(root, EffectSchemaInventoryReferencePath);
   const manifestPath = path.join(root, "package.json");
 
@@ -163,7 +163,7 @@ export class EffectSchemaInventorySource extends Context.Service<
   ): Layer.Layer<
     EffectSchemaInventorySource,
     never,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > => Layer.effect(EffectSchemaInventorySource, EffectSchemaInventorySource.make(root));
 
   /**
@@ -175,7 +175,7 @@ export class EffectSchemaInventorySource extends Context.Service<
   static readonly live: Layer.Layer<
     EffectSchemaInventorySource,
     EffectSchemaInventoryError,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > = Layer.effect(
     EffectSchemaInventorySource,
     findRepoRoot().pipe(

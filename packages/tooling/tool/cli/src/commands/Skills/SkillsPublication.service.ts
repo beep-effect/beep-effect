@@ -19,7 +19,7 @@ import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -180,11 +180,11 @@ const plannedEntries = (files: ReadonlyArray<SkillPublicationFile>, digests: Rea
 const makeSkillFingerprints = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const io = (message: string, target?: string) => SkillPublicationError.mapError(message, target);
   const sha256 = (bytes: Uint8Array) =>
     crypto
-      .digest("SHA-256", asArrayBufferView(bytes))
+      .digest(Digest.sha256, asArrayBufferView(bytes))
       .pipe(Effect.map(Hex.encode), io("Cannot fingerprint skill content."));
 
   const treeDigest = Effect.fnUntraced(function* (

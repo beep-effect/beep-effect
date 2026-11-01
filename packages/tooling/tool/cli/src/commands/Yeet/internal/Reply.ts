@@ -102,7 +102,7 @@ import {
   yeetReviewCommentAuthorKind,
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -880,7 +880,7 @@ const replyGhOutput = (
   context: RepoRunContext,
   args: ReadonlyArray<string>,
   label: string
-): Effect.Effect<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
   ghOutput({ args, cwd: context.repoRoot, label, onFailure: replyGhFailure });
 
 /**
@@ -995,7 +995,7 @@ const collectReplyThreads = (
 ): Effect.Effect<
   ReadonlyArray<ReplyLiveThread>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > =>
   collectTruncatableThreadPages({
     advance: (pageInfo) =>
@@ -1045,7 +1045,7 @@ const collectReplyThreads = (
 const performReplyPost = Effect.fnUntraced(function* (
   context: RepoRunContext,
   action: ReplyPostAction
-): Effect.fn.Return<ReplyDraftOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReplyDraftOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   const target = {
     commentId: action.draft.commentId,
     disposition: draftDisposition(action.draft),
@@ -1113,7 +1113,7 @@ const performReplyPost = Effect.fnUntraced(function* (
 const executeReplyAction = (
   context: RepoRunContext,
   action: ReplyAction
-): Effect.Effect<ReplyDraftOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<ReplyDraftOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
   Match.value(action).pipe(
     Match.tag("post", (post) => performReplyPost(context, post)),
     Match.tag("settled", (settled) => Effect.succeed(settled.outcome)),
@@ -1129,7 +1129,7 @@ const replyPreflight = Effect.fn("Yeet.replyPreflight")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ReplyLiveThread>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const repo = yield* replyGhOutput(context, ["repo", "view", "--json", "owner,name"], "gh repo view").pipe(
     Effect.flatMap((output) =>
@@ -1323,7 +1323,7 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
 ): Effect.fn.Return<
   ReplyReport,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const drafts = yield* loadReplyDrafts(context);
   const preflight = yield* Effect.result(replyPreflight(context, drafts.prNumber));

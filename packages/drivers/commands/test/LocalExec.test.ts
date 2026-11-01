@@ -6,6 +6,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
+import type * as CommandLine from "effect/process/CommandLine";
 
 /** Builds each test layer under the program's scope, with fresh per-invocation state. */
 const withLayer =
@@ -16,7 +17,7 @@ const withLayer =
     );
 
 /** The argv a command would actually spawn with. */
-const argv = (command: ChildProcess.Command): ReadonlyArray<string> => {
+const argv = (command: ChildProcess.Command): ReadonlyArray<CommandLine.Word> => {
   if (!ChildProcess.isStandardCommand(command)) {
     throw new Error("expected a standard command");
   }

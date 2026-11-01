@@ -3,7 +3,7 @@ import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -58,7 +58,7 @@ const decodeSummary = S.decodeEffect(S.fromJsonString(LawsRunSummary));
 const encodeSummary = S.encodeEffect(S.fromJsonString(LawsRunSummary));
 const summaryEquivalent = S.toEquivalence(LawsRunSummary);
 const summaryArbitrary = Arbitrary.schema(LawsRunSummary);
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 const writeFile = Effect.fn("LawsTurboTest.writeFile")(function* (root: string, file: string, content: string) {
   const fs = yield* FileSystem.FileSystem;

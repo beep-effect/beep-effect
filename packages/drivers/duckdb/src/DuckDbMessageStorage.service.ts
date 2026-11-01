@@ -14,12 +14,12 @@ import { $DuckdbId } from "@beep/identity/packages";
 import { quotedString } from "@duckdb/node-api";
 // eslint-disable effect/no-bigint-literals
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
 import { PersistenceError } from "effect/cluster/ClusterError";
 import * as MessageStorage from "effect/cluster/MessageStorage";
 import { SaveResultEncoded } from "effect/cluster/MessageStorage";
 import * as ShardId from "effect/cluster/ShardId";
 import * as Snowflake from "effect/cluster/Snowflake";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { identity } from "effect/Function";
@@ -85,7 +85,7 @@ const withTracerDisabled = Effect.withTracerEnabled(false);
  */
 export const makeEncoded: (options?: {
   readonly prefix?: string | undefined;
-}) => Effect.Effect<MessageStorage.Encoded, never, SqlClient.SqlClient | Crypto.Crypto> = (options) =>
+}) => Effect.Effect<MessageStorage.Encoded, never, SqlClient.SqlClient | Digest.Digest> = (options) =>
   Effect.andThen(runMessageMigrations(options), makeEncodedStorage(options));
 
 const makeEncodedStorage = Effect.fnUntraced(function* (
@@ -96,7 +96,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
     | undefined
 ) {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const prefix = options?.prefix ?? "cluster";
   const table = (name: string) => `${prefix}_${name}`;
 
@@ -122,7 +122,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
   const messageIdForPrimaryKey = (primaryKey: string): Effect.Effect<string, PlatformError.PlatformError> =>
     primaryKey.length <= 255
       ? Effect.succeed(primaryKey)
-      : Effect.map(crypto.digest("SHA-256", encoder.encode(primaryKey)), Hex.encode);
+      : Effect.map(crypto.digest(Digest.sha256, encoder.encode(primaryKey)), Hex.encode);
 
   const messageIdEnforcesWidth = false;
   // sqlite's TEXT message_id column stored over-length plaintext keys before
@@ -690,7 +690,7 @@ export const make: (options?: {
 }) => Effect.Effect<
   MessageStorage.MessageStorage["Service"],
   never,
-  SqlClient.SqlClient | Snowflake.Generator | Crypto.Crypto
+  SqlClient.SqlClient | Snowflake.Generator | Digest.Digest
 > = (options) => Effect.flatMap(makeEncoded(options), MessageStorage.makeEncoded);
 
 /**
@@ -855,7 +855,7 @@ export const layerMigrations = (options: {
  */
 export const layerStorage = (options: {
   readonly prefix?: string | undefined;
-}): Layer.Layer<MessageStorage.MessageStorage, never, SqlClient.SqlClient | ShardingConfig | Crypto.Crypto> =>
+}): Layer.Layer<MessageStorage.MessageStorage, never, SqlClient.SqlClient | ShardingConfig | Digest.Digest> =>
   Layer.effect(
     MessageStorage.MessageStorage,
     Effect.flatMap(makeEncodedStorage(options), MessageStorage.makeEncoded)
@@ -886,7 +886,7 @@ export const layerStorage = (options: {
  */
 export const layerWith = (options: {
   readonly prefix?: string | undefined;
-}): Layer.Layer<MessageStorage.MessageStorage, never, SqlClient.SqlClient | ShardingConfig | Crypto.Crypto> =>
+}): Layer.Layer<MessageStorage.MessageStorage, never, SqlClient.SqlClient | ShardingConfig | Digest.Digest> =>
   layerStorage(options).pipe(Layer.provide(layerMigrations(options)));
 
 /**
@@ -915,7 +915,7 @@ export const layerWith = (options: {
 export const layer: Layer.Layer<
   MessageStorage.MessageStorage,
   never,
-  SqlClient.SqlClient | ShardingConfig | Crypto.Crypto
+  SqlClient.SqlClient | ShardingConfig | Digest.Digest
 > = layerWith({});
 
 // -------------------------------------------------------------------------------------------------

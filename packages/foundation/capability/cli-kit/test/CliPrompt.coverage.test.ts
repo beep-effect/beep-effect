@@ -23,6 +23,7 @@ it.effect("the wizard gate leaves a consumer config without Wizard untouched", (
 const real = Terminal.make({
   columns: Effect.succeed(80),
   rows: Effect.succeed(24),
+  size: Effect.die("unused size queue"),
   readInput: Effect.die("unused input queue"),
   readLine: Effect.succeed("person answered"),
   display: () => Effect.void,

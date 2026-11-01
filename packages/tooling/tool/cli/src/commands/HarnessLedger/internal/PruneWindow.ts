@@ -101,8 +101,10 @@ export const enumeratePruneCandidates = Effect.fn("HarnessLedger.enumeratePruneC
   ]);
   return yield* Effect.forEach(refs, ([kind, name]) =>
     contextSurfaceId(kind, name).pipe(
-      Effect.map((surfaceId) => PruneSurfaceCandidate.make({ kind, name, surfaceId })),
-      Effect.mapError(HarnessLedgerIoError.wrap(`Failed to hash surface ${kind}:${name}.`))
+      Effect.mapBoth({
+        onFailure: HarnessLedgerIoError.wrap(`Failed to hash surface ${kind}:${name}.`),
+        onSuccess: (surfaceId) => PruneSurfaceCandidate.make({ kind, name, surfaceId }),
+      })
     )
   );
 });
@@ -474,8 +476,10 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   const windows = A.filterMap(Str.split(windowsText, "\n"), (line) => HookPulseDisarmWindow.decodeJsonResult(line));
   const sentinel = yield* Config.String("BEEP_HOOK_PULSE_DISARM_SENTINEL").pipe(
     Config.withDefault(path.join(root, "hook-pulse.disarmed")),
-    Effect.map((value) => (value === "" ? path.join(root, "hook-pulse.disarmed") : value)),
-    Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve disarm sentinel."))
+    Effect.mapBoth({
+      onFailure: HarnessLedgerIoError.wrap("Cannot resolve disarm sentinel."),
+      onSuccess: (value) => (value === "" ? path.join(root, "hook-pulse.disarmed") : value),
+    })
   );
   const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.asSome, Effect.orElseSucceed(O.none<boolean>));
   const malformedWindows = A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>

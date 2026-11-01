@@ -9,7 +9,7 @@ import {
 import { restorationArchiveTesting as RA, withRestorationWriterClaim } from "@beep/repo-cli/test/Corpus";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as ByteSize from "effect/ByteSize";
@@ -27,7 +27,9 @@ import * as Str from "effect/String";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const corpusLayer = CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer));
+const corpusLayer = CorpusCommandServiceLive.pipe(
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 const collectorManifestJson = S.fromJsonString(CollectorManifestRecord);
 
 type ArchiveLedgerRace = "append-current" | "append-existing" | "append-type" | "repair-current" | "repair-opened";
@@ -76,7 +78,7 @@ const preserveOptions = (
   });
 
 describe("restoration archive boundary helpers", () => {
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "fails closed for canonical type, containment, crash, and prefix mismatches",
       Effect.fnUntraced(function* () {
@@ -119,7 +121,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "rejects overlapping canonical inputs and invalid collector destinations",
       Effect.fnUntraced(function* () {
@@ -224,7 +226,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "derives stable inventory and writer-coordination identities",
       Effect.fnUntraced(function* () {
@@ -272,7 +274,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "rejects unsupported inventories and contradictory denominators",
       Effect.fnUntraced(function* () {
@@ -415,7 +417,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "rejects collector destinations that appear only after inventory capture",
       Effect.fnUntraced(function* () {
@@ -457,7 +459,12 @@ describe("restoration archive boundary helpers", () => {
               : fs.readFileString(filePath, encoding),
         };
         const layer = CorpusCommandServiceLive.pipe(
-          Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, lateFileSystem)))
+          Layer.provide(
+            Layer.merge(
+              Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
+              Layer.succeed(FileSystem.FileSystem, lateFileSystem)
+            )
+          )
         );
         // Name the late-appearance refusal: without the late write the same row fails
         // earlier, on the present-row denominator, so a bare failure check proves nothing.
@@ -475,7 +482,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "fails closed when archive ledgers drift across repair and append boundaries",
       Effect.fnUntraced(function* () {
@@ -531,7 +538,12 @@ describe("restoration archive boundary helpers", () => {
               ),
           };
           const layer = CorpusCommandServiceLive.pipe(
-            Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, racingFileSystem)))
+            Layer.provide(
+              Layer.merge(
+                Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
+                Layer.succeed(FileSystem.FileSystem, racingFileSystem)
+              )
+            )
           );
           const options = RestorationPreserveOptions.make({
             ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
@@ -557,7 +569,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "stops after the bounded attempts when a source changes after every payload sync",
       Effect.fnUntraced(function* () {
@@ -604,7 +616,12 @@ describe("restoration archive boundary helpers", () => {
             ),
         };
         const layer = CorpusCommandServiceLive.pipe(
-          Layer.provide(Layer.merge(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, racingFileSystem)))
+          Layer.provide(
+            Layer.merge(
+              Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
+              Layer.succeed(FileSystem.FileSystem, racingFileSystem)
+            )
+          )
         );
         const options = RestorationPreserveOptions.make({
           ...preserveOptions(sourceRoot, rootArchive, corpusRoot, sourceManifest),
@@ -627,7 +644,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "reclaims dead writer generations and rejects ambiguous verification artifacts",
       Effect.fnUntraced(function* () {
@@ -763,7 +780,7 @@ describe("restoration archive boundary helpers", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "fails closed when live reclamation generations block stale claim replacement",
       Effect.fnUntraced(function* () {
@@ -979,7 +996,7 @@ describe("restoration archive boundary helpers", () => {
     })
   );
 
-  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "rejects changed sources, aliased partials, and opened-copy identity drift",
       Effect.fnUntraced(function* () {

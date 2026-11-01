@@ -15,7 +15,7 @@ import * as Layer from "effect/Layer";
 import { CandorPromotionSubjectResolver } from "./CandorPromotionGate.ports.ts";
 import type { SourceTextResolver } from "@beep/file-processing/SourceText";
 import type { CandorRecordReadError, CandorRecordReader } from "@beep/law-practice-use-cases/CandorPolicy";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { CandorPromotionSubjectResolutionError } from "./CandorPromotionGate.ports.ts";
 
 const blockedByCandor = PromotionBlockReason.make("law-practice-candor-policy-blocked");
@@ -45,7 +45,7 @@ const candorUnavailable = PromotionBlockReason.make("law-practice-candor-policy-
 export const makeCandorPromotionGate = Effect.fn("law-practice.candor_promotion_gate.make")(function* () {
   const policy = yield* CandorPolicy;
   const resolver = yield* CandorPromotionSubjectResolver;
-  const policyContext = yield* Effect.context<CandorRecordReader | Crypto.Crypto | SourceTextResolver>();
+  const policyContext = yield* Effect.context<CandorRecordReader | Digest.Digest | SourceTextResolver>();
 
   return PromotionGate.of({
     evaluate: Effect.fn("law-practice.candor_promotion_gate.evaluate")(function* (request) {
@@ -99,5 +99,5 @@ export const makeCandorPromotionGate = Effect.fn("law-practice.candor_promotion_
 export const CandorPromotionGateLive: Layer.Layer<
   PromotionGate,
   never,
-  CandorPolicy | CandorPromotionSubjectResolver | CandorRecordReader | Crypto.Crypto | SourceTextResolver
+  CandorPolicy | CandorPromotionSubjectResolver | CandorRecordReader | Digest.Digest | SourceTextResolver
 > = Layer.effect(PromotionGate, makeCandorPromotionGate());

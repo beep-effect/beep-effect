@@ -11,7 +11,7 @@ import { dual } from "effect/Function";
 import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
 import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
 import { SchemaFirstLintOptions } from "./Lint.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as O from "effect/Option";
 import type { CallExpression, SourceFile } from "ts-morph";
 import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.ts";
@@ -398,7 +398,7 @@ export const getsomesStructEntryFromCallExpression: {
  * reference counts only when its binding resolves to the `@beep/schema`
  * declaration of that export. Each entry carries a content anchor
  * (`<lexical path>::<export>@<hash>`), which is the membership key the
- * committed parity backlog ratchets on; hashing needs the `Crypto` service.
+ * committed parity backlog ratchets on; hashing needs the `Digest` service.
  *
  * **Example** (Detect a SchemaUtils default wrapper)
  *
@@ -413,7 +413,7 @@ export const getsomesStructEntryFromCallExpression: {
  *   'import { SchemaUtils } from "@beep/schema"\nexport const Widget = S.Struct({ title: S.String.pipe(SchemaUtils.withEncodeDefault) })'
  * )
  * const program = schemaFirstParityEntriesFromSourceFile(sourceFile, { file: "Widget.ts", owner: "@beep/test" })
- * // Provide Crypto (for example NodeServices.layer) to run it; the entry's symbol is "Widget.title".
+ * // Provide Digest (for example NodeCrypto.layer) to run it; the entry's symbol is "Widget.title".
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -428,11 +428,11 @@ export const schemaFirstParityEntriesFromSourceFile: {
     context: SchemaFirstDetectorContext
   ): (
     sourceFile: SourceFile
-  ) => Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
+  ) => Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Digest.Digest>;
   (
     sourceFile: SourceFile,
     context: SchemaFirstDetectorContext
-  ): Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Crypto.Crypto>;
+  ): Effect.Effect<ReadonlyArray<SchemaFirstInventoryEntry>, SchemaFirstInventoryReadError, Digest.Digest>;
 } = dual(2, (sourceFile: SourceFile, context: SchemaFirstDetectorContext) =>
   SchemaFirstDetectors.parityEntriesFromSourceFile(sourceFile, context.file, context.owner)
 );

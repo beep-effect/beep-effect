@@ -34,7 +34,7 @@ import {
   retiredEffectPathMappings,
   retiredEffectPathsAllowlist,
 } from "./RetiredEffectPaths.model.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -308,7 +308,7 @@ export const runRetiredEffectPaths = Effect.fn("RetiredEffectPaths.runRetiredEff
 ): Effect.fn.Return<
   RetiredEffectPathsSummary,
   RetiredEffectPathsExecutionError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { skippedFiles, ...scan } = yield* scanTrackedTextFiles({
     cwd: options.cwd,

@@ -25,7 +25,9 @@ const anchorReport = (result: { readonly content: ReadonlyArray<unknown> }): str
 
 const decodeAnchor = S.decodeUnknownEffect(McpDispatchAnchor);
 
-const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, FixtureRegistrationsLive, StubMcpClientLayer);
+const fullLayer = FixtureRegistrationsLive.pipe(
+  Layer.provideMerge(Layer.mergeAll(McpServer.McpServer.layer, StubMcpClientLayer))
+);
 
 describe("dispatch anchor", () => {
   it.effect("is absent by default", () =>
@@ -62,7 +64,8 @@ describe("dispatch anchor", () => {
   });
 
   it.layer(
-    Layer.mergeAll(McpServer.McpServer.layer, StubMcpClientLayer, FixtureRegistrationsLive).pipe(
+    FixtureRegistrationsLive.pipe(
+      Layer.provideMerge(Layer.mergeAll(McpServer.McpServer.layer, StubMcpClientLayer)),
       Layer.provide(Layer.succeed(CurrentMcpDispatchAnchor, O.some(McpDispatchAnchor.make("captured-at-build"))))
     ),
     { timeout: "5 seconds" }

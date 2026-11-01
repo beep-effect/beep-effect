@@ -10,12 +10,12 @@ import {
   pathAtomKind,
 } from "@beep/repo-cli/commands/Ci/RouteClassify";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -69,8 +69,8 @@ const rows = (changeSet: ChangeSet): ReadonlyArray<ReadonlyArray<string>> =>
   ]);
 
 const sha256 = Effect.fn("routeClassifyTest.sha256")(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+  const digest = yield* Digest.Digest;
+  return Hex.encode(yield* digest.digest(Digest.sha256, new TextEncoder().encode(text)));
 });
 
 const Segment = S.Literals([
@@ -138,7 +138,7 @@ const GIT_IDENTITY = [
   "commit.gpgsign=false",
 ];
 
-const TestLayer = Layer.provideMerge(ChangeClassifierLive, NodeServices.layer);
+const TestLayer = Layer.provideMerge(ChangeClassifierLive, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 it.layer(TestLayer, { timeout: "60 seconds" })("verification route classify", (it) => {
   describe("totality", () => {

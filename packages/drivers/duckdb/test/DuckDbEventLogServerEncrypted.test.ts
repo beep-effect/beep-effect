@@ -8,9 +8,9 @@ import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as EventJournal from "effect/eventlog/EventJournal";
-import * as EventLogEncryption from "effect/eventlog/EventLogEncryption";
 import { StoreId } from "effect/eventlog/EventLogMessage";
 import * as EventLogServerEncrypted from "effect/eventlog/EventLogServerEncrypted";
 import * as Layer from "effect/Layer";
@@ -18,7 +18,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
-it.layer(Layer.merge(DuckDbTestLayer, EventLogEncryption.layerSubtle), { timeout: "30 seconds" })(
+it.layer(Layer.merge(DuckDbTestLayer, Digest.layerWebCrypto), { timeout: "30 seconds" })(
   "DuckDB encrypted boundaries",
   (it) => {
     it.effect("round-trips epoch-sized sequence ranges and deduplicates retries", () =>
@@ -33,9 +33,9 @@ it.layer(Layer.merge(DuckDbTestLayer, EventLogEncryption.layerSubtle), { timeout
         const second = EventJournal.makeEntryIdUnsafe();
         const batch = { entryIds: A.of(first), iv: new Uint8Array(12), encryptedBatch: Uint8Array.of(5) };
         yield* storage.write(publicKey, storeId, [batch]);
-        const encryption = yield* EventLogEncryption.EventLogEncryption;
+        const digest = yield* Digest.Digest;
         const scopeKey = `${publicKey}/${storeId}`;
-        const hash = Str.slice(0, 16)(yield* encryption.sha256String(new TextEncoder().encode(scopeKey)));
+        const hash = Str.slice(0, 16)(yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(scopeKey)));
         const sql = yield* SqlClient.SqlClient;
         const epoch = 1793151157372;
         yield* sql`UPDATE ${sql(`width_encrypted_${hash}`)} SET sequence = ${epoch}, last_sequence = ${epoch}`;

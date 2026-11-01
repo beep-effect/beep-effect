@@ -4,8 +4,9 @@
  *
  * **Details**
  *
- * `effect/Crypto` has no PBKDF2 or AES-GCM, so the codec uses WebCrypto (`globalThis.crypto.subtle`)
- * as an internal algorithm primitive; it is neither wrapped nor re-exported.
+ * The codec predates `effect/crypto/Kdf` and `effect/crypto/Aead` (effect 4.1.0); the effect 4.0 crypto
+ * service had no PBKDF2 or AES-GCM, so the codec uses WebCrypto (`globalThis.crypto.subtle`) as an
+ * internal algorithm primitive; it is neither wrapped nor re-exported.
  *
  * @packageDocumentation
  * @since 0.0.0

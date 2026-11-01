@@ -26,6 +26,7 @@ import { CandorRecordReadError } from "./CandorPolicy.errors.ts";
 import { CandorPolicy, CandorPolicyShape, CandorRecordReader } from "./CandorPolicy.ports.ts";
 import { CandorGateVerdict, UncoveredEvent } from "./CandorPolicy.values.ts";
 import type { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
+import type * as Digest from "effect/crypto/Digest";
 import type { CandorFilingScope, UncoveredReason } from "./CandorPolicy.values.ts";
 
 const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.service");
@@ -124,7 +125,7 @@ const supersededEventIds = (group: ReadonlyArray<PatentCitationEvent>) =>
 const coverageReason = Effect.fn("CandorPolicy.coverageReason")(function* (
   head: PatentCitationEvent,
   dispositions: ReadonlyArray<CandorDisposition>
-): Effect.fn.Return<O.Option<UncoveredReason>, never, SourceTextResolver | import("effect/Crypto").Crypto> {
+): Effect.fn.Return<O.Option<UncoveredReason>, never, SourceTextResolver | Digest.Digest> {
   if (O.isSome(head.quarantine)) {
     return O.some("quarantined");
   }
@@ -209,7 +210,7 @@ const dispositionReason = (
 const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
   group: ReadonlyArray<PatentCitationEvent>,
   dispositions: ReadonlyArray<CandorDisposition>
-): Effect.fn.Return<ReadonlyArray<UncoveredEvent>, never, SourceTextResolver | import("effect/Crypto").Crypto> {
+): Effect.fn.Return<ReadonlyArray<UncoveredEvent>, never, SourceTextResolver | Digest.Digest> {
   const superseded = supersededEventIds(group);
   const heads = A.filter(group, (event) => !HashSet.has(superseded, event.id));
 
@@ -308,7 +309,7 @@ export const makeCandorPolicy = (): CandorPolicyShape =>
  * **Details**
  *
  * The layer itself has no dependencies. The record seam, the source-text
- * resolver, and `Crypto.Crypto` all travel in the requirement channel of
+ * resolver, and `Digest.Digest` all travel in the requirement channel of
  * `evaluate`, so the caller decides where recorded material and source custody
  * come from and this slice never owns a live layer for either.
  *

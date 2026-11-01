@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -39,22 +39,16 @@ const textEncoder = new TextEncoder();
  * @category utilities
  * @since 0.0.0
  */
-export const publishJournalTextAtomically = Effect.fn("JournalFile.publishTextAtomically")(function* (
+export const publishJournalTextAtomically = Effect.fn("JournalFile.publishTextAtomically")(function* <R = never>(
   targetPath: string,
   content: string,
   label: string,
-  beforePublish: Effect.Effect<
-    void,
-    QualitySchedulerError,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path
-  > = Effect.void
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  beforePublish: Effect.Effect<void, QualitySchedulerError, R> = Effect.void
+): Effect.fn.Return<void, QualitySchedulerError, R | SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto
-    .randomUUIDv4()
-    .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to create a staging identity for ${label}.`)));
+  const crypto = yield* SecureRandom.SecureRandom;
+  const token = yield* crypto.uuidV4();
   const stagingPath = `${targetPath}.staging-${process.pid}-${token}`;
   yield* Effect.ensuring(
     Effect.gen(function* () {

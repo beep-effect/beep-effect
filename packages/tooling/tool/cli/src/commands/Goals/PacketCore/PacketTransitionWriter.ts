@@ -25,7 +25,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe } from "@beep/utils";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
@@ -58,6 +58,7 @@ import {
   PacketStreamLocator,
 } from "./PacketEventStore.ts";
 import { foldPacketEvents, projectPacketTrace, renderPacketTraceFile } from "./PacketFold.ts";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as PlatformError from "effect/PlatformError";
 import type { PacketCasConflictError } from "./PacketCore.errors.ts";
 import type { PacketEventId } from "./PacketCore.schemas.ts";
@@ -424,7 +425,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
   const store = yield* PacketEventStore;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
 
   const tracePathFor = (packetPath: string): string => path.join(packetPath, ...PACKET_TRACE_SEGMENTS);
 
@@ -463,7 +464,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
       seq = 1;
       parent = O.some(
         yield* packetEventDigest(genesis).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
+          Effect.provideService(Digest.Digest, crypto),
           Effect.mapError(streamErrorFromSchema(request.locator.packet, "genesis event could not be encoded"))
         )
       );
@@ -527,7 +528,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     let stored = A.empty<StoredPacketEvent>();
     for (const event of events) {
       const id = yield* packetEventDigest(event).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.mapError(streamErrorFromSchema(packet, "draft event could not be encoded"))
       );
       stored = A.append(stored, StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event }));
@@ -733,7 +734,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
 export const PacketTransitionWriterLive: Layer.Layer<
   PacketTransitionWriter,
   never,
-  PacketEventStore | FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  PacketEventStore | FileSystem.FileSystem | Path.Path | Digest.Digest
 > = Layer.effect(PacketTransitionWriter, makePacketTransitionWriter());
 
 /**
@@ -753,5 +754,5 @@ export const PacketTransitionWriterLive: Layer.Layer<
 export const PacketCoreLive: Layer.Layer<
   PacketTransitionWriter | PacketEventStore,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
 > = PacketTransitionWriterLive.pipe(Layer.provideMerge(PacketEventStoreLive));

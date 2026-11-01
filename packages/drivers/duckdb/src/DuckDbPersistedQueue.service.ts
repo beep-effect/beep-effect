@@ -16,7 +16,7 @@ import { quotedString as quoteString } from "@duckdb/node-api";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
@@ -125,95 +125,98 @@ export const makeStoreSql: (
         readonly lockExpiration?: Duration.Input | undefined;
       }
     | undefined
-) => Effect.Effect<PersistedQueueStore["Service"], SqlError, SqlClient.SqlClient | Crypto.Crypto | Scope.Scope> =
-  Effect.fnUntraced(function* (options) {
-    const crypto = yield* Crypto.Crypto;
-    const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-    const tableName = options?.tableName ?? "effect_queue";
-    const tableNameSql = sql(tableName);
-    const pollInterval = Duration.max(
-      options?.pollInterval !== undefined ? Duration.fromInputUnsafe(options.pollInterval) : Duration.millis(1000),
-      Duration.millis(1)
-    );
-    const lockRefreshInterval = Duration.max(
-      options?.lockRefreshInterval !== undefined
-        ? Duration.fromInputUnsafe(options.lockRefreshInterval)
-        : Duration.seconds(30),
-      Duration.millis(1)
-    );
-    const lockExpiration = Duration.max(
-      options?.lockExpiration !== undefined ? Duration.fromInputUnsafe(options.lockExpiration) : Duration.minutes(2),
-      Duration.millis(1)
-    );
-    const ackRetrySchedule = makeAckRetrySchedule(lockExpiration);
+) => Effect.Effect<
+  PersistedQueueStore["Service"],
+  SqlError,
+  SqlClient.SqlClient | SecureRandom.SecureRandom | Scope.Scope
+> = Effect.fnUntraced(function* (options) {
+  const crypto = yield* SecureRandom.SecureRandom;
+  const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+  const tableName = options?.tableName ?? "effect_queue";
+  const tableNameSql = sql(tableName);
+  const pollInterval = Duration.max(
+    options?.pollInterval !== undefined ? Duration.fromInputUnsafe(options.pollInterval) : Duration.millis(1000),
+    Duration.millis(1)
+  );
+  const lockRefreshInterval = Duration.max(
+    options?.lockRefreshInterval !== undefined
+      ? Duration.fromInputUnsafe(options.lockRefreshInterval)
+      : Duration.seconds(30),
+    Duration.millis(1)
+  );
+  const lockExpiration = Duration.max(
+    options?.lockExpiration !== undefined ? Duration.fromInputUnsafe(options.lockExpiration) : Duration.minutes(2),
+    Duration.millis(1)
+  );
+  const ackRetrySchedule = makeAckRetrySchedule(lockExpiration);
 
-    yield* runMigrations({ loader: sqlMigrations(tableName), table: `${tableName}_migrations` });
+  yield* runMigrations({ loader: sqlMigrations(tableName), table: `${tableName}_migrations` });
 
-    // beep: DuckDB timestamp functions are transaction-stable; delayed offers bind the offer-time clock below.
-    const sqlNow = sql.literal("get_current_timestamp()");
-    const secondsOffset = (seconds: number) => sql`${sqlNow} + INTERVAL '${sql.literal(seconds.toString())} seconds'`;
-    const secondsAgo = (seconds: number) => secondsOffset(-Math.max(Math.ceil(seconds), 0));
-    const secondsFromNow = (seconds: number) => secondsOffset(Math.max(Math.ceil(seconds), 0));
-    // beep: DuckDB clocks are transaction-stable; bind a live offer-time TIMESTAMPTZ, independent of session time zone.
-    const delayedVisibleAt = (delay: Duration.Duration, now: number) =>
-      sql`make_timestamptz(CAST(${now + Math.ceil(Duration.toMillis(delay))} AS BIGINT) * 1000)`;
-    const expiresAt = lockExpiration.pipe(Duration.toSeconds, secondsAgo);
+  // beep: DuckDB timestamp functions are transaction-stable; delayed offers bind the offer-time clock below.
+  const sqlNow = sql.literal("get_current_timestamp()");
+  const secondsOffset = (seconds: number) => sql`${sqlNow} + INTERVAL '${sql.literal(seconds.toString())} seconds'`;
+  const secondsAgo = (seconds: number) => secondsOffset(-Math.max(Math.ceil(seconds), 0));
+  const secondsFromNow = (seconds: number) => secondsOffset(Math.max(Math.ceil(seconds), 0));
+  // beep: DuckDB clocks are transaction-stable; bind a live offer-time TIMESTAMPTZ, independent of session time zone.
+  const delayedVisibleAt = (delay: Duration.Duration, now: number) =>
+    sql`make_timestamptz(CAST(${now + Math.ceil(Duration.toMillis(delay))} AS BIGINT) * 1000)`;
+  const expiresAt = lockExpiration.pipe(Duration.toSeconds, secondsAgo);
 
-    const offer = (id: string, name: string, element: string, visibleAt: Fragment) =>
-      sql`
+  const offer = (id: string, name: string, element: string, visibleAt: Fragment) =>
+    sql`
         INSERT OR IGNORE INTO ${tableNameSql} (id, queue_name, element, state, attempts, visible_at, created_at, updated_at)
         VALUES (${id}, ${name}, ${element}, 'pending', 0, ${visibleAt}, ${sqlNow}, ${sqlNow})
       `;
 
-    const wrapString = (s: string) => `'${s}'`;
-    const stringLiteral = (s: string) => sql.literal(wrapString(s));
+  const wrapString = (s: string) => `'${s}'`;
+  const stringLiteral = (s: string) => sql.literal(wrapString(s));
 
-    // Elements this store has claimed and not yet settled. Each poll claims its
-    // rows under a fresh lock, so a settlement only matches the acquisition it
-    // belongs to, even after the same store re-claims a lapsed row.
-    let held = HashSet.empty<Element>();
-    const refreshLocks: Effect.Effect<void, SqlError> = Effect.suspend((): Effect.Effect<void, SqlError> => {
-      if (HashSet.size(held) === 0) return Effect.void;
-      let sequences = HashSet.empty<number | string>();
-      let locks = HashSet.empty<string>();
-      for (const element of held) {
-        sequences = HashSet.add(sequences, element.sequence);
-        locks = HashSet.add(locks, wrapString(element.lock));
-      }
-      // A row only ever carries the lock of the poll that claimed it, so matching
-      // every held sequence against every live lock renews just this store's own
-      // claims while keeping the statement flat
-      return sql`
+  // Elements this store has claimed and not yet settled. Each poll claims its
+  // rows under a fresh lock, so a settlement only matches the acquisition it
+  // belongs to, even after the same store re-claims a lapsed row.
+  let held = HashSet.empty<Element>();
+  const refreshLocks: Effect.Effect<void, SqlError> = Effect.suspend((): Effect.Effect<void, SqlError> => {
+    if (HashSet.size(held) === 0) return Effect.void;
+    let sequences = HashSet.empty<number | string>();
+    let locks = HashSet.empty<string>();
+    for (const element of held) {
+      sequences = HashSet.add(sequences, element.sequence);
+      locks = HashSet.add(locks, wrapString(element.lock));
+    }
+    // A row only ever carries the lock of the poll that claimed it, so matching
+    // every held sequence against every live lock renews just this store's own
+    // claims while keeping the statement flat
+    return sql`
       UPDATE ${tableNameSql}
       SET acquired_at = ${sqlNow}
       WHERE sequence IN (${sql.literal(A.join(A.map(A.fromIterable(sequences), String), ","))})
       AND acquired_by IN (${sql.literal(A.join(A.fromIterable(locks), ","))})
     `;
-    });
-    const ack = (statement: Effect.Effect<unknown, SqlError>, element: Element): Effect.Effect<void> =>
-      statement.pipe(
-        Effect.retry(ackRetrySchedule),
-        Effect.orDie,
-        Effect.ensuring(
-          Effect.sync(() => {
-            held = HashSet.remove(held, element);
-          })
-        ),
-        Effect.asVoid
-      );
-    const complete = (element: Element) =>
-      ack(
-        sql`
+  });
+  const ack = (statement: Effect.Effect<unknown, SqlError>, element: Element): Effect.Effect<void> =>
+    statement.pipe(
+      Effect.retry(ackRetrySchedule),
+      Effect.orDie,
+      Effect.ensuring(
+        Effect.sync(() => {
+          held = HashSet.remove(held, element);
+        })
+      ),
+      Effect.asVoid
+    );
+  const complete = (element: Element) =>
+    ack(
+      sql`
         UPDATE ${tableNameSql}
         SET acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow}, state = 'completed'
         WHERE sequence = ${element.sequence}
         AND acquired_by = ${stringLiteral(element.lock)}
       `,
-        element
-      );
-    const fail = (element: Element, cause: Cause.Cause<unknown>) =>
-      ack(
-        sql`
+      element
+    );
+  const fail = (element: Element, cause: Cause.Cause<unknown>) =>
+    ack(
+      sql`
         UPDATE ${tableNameSql}
         SET acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow}, state = 'failed', last_failure = ${Cause.pretty(
           cause
@@ -221,11 +224,11 @@ export const makeStoreSql: (
         WHERE sequence = ${element.sequence}
         AND acquired_by = ${stringLiteral(element.lock)}
       `,
-        element
-      );
-    const retry = (element: Element, delay: Duration.Duration, cause: Cause.Cause<unknown>) =>
-      ack(
-        sql`
+      element
+    );
+  const retry = (element: Element, delay: Duration.Duration, cause: Cause.Cause<unknown>) =>
+    ack(
+      sql`
         UPDATE ${tableNameSql}
         SET acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow}, visible_at = ${delay.pipe(
           Duration.toSeconds,
@@ -234,60 +237,60 @@ export const makeStoreSql: (
         WHERE sequence = ${element.sequence}
         AND acquired_by = ${stringLiteral(element.lock)}
       `,
-        element
-      );
-    const interrupt = (element: Element) =>
-      ack(
-        sql`
+      element
+    );
+  const interrupt = (element: Element) =>
+    ack(
+      sql`
         UPDATE ${tableNameSql}
         SET acquired_at = NULL, acquired_by = NULL, attempts = attempts - 1
         WHERE sequence = ${element.sequence}
         AND acquired_by = ${stringLiteral(element.lock)}
       `,
-        element
-      );
-
-    yield* refreshLocks.pipe(
-      Effect.tapCause(Effect.logWarning),
-      Effect.retry(Schedule.spaced(500)),
-      Effect.schedule(Schedule.fixed(lockRefreshInterval)),
-      Effect.annotateLogs({
-        package: "@effect/sql",
-        module: "SqlPersistedQueue",
-        fiber: "refreshLocks",
-      }),
-      Effect.forkScoped
+      element
     );
 
-    // beep: SQL row shapes derive from annotated schemas.
-    const Element = S.Struct({
-      id: S.String,
-      sequence: S.Union([S.Finite, S.String]),
-      element: S.String,
-      attempts: S.mutableKey(S.Finite),
-      lock: S.mutableKey(S.String),
-    }).pipe($I.annoteSchema("Element", { description: "DuckDB Element persisted row." }));
-    type Element = typeof Element.Type;
-    const queueStates = makeQueueStates();
-    const mailboxes = yield* RcMap.make({
-      lookup: Effect.fnUntraced(function* (name: string) {
-        const state = queueStates.get(name);
-        const maxAttempts = state.maxAttempts;
-        const queue = yield* Queue.make<Element>();
-        const takers = MutableRef.make(0);
-        const pollLatch = Latch.makeUnsafe();
-        const takenLatch = Latch.makeUnsafe();
-        const nudge = state.nudge;
+  yield* refreshLocks.pipe(
+    Effect.tapCause(Effect.logWarning),
+    Effect.retry(Schedule.spaced(500)),
+    Effect.schedule(Schedule.fixed(lockRefreshInterval)),
+    Effect.annotateLogs({
+      package: "@effect/sql",
+      module: "SqlPersistedQueue",
+      fiber: "refreshLocks",
+    }),
+    Effect.forkScoped
+  );
 
-        yield* Effect.addFinalizer(() =>
-          Effect.flatMap(Queue.clear(queue), (elements) =>
-            Effect.forEach(elements, interrupt, { concurrency: "unbounded", discard: true })
-          )
-        );
+  // beep: SQL row shapes derive from annotated schemas.
+  const Element = S.Struct({
+    id: S.String,
+    sequence: S.Union([S.Finite, S.String]),
+    element: S.String,
+    attempts: S.mutableKey(S.Finite),
+    lock: S.mutableKey(S.String),
+  }).pipe($I.annoteSchema("Element", { description: "DuckDB Element persisted row." }));
+  type Element = typeof Element.Type;
+  const queueStates = makeQueueStates();
+  const mailboxes = yield* RcMap.make({
+    lookup: Effect.fnUntraced(function* (name: string) {
+      const state = queueStates.get(name);
+      const maxAttempts = state.maxAttempts;
+      const queue = yield* Queue.make<Element>();
+      const takers = MutableRef.make(0);
+      const pollLatch = Latch.makeUnsafe();
+      const takenLatch = Latch.makeUnsafe();
+      const nudge = state.nudge;
 
-        // flip exhausted rows whose lock expired (worker crashed on the final
-        // attempt) to failed, since no finalizer will ever run for them
-        yield* sql`
+      yield* Effect.addFinalizer(() =>
+        Effect.flatMap(Queue.clear(queue), (elements) =>
+          Effect.forEach(elements, interrupt, { concurrency: "unbounded", discard: true })
+        )
+      );
+
+      // flip exhausted rows whose lock expired (worker crashed on the final
+      // attempt) to failed, since no finalizer will ever run for them
+      yield* sql`
         UPDATE ${tableNameSql}
         SET state = 'failed', acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow},
           last_failure = COALESCE(last_failure, 'Lock expired after final attempt')
@@ -296,15 +299,15 @@ export const makeStoreSql: (
         AND attempts >= ${maxAttempts}
         AND (acquired_at IS NULL OR acquired_at < ${expiresAt})
       `.pipe(
-          Effect.tapCause(Effect.logWarning),
-          Effect.ignore,
-          Effect.schedule(Schedule.spaced(lockRefreshInterval)),
-          Effect.forkScoped,
-          Effect.interruptible
-        );
+        Effect.tapCause(Effect.logWarning),
+        Effect.ignore,
+        Effect.schedule(Schedule.spaced(lockRefreshInterval)),
+        Effect.forkScoped,
+        Effect.interruptible
+      );
 
-        const poll = (size: number, lockSql: Fragment) =>
-          sql<Element>`
+      const poll = (size: number, lockSql: Fragment) =>
+        sql<Element>`
             UPDATE ${tableNameSql}
             SET acquired_at = ${sqlNow}, acquired_by = ${lockSql}, attempts = attempts + 1
             WHERE sequence IN (
@@ -320,42 +323,42 @@ export const makeStoreSql: (
             RETURNING sequence, id, element, attempts
           `;
 
-        yield* Effect.gen(function* () {
-          while (true) {
-            yield* pollLatch.await;
-            yield* Effect.yieldNow;
-            nudge.closeUnsafe();
-            const lock = yield* crypto.randomUUIDv4();
-            // beep: no zero-takers short-circuit; a taker leaving mid-iteration polls `LIMIT 0`, which returns no rows.
-            const results = yield* poll(takers.current, stringLiteral(lock));
-            if (results.length === 0) {
-              yield* Effect.race(Effect.sleep(pollInterval), nudge.await);
-              continue;
-            }
-            takenLatch.closeUnsafe();
-            for (const row of results) {
-              row.attempts = Number(row.attempts);
-              row.lock = lock;
-              held = HashSet.add(held, row);
-            }
-            yield* Queue.offerAll(queue, results);
-            yield* takenLatch.await;
-            yield* Effect.yieldNow;
+      yield* Effect.gen(function* () {
+        while (true) {
+          yield* pollLatch.await;
+          yield* Effect.yieldNow;
+          nudge.closeUnsafe();
+          const lock = yield* crypto.uuidV4();
+          // beep: no zero-takers short-circuit; a taker leaving mid-iteration polls `LIMIT 0`, which returns no rows.
+          const results = yield* poll(takers.current, stringLiteral(lock));
+          if (results.length === 0) {
+            yield* Effect.race(Effect.sleep(pollInterval), nudge.await);
+            continue;
           }
-        }).pipe(
-          Effect.tapCause(Effect.logWarning),
-          Effect.sandbox,
-          Effect.retry(Schedule.spaced(500)),
-          Effect.forkScoped
-        );
+          takenLatch.closeUnsafe();
+          for (const row of results) {
+            row.attempts = Number(row.attempts);
+            row.lock = lock;
+            held = HashSet.add(held, row);
+          }
+          yield* Queue.offerAll(queue, results);
+          yield* takenLatch.await;
+          yield* Effect.yieldNow;
+        }
+      }).pipe(
+        Effect.tapCause(Effect.logWarning),
+        Effect.sandbox,
+        Effect.retry(Schedule.spaced(500)),
+        Effect.forkScoped
+      );
 
-        return { queue, takers, pollLatch, takenLatch } as const;
-      }),
-      idleTimeToLive: Duration.seconds(30),
-    });
+      return { queue, takers, pollLatch, takenLatch } as const;
+    }),
+    idleTimeToLive: Duration.seconds(30),
+  });
 
-    const cleanupBatch = (state: string, seconds: number) =>
-      sql<{ readonly deleted: number }>`
+  const cleanupBatch = (state: string, seconds: number) =>
+    sql<{ readonly deleted: number }>`
         DELETE FROM ${tableNameSql}
         WHERE sequence IN (
           SELECT sequence FROM ${tableNameSql}
@@ -365,132 +368,132 @@ export const makeStoreSql: (
         RETURNING 1 AS deleted
       `.pipe(Effect.map((rows) => rows.length));
 
-    const cleanupState = (state: string, timeToLive: Duration.Duration) =>
-      cleanupBatch(state, Duration.toSeconds(timeToLive)).pipe(
-        Effect.repeat({
-          while: (deletedCount) => deletedCount === sqlCleanupBatchSize,
-          schedule: Schedule.spaced(Duration.millis(10)),
-        })
-      );
+  const cleanupState = (state: string, timeToLive: Duration.Duration) =>
+    cleanupBatch(state, Duration.toSeconds(timeToLive)).pipe(
+      Effect.repeat({
+        while: (deletedCount) => deletedCount === sqlCleanupBatchSize,
+        schedule: Schedule.spaced(Duration.millis(10)),
+      })
+    );
 
-    return PersistedQueueStore.of({
-      offer: Effect.fn("DuckDbPersistedQueue.offer")(({ delay, element, id, name }) =>
-        Effect.catchCause(
-          Effect.gen(function* () {
-            const now = yield* Clock.Clock.defaultValue().currentTimeMillis;
-            return yield* offer(
-              id,
-              name,
-              yield* encodeJsonEffect(element),
-              delay === undefined ? sqlNow : delayedVisibleAt(delay, now)
-            );
-          }),
-          (cause) =>
-            Effect.fail(
-              PersistedQueueError.make({
-                message: "Failed to offer element to persisted queue",
-                cause,
-              })
-            )
-        ).pipe(
-          // Wake takers once the offer is committed.
-          Effect.tap(() =>
-            sql.afterCommit(
-              Effect.sync(() => {
-                queueStates.peek(name)?.nudge.openUnsafe();
-              })
-            )
-          )
-        )
-      ),
-      take: Effect.fn("DuckDbPersistedQueue.take")((options) => {
-        queueStates.get(options.name).maxAttempts = options.maxAttempts;
-        const loop: Effect.Effect<
-          {
-            readonly id: string;
-            readonly attempts: number;
-            readonly element: unknown;
-          },
-          PersistedQueueError,
-          Scope.Scope
-        > = Effect.uninterruptibleMask((restore) =>
-          RcMap.get(mailboxes, options.name).pipe(
-            Effect.flatMap(({ pollLatch, queue, takenLatch, takers }) => {
-              takers.current++;
-              if (takers.current === 1) {
-                pollLatch.openUnsafe();
-              }
-              // onExit so the decrement also runs when a waiting take is
-              // interrupted, otherwise the poller keeps fetching for a phantom
-              // taker
-              return Effect.onExit(restore(Queue.take(queue)), () =>
-                Effect.sync(() => {
-                  takers.current--;
-                  if (takers.current === 0) {
-                    pollLatch.closeUnsafe();
-                    takenLatch.openUnsafe();
-                  } else if (Queue.sizeUnsafe(queue) === 0) {
-                    takenLatch.openUnsafe();
-                  }
-                })
-              );
-            }),
-            Effect.scoped,
-            restore,
-            Effect.flatMap((element) => {
-              let parsed: unknown;
-              try {
-                parsed = decodeJson(element.element);
-              } catch (defect) {
-                // a row that cannot be parsed will never succeed, so dead-letter
-                // it and take the next element
-                // beep: restore so the next take stays interruptible instead of inheriting this mask (#2306 review).
-                return Effect.andThen(fail(element, Cause.die(defect)), restore(loop));
-              }
-              return Effect.as(
-                Effect.addFinalizer((exit) => {
-                  if (exit._tag === "Success") {
-                    return complete(element);
-                  }
-                  const dead = deadLetterFromCause(exit.cause);
-                  if (dead !== undefined) {
-                    return fail(element, dead.cause);
-                  }
-                  if (Cause.hasInterruptsOnly(exit.cause)) {
-                    return interrupt(element);
-                  }
-                  if (element.attempts >= options.maxAttempts) {
-                    return fail(element, exit.cause);
-                  }
-                  return Effect.flatMap(options.retryDelay(element.attempts), (delay) =>
-                    retry(element, delay, exit.cause)
-                  );
-                }),
-                { id: element.id, attempts: element.attempts, element: parsed }
-              );
-            })
-          )
-        );
-        return loop;
-      }),
-      cleanup: Effect.fnUntraced(
-        function* ({ failedTimeToLive, timeToLive }) {
-          yield* cleanupState("completed", timeToLive);
-          if (failedTimeToLive !== undefined) {
-            yield* cleanupState("failed", failedTimeToLive);
-          }
-        },
-        Effect.catchCause((cause) =>
+  return PersistedQueueStore.of({
+    offer: Effect.fn("DuckDbPersistedQueue.offer")(({ delay, element, id, name }) =>
+      Effect.catchCause(
+        Effect.gen(function* () {
+          const now = yield* Clock.Clock.defaultValue().currentTimeMillis;
+          return yield* offer(
+            id,
+            name,
+            yield* encodeJsonEffect(element),
+            delay === undefined ? sqlNow : delayedVisibleAt(delay, now)
+          );
+        }),
+        (cause) =>
           Effect.fail(
             PersistedQueueError.make({
-              message: "Failed to clean up persisted queue",
+              message: "Failed to offer element to persisted queue",
               cause,
             })
           )
+      ).pipe(
+        // Wake takers once the offer is committed.
+        Effect.tap(() =>
+          sql.afterCommit(
+            Effect.sync(() => {
+              queueStates.peek(name)?.nudge.openUnsafe();
+            })
+          )
         )
-      ),
-    });
+      )
+    ),
+    take: Effect.fn("DuckDbPersistedQueue.take")((options) => {
+      queueStates.get(options.name).maxAttempts = options.maxAttempts;
+      const loop: Effect.Effect<
+        {
+          readonly id: string;
+          readonly attempts: number;
+          readonly element: unknown;
+        },
+        PersistedQueueError,
+        Scope.Scope
+      > = Effect.uninterruptibleMask((restore) =>
+        RcMap.get(mailboxes, options.name).pipe(
+          Effect.flatMap(({ pollLatch, queue, takenLatch, takers }) => {
+            takers.current++;
+            if (takers.current === 1) {
+              pollLatch.openUnsafe();
+            }
+            // onExit so the decrement also runs when a waiting take is
+            // interrupted, otherwise the poller keeps fetching for a phantom
+            // taker
+            return Effect.onExit(restore(Queue.take(queue)), () =>
+              Effect.sync(() => {
+                takers.current--;
+                if (takers.current === 0) {
+                  pollLatch.closeUnsafe();
+                  takenLatch.openUnsafe();
+                } else if (Queue.sizeUnsafe(queue) === 0) {
+                  takenLatch.openUnsafe();
+                }
+              })
+            );
+          }),
+          Effect.scoped,
+          restore,
+          Effect.flatMap((element) => {
+            let parsed: unknown;
+            try {
+              parsed = decodeJson(element.element);
+            } catch (defect) {
+              // a row that cannot be parsed will never succeed, so dead-letter
+              // it and take the next element
+              // beep: restore so the next take stays interruptible instead of inheriting this mask (#2306 review).
+              return Effect.andThen(fail(element, Cause.die(defect)), restore(loop));
+            }
+            return Effect.as(
+              Effect.addFinalizer((exit) => {
+                if (exit._tag === "Success") {
+                  return complete(element);
+                }
+                const dead = deadLetterFromCause(exit.cause);
+                if (dead !== undefined) {
+                  return fail(element, dead.cause);
+                }
+                if (Cause.hasInterruptsOnly(exit.cause)) {
+                  return interrupt(element);
+                }
+                if (element.attempts >= options.maxAttempts) {
+                  return fail(element, exit.cause);
+                }
+                return Effect.flatMap(options.retryDelay(element.attempts), (delay) =>
+                  retry(element, delay, exit.cause)
+                );
+              }),
+              { id: element.id, attempts: element.attempts, element: parsed }
+            );
+          })
+        )
+      );
+      return loop;
+    }),
+    cleanup: Effect.fnUntraced(
+      function* ({ failedTimeToLive, timeToLive }) {
+        yield* cleanupState("completed", timeToLive);
+        if (failedTimeToLive !== undefined) {
+          yield* cleanupState("failed", failedTimeToLive);
+        }
+      },
+      Effect.catchCause((cause) =>
+        Effect.fail(
+          PersistedQueueError.make({
+            message: "Failed to clean up persisted queue",
+            cause,
+          })
+        )
+      )
+    ),
   });
+});
 
 // beep: DuckDB starts at the current schema; sequence identity and full indexes replace SQLite rebuilds/partial indexes.
 const sqlMigrations = (tableName: string) =>
@@ -531,7 +534,7 @@ export const layerStoreSql: (
         readonly lockExpiration?: Duration.Input | undefined;
       }
     | undefined
-) => Layer.Layer<PersistedQueueStore, SqlError, SqlClient.SqlClient | Crypto.Crypto> = flow(
+) => Layer.Layer<PersistedQueueStore, SqlError, SqlClient.SqlClient | SecureRandom.SecureRandom> = flow(
   makeStoreSql,
   Layer.effect(PersistedQueueStore)
 );

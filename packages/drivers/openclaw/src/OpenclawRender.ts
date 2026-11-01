@@ -20,7 +20,7 @@
 import { $OpenclawId } from "@beep/identity";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, flow, pipe } from "effect/Function";
@@ -416,9 +416,9 @@ const utf8 = new TextEncoder();
  * @since 0.0.0
  */
 export const renderOpenclawConfig = Effect.fn($I`renderOpenclawConfig`)(function* (intent: OpenclawDeploymentIntent) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const canonicalJson = canonicalizeDocument(versionedDocumentRenderer(intent.openclawVersion)(intent));
-  const digest = yield* crypto.digest("SHA-256", utf8.encode(canonicalJson));
+  const digest = yield* crypto.digest(Digest.sha256, utf8.encode(canonicalJson));
   return RenderedOpenclawConfig.make({
     canonicalJson,
     contentHash: OpenclawSha256Hex.make(Hex.encode(digest)),

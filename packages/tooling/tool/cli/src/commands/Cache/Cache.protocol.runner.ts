@@ -8,7 +8,7 @@
 import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -163,7 +163,7 @@ export const runCacheProtocolWorker = Effect.fn("CacheProtocol.worker")(
     yield* verifyPrivateNetwork;
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* SecureRandom.SecureRandom;
     const executable = yield* fs.realPath(request.executable);
     if ((yield* hashCacheExperimentExecutable(executable)) !== request.client.sha256)
       return yield* CacheCommandError.new("Protocol native binary differs from the requested pin.");

@@ -23,7 +23,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 // beep: Effect public leaf imports replace upstream barrels.
 import * as TestClock from "effect/testing/TestClock";
 import type { Vitest } from "@effect/vitest";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Duration from "effect/Duration";
 
 const makeQueue = Effect.fnUntraced(function* (tableName: string, pollInterval: Duration.Input = "10 millis") {
@@ -39,7 +39,7 @@ const makeQueue = Effect.fnUntraced(function* (tableName: string, pollInterval: 
 // when it runs on the same host. The tests run one at a time, since a
 // transaction on a single-connection database would hold up the other test's
 // offer.
-export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | Crypto.Crypto>) => {
+export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | SecureRandom.SecureRandom>) => {
   testApi.layer(Layer.empty, { concurrent: false, timeout: "90 seconds" })("PersistedQueue SQL delays", (it) => {
     it.effect(
       "never delivers a delayed offer early at a second boundary",

@@ -28,7 +28,7 @@ import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { decodeYamlTextWith } from "../../internal/schema/TextCodec.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_DESCRIPTORS } from "./CiLane.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Ci/CiGovernance");
@@ -235,7 +235,7 @@ export class GithubPolicyClient extends Context.Service<GithubPolicyClient, Gith
 ) {}
 const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string) {
   // Capture the platform dependencies once; commands provide this implementation.
-  const capture = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const capture = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
   const request = Effect.fn("CiGovernance.request")(function* (args: ReadonlyArray<string>) {
     const result = yield* runRepoCommandCapture("gh", ["api", ...args], root).pipe(
       Effect.provide(capture),

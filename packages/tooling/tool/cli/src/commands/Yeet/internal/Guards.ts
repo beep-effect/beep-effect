@@ -14,7 +14,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
 import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.ts";
 import { validateOpenPullRequest } from "./PullRequest.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -197,7 +197,7 @@ export const validateMonitorBranch = (context: RepoRunContext): Effect.Effect<vo
 export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(function* (
   context: RepoRunContext,
   options: YeetRunOptions
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   yield* validateOptionGuards(options);
 
   if (!shouldMonitorChecks(options)) {
@@ -277,7 +277,7 @@ export const validateCommitMessage = Effect.fn("Yeet.validateCommitMessage")(fun
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const commitlint = yield* resolveLocalRepoBinary(context.repoRoot, "commitlint");
   const messagePath = yield* commitMessagePathForContext(context);

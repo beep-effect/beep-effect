@@ -39,6 +39,7 @@ const HelpRenderLayer = Layer.mergeAll(
     Terminal.make({
       columns: Effect.succeed(80),
       rows: Effect.succeed(24),
+      size: Effect.die("Help rendering must not prompt."),
       readInput: Effect.die("Help rendering must not prompt."),
       readLine: Effect.die("Help rendering must not prompt."),
       display: () => Effect.void,

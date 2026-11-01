@@ -131,7 +131,8 @@ import {
   validateNormalizeMaxLongEdge,
   validatePrefix,
 } from "./internal/Validation.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Terminal from "effect/Terminal";
@@ -167,12 +168,12 @@ import type { PersonMatchWorkerService } from "./internal/MatchPerson.worker-ser
 const $I = $RepoCliId.create("commands/Files/Files.service");
 
 type FilesCommandPlatformRequirements =
+  | Digest.Digest
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | Terminal.Terminal
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner
-  | Crypto.Crypto
   | HttpClient.HttpClient;
 
 type FilesCommandServiceRequirements = FilesCommandPlatformRequirements | PersonMatchWorkerService | Exiftool;
@@ -1601,10 +1602,10 @@ const buildRenamePlan = Effect.fn("Files.buildRenamePlan")(function* (
 ): Effect.fn.Return<
   RenamePlan,
   FilesCommandError,
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | Terminal.Terminal
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner
   | Exiftool
 > {

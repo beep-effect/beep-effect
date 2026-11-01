@@ -48,7 +48,7 @@ import {
   workspaceCoverageScopeOwners,
 } from "./CoverageScope.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
@@ -1296,7 +1296,11 @@ const packageByNameOrder = Order.mapInput(Order.String, (entry: CoverageSnapshot
 
 const readGitSha = Effect.fn("CoverageRegression.readGitSha")(function* (
   repoRoot: string
-): Effect.fn.Return<string, QualityTaskConfigurationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  string,
+  QualityTaskConfigurationError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCaptured({
     command: "git",
     args: ["rev-parse", "HEAD"],
@@ -1904,7 +1908,7 @@ export const coverageBaselineRowDeltaFromBase = Effect.fn("CoverageRegression.co
   ): Effect.fn.Return<
     O.Option<CoverageBaselineRowDelta>,
     never,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     // Changed-file discovery diffs `base...HEAD`, i.e. from the merge base, so
     // the document must come from that same commit: reading the ref's tip would
@@ -2012,7 +2016,7 @@ const coverageBaselineChangeSetFromBase = Effect.fn("CoverageRegression.coverage
 ): Effect.fn.Return<
   CoverageBaselineChangeSet,
   QualityTaskConfigurationError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
     QualityTaskConfigurationError.mapError(`Failed to collect coverage baseline files from ${base}...HEAD.`)
@@ -2022,7 +2026,7 @@ const coverageBaselineChangeSetFromBase = Effect.fn("CoverageRegression.coverage
 
 const originMainMergeBase = Effect.fn("CoverageRegression.originMainMergeBase")(function* (
   repoRoot: string
-): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const originMain = yield* Effect.option(resolveGitCommit(repoRoot, "origin/main", coverageBaselineGitAdapter));
   return yield* O.match(originMain, {
     onNone: () => Effect.succeed(O.none<string>()),
@@ -2035,7 +2039,7 @@ const collectCoverageBaselineChangeSet = Effect.fn("CoverageRegression.collectCo
 ): Effect.fn.Return<
   CoverageBaselineChangeSet,
   QualityTaskConfigurationError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const configuredBase = yield* configStringOption("TURBO_SCM_BASE");
   if (O.isSome(configuredBase)) {
@@ -2085,7 +2089,7 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
 ): Effect.fn.Return<
   CoverageRegressionBaseline,
   QualityTaskConfigurationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const currentPrevious = pipe(previous, O.filter(isCurrentCoverageRegressionBaseline));
   const heldRow = pipe(
@@ -2152,7 +2156,7 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
 ): Effect.fn.Return<
   CoverageComparisonBaselines,
   CoverageRegressionError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const configuredBase = yield* baseOverride === undefined
     ? configStringOption("TURBO_SCM_BASE")
@@ -2605,7 +2609,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
   ): Effect.fn.Return<
     void,
     CoverageRegressionError,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     const path = yield* Path.Path;
     const entries = yield* collectCoverageSnapshot(repoRoot);
@@ -4188,7 +4192,7 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
   ): Effect.fn.Return<
     void,
     CoverageRegressionError | QualityTaskFailed,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     const baselines = yield* readComparisonBaseline(repoRoot, base);
     const baseline = baselines.baseline;

@@ -42,7 +42,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -1171,10 +1172,8 @@ export const yeetInboxRowWakes = (row: YeetInboxRow): boolean =>
     (YeetInboxSeverity.is.P1(row.severity) && isYeetInboxP1WakeRowKind(row.kind)));
 
 const yeetInboxIdentityId = Effect.fnUntraced(function* (label: string, parts: ReadonlyArray<string>) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(A.join(parts, ":")))
-    .pipe(Effect.mapError(YeetCommandError.new("Failed to hash inbox receipt identity.")));
+  const crypto = yield* Digest.Digest;
+  const bytes = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(A.join(parts, ":")));
   return `${safeArtifactName(label)}-${Str.takeLeft(12)(Hex.encode(bytes))}`;
 });
 
@@ -1641,9 +1640,9 @@ const updateYeetInboxActiveIndex = Effect.fn("Yeet.updateInboxActiveIndex")(func
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const inboxDir = path.dirname(paths.activePath);
-  const crypto = yield* Crypto.Crypto;
-  const inputPath = path.join(inboxDir, `.active-row-${yield* crypto.randomUUIDv4()}.tmp`);
-  const outputPath = path.join(inboxDir, `.active-index-${yield* crypto.randomUUIDv4()}.tmp`);
+  const crypto = yield* SecureRandom.SecureRandom;
+  const inputPath = path.join(inboxDir, `.active-row-${yield* crypto.uuidV4()}.tmp`);
+  const outputPath = path.join(inboxDir, `.active-index-${yield* crypto.uuidV4()}.tmp`);
   const versionPath = path.join(inboxDir, "active-p0-safe-v2");
   yield* fs.writeFileString(inputPath, `${line}\n`, { flag: "wx", mode: 0o600 });
   const script = `
@@ -1867,7 +1866,7 @@ export const renderYeetInboxRowLine = (row: YeetInboxRow): Effect.Effect<string,
 export const appendYeetInboxRow = Effect.fn("Yeet.appendYeetInboxRow")(function* (
   repoRoot: string,
   row: YeetInboxRow
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const paths = yield* yeetInboxPaths(repoRoot);
   const line = yield* renderYeetInboxRowLine(row).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode an inbox row."))
@@ -1915,7 +1914,7 @@ export const appendYeetInboxRow = Effect.fn("Yeet.appendYeetInboxRow")(function*
 export const appendYeetInboxRowOnce = Effect.fn("Yeet.appendYeetInboxRowOnce")(function* (
   repoRoot: string,
   row: YeetInboxRow
-): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<boolean, YeetCommandError, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   if ((yield* yeetInboxAckReceiptExists(repoRoot, row.id)) || (yield* yeetInboxHoldsRow(repoRoot, row.id))) {
     return false;
   }

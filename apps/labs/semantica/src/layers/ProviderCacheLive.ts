@@ -1,6 +1,6 @@
 import * as Bool from "effect/Boolean";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -36,7 +36,7 @@ const corrupt = (message: string): ProviderCacheCorrupt => ProviderCacheCorrupt.
 
 const makeProviderCache = Effect.gen(function* () {
   const config = yield* LabConfig;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockOwner = `${process.pid}\n`;
@@ -45,7 +45,7 @@ const makeProviderCache = Effect.gen(function* () {
 
   const cacheKey = Effect.fn("ProviderCache.cacheKey")((key: ProviderCacheKey) =>
     contentDigest(ProviderCacheKey)(key).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.mapError(() => corrupt("The provider cache key could not be encoded."))
     )
   );

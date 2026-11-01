@@ -30,10 +30,15 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
+import type * as CommandLine from "effect/process/CommandLine";
+
+/** The plain text a real spawner hands the child for one argv word. */
+const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
 
 const encoder = new TextEncoder();
 const tailscaleStatusJson = `{"Self":{"DNSName":"desktop.tail.ts.net.","TailscaleIPs":["100.100.100.100","fd7a:115c:a1e0::1","192.168.1.20"]}}`;
@@ -82,7 +87,7 @@ function mockSpawnerLayer(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) =>
       ChildProcess.isStandardCommand(command)
-        ? Effect.succeed(mockHandle(handler(command.command, command.args, command.options)))
+        ? Effect.succeed(mockHandle(handler(command.command, A.map(command.args, wordText), command.options)))
         : Effect.die("Expected a standard tailscale command")
     )
   );

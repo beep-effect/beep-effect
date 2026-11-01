@@ -40,8 +40,7 @@ import {
   PacketTraceProjection,
 } from "./PacketCore.schemas.ts";
 import { canonicalJsonTextPretty, packetEventDigest } from "./PacketDigest.ts";
-import type * as Crypto from "effect/Crypto";
-import type * as PlatformError from "effect/PlatformError";
+import type * as Digest from "effect/crypto/Digest";
 import type {
   PacketRoot,
   PacketSlug,
@@ -629,8 +628,8 @@ export const planForkRepair: (input: {
   readonly packet: PacketSlug;
   readonly root: PacketRoot;
   readonly events: ReadonlyArray<StoredPacketEvent>;
-}) => Effect.Effect<O.Option<PacketForkRepairPlan>, S.SchemaError | PlatformError.PlatformError, Crypto.Crypto> =
-  Effect.fnUntraced(function* (input: {
+}) => Effect.Effect<O.Option<PacketForkRepairPlan>, S.SchemaError, Digest.Digest> = Effect.fnUntraced(
+  function* (input: {
     readonly packet: PacketSlug;
     readonly root: PacketRoot;
     readonly events: ReadonlyArray<StoredPacketEvent>;
@@ -665,4 +664,5 @@ export const planForkRepair: (input: {
         filesToRemove: A.map(losing, (stored) => stored.fileName),
       })
     );
-  });
+  }
+);

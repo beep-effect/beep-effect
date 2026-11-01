@@ -2,7 +2,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -238,13 +238,13 @@ const digestRows = Effect.fnUntraced(function* (
   summaryIds: ReadonlyArray<string>,
   rows: ReadonlyArray<TurboLaneTaskHash>
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const sorted = pipe(rows, A.sortBy(rowOrder));
   const text = A.join(
     A.map(sorted, (row) => `${row.taskId}=${row.hash}`),
     "\n"
   );
-  const digest = Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+  const digest = Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text)));
   return TurboLaneDigest.make({ digest, summaryIds, tasks: sorted });
 });
 
@@ -290,11 +290,11 @@ const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>)
 export const turboLaneDigestFromSummary: {
   (
     taskNames: ReadonlyArray<string>
-  ): (summary: TurboRunSummary) => Effect.Effect<O.Option<TurboLaneDigest>, PlatformError.PlatformError, Crypto.Crypto>;
+  ): (summary: TurboRunSummary) => Effect.Effect<O.Option<TurboLaneDigest>, PlatformError.PlatformError, Digest.Digest>;
   (
     summary: TurboRunSummary,
     taskNames: ReadonlyArray<string>
-  ): Effect.Effect<O.Option<TurboLaneDigest>, PlatformError.PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<O.Option<TurboLaneDigest>, PlatformError.PlatformError, Digest.Digest>;
 } = dual(
   2,
   Effect.fnUntraced(function* (summary: TurboRunSummary, taskNames: ReadonlyArray<string>) {

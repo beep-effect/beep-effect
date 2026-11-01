@@ -29,8 +29,8 @@ import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
@@ -72,8 +72,8 @@ const intendedFiles = A.map(intendedTree, (file) =>
 );
 
 const sha256 = Effect.fnUntraced(function* (bytes: Uint8Array) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", bytes));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, bytes));
 });
 
 // A file is fingerprinted by its bytes, a directory by its tree hash.
@@ -321,7 +321,7 @@ layer(
         const fs = yield* FileSystem.FileSystem;
         const { journals, root, target } = yield* fixture(kind, true);
         const base = yield* ModelsAtomicExchange;
-        const services = yield* Effect.context<FileSystem.FileSystem | Path.Path | Crypto.Crypto>();
+        const services = yield* Effect.context<FileSystem.FileSystem | Path.Path | Digest.Digest>();
         let competitor = "";
         const interfering = ModelsAtomicExchange.of({
           qualify: base.qualify,

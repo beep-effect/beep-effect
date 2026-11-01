@@ -1,5 +1,6 @@
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { CoverageConfig } from "@beep/repo-cli/test/Quality";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, expect, it } from "@effect/vitest";
 import { IstanbulCoverageProvider } from "@vitest/coverage-istanbul/dist/provider.js";
@@ -8,6 +9,7 @@ import { createCoverageMap } from "@vitest/istanbul-lib-coverage";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { vi } from "vitest";
@@ -243,87 +245,90 @@ it("wires the isolated bootstrap to the Effect main without interpreting canonic
   expect(Effect.isEffect(mocks.main.mock.calls[0]?.[0])).toBe(true);
 });
 
-it.layer(NodeServices.layer, { timeout: "60 seconds" })("actual runtime coverage config census", (it) => {
-  it.effect("uses actual Node/Bun, invocation environment and alternate config without importing tests", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const repoRoot = path.resolve(import.meta.dirname, "../../../../..");
-      yield* fs.makeDirectory(path.join(repoRoot, ".beep"), { recursive: true });
-      const temporaryRoot = yield* fs.makeTempDirectoryScoped({
-        directory: path.join(repoRoot, ".beep"),
-        prefix: "config-census-",
-      });
-      const root = yield* fs.realPath(temporaryRoot);
-      yield* fs.makeDirectory(path.join(root, "src"));
-      yield* fs.writeFileString(path.join(root, "package.json"), '{"type":"module"}');
-      yield* fs.writeFileString(
-        path.join(root, "proof.test.ts"),
-        'throw new Error("Census must not import test modules");'
-      );
-      yield* fs.writeFileString(
-        path.join(root, "vitest.config.ts"),
-        'export default { test: { coverage: { include: ["src/trap.ts"] } } };'
-      );
-      yield* fs.writeFileString(
-        path.join(root, "selected.config.ts"),
-        'const runtime=process.versions.bun === undefined ? "node" : "bun"; export default { test: { include: ["proof.test.ts"], coverage: {include: [`src/${process.env.COVERAGE_SOURCE_SIDE}-${runtime}.ts`]} } };'
-      );
-      const cases = [
-        { runtime: "node", side: "a", provider: "istanbul" },
-        { runtime: "node", side: "b", provider: "istanbul" },
-        { runtime: "node", side: "a", provider: "v8" },
-        { runtime: "node", side: "b", provider: "v8" },
-        { runtime: "bun", side: "a", provider: "istanbul" },
-        { runtime: "bun", side: "b", provider: "istanbul" },
-      ];
-      for (const { runtime, side } of cases)
-        yield* fs.writeFileString(path.join(root, `src/${side}-${runtime}.ts`), "export const value = () => 42;");
-      const helper = yield* path.toFileUrl(
-        path.join(repoRoot, "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageConfig.runtime.ts")
-      );
-      const helperImport = yield* encodeString(helper.href);
-      const bootstrap = `import(${helperImport}).then(m=>m.runCoverageConfigRuntimeDiscovery(process.argv))`;
-      const node = yield* hostNodeExecutable;
-      for (const { runtime, side, provider } of cases) {
-        const command = runtime === "node" ? node : "bun";
-        const version = yield* StepExec.runCaptured({
-          command,
-          args: ["--print", `process.versions.${runtime}`],
-          source: "stdout",
-          trim: true,
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 seconds" })(
+  "actual runtime coverage config census",
+  (it) => {
+    it.effect("uses actual Node/Bun, invocation environment and alternate config without importing tests", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = path.resolve(import.meta.dirname, "../../../../..");
+        yield* fs.makeDirectory(path.join(repoRoot, ".beep"), { recursive: true });
+        const temporaryRoot = yield* fs.makeTempDirectoryScoped({
+          directory: path.join(repoRoot, ".beep"),
+          prefix: "config-census-",
         });
+        const root = yield* fs.realPath(temporaryRoot);
+        yield* fs.makeDirectory(path.join(root, "src"));
+        yield* fs.writeFileString(path.join(root, "package.json"), '{"type":"module"}');
+        yield* fs.writeFileString(
+          path.join(root, "proof.test.ts"),
+          'throw new Error("Census must not import test modules");'
+        );
+        yield* fs.writeFileString(
+          path.join(root, "vitest.config.ts"),
+          'export default { test: { coverage: { include: ["src/trap.ts"] } } };'
+        );
+        yield* fs.writeFileString(
+          path.join(root, "selected.config.ts"),
+          'const runtime=process.versions.bun === undefined ? "node" : "bun"; export default { test: { include: ["proof.test.ts"], coverage: {include: [`src/${process.env.COVERAGE_SOURCE_SIDE}-${runtime}.ts`]} } };'
+        );
+        const cases = [
+          { runtime: "node", side: "a", provider: "istanbul" },
+          { runtime: "node", side: "b", provider: "istanbul" },
+          { runtime: "node", side: "a", provider: "v8" },
+          { runtime: "node", side: "b", provider: "v8" },
+          { runtime: "bun", side: "a", provider: "istanbul" },
+          { runtime: "bun", side: "b", provider: "istanbul" },
+        ];
+        for (const { runtime, side } of cases)
+          yield* fs.writeFileString(path.join(root, `src/${side}-${runtime}.ts`), "export const value = () => 42;");
+        const helper = yield* path.toFileUrl(
+          path.join(repoRoot, "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageConfig.runtime.ts")
+        );
+        const helperImport = yield* encodeString(helper.href);
+        const bootstrap = `import(${helperImport}).then(m=>m.runCoverageConfigRuntimeDiscovery(process.argv))`;
+        const node = yield* hostNodeExecutable;
+        for (const { runtime, side, provider } of cases) {
+          const command = runtime === "node" ? node : "bun";
+          const version = yield* StepExec.runCaptured({
+            command,
+            args: ["--print", `process.versions.${runtime}`],
+            source: "stdout",
+            trim: true,
+          });
 
-        const result = yield* StepExec.runCaptured({
-          command,
-          args: [
-            ...(runtime === "node" ? ["--experimental-strip-types"] : []),
-            "--input-type=module",
-            "--eval",
-            bootstrap,
-            "--",
-            "vitest",
-            "run",
-            "--config=selected.config.ts",
-          ],
-          cwd: root,
-          env: {
-            COVERAGE_SOURCE_SIDE: side,
-            BEEP_COVERAGE_EXPECTED_RUNTIME: runtime,
-            BEEP_COVERAGE_EXPECTED_RUNTIME_VERSION: version.output,
-            BEEP_COVERAGE_EXPECTED_PROVIDER: provider,
-          },
-          extendEnv: true,
-          source: "stdout",
-          trim: true,
-        });
-        expect(result.exitCode, result.output).toBe(0);
-        expect(yield* decodeFiles(result.output)).toEqual([path.join(root, `src/${side}-${runtime}.ts`)]);
-      }
+          const result = yield* StepExec.runCaptured({
+            command,
+            args: [
+              ...(runtime === "node" ? ["--experimental-strip-types"] : []),
+              "--input-type=module",
+              "--eval",
+              bootstrap,
+              "--",
+              "vitest",
+              "run",
+              "--config=selected.config.ts",
+            ],
+            cwd: root,
+            env: {
+              COVERAGE_SOURCE_SIDE: side,
+              BEEP_COVERAGE_EXPECTED_RUNTIME: runtime,
+              BEEP_COVERAGE_EXPECTED_RUNTIME_VERSION: version.output,
+              BEEP_COVERAGE_EXPECTED_PROVIDER: provider,
+            },
+            extendEnv: true,
+            source: "stdout",
+            trim: true,
+          });
+          expect(result.exitCode, result.output).toBe(0);
+          expect(yield* decodeFiles(result.output)).toEqual([path.join(root, `src/${side}-${runtime}.ts`)]);
+        }
 
-      expect(yield* fs.readFileString(path.join(root, "proof.test.ts"))).toBe(
-        'throw new Error("Census must not import test modules");'
-      );
-    })
-  );
-});
+        expect(yield* fs.readFileString(path.join(root, "proof.test.ts"))).toBe(
+          'throw new Error("Census must not import test modules");'
+        );
+      })
+    );
+  }
+);

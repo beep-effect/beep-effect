@@ -124,15 +124,16 @@ const executeJson = Effect.fn("Discord.executeJson")(function* (
   const rawRequest = HttpClientRequest.make(method)(`${baseUrl}${fullPath}`);
   const request = yield* pipe(
     body === undefined ? Effect.succeed(rawRequest) : HttpClientRequest.bodyJson(rawRequest, body),
-    Effect.mapError((cause) =>
-      DiscordError.make({
-        cause: pipe(cause, errorCause, O.some),
-        method: O.some(method),
-        path: decodeErrorPathOption(fullPath),
-        reason: "request",
-      })
-    ),
-    Effect.map((requestWithBody) => authRequest(requestWithBody, botToken))
+    Effect.mapBoth({
+      onFailure: (cause) =>
+        DiscordError.make({
+          cause: pipe(cause, errorCause, O.some),
+          method: O.some(method),
+          path: decodeErrorPathOption(fullPath),
+          reason: "request",
+        }),
+      onSuccess: (requestWithBody) => authRequest(requestWithBody, botToken),
+    })
   );
 
   const response = yield* client.execute(request).pipe(

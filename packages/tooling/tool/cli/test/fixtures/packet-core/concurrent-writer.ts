@@ -2,7 +2,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { PacketEvent, PacketEventStore, PacketEventStoreLive, PacketStreamLocator } from "@beep/repo-cli/test/Goals";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { BunRuntime } from "@effect/platform-bun";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Console from "effect/Console";
@@ -75,6 +75,8 @@ const main = Effect.gen(function* () {
 });
 
 const program = Effect.scoped(
-  Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => main.pipe(Effect.provide(context))))
+  Layer.build(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)).pipe(
+    Effect.flatMap((context) => main.pipe(Effect.provide(context)))
+  )
 );
 BunRuntime.runMain(program);

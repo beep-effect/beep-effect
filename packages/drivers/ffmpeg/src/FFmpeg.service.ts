@@ -800,12 +800,13 @@ const renderManifest = Effect.fn("FFmpeg.renderManifest")(function* (
   );
 
   return yield* encodeJson(encoded).pipe(
-    Effect.map((json) => `${json}\n`),
-    Effect.mapError((cause) =>
-      FFmpegError.fromUnknown("extractFrames", `Failed to render extract-frames manifest: "${manifestPath}"`, {
-        cause,
-      })
-    )
+    Effect.mapBoth({
+      onFailure: (cause) =>
+        FFmpegError.fromUnknown("extractFrames", `Failed to render extract-frames manifest: "${manifestPath}"`, {
+          cause,
+        }),
+      onSuccess: (json) => `${json}\n`,
+    })
   );
 });
 
@@ -1106,12 +1107,13 @@ const renderFramesAtManifest = Effect.fn("FFmpeg.renderFramesAtManifest")(functi
   );
 
   return yield* encodeJson(encoded).pipe(
-    Effect.map((json) => `${json}\n`),
-    Effect.mapError((cause) =>
-      FFmpegError.fromUnknown("extractFramesAt", `Failed to render extract-frames-at manifest: "${manifestPath}"`, {
-        cause,
-      })
-    )
+    Effect.mapBoth({
+      onFailure: (cause) =>
+        FFmpegError.fromUnknown("extractFramesAt", `Failed to render extract-frames-at manifest: "${manifestPath}"`, {
+          cause,
+        }),
+      onSuccess: (json) => `${json}\n`,
+    })
   );
 });
 

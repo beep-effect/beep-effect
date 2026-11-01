@@ -45,7 +45,7 @@ import {
 import { normalizeTextLocator, normalizeWithRawOffsets } from "./VerifiedSpan.normalization.ts";
 import type { GroundedExtraction } from "@beep/langextract/Extraction";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type {
   BeginVerifiedSpanHistoryInput,
   ContinueVerifiedSpanHistoryInput,
@@ -585,16 +585,16 @@ const verifyLocatedAnchors = (
           verifiedSource,
         })
       ).pipe(
-        Effect.map((verified) =>
-          VerifiedSpanCandidateAnchorReceipt.make({
-            candidateIndex: S.Natural.make(index),
-            receipt: toTextAnchorVerificationReceipt(verified),
-          })
-        ),
-        Effect.mapError(
-          /* istanbul ignore next -- locator output already proves boundaries and exact slices; retain fail-closed defense. Owner: @beep/langextract. Exit: the locator returns a verified-receipt type that the verifier does not re-check. */
-          (error) => attemptFailure("anchor", error.reason, O.some(S.Natural.make(index)))
-        )
+        Effect.mapBoth({
+          onFailure:
+            /* istanbul ignore next -- locator output already proves boundaries and exact slices; retain fail-closed defense. Owner: @beep/langextract. Exit: the locator returns a verified-receipt type that the verifier does not re-check. */
+            (error) => attemptFailure("anchor", error.reason, O.some(S.Natural.make(index))),
+          onSuccess: (verified) =>
+            VerifiedSpanCandidateAnchorReceipt.make({
+              candidateIndex: S.Natural.make(index),
+              receipt: toTextAnchorVerificationReceipt(verified),
+            }),
+        })
       ),
     { concurrency: 1 }
   ).pipe(
@@ -632,7 +632,7 @@ const runAttempt = Effect.fnUntraced(function* (
   matterRef: string,
   kind: VerifiedSpanAttemptKind,
   previousAttemptId: O.Option<VerifiedSpanAttemptId>
-): Effect.fn.Return<VerifiedSpanAttemptRecord, never, Crypto.Crypto> {
+): Effect.fn.Return<VerifiedSpanAttemptRecord, never, Digest.Digest> {
   if (!sourceIdentityMatchesMatter(matterRef, expectedSource, input.source)) {
     return attemptRecord(
       input,
@@ -714,13 +714,13 @@ const isStaleSourceFailure = (outcome: VerifiedSpanAttemptOutcomeType): boolean 
  * typeof beginVerifiedSpanHistory // => "function"
  * ```
  *
- * @effects Requires `Crypto.Crypto` for source-digest and exact-anchor proof.
+ * @effects Requires `Digest.Digest` for source-digest and exact-anchor proof.
  * @category validation
  * @since 0.0.0
  */
 export const beginVerifiedSpanHistory = Effect.fn("VerifiedSpan.beginHistory")(function* (
   input: BeginVerifiedSpanHistoryInput
-): Effect.fn.Return<VerifiedSpanHistoryType, never, Crypto.Crypto> {
+): Effect.fn.Return<VerifiedSpanHistoryType, never, Digest.Digest> {
   const attempt = yield* runAttempt(
     input,
     input.expectedSource,
@@ -748,24 +748,24 @@ export const beginVerifiedSpanHistory = Effect.fn("VerifiedSpan.beginHistory")(f
  * typeof verifyCurrentSpanHistory // => "function"
  * ```
  *
- * @effects Requires `Crypto.Crypto` for source-digest and exact-anchor proof.
+ * @effects Requires `Digest.Digest` for source-digest and exact-anchor proof.
  * @category validation
  * @since 0.0.0
  */
 export const verifyCurrentSpanHistory: {
   (
     input: ContinueVerifiedSpanHistoryInput
-  ): (history: VerifiedSpanHistoryType) => Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+  ): (history: VerifiedSpanHistoryType) => Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Digest.Digest>;
   (
     history: VerifiedSpanHistoryType,
     input: ContinueVerifiedSpanHistoryInput
-  ): Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+  ): Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Digest.Digest>;
 } = dual(
   2,
   Effect.fn("VerifiedSpan.verifyCurrentHistory")(function* (
     history: VerifiedSpanHistoryType,
     input: ContinueVerifiedSpanHistoryInput
-  ): Effect.fn.Return<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto> {
+  ): Effect.fn.Return<VerifiedSpanHistoryType, VerifiedSpanError, Digest.Digest> {
     const previous = yield* lastHistoryAttempt(history);
     if (
       Bool.or(
@@ -805,24 +805,24 @@ export const verifyCurrentSpanHistory: {
  * typeof reanchorVerifiedSpanHistory // => "function"
  * ```
  *
- * @effects Requires `Crypto.Crypto` for source-digest and exact-anchor proof.
+ * @effects Requires `Digest.Digest` for source-digest and exact-anchor proof.
  * @category validation
  * @since 0.0.0
  */
 export const reanchorVerifiedSpanHistory: {
   (
     input: ContinueVerifiedSpanHistoryInput
-  ): (history: VerifiedSpanHistoryType) => Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+  ): (history: VerifiedSpanHistoryType) => Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Digest.Digest>;
   (
     history: VerifiedSpanHistoryType,
     input: ContinueVerifiedSpanHistoryInput
-  ): Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto>;
+  ): Effect.Effect<VerifiedSpanHistoryType, VerifiedSpanError, Digest.Digest>;
 } = dual(
   2,
   Effect.fn("VerifiedSpan.reanchorHistory")(function* (
     history: VerifiedSpanHistoryType,
     input: ContinueVerifiedSpanHistoryInput
-  ): Effect.fn.Return<VerifiedSpanHistoryType, VerifiedSpanError, Crypto.Crypto> {
+  ): Effect.fn.Return<VerifiedSpanHistoryType, VerifiedSpanError, Digest.Digest> {
     const previous = yield* lastHistoryAttempt(history);
     if (
       Bool.or(

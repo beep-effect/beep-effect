@@ -18,7 +18,8 @@ import {
   yeetLocalShardFailedRowId,
 } from "./Inbox.ts";
 import { loadYeetInboxView } from "./InboxView.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { YeetCommandError } from "../Yeet.errors.ts";
@@ -81,7 +82,11 @@ export class YeetLocalShardOutcome extends S.Opaque<YeetLocalShardOutcome, { rea
 export const recordYeetLocalShardOutcome = Effect.fn("Yeet.recordYeetLocalShardOutcome")(function* (
   repoRoot: string,
   outcome: YeetLocalShardOutcome
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
   const observedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   if (outcome.exitCode !== 0) {
     const capsule = YeetLocalShardFailureCapsule.make(outcome);

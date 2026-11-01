@@ -396,7 +396,7 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
     yield* Metric.update(ipcOutboundFrames, 1);
   }).pipe(
     Effect.trackDuration(ipcSendDuration),
-    Effect.tapError(() => Metric.update(ipcSendFailures, 1)),
+    Effect.trackErrors(ipcSendFailures, () => 1),
     tapRedactedCause(
       LogRedactedCauseOptions.make({
         message: "Tauri IPC frame send failed",

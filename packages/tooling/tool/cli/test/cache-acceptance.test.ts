@@ -49,7 +49,8 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -706,11 +707,13 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
   it.effect("rejects issuer revocation that occurs while hosted metadata is checked", () =>
     Effect.gen(function* () {
       const { fs, path, trust, published } = yield* publishedSetup;
-      const crypto = yield* Crypto.Crypto;
+      const digest = yield* Digest.Digest;
+      const secureRandom = yield* SecureRandom.SecureRandom;
       const revoke = revokeCacheProducerIssuer(trust.stable).pipe(
         Effect.provideService(FileSystem.FileSystem, fs),
         Effect.provideService(Path.Path, path),
-        Effect.provideService(Crypto.Crypto, crypto)
+        Effect.provideService(Digest.Digest, digest),
+        Effect.provideService(SecureRandom.SecureRandom, secureRandom)
       );
       const revoking = CacheHostedProducerVerifier.of({
         verify: Effect.fn("AcceptanceTest.revokeDuringPublication")(function* (

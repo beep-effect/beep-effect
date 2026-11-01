@@ -48,7 +48,8 @@ import {
 import { makeRouteGit, RouteCensusReaderLive, RouteGit, VerificationRouteLive } from "./RouteCensus.ts";
 import { ChangeClassifierLive } from "./RouteClassify.ts";
 import { ROUTE_CORPUS_RECEIPT_FILE, RouteCorpusLive } from "./RouteCorpus.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RouteCensus, RouteCorpusReceipt, RoutePlan, RouteReplay } from "./Route.schemas.ts";
@@ -93,7 +94,7 @@ const DEFAULT_WORKFLOWS: ReadonlyArray<string> = ["Check", "Heavy"];
 const RouteGitFromRepo: Layer.Layer<
   RouteGit,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem
+  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem
 > = Layer.effect(
   RouteGit,
   findRepoRoot().pipe(

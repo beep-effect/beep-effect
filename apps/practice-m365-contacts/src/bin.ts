@@ -3,6 +3,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Command from "effect/cli/Command";
@@ -28,7 +29,7 @@ const program = Effect.gen(function* () {
  * @since 0.0.0
  */
 export const runContacts = () =>
-  BunServices.layer.pipe(
+  Layer.merge(BunServices.layer, BunCrypto.layer).pipe(
     Layer.build,
     Effect.flatMap((context) => program.pipe(Effect.provideContext(context))),
     Effect.scoped,

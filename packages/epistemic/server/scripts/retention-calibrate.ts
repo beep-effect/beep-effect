@@ -21,7 +21,7 @@ import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -81,8 +81,8 @@ const ProtocolJson = S.fromJsonString(Protocol);
 const InputsJson = S.fromJsonString(Inputs);
 const agesEqual = S.toEquivalence(S.Array(S.Finite));
 const hash = Effect.fn("Calibration.hash")(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text)));
 });
 const requireEvidence = Effect.fn("Calibration.requireEvidence")(function* (
   checks: ReadonlyArray<boolean>,

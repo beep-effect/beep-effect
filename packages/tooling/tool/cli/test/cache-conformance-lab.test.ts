@@ -24,12 +24,12 @@ import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
 import * as ProtocolFixture from "@beep/repo-cli/commands/Cache/Cache.protocol.fixture";
 import { CacheRuntimeProcess } from "@beep/repo-cli/test/Cache";
 import { Sha256Hex } from "@beep/schema";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -64,7 +64,7 @@ import type { ServerMode } from "./cache-conformance-server.ts";
 
 afterEach(() => vi.restoreAllMocks());
 
-const Services = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer);
+const Services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
 const observeProxyBody = Effect.fn("ConformanceTest.observeProxyBody")(function* () {
   const started = yield* Deferred.make<void>();
   const completed = yield* Deferred.make<void>();
@@ -559,8 +559,8 @@ it.layer(Services, { timeout: "120 seconds", excludeTestServices: true })("cache
 // real Turbo or sandbox execution.
 const taskHash = "c0ffee0123456789";
 const sign = (key: string, team: string, body: Uint8Array) =>
-  Crypto.Crypto.use((crypto) =>
-    crypto.digest("SHA-256", new Uint8Array([...new TextEncoder().encode(`${key}|${taskHash}|${team}|`), ...body]))
+  Digest.Digest.use((crypto) =>
+    crypto.digest(Digest.sha256, new Uint8Array([...new TextEncoder().encode(`${key}|${taskHash}|${team}|`), ...body]))
   ).pipe(Effect.map(Hex.encode));
 
 type SimulatedRun = {
@@ -588,7 +588,12 @@ const simulatedRun = (options: Parameters<typeof CacheRuntimeProcess.runCaptured
 
 const simulatedOutput = new TextEncoder().encode("conformance-native-signed-output\n");
 
-const makeNativeClient = (fs: FileSystem.FileSystem, path: Path.Path, client: HttpClient.HttpClient) => {
+const makeNativeClient = (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  client: HttpClient.HttpClient,
+  digest: Digest.Digest["Service"]
+) => {
   const restore = Effect.fnUntraced(function* (run: SimulatedRun) {
     const response = yield* client.get(run.url, { headers: run.headers });
     const stored = new Uint8Array(yield* response.arrayBuffer);
@@ -628,21 +633,23 @@ const makeNativeClient = (fs: FileSystem.FileSystem, path: Path.Path, client: Ht
       })
     );
   });
-  return Effect.fn("ConformanceNativeTest.process")(function* (
-    options: Parameters<typeof CacheRuntimeProcess.runCapturedStreams>[0]
-  ) {
-    expect(options.command).toBe("/usr/bin/bwrap");
-    expect(options.args).toContain("--skip-infer");
-    expect(options.args).toContain("--single-package");
-    const run = simulatedRun(options);
-    const { verified, stored } = yield* restore(run);
-    // Restored from a verified remote hit, executed when allowed, or denied (exit 42).
-    if (verified) yield* writeOutput(run, stored);
-    if (!verified && !run.deny) yield* writeOutput(run, simulatedOutput).pipe(Effect.andThen(upload(run)));
-    const exitCode = verified || !run.deny ? 0 : 42;
-    yield* writeSummary(run, verified, exitCode);
-    return CacheRuntimeProcess.CapturedStreams.make({ exitCode, stdout: "", stderr: "", truncated: false });
-  }, Effect.orDie);
+  return Effect.fn("ConformanceNativeTest.process")(
+    function* (options: Parameters<typeof CacheRuntimeProcess.runCapturedStreams>[0]) {
+      expect(options.command).toBe("/usr/bin/bwrap");
+      expect(options.args).toContain("--skip-infer");
+      expect(options.args).toContain("--single-package");
+      const run = simulatedRun(options);
+      const { verified, stored } = yield* restore(run);
+      // Restored from a verified remote hit, executed when allowed, or denied (exit 42).
+      if (verified) yield* writeOutput(run, stored);
+      if (!verified && !run.deny) yield* writeOutput(run, simulatedOutput).pipe(Effect.andThen(upload(run)));
+      const exitCode = verified || !run.deny ? 0 : 42;
+      yield* writeSummary(run, verified, exitCode);
+      return CacheRuntimeProcess.CapturedStreams.make({ exitCode, stdout: "", stderr: "", truncated: false });
+    },
+    Effect.orDie,
+    Effect.provideService(Digest.Digest, digest)
+  );
 };
 
 const pin = CacheConformanceClientPin.make({
@@ -657,7 +664,7 @@ const runNativeAgainst = Effect.fn("ConformanceNativeTest.run")(function* (mode:
   const fs = yield* FileSystem.FileSystem;
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockImplementation(() => Effect.succeed(pin.executableSha256));
   vi.spyOn(CacheRuntimeProcess, "runCapturedStreams").mockImplementation(
-    makeNativeClient(fs, yield* Path.Path, yield* HttpClient.HttpClient)
+    makeNativeClient(fs, yield* Path.Path, yield* HttpClient.HttpClient, yield* Digest.Digest)
   );
   const server = yield* makeConformanceServer({ ...mode, bindTenant: false });
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-conformance-native-" });

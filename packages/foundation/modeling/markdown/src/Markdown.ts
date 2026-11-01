@@ -815,8 +815,10 @@ export class Markdown {
           // pass tree; going through `Markdown.parse` would walk it twice.
           decode: (input: string) =>
             Effect.fromResult(parsePassResult(input, options)).pipe(
-              Effect.map((pass) => pass.root),
-              Effect.mapError((error) => new SchemaIssue.InvalidValue({ message: error.message }, input)),
+              Effect.mapBoth({
+                onFailure: (error) => new SchemaIssue.InvalidValue({ message: error.message }, input),
+                onSuccess: (pass) => pass.root,
+              }),
               Effect.withSpan("Markdown.parse")
             ),
           encode: (value: Root) =>

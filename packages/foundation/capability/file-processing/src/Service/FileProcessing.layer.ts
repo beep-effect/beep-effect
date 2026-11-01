@@ -18,7 +18,7 @@ import { FileProcessingOperationError } from "../Operation/Operation.errors.ts";
 import { DetectFileOperation, ExportArchiveOperation, ExtractFileOperation } from "../Operation/Operation.schema.ts";
 import { FileFormatFamily as FileFormatFamilySchema } from "../Strategy/Strategy.schema.ts";
 import { FileProcessingService } from "./FileProcessing.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { DetectionResult, ProcessFileOperation } from "../Operation/Operation.schema.ts";
 import type {
   FileFormatFamily,
@@ -112,11 +112,11 @@ const detectWithAvailableEngine = Effect.fn("FileProcessingService.detectWithAva
  */
 export const makeFileProcessingServiceLayer = (
   engines: ReadonlyArray<FileProcessingEngineShape>
-): Layer.Layer<FileProcessingService, never, Crypto.Crypto> =>
+): Layer.Layer<FileProcessingService, never, Digest.Digest> =>
   Layer.effect(
     FileProcessingService,
     Effect.gen(function* () {
-      const cryptoContext = yield* Effect.context<Crypto.Crypto>();
+      const cryptoContext = yield* Effect.context<Digest.Digest>();
 
       return FileProcessingService.of({
         detect: Effect.fn("FileProcessingService.detect")(function* (operation) {

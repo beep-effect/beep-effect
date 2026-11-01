@@ -4,17 +4,18 @@ import * as SqlEventLogServerEncrypted from "@beep/duckdb/DuckDbEventLogServerEn
 import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as EventJournal from "effect/eventlog/EventJournal";
-import * as EventLogEncryption from "effect/eventlog/EventLogEncryption";
 import * as Fiber from "effect/Fiber";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
+import type * as EventLogEncryption from "effect/eventlog/EventLogEncryption";
 import type { StoreId } from "effect/eventlog/EventLogMessage";
 
 const storeId = "store-a" as StoreId;
@@ -96,7 +97,7 @@ export const suite: {
   <E>(layer: Layer.Layer<SqlClient.SqlClient, E>): (name: string) => void;
   <E>(name: string, layer: Layer.Layer<SqlClient.SqlClient, E>): void;
 } = dual(2, <E>(name: string, layer: Layer.Layer<SqlClient.SqlClient, E>) =>
-  it.layer(Layer.mergeAll(Reactivity.layer, EventLogEncryption.layerSubtle, layer), {
+  it.layer(Layer.mergeAll(Reactivity.layer, Digest.layerWebCrypto, layer), {
     timeout: "60 seconds",
     excludeTestServices: true,
   })(`SqlEventLogServerEncrypted storage (${name})`, (it) => {

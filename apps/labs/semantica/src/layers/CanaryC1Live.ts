@@ -2,7 +2,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
@@ -226,7 +226,7 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
   const activeEmbeddingIdentity = yield* ActiveEmbeddingIdentity;
   const c0 = yield* CanaryC0;
   const config = yield* LabConfig;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const providerCache = yield* ProviderCache;
@@ -255,7 +255,7 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
     const selectedConfig = LabConfig.of({ ...config, mode, offline: mode === "replay" });
     const embeddingLayer = EmbedderRuntimeLive(embeddingProvider).pipe(
       Layer.provide(Layer.succeed(ActiveEmbeddingIdentity, activeEmbeddingIdentity)),
-      Layer.provide(Layer.succeed(Crypto.Crypto, crypto)),
+      Layer.provide(Layer.succeed(Digest.Digest, crypto)),
       Layer.provide(Layer.succeed(LabConfig, selectedConfig)),
       Layer.provide(Layer.succeed(ProviderCache, providerCache))
     );
@@ -309,7 +309,7 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
       onNonEmpty: Effect.succeed,
     });
     const expectationDigest = yield* contentDigest(GProjectionExpectation)(expectation).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.mapError(() => failed("expectation-unavailable", "The G-projection expectation digest failed."))
     );
     const gWitness = GProjectionWitness.make({
@@ -375,7 +375,7 @@ const makeCanaryC1 = Effect.fn("CanaryC1.make")(function* <E>(
       S.Struct(C1EvalReport.fields),
       "reportDigest"
     )(provisional).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.mapError(() => failed("report-invalid", "The C1 report digest preimage did not encode."))
     );
     const report = yield* C1EvalReport.makeEffect({ ...provisional, reportDigest }).pipe(

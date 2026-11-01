@@ -76,8 +76,10 @@ import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const worktreeRemovalTestLayer = WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer));
-const testLayer = Layer.mergeAll(NodeServices.layer, worktreeRemovalTestLayer);
+const worktreeRemovalTestLayer = WorktreeRemovalServiceLive.pipe(
+  Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
+const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, worktreeRemovalTestLayer);
 
 const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueManifest));
 const decodeResidueManifest = S.decodeUnknownEffect(S.fromJsonString(WorktreeResidueManifest));
@@ -1623,7 +1625,9 @@ describe("worktree git operations", () => {
                 WorktreeRemovalService,
                 WorktreeRemovalServiceLive.pipe(
                   Layer.fresh,
-                  Layer.provide(Layer.mergeAll(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))),
+                  Layer.provide(
+                    Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                  ),
                   Layer.build,
                   Effect.map(Context.get(WorktreeRemovalService))
                 )
@@ -1682,7 +1686,9 @@ describe("worktree git operations", () => {
                 WorktreeRemovalService,
                 WorktreeRemovalServiceLive.pipe(
                   Layer.fresh,
-                  Layer.provide(Layer.mergeAll(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))),
+                  Layer.provide(
+                    Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                  ),
                   Layer.build,
                   Effect.map(Context.get(WorktreeRemovalService))
                 )
@@ -1761,7 +1767,9 @@ describe("worktree git operations", () => {
               WorktreeRemovalService,
               WorktreeRemovalServiceLive.pipe(
                 Layer.fresh,
-                Layer.provide(Layer.mergeAll(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))),
+                Layer.provide(
+                  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                ),
                 Layer.build,
                 Effect.map(Context.get(WorktreeRemovalService))
               )
@@ -2203,7 +2211,7 @@ describe("worktree git operations", () => {
               WorktreeRemovalService,
               WorktreeRemovalServiceLayer.pipe(
                 Layer.fresh,
-                Layer.provide([NodeServices.layer, probe]),
+                Layer.provide([Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), probe]),
                 Layer.build,
                 Effect.map(Context.get(WorktreeRemovalService))
               )
@@ -2260,7 +2268,7 @@ describe("worktree git operations", () => {
             )
             .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
           const outcome = remove.pipe(
-            Effect.map(() => "retired"),
+            Effect.as("retired"),
             Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
           );
 
@@ -2352,7 +2360,7 @@ describe("worktree git operations", () => {
                       ),
                     })
                   ),
-                  Effect.map(() => "retired"),
+                  Effect.as("retired"),
                   Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
                 );
 
@@ -2515,7 +2523,7 @@ describe("worktree git operations", () => {
             )
             .pipe(
               Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot)),
-              Effect.map(() => "retired"),
+              Effect.as("retired"),
               Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
             );
 
@@ -2569,7 +2577,7 @@ describe("worktree git operations", () => {
             )
             .pipe(
               Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot)),
-              Effect.map(() => "retired"),
+              Effect.as("retired"),
               Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
             );
 

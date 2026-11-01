@@ -229,8 +229,7 @@ const readGraphStore = Effect.fn("PracticeKgSelfCheck.readGraphStore")(function*
     .pipe(
       Effect.andThen(sql.unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM kg_node")),
       Effect.flatMap(decodeCountRows),
-      Effect.map(firstCount),
-      Effect.mapError(storeFailure(GRAPH_STORE, bundleDir))
+      Effect.mapBoth({ onFailure: storeFailure(GRAPH_STORE, bundleDir), onSuccess: firstCount })
     );
 });
 
@@ -249,8 +248,7 @@ const readMatterStore = Effect.fn("PracticeKgSelfCheck.readMatterStore")(functio
       Effect.andThen(duckdb.query(PracticeKgQueries.searchText, [SELF_CHECK_REFERENCE, null, 1])),
       Effect.andThen(duckdb.query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")),
       Effect.flatMap(decodeCountRows),
-      Effect.map(firstCount),
-      Effect.mapError(storeFailure(MATTER_STORE, bundleDir))
+      Effect.mapBoth({ onFailure: storeFailure(MATTER_STORE, bundleDir), onSuccess: firstCount })
     );
 });
 

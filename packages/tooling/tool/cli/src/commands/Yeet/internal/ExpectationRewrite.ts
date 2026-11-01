@@ -45,7 +45,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { ExpectationRewrite, ExpectationRewriteVerdict } from "./FinalCheck.schemas.ts";
 import { runGitPathList } from "./GitExec.ts";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 
@@ -328,7 +328,7 @@ const runInherited = Effect.fn("Yeet.ExpectationRewrite.runInherited")(function*
   args: ReadonlyArray<string>,
   cwd: string,
   env?: Record<string, string>
-): Effect.fn.Return<number, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<number, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const commandLine = A.join([command, ...args], " ");
   return yield* runToExit({
     command,
@@ -534,7 +534,7 @@ export const collectExpectationRewrites = Effect.fn("Yeet.collectExpectationRewr
 ): Effect.fn.Return<
   ReadonlyArray<ExpectationRewrite>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const modified = yield* runGitPathList(repoRoot, [
     "diff",
@@ -591,7 +591,7 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
 ): Effect.fn.Return<
   ReadonlyArray<ExpectationRewriteVerdict>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const files = rewrittenTestFiles(rewrites);
   if (A.isReadonlyArrayEmpty(files)) {

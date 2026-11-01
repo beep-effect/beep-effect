@@ -53,7 +53,7 @@ import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } fr
 import { jsdocGitErrorAdapter } from "./internal/JSDocRatchet.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { FsUtils } from "@beep/repo-utils";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensus");
@@ -365,7 +365,11 @@ export class CheckCensusMissingOutput extends S.Opaque<CheckCensusMissingOutput,
   )
 ) {}
 
-type CensusEnvironment = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
+type CensusEnvironment =
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
   tsgoPath: string,
@@ -374,7 +378,7 @@ const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runCaptured({
     command: tsgoPath,
@@ -403,7 +407,7 @@ const measureDiagnostics = Effect.fn("CheckCensus.measureDiagnostics")(function*
     readonly checkTimeMs: number;
   },
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const [elapsed, result] = yield* runCaptured({
     command: tsgoPath,
@@ -447,7 +451,7 @@ const measureProgram = Effect.fn("CheckCensus.measureProgram")(function* (
 ): Effect.fn.Return<
   { readonly program: CheckCensusProgram; readonly files: HashSet.HashSet<string> },
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const files = yield* listProgramFiles(tsgoPath, configPath, packageDir);
   const upstream = pipe(
@@ -948,7 +952,7 @@ const checkCensusBaselineProvenance = Effect.fn("CheckCensus.baselineProvenance"
 ): Effect.fn.Return<
   CheckCensusBaselineProvenance,
   QualityScriptCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const commit = yield* resolveGitCommit(repoRoot, "HEAD", jsdocGitErrorAdapter);
   const status = yield* runGitLines(repoRoot, ["status", "--porcelain"], jsdocGitErrorAdapter);

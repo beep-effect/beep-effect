@@ -39,7 +39,7 @@ import {
 import { decodeProvenanceLinesForTesting } from "@beep/repo-cli/commands/Corpus/internal/ServicePrograms";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
@@ -60,7 +60,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const preservationTestLayer = Layer.mergeAll(CorpusCommandServiceLive, CapacityPreflightServiceLive).pipe(
-  Layer.provideMerge(NodeServices.layer)
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
 );
 
 const isPreservationManifestRow = S.is(PreservationManifestRow);
@@ -150,7 +150,7 @@ const serviceLayer = (
     PreservationManifestStoreLive(manifestPath),
     PreservationVerifierLive(manifestPath),
     StreamingHasherLive
-  ).pipe(Layer.provideMerge(NodeServices.layer));
+  ).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T7 corpus preservation", (it) => {
   it("declares the payload-sync hook output as an Effect", () => {

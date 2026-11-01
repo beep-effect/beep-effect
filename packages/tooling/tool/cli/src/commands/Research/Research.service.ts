@@ -17,7 +17,8 @@ import { notionPullImpl } from "./internal/NotionPullRun.ts";
 import { repoCardImpl } from "./internal/RepoCardRun.ts";
 import { statusImpl } from "./internal/Status.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as Path from "effect/Path";
@@ -59,10 +60,11 @@ const $I = $RepoCliId.create("commands/Research/Research.service");
  */
 export type ResearchCommandServiceRequirements =
   | ChildProcessSpawner.ChildProcessSpawner
-  | Crypto.Crypto
+  | Digest.Digest
   | FileSystem.FileSystem
   | HttpClient.HttpClient
-  | Path.Path;
+  | Path.Path
+  | SecureRandom.SecureRandom;
 
 /**
  * Service contract for research knowledge-vault operations.

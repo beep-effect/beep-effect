@@ -41,6 +41,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const isStoppedPollMessage = S.is(
   S.String.check(
@@ -93,7 +94,7 @@ const recordingSpawnerLayer = (respond: (commandLine: string) => CommandStub) =>
       ChildProcessSpawner.make((command) =>
         ChildProcess.isStandardCommand(command)
           ? Effect.map(
-              Ref.updateAndGet(commandsRef, A.append(A.join([command.command, ...command.args], " "))),
+              Ref.updateAndGet(commandsRef, A.append(A.join([command.command, ...commandArgs(command)], " "))),
               (commands) => stubHandle(respond(O.getOrElse(A.last(commands), () => Str.empty)))
             )
           : Effect.die("the comment monitor never spawns a piped command")

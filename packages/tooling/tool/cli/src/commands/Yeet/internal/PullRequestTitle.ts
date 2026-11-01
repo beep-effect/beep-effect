@@ -24,7 +24,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runGitOutput } from "./GitExec.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -263,7 +263,7 @@ export const resolvePullRequestTitle = Effect.fn("Yeet.resolvePullRequestTitle")
 ): Effect.fn.Return<
   YeetPullRequestTitleResolution,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const fromMessage = O.flatMap(message, titleFromMessage);
   if (O.isSome(fromMessage)) {

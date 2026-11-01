@@ -49,7 +49,8 @@ import {
 } from "./Route.schemas.ts";
 import { ChangeClassifier, ClassifyInput, RouteCensusReader, VerificationRoute } from "./Route.service.ts";
 import { requiredLanes, routeFootprintCanonicalJson, skippedLanes } from "./RouteFootprints.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubCheckLaneSpec } from "../Quality/Quality.schemas.ts";
 import type { WaveOrderShape } from "../Yeet/internal/WaveOrder.ts";
@@ -304,9 +305,10 @@ export const orderSelectedLanes: {
  * @category queries
  * @since 0.0.0
  */
-export const routeFootprintDigest: Effect.Effect<string, RouteError, Crypto.Crypto> = Effect.suspend(() =>
-  sha256Hex(routeFootprintCanonicalJson())
-).pipe(Effect.mapError(RouteError.mapError("footprint", "Failed to digest the footprint record.")));
+export const routeFootprintDigest: Effect.Effect<string, RouteError, Digest.Digest | SecureRandom.SecureRandom> =
+  Effect.suspend(() => sha256Hex(routeFootprintCanonicalJson())).pipe(
+    Effect.mapError(RouteError.mapError("footprint", "Failed to digest the footprint record."))
+  );
 
 /**
  * The workspace packages a commit range affects, by package name.
@@ -343,12 +345,12 @@ export const changeDetectorAffectedPackages: Effect.Effect<RouteAffectedPackages
   function* () {
     const detector = yield* ChangeDetector;
     const affected: RouteAffectedPackages = (base, head) =>
-      detector
-        .affectedPackages({ base, head })
-        .pipe(
-          Effect.map(A.map((pkg) => pkg.name)),
-          Effect.mapError(RouteError.mapError("workspace", `Failed to compute the packages ${base}...${head} affects.`))
-        );
+      detector.affectedPackages({ base, head }).pipe(
+        Effect.mapBoth({
+          onSuccess: A.map((pkg) => pkg.name),
+          onFailure: RouteError.mapError("workspace", `Failed to compute the packages ${base}...${head} affects.`),
+        })
+      );
     return affected;
   }
 ).pipe(Effect.withSpan("RouteCensus.changeDetectorAffectedPackages"));
@@ -384,7 +386,7 @@ const selectedKinds = (
  */
 export const makeVerificationRoute = Effect.fn("VerificationRoute.make")(function* (
   affected: RouteAffectedPackages
-): Effect.fn.Return<VerificationRouteShape, RouteError, WaveOrder | Crypto.Crypto> {
+): Effect.fn.Return<VerificationRouteShape, RouteError, WaveOrder | Digest.Digest | SecureRandom.SecureRandom> {
   const waveOrder = yield* WaveOrder;
   const footprintDigest = yield* routeFootprintDigest;
   const specs = githubCheckPrePushLanes(PRE_PUSH_SPEC_ROOT, A.empty<GithubCheckLaneSpec>());
@@ -428,7 +430,7 @@ export const makeVerificationRoute = Effect.fn("VerificationRoute.make")(functio
  */
 export const verificationRouteLayer = (
   affected: RouteAffectedPackages
-): Layer.Layer<VerificationRoute, RouteError, WaveOrder | Crypto.Crypto> =>
+): Layer.Layer<VerificationRoute, RouteError, WaveOrder | Digest.Digest | SecureRandom.SecureRandom> =>
   Layer.effect(VerificationRoute, makeVerificationRoute(affected));
 
 /**
@@ -436,7 +438,7 @@ export const verificationRouteLayer = (
  *
  * **Details**
  *
- * The caller provides `WaveOrder` (normally `WaveOrder.Default`), `Crypto`
+ * The caller provides `WaveOrder` (normally `WaveOrder.Default`), `Digest`, `SecureRandom`
  * and `ChangeDetector` with its `Git` and `WorkspaceDiscovery` layers.
  *
  * **Example** (Reference the production layer)
@@ -454,7 +456,7 @@ export const verificationRouteLayer = (
 export const VerificationRouteLive: Layer.Layer<
   VerificationRoute,
   RouteError,
-  WaveOrder | Crypto.Crypto | ChangeDetector
+  WaveOrder | Digest.Digest | SecureRandom.SecureRandom | ChangeDetector
 > = Layer.effect(VerificationRoute, Effect.flatMap(changeDetectorAffectedPackages, makeVerificationRoute));
 
 /**
@@ -640,8 +642,14 @@ export class RouteGit extends Context.Service<RouteGit, RouteGitShape>()($I`Rout
  */
 export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
   repoRoot: string
-): Effect.fn.Return<RouteGitShape, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+): Effect.fn.Return<
+  RouteGitShape,
+  never,
+  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const context = yield* Effect.context<
+    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  >();
   const spawnFailed = (args: ReadonlyArray<string>) =>
     RouteError.mapError("git", `Failed to spawn git ${A.join(args, " ")}.`);
   const git = (args: ReadonlyArray<string>) =>
@@ -728,7 +736,7 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
  */
 export const routeGitLayer = (
   repoRoot: string
-): Layer.Layer<RouteGit, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Layer.Layer<RouteGit, never, Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   Layer.effect(RouteGit, makeRouteGit(repoRoot));
 
 const isPullRequestRun = (run: HostedRun): boolean => Str.Equivalence(run.event, "pull_request");
@@ -946,7 +954,7 @@ const NEWEST_FIRST: Order.Order<HostedRun> = Order.mapInput(
 export const makeRouteCensusReader: Effect.Effect<
   RouteCensusShape,
   RouteError,
-  ChangeClassifier | RouteGit | Crypto.Crypto
+  ChangeClassifier | RouteGit | Digest.Digest | SecureRandom.SecureRandom
 > = Effect.gen(function* () {
   const classifier = yield* ChangeClassifier;
   const git = yield* RouteGit;
@@ -1083,7 +1091,7 @@ export const makeRouteCensusReader: Effect.Effect<
  * **Details**
  *
  * The caller provides `ChangeClassifier`, {@link RouteGit} (production:
- * {@link routeGitLayer}) and `Crypto`.
+ * {@link routeGitLayer}) and `Digest`, `SecureRandom`.
  *
  * **Example** (Reference the reader layer)
  *
@@ -1100,5 +1108,5 @@ export const makeRouteCensusReader: Effect.Effect<
 export const RouteCensusReaderLive: Layer.Layer<
   RouteCensusReader,
   RouteError,
-  ChangeClassifier | RouteGit | Crypto.Crypto
+  ChangeClassifier | RouteGit | Digest.Digest | SecureRandom.SecureRandom
 > = Layer.effect(RouteCensusReader, makeRouteCensusReader);

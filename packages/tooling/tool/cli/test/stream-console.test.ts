@@ -13,7 +13,7 @@ import {
 } from "@beep/repo-cli/test/Cli";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { P } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -835,7 +835,7 @@ describe("stream console", () => {
     expect(captured.maxDepth).toBe(1);
   });
 
-  it.layer(NodeServices.layer)((it) =>
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))((it) =>
     it.effect(
       "delivers a large block through a pipe before a forced exit under Bun",
       Effect.fnUntraced(function* () {

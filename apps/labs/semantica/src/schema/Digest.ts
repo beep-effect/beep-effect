@@ -7,7 +7,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { canonicalJson } from "@/corpus/Canonical";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const utf8Encoder = new TextEncoder();
 
@@ -21,7 +21,7 @@ const sha256CanonicalEffect = (value: unknown) =>
  *
  * Callers must schema-encode domain values before passing them here. Schema
  * refinements use this synchronous noble-hashes twin because checks cannot
- * require the Effect `Crypto` service.
+ * require the Effect `Digest` service.
  *
  * **Example** (Hash an encoded preimage)
  *
@@ -38,7 +38,7 @@ export const sha256CanonicalSync = (value: unknown): Sha256Hex =>
   Sha256Hex.make(Hex.encode(sha256(utf8Encoder.encode(canonicalJson(value)))));
 
 type DigestEffect<Type> = Type extends unknown
-  ? (value: Type) => Effect.Effect<Sha256Hex, S.SchemaError, Crypto.Crypto>
+  ? (value: Type) => Effect.Effect<Sha256Hex, S.SchemaError, Digest.Digest>
   : never;
 
 type DigestResult<Type> = Type extends unknown ? (value: Type) => Result.Result<Sha256Hex, S.SchemaError> : never;

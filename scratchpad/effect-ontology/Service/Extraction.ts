@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Extraction Services
  *
@@ -103,8 +103,8 @@ const isAttributeValue = (value: unknown): value is string | number | boolean =>
  */
 export class EntityExtractor extends Context.Service<EntityExtractor>()($I`EntityExtractor`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
-    const sha256Sync = flow(sha256SyncEffect, Effect.provideService(Crypto.Crypto, crypto));
+    const crypto = yield* Digest.Digest;
+    const sha256Sync = flow(sha256SyncEffect, Effect.provideService(Digest.Digest, crypto));
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -154,7 +154,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           retryPolicy: config.llm.retryPolicy,
           enablePromptCaching: config.llm.enablePromptCaching,
         }).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
+          Effect.provideService(Digest.Digest, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             Effect.all([
@@ -342,7 +342,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
  */
 export class MentionExtractor extends Context.Service<MentionExtractor>()($I`MentionExtractor`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -370,7 +370,7 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
             mentionCount: response.value.mentions.length,
           }),
         }).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
+          Effect.provideService(Digest.Digest, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             annotateExtraction({
@@ -448,8 +448,8 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
  */
 export class RelationExtractor extends Context.Service<RelationExtractor>()($I`RelationExtractor`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
-    const sha256Sync = flow(sha256SyncEffect, Effect.provideService(Crypto.Crypto, crypto));
+    const crypto = yield* Digest.Digest;
+    const sha256Sync = flow(sha256SyncEffect, Effect.provideService(Digest.Digest, crypto));
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -530,7 +530,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             relationCount: response.value.relations.length,
           }),
         }).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
+          Effect.provideService(Digest.Digest, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             annotateExtraction({

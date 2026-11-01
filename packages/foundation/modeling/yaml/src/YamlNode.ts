@@ -560,6 +560,8 @@ export class YamlAlias extends YamlNodeBase.extend<YamlAlias, {}, { readonly bra
   }
 }
 
+type YamlScalarEncodedFields = typeof YamlScalar.Encoded;
+
 /**
  * Companion namespace for {@link YamlScalar}.
  *
@@ -586,8 +588,10 @@ export declare namespace YamlScalar {
    * @category type-level
    * @since 0.0.0
    */
-  export interface Encoded extends S.Codec.Encoded<typeof YamlScalar> {}
+  export interface Encoded extends YamlScalarEncodedFields {}
 }
+
+type YamlMapEncodedFields = typeof YamlMap.Encoded;
 
 /**
  * Companion namespace for {@link YamlMap}.
@@ -614,8 +618,10 @@ export declare namespace YamlMap {
    * @category type-level
    * @since 0.0.0
    */
-  export interface Encoded extends S.Codec.Encoded<typeof YamlMap> {}
+  export interface Encoded extends YamlMapEncodedFields {}
 }
+
+type YamlSeqEncodedFields = typeof YamlSeq.Encoded;
 
 /**
  * Companion namespace for {@link YamlSeq}.
@@ -642,8 +648,10 @@ export declare namespace YamlSeq {
    * @category type-level
    * @since 0.0.0
    */
-  export interface Encoded extends S.Codec.Encoded<typeof YamlSeq> {}
+  export interface Encoded extends YamlSeqEncodedFields {}
 }
+
+type YamlAliasEncodedFields = typeof YamlAlias.Encoded;
 
 /**
  * Companion namespace for {@link YamlAlias}.
@@ -670,7 +678,7 @@ export declare namespace YamlAlias {
    * @category type-level
    * @since 0.0.0
    */
-  export interface Encoded extends S.Codec.Encoded<typeof YamlAlias> {}
+  export interface Encoded extends YamlAliasEncodedFields {}
 }
 
 /**

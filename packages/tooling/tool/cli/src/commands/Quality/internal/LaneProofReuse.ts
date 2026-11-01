@@ -8,7 +8,8 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -109,12 +110,8 @@ export class LaneProofSession extends S.Opaque<LaneProofSession, { readonly bran
 ) {}
 
 const hashText = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(
-    yield* crypto
-      .digest("SHA-256", new TextEncoder().encode(value))
-      .pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to hash lane-proof identity." })))
-  );
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
 });
 
 const stableRecordText = (value: Readonly<Record<string, string | undefined>>): string =>
@@ -183,14 +180,10 @@ const runGit = (
 const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const indexPath = path.resolve(
     repoRoot,
-    yield* runGit(repoRoot, [
-      "rev-parse",
-      "--git-path",
-      `yeet-lane-proof-index-${yield* crypto.randomUUIDv4().pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof index identity." })))}`,
-    ])
+    yield* runGit(repoRoot, ["rev-parse", "--git-path", `yeet-lane-proof-index-${yield* crypto.uuidV4()}`])
   );
   const indexEnv = { GIT_INDEX_FILE: indexPath };
   return yield* Effect.acquireUseRelease(
@@ -357,8 +350,8 @@ export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
   const encoded = yield* LaneProofStoreJson.encode(
     LaneProofStore.make({ schemaVersion: "yeet-lane-proofs/v2", records })
   );
-  const crypto = yield* Crypto.Crypto;
-  const temporaryPath = `${refreshedSession.path}.${yield* crypto.randomUUIDv4().pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof staging identity." })))}.tmp`;
+  const crypto = yield* SecureRandom.SecureRandom;
+  const temporaryPath = `${refreshedSession.path}.${yield* crypto.uuidV4()}.tmp`;
   yield* fs.makeDirectory(path.dirname(refreshedSession.path), { recursive: true });
   yield* fs.writeFileString(temporaryPath, `${encoded}\n`);
   yield* fs.rename(temporaryPath, refreshedSession.path);

@@ -53,7 +53,7 @@ import {
 } from "./Inventory.ts";
 import { materializeExpectFlag, materializeWriteFlag, requireOneMode, writeReviewedPlan } from "./Materialize.ts";
 import { canonicalJsonText, sha256Hex, sha256HexBytes } from "./PacketCore/PacketDigest.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type { MaterializationPlan, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { ConflictRow, PlanRow, PreservationRow } from "./Bootstrap.ts";
@@ -76,9 +76,7 @@ const readSnapshotFile = Effect.fn("Goals.readSnapshotFile")(function* (root: st
   const bytes = yield* fs
     .readFile(entryAbsolute)
     .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to read "${entryAbsolute}".`)));
-  const digest = yield* sha256HexBytes(bytes).pipe(
-    Effect.mapError(GoalPlanOperationalError.new(`Failed to digest "${entryAbsolute}".`))
-  );
+  const digest = yield* sha256HexBytes(bytes);
   return PacketSnapshotFile.make({
     path: entryRelative,
     text: new TextDecoder().decode(bytes),
@@ -92,7 +90,7 @@ const walkEntry: (
 ) => Effect.Effect<
   ReadonlyArray<PacketSnapshotFile>,
   GoalPlanOperationalError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > = Effect.fn("Goals.walkPacketEntry")(function* (root: string, entryRelative: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -129,7 +127,7 @@ const walkDirectory = (
 ): Effect.Effect<
   ReadonlyArray<PacketSnapshotFile>,
   GoalPlanOperationalError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > =>
   Effect.map(walkEntries(root, ""), (files) =>
     A.sort(
@@ -188,7 +186,7 @@ export const readPacketSnapshot = Effect.fn("Goals.readPacketSnapshot")(function
   const templateFiles = yield* walkDirectory(templatePath);
   const templateSnapshotHash = yield* sha256Hex(
     canonicalJsonText(A.map(templateFiles, (file) => ({ path: file.path, digest: file.digest })))
-  ).pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to digest the template snapshot at "${templatePath}".`)));
+  );
   const exists = yield* directoryExists(packetPath);
   const files = exists ? yield* walkDirectory(packetPath) : A.empty<PacketSnapshotFile>();
   return PacketSnapshot.make({
@@ -323,10 +321,10 @@ export const compileAdoptionPlan: {
   (
     snapshot: PacketSnapshot,
     toward: O.Option<PhaseArchetype>
-  ): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Digest.Digest>;
   (
     toward: O.Option<PhaseArchetype>
-  ): (snapshot: PacketSnapshot) => Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  ): (snapshot: PacketSnapshot) => Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Digest.Digest>;
 } = dual(
   2,
   Effect.fnUntraced(function* (snapshot: PacketSnapshot, toward: O.Option<PhaseArchetype>) {
@@ -401,7 +399,7 @@ const conflictedAdoptionPlan = (
   base: AdoptionPlanBase,
   reason: ConflictRow["reason"],
   message: string
-): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto> =>
+): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Digest.Digest> =>
   sealMaterializationPlan({
     ...base,
     entries: [],
@@ -469,7 +467,7 @@ const seededManifestRow = (
   snapshot: PacketSnapshot,
   archetype: PhaseArchetype,
   fullPath: string
-): Effect.Effect<PlanRow, PlatformError.PlatformError, Crypto.Crypto> => {
+): Effect.Effect<PlanRow, PlatformError.PlatformError, Digest.Digest> => {
   const readme = A.findFirst(snapshot.files, (file) => file.path === README_RELATIVE_PATH);
   const readmeText = O.map(readme, (file) => file.text);
   const payload = seededManifestPayload({
@@ -504,7 +502,7 @@ const missingTemplateRow = (
   snapshot: PacketSnapshot,
   archetype: PhaseArchetype,
   templateFile: PacketSnapshotFile
-): Effect.Effect<ClassifiedRow, PlatformError.PlatformError, Crypto.Crypto> => {
+): Effect.Effect<ClassifiedRow, PlatformError.PlatformError, Digest.Digest> => {
   const fullPath = `${snapshot.packetPath}/${templateFile.path}`;
   if (templateFile.path === MANIFEST_RELATIVE_PATH) {
     return Effect.map(seededManifestRow(snapshot, archetype, fullPath), (entry) => ({

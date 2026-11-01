@@ -29,7 +29,7 @@ import { jsdocLawFindings } from "./JsdocLaw.ts";
 import { canonFindings, coverageGaps } from "./Canon.ts";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { PlatformError } from "effect/PlatformError";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { EffectVitestLintError } from "@beep/repo-cli/commands/Lint";
 import type { ManifestInvalid } from "./Audit.errors.ts";
 
@@ -774,8 +774,8 @@ export const lint: {
  * @since 0.0.0
  */
 export const test: {
-  (config: RunnerConfig, target: AuditTarget, coverage: boolean): Effect.Effect<undefined, ManifestInvalid | PlatformError | EffectVitestLintError | GateFailed, FileSystem.FileSystem | Path.Path | ChildProcessSpawner | Crypto.Crypto>;
-  (target: AuditTarget, coverage: boolean): (config: RunnerConfig) => Effect.Effect<undefined, ManifestInvalid | PlatformError | EffectVitestLintError | GateFailed, FileSystem.FileSystem | Path.Path | ChildProcessSpawner | Crypto.Crypto>;
+  (config: RunnerConfig, target: AuditTarget, coverage: boolean): Effect.Effect<undefined, ManifestInvalid | PlatformError | EffectVitestLintError | GateFailed, FileSystem.FileSystem | Path.Path | ChildProcessSpawner | Digest.Digest>;
+  (target: AuditTarget, coverage: boolean): (config: RunnerConfig) => Effect.Effect<undefined, ManifestInvalid | PlatformError | EffectVitestLintError | GateFailed, FileSystem.FileSystem | Path.Path | ChildProcessSpawner | Digest.Digest>;
 } = dual(3, Effect.fn("Gates.test")(function* (config: RunnerConfig, target: AuditTarget, coverage: boolean) {
   const lab = labPaths(target);
   const exitCode = yield* runInherited(

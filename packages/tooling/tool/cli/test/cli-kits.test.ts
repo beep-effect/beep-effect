@@ -38,7 +38,7 @@ import { describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -421,61 +421,64 @@ describe("internal/cli/FsGuards", () => {
 
   // Real streaming over a multi-chunk file: the in-memory filesystem appends are quadratic here,
   // so this case stays on the platform filesystem it is meant to exercise.
-  it.layer(NodeServices.layer, { timeout: "120 seconds" })("hashFileSha256 over the platform filesystem", (it) => {
-    it.effect(
-      "hashes a file far larger than one chunk without reading it whole",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const crypto = yield* Crypto.Crypto;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-large-" });
-        const filePath = path.join(root, "large.bin");
-        const chunkCount = 64;
-        const totalBytes = chunkCount * hashFileChunkBytes;
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 seconds" })(
+    "hashFileSha256 over the platform filesystem",
+    (it) => {
+      it.effect(
+        "hashes a file far larger than one chunk without reading it whole",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const crypto = yield* Digest.Digest;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-large-" });
+          const filePath = path.join(root, "large.bin");
+          const chunkCount = 64;
+          const totalBytes = chunkCount * hashFileChunkBytes;
 
-        // Independent oracle: the platform digest over the same bytes, built
-        // here once so the code under test never sees a whole-file buffer.
-        const whole = new Uint8Array(totalBytes);
-        yield* Effect.forEach(
-          A.range(0, chunkCount - 1),
-          (index) => {
-            const chunk = patternedBytes(hashFileChunkBytes, index);
-            whole.set(chunk, index * hashFileChunkBytes);
-            return fs.writeFile(filePath, chunk, { flag: "a" });
-          },
-          { discard: true }
-        );
-        const expected = Hex.encode(yield* crypto.digest("SHA-256", whole));
+          // Independent oracle: the platform digest over the same bytes, built
+          // here once so the code under test never sees a whole-file buffer.
+          const whole = new Uint8Array(totalBytes);
+          yield* Effect.forEach(
+            A.range(0, chunkCount - 1),
+            (index) => {
+              const chunk = patternedBytes(hashFileChunkBytes, index);
+              whole.set(chunk, index * hashFileChunkBytes);
+              return fs.writeFile(filePath, chunk, { flag: "a" });
+            },
+            { discard: true }
+          );
+          const expected = Hex.encode(yield* crypto.digest(Digest.sha256, whole));
 
-        const chunkSizes = MutableList.make<number>();
-        const requestedChunkSizes = MutableList.make<number | undefined>();
-        const wholeFileReads = yield* Ref.make(0);
-        const observedFs: FileSystem.FileSystem = {
-          ...fs,
-          readFile: (target) =>
-            Ref.update(wholeFileReads, (count) => count + 1).pipe(Effect.andThen(fs.readFile(target))),
-          stream: (target, options) => {
-            MutableList.append(requestedChunkSizes, Number(options?.chunkSize));
-            return fs
-              .stream(target, options)
-              .pipe(Stream.tap((chunk) => Effect.sync(() => MutableList.append(chunkSizes, chunk.byteLength))));
-          },
-        };
+          const chunkSizes = MutableList.make<number>();
+          const requestedChunkSizes = MutableList.make<number | undefined>();
+          const wholeFileReads = yield* Ref.make(0);
+          const observedFs: FileSystem.FileSystem = {
+            ...fs,
+            readFile: (target) =>
+              Ref.update(wholeFileReads, (count) => count + 1).pipe(Effect.andThen(fs.readFile(target))),
+            stream: (target, options) => {
+              MutableList.append(requestedChunkSizes, Number(options?.chunkSize));
+              return fs
+                .stream(target, options)
+                .pipe(Stream.tap((chunk) => Effect.sync(() => MutableList.append(chunkSizes, chunk.byteLength))));
+            },
+          };
 
-        const digest = yield* hashFileSha256(filePath, hashTestError).pipe(
-          Effect.provideService(FileSystem.FileSystem, observedFs)
-        );
-        const observedSizes = MutableList.toArray(chunkSizes);
+          const digest = yield* hashFileSha256(filePath, hashTestError).pipe(
+            Effect.provideService(FileSystem.FileSystem, observedFs)
+          );
+          const observedSizes = MutableList.toArray(chunkSizes);
 
-        expect(digest).toBe(expected);
-        expect(yield* Ref.get(wholeFileReads)).toBe(0);
-        expect(MutableList.toArray(requestedChunkSizes)).toEqual([hashFileChunkBytes]);
-        expect(A.length(observedSizes)).toBeGreaterThanOrEqual(chunkCount);
-        expect(Math.max(...observedSizes)).toBeLessThanOrEqual(hashFileChunkBytes);
-        expect(A.reduce(observedSizes, 0, (total, size) => total + size)).toBe(totalBytes);
-      })
-    );
-  });
+          expect(digest).toBe(expected);
+          expect(yield* Ref.get(wholeFileReads)).toBe(0);
+          expect(MutableList.toArray(requestedChunkSizes)).toEqual([hashFileChunkBytes]);
+          expect(A.length(observedSizes)).toBeGreaterThanOrEqual(chunkCount);
+          expect(Math.max(...observedSizes)).toBeLessThanOrEqual(hashFileChunkBytes);
+          expect(A.reduce(observedSizes, 0, (total, size) => total + size)).toBe(totalBytes);
+        })
+      );
+    }
+  );
 });
 
 describe("internal/cli/Timing text helpers", () => {

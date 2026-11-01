@@ -612,10 +612,9 @@ const resolveFolders = Effect.fnUntraced(function* (
   config: DocketGraphConfig
 ): Effect.fn.Return<MailboxFolders, DocketIntakeError> {
   const folderId = (folder: string) =>
-    m365.getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) })).pipe(
-      Effect.map((resolved) => resolved.id),
-      Effect.mapError(mailboxError)
-    );
+    m365
+      .getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) }))
+      .pipe(Effect.mapBoth({ onFailure: mailboxError, onSuccess: (resolved) => resolved.id }));
   const excluded = yield* Effect.forEach(EXCLUDED_FOLDERS, folderId, { concurrency: 1 });
   const marked = yield* Effect.forEach(
     MARKED_FOLDERS,

@@ -8,7 +8,7 @@ import {
 } from "@beep/repo-cli/commands/Goals";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -126,7 +126,7 @@ const currentConsumerOutputs = Effect.fn("GoalsManifestCapabilitiesTest.currentC
   );
 });
 
-layer(NodeServices.layer)("GoalManifest capability fields", (it) => {
+layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GoalManifest capability fields", (it) => {
   it.effect(
     "1. decodes every tracked goal manifest, including _template",
     Effect.fn("GoalsManifestCapabilitiesTest.census")(function* () {

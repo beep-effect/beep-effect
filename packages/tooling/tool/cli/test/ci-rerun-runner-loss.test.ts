@@ -27,7 +27,7 @@ import {
 import { GithubJobRecord, GithubJobStepRecord, githubJobHasFailedStep } from "@beep/repo-cli/test/SharedInternals";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -50,6 +50,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -346,9 +347,9 @@ type GhReply = readonly [key: string, exitCode: number, output: string];
 const ghSpawner = (replies: ReadonlyArray<GhReply>, commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const key = command.args[0] === "api" ? (command.args[1] ?? "") : A.join(command.args, " ");
+    const key = commandArgs(command)[0] === "api" ? (commandArgs(command)[1] ?? "") : A.join(commandArgs(command), " ");
     const reply = A.findFirst(replies, ([candidate]) => candidate === key);
-    return Ref.update(commands, A.append(command.args)).pipe(
+    return Ref.update(commands, A.append(commandArgs(command))).pipe(
       Effect.andThen(
         O.match(reply, {
           onNone: () => Effect.succeed(handle(1, `gh: unscripted ${key} (HTTP 404)`)),
@@ -407,7 +408,7 @@ const failedAttemptReplies: ReadonlyArray<GhReply> = [
 
 // The suite's runner outputs: only the step-summary test publishes through it.
 const rerunOutputs = ActionOutputs.recording();
-const platform = Layer.mergeAll(NodeServices.layer, TestConsole.layer, rerunOutputs.layer);
+const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer, rerunOutputs.layer);
 const logs = TestConsole.logLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
 const errors = TestConsole.errorLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
 const decideRun = (runInput: CiRerunRunnerLossInput) =>
@@ -897,7 +898,7 @@ const reviewReplies = HashMap.make(
 );
 const reviewSpawner = ChildProcessSpawner.make((command) => {
   if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-  const key = A.join(command.args, " ");
+  const key = A.join(commandArgs(command), " ");
   return key === `api --jq .sha repos/{owner}/{repo}/commits/${SPAWN_FAILURE_SHA}`
     ? Effect.fail(
         PlatformError.systemError({
@@ -910,7 +911,7 @@ const reviewSpawner = ChildProcessSpawner.make((command) => {
     : Effect.succeed(O.getOrElse(HashMap.get(reviewReplies, key), () => handle(1, `gh: unscripted ${key} (HTTP 404)`)));
 });
 const reviewPlatform = Layer.merge(
-  NodeServices.layer,
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, reviewSpawner)
 );
 
