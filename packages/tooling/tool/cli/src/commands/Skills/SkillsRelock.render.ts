@@ -23,7 +23,7 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as jsonc from "jsonc-parser";
+import { renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import {
   SkillRelockReceipt,
   SkillReplayBatch,
@@ -62,11 +62,6 @@ const DIFF_BUDGET = 40_000;
  */
 export const SKILL_REPLAY_COMMENT_TAG = "<!-- beep-skills-replay -->";
 
-const formatJson = (encoded: string): string => {
-  const edits = jsonc.format(encoded, undefined, { tabSize: 2, insertSpaces: true });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
-
 /**
  * Renders a replay batch as two-space formatted JSON with a trailing newline.
  *
@@ -85,7 +80,7 @@ const formatJson = (encoded: string): string => {
  * @since 0.0.0
  */
 export const renderSkillReplayJson = (batch: SkillReplayBatch): string =>
-  encodeReplayBatchJson(batch).pipe(Result.getOrThrow, formatJson);
+  encodeReplayBatchJson(batch).pipe(Result.getOrThrow, renderPrettyCommandJson);
 
 /**
  * Renders a relock receipt as two-space formatted JSON with a trailing newline.
@@ -109,7 +104,7 @@ export const renderSkillReplayJson = (batch: SkillReplayBatch): string =>
  * @since 0.0.0
  */
 export const renderSkillRelockReceiptJson = (receipt: SkillRelockReceipt): string =>
-  encodeRelockReceiptJson(receipt).pipe(Result.getOrThrow, formatJson);
+  encodeRelockReceiptJson(receipt).pipe(Result.getOrThrow, renderPrettyCommandJson);
 
 const countOf = (rows: ReadonlyArray<SkillHunkReport>, status: SkillHunkStatus): number =>
   A.length(A.filter(rows, (row) => row.status === status));

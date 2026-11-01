@@ -6,7 +6,7 @@
  * (`goals/goals-doctor/research/status-token-census.md`) onto the canonical
  * 5-state domain, normalizes phase statuses, keeps `lifecycle` equal to the
  * canonical status, rewrites README `Lifecycle:` lines, and backfills the five
- * manifest-less packets. Edits are surgical (`jsonc-parser` modifications) so
+ * manifest-less packets. Edits are surgical (`@beep/jsonc` modifications) so
  * untouched manifest bytes stay untouched, and the whole plan is idempotent:
  * a second run over migrated packets produces zero edits.
  *

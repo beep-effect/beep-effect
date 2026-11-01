@@ -1,3 +1,5 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
+import { JsoncFormatter } from "@beep/jsonc/JsoncFormatter";
 import {
   syncTsconfigAtRoot,
   TsconfigSyncRunOptions,
@@ -28,7 +30,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as jsonc from "jsonc-parser";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -85,11 +86,10 @@ const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
 
 const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
   const encoded = yield* encodeJson(value);
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  yield* writeTextFile(filePath, `${jsonc.applyEdits(encoded, edits)}\n`);
+  yield* writeTextFile(
+    filePath,
+    `${JsoncFormatter.formatToString(encoded, undefined, { tabSize: 2, insertSpaces: true })}\n`
+  );
 });
 
 const readJsonFile = Effect.fn(function* (filePath: string) {
@@ -99,10 +99,7 @@ const readJsonFile = Effect.fn(function* (filePath: string) {
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return jsonc.parse(yield* fs.readFileString(filePath), undefined, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
+  return yield* Jsonc.parse(yield* fs.readFileString(filePath));
 });
 
 const writeSyncpackConfig = (filePath: string, sources: ReadonlyArray<string>) =>

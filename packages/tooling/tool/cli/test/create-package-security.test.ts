@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   ConfigUpdateTarget,
   checkConfigNeedsUpdate,
@@ -14,7 +15,6 @@ import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import * as jsonc from "jsonc-parser";
 
 const testLayer = NodeServices.layer;
 
@@ -63,13 +63,10 @@ describe("create-package security", () => {
         yield* writeRootConfigFiles(tmpDir);
 
         const changed = yield* updateTsconfigPackages(tmpDir, "packages/foundation/modeling/identity");
-        const parsed = jsonc.parse(yield* fs.readFileString(filePath), undefined, {
-          allowTrailingComma: true,
-          disallowComments: false,
-        });
+        const parsed = yield* Jsonc.parse(yield* fs.readFileString(filePath));
 
         expect(changed).toBe(false);
-        expect(parsed.references).toEqual([{ path: "packages/foundation/modeling/identity" }]);
+        expect(parsed).toMatchObject({ references: [{ path: "packages/foundation/modeling/identity" }] });
       })
     );
 

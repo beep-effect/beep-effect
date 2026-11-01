@@ -10,7 +10,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as jsonc from "jsonc-parser";
+import { renderPrettyCommandJson } from "../../internal/cli/Json.ts";
 import { SkillPatchAddReceipt, SkillPatchLabelReceipt } from "./SkillsPatch.schemas.ts";
 import { SkillReviewSession } from "./SkillsReview.schemas.ts";
 import type { SkillReviewItem, SkillReviewSkill } from "./SkillsReview.schemas.ts";
@@ -18,11 +18,6 @@ import type { SkillReviewItem, SkillReviewSkill } from "./SkillsReview.schemas.t
 const encodeSessionJson = S.encodeResult(S.fromJsonString(SkillReviewSession));
 const encodePatchAddJson = S.encodeResult(S.fromJsonString(SkillPatchAddReceipt));
 const encodePatchLabelJson = S.encodeResult(S.fromJsonString(SkillPatchLabelReceipt));
-
-const formatJson = (encoded: string): string => {
-  const edits = jsonc.format(encoded, undefined, { tabSize: 2, insertSpaces: true });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-};
 
 const short = Str.slice(0, 12);
 
@@ -47,7 +42,7 @@ const short = Str.slice(0, 12);
  * @since 0.0.0
  */
 export const renderSkillReviewSessionJson = (session: SkillReviewSession): string =>
-  encodeSessionJson(session).pipe(Result.getOrThrow, formatJson);
+  encodeSessionJson(session).pipe(Result.getOrThrow, renderPrettyCommandJson);
 
 const itemLine = (item: SkillReviewItem): string =>
   `  - ${item.skill} ${item.kind}: ${item.patch} ${item.file} hunk ${item.hunk === 0 ? "section" : item.hunk} (${item.status}, labelled ${item.currentLabel}) ${short(item.hunkHash)}${
@@ -115,7 +110,7 @@ export const renderSkillReviewSessionSummary = (session: SkillReviewSession): st
  * @since 0.0.0
  */
 export const renderSkillPatchAddReceiptJson = (receipt: SkillPatchAddReceipt): string =>
-  encodePatchAddJson(receipt).pipe(Result.getOrThrow, formatJson);
+  encodePatchAddJson(receipt).pipe(Result.getOrThrow, renderPrettyCommandJson);
 
 /**
  * Renders a `skills patch add` receipt as one line per new patch under a headline.
@@ -159,7 +154,7 @@ export const renderSkillPatchAddSummary = (receipt: SkillPatchAddReceipt): strin
  * @since 0.0.0
  */
 export const renderSkillPatchLabelReceiptJson = (receipt: SkillPatchLabelReceipt): string =>
-  encodePatchLabelJson(receipt).pipe(Result.getOrThrow, formatJson);
+  encodePatchLabelJson(receipt).pipe(Result.getOrThrow, renderPrettyCommandJson);
 
 /**
  * Renders a `skills patch label` receipt as its changes and pending patches under a headline.

@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { Fn } from "@beep/schema";
 import * as A from "effect/Array";
@@ -22,9 +23,9 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { parse as parseJsonc } from "jsonc-parser";
 import { ts } from "ts-morph";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { runCapturedStreams } from "../../internal/process/index.ts";
@@ -59,8 +60,10 @@ import {
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ParseError } from "jsonc-parser";
 import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
+
+// jsonc-parser's default reading: comments allowed, trailing commas rejected.
+const strictJson = JsoncParseOptions.make({ allowTrailingComma: false });
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
 
@@ -1621,11 +1624,7 @@ const collectCodemodInheritance = Effect.fn("FallowQuality.collectCodemodInherit
   if (files.exitCode !== 0 || diff.exitCode !== 0) return 0;
   const reports = yield* Effect.forEach(A.filter(Str.split(files.stdout, "\n"), Str.isNonEmpty), (file) =>
     fs.readFileString(path.join(repoRoot, file)).pipe(
-      Effect.map((text) => {
-        const errors: Array<ParseError> = [];
-        const report: unknown = parseJsonc(text, errors);
-        return A.isReadonlyArrayEmpty(errors) ? report : undefined;
-      }),
+      Effect.map((text) => Result.getOrUndefined(Jsonc.parseResult(text, strictJson))),
       Effect.orElseSucceed(() => undefined)
     )
   );

@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   JSDocDocumentationInventoryOptions,
   jsdocCommentsFromSource,
@@ -23,7 +24,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as jsonc from "jsonc-parser";
 
 /**
  * Regression fixtures for verified JSDoc inventory detector bugs
@@ -107,16 +107,7 @@ type FixturePackage = {
 const writeJsonFile = (filePath: string, value: unknown) =>
   FileSystem.FileSystem.pipe(Effect.flatMap((fs) => fs.writeFileString(filePath, `${encodeJson(value)}\n`)));
 
-const parseJsoncText = (text: string): unknown => {
-  const errors: Array<jsonc.ParseError> = [];
-  const parsed = jsonc.parse(text, errors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
-
-  expect(errors).toEqual([]);
-  return parsed;
-};
+const parseJsoncText = (text: string): unknown => Result.getOrThrow(Jsonc.parseResult(text));
 
 const acquireFixtureRepo = Effect.fnUntraced(function* (options: {
   readonly topoSortScript: string;

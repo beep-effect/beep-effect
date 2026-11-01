@@ -26,6 +26,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
@@ -42,7 +43,6 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as jsonc from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
 import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
@@ -116,13 +116,10 @@ class WorkspaceManifest extends S.Opaque<WorkspaceManifest, { readonly brand: un
   }).pipe($I.annoteSchema("WorkspaceManifest", { description: "The manifest fields the fingerprint reads." }))
 ) {}
 
-const parseJsonc = Effect.fnUntraced(function* (file: string, text: string) {
-  const errors: Array<jsonc.ParseError> = [];
-  const value: unknown = jsonc.parse(text, errors, { allowTrailingComma: true });
-  if (A.isReadonlyArrayNonEmpty(errors))
-    return yield* PolicyFingerprintError.make({ message: `Cannot parse ${file}`, cause: errors });
-  return value;
-});
+const parseJsonc = (file: string, text: string) =>
+  Jsonc.parse(text).pipe(
+    Effect.mapError((cause) => PolicyFingerprintError.make({ message: `Cannot parse ${file}`, cause }))
+  );
 
 const decodeTurbo = S.decodeUnknownEffect(TurboConfiguration);
 const decodeManifest = S.decodeUnknownEffect(WorkspaceManifest);

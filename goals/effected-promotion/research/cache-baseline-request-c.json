@@ -1,5 +1,5 @@
 {
-  "previous": "96e4861063a6c5500bc61e3a50e7c114eb35be4fe08f1c0251c7991b9ea31183",
+  "previous": "5eae400b284cf6d5cf2b900349bd3debdd3358773f7ba3a91f58e77e37b10e6d",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion closeout C, chore/effected-promotion-closeout)",
     "reason": "Record the closeout manifest edit that drops the six *:effected scripts and the 44 lab-only dependencies from @beep/scratchpad after the effected lab is deleted; the closure shrinks by one package and no other subject changes; no qualification is granted.",

@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R6, lane effected-r6)",
-      "reason": "Record the root subject drift from the generated policy-fingerprint task inputs: all seven gain the @beep/markdown MarkdownFence module, and the five that reached docgen only through repo-cli JSDocSections drop the docgen closure now that the fence extractors read @beep/markdown directly; no manifest changes; the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R3b, refactor/jsonc-parser-out)",
+      "reason": "Record the R3b manifest edits: @beep/repo-configs drops the npm jsonc-parser dependency and adds the @beep/jsonc workspace dependency (its closure gains exactly @beep/jsonc), and the root gains the @beep/jsonc devDependency for the schema-opaque-default codemod while the policy-fingerprint shared seal gains @beep/jsonc internal/lines.ts; measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r6.md",
-        "sha256": "a07fb3cbf695a470da0cbed932406a0e9076b065ded7f29c65257dffc294c6c9"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r3b.md",
+        "sha256": "f8f10829ea0992890189d85c24269f41d3e2ea276c2fff69e64596e991390dda"
       }
     },
     "@beep/acp": {
@@ -1146,11 +1146,11 @@
       }
     },
     "@beep/repo-configs": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R3b, refactor/jsonc-parser-out)",
+      "reason": "Record the R3b manifest edits: @beep/repo-configs drops the npm jsonc-parser dependency and adds the @beep/jsonc workspace dependency (its closure gains exactly @beep/jsonc), and the root gains the @beep/jsonc devDependency for the schema-opaque-default codemod while the policy-fingerprint shared seal gains @beep/jsonc internal/lines.ts; measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r3b.md",
+        "sha256": "f8f10829ea0992890189d85c24269f41d3e2ea276c2fff69e64596e991390dda"
       }
     },
     "@beep/repo-docgen": {
@@ -7645,6 +7645,7 @@
             "packages/foundation/modeling/jsonc/src/index.ts",
             "packages/foundation/modeling/jsonc/src/internal/accumulation.ts",
             "packages/foundation/modeling/jsonc/src/internal/limits.ts",
+            "packages/foundation/modeling/jsonc/src/internal/lines.ts",
             "packages/foundation/modeling/jsonc/src/internal/navigate.ts",
             "packages/foundation/modeling/jsonc/src/internal/parser.ts",
             "packages/foundation/modeling/jsonc/src/internal/scanner.ts",
@@ -104938,6 +104939,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#audit",
+          "@beep/jsonc#audit",
           "@beep/schema#audit",
           "@beep/semver#audit",
           "@beep/test-runner#audit",
@@ -105005,6 +105007,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/semver#build",
           "@beep/test-runner#build",
@@ -105062,6 +105065,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/semver#build",
           "@beep/test-runner#build",
@@ -105105,6 +105109,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#codegen",
+          "@beep/jsonc#codegen",
           "@beep/schema#codegen",
           "@beep/semver#codegen",
           "@beep/test-runner#codegen",
@@ -105141,6 +105146,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/semver#build",
           "@beep/test-runner#build",
@@ -105269,6 +105275,7 @@
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/semver#transit",
           "@beep/test-runner#transit",
@@ -105475,6 +105482,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/semver#transit",
           "@beep/test-runner#transit",
@@ -105521,6 +105529,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/semver#transit",
           "@beep/test-runner#transit",
@@ -105573,6 +105582,7 @@
         "commandDigest": "e974babe448589ddbadf65a0267118f4f0091834d0a4fa8e767777dd96a7dfff",
         "dependencies": [
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/semver#transit",
           "@beep/test-runner#transit",
@@ -135926,7 +135936,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "d69c396677f3302d5e4ab25bcefdd1194751d5c3a4510b6d1701f17c59f6eb06"
+        "sha256": "7e01da8bc1c30562eef3e90719642c0928339c968e4badfe9f3096e515ace51a"
       }
     ]
   }

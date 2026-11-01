@@ -24,7 +24,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { getNodeValue } from "jsonc-parser";
 import { asArrayBufferView } from "../../internal/cli/Bytes.ts";
 import { collectText } from "../../internal/process/StepExec.ts";
 import { makePublicationLedger, publicationSuffix } from "../../internal/publication/PublicationLedger.ts";
@@ -100,7 +99,7 @@ const decodeJournal = S.decodeEffect(S.fromJsonString(ModelsApplyJournal));
 const failure = (message: string) => ModelsLocatorError.make({ message });
 const nativeFields = S.Record(S.String, S.Unknown);
 const encodeValue = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const decodeJsonText = (text: string) => modelsParseJson(text).pipe(Effect.map(getNodeValue));
+const decodeJsonText = (text: string) => modelsParseJson(text).pipe(Effect.map((tree) => tree.toValue()));
 
 // Mask exactly the owned leaves in parsed native data. This assertion is
 // independent of the stronger byte-preservation assertion below.

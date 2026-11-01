@@ -745,7 +745,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer), { timeout: "30 se
         expect(approval.binding).toEqual(f.binding);
         expect(profile).toEqual(f.profile);
         expect(yield* f.fs.exists(f.path.join(f.inputs, "issuer.key"))).toBe(false);
-        expect(yield* f.fs.readDirectory(f.inputs)).toEqual(["approval.json", "runtime.json"]);
+        expect(A.sort(yield* f.fs.readDirectory(f.inputs), Str.Order)).toEqual(["approval.json", "runtime.json"]);
       })
     );
     it.effect.each(["issuer.key", "revoked"])("refuses provisioning input directories containing %s", (marker) =>

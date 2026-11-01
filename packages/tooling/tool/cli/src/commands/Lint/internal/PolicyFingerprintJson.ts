@@ -7,12 +7,16 @@
  * @since 0.0.0
  */
 
+import { Jsonc } from "@beep/jsonc/Jsonc";
+import { JsoncEdit } from "@beep/jsonc/JsoncEdit";
+import { JsoncModifier } from "@beep/jsonc/JsoncModifier";
 import { A, O, Str } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as jsonc from "jsonc-parser";
+import * as Result from "effect/Result";
+import type { JsoncNode, JsoncPath } from "@beep/jsonc/JsoncNode";
 
-const FORMATTING = { formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\n" } } as const;
+const FORMATTING = { insertSpaces: true, tabSize: 2, eol: "\n" } as const;
 // The repository's Biome JSON line width.
 const JSON_LINE_WIDTH = 80;
 
@@ -78,7 +82,7 @@ export const renderJsonDocument = (value: unknown): string => renderJson(value, 
  * so generated properties stay grouped and ordered.
  *
  * @param owned - Whether a property belongs to the generated group.
- * @returns A callback taking the inserted key and returning a `jsonc` insertion-index callback.
+ * @returns A callback taking the inserted key and returning a callback that picks the insertion index.
  * @internal
  * @category utilities
  * @since 0.0.0
@@ -95,16 +99,31 @@ export const insertAfterOwned =
 /** One {@link modifyJson} edit. */
 interface JsonEdit {
   readonly insertion?: ((properties: Array<string>) => number) | undefined;
-  readonly path: jsonc.JSONPath;
+  readonly path: JsoncPath;
   readonly text: string;
   readonly value: unknown;
 }
 
+const parseTree = (text: string): O.Option<JsoncNode> => O.flatten(Result.getSuccess(Jsonc.parseTreeResult(text)));
+
+// The property names of the object at `path`, in document order.
+const propertyNames = (text: string, path: JsoncPath): O.Option<Array<string>> =>
+  O.flatMap(parseTree(text), (tree) => tree.find(path)).pipe(
+    O.filter((node) => node.type === "object"),
+    O.map((node) =>
+      A.getSomes(
+        A.map(node.children ?? A.empty<JsoncNode>(), (property) =>
+          O.filter(O.fromUndefinedOr(property.children?.[0]?.value), P.isString)
+        )
+      )
+    )
+  );
+
 // Re-lay the node at `path` out the way Biome would print it.
-const relayout = (text: string, path: jsonc.JSONPath, value: unknown): string => {
-  const tree = jsonc.parseTree(text);
-  const node = tree === undefined ? undefined : jsonc.findNodeAtLocation(tree, path);
-  if (node === undefined) return text;
+const relayout = (text: string, path: JsoncPath, value: unknown): string => {
+  const found = O.flatMap(parseTree(text), (tree) => tree.find(path));
+  if (O.isNone(found)) return text;
+  const node = found.value;
   const before = Str.slice(0, node.offset)(text);
   const start = O.match(Str.lastIndexOf("\n")(before), { onNone: () => 0, onSome: (index) => index + 1 });
   const indent = O.getOrElse(
@@ -128,7 +147,17 @@ const relayout = (text: string, path: jsonc.JSONPath, value: unknown): string =>
  * @since 0.0.0
  */
 export const modifyJson = ({ text, path, value, insertion }: JsonEdit): string => {
-  const options = insertion === undefined ? FORMATTING : { ...FORMATTING, getInsertionIndex: insertion };
-  const next = jsonc.applyEdits(text, jsonc.modify(text, path, value, options));
+  // The insertion index is chosen from the existing parent's property names,
+  // as jsonc-parser's `getInsertionIndex` callback chose it.
+  const insertionIndex = O.flatMap(O.fromUndefinedOr(insertion), (choose) =>
+    O.map(propertyNames(text, A.dropRight(path, 1)), choose)
+  );
+  const next = JsoncModifier.modifyWithFormattingResult(text, path, value, {
+    formattingOptions: FORMATTING,
+    ...O.match(insertionIndex, { onNone: () => ({}), onSome: (index) => ({ insertionIndex: index }) }),
+  }).pipe(
+    Result.map((edits) => JsoncEdit.applyAll(text, edits)),
+    Result.getOrThrow
+  );
   return value === undefined ? next : relayout(next, path, value);
 };

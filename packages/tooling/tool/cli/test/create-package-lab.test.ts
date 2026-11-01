@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import {
   LAB_COMPOSERS_END_MARKER,
@@ -35,7 +36,6 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as TestConsole from "effect/testing/TestConsole";
-import * as jsonc from "jsonc-parser";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -129,10 +129,7 @@ const readJsonFile = Effect.fn(function* (filePath: string) {
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return jsonc.parse(yield* fs.readFileString(filePath), undefined, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
+  return yield* Jsonc.parse(yield* fs.readFileString(filePath));
 });
 
 const markerIndex =
