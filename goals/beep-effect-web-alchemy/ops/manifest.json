@@ -6,7 +6,7 @@
     "title": "beep-effect.com web app on Alchemy",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-31",
+    "updated": "2026-11-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/beep-effect-web-alchemy",
@@ -18,7 +18,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301); final closeout PR #2444 carries the P3 evidence and reflection through repository gates.",
+    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301). Closeout PR #2444 merged over pending required checks (relaxed gate), so final PR #2447 re-finals the completion through the strict gate.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -27,6 +27,10 @@
       },
       {
         "number": 2444,
+        "role": "supporting"
+      },
+      {
+        "number": 2447,
         "role": "final"
       }
     ],
@@ -38,7 +42,7 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-closeout-b46f6b891dac/verdict.json",
+        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-refinal-5de23d4c0df7/verdict.json",
         "gating": true
       }
     ]
@@ -114,6 +118,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2444
+    "finalPullRequest": 2447
   }
 }
