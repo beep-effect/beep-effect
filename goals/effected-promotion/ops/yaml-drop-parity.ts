@@ -12,7 +12,8 @@
  *    `$HOME/.config/beep/models.yaml` and `seedModelsManifest`; Research `renderCard` over every knowledge card in
  *    the operator vault whose frontmatter decodes as `KnowledgeCardFrontmatter`, plus an edge corpus. The writers
  *    use `@beep/yaml`'s `quoteStyle: "auto"` (the `yaml` npm package's per-value quote choice), so every case must
- *    be `identical`; any difference is unclassified.
+ *    be `identical`; any difference, and any `renderCard` failure, is unclassified. A vault file is skipped only
+ *    when it cannot be read or its frontmatter does not decode as a card; the report counts both (`vaultSkips`).
  * 2. **parse** (value parity): the frozen legacy reads (`YAML.parse` for Runners, `parseDocument(...).toJSON()`
  *    with the error check for ChangesetGraph, FallowQuality and the workflow tests) against `effect/encoding/Yaml`
  *    `parse`, over every tracked `.github/**` workflow and action file, every `.changeset/*.md` frontmatter, the
@@ -36,7 +37,8 @@
  * 5. **cli**: `beep quality changeset-graph` stdout and exit code, fingerprinted.
  *
  * Run once before the switch (`--out`), then after it with `--before <baseline.json>`: the baseline must hold no
- * non-identical case (faithful frozen copies), the repository input sets must match, and the site fingerprints
+ * non-identical case (faithful frozen copies), the repository input sets must match, the per-site case counts must
+ * match (the stringify vault site may grow with the vault but never shrink), and the site fingerprints
  * (changeset references, cli) must be equal. Repository inputs are recorded by repository-relative path, so the
  * reports compare across checkouts; operator inputs (vault cards, the home manifest) are recorded only as counts
  * and hashed case ids, never content.
@@ -73,7 +75,7 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as EffectYaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -82,6 +84,7 @@ import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -107,11 +110,16 @@ const CliRun = S.Struct({ command: S.String, exitCode: S.Finite, stdoutSha256: S
 type CliRun = typeof CliRun.Type;
 const Comparison = S.Struct({ baseline: S.String, identical: S.Boolean, differing: S.Array(S.String) });
 type Comparison = typeof Comparison.Type;
+// Vault files the stringify leg could not turn into a card case: an unreadable file, or one whose frontmatter does
+// not decode as a knowledge card. A card that decodes always yields a case (a render failure is `unclassified`).
+const VaultSkips = S.Struct({ unreadable: S.Finite, undecodable: S.Finite });
+type VaultSkip = keyof typeof VaultSkips.Type;
 const Report = S.Struct({
   schemaVersion: S.tag(1),
   tool: S.String,
   commit: S.optionalKey(S.String),
   stringify: Leg,
+  vaultSkips: S.optionalKey(VaultSkips),
   parse: Leg,
   edit: Leg,
   locator: Leg,
@@ -293,6 +301,14 @@ const vaultRoot = (home: string): string => {
 };
 const FRONTMATTER_BLOCK = /^---\n(?<yaml>[\s\S]*?\n)---\n\n(?<body>[\s\S]*)$/u;
 
+// One card's byte-parity case: the retired renderer against `renderCard`, whose typed failure is `unclassified`.
+const cardCase = (id: string, card: KnowledgeCardFrontmatter, body: string): Effect.Effect<Case> =>
+  renderCard(card, body).pipe(
+    Effect.map((current) => stringifyOutcome(legacyRenderCard(card, body), current)),
+    Effect.orElseSucceed(() => "unclassified"),
+    Effect.map((outcome) => ({ site: "repo-cli Research/internal/Vault.ts", id, outcome }))
+  );
+
 const stringifyLeg = Effect.fn("stringifyLeg")(function* (home: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -335,40 +351,38 @@ const stringifyLeg = Effect.fn("stringifyLeg")(function* (home: string) {
   const cardFiles = (yield* fs.exists(root))
     ? A.filter(yield* fs.readDirectory(root, { recursive: true }), Str.endsWith(".md"))
     : [];
-  const vaultCases = yield* Effect.forEach(A.sort(cardFiles, Order.String), (relative) =>
+  // Only an unreadable file or frontmatter that does not decode as a card is a skip, counted in the report; a
+  // decoded card whose rendering fails is an `unclassified` case, so it fails the gate instead of vanishing.
+  const vaultEntries = yield* Effect.forEach(A.sort(cardFiles, Order.String), (relative) =>
     fs.readFileString(path.join(root, relative)).pipe(
-      Effect.flatMap(
-        Effect.fnUntraced(function* (text) {
+      Effect.matchEffect({
+        onFailure: () => Effect.succeed(Result.fail<VaultSkip>("unreadable")),
+        onSuccess: (text): Effect.Effect<Result.Result<Case, VaultSkip>> => {
           const match = FRONTMATTER_BLOCK.exec(text);
-          if (match?.groups === undefined) return O.none<Case>();
+          if (match?.groups === undefined) return Effect.succeed(Result.fail("undecodable"));
           const raw = legacyDocumentValue(match.groups.yaml ?? "");
           const card = O.flatMap(O.filter(raw, P.isObject), (value) => cardFrom(value as Record<string, unknown>));
-          if (O.isNone(card)) return O.none<Case>();
-          const body = match.groups.body ?? "";
-          return O.some<Case>({
-            site: "repo-cli Research/internal/Vault.ts",
-            id: `vault:${short(relative)}`,
-            outcome: stringifyOutcome(legacyRenderCard(card.value, body), yield* renderCard(card.value, body)),
-          });
-        })
-      ),
-      Effect.orElseSucceed(() => O.none<Case>())
+          if (O.isNone(card)) return Effect.succeed(Result.fail("undecodable"));
+          return Effect.map(cardCase(`vault:${short(relative)}`, card.value, match.groups.body ?? ""), Result.succeed);
+        },
+      })
     )
   );
-  cases.push(...A.getSomes(vaultCases));
+  const [vaultCases, skipped] = A.partition(vaultEntries, identity);
+  cases.push(...vaultCases);
   for (const [index, raw] of EDGE_CARDS.entries()) {
     const card = cardFrom(raw);
-    if (O.isNone(card)) {
-      cases.push({ site: "repo-cli Research/internal/Vault.ts", id: `edge-${index}`, outcome: "unclassified" });
-      continue;
-    }
-    cases.push({
-      site: "repo-cli Research/internal/Vault.ts",
-      id: `edge-${index}`,
-      outcome: stringifyOutcome(legacyRenderCard(card.value, "Body."), yield* renderCard(card.value, "Body.")),
-    });
+    cases.push(
+      O.isNone(card)
+        ? { site: "repo-cli Research/internal/Vault.ts", id: `edge-${index}`, outcome: "unclassified" }
+        : yield* cardCase(`edge-${index}`, card.value, "Body.")
+    );
   }
-  return cases;
+  const vaultSkips = {
+    unreadable: A.length(A.filter(skipped, (skip) => skip === "unreadable")),
+    undecodable: A.length(A.filter(skipped, (skip) => skip === "undecodable")),
+  };
+  return { cases, vaultSkips };
 });
 
 // --- leg 2: parse -----------------------------------------------------------------------------------------------
@@ -793,13 +807,31 @@ const repoCaseIds = (report: Report): ReadonlyArray<string> =>
     Order.String
   );
 
+// Stringify sites fed by operator inputs that grow between runs: the knowledge vault gains cards, so its site may
+// count more cases than the baseline but never fewer. Every other stringify site must count exactly as many cases,
+// so a card or writer case that stops producing a result fails the comparison instead of leaving it.
+const GROWING_STRINGIFY_SITES: ReadonlyArray<string> = ["repo-cli Research/internal/Vault.ts"];
+
+const stringifyCountDrift = (before: Report, after: Report): ReadonlyArray<string> => {
+  const countsOf = (report: Report) => R.fromEntries(A.map(report.stringify.sites, (site) => [site.site, site.cases]));
+  const was = countsOf(before);
+  const now = countsOf(after);
+  const sites = A.sort(A.dedupe([...R.keys(was), ...R.keys(now)]), Order.String);
+  return A.flatMap(sites, (site) => {
+    const baseline = was[site] ?? 0;
+    const current = now[site] ?? 0;
+    const holds = A.contains(GROWING_STRINGIFY_SITES, site) ? current >= baseline : current === baseline;
+    return holds ? [] : [`stringify case count ${site} ${baseline} -> ${current}`];
+  });
+};
+
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const home = process.env.HOME ?? "";
   const repoFiles = yield* gitFiles(REPO_YAML_PATTERNS);
 
-  const stringifyCases = yield* stringifyLeg(home);
+  const stringified = yield* stringifyLeg(home);
   const parsed = yield* parseLeg(repoFiles);
   const editCases = yield* editLeg(repoFiles);
   const locatorCases = yield* locatorLeg(repoFiles);
@@ -815,7 +847,8 @@ const program = Effect.gen(function* () {
     schemaVersion: 1,
     tool: TOOL,
     ...O.match(commit, { onNone: () => ({}), onSome: (sha) => ({ commit: sha }) }),
-    stringify: legOf(stringifyCases),
+    stringify: legOf(stringified.cases),
+    vaultSkips: stringified.vaultSkips,
     parse: legOf(parsed.cases),
     edit: legOf(editCases),
     locator: legOf(locatorCases),
@@ -838,6 +871,7 @@ const program = Effect.gen(function* () {
           baselineNonIdentical === 0 ? O.none() : O.some(`baseline holds ${baselineNonIdentical} non-identical cases`),
           sameJson(before.repoInputs, draft.repoInputs) ? O.none() : O.some("repoInputs"),
           sameJson(repoCaseIds(before), repoCaseIds(draft)) ? O.none() : O.some("repo case counts"),
+          ...A.map(stringifyCountDrift(before, draft), O.some),
           sameJson(before.changesetReferences, draft.changesetReferences) ? O.none() : O.some("changesetReferences"),
           sameJson(before.cli, draft.cli) ? O.none() : O.some("cli"),
         ]);
@@ -867,6 +901,9 @@ const program = Effect.gen(function* () {
       )}; unclassified=${leg.unclassified}`
     );
   }
+  yield* Console.log(
+    `vault skips: unreadable=${stringified.vaultSkips.unreadable} undecodable=${stringified.vaultSkips.undecodable}`
+  );
   yield* Console.log(
     A.join(
       A.map(
