@@ -4,7 +4,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
-import { assertExitFailure, assertInstanceOf } from "@effect/vitest/utils";
+import { assertExitFailure, assertInstanceOf, assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -154,6 +154,10 @@ const dyingDigest = Layer.mock(Digest.Digest)({
     ),
 });
 const FailingDigestProjectionLive = CiOpsProjectionLive.pipe(Layer.provide(dyingDigest));
+
+// A digest that returns too few bytes: the SHA-256 decode rejects it, and planEpisode reports a typed read error.
+const shortDigest = Layer.mock(Digest.Digest)({ digest: () => Effect.succeed(new Uint8Array([1, 2, 3])) });
+const ShortDigestProjectionLive = CiOpsProjectionLive.pipe(Layer.provide(shortDigest));
 
 // Contract §8.3: none of these may touch a lane plan, in either namespace.
 const forbiddenLanePlanTerms = [
@@ -624,13 +628,24 @@ it.layer(PlatformLive, { timeout: "10 seconds" })("@beep/ciops lane-plan seam", 
     );
   });
 
+  it.layer(ShortDigestProjectionLive, { timeout: "10 seconds" })((it) => {
+    it.effect("reports a malformed SHA-256 digest as a typed HandoffReadError", () =>
+      Effect.gen(function* () {
+        const service: CiOpsProjectionShape = yield* CiOpsProjection;
+        const failure = yield* Effect.flip(service.planEpisode(fixtureInput(pinnedHandoffSha256)));
+        assertInstanceOf(failure, HandoffReadError);
+        expect(failure.message).toContain("SHA-256 digest failed");
+      })
+    );
+  });
+
   it.layer(FailingDigestProjectionLive, { timeout: "10 seconds" })((it) => {
     it.effect("surfaces a digest defect as a defect, never a typed HandoffReadError", () =>
       Effect.gen(function* () {
         const service: CiOpsProjectionShape = yield* CiOpsProjection;
         const exit = yield* Effect.exit(service.planEpisode(fixtureInput(pinnedHandoffSha256)));
-        expect(Exit.isFailure(exit) && Exit.hasDies(exit)).toBe(true);
-        expect(Exit.isFailure(exit) && Exit.hasFails(exit)).toBe(false);
+        exit.pipe(Exit.hasDies, assertTrue);
+        exit.pipe(Exit.findErrorOption, assertNone);
       })
     );
   });

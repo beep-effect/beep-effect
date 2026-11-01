@@ -195,6 +195,8 @@ type WorldOptions = {
   readonly index?: MatterIndex;
   /** Makes every SHA-256 digest fail, as an unavailable platform would. */
   readonly failingDigests?: ReadonlyArray<Digest.Algorithm>;
+  /** Makes these digests return truncated output, which no hex decoder accepts. */
+  readonly truncatedDigests?: ReadonlyArray<Digest.Algorithm>;
 };
 
 type WorldShape = {
@@ -258,7 +260,10 @@ const sha1Of = (bytes: Uint8Array) =>
     Effect.map((buffer) => ContentSha1.make(Hex.encode(new Uint8Array(buffer))))
   );
 
-const testCrypto = (failingDigests: ReadonlyArray<Digest.Algorithm>) =>
+const testCrypto = (
+  failingDigests: ReadonlyArray<Digest.Algorithm>,
+  truncatedDigests: ReadonlyArray<Digest.Algorithm>
+) =>
   Layer.effect(
     Digest.Digest,
     Effect.map(Digest.Digest, (webCrypto) => {
@@ -267,7 +272,8 @@ const testCrypto = (failingDigests: ReadonlyArray<Digest.Algorithm>) =>
       return Digest.Digest.of({
         digest: Effect.fn("MailTaggingFixture.digest")(function* (algorithm: Digest.Algorithm, data: Uint8Array) {
           yield* available(algorithm);
-          return yield* webCrypto.digest(algorithm, data);
+          const bytes = yield* webCrypto.digest(algorithm, data);
+          return A.contains(truncatedDigests, algorithm) ? bytes.subarray(0, 3) : bytes;
         }),
         digestHex: Effect.fn("MailTaggingFixture.digestHex")(function* (algorithm: Digest.Algorithm, data: Uint8Array) {
           yield* available(algorithm);
@@ -538,7 +544,7 @@ const UseCases = Layer.merge(
 export const scenario = (options: WorldOptions) =>
   Layer.fresh(
     UseCases.pipe(
-      Layer.provideMerge(Layer.merge(Ports, testCrypto(options.failingDigests ?? []))),
+      Layer.provideMerge(Layer.merge(Ports, testCrypto(options.failingDigests ?? [], options.truncatedDigests ?? []))),
       Layer.provideMerge(Layer.effect(World, makeWorld(options)))
     )
   );

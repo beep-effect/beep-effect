@@ -127,11 +127,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         (yield* f.ledger.prepareAttempt(DeliveryAttempt.make({ ...attempt, attemptId: id("f") })).pipe(Effect.flip))
           .reason
       ).toBe("reclaimed");
-      for (const eventId of eventIds)
-        expect(yield* f.ledger.state(eventId)).toMatchObject({
-          _tag: "Some",
-          value: { state: "visible", attempts: 1 },
-        });
+      yield* Effect.forEach(
+        eventIds,
+        (eventId) =>
+          f.ledger.state(eventId).pipe(
+            Effect.map((state) =>
+              expect(state).toMatchObject({
+                _tag: "Some",
+                value: { state: "visible", attempts: 1 },
+              })
+            )
+          ),
+        { discard: true }
+      );
       expect(yield* reopened.acceptBatch(yield* f.batch("2"))).toMatchObject({ newEvents: 1, page: { sequence: 2 } });
     })
   )
@@ -290,11 +298,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         _tag: "Some",
         value: { verifiedEvents: 1 },
       });
-      for (const eventId of attempt.eventIds)
-        expect(yield* f.ledger.state(eventId)).toMatchObject({
-          _tag: "Some",
-          value: { state: "visible", attempts: 2, ambiguousAttempts: 2 },
-        });
+      yield* Effect.forEach(
+        attempt.eventIds,
+        (eventId) =>
+          f.ledger.state(eventId).pipe(
+            Effect.map((state) =>
+              expect(state).toMatchObject({
+                _tag: "Some",
+                value: { state: "visible", attempts: 2, ambiguousAttempts: 2 },
+              })
+            )
+          ),
+        { discard: true }
+      );
     })
   )
 );

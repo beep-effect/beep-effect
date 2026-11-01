@@ -185,8 +185,7 @@ const nameHeld = (reason: string) => Effect.fail(MailTaggingPortError.during("Do
 
 const decodeContentHash = S.decodeEffect(Sha256HexFromBytes);
 
-const hashFailed = (operation: "sha256" | "sha1") => () =>
-  MailTaggingPortError.during("ContentHasher", operation, `${operation} digest failed`);
+const sha256Failed = () => MailTaggingPortError.during("ContentHasher", "sha256", "sha256 digest failed");
 
 /**
  * Builds the attachment filer over the mailbox, the matter-folder directory,
@@ -300,7 +299,7 @@ export const makeAttachmentFiler: Effect.Effect<
   ): Effect.fn.Return<ContentSha256, MailTaggingPortError> {
     const digest = yield* decodeContentHash(bytes).pipe(
       Effect.provideService(Digest.Digest, crypto),
-      Effect.mapError(hashFailed("sha256"))
+      Effect.mapError(sha256Failed)
     );
     return ContentSha256.make(digest);
   });

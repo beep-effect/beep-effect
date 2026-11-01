@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T03:00:08.040Z",
+  "generatedAt": "2026-11-01T03:16:54.737Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
     "publicModules": 3640,
-    "publicExports": 25761,
+    "publicExports": 25763,
     "openModules": 161,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -45924,8 +45924,8 @@
           "exportKind": "class",
           "filePath": "src/ScriptedSpawner.ts",
           "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 308,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-308-spawnrecord",
+          "line": 314,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-314-spawnrecord",
           "currentTags": [
             "@public",
             "@category",
@@ -45947,8 +45947,8 @@
           "exportKind": "class",
           "filePath": "src/ScriptedSpawner.ts",
           "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 400,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-400-scriptedspawner",
+          "line": 406,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-406-scriptedspawner",
           "currentTags": [
             "@public",
             "@category",
@@ -447649,7 +447649,7 @@
         "srcDir": "src",
         "sourceFileCount": 500,
         "publicModuleCount": 497,
-        "publicExportCount": 4625
+        "publicExportCount": 4627
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -450025,7 +450025,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -478087,9 +478087,56 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Route.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-333-ciroutecommand",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-336-ciroutecommand",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRouteServices",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/Route.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
+          "line": 354,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-354-cirouteservices",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeCiRouteCommandForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/Route.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-373-makeciroutecommandfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@internal",
             "@category",
             "@since"
           ],
@@ -610872,8 +610919,8 @@
           "exportKind": "const",
           "filePath": "src/MailTagging/MailTagging.filer.ts",
           "repoPath": "packages/law-practice/use-cases/src/MailTagging/MailTagging.filer.ts",
-          "line": 285,
-          "anchor": "packages-law-practice-use-cases-src-mailtagging-mailtagging-filer-ts-285-makeattachmentfiler",
+          "line": 284,
+          "anchor": "packages-law-practice-use-cases-src-mailtagging-mailtagging-filer-ts-284-makeattachmentfiler",
           "currentTags": [
             "@category",
             "@since"
