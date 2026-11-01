@@ -1,5 +1,5 @@
 import { Sha256Hex } from "@beep/schema";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
@@ -77,6 +77,6 @@ const decodeSha256Hex = S.decodeUnknownEffect(Sha256Hex);
 
 /** Hash the exact emitted bytes; callers translate failures to their safe export error. */
 export const hashObservationPayload = Effect.fnUntraced(function* (body: Uint8Array) {
-  const crypto = yield* Crypto.Crypto;
-  return yield* crypto.digest("SHA-256", body).pipe(Effect.map(Hex.encode), Effect.flatMap(decodeSha256Hex));
+  const digest = yield* Digest.Digest;
+  return yield* digest.digest(Digest.sha256, body).pipe(Effect.map(Hex.encode), Effect.flatMap(decodeSha256Hex));
 });

@@ -9,7 +9,7 @@ import {
   withPacketEventLock,
 } from "@beep/repo-cli/test/Goals";
 import { QualitySchedulerError, withJournalFileLock } from "@beep/repo-cli/test/RepoRun";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -27,7 +27,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 
-const testLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
+const testLayer = PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const writerUrl = new URL("./fixtures/packet-core/concurrent-writer.ts", import.meta.url);
 const encodeEvent = S.encodeEffect(S.fromJsonString(PacketEvent));
 const isPacketCasConflictError = S.is(PacketCasConflictError);

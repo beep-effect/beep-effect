@@ -1,5 +1,4 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
@@ -40,10 +39,10 @@ describe("PackagePublish remaining failure paths", () => {
     }));
   });
   const packSpawner = scripted(() => ({ stdout: '[{"name":"pkg","version":"1.0.0","filename":"pkg.tgz"}]' }));
-  const refusingCrypto = Layer.succeed(Crypto.Crypto, Crypto.make({ randomBytes: (size) => new Uint8Array(size), digest: () => Effect.fail(denied) }));
-  const digestLayer = PackagePublish.layer.pipe(Layer.provide(Layer.mergeAll(packSpawner.layer, refusingCrypto, LocalExec.layerNone, MemoryFileSystem.layerWith({ "/pkg/pkg.tgz": "bytes" }))));
+  // effect 4.1.0's digest cannot fail, so the remaining `digest` failure is reading the packed tarball.
+  const digestLayer = PackagePublish.layer.pipe(Layer.provide(Layer.mergeAll(packSpawner.layer, fakeCrypto, LocalExec.layerNone, MemoryFileSystem.layerWith({ "/pkg/pkg.tgz": "bytes" }, { faults: { readFile: () => Effect.fail(denied) } }))));
   it.layer(digestLayer, { timeout: "30 seconds" })((it) => {
-    it.effect("maps digest computation failure after a successful pack", () => Effect.gen(function* () {
+    it.effect("maps a tarball read failure after a successful pack to digest", () => Effect.gen(function* () {
       const publisher = yield* PackagePublish;
       const failure = yield* Effect.flip(publisher.pack("/pkg"));
       assert.strictEqual(failure.kind, "digest");

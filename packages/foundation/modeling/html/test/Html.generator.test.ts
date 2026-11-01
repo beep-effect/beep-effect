@@ -21,7 +21,7 @@ import { assertReviewedCurrentAttributeGap } from "../scripts/generate.ts";
 
 const encodeHtmlElementMetaResult = S.encodeResult(HtmlElementMeta);
 
-const encodedMeta = (tag: keyof typeof ELEMENT_META): S.Codec.Encoded<typeof HtmlElementMeta> =>
+const encodedMeta = (tag: keyof typeof ELEMENT_META): typeof HtmlElementMeta.Encoded =>
   Result.getOrThrow(encodeHtmlElementMetaResult(ELEMENT_META[tag]));
 
 const expectDeepFrozen = (value: unknown): void => {

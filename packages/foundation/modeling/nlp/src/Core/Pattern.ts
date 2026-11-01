@@ -603,12 +603,9 @@ export class Pattern extends S.Opaque<Pattern, { readonly brand: unique symbol }
    * Encode a pattern into its schema representation.
    */
   static readonly encode: {
-    (pattern: Pattern): S.Codec.Encoded<typeof Pattern>;
-    (): (pattern: Pattern) => S.Codec.Encoded<typeof Pattern>;
-  } = dual<
-    () => (pattern: Pattern) => S.Codec.Encoded<typeof Pattern>,
-    (pattern: Pattern) => S.Codec.Encoded<typeof Pattern>
-  >(
+    (pattern: Pattern): typeof Pattern.Encoded;
+    (): (pattern: Pattern) => typeof Pattern.Encoded;
+  } = dual<() => (pattern: Pattern) => typeof Pattern.Encoded, (pattern: Pattern) => typeof Pattern.Encoded>(
     (args) => args.length >= 1,
     (pattern) => Result.getOrThrowWith(encodePatternResult(pattern), schemaIssueToError)
   );
@@ -617,12 +614,9 @@ export class Pattern extends S.Opaque<Pattern, { readonly brand: unique symbol }
    * Decode unknown input into a pattern.
    */
   static readonly decode: {
-    (input: S.Codec.Encoded<typeof Pattern>): Pattern;
-    (): (input: S.Codec.Encoded<typeof Pattern>) => Pattern;
-  } = dual<
-    () => (input: S.Codec.Encoded<typeof Pattern>) => Pattern,
-    (input: S.Codec.Encoded<typeof Pattern>) => Pattern
-  >(
+    (input: typeof Pattern.Encoded): Pattern;
+    (): (input: typeof Pattern.Encoded) => Pattern;
+  } = dual<() => (input: typeof Pattern.Encoded) => Pattern, (input: typeof Pattern.Encoded) => Pattern>(
     (args) => args.length >= 1,
     (input) => Result.getOrThrowWith(decodePatternResult(input), schemaIssueToError)
   );

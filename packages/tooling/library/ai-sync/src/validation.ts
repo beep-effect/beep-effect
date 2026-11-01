@@ -14,7 +14,6 @@ import * as Toml from "effect/encoding/Toml";
 import * as FileSystem from "effect/FileSystem";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import { AiSyncError, AiSyncValidationResult, ValidateRepoConfig } from "./models.ts";
@@ -28,15 +27,11 @@ const decodeJsonTextAs = <Schema extends S.Top>(schema: Schema) => S.decodeUnkno
 // effect/encoding/Toml ships the parser but no schema codec; Codex config is only ever read,
 // and a parse failure surfaces as the same SchemaError a schema codec would raise.
 const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
-  Effect.try({
-    try: () => Toml.parse(text),
-    catch: (cause) =>
-      new S.SchemaError(
-        new SchemaIssue.InvalidValue({
-          message: `Invalid TOML input (${P.isError(cause) ? cause.message : String(cause)}).`,
-        })
-      ),
-  });
+  Effect.fromResult(Toml.parse(text)).pipe(
+    Effect.mapError(
+      (cause) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: `Invalid TOML input (${cause.message}).` }))
+    )
+  );
 const decodeTomlTextWith =
   <A, E, R>(decode: (input: unknown) => Effect.Effect<A, E, R>) =>
   (text: string): Effect.Effect<A, E | S.SchemaError, R> =>

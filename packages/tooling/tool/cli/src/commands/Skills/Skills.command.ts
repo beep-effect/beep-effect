@@ -10,10 +10,10 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -425,10 +425,10 @@ const toSortedRecord = <A>(entries: ReadonlyArray<readonly [string, A]>): Record
 const sha256Hex = Effect.fn("Skills.sha256Hex")(function* (
   bytes: Uint8Array,
   file: string
-): Effect.fn.Return<string, SkillsCommandError, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
+): Effect.fn.Return<string, SkillsCommandError, Digest.Digest> {
+  const crypto = yield* Digest.Digest;
   const digest = yield* crypto
-    .digest("SHA-256", asArrayBufferView(bytes))
+    .digest(Digest.sha256, asArrayBufferView(bytes))
     .pipe(SkillsCommandError.mapError(`Failed to compute SHA-256 digest for ${file}.`, file));
   return Hex.encode(digest);
 });
@@ -436,7 +436,7 @@ const sha256Hex = Effect.fn("Skills.sha256Hex")(function* (
 const hashSkillFiles = Effect.fn("Skills.hashSkillFiles")(function* (
   files: ReadonlyArray<SkillFile>,
   label: string
-): Effect.fn.Return<string, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<string, SkillsCommandError, Digest.Digest> {
   const sortedFiles = A.sortWith(files, (file) => file.path, Order.String);
   const chunks: Array<Uint8Array> = [];
 
@@ -588,7 +588,7 @@ const readSkillFiles = Effect.fn("Skills.readSkillFiles")(function* (
 const hashSkillDirectory = Effect.fn("Skills.hashSkillDirectory")(function* (
   absoluteSkillDir: string,
   name: string
-): Effect.fn.Return<O.Option<string>, SkillsCommandError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<O.Option<string>, SkillsCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const files = yield* readSkillFiles(absoluteSkillDir);
   if (files.length === 0) {
     return O.none();
@@ -625,7 +625,7 @@ const fetchRemoteSkillSnapshot = Effect.fn("Skills.fetchRemoteSkillSnapshot")(fu
 ): Effect.fn.Return<
   readonly [RemoteSkillSource, SkillSnapshot],
   SkillsCommandError,
-  HttpClient.HttpClient | Crypto.Crypto
+  HttpClient.HttpClient | Digest.Digest
 > {
   const tree = yield* fetchGitHubTree(source);
   if (tree.truncated) {
@@ -653,7 +653,11 @@ const fetchRemoteSkillSnapshot = Effect.fn("Skills.fetchRemoteSkillSnapshot")(fu
 
   const files = yield* Effect.forEach(
     blobEntries,
-    Effect.fnUntraced(function* (entry): Effect.fn.Return<SkillFile, SkillsCommandError, HttpClient.HttpClient> {
+    Effect.fnUntraced(function* (entry): Effect.fn.Return<
+      SkillFile,
+      SkillsCommandError,
+      HttpClient.HttpClient | Digest.Digest
+    > {
       const url = `https://raw.githubusercontent.com/${source.source}/${source.ref}/${entry.path}`;
       const bytes = yield* fetchResponseBytes(url);
       const relativePath = yield* validateSkillFilePath(Str.slice(skillRoot.length + 1)(entry.path), source.name);
@@ -751,7 +755,7 @@ const makeLockEntry = (computedHash: string, source: O.Option<RemoteSkillSource>
 const buildDesiredLock = Effect.fn("Skills.buildDesiredLock")(function* (
   repoRoot: string,
   snapshotsByName: Readonly<Record<string, SkillSnapshot>>
-): Effect.fn.Return<SkillLockFile, SkillsCommandError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<SkillLockFile, SkillsCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const path = yield* Path.Path;
   const names = yield* listInstalledSkillNames(repoRoot);
   const entries: Array<readonly [string, SkillLockEntry]> = [];
@@ -1173,7 +1177,7 @@ const desiredLockEntry = Effect.fn("Skills.desiredLockEntry")(function* (
 ): Effect.fn.Return<
   readonly [string, SkillsLockEntry],
   SkillsCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const vendored = vendoredEntryOf(O.some(current), name);
   if (O.isSome(vendored)) {
@@ -1273,7 +1277,7 @@ export const runSkillsUpdate = Effect.fn("Skills.runSkillsUpdate")(function* (op
 }): Effect.fn.Return<
   ReadonlyArray<SkillDrift>,
   SkillsCommandError | SkillsDriftError | SkillFrontmatterError | SkillVendoredRefetchError | SkillPublicationError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | HttpClient.HttpClient | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | HttpClient.HttpClient | ChildProcessSpawner.ChildProcessSpawner | Digest.Digest
 > {
   const publisher = yield* skillPublisherOrLive;
   return yield* updateSkills(options).pipe(Effect.provideService(SkillPublisher, publisher));

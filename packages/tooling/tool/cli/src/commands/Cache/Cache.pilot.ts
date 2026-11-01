@@ -14,7 +14,7 @@ import { GitObjectId } from "@beep/schema/Conformance";
 import { HostProcessArchitecture, HostProcessPlatform, O } from "@beep/utils";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -108,6 +108,7 @@ import {
   CacheToolchainSnapshot,
 } from "./Cache.schemas.ts";
 import { CacheQualificationService } from "./Cache.service.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 import type { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
@@ -273,7 +274,7 @@ const snapshot = Effect.fn("CachePilot.snapshot")(function* (root: string) {
   ): Effect.fn.Return<
     void,
     CacheCommandError | FsGuardError | S.SchemaError | PlatformError.PlatformError,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto
+    FileSystem.FileSystem | Path.Path | Digest.Digest
   > {
     if (depth > 16 || files.length > 5000)
       return yield* CacheCommandError.new("Pilot source tree exceeded its traversal bound.");
@@ -1526,7 +1527,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       });
     });
     if (mode === "signed") {
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* SecureRandom.SecureRandom;
       const freshCapability = crypto.randomBytes(32).pipe(Effect.map(Hex.encode), Effect.map(Redacted.make));
       const rootBefore = yield* readBytes(root, "turbo.json").pipe(Effect.flatMap(decodeText));
       const signedConfig = yield* projectCacheSignedRoot(rootBefore);
@@ -2345,7 +2346,7 @@ export const runCacheSignedPilotUploadWorker = Effect.fn("CachePilot.runUploadWo
   signing: Redacted.Redacted<string>,
   protectedIssuerMaterial: O.Option<string> = O.none()
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const freshCapability = crypto.randomBytes(32).pipe(Effect.map(Hex.encode), Effect.map(Redacted.make));
   const bearers = CacheConformanceBearers.make({
     writer: bearer,

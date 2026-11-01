@@ -5,29 +5,23 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Cause from "effect/Cause";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { defaultDocgenConfig } from "./helpers.ts";
 
 const packageName = "@beep/proof-manifest-fixture";
 
-const isDocgenError = S.is(Domain.DocgenError);
-
 const encodeManifestJson = S.encodeUnknownEffect(S.fromJsonString(ProofManifest.DocgenProofManifest));
 
 const testLayer = Layer.mergeAll(
   Configuration.Configuration.layer({ ...defaultDocgenConfig, projectName: packageName }),
-  FsUtilsLive
+  FsUtilsLive,
+  Digest.layerWebCrypto
 ).pipe(Layer.provideMerge(BunServices.layer));
 
 const testProcess = (packagePath: string) =>
@@ -36,18 +30,6 @@ const testProcess = (packagePath: string) =>
     cwd: Effect.succeed(packagePath),
     platform: Effect.succeed("linux"),
   });
-
-const failingCrypto = Crypto.make({
-  randomBytes: (size) => new Uint8Array(size),
-  digest: () =>
-    Effect.fail(
-      PlatformError.badArgument({
-        module: "Crypto",
-        method: "digest",
-        description: "proof manifest digest refusal",
-      })
-    ),
-});
 
 const makeFixturePackage = Effect.fn("makeFixturePackage")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -171,27 +153,6 @@ it.layer(testLayer)("ProofManifest", (it) => {
 
       expect(verification.status).toBe("stale");
       expect(verification.reason).toBe("docgen tool version changed");
-    })
-  );
-
-  it.effect("fails with a DocgenError when the platform digest refuses", () =>
-    Effect.gen(function* () {
-      const packagePath = yield* makeFixturePackage();
-
-      const exit = yield* ProofManifest.writeDocgenProofManifest().pipe(
-        Effect.provideService(Domain.Process, testProcess(packagePath)),
-        Effect.provideService(Crypto.Crypto, failingCrypto),
-        Effect.exit
-      );
-
-      pipe(exit, Exit.isFailure, assertTrue);
-      if (Exit.isFailure(exit)) {
-        const failure = Cause.squash(exit.cause);
-        expect(isDocgenError(failure)).toBe(true);
-        if (isDocgenError(failure)) {
-          expect(failure.message).toContain("[ProofManifest.sha256] Failed to hash proof identity");
-        }
-      }
     })
   );
 });

@@ -11,7 +11,7 @@ import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -252,10 +252,10 @@ const utf8 = new TextEncoder();
 
 const sha256Bytes = Effect.fn("Evidence.sha256Bytes")(function* (
   bytes: Uint8Array
-): Effect.fn.Return<string, PolicyDecodeError, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
+): Effect.fn.Return<string, PolicyDecodeError, Digest.Digest> {
+  const crypto = yield* Digest.Digest;
   const digest = yield* crypto
-    .digest("SHA-256", bytes)
+    .digest(Digest.sha256, bytes)
     .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Failed to digest a replay artifact." })));
   return Hex.encode(digest);
 });
@@ -323,7 +323,7 @@ export const generateReplayEvidence = Effect.fn("Evidence.generateReplayEvidence
 ): Effect.fn.Return<
   EvidenceRun,
   PolicyDecodeError | ReplayMismatchError | ReplayWindowError,
-  FileSystem.FileSystem | Crypto.Crypto
+  FileSystem.FileSystem | Digest.Digest
 > {
   const artifacts = yield* Effect.all(
     { abox: readArtifact(paths.abox), journal: readArtifact(paths.journal) },
@@ -705,7 +705,7 @@ const replayGoldenAgreement = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   readonly [string, FirstChoiceAgreement],
   PolicyDecodeError | ReplayMismatchError | ReplayWindowError,
-  FileSystem.FileSystem | Crypto.Crypto
+  FileSystem.FileSystem | Digest.Digest
 > {
   const source = yield* readArtifact(path);
   const journalDigest = yield* sha256(source);
@@ -725,7 +725,7 @@ const replayLivePin = Effect.fnUntraced(function* (
   policyDigest: string,
   paths: LiveEvidencePaths,
   window: ReplayWindow
-): Effect.fn.Return<LiveReplayReport, PolicyDecodeError | ReplayWindowError, FileSystem.FileSystem | Crypto.Crypto> {
+): Effect.fn.Return<LiveReplayReport, PolicyDecodeError | ReplayWindowError, FileSystem.FileSystem | Digest.Digest> {
   const journalPath = repoPath(paths, paths.journal);
   const manifestPath = repoPath(paths, paths.manifest);
   const journalBytes = yield* readBytes(journalPath);
@@ -1003,7 +1003,7 @@ export const generateLiveReplayEvidence = Effect.fn("Evidence.generateLiveReplay
 ): Effect.fn.Return<
   LiveEvidenceRun,
   PolicyDecodeError | ReplayMismatchError | ReplayWindowError,
-  FileSystem.FileSystem | Crypto.Crypto
+  FileSystem.FileSystem | Digest.Digest
 > {
   const abox = yield* readArtifact(repoPath(paths, paths.abox));
   const policy = yield* decodeAdmissionPolicyParams(abox);

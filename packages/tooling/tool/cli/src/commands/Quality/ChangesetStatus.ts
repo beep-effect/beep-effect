@@ -33,7 +33,7 @@ import { manifestParser } from "../../internal/ManifestRead.ts";
 import { runCaptured } from "../../internal/process/index.ts";
 import { changesetPackageReferencesFromText, collectWorkspacePackageJsonFiles } from "./ChangesetGraph.ts";
 import { ChangesetStatusError } from "./Quality.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { ChangesetGraphPackageReference } from "./ChangesetGraph.ts";
@@ -421,7 +421,7 @@ const collectGitDiffNameOnlyPaths = Effect.fn("ChangesetStatus.collectGitDiffNam
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   ChangesetStatusError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runCaptured({
     command: "git",
@@ -443,7 +443,7 @@ const collectChangedFilesSince = (
 ): Effect.Effect<
   ReadonlyArray<string>,
   ChangesetStatusError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > =>
   collectGitDiffNameOnlyPaths(repoRoot, [
     "diff",
@@ -479,7 +479,7 @@ const collectAddedChangesetReferences = Effect.fn("ChangesetStatus.collectAddedC
 ): Effect.fn.Return<
   ReadonlyArray<ChangesetGraphPackageReference>,
   ChangesetStatusError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -591,7 +591,7 @@ const runEnforcedCheck = Effect.fn("ChangesetStatus.runEnforcedCheck")(function*
 ): Effect.fn.Return<
   void,
   ChangesetStatusError | CliReportedExit,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const workspaces = yield* collectChangedWorkspacePackages(repoRoot, partition.productWorkspaceDirs);
   yield* Console.log(
@@ -649,7 +649,7 @@ export const runChangesetStatus = Effect.fn("ChangesetStatus.runChangesetStatus"
 ): Effect.fn.Return<
   void,
   ChangesetStatusError | CliReportedExit,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const base = O.getOrElse(since, () => "origin/main");
   const changedFiles = yield* collectChangedFilesSince(repoRoot, base);

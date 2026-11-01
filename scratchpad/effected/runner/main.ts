@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { BunRuntime, BunServices } from "@effect/platform-bun";
+import { BunCrypto, BunRuntime, BunServices } from "@effect/platform-bun";
 import * as A from "effect/Array";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
@@ -245,7 +245,7 @@ const root = Command.make("audit:effected").pipe(
   Command.withSubcommands([copy, carry, codemod, docsExtract, docsApply, parity, check, lint, test, docgen, audit, ledger, review, append])
 );
 
-const RunnerLayers = AuditLive.pipe(Layer.provideMerge(BunServices.layer));
+const RunnerLayers = AuditLive.pipe(Layer.provideMerge(Layer.mergeAll(BunServices.layer, BunCrypto.layer)));
 
 /**
  * The CLI program: builds the runner's layers once and runs the command tree

@@ -31,7 +31,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -39,6 +39,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
@@ -116,7 +117,7 @@ const readVerdictArtifact = Effect.fnUntraced(function* (context: RepoRunContext
 // writer to a generic JSON render left every test green while `yeet status`
 // could no longer decode what the writer had emitted. These assert the bytes
 // that actually landed on disk.
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("writeRunVerdict", (it) => {
   it.effect("writes a verdict file that decodes back through YeetVerdictJson", () =>
     Effect.gen(function* () {
       const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
@@ -309,96 +310,102 @@ const closeoutReportWith = (reviewedHeadSha: O.Option<string>): PrCloseoutReport
     schemaVersion: "yeet-pr-closeout/v1",
   });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("writePrCloseoutReport", (it) => {
-  it.effect("writes a closeout file whose reviewedHeadSha decodes back as a plain string", () =>
-    Effect.gen(function* () {
-      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-      const fs = yield* FileSystem.FileSystem;
-      const context = contextForRoot(tmpDir);
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "writePrCloseoutReport",
+  (it) => {
+    it.effect("writes a closeout file whose reviewedHeadSha decodes back as a plain string", () =>
+      Effect.gen(function* () {
+        const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const fs = yield* FileSystem.FileSystem;
+        const context = contextForRoot(tmpDir);
 
-      const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.some(reviewedSha)));
-      expect(reportPath).toBe(yield* runArtifactPathForContext(context, "pr-closeout.json"));
+        const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.some(reviewedSha)));
+        expect(reportPath).toBe(yield* runArtifactPathForContext(context, "pr-closeout.json"));
 
-      const text = yield* fs.readFileString(reportPath);
-      expect(text).not.toContain('"_id":"Option"');
-      expect(text).toContain(`"reviewedHeadSha":"${reviewedSha}"`);
+        const text = yield* fs.readFileString(reportPath);
+        expect(text).not.toContain('"_id":"Option"');
+        expect(text).toContain(`"reviewedHeadSha":"${reviewedSha}"`);
 
-      const decoded = yield* PrCloseoutReportJson.decode(text);
-      assertSome(decoded.reviewedHeadSha, reviewedSha);
-      expect(decoded.greptile.score).toBe("5/5");
-    })
-  );
+        const decoded = yield* PrCloseoutReportJson.decode(text);
+        assertSome(decoded.reviewedHeadSha, reviewedSha);
+        expect(decoded.greptile.score).toBe("5/5");
+      })
+    );
 
-  it.effect("omits reviewedHeadSha from the artifact when no head was recorded", () =>
-    Effect.gen(function* () {
-      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-      const fs = yield* FileSystem.FileSystem;
-      const context = contextForRoot(tmpDir);
+    it.effect("omits reviewedHeadSha from the artifact when no head was recorded", () =>
+      Effect.gen(function* () {
+        const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const fs = yield* FileSystem.FileSystem;
+        const context = contextForRoot(tmpDir);
 
-      const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.none()));
+        const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.none()));
 
-      const text = yield* fs.readFileString(reportPath);
-      expect(text).not.toContain("reviewedHeadSha");
+        const text = yield* fs.readFileString(reportPath);
+        expect(text).not.toContain("reviewedHeadSha");
 
-      const decoded = yield* PrCloseoutReportJson.decode(text);
-      assertNone(decoded.reviewedHeadSha);
-    })
-  );
-});
+        const decoded = yield* PrCloseoutReportJson.decode(text);
+        assertNone(decoded.reviewedHeadSha);
+      })
+    );
+  }
+);
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeYeetStatusSnapshot", (it) => {
-  it.effect("writes a status file that decodes back through YeetStatusSnapshotJson", () =>
-    Effect.gen(function* () {
-      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const statusPath = path.join(tmpDir, ".beep", "yeet", "runs", "feat_merge-loop", "status.json");
-      const closeout = YeetStatusArtifact.make({
-        detail: "PR #560",
-        issueCount: 0,
-        path: "pr-closeout.json",
-        state: "present",
-        greptileScore: O.some("5/5"),
-      });
-      const snapshot = YeetStatusSnapshot.make({
-        base: "origin/main",
-        branch: "feat/merge-loop",
-        closeout,
-        createdAt: "2026-08-04T00:00:00.000Z",
-        head: "HEAD",
-        nextCommand: "bun run beep yeet closeout --summary",
-        remote: YeetStatusRemote.make({
-          available: true,
-          checked: true,
-          detail: "PR #560 OPEN",
-          checkCount: 24,
-          failingCheckCount: 0,
-          pendingCheckCount: 0,
-          unresolvedReviewThreadCount: 1,
-        }),
-        runId: "feat_merge-loop",
-        schemaVersion: "yeet-status/v1",
-        statusPath,
-        verdict: YeetStatusArtifact.make({ detail: "publish success", path: "verdict.json", state: "present" }),
-        worktree: YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
-        mergeReady: O.some(blockedMergeReady),
-      });
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "writeYeetStatusSnapshot",
+  (it) => {
+    it.effect("writes a status file that decodes back through YeetStatusSnapshotJson", () =>
+      Effect.gen(function* () {
+        const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const statusPath = path.join(tmpDir, ".beep", "yeet", "runs", "feat_merge-loop", "status.json");
+        const closeout = YeetStatusArtifact.make({
+          detail: "PR #560",
+          issueCount: 0,
+          path: "pr-closeout.json",
+          state: "present",
+          greptileScore: O.some("5/5"),
+        });
+        const snapshot = YeetStatusSnapshot.make({
+          base: "origin/main",
+          branch: "feat/merge-loop",
+          closeout,
+          createdAt: "2026-08-04T00:00:00.000Z",
+          head: "HEAD",
+          nextCommand: "bun run beep yeet closeout --summary",
+          remote: YeetStatusRemote.make({
+            available: true,
+            checked: true,
+            detail: "PR #560 OPEN",
+            checkCount: 24,
+            failingCheckCount: 0,
+            pendingCheckCount: 0,
+            unresolvedReviewThreadCount: 1,
+          }),
+          runId: "feat_merge-loop",
+          schemaVersion: "yeet-status/v1",
+          statusPath,
+          verdict: YeetStatusArtifact.make({ detail: "publish success", path: "verdict.json", state: "present" }),
+          worktree: YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+          mergeReady: O.some(blockedMergeReady),
+        });
 
-      yield* writeYeetStatusSnapshot(snapshot);
+        yield* writeYeetStatusSnapshot(snapshot);
 
-      const text = yield* fs.readFileString(statusPath);
-      expect(text).not.toContain('"_id":"Option"');
+        const text = yield* fs.readFileString(statusPath);
+        expect(text).not.toContain('"_id":"Option"');
 
-      const decoded = yield* YeetStatusSnapshotJson.decode(text);
-      expect(decoded.statusPath).toBe(statusPath);
-      assertSome(
-        O.flatMap(decoded.mergeReady, (value) => value.failing),
-        "threads-resolved"
-      );
-      assertSome(
-        O.flatMap(decoded.mergeReady, (value) => value.criteria.greptileScore),
-        "5/5"
-      );
-    })
-  );
-});
+        const decoded = yield* YeetStatusSnapshotJson.decode(text);
+        expect(decoded.statusPath).toBe(statusPath);
+        assertSome(
+          O.flatMap(decoded.mergeReady, (value) => value.failing),
+          "threads-resolved"
+        );
+        assertSome(
+          O.flatMap(decoded.mergeReady, (value) => value.criteria.greptileScore),
+          "5/5"
+        );
+      })
+    );
+  }
+);

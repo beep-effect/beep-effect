@@ -32,7 +32,7 @@ import type { AuditTarget } from "./Ledger.schema.ts";
 import { labPaths, type RunnerConfig } from "./Paths.ts";
 import type { EffectVitestLintError } from "@beep/repo-cli/commands/Lint";
 import type { PlatformError } from "effect/PlatformError";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $ScratchpadId.create("effected/runner/Canon");
 
@@ -99,8 +99,8 @@ export interface CanonVerdict {
  * @since 0.0.0
  */
 export const canonFindings: {
-  (config: RunnerConfig, target: AuditTarget): Effect.Effect<CanonVerdict, ManifestInvalid | PlatformError | EffectVitestLintError, FileSystem.FileSystem | Path.Path | Crypto.Crypto>;
-  (target: AuditTarget): (config: RunnerConfig) => Effect.Effect<CanonVerdict, ManifestInvalid | PlatformError | EffectVitestLintError, FileSystem.FileSystem | Path.Path | Crypto.Crypto>;
+  (config: RunnerConfig, target: AuditTarget): Effect.Effect<CanonVerdict, ManifestInvalid | PlatformError | EffectVitestLintError, FileSystem.FileSystem | Path.Path | Digest.Digest>;
+  (target: AuditTarget): (config: RunnerConfig) => Effect.Effect<CanonVerdict, ManifestInvalid | PlatformError | EffectVitestLintError, FileSystem.FileSystem | Path.Path | Digest.Digest>;
 } = dual(2, Effect.fn("Canon.findings")(function* (config: RunnerConfig, target: AuditTarget) {
   const path = yield* Path.Path;
   const lab = labPaths(target);

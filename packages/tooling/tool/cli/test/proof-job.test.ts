@@ -11,7 +11,7 @@ import {
   yeetProofJobRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -43,6 +43,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 import { waitTimesOut } from "./support/ProofJobWait.ts";
 
 const $I = $RepoCliId.create("test/proof-job.test");
@@ -137,7 +138,7 @@ const runFixture = Effect.fnUntraced(function* <Value, Error, Requirements>(
 const fixture = <Value, Error, Requirements>(
   use: (root: string) => Effect.Effect<Value, Error, Requirements>,
   exitCode = 0
-) => runFixture(use, exitCode).pipe(provideScopedLayer(NodeServices.layer));
+) => runFixture(use, exitCode).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const running = Effect.fnUntraced(function* (root: string, launcher: Job.ProofJobLauncherShape, id: UUID) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1022,7 +1023,7 @@ describe("proof job recovery boundaries", () => {
   );
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds", excludeTestServices: true })(
   "review round 1 transitions",
   (it) => {
     for (const cancelFirst of [true, false]) {
@@ -1404,7 +1405,7 @@ const commandCheckoutLayer = Layer.effectContext(
 ).pipe(
   Layer.provideMerge(
     Layer.merge(
-      NodeServices.layer,
+      Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
       Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
     )
   )
@@ -1832,7 +1833,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
   });
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds", excludeTestServices: true })(
   "proof job journal boundaries",
   (it) => {
     it.effect("does not invent an attempt when the journal or start row is missing", () =>
@@ -1890,161 +1891,167 @@ const expectBookkeeping = Effect.fnUntraced(function* (
   expect(O.getOrThrow(finished.outcome).verdictOutcome).toBe(testCase.outcome);
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeeping", (it) => {
-  for (const testCase of bookkeepingCases) {
-    it.effect(`records the verdict despite ${testCase.identity} job bookkeeping`, () =>
-      fixture(
-        Effect.fnUntraced(function* (root) {
-          const launcher = yield* ProofJobLauncher.make(root);
-          const record = yield* launcher.submit(submission(root));
-          const context = Job.RepoRunContext.make({
-            repoRoot: root,
-            cwd: root,
-            base: "main",
-            head: "HEAD",
-            branch: "feat/job",
-            packetDir: ".beep/yeet",
-            originalArgv: [],
-            turbo: Job.TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
-          });
-          const plan = Job.RepoRunPlan.make({
-            context,
-            steps: [
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "proof verdict bookkeeping",
+  (it) => {
+    for (const testCase of bookkeepingCases) {
+      it.effect(`records the verdict despite ${testCase.identity} job bookkeeping`, () =>
+        fixture(
+          Effect.fnUntraced(function* (root) {
+            const launcher = yield* ProofJobLauncher.make(root);
+            const record = yield* launcher.submit(submission(root));
+            const context = Job.RepoRunContext.make({
+              repoRoot: root,
+              cwd: root,
+              base: "main",
+              head: "HEAD",
+              branch: "feat/job",
+              packetDir: ".beep/yeet",
+              originalArgv: [],
+              turbo: Job.TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+            });
+            const plan = Job.RepoRunPlan.make({
+              context,
+              steps: [
+                Job.RepoPlanStep.make({
+                  id: "full:pending",
+                  label: "Pending proof",
+                  phase: "full",
+                  command: "proof-test",
+                  args: [],
+                  cwd: root,
+                  scope: "repo",
+                  mutability: "readonly",
+                  resume: "never",
+                }),
+              ],
+            });
+            const started = Job.YeetAttemptStarted.make({
+              _tag: "attempt-started",
+              schemaVersion: "yeet-attempt-journal/v1",
+              attemptId,
+              runId: "feat_job",
+              branch: "feat/job",
+              base: "main",
+              head: "abc123",
+              mode: "verify",
+              startedAt: stamp,
+            });
+            const recorder = yield* Ref.make<ReadonlyArray<Job.YeetExecutedStep>>([]);
+            const extras = yield* Ref.make<Job.YeetVerdictExtrasForTesting>({
+              baseFreshness: O.none(),
+              mergeReady: O.none(),
+              stash: O.none(),
+              publishedHeadSha: O.none(),
+            });
+            yield* Job.writeRunVerdictForTesting(
+              plan,
+              Job.defaultYeetRunOptions({ mode: "verify" }),
+              started,
+              0,
+              recorder,
+              extras,
+              testCase.outcome,
+              "verified",
+              O.none()
+            ).pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ PATH: root, BEEP_YEET_JOB_ID: testCase.jobId(record.jobId) })
+              )
+            );
+            const fs = yield* FileSystem.FileSystem;
+            expect(yield* fs.exists(yield* Job.runArtifactPathForContext(context, "verdict.json"))).toBe(true);
+            yield* expectBookkeeping(launcher, record.jobId, testCase);
+          })
+        )
+      );
+    }
+  }
+);
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "proof phase record integration",
+  (it) => {
+    for (const measurement of ["valid", "invalid", "absent"]) {
+      it.effect(`records proof outcomes with ${measurement} RSS telemetry`, () =>
+        fixture(
+          Effect.fnUntraced(function* (root) {
+            const fs = yield* FileSystem.FileSystem;
+            const context = Job.RepoRunContext.make({
+              repoRoot: root,
+              cwd: root,
+              base: "main",
+              head: "HEAD",
+              branch: "feat/job",
+              packetDir: ".beep/yeet",
+              originalArgv: [],
+              turbo: Job.TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+            });
+            const spawner = ChildProcessSpawner.make(
+              Effect.fnUntraced(function* (command) {
+                if (!ChildProcess.isStandardCommand(command))
+                  return yield* Effect.die("Expected a standard proof command");
+                if (command.command === "/usr/bin/time") {
+                  const rssPath = command.pipe(commandArgs, A.get(3), O.getOrThrow);
+                  yield* fs.writeFileString(rssPath, measurement === "valid" ? "42\n" : "unknown\n");
+                }
+                const exitCode = A.contains(commandArgs(command), "fail") ? 23 : 0;
+                const output = command.command === "git" ? "abc123\n" : "proof output\n";
+                return ChildProcessSpawner.makeHandle({
+                  all: Stream.make(new TextEncoder().encode(output)),
+                  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+                  getInputFd: () => Sink.drain,
+                  getOutputFd: () => Stream.empty,
+                  isRunning: Effect.succeed(false),
+                  kill: () => Effect.void,
+                  pid: ChildProcessSpawner.ProcessId(1),
+                  stderr: Stream.empty,
+                  stdin: Sink.drain,
+                  stdout: Stream.make(new TextEncoder().encode(output)),
+                  unref: Effect.succeed(Effect.void),
+                });
+              })
+            );
+            const filesystem = FileSystem.FileSystem.of({
+              ...fs,
+              exists: Effect.fn("FileSystem.FileSystem.exists")((path) =>
+                path === "/usr/bin/time" ? Effect.succeed(measurement !== "absent") : fs.exists(path)
+              ),
+            });
+            const step = (id: string, result: string) =>
               Job.RepoPlanStep.make({
-                id: "full:pending",
-                label: "Pending proof",
+                id,
+                label: id,
                 phase: "full",
                 command: "proof-test",
-                args: [],
+                args: [result],
                 cwd: root,
                 scope: "repo",
                 mutability: "readonly",
                 resume: "never",
-              }),
-            ],
-          });
-          const started = Job.YeetAttemptStarted.make({
-            _tag: "attempt-started",
-            schemaVersion: "yeet-attempt-journal/v1",
-            attemptId,
-            runId: "feat_job",
-            branch: "feat/job",
-            base: "main",
-            head: "abc123",
-            mode: "verify",
-            startedAt: stamp,
-          });
-          const recorder = yield* Ref.make<ReadonlyArray<Job.YeetExecutedStep>>([]);
-          const extras = yield* Ref.make<Job.YeetVerdictExtrasForTesting>({
-            baseFreshness: O.none(),
-            mergeReady: O.none(),
-            stash: O.none(),
-            publishedHeadSha: O.none(),
-          });
-          yield* Job.writeRunVerdictForTesting(
-            plan,
-            Job.defaultYeetRunOptions({ mode: "verify" }),
-            started,
-            0,
-            recorder,
-            extras,
-            testCase.outcome,
-            "verified",
-            O.none()
-          ).pipe(
-            Effect.provideService(
-              ConfigProvider.ConfigProvider,
-              ConfigProvider.fromUnknown({ PATH: root, BEEP_YEET_JOB_ID: testCase.jobId(record.jobId) })
-            )
-          );
-          const fs = yield* FileSystem.FileSystem;
-          expect(yield* fs.exists(yield* Job.runArtifactPathForContext(context, "verdict.json"))).toBe(true);
-          yield* expectBookkeeping(launcher, record.jobId, testCase);
-        })
-      )
-    );
-  }
-});
-
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof phase record integration", (it) => {
-  for (const measurement of ["valid", "invalid", "absent"]) {
-    it.effect(`records proof outcomes with ${measurement} RSS telemetry`, () =>
-      fixture(
-        Effect.fnUntraced(function* (root) {
-          const fs = yield* FileSystem.FileSystem;
-          const context = Job.RepoRunContext.make({
-            repoRoot: root,
-            cwd: root,
-            base: "main",
-            head: "HEAD",
-            branch: "feat/job",
-            packetDir: ".beep/yeet",
-            originalArgv: [],
-            turbo: Job.TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
-          });
-          const spawner = ChildProcessSpawner.make(
-            Effect.fnUntraced(function* (command) {
-              if (!ChildProcess.isStandardCommand(command))
-                return yield* Effect.die("Expected a standard proof command");
-              if (command.command === "/usr/bin/time") {
-                const rssPath = O.getOrThrow(A.get(command.args, 3));
-                yield* fs.writeFileString(rssPath, measurement === "valid" ? "42\n" : "unknown\n");
-              }
-              const exitCode = A.contains(command.args, "fail") ? 23 : 0;
-              const output = command.command === "git" ? "abc123\n" : "proof output\n";
-              return ChildProcessSpawner.makeHandle({
-                all: Stream.make(new TextEncoder().encode(output)),
-                exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-                getInputFd: () => Sink.drain,
-                getOutputFd: () => Stream.empty,
-                isRunning: Effect.succeed(false),
-                kill: () => Effect.void,
-                pid: ChildProcessSpawner.ProcessId(1),
-                stderr: Stream.empty,
-                stdin: Sink.drain,
-                stdout: Stream.make(new TextEncoder().encode(output)),
-                unref: Effect.succeed(Effect.void),
               });
-            })
-          );
-          const filesystem = FileSystem.FileSystem.of({
-            ...fs,
-            exists: Effect.fn("FileSystem.FileSystem.exists")((path) =>
-              path === "/usr/bin/time" ? Effect.succeed(measurement !== "absent") : fs.exists(path)
-            ),
-          });
-          const step = (id: string, result: string) =>
-            Job.RepoPlanStep.make({
-              id,
-              label: id,
-              phase: "full",
-              command: "proof-test",
-              args: [result],
-              cwd: root,
-              scope: "repo",
-              mutability: "readonly",
-              resume: "never",
-            });
-          const recorder = yield* Ref.make<ReadonlyArray<Job.YeetExecutedStep>>([]);
-          const execute = (steps: ReadonlyArray<Job.RepoPlanStep>) =>
-            Job.runProofPhaseForTesting(context, steps, recorder).pipe(
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-              Effect.provideService(FileSystem.FileSystem, filesystem)
-            );
-          const failed = yield* execute([step("full:first", "fail"), step("full:second", "pass")]);
-          expect(A.map(failed, (result) => result.exitCode)).toEqual([23]);
-          const passed = yield* execute([step("full:first", "pass"), step("full:second", "pass")]);
-          expect(A.map(passed, (result) => result.exitCode)).toEqual([0, 0]);
-          expect(yield* Ref.get(recorder)).toHaveLength(3);
-          expect(passed[0]?.peakRssKb).toBe(measurement === "valid" ? 42 : undefined);
-          const rows = yield* Job.loadYeetInboxView(root);
-          expect(rows.entries).toHaveLength(1);
-          expect(rows.entries[0]?.ack.acked).toBe(true);
-        })
-      )
-    );
+            const recorder = yield* Ref.make<ReadonlyArray<Job.YeetExecutedStep>>([]);
+            const execute = (steps: ReadonlyArray<Job.RepoPlanStep>) =>
+              Job.runProofPhaseForTesting(context, steps, recorder).pipe(
+                Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+                Effect.provideService(FileSystem.FileSystem, filesystem)
+              );
+            const failed = yield* execute([step("full:first", "fail"), step("full:second", "pass")]);
+            expect(A.map(failed, (result) => result.exitCode)).toEqual([23]);
+            const passed = yield* execute([step("full:first", "pass"), step("full:second", "pass")]);
+            expect(A.map(passed, (result) => result.exitCode)).toEqual([0, 0]);
+            expect(yield* Ref.get(recorder)).toHaveLength(3);
+            expect(passed[0]?.peakRssKb).toBe(measurement === "valid" ? 42 : undefined);
+            const rows = yield* Job.loadYeetInboxView(root);
+            expect(rows.entries).toHaveLength(1);
+            expect(rows.entries[0]?.ack.acked).toBe(true);
+          })
+        )
+      );
+    }
   }
-});
+);
 
 const reasonTable: ReadonlyArray<readonly [Job.ProofJobServiceResult, Job.ProofJobTerminationReason]> = [
   ["success", "unrecorded-failure"],
@@ -2071,75 +2078,78 @@ describe("proof job termination reasons", () => {
   });
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof job record guards", (it) => {
-  it.effect("refuses a record path that is not a regular file", () =>
-    fixture(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const launcher = yield* ProofJobLauncher.make(root);
-        yield* fs.makeDirectory(`${root}/.beep/yeet/jobs/${attemptId}.json`, { recursive: true });
-        expect(yield* launcher.read(attemptId).pipe(Effect.flip)).toMatchObject({ _tag: "YeetCommandError" });
-      })
-    )
-  );
-  it.effect("refuses a record whose identity does not match its file", () =>
-    fixture(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const launcher = yield* ProofJobLauncher.make(root);
-        const record = yield* launcher.submit(submission(root));
-        const text = yield* fs.readFileString(`${root}/.beep/yeet/jobs/${record.jobId}.json`);
-        yield* fs.writeFileString(`${root}/.beep/yeet/jobs/${attemptId}.json`, text);
-        expect(yield* launcher.read(attemptId).pipe(Effect.flip)).toMatchObject({ _tag: "YeetCommandError" });
-      })
-    )
-  );
-  it.effect("refuses a submission for another checkout", () =>
-    fixture(
-      Effect.fnUntraced(function* (root) {
-        const launcher = yield* ProofJobLauncher.make(root);
-        const own = submission(root);
-        const elsewhere = Job.ProofJobSubmission.make({
-          ...own,
-          request: Job.ProofJobRequest.make({ ...own.request, checkout: `${root}-elsewhere` }),
-        });
-        expect(yield* launcher.submit(elsewhere).pipe(Effect.flip)).toMatchObject({
-          message: "Submission checkout does not match launcher root.",
-        });
-      })
-    )
-  );
-  it.effect("records a launch whose systemd-run could not be spawned", () =>
-    fixture(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const launcher = yield* ProofJobLauncher.make(root);
-        yield* fs.remove(`${root}/systemd-run`);
-        expect((yield* launcher.submit(submission(root)).pipe(Effect.flip))._tag).toBe("YeetCommandError");
-        const records = yield* launcher.list;
-        expect(A.map(records, (record) => record.phase)).toEqual(["terminated"]);
-        expect(A.map(records, (record) => O.getOrNull(record.terminationReason))).toEqual(["job-start-failed"]);
-      })
-    )
-  );
-  it.effect("forwards nested environment records that carry no value of their own", () =>
-    fixture(
-      Effect.fnUntraced(function* (root) {
-        const fs = yield* FileSystem.FileSystem;
-        const launcher = yield* ProofJobLauncher.make(root);
-        yield* launcher
-          .submit(submission(root))
-          .pipe(
-            Effect.provideService(
-              ConfigProvider.ConfigProvider,
-              ConfigProvider.fromUnknown({ PATH: root, BEEP: { NESTED: "x" } })
-            )
-          );
-        expect(yield* fs.readFileString(`${root}/launch.argv`)).toContain("--setenv=BEEP_NESTED=x");
-      })
-    )
-  );
-});
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "proof job record guards",
+  (it) => {
+    it.effect("refuses a record path that is not a regular file", () =>
+      fixture(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const launcher = yield* ProofJobLauncher.make(root);
+          yield* fs.makeDirectory(`${root}/.beep/yeet/jobs/${attemptId}.json`, { recursive: true });
+          expect(yield* launcher.read(attemptId).pipe(Effect.flip)).toMatchObject({ _tag: "YeetCommandError" });
+        })
+      )
+    );
+    it.effect("refuses a record whose identity does not match its file", () =>
+      fixture(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const launcher = yield* ProofJobLauncher.make(root);
+          const record = yield* launcher.submit(submission(root));
+          const text = yield* fs.readFileString(`${root}/.beep/yeet/jobs/${record.jobId}.json`);
+          yield* fs.writeFileString(`${root}/.beep/yeet/jobs/${attemptId}.json`, text);
+          expect(yield* launcher.read(attemptId).pipe(Effect.flip)).toMatchObject({ _tag: "YeetCommandError" });
+        })
+      )
+    );
+    it.effect("refuses a submission for another checkout", () =>
+      fixture(
+        Effect.fnUntraced(function* (root) {
+          const launcher = yield* ProofJobLauncher.make(root);
+          const own = submission(root);
+          const elsewhere = Job.ProofJobSubmission.make({
+            ...own,
+            request: Job.ProofJobRequest.make({ ...own.request, checkout: `${root}-elsewhere` }),
+          });
+          expect(yield* launcher.submit(elsewhere).pipe(Effect.flip)).toMatchObject({
+            message: "Submission checkout does not match launcher root.",
+          });
+        })
+      )
+    );
+    it.effect("records a launch whose systemd-run could not be spawned", () =>
+      fixture(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const launcher = yield* ProofJobLauncher.make(root);
+          yield* fs.remove(`${root}/systemd-run`);
+          expect((yield* launcher.submit(submission(root)).pipe(Effect.flip))._tag).toBe("YeetCommandError");
+          const records = yield* launcher.list;
+          expect(A.map(records, (record) => record.phase)).toEqual(["terminated"]);
+          expect(A.map(records, (record) => O.getOrNull(record.terminationReason))).toEqual(["job-start-failed"]);
+        })
+      )
+    );
+    it.effect("forwards nested environment records that carry no value of their own", () =>
+      fixture(
+        Effect.fnUntraced(function* (root) {
+          const fs = yield* FileSystem.FileSystem;
+          const launcher = yield* ProofJobLauncher.make(root);
+          yield* launcher
+            .submit(submission(root))
+            .pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ PATH: root, BEEP: { NESTED: "x" } })
+              )
+            );
+          expect(yield* fs.readFileString(`${root}/launch.argv`)).toContain("--setenv=BEEP_NESTED=x");
+        })
+      )
+    );
+  }
+);
 
 // The contender pauses 25 ms between file-lock attempts. A delegating Clock counts those pauses
 // and returns at once, so the test needs neither live time nor a TestClock adjustment that real

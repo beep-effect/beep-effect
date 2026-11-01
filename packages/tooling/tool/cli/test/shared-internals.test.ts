@@ -80,6 +80,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs, commandEnv } from "./support/commandArgs.ts";
 
 class SharedInternalsTestError extends S.TaggedError<SharedInternalsTestError, { readonly brand: unique symbol }>()(
   "SharedInternalsTestError",
@@ -749,13 +750,14 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           if (!ChildProcess.isStandardCommand(command)) {
             return Effect.die("the cache reference fixture never spawns a piped command");
           }
-          const childEnvironment = command.options.env ?? {};
+          const childEnvironment = commandEnv(command) ?? {};
           const fails =
-            A.some(command.args, Str.startsWith("--env-file=")) ||
+            A.some(commandArgs(command), Str.startsWith("--env-file=")) ||
             childEnvironment.STALE_DATABASE_URL === staleReference;
-          return Ref.update(spawnedCommands, A.append({ args: command.args, environment: childEnvironment })).pipe(
-            Effect.as(stubHandle(fails ? 1 : 0))
-          );
+          return Ref.update(
+            spawnedCommands,
+            A.append({ args: commandArgs(command), environment: childEnvironment })
+          ).pipe(Effect.as(stubHandle(fails ? 1 : 0)));
         });
 
         clearTurboCacheSecretSessionVerdictsForTesting();

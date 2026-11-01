@@ -189,16 +189,17 @@ export const makeWorkItemUseCases = (repository: WorkItemRepositoryShape): WorkI
   list: Effect.fn("ArchitectureLab.WorkItemUseCases.list")(function* (query: ListWorkItemsQuery) {
     return yield* pipe(
       repository.list,
-      Effect.map((workItems) =>
-        pipe(
-          query.status,
-          O.match({
-            onNone: () => workItems,
-            onSome: (status) => A.filter(workItems, (workItem) => workItem.status === status),
-          })
-        )
-      ),
-      Effect.mapError(toWorkItemActionError)
+      Effect.mapBoth({
+        onFailure: toWorkItemActionError,
+        onSuccess: (workItems) =>
+          pipe(
+            query.status,
+            O.match({
+              onNone: () => workItems,
+              onSome: (status) => A.filter(workItems, (workItem) => workItem.status === status),
+            })
+          ),
+      })
     );
   }),
 });

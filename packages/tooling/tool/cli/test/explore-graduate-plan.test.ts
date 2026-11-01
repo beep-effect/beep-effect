@@ -10,7 +10,7 @@ import {
   renderGraduationPlanHuman,
 } from "@beep/repo-cli/test/Explore";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -18,6 +18,7 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -90,7 +91,7 @@ const consoleLogText = Effect.fnUntraced(function* () {
   return A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
 });
 
-it.layer(NodeServices.layer, { concurrent: false, timeout: "60 seconds" })((it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("explore graduate --plan compiler", { concurrent: false }, () => {
     it.effect("compiles one bootstrap child plan with provenance and the manifest edit", () =>
       Effect.gen(function* () {

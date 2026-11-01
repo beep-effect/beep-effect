@@ -811,10 +811,10 @@ export const encodeSchemaFirstInventoryDocument: {
   (
     input: unknown,
     options?: AST.ParseOptions
-  ): Effect.Effect<S.Codec.Encoded<typeof SchemaFirstInventoryDocument>, S.SchemaError>;
+  ): Effect.Effect<typeof SchemaFirstInventoryDocument.Encoded, S.SchemaError>;
   (
     options?: AST.ParseOptions
-  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof SchemaFirstInventoryDocument>, S.SchemaError>;
+  ): (input: unknown) => Effect.Effect<typeof SchemaFirstInventoryDocument.Encoded, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(SchemaFirstInventoryDocument));
 
 const makeParityMembershipKey = (file: string, ruleId: string, occurrence: string): string =>
@@ -1816,11 +1816,11 @@ export const decodeEffectVitestPrimitiveGraphDocument: {
 export const encodeEffectVitestPrimitiveGraphDocument: {
   (
     options?: AST.ParseOptions
-  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof EffectVitestPrimitiveGraphDocument>, S.SchemaError>;
+  ): (input: unknown) => Effect.Effect<typeof EffectVitestPrimitiveGraphDocument.Encoded, S.SchemaError>;
   (
     input: unknown,
     options?: AST.ParseOptions
-  ): Effect.Effect<S.Codec.Encoded<typeof EffectVitestPrimitiveGraphDocument>, S.SchemaError>;
+  ): Effect.Effect<typeof EffectVitestPrimitiveGraphDocument.Encoded, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(EffectVitestPrimitiveGraphDocument));
 
 /**
@@ -1872,11 +1872,11 @@ export const decodeEffectVitestInventoryDocument: {
 export const encodeEffectVitestInventoryDocument: {
   (
     options?: AST.ParseOptions
-  ): (input: unknown) => Effect.Effect<S.Codec.Encoded<typeof EffectVitestInventoryDocument>, S.SchemaError>;
+  ): (input: unknown) => Effect.Effect<typeof EffectVitestInventoryDocument.Encoded, S.SchemaError>;
   (
     input: unknown,
     options?: AST.ParseOptions
-  ): Effect.Effect<S.Codec.Encoded<typeof EffectVitestInventoryDocument>, S.SchemaError>;
+  ): Effect.Effect<typeof EffectVitestInventoryDocument.Encoded, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(EffectVitestInventoryDocument));
 /**
  * Encode one validated finding as its JSONL-compatible JSON string.

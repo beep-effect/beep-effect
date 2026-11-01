@@ -9,7 +9,6 @@ import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Str from "effect/String";
-import { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 
 /**
  * Convert an arbitrary branch or step name into a stable artifact file segment.
@@ -34,9 +33,7 @@ export const repoRunSafeArtifactName: (value: string) => string = flow(
 );
 
 const artifactNameHash = Effect.fnUntraced(function* (value: string) {
-  return Str.takeLeft(12)(
-    yield* sha256Hex(value).pipe(Effect.mapError(QualitySchedulerError.new("Failed to hash run artifact identity.")))
-  );
+  return Str.takeLeft(12)(yield* sha256Hex(value));
 });
 
 /**

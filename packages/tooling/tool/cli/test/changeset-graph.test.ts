@@ -9,7 +9,7 @@ import {
   runChangesetGraphCheck,
 } from "@beep/repo-cli/test/Quality";
 import { parseChangesetFile } from "@changesets/parse";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -17,6 +17,7 @@ import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -365,7 +366,7 @@ Record a null bump.
     });
   });
 
-  it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: false, timeout: "30 seconds" })((it) => {
     // 4-A2: the root patterns come from `@beep/repo-workspaces` `WorkspacePatterns.read`;
     // its typed read failure maps onto ChangesetGraphError with the failing file.
     it.effect("reports an unreadable root manifest as a ChangesetGraphError naming the file", () =>

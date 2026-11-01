@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
  * ImageFetcher Service
@@ -285,8 +285,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
   static readonly Live = Layer.effect(
     ImageFetcher,
     Effect.gen(function* () {
-      const crypto = yield* Crypto.Crypto;
-      const sha256Bytes = flow(sha256BytesEffect, Effect.provideService(Crypto.Crypto, crypto));
+      const crypto = yield* Digest.Digest;
+      const sha256Bytes = flow(sha256BytesEffect, Effect.provideService(Digest.Digest, crypto));
       const httpClient = yield* HttpClient.HttpClient;
 
       const fetchAttempt = Effect.fn("ImageFetcher.fetchAttempt")(function* (

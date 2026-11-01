@@ -9,12 +9,13 @@ import {
   UsptoClaimSource,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -83,7 +84,7 @@ const verifyCanonicalText = Effect.fn("PositiveEvaluation.verifyCanonicalText")(
 
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const crypto = yield* Crypto.Crypto;
+  const digest = yield* Digest.Digest;
   const output = yield* Config.String("CLAIM_EVALUATION_OUTPUT");
   const packet = "goals/claim-element-antecedent-check/research";
   const fixtures = "packages/law-practice/domain/test/fixtures/claim-element/positive";
@@ -99,7 +100,7 @@ const program = Effect.gen(function* () {
   const implementation = yield* S.decodeEffect(implementationFreezeJson)(yield* fs.readFileString(implementationFile));
   const verifiedText = Effect.fn("PositiveEvaluation.verifiedText")(function* (path: string, expected: string) {
     const text = yield* fs.readFileString(path);
-    if (Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(text))) !== expected)
+    if (Hex.encode(yield* digest.digest(Digest.sha256, new TextEncoder().encode(text))) !== expected)
       return yield* StructuralEvaluationError.make({ message: `Frozen file hash mismatch: ${path}` });
     return text;
   });
@@ -252,7 +253,7 @@ const program = Effect.gen(function* () {
 });
 BunRuntime.runMain(
   Effect.gen(function* () {
-    const services = yield* Layer.build(BunServices.layer);
+    const services = yield* Layer.build(Layer.mergeAll(BunServices.layer, BunCrypto.layer));
     yield* program.pipe(Effect.provide(services));
   }).pipe(Effect.scoped)
 );

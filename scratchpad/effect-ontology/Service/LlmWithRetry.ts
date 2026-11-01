@@ -1,4 +1,4 @@
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 /**
  * Service: LLM with Retry
  *
@@ -27,7 +27,6 @@ import * as LanguageModel from "effect/ai/LanguageModel";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 import { recordProviderAttempt, recordProviderUsage } from "../Telemetry/ExtractionTelemetry.ts";
 import { annotateError, annotateLlmCall, annotateRetry, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
-import type { HashingError } from "../Utils/Hash.ts";
 import { sha256Sync } from "../Utils/Hash.ts";
 import { makeCachedPromptFromStructured } from "./PromptCache.ts";
 import type { RetryPolicyInput } from "./Retry.ts";
@@ -98,8 +97,8 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   options: GenerateObjectWithRetryOptions<StructuredOutputSchema>
 ): Effect.fn.Return<
   LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"], "opaque">,
-  AiError.AiError | Cause.TimeoutError | S.SchemaError | HashingError,
-  LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"] | Crypto.Crypto
+  AiError.AiError | Cause.TimeoutError | S.SchemaError,
+  LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"] | Digest.Digest
 > {
   const {
     annotateSuccess,

@@ -31,7 +31,7 @@ import { evaluateRules } from "@/workflows/Rules";
 import type { DuckDb } from "@beep/duckdb";
 import type { VerifiedSpanError } from "@beep/langextract/VerifiedSpan";
 import type { SparqlQueryService } from "@beep/semantic-web";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { SqlClient } from "effect/sql/SqlClient";
 import type { FrozenProviderRecording, ProviderRecording, RetentionAuthorization } from "@/domain/Bundle";
 import type { FixtureError } from "@/fixtures/Sources";
@@ -122,7 +122,7 @@ export const replayOffline = Effect.fn("lejeune.replay.offline")(function* (
 ): Effect.fn.Return<
   ReplayBuild,
   FixtureError | ProjectionError | ProviderRecordingIntegrityError | ReplayError | VerifiedSpanError,
-  Crypto.Crypto | DuckDb | SparqlQueryService | SqlClient
+  Digest.Digest | DuckDb | SparqlQueryService | SqlClient
 > {
   const frozenProviderRecording = yield* verifyFrozenProviderRecording(
     providerRecording,

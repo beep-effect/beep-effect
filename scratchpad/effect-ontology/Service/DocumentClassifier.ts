@@ -1,4 +1,4 @@
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Document Classifier
  *
@@ -402,7 +402,7 @@ export const defaultClassification: DocumentClassification = {
  */
 export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I`DocumentClassifier`, {
   make: Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -422,7 +422,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
               "classifier.content_type": O.getOrElse(input.contentType, () => "unknown"),
             },
           }).pipe(
-            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.provideService(Digest.Digest, crypto),
             Effect.provideService(LanguageModel.LanguageModel, llm)
           );
           return result.value;
@@ -460,7 +460,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
               "classifier.batch_size": input.documents.length,
             },
           }).pipe(
-            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.provideService(Digest.Digest, crypto),
             Effect.provideService(LanguageModel.LanguageModel, llm)
           );
           const classifications = MutableHashMap.empty<number, DocumentClassification>();
@@ -533,7 +533,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
                   "classifier.batch_size": batch.length,
                 },
               }).pipe(
-                Effect.provideService(Crypto.Crypto, crypto),
+                Effect.provideService(Digest.Digest, crypto),
                 Effect.provideService(LanguageModel.LanguageModel, llm),
                 Effect.catch((error) =>
                   Effect.gen(function* () {

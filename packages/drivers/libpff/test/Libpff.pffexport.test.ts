@@ -17,6 +17,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, vi } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -24,11 +25,15 @@ import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+// `NodeServices` no longer bundles crypto; the archive engine hashes through `Digest`.
+const TestServices = Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest);
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -328,7 +333,7 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })("portable engine names", (it) => {
+  it.layer(TestServices, { timeout: 30_000 })("portable engine names", (it) => {
     it.effect(
       "escapes backslash files and folders while preserving EML display names",
       Effect.fnUntraced(function* () {
@@ -377,7 +382,7 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     );
   });
 
-  it.layer(NodeServices.layer)("exports directly from a file locator when the caller omits source bytes", (it) => {
+  it.layer(TestServices)("exports directly from a file locator when the caller omits source bytes", (it) => {
     it.effect(
       "exports directly from a file locator when the caller omits source bytes",
       Effect.fnUntraced(function* () {
@@ -401,7 +406,7 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     );
   });
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })(
+  it.layer(TestServices, { excludeTestServices: true })(
     "isolates a file-locator export inside bubblewrap when configured",
     (it) => {
       it.effect("isolates a file-locator export inside bubblewrap when configured", (context) =>
@@ -434,7 +439,7 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     }
   );
 
-  it.layer(NodeServices.layer)("binds an external shebang interpreter prefix into the sandbox", (it) => {
+  it.layer(TestServices)("binds an external shebang interpreter prefix into the sandbox", (it) => {
     it.effect(
       "binds an external shebang interpreter prefix into the sandbox",
       Effect.fnUntraced(function* () {
@@ -477,7 +482,7 @@ describe("makePffexportFileProcessingEngine", { concurrent: false }, () => {
     );
   });
 
-  it.layer(NodeServices.layer, { excludeTestServices: true, timeout: 30_000 })(
+  it.layer(TestServices, { excludeTestServices: true, timeout: 30_000 })(
     "uses a standard-root env interpreter without an additional runtime bind",
     (it) => {
       it.effect(
@@ -538,7 +543,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer)("fails closed when a sandboxed executable cannot be resolved", (it) => {
+  it.layer(TestServices)("fails closed when a sandboxed executable cannot be resolved", (it) => {
     it.effect(
       "fails closed when a sandboxed executable cannot be resolved",
       Effect.fnUntraced(function* () {
@@ -566,7 +571,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer)("binds an external canonical target reached through a covered shebang symlink", (it) => {
+  it.layer(TestServices)("binds an external canonical target reached through a covered shebang symlink", (it) => {
     it.effect(
       "binds an external canonical target reached through a covered shebang symlink",
       Effect.fnUntraced(function* () {
@@ -614,7 +619,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer, { excludeTestServices: true })(
+  it.layer(TestServices, { excludeTestServices: true })(
     "invokes an env-selected interpreter through its canonical path-sensitive prefix",
     (it) => {
       it.effect(
@@ -679,7 +684,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer)("rejects malformed or unavailable sandbox shebang interpreters", (it) => {
+  it.layer(TestServices)("rejects malformed or unavailable sandbox shebang interpreters", (it) => {
     it.effect(
       "rejects malformed or unavailable sandbox shebang interpreters",
       Effect.fnUntraced(function* () {
@@ -730,7 +735,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer)("rejects non-file sources without bytes and direct extraction", (it) => {
+  it.layer(TestServices)("rejects non-file sources without bytes and direct extraction", (it) => {
     it.effect(
       "rejects non-file sources without bytes and direct extraction",
       Effect.fnUntraced(function* () {
@@ -764,7 +769,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer)("reports a successful pffexport run that produces no children", (it) => {
+  it.layer(TestServices)("reports a successful pffexport run that produces no children", (it) => {
     it.effect(
       "reports a successful pffexport run that produces no children",
       Effect.fnUntraced(function* () {
@@ -781,28 +786,23 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
-    "assembles a headers-only message without an exported body",
-    (it) => {
-      it.effect(
-        "assembles a headers-only message without an exported body",
-        Effect.fnUntraced(function* () {
-          const { exportRoot, operation, stubPath } = yield* fixture(headersOnlyStub);
-          const engine = yield* makePffexportFileProcessingEngine(
-            PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
-          );
+  it.layer(TestServices, { timeout: 30_000 })("assembles a headers-only message without an exported body", (it) => {
+    it.effect(
+      "assembles a headers-only message without an exported body",
+      Effect.fnUntraced(function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(headersOnlyStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
 
-          const result = yield* engine.exportArchive(operation);
+        const result = yield* engine.exportArchive(operation);
 
-          expect(A.some(result.children, (child) => pipe(child.relativePath, Str.endsWith("/Message.eml")))).toBe(
-            false
-          );
-        })
-      );
-    }
-  );
+        expect(A.some(result.children, (child) => pipe(child.relativePath, Str.endsWith("/Message.eml")))).toBe(false);
+      })
+    );
+  });
 
-  it.layer(NodeServices.layer)("maps filesystem failures at each export traversal boundary", (it) => {
+  it.layer(TestServices)("maps filesystem failures at each export traversal boundary", (it) => {
     it.effect(
       "maps filesystem failures at each export traversal boundary",
       Effect.fnUntraced(function* () {
@@ -880,7 +880,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer)("resolves and binds a bare pffexport executable outside sandbox runtime roots", (it) => {
+  it.layer(TestServices)("resolves and binds a bare pffexport executable outside sandbox runtime roots", (it) => {
     it.effect(
       "resolves and binds a bare pffexport executable outside sandbox runtime roots",
       Effect.fnUntraced(function* () {
@@ -916,7 +916,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
+  it.layer(TestServices, { timeout: 30_000 })(
     "exports children, assembles EML artifacts, and writes JSONL metadata records",
     (it) => {
       it.effect(
@@ -1005,7 +1005,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
+  it.layer(TestServices, { timeout: 30_000 })(
     "walks both recovered target trees when the export mode selects them",
     (it) => {
       it.effect(
@@ -1028,7 +1028,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })("walks all three target trees under the all export mode", (it) => {
+  it.layer(TestServices, { timeout: 30_000 })("walks all three target trees under the all export mode", (it) => {
     it.effect(
       "walks all three target trees under the all export mode",
       Effect.fnUntraced(function* () {
@@ -1046,7 +1046,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
+  it.layer(TestServices, { timeout: 30_000 })(
     "re-encodes an over-long body line as base64 in the assembled EML",
     (it) => {
       it.effect(
@@ -1085,7 +1085,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
+  it.layer(TestServices, { timeout: 30_000 })(
     "never overwrites an engine-owned Message.eml and keeps children unique",
     (it) => {
       it.effect(
@@ -1122,7 +1122,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer)("maps a signal-killed pffexport process to archive-export-failed", (it) => {
+  it.layer(TestServices)("maps a signal-killed pffexport process to archive-export-failed", (it) => {
     it.effect(
       "maps a signal-killed pffexport process to archive-export-failed",
       Effect.fnUntraced(function* () {
@@ -1142,7 +1142,7 @@ exec "$mapped_command" "\${mapped[@]}"`
 
   // it.live: the timeout races a real subprocess, and the frozen TestClock of
   // it.effect would never fire Effect.timeoutOrElse against it.
-  it.layer(NodeServices.layer, { excludeTestServices: true })(
+  it.layer(TestServices, { excludeTestServices: true })(
     "maps a hung pffexport process to operation-timed-out",
     (it) => {
       it.effect(
@@ -1175,7 +1175,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
+  it.layer(TestServices, { timeout: 30_000 })(
     "skips EML assembly with warnings when the materialization budget is exceeded",
     (it) => {
       it.effect(
@@ -1209,7 +1209,7 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
+  it.layer(TestServices, { timeout: 30_000 })(
     "continues evaluating later messages after an oversized item exceeds the budget",
     (it) => {
       it.effect(
@@ -1237,31 +1237,28 @@ exec "$mapped_command" "\${mapped[@]}"`
     }
   );
 
-  it.layer(NodeServices.layer)(
-    "requires the quota sandbox and retains no output when a ceiling is configured",
-    (it) => {
-      it.effect(
-        "requires the quota sandbox and retains no output when a ceiling is configured",
-        Effect.fnUntraced(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
-          const config = yield* decodePffexportEngineConfig({
-            exportRoot,
-            maxOutputBytes: 1,
-            pffexportPath: stubPath,
-          });
-          const engine = yield* makePffexportFileProcessingEngine(config);
+  it.layer(TestServices)("requires the quota sandbox and retains no output when a ceiling is configured", (it) => {
+    it.effect(
+      "requires the quota sandbox and retains no output when a ceiling is configured",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { operation, exportRoot, stubPath } = yield* fixture(stubPffexport);
+        const config = yield* decodePffexportEngineConfig({
+          exportRoot,
+          maxOutputBytes: 1,
+          pffexportPath: stubPath,
+        });
+        const engine = yield* makePffexportFileProcessingEngine(config);
 
-          const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
-          expect(error.reason).toBe("archive-export-failed");
-          expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
-        })
-      );
-    }
-  );
+        expect(error.reason).toBe("archive-export-failed");
+        expect(yield* fs.readDirectory(exportRoot)).toStrictEqual([]);
+      })
+    );
+  });
 
-  it.layer(NodeServices.layer)("maps quota exhaustion before host publication to an output-limit failure", (it) => {
+  it.layer(TestServices)("maps quota exhaustion before host publication to an output-limit failure", (it) => {
     it.effect(
       "maps quota exhaustion before host publication to an output-limit failure",
       Effect.fnUntraced(function* () {
@@ -1312,7 +1309,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer)("publishes repeated validated quota handoffs after each sandbox exits", (it) => {
+  it.layer(TestServices)("publishes repeated validated quota handoffs after each sandbox exits", (it) => {
     it.effect(
       "publishes repeated validated quota handoffs after each sandbox exits",
       Effect.fnUntraced(function* () {
@@ -1373,7 +1370,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })("portable quota handoff", (it) => {
+  it.layer(TestServices, { timeout: 30_000 })("portable quota handoff", (it) => {
     it.effect(
       "validates raw backslash folders before escaping a bounded quota handoff",
       Effect.fnUntraced(function* () {
@@ -1443,7 +1440,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer)("rejects symbolic links in untrusted pffexport output", (it) => {
+  it.layer(TestServices)("rejects symbolic links in untrusted pffexport output", (it) => {
     it.effect(
       "rejects symbolic links in untrusted pffexport output",
       Effect.fnUntraced(function* () {
@@ -1459,7 +1456,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer)("fails on stale export outputs under the default existing-export policy", (it) => {
+  it.layer(TestServices)("fails on stale export outputs under the default existing-export policy", (it) => {
     it.effect(
       "fails on stale export outputs under the default existing-export policy",
       Effect.fnUntraced(function* () {
@@ -1480,7 +1477,7 @@ exec "$@"
   });
 
   for (const existingExportPolicy of ["fail", "replace"] as const) {
-    it.layer(NodeServices.layer)(
+    it.layer(TestServices)(
       `fails while another export claims the same target under the ${existingExportPolicy} policy`,
       (it) => {
         it.effect(
@@ -1503,7 +1500,7 @@ exec "$@"
     );
   }
 
-  it.layer(NodeServices.layer, { timeout: 30_000 })(
+  it.layer(TestServices, { timeout: 30_000 })(
     "replaces stale export outputs when configured and releases the claim",
     (it) => {
       it.effect(
@@ -1530,7 +1527,7 @@ exec "$@"
     }
   );
 
-  it.layer(NodeServices.layer)("maps non-zero pffexport exits to archive-export-failed", (it) => {
+  it.layer(TestServices)("maps non-zero pffexport exits to archive-export-failed", (it) => {
     it.effect(
       "maps non-zero pffexport exits to archive-export-failed",
       Effect.fnUntraced(function* () {
@@ -1549,7 +1546,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer)("maps a missing pffexport binary to engine-unavailable", (it) => {
+  it.layer(TestServices)("maps a missing pffexport binary to engine-unavailable", (it) => {
     it.effect(
       "maps a missing pffexport binary to engine-unavailable",
       Effect.fnUntraced(function* () {
@@ -1565,7 +1562,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer)("classifies bounded process diagnostics without retaining raw stderr", (it) => {
+  it.layer(TestServices)("classifies bounded process diagnostics without retaining raw stderr", (it) => {
     it.effect(
       "classifies bounded process diagnostics without retaining raw stderr",
       Effect.fnUntraced(function* () {
@@ -1582,7 +1579,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer)("classifies password and codepage process diagnostics", (it) => {
+  it.layer(TestServices)("classifies password and codepage process diagnostics", (it) => {
     it.effect(
       "classifies password and codepage process diagnostics",
       Effect.fnUntraced(function* () {
@@ -1604,7 +1601,7 @@ exec "$@"
     );
   });
 
-  it.layer(NodeServices.layer)("rejects non-pst formats without spawning", (it) => {
+  it.layer(TestServices)("rejects non-pst formats without spawning", (it) => {
     it.effect(
       "rejects non-pst formats without spawning",
       Effect.fnUntraced(function* () {

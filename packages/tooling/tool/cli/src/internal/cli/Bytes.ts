@@ -13,7 +13,7 @@ import * as A from "effect/Array";
  * **When to use**
  *
  * Use when handing bytes to an API typed against `Uint8Array<ArrayBuffer>` —
- * `Crypto.digest` and `FileSystem.writeFile` both reject the `SharedArrayBuffer`
+ * `Digest.digest` and `FileSystem.writeFile` both reject the `SharedArrayBuffer`
  * possibility that a bare `Uint8Array` carries in its type.
  *
  * **Gotchas**

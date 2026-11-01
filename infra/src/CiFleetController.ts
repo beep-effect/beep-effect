@@ -651,6 +651,32 @@ export type CiFleetControllerPulumiConfigValues = typeof CiFleetControllerPulumi
 /**
  * Fully validated CI fleet controller configuration.
  *
+ * **Details**
+ *
+ * `runnerLabel` defaults to `beep-ec2-heavy` and `amiSsmParameterName` to the
+ * public Amazon Linux 2023 parameter; `amiId` is absent unless pinned.
+ *
+ * **Example** (Construct a configuration with the shadow-label default)
+ *
+ * ```ts
+ * import { CiFleetControllerConfig } from "@beep/infra"
+ * import * as O from "effect/Option"
+ *
+ * const config = CiFleetControllerConfig.make({
+ *   amiId: O.none(),
+ *   githubAppIdSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/id",
+ *   githubAppKeyBase64SsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/key",
+ *   githubAppKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+ *   githubAppWebhookSecretSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/webhook-secret",
+ *   runnerBinariesSyncerLambdaZip: "/artifacts/runner-binaries-syncer.zip",
+ *   runnerRolePermissionsBoundaryArn: "arn:aws:iam::123456789012:policy/beep-ci-fleet-boundary",
+ *   runnersLambdaZip: "/artifacts/runners.zip",
+ *   terminationWatcherLambdaZip: "/artifacts/termination-watcher.zip",
+ *   webhookLambdaZip: "/artifacts/webhook.zip",
+ * })
+ * console.log(config.runnerLabel) // "beep-ec2-heavy"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -684,6 +710,31 @@ export class CiFleetControllerConfig extends S.Opaque<CiFleetControllerConfig, {
 /**
  * Apply the shadow-label default to decoded Pulumi config values.
  *
+ * **Example** (Pin a runner label and AMI)
+ *
+ * ```ts
+ * import { CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra"
+ * import * as O from "effect/Option"
+ *
+ * const config = makeCiFleetControllerConfig(
+ *   CiFleetControllerPulumiConfigValues.make({
+ *     amiId: "ami-0123456789abcdef0",
+ *     runnerLabel: "beep-ci-heavy",
+ *     githubAppIdSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/id",
+ *     githubAppKeyBase64SsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/key",
+ *     githubAppKmsKeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+ *     githubAppWebhookSecretSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/webhook-secret",
+ *     runnerBinariesSyncerLambdaZip: "/artifacts/runner-binaries-syncer.zip",
+ *     runnerRolePermissionsBoundaryArn: "arn:aws:iam::123456789012:policy/beep-ci-fleet-boundary",
+ *     runnersLambdaZip: "/artifacts/runners.zip",
+ *     terminationWatcherLambdaZip: "/artifacts/termination-watcher.zip",
+ *     webhookLambdaZip: "/artifacts/webhook.zip",
+ *   })
+ * )
+ * console.log(config.runnerLabel) // "beep-ci-heavy"
+ * console.log(O.isSome(config.amiId)) // true
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -713,6 +764,16 @@ export const makeCiFleetControllerConfig = (values: CiFleetControllerPulumiConfi
  * Relative Lambda ZIP paths resolve against `BEEP_INFRA_ARTIFACTS_ROOT`, or
  * `$HOME/beep-infra-artifacts` when that variable is unset; absolute values
  * are used as configured.
+ *
+ * **Example** (Load the configuration inside a Pulumi program)
+ *
+ * ```ts
+ * import { loadCiFleetControllerConfig } from "@beep/infra"
+ *
+ * // Lambda ZIPs such as `runners.zip` resolve to `/srv/beep-infra-artifacts/runners.zip`.
+ * const config = loadCiFleetControllerConfig({ BEEP_INFRA_ARTIFACTS_ROOT: "/srv/beep-infra-artifacts" })
+ * console.log(config.runnersLambdaZip)
+ * ```
  *
  * @category constructors
  * @since 0.0.0

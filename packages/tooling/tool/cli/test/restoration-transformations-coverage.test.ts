@@ -26,7 +26,7 @@ import {
 } from "@beep/repo-cli/commands/Corpus";
 import { restorationTransformationTesting as RT } from "@beep/repo-cli/test/Corpus";
 import { PosixPath, Sha256Hex } from "@beep/schema";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -174,8 +174,8 @@ const familySummary = (
   });
 
 const testLayer = Layer.mergeAll(
-  CorpusCommandServiceLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  NodeServices.layer
+  CorpusCommandServiceLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
 );
 
 layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpers", (it) => {

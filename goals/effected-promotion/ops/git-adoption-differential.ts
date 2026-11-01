@@ -20,7 +20,7 @@
  * Exit code 1 when any gate fails.
  */
 import * as NodeURL from "node:url";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -401,7 +401,7 @@ const program = Effect.gen(function* () {
 }).pipe(Effect.scoped);
 
 NodeRuntime.runMain(
-  Layer.build(NodeServices.layer).pipe(
+  Layer.build(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)).pipe(
     Effect.flatMap((services) => program.pipe(Effect.provide(services))),
     Effect.scoped
   )

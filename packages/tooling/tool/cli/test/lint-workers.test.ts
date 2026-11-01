@@ -4,7 +4,7 @@ import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { beforeEach, describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -55,7 +55,9 @@ vi.mock("../src/internal/cli/EnvConfig.ts", (importOriginal) =>
     turboEnvironmentHealthWarnings: (() => Effect.succeed([])) satisfies typeof turboEnvironmentHealthWarnings,
   }))
 );
-const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(Layer.provideMerge(NodeServices.layer));
+const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+);
 const runCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const run = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =>
   runCommand(args).pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));

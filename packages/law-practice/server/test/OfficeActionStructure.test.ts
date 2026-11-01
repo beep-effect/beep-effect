@@ -1,5 +1,6 @@
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { DocStructureAbstention, DocStructureDocument, DocStructureRuleFamily } from "@beep/law-practice-domain";
+import { fixtureSource, TestCrypto } from "@beep/law-practice-domain/test";
 import {
   OfficeActionDocketIntakeLive,
   officeActionStructureFileStore,
@@ -12,6 +13,7 @@ import {
   OfficeActionStructureAttempt,
   OfficeActionStructureStore,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
+import { fixtureOcrPage } from "@beep/law-practice-use-cases/test";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifySourceTextIdentityInput } from "@beep/provenance/VerifiedTextAnchor";
@@ -29,7 +31,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { fixtureOcrPage, fixtureSource, fixtureText, TestCrypto } from "./officeActionFixtures.ts";
+import { fixtureText } from "./officeActionFixtures.ts";
 
 const document = DocStructureDocument.make({
   documentId: "fixture",

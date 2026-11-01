@@ -35,7 +35,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ProviderInstanceInsert } from "@beep/agents-tables/entities/ProviderInstance";
 import type { AddProviderInstanceCommand } from "@beep/agents-use-cases/server";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const decodeProviderInstanceInsert = S.decodeUnknownEffect(Domain.ProviderInstance.insert);
 const encodeProviderInstanceInsert = S.encodeEffect(Domain.ProviderInstance.insert);
@@ -102,7 +102,7 @@ const insertFromCommand = Effect.fn("Agents.ProviderInstanceRepository.insertFro
 export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstanceRepository.make")(function* () {
   const db = yield* PostgresDrizzle;
   const scope = yield* ProviderInstanceActorContext;
-  const publicIdContext = yield* Effect.context<CuidState | Crypto.Crypto>();
+  const publicIdContext = yield* Effect.context<CuidState | Digest.Digest>();
   const inScope = (id: Agents.ProviderInstanceId) =>
     and(eq(providerInstanceTable.id, id), eq(providerInstanceTable.orgId, scope.orgId));
 

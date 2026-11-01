@@ -1,6 +1,6 @@
 import { PersonMatchModel, prepareAdaFaceArtifacts, verifyPersonMatchModelArtifacts } from "@beep/repo-cli/test/Files";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -24,7 +24,11 @@ const noDownloadClient = HttpClient.make((request) =>
   Effect.die(`Unexpected model download during store test: ${request.url}`)
 );
 
-const testLayer = Layer.mergeAll(NodeServices.layer, Layer.succeed(HttpClient.HttpClient, noDownloadClient));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  Layer.succeed(HttpClient.HttpClient, noDownloadClient)
+);
 
 const temporaryRoot = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;

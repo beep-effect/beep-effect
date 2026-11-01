@@ -20,7 +20,8 @@ import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem";
 import * as NodePath from "@effect/platform-node-shared/NodePath";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -251,7 +252,7 @@ const rootPathKey = "";
  * Digests here hash canonical JSON this module just built or a plan that already
  * decoded, so a digest failure is an invariant violation, not a recoverable error.
  */
-const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError | S.SchemaError, Crypto.Crypto>) =>
+const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError | S.SchemaError, Digest.Digest>) =>
   Effect.orDie(effect);
 
 const folderPathDigest = (pathKeys: ReadonlyArray<string>) =>
@@ -1187,10 +1188,11 @@ const makeService = (
   journal: BoxContentMigrationJournalShape,
   fs: FileSystem.FileSystem,
   sourcePaths: Path.Path,
-  crypto: Crypto.Crypto
+  digest: Digest.Digest["Service"],
+  secureRandom: SecureRandom.SecureRandom["Service"]
 ): BoxContentMigrationShape => {
-  const provided = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto | FileSystem.FileSystem>) =>
-    effect.pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.provideService(FileSystem.FileSystem, fs));
+  const provided = <A, E>(effect: Effect.Effect<A, E, Digest.Digest | FileSystem.FileSystem>) =>
+    effect.pipe(Effect.provideService(Digest.Digest, digest), Effect.provideService(FileSystem.FileSystem, fs));
 
   const decodeMap = Effect.fnUntraced(function* (mapInput: unknown) {
     const map = yield* decodeBoxContentMigrationMap(mapInput);
@@ -1246,7 +1248,7 @@ const makeService = (
       });
     }
     const attemptId = yield* O.match(options.attemptId, {
-      onNone: () => Effect.map(crypto.randomUUIDv4(), BoxApplyAttemptId.make),
+      onNone: () => Effect.map(secureRandom.uuidV4(), BoxApplyAttemptId.make),
       onSome: Effect.succeed,
     });
     const write = yield* makeJournalWriter(journal, attemptId, reviewedPlan.planDigest);
@@ -1357,9 +1359,16 @@ export class BoxContentMigration extends Context.Service<BoxContentMigration, Bo
     B.Box | BoxContentMigrationJournal | FileSystem.FileSystem | Path.Path
   > = Layer.effect(
     BoxContentMigration,
-    Effect.all([B.Box, BoxContentMigrationJournal, FileSystem.FileSystem, Path.Path, Crypto.Crypto]).pipe(
-      Effect.map(([box, journal, fs, sourcePaths, crypto]) =>
-        BoxContentMigration.of(makeService(box, journal, fs, sourcePaths, crypto))
+    Effect.all([
+      B.Box,
+      BoxContentMigrationJournal,
+      FileSystem.FileSystem,
+      Path.Path,
+      Digest.Digest,
+      SecureRandom.SecureRandom,
+    ]).pipe(
+      Effect.map(([box, journal, fs, sourcePaths, digest, secureRandom]) =>
+        BoxContentMigration.of(makeService(box, journal, fs, sourcePaths, digest, secureRandom))
       )
     )
   ).pipe(Layer.provide(NodeCrypto.layer));

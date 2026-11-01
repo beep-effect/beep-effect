@@ -2984,8 +2984,10 @@ const ContactFromWire = S.Record(S.String, S.Unknown).pipe(
   S.decodeTo(S.toType(GraphContact), {
     decode: SchemaGetter.transformEffect((wire) =>
       S.decodeUnknownEffect(GraphContact)(wire).pipe(
-        Effect.map((contact) => GraphContact.make({ ...contact, rawJson: O.some(wire) })),
-        Effect.mapError((error) => error.issue)
+        Effect.mapBoth({
+          onFailure: (error) => error.issue,
+          onSuccess: (contact) => GraphContact.make({ ...contact, rawJson: O.some(wire) }),
+        })
       )
     ),
     encode: SchemaGetter.transformEffect((contact) =>
@@ -3665,8 +3667,7 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
    */
   static readonly layer: Layer.Layer<M365, M365Error> = Layer.unwrap(
     loadEnvConfig().pipe(
-      Effect.map(M365.makeLiveLayer),
-      Effect.mapError((cause) => M365Error.fromReason("config", { cause }))
+      Effect.mapBoth({ onFailure: (cause) => M365Error.fromReason("config", { cause }), onSuccess: M365.makeLiveLayer })
     )
   );
 }

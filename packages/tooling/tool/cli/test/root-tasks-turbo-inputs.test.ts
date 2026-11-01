@@ -8,7 +8,7 @@ import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { isPackageSourceFile, TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -28,7 +28,7 @@ const sharedSealId = `${fingerprintId}:shared`;
 // Generated seal tasks are owned and checked by `beep lint policy-fingerprint`.
 const isSealId = Str.startsWith(`${fingerprintId}:`);
 const nonInput = ".beep/c3-fixture-excluded.bin";
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const isProofTaskName = S.is(TurboConfigProofTaskName);
 const Strings = S.Array(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed([])));
 

@@ -12,7 +12,7 @@ import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
 import * as Config from "effect/Config";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -113,7 +113,7 @@ const lookupCachedResponse = Effect.fn("LanguageModelCache.lookupCachedResponse"
 ): Effect.fn.Return<
   Result.Result<string, ProviderCacheKey>,
   ProviderCacheCorrupt,
-  ActiveModelIdentity | Crypto.Crypto | ProviderCache
+  ActiveModelIdentity | Digest.Digest | ProviderCache
 > {
   const model = yield* ActiveModelIdentity;
   const cache = yield* ProviderCache;
@@ -151,7 +151,7 @@ export const replayGenerateText = Effect.fn("LanguageModelCache.replayGenerateTe
 ): Effect.fn.Return<
   string,
   ProviderCacheCorrupt | ProviderUnavailable,
-  ActiveModelIdentity | Crypto.Crypto | ProviderCache
+  ActiveModelIdentity | Digest.Digest | ProviderCache
 > {
   return yield* (yield* lookupCachedResponse(prompt)).pipe(
     Result.match({
@@ -167,7 +167,7 @@ const cachedGenerateText = Effect.fn("LanguageModelCache.cachedGenerateText")(fu
 ): Effect.fn.Return<
   string,
   AiError.AiError | ProviderCacheCorrupt,
-  ActiveModelIdentity | Crypto.Crypto | ProviderCache
+  ActiveModelIdentity | Digest.Digest | ProviderCache
 > {
   const onCacheMiss = Effect.fn("LanguageModelCache.cachedGenerateText.onCacheMiss")(function* (key: ProviderCacheKey) {
     const cache = yield* ProviderCache;
@@ -219,20 +219,22 @@ const makeGenerateTextAdapter = Effect.fn("LanguageModelCache.makeGenerateTextAd
   ) => Effect.Effect<
     string,
     AiError.AiError | ProviderCacheCorrupt | ProviderUnavailable,
-    ActiveModelIdentity | Crypto.Crypto | ProviderCache
+    ActiveModelIdentity | Digest.Digest | ProviderCache
   >
 ) {
   const model = yield* ActiveModelIdentity;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const cache = yield* ProviderCache;
   return yield* LanguageModel.make({
     generateText: (options) =>
       generateText(options.prompt.pipe(promptText)).pipe(
         Effect.provideService(ActiveModelIdentity, model),
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.provideService(ProviderCache, cache),
-        Effect.map((text) => [Response.makePart("text", { text })]),
-        Effect.mapError(toAdapterError)
+        Effect.mapBoth({
+          onFailure: toAdapterError,
+          onSuccess: (text) => [Response.makePart("text", { text })],
+        })
       ),
     streamText: () => Stream.empty,
   });
@@ -275,7 +277,7 @@ const makeReplayAdapter = makeGenerateTextAdapter(replayGenerateText);
  */
 export const CachingLanguageModelLive = <E, R>(
   inner: Layer.Layer<LanguageModel.LanguageModel, E, R>
-): Layer.Layer<LanguageModel.LanguageModel, E, ActiveModelIdentity | Crypto.Crypto | ProviderCache | R> =>
+): Layer.Layer<LanguageModel.LanguageModel, E, ActiveModelIdentity | Digest.Digest | ProviderCache | R> =>
   Layer.effect(LanguageModel.LanguageModel, makeCachingAdapter).pipe(Layer.provide(inner));
 
 /**
@@ -295,7 +297,7 @@ export const CachingLanguageModelLive = <E, R>(
 export const ReplayLanguageModelLive: Layer.Layer<
   LanguageModel.LanguageModel,
   never,
-  ActiveModelIdentity | Crypto.Crypto | ProviderCache
+  ActiveModelIdentity | Digest.Digest | ProviderCache
 > = Layer.effect(LanguageModel.LanguageModel, makeReplayAdapter);
 
 /**

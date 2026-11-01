@@ -8,16 +8,21 @@
 
 import { $CommandsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { ExitCode, RunOptions } from "./Run.ts";
+import type * as CommandLine from "effect/process/CommandLine";
 import type * as Types from "effect/Types";
 
 const $I = $CommandsId.create("ScriptedSpawner");
@@ -220,6 +225,9 @@ const Environment = S.Record(S.String, S.UndefinedOr(S.String)).pipe(
     description: "Platform environment values, including explicitly undefined entries.",
   })
 );
+const wordValue = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
+const envValue = (value: CommandLine.Word | undefined): string | undefined =>
+  P.isUndefined(value) ? value : wordValue(value);
 /** Core's numeric-template keys include whitespace and radix spellings, unlike Schema's numeric template matcher. */
 const AdditionalFdKey = S.TemplateLiteral([
   "fd",
@@ -477,20 +485,24 @@ export class ScriptedSpawner {
             })
           );
         }
+        // A real spawner hands the child unwrapped values, so the record and the
+        // script see the plain strings the process would receive.
+        const args = A.map(command.args, wordValue);
+        const env = P.isUndefined(command.options.env) ? undefined : R.map(command.options.env, envValue);
         return Effect.suspend(() => {
           // Mutable on purpose: `unrefed` is live state, flipped below when the
           // handle's unref effect runs.
           const record: Types.Mutable<SpawnRecord> = SpawnRecord.make({
             command: command.command,
-            args: command.args,
+            args,
             cwd: command.options.cwd,
-            env: command.options.env,
+            env,
             extendEnv: command.options.extendEnv,
             options: command.options,
             unrefed: false,
           });
           spawns.push(record);
-          const result = script(command.command, command.args);
+          const result = script(command.command, args);
           if (result instanceof PlatformError.PlatformError) {
             return Effect.fail(result);
           }

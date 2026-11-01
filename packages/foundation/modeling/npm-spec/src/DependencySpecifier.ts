@@ -666,10 +666,11 @@ const fromString: S.Codec<ClassifiedSpecifier, string> = S.String.pipe(
     SchemaTransformation.transformEffect<(typeof Classified)["Encoded"], string>({
       decode: (input) =>
         S.decodeEffect(DependencySpecifier)(input).pipe(
-          Effect.map(classify),
-          Effect.mapError(
-            () => new SchemaIssue.InvalidValue({ message: `Invalid dependency specifier: "${input}"` }, input)
-          )
+          Effect.mapBoth({
+            onFailure: () =>
+              new SchemaIssue.InvalidValue({ message: `Invalid dependency specifier: "${input}"` }, input),
+            onSuccess: classify,
+          })
         ),
       encode: (classified) => Effect.succeed(classified.raw),
     })

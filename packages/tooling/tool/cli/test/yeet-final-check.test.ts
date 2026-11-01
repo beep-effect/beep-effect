@@ -37,6 +37,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { FinalCheckVerdict } from "@beep/repo-cli/test/Yeet";
 
 const HEAD = Str.repeat(40)("a");
@@ -417,9 +418,9 @@ const handle = (exitCode: number, output = "") =>
 const scriptedSpawner = (failing: ReadonlyArray<string> = []) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const line = A.join([command.command, ...command.args], " ");
+    const line = A.join([command.command, ...commandArgs(command)], " ");
     if (A.some(failing, (fragment) => Str.includes(fragment)(line))) return Effect.succeed(handle(1));
-    const bunOnlyOnNode = Str.includes("bun-only")(line) && !A.contains(command.args, "--bun");
+    const bunOnlyOnNode = Str.includes("bun-only")(line) && !A.contains(commandArgs(command), "--bun");
     return Effect.succeed(
       handle(command.command === "bunx" && (Str.includes("masked")(line) || bunOnlyOnNode) ? 1 : 0)
     );
@@ -452,7 +453,7 @@ const smallDiff = (path: string, from: string, to: string) =>
 const treeMoveGit = (commands: Ref.Ref<ReadonlyArray<string>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const line = A.join([command.command, ...command.args], " ");
+    const line = A.join([command.command, ...commandArgs(command)], " ");
     const reply = (output: string) => Ref.update(commands, A.append(line)).pipe(Effect.as(handle(0, output)));
     if (Str.includes("--name-only")(line)) return reply("pkg/test/huge.test.ts\0pkg/test/small.test.ts\0");
     if (Str.includes("--name-status")(line)) {
@@ -516,7 +517,7 @@ type GitScript = (line: string) => Effect.Effect<ChildProcessSpawner.ChildProces
 const scriptedGit = (script: GitScript) =>
   ChildProcessSpawner.make((command) =>
     ChildProcess.isStandardCommand(command)
-      ? script(A.join([command.command, ...command.args], " "))
+      ? script(A.join([command.command, ...commandArgs(command)], " "))
       : Effect.die("unexpected pipe")
   );
 const collectWith = (script: GitScript) =>

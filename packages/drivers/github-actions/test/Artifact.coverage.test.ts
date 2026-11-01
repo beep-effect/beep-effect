@@ -23,6 +23,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import { commandArgs } from "./support/commandArgs.ts";
 import { json, jsonStatus, resultsEnv, runtimeToken, twirpFetch } from "./support/results.ts";
 import type { FileBlobTransfer } from "@beep/github-actions/BlobTransfer";
 
@@ -57,7 +58,7 @@ const fixture = (options: FixtureOptions = {}) => {
         Effect.gen(function* () {
           if (options.spawnFails === true) return yield* fault;
           if ("args" in command && command.command === "zip") {
-            const destination = command.args[2];
+            const destination = commandArgs(command)[2];
             if (destination === undefined) return yield* Effect.die("missing zip destination");
             yield* fs.writeFileString(destination, "archive bytes");
           }

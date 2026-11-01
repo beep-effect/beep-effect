@@ -9,6 +9,7 @@ import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as McpSchema from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
 import * as Tool from "effect/ai/Tool";
 import * as Toolkit from "effect/ai/Toolkit";
@@ -50,12 +51,9 @@ const buildComposedFixture = (env: Record<string, string>) => {
   return {
     acquisitions,
     executions,
-    layer: Layer.mergeAll(
-      McpServer.McpServer.layer,
-      StubMcpClientLayer,
-      composeGatedLayers(gatedLayer(hardRegistration, hardSourceLayer)).pipe(
-        Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
-      )
+    layer: composeGatedLayers(gatedLayer(hardRegistration, hardSourceLayer)).pipe(
+      Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env))),
+      Layer.provideMerge(Layer.mergeAll(McpServer.McpServer.layer, StubMcpClientLayer))
     ),
   };
 };
@@ -79,8 +77,8 @@ describe("composeGatedLayers (hard gate)", () => {
         assert.strictEqual(yield* Ref.get(absent.acquisitions), 0);
         assert.strictEqual(yield* Ref.get(absent.executions), 0);
         assertFailure(
-          Result.mapError(result, (error) => ({ _tag: error._tag, message: error.message })),
-          { _tag: "InvalidParams", message: "Tool 'hard_source_tool' not found" }
+          Result.mapError(result, (error) => ({ code: error.code, message: error.message })),
+          { code: McpSchema.INVALID_PARAMS_ERROR_CODE, message: "Tool 'hard_source_tool' not found" }
         );
       })
     );

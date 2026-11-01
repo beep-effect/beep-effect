@@ -1,0 +1,44 @@
+{
+  "observedAt": "2026-10-28T02:24:40.843609+00:00",
+  "settings": {
+    "elpresidank": {
+      "exists": true,
+      ".codex/config.toml": {
+        "readable": true,
+        "otelKeys": [],
+        "exporterKind": null,
+        "traceExporterKind": null,
+        "metricsExporterKind": null
+      },
+      ".claude/settings.json": {
+        "readable": true,
+        "telemetryEnabled": null,
+        "tracesExporter": null,
+        "metricsExporter": null
+      }
+    },
+    "worker": {
+      "exists": true,
+      ".codex/config.toml": {
+        "readable": false
+      },
+      ".claude/settings.json": {
+        "readable": false
+      }
+    }
+  },
+  "workerFollowup": {
+    "observedAt": "2026-10-28T02:48:45.649816+00:00",
+    "route": "repo-owned ssh-dankserver-worker.sh, read-only own-account probe",
+    "codex": {
+      "configExists": true,
+      "otelKeys": [],
+      "traceExporterDeclared": false,
+      "metricsExporterDeclared": false
+    },
+    "claude": {
+      "configExists": false
+    },
+    "qualification": "User-level config lacks telemetry enrollment; process/environment/system overrides and actual emitted traffic remain unverified."
+  }
+}

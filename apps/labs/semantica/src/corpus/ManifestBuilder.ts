@@ -2,7 +2,7 @@ import { $SemanticaId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
@@ -102,7 +102,7 @@ const toManifestDiff = (row: CorpusManifestRow, drift: ByteDrift): ManifestDiff 
 
 const makeCorpusManifestBuilder = Effect.gen(function* () {
   const config = yield* LabConfig;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
@@ -156,7 +156,7 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
   });
 
   const hashBytes = Effect.fn("CorpusManifestBuilder.hashBytes")((bytes: Uint8Array) =>
-    S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
+    S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Digest.Digest, crypto), Effect.orDie)
   );
 
   const readSelectedPaperIds = Effect.fn("CorpusManifestBuilder.readSelectedPaperIds")(function* (corpusRoot: string) {

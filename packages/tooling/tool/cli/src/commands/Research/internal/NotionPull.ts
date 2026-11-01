@@ -28,7 +28,7 @@ import * as Str from "effect/String";
 import { asRecord } from "../../../internal/cli/UnknownProbe.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { sha256HexOf } from "./Vault.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $RepoCliId.create("commands/Research/internal/NotionPull");
 
@@ -358,7 +358,7 @@ const decodeSavedLinkInputsJson = S.decodeEffect(S.fromJsonString(S.Array(SavedL
  */
 export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
   filePath: string
-): Effect.fn.Return<ReadonlyArray<NotionSavedLink>, ResearchCommandError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<ReadonlyArray<NotionSavedLink>, ResearchCommandError, FileSystem.FileSystem | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs
     .readFileString(filePath)

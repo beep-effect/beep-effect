@@ -48,6 +48,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { expectReportedExit } from "./support/CommandTest.ts";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { ReplyAction } from "@beep/repo-cli/test/Yeet";
 
 const OPEN_COMMENT_ID = 2_284_119_001;
@@ -490,8 +491,8 @@ const stubSpawner = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawn
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("the reply engine never spawns a piped command");
     }
-    const line = A.join([command.command, ...command.args], " ");
-    spawned?.push([command.command, ...command.args]);
+    const line = A.join([command.command, ...commandArgs(command)], " ");
+    spawned?.push([command.command, ...commandArgs(command)]);
     return pipe(
       A.findFirst(stubs, ([marker]) => Str.includes(marker)(line)),
       O.match({

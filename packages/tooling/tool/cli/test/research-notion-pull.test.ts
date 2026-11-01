@@ -3,7 +3,7 @@ import {
   ResearchCommandServiceLive,
   ResearchNotionPullOptions,
 } from "@beep/repo-cli/commands/Research";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, layer } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -21,9 +21,11 @@ import * as Str from "effect/String";
 // backfill seam, which is the same code path minus the HTTP request.
 const testLayer = Layer.mergeAll(
   ResearchCommandServiceLive.pipe(
-    Layer.provideMerge(FetchHttpClient.layer.pipe(Layer.provideMerge(NodeServices.layer)))
+    Layer.provideMerge(
+      FetchHttpClient.layer.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+    )
   ),
-  NodeServices.layer
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
 );
 
 const encodeLinksFile = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -82,10 +84,10 @@ const stubNotionLayer = Layer.mergeAll(
             Effect.orDie
           )
         )
-      ).pipe(Layer.provideMerge(NodeServices.layer))
+      ).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
     )
   ),
-  NodeServices.layer
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
 );
 
 it.layer(testLayer, { timeout: "30 seconds" })("research notion-pull", (it) => {

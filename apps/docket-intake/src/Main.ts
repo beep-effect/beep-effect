@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -30,7 +31,7 @@ import { liveWiring } from "./runtime/Layer.ts";
  * @since 0.0.0
  */
 export const main = Layer.effectDiscard(Command.run(makeCommand(liveWiring), { version: "0.0.0" })).pipe(
-  Layer.provide(BunServices.layer),
+  Layer.provide(Layer.merge(BunServices.layer, BunCrypto.layer)),
   Layer.provide(Layer.succeed(Logger.LogToStderr, true)),
   Layer.build,
   Effect.scoped

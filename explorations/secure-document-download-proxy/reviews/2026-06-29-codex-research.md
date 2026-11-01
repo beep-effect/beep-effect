@@ -46,13 +46,13 @@
 
 3. "**Crypto/id primitives present** — `@noble/hashes@^2.2.0` (HMAC-SHA256/BLAKE2b, `package.json:77`) and `uuid@^14.0.1` (`package.json:230`, catalog-pinned). v4 via `crypto.getRandomValues` (CSPRNG)."
 
-   (Update 2026-10-20: the repository no longer uses the `uuid` package. Random UUIDs come from the `effect/Crypto` service's `randomUUIDv4`, name-based ids are built on its `digest`, and the root and effect-ontology biome configs reject `uuid` imports.)
+   (Update 2026-10-20: the repository no longer uses the `uuid` package. Random UUIDs come from the `effect/crypto/SecureRandom` service's `uuidV4`, name-based ids are built on the `effect/crypto/Digest` service's `digest`, and the root and effect-ontology biome configs reject `uuid` imports.)
 
    This misses repo-native UUID modeling. At review time the repo exported a branded UUID string schema and a UUID-v4 insert helper under `@beep/schema`, so the next step should not have started from the raw `uuid` package alone. If the URL guard truly requires *strict v4 string* validation, derive a named strict-v4 schema and document why the general UUID schema is insufficient.
 
    Repo evidence at review time: `@beep/schema` `String.ts` exported a branded `UUID` using `S.isUUID()` (retired for upstream `effect/Schema` in #1343), and the `Model.uuid.ts` helpers, which imported `uuid` and generated v4 bytes by default, were deleted in #720.
 
-   Concrete fix: validate with upstream `effect/Schema` `S.isUUID()`, or `S.isUUID(4)` for strict v4, and mint ids with the `effect/Crypto` service's `randomUUIDv4`. Add a separate `StrictUuidV4PdfBasename` schema only if the route must reject non-v4 UUIDs and enforce the `.pdf` suffix in one decoded path-param model.
+   Concrete fix: validate with upstream `effect/Schema` `S.isUUID()`, or `S.isUUID(4)` for strict v4, and mint ids with the `effect/crypto/SecureRandom` service's `uuidV4`. Add a separate `StrictUuidV4PdfBasename` schema only if the route must reject non-v4 UUIDs and enforce the `.pdf` suffix in one decoded path-param model.
 
 4. "Cross-platform analog for a Tauri desktop is the OS keyring via `tauri-plugin-keyring` (macOS Keychain / Linux Secret Service / Windows Credential Manager)."
 

@@ -1,6 +1,6 @@
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/commands/Refs";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -17,7 +17,7 @@ const writeExecutable = Effect.fn("SetupEffectRefTest.writeExecutable")(function
   yield* fs.writeFileString(filePath, content);
   yield* fs.chmod(filePath, 0o755);
 });
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("setup-effect-ref", (it) => {
   for (const useDefault of [false, true]) {
     it.effect(`provisions reference links idempotently with the ${useDefault ? "default" : "relative"} root`, () =>
       Effect.gen(function* () {

@@ -21,7 +21,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import { runRepoCommandCapture } from "../repo-run/index.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhPageInfo } from "./GhSchema.ts";
 
@@ -224,7 +224,7 @@ export interface GhGraphqlPageOptions<E> {
  */
 export const ghGraphqlPage = <E>(
   options: GhGraphqlPageOptions<E>
-): Effect.Effect<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   ghOutput({
     args: [
       "api",

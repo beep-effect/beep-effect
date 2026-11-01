@@ -1,0 +1,20 @@
+diff --git a/dist/internal/equal.js b/dist/internal/equal.js
+index 8b83c84..50de8a1 100644
+--- a/dist/internal/equal.js
++++ b/dist/internal/equal.js
+@@ -4,6 +4,15 @@ export const getAllObjectKeys = obj => {
+   if (obj.constructor === Object) return keys;
+   if (obj instanceof Error) {
+     keys.delete("stack");
++    // JavaScriptCore (Bun, Safari) materializes the construction site as own
++    // non-enumerable properties; they are location metadata, not structure,
++    // like `stack`. A key the error declares in its Data/Schema payload, or an
++    // enumerable own field, is payload and stays.
++    const declared = obj[Symbol.for("effect/Data/Error/plainArgs")];
++    for (const key of ["line", "column", "sourceURL", "originalLine", "originalColumn"]) {
++      if (declared !== null && typeof declared === "object" && Object.hasOwn(declared, key)) continue;
++      if (Object.getOwnPropertyDescriptor(obj, key)?.enumerable === false) keys.delete(key);
++    }
+   }
+   const proto = Object.getPrototypeOf(obj);
+   let current = proto;

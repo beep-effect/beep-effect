@@ -829,9 +829,10 @@ const decodeLockFacts = (lockText: string) =>
     // A lock that does not declare version 1 is a broken v2 lock: report the v2 error,
     // not the v1 fallback's (#1702).
     Effect.catch((v2Error) =>
-      Effect.map(decodeLockV1(lockText), (lock) => ({ version: 1 as const, entries: v1Facts(lock, lockText) })).pipe(
-        Effect.mapError((v1Error) => (DECLARES_LOCK_V1.test(lockText) ? v1Error : v2Error))
-      )
+      Effect.mapBoth(decodeLockV1(lockText), {
+        onFailure: (v1Error) => (DECLARES_LOCK_V1.test(lockText) ? v1Error : v2Error),
+        onSuccess: (lock) => ({ version: 1 as const, entries: v1Facts(lock, lockText) }),
+      })
     ),
     KnowledgeOperationalError.mapError(
       `${KNOWLEDGE_SKILLS_LOCK_PATH} decodes as neither skills-lock v2 nor the v1 lock file.`

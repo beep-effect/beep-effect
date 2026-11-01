@@ -41,7 +41,7 @@ import {
   retiredIriAuthorities,
   retiredIriAuthoritiesScope,
 } from "./RetiredIriAuthorities.model.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -457,7 +457,7 @@ export const runRetiredIriAuthorities = Effect.fn("RetiredIriAuthorities.runReti
 ): Effect.fn.Return<
   RetiredIriAuthoritiesSummary,
   RetiredIriAuthoritiesExecutionError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { skippedFiles, ...scan } = yield* scanTrackedTextFiles({
     cwd: options.cwd,

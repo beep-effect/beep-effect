@@ -2,7 +2,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -231,7 +231,7 @@ const seedTriples = (run: string): A.NonEmptyReadonlyArray<RdfTriple> => {
 const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
   const c1 = yield* CanaryC1;
   const config = yield* LabConfig;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -276,7 +276,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         onNonEmpty: Effect.succeed,
       });
       const expectationDigest = yield* contentDigest(GEntailmentExpectation)(expectation).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.mapError(() => failed("expectation-unavailable", "The C2 expectation digest failed."))
       );
       const projection = yield* rdf.rebuild(base.snapshot);
@@ -291,7 +291,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         onNonEmpty: Effect.succeed,
       });
       const beforeCrashDigest = yield* contentDigest(S.Array(S.String))(projection.serializedQuads).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.mapError(() => failed("crash-mismatch", "The full C1 projection digest failed."))
       );
       const encodedCrashInput = yield* S.encodeEffect(crashInputJson)(
@@ -358,7 +358,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
         onNonEmpty: Effect.succeed,
       });
       const closureDigest = yield* contentDigest(S.Array(RdfStatement))(full.closure).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.mapError(() => failed("report-invalid", "The C2 closure digest failed."))
       );
       const reasoning = ReasoningWitness.make({
@@ -373,7 +373,7 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
           events,
         }),
       });
-      const report = yield* sealC2EvalReport(base.report, reasoning).pipe(Effect.provideService(Crypto.Crypto, crypto));
+      const report = yield* sealC2EvalReport(base.report, reasoning).pipe(Effect.provideService(Digest.Digest, crypto));
       const reportDigest = report.reportDigest;
       const coldStartMs = yield* measureBundleColdStart(processSpawner, runtimeProbeEntry);
       const timings = yield* Effect.forEach(A.replicate(C2_INTERACTIVE_QUERY, 20), () =>

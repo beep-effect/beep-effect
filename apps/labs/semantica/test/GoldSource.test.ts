@@ -5,12 +5,14 @@ import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep
 import { Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -38,6 +40,8 @@ import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { assertTrue } from "@effect/vitest/utils";
 import type { GoldFile as GoldFileValue } from "@/schema/Gold";
+
+const BunPlatformLive = Layer.merge(BunServices.layer, BunCrypto.layer);
 
 const GoldFileJson = S.fromJsonString(GoldFile, { space: 2 });
 const encodeGoldFileJson = S.encodeEffect(GoldFileJson);
@@ -116,7 +120,7 @@ describe("C0 gold source", () => {
     { arbitrary: fcRuns(20) }
   );
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("loads selected files and omits unreferenced subsets after verifying the complete gold reference", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -134,7 +138,7 @@ describe("C0 gold source", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("returns GoldUnavailable for a malformed covered file", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -156,7 +160,7 @@ describe("C0 gold source", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("fails typed when a covered label file no longer matches gold.json", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -195,7 +199,7 @@ describe("C0 gold source", () => {
     );
   });
 
-  it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("fails typed when a covered label digest mismatches its canonical document slice", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

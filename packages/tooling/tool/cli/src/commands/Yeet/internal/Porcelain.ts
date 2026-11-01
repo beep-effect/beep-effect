@@ -71,7 +71,8 @@ import {
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
 import { executeSweep, observeSweepGitState, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
 import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Duration from "effect/Duration";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -385,7 +386,12 @@ export const runYeetSweep = Effect.fn("Yeet.runSweepCommand")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | WorktreeRemovalService
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeRemovalService
+  | Digest.Digest
 > {
   const hydrated = yield* hydrateYeetReadOnlyContext(options);
   if (options.retire === true) {
@@ -422,7 +428,7 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const outcome = yield* mergePr(yield* hydrateYeetReadOnlyContext(options));
   yield* Console.log(`[yeet] pull request #${outcome.pullRequestNumber} is ${outcome.state}`);
@@ -470,7 +476,7 @@ export const runYeetReplyPass = Effect.fn("Yeet.runReplyCommand")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError | CliReportedExit,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const context = yield* hydrateYeetReadOnlyContext(options);
   const report = yield* runYeetReply(context);
@@ -556,7 +562,11 @@ export const runYeetMergeLoop: {
   ) => Effect.Effect<
     YeetMonitorTerminalState,
     YeetCommandError | CliReportedExit,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >;
   (
     options: YeetPorcelainOptions,
@@ -564,7 +574,11 @@ export const runYeetMergeLoop: {
   ): Effect.Effect<
     YeetMonitorTerminalState,
     YeetCommandError | CliReportedExit,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >;
 } = dual(
   (args) => P.hasProperty(args[0], "base"),
@@ -574,7 +588,11 @@ export const runYeetMergeLoop: {
   ): Effect.fn.Return<
     YeetMonitorTerminalState,
     YeetCommandError | CliReportedExit,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
   > {
     const policy =
       dependencies.policy ??
@@ -668,7 +686,11 @@ export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* 
 ): Effect.fn.Return<
   void,
   YeetCommandError | CliReportedExit,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const context = yield* hydrateMonitoredContext(options, dependencies, true);
   const ended = yield* (dependencies.watchStream ?? runYeetWatchStream)(context, {

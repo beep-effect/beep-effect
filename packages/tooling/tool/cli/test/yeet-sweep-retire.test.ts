@@ -37,7 +37,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -63,8 +63,9 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer))
+  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const runGit = Effect.fn("YeetRetireTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {
@@ -1101,7 +1102,9 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             WorktreeRemovalService,
             WorktreeRemovalServiceLive.pipe(
               Layer.fresh,
-              Layer.provide(Layer.mergeAll(NodeServices.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))),
+              Layer.provide(
+                Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+              ),
               Layer.build,
               Effect.map(Context.get(WorktreeRemovalService))
             )

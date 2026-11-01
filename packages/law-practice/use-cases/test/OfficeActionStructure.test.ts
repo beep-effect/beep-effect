@@ -7,10 +7,12 @@ import {
   recognizeOfficeActionPair,
   ShortenedStatutoryPeriodCandidate,
 } from "@beep/law-practice-domain";
+import { fixtureSource, TestCrypto } from "@beep/law-practice-domain/test";
 import {
   makeOfficeActionStructure,
   OfficeActionStructureInput,
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
+import { fixtureOcrPage } from "@beep/law-practice-use-cases/test";
 import { SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/provenance/VerifiedTextAnchor";
 import { expect, it } from "@effect/vitest";
@@ -19,7 +21,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { fixtureInventory, fixtureOcrPage, fixtureSource, readFixture, TestCrypto } from "./officeActionFixtures.ts";
+import { fixtureInventory, readFixture } from "./officeActionFixtures.ts";
 import type { Fixture } from "./fixtures/office-action-structure/Fixture.schema.ts";
 
 const structure = makeOfficeActionStructure();
