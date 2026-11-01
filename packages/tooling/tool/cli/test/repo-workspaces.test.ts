@@ -115,6 +115,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("RepoWorkspaces", (it) =
       })
     );
 
+    it.effect("fails typed when pnpm-workspace.yaml is not YAML, naming that file", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const root = yield* repository({
+          "package.json": json({ name: "@beep/root", private: true }),
+          "pnpm-workspace.yaml": "packages: [unterminated\n",
+        });
+        const failure = yield* Effect.flip(workspaceMembers(root));
+        assertInstanceOf(failure, WorkspaceDiscoveryError);
+        strictEqual(failure.kind, "invalidYaml");
+        strictEqual(failure.path, path.join(root, "pnpm-workspace.yaml"));
+      })
+    );
+
     it.effect("fails closed on an empty, absolute or parent-traversing root pattern before reading members", () =>
       Effect.gen(function* () {
         const cases: ReadonlyArray<readonly [string, string]> = [
