@@ -34,11 +34,11 @@ const OptionalText = S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDef
  *
  * **Example** (The domain ends with the catch-all)
  *
- * ```ts
+ * ```ts import.meta.vitest name="The domain ends with the catch-all"
  * import { CHANGE_ATOM_KIND_VALUES } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
  *
- * console.log(A.contains(CHANGE_ATOM_KIND_VALUES, "unknown")) // true
+ * A.contains(CHANGE_ATOM_KIND_VALUES, "unknown") // => true
  * ```
  *
  * @category schemas
@@ -83,10 +83,10 @@ export const CHANGE_ATOM_KIND_VALUES = [
  *
  * **Example** (Guard an atom kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard an atom kind"
  * import { ChangeAtomKind } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(ChangeAtomKind.is.unknown("unknown")) // true
+ * ChangeAtomKind.is.unknown("unknown") // => true
  * ```
  *
  * @category schemas
@@ -113,7 +113,7 @@ export type ChangeAtomKind = typeof ChangeAtomKind.Type;
  *
  * **Example** (Construct an atom)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct an atom"
  * import { ChangeAtom } from "@beep/repo-cli/commands/Ci"
  * import * as O from "effect/Option"
  *
@@ -123,7 +123,7 @@ export type ChangeAtomKind = typeof ChangeAtomKind.Type;
  *   detail: O.some("catalog @biomejs/biome 2.5.6 -> 9.9.9"),
  *   digest: "0f0f",
  * })
- * console.log(O.isNone(atom.pkg)) // true
+ * O.isNone(atom.pkg) // => true
  * ```
  *
  * @category models
@@ -148,11 +148,11 @@ export class ChangeAtom extends S.Opaque<ChangeAtom, { readonly brand: unique sy
  *
  * **Example** (An empty change set)
  *
- * ```ts
+ * ```ts import.meta.vitest name="An empty change set"
  * import { ChangeSet } from "@beep/repo-cli/commands/Ci"
  *
  * const empty = ChangeSet.make({ base: "aaaa", head: "bbbb", changedPaths: [], atoms: [] })
- * console.log(empty.atoms.length) // 0
+ * empty.atoms.length // => 0
  * ```
  *
  * @category models
@@ -177,10 +177,10 @@ export class ChangeSet extends S.Opaque<ChangeSet, { readonly brand: unique symb
  *
  * **Example** (Guard a propagation class)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard a propagation class"
  * import { FootprintPropagation } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(FootprintPropagation.is["reverse-deps"]("reverse-deps")) // true
+ * FootprintPropagation.is["reverse-deps"]("reverse-deps") // => true
  * ```
  *
  * @category schemas
@@ -217,7 +217,7 @@ export type FootprintPropagation = typeof FootprintPropagation.Type;
  *
  * **Example** (The unrefined footprint of a lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="The unrefined footprint of a lane"
  * import { CHANGE_ATOM_KIND_VALUES, CheckFootprint } from "@beep/repo-cli/commands/Ci"
  *
  * const lint = CheckFootprint.make({
@@ -229,7 +229,7 @@ export type FootprintPropagation = typeof FootprintPropagation.Type;
  *   fixtures: [],
  *   basis: "unrefined",
  * })
- * console.log(lint.kinds.length === CHANGE_ATOM_KIND_VALUES.length) // true
+ * lint.kinds.length === CHANGE_ATOM_KIND_VALUES.length // => true
  * ```
  *
  * @category models
@@ -266,11 +266,11 @@ export class CheckFootprint extends S.Opaque<CheckFootprint, { readonly brand: u
  *
  * **Example** (A lane selected by one atom kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A lane selected by one atom kind"
  * import { RouteSelection } from "@beep/repo-cli/commands/Ci"
  *
  * const row = RouteSelection.make({ lane: "lint", selectedBy: ["cfg:biome"] })
- * console.log(row.lane) // "lint"
+ * row.lane // => "lint"
  * ```
  *
  * @category models
@@ -294,7 +294,7 @@ export class RouteSelection extends S.Opaque<RouteSelection, { readonly brand: u
  *
  * **Example** (A plan that selects nothing)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A plan that selects nothing"
  * import { RoutePlan } from "@beep/repo-cli/commands/Ci"
  *
  * const plan = RoutePlan.make({
@@ -306,7 +306,7 @@ export class RouteSelection extends S.Opaque<RouteSelection, { readonly brand: u
  *   skipped: [],
  *   footprintDigest: "0000",
  * })
- * console.log(plan.selected.length) // 0
+ * plan.selected.length // => 0
  * ```
  *
  * @category models
@@ -333,12 +333,12 @@ export class RoutePlan extends S.Opaque<RoutePlan, { readonly brand: unique symb
  *
  * **Example** (A finished hosted job)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A finished hosted job"
  * import { HostedJob } from "@beep/repo-cli/commands/Ci"
  * import * as O from "effect/Option"
  *
  * const job = HostedJob.make({ name: "Lint", conclusion: O.some("success") })
- * console.log(O.isNone(job.startedAt)) // true
+ * O.isNone(job.startedAt) // => true
  * ```
  *
  * @category models
@@ -362,7 +362,7 @@ export class HostedJob extends S.Opaque<HostedJob, { readonly brand: unique symb
  *
  * **Example** (A pull-request run with no jobs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A pull-request run with no jobs"
  * import { HostedRun } from "@beep/repo-cli/commands/Ci"
  *
  * const run = HostedRun.make({
@@ -375,7 +375,7 @@ export class HostedJob extends S.Opaque<HostedJob, { readonly brand: unique symb
  *   attempt: 1,
  *   jobs: [],
  * })
- * console.log(run.jobs.length) // 0
+ * run.jobs.length // => 0
  * ```
  *
  * @category models
@@ -405,7 +405,7 @@ export class HostedRun extends S.Opaque<HostedRun, { readonly brand: unique symb
  *
  * **Example** (An empty corpus receipt)
  *
- * ```ts
+ * ```ts import.meta.vitest name="An empty corpus receipt"
  * import { RouteCorpusReceipt } from "@beep/repo-cli/commands/Ci"
  *
  * const receipt = RouteCorpusReceipt.make({
@@ -419,7 +419,7 @@ export class HostedRun extends S.Opaque<HostedRun, { readonly brand: unique symb
  *   path: "goals/verification-route/research/corpus/hosted-runs.ndjson.gz",
  *   sha256: "00",
  * })
- * console.log(receipt.runs) // 0
+ * receipt.runs // => 0
  * ```
  *
  * @category models
@@ -449,10 +449,10 @@ export class RouteCorpusReceipt extends S.Opaque<RouteCorpusReceipt, { readonly 
  *
  * **Example** (Guard a cost basis)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard a cost basis"
  * import { RouteCostBasis } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(RouteCostBasis.is["gate-order-seed"]("gate-order-seed")) // true
+ * RouteCostBasis.is["gate-order-seed"]("gate-order-seed") // => true
  * ```
  *
  * @category schemas
@@ -477,12 +477,12 @@ export type RouteCostBasis = typeof RouteCostBasis.Type;
  *
  * **Example** (A lane with no cost estimate)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A lane with no cost estimate"
  * import { RouteLaneCost } from "@beep/repo-cli/commands/Ci"
  * import * as O from "effect/Option"
  *
  * const cost = RouteLaneCost.make({ lane: "lint", basis: "none" })
- * console.log(O.isNone(cost.p50Ms)) // true
+ * O.isNone(cost.p50Ms) // => true
  * ```
  *
  * @category models
@@ -516,7 +516,7 @@ export class RouteLaneCost extends S.Opaque<RouteLaneCost, { readonly brand: uni
  *
  * **Example** (One pure head on one lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="One pure head on one lane"
  * import { RouteCensusRow } from "@beep/repo-cli/commands/Ci"
  *
  * const row = RouteCensusRow.make({
@@ -527,7 +527,7 @@ export class RouteLaneCost extends S.Opaque<RouteLaneCost, { readonly brand: uni
  *   mixedHeads: 0,
  *   mixedMs: 0,
  * })
- * console.log(row.pureMs) // 60000
+ * row.pureMs // => 60000
  * ```
  *
  * @category models
@@ -557,7 +557,7 @@ export class RouteCensusRow extends S.Opaque<RouteCensusRow, { readonly brand: u
  *
  * **Example** (An empty census)
  *
- * ```ts
+ * ```ts import.meta.vitest name="An empty census"
  * import { RouteCensus } from "@beep/repo-cli/commands/Ci"
  *
  * const census = RouteCensus.make({
@@ -571,7 +571,7 @@ export class RouteCensusRow extends S.Opaque<RouteCensusRow, { readonly brand: u
  *   rows: [],
  *   costs: [],
  * })
- * console.log(census.rows.length) // 0
+ * census.rows.length // => 0
  * ```
  *
  * @category models
@@ -602,7 +602,7 @@ export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique 
  *
  * **Example** (A head with nothing skipped)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A head with nothing skipped"
  * import { RouteReplayHead } from "@beep/repo-cli/commands/Ci"
  *
  * const head = RouteReplayHead.make({
@@ -613,7 +613,7 @@ export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique 
  *   skippedReds: [],
  *   baseUnknown: false,
  * })
- * console.log(head.skippedReds.length) // 0
+ * head.skippedReds.length // => 0
  * ```
  *
  * @category models
@@ -646,7 +646,7 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  *
  * **Example** (An empty replay has full recall)
  *
- * ```ts
+ * ```ts import.meta.vitest name="An empty replay has full recall"
  * import { RouteReplay } from "@beep/repo-cli/commands/Ci"
  *
  * const replay = RouteReplay.make({
@@ -661,7 +661,7 @@ export class RouteReplayHead extends S.Opaque<RouteReplayHead, { readonly brand:
  *   recall: 1,
  *   perHead: [],
  * })
- * console.log(replay.recall) // 1
+ * replay.recall // => 1
  * ```
  *
  * @category models
@@ -691,10 +691,10 @@ export class RouteReplay extends S.Opaque<RouteReplay, { readonly brand: unique 
  *
  * **Example** (Guard an error reason)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard an error reason"
  * import { RouteErrorReason } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(RouteErrorReason.is["corpus-pin"]("corpus-pin")) // true
+ * RouteErrorReason.is["corpus-pin"]("corpus-pin") // => true
  * ```
  *
  * @category schemas
@@ -726,11 +726,11 @@ export type RouteErrorReason = typeof RouteErrorReason.Type;
  *
  * **Example** (Construct a route error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Construct a route error"
  * import { RouteError } from "@beep/repo-cli/commands/Ci"
  *
  * const error = RouteError.new("git", "git diff failed")
- * console.log(error.reason) // "git"
+ * error.reason // => "git"
  * ```
  *
  * @category errors

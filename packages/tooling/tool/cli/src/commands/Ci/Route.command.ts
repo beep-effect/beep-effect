@@ -59,10 +59,10 @@ import type { RouteCensusShape, RouteCorpusLoaded } from "./Route.service.ts";
  *
  * **Example** (Read the default corpus directory)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the default corpus directory"
  * import { ROUTE_CORPUS_DEFAULT_DIR } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(ROUTE_CORPUS_DEFAULT_DIR) // "goals/verification-route/research/corpus"
+ * ROUTE_CORPUS_DEFAULT_DIR // => "goals/verification-route/research/corpus"
  * ```
  *
  * @category constructors
@@ -76,10 +76,10 @@ export const ROUTE_CORPUS_DEFAULT_DIR = "goals/verification-route/research/corpu
  *
  * **Example** (Read the default capture start)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the default capture start"
  * import { ROUTE_CORPUS_DEFAULT_SINCE } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(ROUTE_CORPUS_DEFAULT_SINCE) // "2026-09-01"
+ * ROUTE_CORPUS_DEFAULT_SINCE // => "2026-09-01"
  * ```
  *
  * @category constructors

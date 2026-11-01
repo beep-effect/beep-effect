@@ -21,11 +21,11 @@ const $I = $RepoCliId.create("commands/Ci/Route.service");
  *
  * **Example** (Classify the working head against its merge base)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Classify the working head against its merge base"
  * import { ClassifyInput } from "@beep/repo-cli/commands/Ci"
  *
  * const input = ClassifyInput.make({ repoRoot: "/repo", base: "aaaa", head: "HEAD" })
- * console.log(input.head) // "HEAD"
+ * input.head // => "HEAD"
  * ```
  *
  * @category models
@@ -60,7 +60,7 @@ export interface ChangeClassifierShape {
  *
  * **Example** (Read the service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the service"
  * import { ChangeClassifier } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
@@ -68,7 +68,7 @@ export interface ChangeClassifierShape {
  *   const classifier = yield* ChangeClassifier
  *   return typeof classifier.classify
  * })
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category services
@@ -95,7 +95,7 @@ export interface VerificationRouteShape {
  *
  * **Example** (Read the route service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the route service"
  * import { VerificationRoute } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
@@ -103,7 +103,7 @@ export interface VerificationRouteShape {
  *   const route = yield* VerificationRoute
  *   return typeof route.plan
  * })
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category services
@@ -119,7 +119,7 @@ export class VerificationRoute extends Context.Service<VerificationRoute, Verifi
  *
  * **Example** (Capture both hosted workflows since the baseline start)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Capture both hosted workflows since the baseline start"
  * import { RouteCorpusCaptureOptions } from "@beep/repo-cli/commands/Ci"
  *
  * const options = RouteCorpusCaptureOptions.make({
@@ -128,7 +128,7 @@ export class VerificationRoute extends Context.Service<VerificationRoute, Verifi
  *   workflows: ["Check", "Heavy"],
  *   outDir: "goals/verification-route/research/corpus",
  * })
- * console.log(options.workflows.length) // 2
+ * options.workflows.length // => 2
  * ```
  *
  * @category models
@@ -153,7 +153,7 @@ export class RouteCorpusCaptureOptions extends S.Opaque<RouteCorpusCaptureOption
  *
  * **Example** (A loaded corpus with no runs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A loaded corpus with no runs"
  * import { RouteCorpusLoaded, RouteCorpusReceipt } from "@beep/repo-cli/commands/Ci"
  *
  * const loaded = RouteCorpusLoaded.make({
@@ -170,7 +170,7 @@ export class RouteCorpusCaptureOptions extends S.Opaque<RouteCorpusCaptureOption
  *   }),
  *   runs: [],
  * })
- * console.log(loaded.runs.length) // 0
+ * loaded.runs.length // => 0
  * ```
  *
  * @category models
@@ -207,7 +207,7 @@ export interface RouteCorpusShape {
  *
  * **Example** (Read the corpus service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the corpus service"
  * import { RouteCorpus } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
@@ -215,7 +215,7 @@ export interface RouteCorpusShape {
  *   const corpus = yield* RouteCorpus
  *   return typeof corpus.load
  * })
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category services
@@ -241,7 +241,7 @@ export interface RouteCensusShape {
  *
  * **Example** (Read the census service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the census service"
  * import { RouteCensusReader } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
@@ -249,7 +249,7 @@ export interface RouteCensusShape {
  *   const reader = yield* RouteCensusReader
  *   return typeof reader.census
  * })
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category services

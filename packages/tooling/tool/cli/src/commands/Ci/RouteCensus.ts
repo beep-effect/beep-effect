@@ -83,10 +83,10 @@ const shareOf = (part: number, whole: number): number => (whole === 0 ? 0 : part
  *
  * **Example** (Name the pre-push twin of a lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Name the pre-push twin of a lane"
  * import { prePushLaneId } from "@beep/repo-cli/commands/Ci/RouteCensus"
  *
- * console.log(prePushLaneId("lint")) // "quality:lint"
+ * prePushLaneId("lint") // => "quality:lint"
  * ```
  *
  * @param lane - The hosted lane.
@@ -102,12 +102,12 @@ export const prePushLaneId = (lane: CiLaneId): string => `${PRE_PUSH_LANE_PREFIX
  *
  * **Example** (Join a pre-push id to its lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Join a pre-push id to its lane"
  * import { ciLaneOfPrePushLaneId } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as O from "effect/Option"
  *
- * console.log(O.getOrNull(ciLaneOfPrePushLaneId("quality:check"))) // "check"
- * console.log(O.isNone(ciLaneOfPrePushLaneId("quality:cache-policy"))) // true
+ * O.getOrNull(ciLaneOfPrePushLaneId("quality:check")) // => "check"
+ * O.isNone(ciLaneOfPrePushLaneId("quality:cache-policy")) // => true
  * ```
  *
  * @param id - A pre-push lane id.
@@ -143,13 +143,13 @@ const LANE_BY_CONTEXT: HashMap.HashMap<string, CiLaneId> = HashMap.fromIterable(
  *
  * **Example** (Join hosted job names to lanes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Join hosted job names to lanes"
  * import { jobNameToLane } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as O from "effect/Option"
  *
- * console.log(O.getOrNull(jobNameToLane("Heavy / Check"))) // "check"
- * console.log(O.getOrNull(jobNameToLane("Lint (lint-a)"))) // "lint"
- * console.log(O.isNone(jobNameToLane("PR Size Label"))) // true
+ * O.getOrNull(jobNameToLane("Heavy / Check")) // => "check"
+ * O.getOrNull(jobNameToLane("Lint (lint-a)")) // => "lint"
+ * O.isNone(jobNameToLane("PR Size Label")) // => true
  * ```
  *
  * @param name - The hosted job name.
@@ -169,7 +169,7 @@ export const jobNameToLane = (name: string): O.Option<CiLaneId> =>
  *
  * **Example** (Measure a job)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Measure a job"
  * import { hostedJobCostMs } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import { HostedJob } from "@beep/repo-cli/commands/Ci"
  * import * as O from "effect/Option"
@@ -179,7 +179,7 @@ export const jobNameToLane = (name: string): O.Option<CiLaneId> =>
  *   startedAt: O.some("2026-10-28T00:00:00Z"),
  *   completedAt: O.some("2026-10-28T00:01:00Z"),
  * })
- * console.log(O.getOrNull(hostedJobCostMs(job))) // 60000
+ * O.getOrNull(hostedJobCostMs(job)) // => 60000
  * ```
  *
  * @param job - A captured job with optional start and completion timestamps.
@@ -200,7 +200,7 @@ export const hostedJobCostMs = (job: HostedJob): O.Option<number> =>
  *
  * **Example** (Keep only lane jobs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Keep only lane jobs"
  * import { hostedLaneJobs } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import { HostedJob, HostedRun } from "@beep/repo-cli/commands/Ci"
  *
@@ -214,7 +214,7 @@ export const hostedJobCostMs = (job: HostedJob): O.Option<number> =>
  *   attempt: 1,
  *   jobs: [HostedJob.make({ name: "Lint" }), HostedJob.make({ name: "PR Size Label" })],
  * })
- * console.log(hostedLaneJobs([run]).length) // 1
+ * hostedLaneJobs([run]).length // => 1
  * ```
  *
  * @param runs - Captured runs whose jobs are joined to lanes.
@@ -294,11 +294,11 @@ export const orderSelectedLanes: {
  *
  * **Example** (Build the digest effect)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the digest effect"
  * import { routeFootprintDigest } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(routeFootprintDigest)) // true
+ * Effect.isEffect(routeFootprintDigest) // => true
  * ```
  *
  * @category queries
@@ -329,11 +329,11 @@ export type RouteAffectedPackages = (base: string, head: string) => Effect.Effec
  *
  * **Example** (Read the production affected-packages function)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the production affected-packages function"
  * import { changeDetectorAffectedPackages } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(changeDetectorAffectedPackages)) // true
+ * Effect.isEffect(changeDetectorAffectedPackages) // => true
  * ```
  *
  * @category services
@@ -369,12 +369,12 @@ const selectedKinds = (
  *
  * **Example** (Build the route with no affected packages)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the route with no affected packages"
  * import { makeVerificationRoute } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  *
  * const route = makeVerificationRoute(() => Effect.succeed([]))
- * console.log(Effect.isEffect(route)) // true
+ * Effect.isEffect(route) // => true
  * ```
  *
  * @param affected - Computes the affected packages of the plan's range.
@@ -413,12 +413,12 @@ export const makeVerificationRoute = Effect.fn("VerificationRoute.make")(functio
  *
  * **Example** (Build a route layer with a stubbed affected set)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a route layer with a stubbed affected set"
  * import { verificationRouteLayer } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  * import * as Layer from "effect/Layer"
  *
- * console.log(Layer.isLayer(verificationRouteLayer(() => Effect.succeed(["@beep/repo-cli"])))) // true
+ * Layer.isLayer(verificationRouteLayer(() => Effect.succeed(["@beep/repo-cli"]))) // => true
  * ```
  *
  * @param affected - Computes the affected packages of the plan's range.
@@ -441,11 +441,11 @@ export const verificationRouteLayer = (
  *
  * **Example** (Reference the production layer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reference the production layer"
  * import { VerificationRouteLive } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Layer from "effect/Layer"
  *
- * console.log(Layer.isLayer(VerificationRouteLive)) // true
+ * Layer.isLayer(VerificationRouteLive) // => true
  * ```
  *
  * @category services
@@ -468,10 +468,10 @@ export const VerificationRouteLive: Layer.Layer<
  *
  * **Example** (Read a batch-check report)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read a batch-check report"
  * import { missingFromBatchCheck } from "@beep/repo-cli/commands/Ci/RouteCensus"
  *
- * console.log(missingFromBatchCheck(["aa", "bb"], "aa commit 250\nbb missing\n")) // ["bb"]
+ * missingFromBatchCheck(["aa", "bb"], "aa commit 250\nbb missing\n") // => ["bb"]
  * ```
  *
  * @param shas - The shas that were checked, in order.
@@ -528,7 +528,7 @@ export interface RouteHeadFetchShape {
  *
  * **Example** (Nothing to fetch for no heads)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Nothing to fetch for no heads"
  * import { ensureRouteHeads } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  *
@@ -537,7 +537,7 @@ export interface RouteHeadFetchShape {
  *   fetchPullHeads: Effect.void,
  *   missingCommits: (shas) => Effect.succeed(shas),
  * })
- * console.log(Effect.isEffect(ensure([]))) // true
+ * Effect.isEffect(ensure([])) // => true
  * ```
  *
  * @param git - The fetch and object-store primitives.
@@ -596,7 +596,7 @@ export interface RouteGitShape {
  *
  * **Example** (Read the service)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the service"
  * import { RouteGit } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  *
@@ -604,7 +604,7 @@ export interface RouteGitShape {
  *   const git = yield* RouteGit
  *   return git.repoRoot
  * })
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category services
@@ -626,11 +626,11 @@ export class RouteGit extends Context.Service<RouteGit, RouteGitShape>()($I`Rout
  *
  * **Example** (Build the git reads for a checkout)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the git reads for a checkout"
  * import { makeRouteGit } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(makeRouteGit("/repo"))) // true
+ * Effect.isEffect(makeRouteGit("/repo")) // => true
  * ```
  *
  * @param repoRoot - The checkout git runs in.
@@ -714,11 +714,11 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
  *
  * **Example** (Build the git layer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the git layer"
  * import { routeGitLayer } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Layer from "effect/Layer"
  *
- * console.log(Layer.isLayer(routeGitLayer("/repo"))) // true
+ * Layer.isLayer(routeGitLayer("/repo")) // => true
  * ```
  *
  * @param repoRoot - The checkout git runs in.
@@ -755,12 +755,12 @@ const medianMs = (values: ReadonlyArray<number>): O.Option<number> => {
  *
  * **Example** (Cost every lane over an empty corpus)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Cost every lane over an empty corpus"
  * import { routeLaneCosts } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as A from "effect/Array"
  *
  * const costs = routeLaneCosts([])
- * console.log(A.every(costs, (cost) => cost.basis !== "hosted-median")) // true
+ * A.every(costs, (cost) => cost.basis !== "hosted-median") // => true
  * ```
  *
  * @param runs - The corpus runs whose job durations back the hosted median.
@@ -933,11 +933,11 @@ const NEWEST_FIRST: Order.Order<HostedRun> = Order.mapInput(
  *
  * **Example** (Reference the reader constructor)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reference the reader constructor"
  * import { makeRouteCensusReader } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(makeRouteCensusReader)) // true
+ * Effect.isEffect(makeRouteCensusReader) // => true
  * ```
  *
  * @category constructors
@@ -1008,7 +1008,11 @@ export const makeRouteCensusReader: Effect.Effect<
   const replay = Effect.fn("RouteCensusReader.replay")(function* (corpus: RouteCorpusLoaded) {
     const heads = yield* headEvidence(corpus);
     const mainRuns = A.filter(corpus.runs, isMainPushRun);
-    const mainShasNewestFirst = A.dedupe(A.map(A.sort(mainRuns, NEWEST_FIRST), (run) => run.headSha));
+    // Main commits the checkout lacks are fetched by sha; one that stays missing
+    // cannot be an ancestor candidate, so its base evidence reads as unknown.
+    const mainShas = A.dedupe(A.map(A.sort(mainRuns, NEWEST_FIRST), (run) => run.headSha));
+    const missingMain = HashSet.fromIterable(yield* git.ensureHeads(mainShas));
+    const mainShasNewestFirst = A.filter(mainShas, (sha) => !HashSet.has(missingMain, sha));
     const mainRunsAt = (sha: string): ReadonlyArray<HostedRun> =>
       A.filter(mainRuns, (run) => Str.Equivalence(run.headSha, sha));
 
@@ -1083,11 +1087,11 @@ export const makeRouteCensusReader: Effect.Effect<
  *
  * **Example** (Reference the reader layer)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Reference the reader layer"
  * import { RouteCensusReaderLive } from "@beep/repo-cli/commands/Ci/RouteCensus"
  * import * as Layer from "effect/Layer"
  *
- * console.log(Layer.isLayer(RouteCensusReaderLive)) // true
+ * Layer.isLayer(RouteCensusReaderLive) // => true
  * ```
  *
  * @category services

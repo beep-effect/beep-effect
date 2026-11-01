@@ -54,12 +54,12 @@ const EXTERNAL_ADVISORY =
  *
  * **Example** (Every lane has a row that includes unknown)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Every lane has a row that includes unknown"
  * import { CI_LANE_ID_VALUES, ROUTE_FOOTPRINTS } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
  *
  * const total = A.every(CI_LANE_ID_VALUES, (lane) => A.contains(ROUTE_FOOTPRINTS[lane].kinds, "unknown"))
- * console.log(total) // true
+ * total // => true
  * ```
  *
  * @category constructors
@@ -97,10 +97,10 @@ export const ROUTE_FOOTPRINTS = {
  *
  * **Example** (One footprint per lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="One footprint per lane"
  * import { CI_LANE_ID_VALUES, routeFootprintList } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(routeFootprintList().length === CI_LANE_ID_VALUES.length) // true
+ * routeFootprintList().length === CI_LANE_ID_VALUES.length // => true
  * ```
  *
  * @returns One {@link CheckFootprint} per lane, in `CI_LANE_ID_VALUES` order.
@@ -116,10 +116,10 @@ export const routeFootprintList = (): ReadonlyArray<CheckFootprint> =>
  *
  * **Example** (The canonical text is deterministic)
  *
- * ```ts
+ * ```ts import.meta.vitest name="The canonical text is deterministic"
  * import { routeFootprintCanonicalJson } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(routeFootprintCanonicalJson() === routeFootprintCanonicalJson()) // true
+ * routeFootprintCanonicalJson() === routeFootprintCanonicalJson() // => true
  * ```
  *
  * @returns The minified JSON text the footprint digest is computed over.
@@ -152,11 +152,11 @@ const externalLanes = (): HashMap.HashMap<CiLaneId, HashSet.HashSet<ChangeAtomKi
  *
  * **Example** (Unknown reaches every lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Unknown reaches every lane"
  * import { CI_LANE_ID_VALUES, lanesAffectedBy } from "@beep/repo-cli/commands/Ci"
  * import * as HashSet from "effect/HashSet"
  *
- * console.log(HashSet.size(lanesAffectedBy("unknown")) === CI_LANE_ID_VALUES.length) // true
+ * HashSet.size(lanesAffectedBy("unknown")) === CI_LANE_ID_VALUES.length // => true
  * ```
  *
  * @param kind - The atom kind to look up.
@@ -183,11 +183,11 @@ export const lanesAffectedBy = (kind: ChangeAtomKind): HashSet.HashSet<CiLaneId>
  *
  * **Example** (No atoms require only the external lanes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="No atoms require only the external lanes"
  * import { requiredLanes } from "@beep/repo-cli/commands/Ci"
  * import * as HashMap from "effect/HashMap"
  *
- * console.log(HashMap.has(requiredLanes([]), "security")) // true
+ * HashMap.has(requiredLanes([]), "security") // => true
  * ```
  *
  * @param atoms - The classified change.
@@ -217,10 +217,10 @@ export const requiredLanes = (
  *
  * **Example** (An empty change skips every non-external lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="An empty change skips every non-external lane"
  * import { CI_LANE_ID_VALUES, requiredLanes, skippedLanes } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(skippedLanes(requiredLanes([])).length === CI_LANE_ID_VALUES.length - 1) // true
+ * skippedLanes(requiredLanes([])).length === CI_LANE_ID_VALUES.length - 1 // => true
  * ```
  *
  * @param required - The output of {@link requiredLanes}.
@@ -237,10 +237,10 @@ export const skippedLanes = (
  *
  * **Example** (Security is the external lane)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Security is the external lane"
  * import { routeFootprintRecord } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(routeFootprintRecord().security.external) // true
+ * routeFootprintRecord().security.external // => true
  * ```
  *
  * @returns The same rows as {@link ROUTE_FOOTPRINTS}, typed as a plain record.

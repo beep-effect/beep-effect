@@ -95,6 +95,10 @@ const gitLayer = (
         );
       }),
       isAncestor: Effect.fn("RouteGit.isAncestor")(function* (ancestor, descendant) {
+        // Like git: a commit missing from the object store fails the check.
+        if (A.contains(unresolved, ancestor)) {
+          return yield* RouteError.new("git", `git merge-base --is-ancestor ${ancestor} ${descendant} exited 128.`);
+        }
         return A.some(ancestors, ([from, to]) => from === ancestor && to === descendant);
       }),
       ensureHeads: Effect.fn("RouteGit.ensureHeads")(function* (shas) {
@@ -459,7 +463,11 @@ describe("route replay", () => {
         gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
       );
 
-      expect(yield* Ref.get(ensured)).toEqual([["a1", "b2", "c3"]]);
+      // Pull-request heads first, then the main candidates for base evidence.
+      expect(yield* Ref.get(ensured)).toEqual([
+        ["a1", "b2", "c3"],
+        ["m2", "m1", "m0"],
+      ]);
       expect(replay.recall).toBe(1);
       expect(replay.skippedLaneRuns).toBe(0);
       expect(replay.skippedReds).toBe(0);
@@ -506,6 +514,27 @@ describe("route replay", () => {
         expect(replay.recall).toBe(1 - 3 / (3 * SKIPPED_WITHOUT_ATOMS));
         expect(replay.corpusSha256).toBe("c0ffee");
       })
+  );
+
+  it.effect("skips a main candidate that stays missing instead of failing the replay", () =>
+    Effect.gen(function* () {
+      const runs = yield* decodeRuns(replayRunsJson);
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      // m2, the newest main run, cannot be fetched; asking git about it would fail.
+      const replay = yield* runReplay(
+        runs,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured, ["m2"])
+      );
+
+      expect(
+        A.map(replay.perHead, (head) => [head.headSha, head.mergeBase, head.skippedReds, head.baseUnknown])
+      ).toEqual([
+        ["a1", "m1", ["check"], false],
+        ["b2", "m9", ["sast"], false],
+        ["c3", "zz", ["lint"], true],
+      ]);
+    })
   );
 
   it.effect("selects every lane for an unresolved head and marks its base unknown", () =>

@@ -54,7 +54,7 @@ const DAY3_RUN = 18890000108;
 const PR_HEAD = "a1e7f3c5b9d2e4f6a8c0b1d3e5f7a9c2b4d6e8f0";
 const MAIN_HEAD = "b2f8c4d6e8a0b1c3d5e7f9a2b4c6d8e0f1a3b5c7";
 const LIST_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,updatedAt,headBranch,headSha,attempt";
-const VIEW_FIELDS = "databaseId,workflowName,event,conclusion,createdAt,headBranch,headSha,attempt,jobs";
+const VIEW_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,headBranch,headSha,attempt,jobs";
 
 type Calls = Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>;
 
@@ -115,7 +115,7 @@ const syntheticList = (runId: number): string =>
   `[{"attempt":1,"databaseId":${runId},"event":"pull_request","headBranch":"feat/checkpoint","status":"completed"}]`;
 
 const syntheticView = (runId: number, day: string): string =>
-  `{"attempt":1,"conclusion":"success","createdAt":"${day}T08:00:00Z","databaseId":${runId},"event":"pull_request","headBranch":"feat/checkpoint","headSha":"f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9","jobs":[],"workflowName":"Check"}`;
+  `{"attempt":1,"conclusion":"success","createdAt":"${day}T08:00:00Z","databaseId":${runId},"event":"pull_request","status":"completed","headBranch":"feat/checkpoint","headSha":"f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9","jobs":[],"workflowName":"Check"}`;
 
 // The recorded days plus two synthetic ones: 2026-10-29 holds DAY2_RUN, and
 // 2026-10-30 holds DAY3_RUN, whose view GitHub refuses while `refuseDay3` holds.
@@ -559,6 +559,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("route corpus capture an
       const third = yield* (yield* makeRouteCorpus(rerun)).capture(captureOptions(root));
       expect(viewedRunIds(yield* Ref.get(calls))).toEqual([`${PR_RUN}`]);
       expect(third.runs).toBe(4);
+    })
+  );
+
+  it.effect("does not pin a run whose view shows a newer, unfinished attempt", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-corpus-" }));
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-10-31T00:00:00Z").pipe(DateTime.toEpochMillis));
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const runGh = yield* fixtureRunner(calls);
+      // A rerun starts between the list (attempt 1 finished) and the view.
+      const racing: RouteGhRunner = (args, cwd) =>
+        args[1] === "view" && args[2] === `${PR_RUN}`
+          ? runGh(args, cwd).pipe(
+              Effect.map(Str.replace(/^ {2}"status": "completed"/mu, '  "status": "in_progress"')),
+              Effect.map(Str.replace(/^ {2}"attempt": 1/mu, '  "attempt": 2'))
+            )
+          : runGh(args, cwd);
+
+      const raced = yield* (yield* makeRouteCorpus(racing)).capture(captureOptions(root));
+      expect(raced.runs).toBe(3);
+
+      // The day stayed open, so the next capture fetches that run again.
+      yield* Ref.set(calls, []);
+      const resumed = yield* (yield* makeRouteCorpus(runGh)).capture(captureOptions(root));
+      expect(viewedRunIds(yield* Ref.get(calls))).toContain(`${PR_RUN}`);
+      expect(resumed.runs).toBe(4);
     })
   );
 

@@ -62,10 +62,10 @@ const $I = $RepoCliId.create("commands/Ci/RouteCorpus");
  *
  * **Example** (Read the cap)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the cap"
  * import { ROUTE_CORPUS_LIST_CAP } from "@beep/repo-cli/commands/Ci/RouteCorpus"
  *
- * console.log(ROUTE_CORPUS_LIST_CAP) // 1000
+ * ROUTE_CORPUS_LIST_CAP // => 1000
  * ```
  *
  * @category constants
@@ -83,10 +83,10 @@ export const ROUTE_CORPUS_LIST_CAP = 1000;
  *
  * **Example** (Locate a legacy corpus file)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Locate a legacy corpus file"
  * import { ROUTE_CORPUS_FILE } from "@beep/repo-cli/commands/Ci/RouteCorpus"
  *
- * console.log(`research/corpus/${ROUTE_CORPUS_FILE}`) // "research/corpus/hosted-runs.ndjson.gz"
+ * `research/corpus/${ROUTE_CORPUS_FILE}` // => "research/corpus/hosted-runs.ndjson.gz"
  * ```
  *
  * @category constants
@@ -99,10 +99,10 @@ export const ROUTE_CORPUS_FILE = "hosted-runs.ndjson.gz";
  *
  * **Example** (Locate the receipt to load)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Locate the receipt to load"
  * import { ROUTE_CORPUS_RECEIPT_FILE } from "@beep/repo-cli/commands/Ci/RouteCorpus"
  *
- * console.log(`research/corpus/${ROUTE_CORPUS_RECEIPT_FILE}`) // "research/corpus/RECEIPTS.json"
+ * `research/corpus/${ROUTE_CORPUS_RECEIPT_FILE}` // => "research/corpus/RECEIPTS.json"
  * ```
  *
  * @category constants
@@ -115,7 +115,7 @@ const RATE_LIMIT_MAX_WAIT = Duration.minutes(60);
 const RATE_LIMIT_MARGIN_MS = 1000;
 const GH_RATE_LIMIT_PATTERN = /rate limit exceeded|secondary rate limit/iu;
 const GH_LIST_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,updatedAt,headBranch,headSha,attempt";
-const GH_VIEW_FIELDS = "databaseId,workflowName,event,conclusion,createdAt,headBranch,headSha,attempt,jobs";
+const GH_VIEW_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,headBranch,headSha,attempt,jobs";
 
 /**
  * Runs one `gh` command in a checkout and yields its stdout.
@@ -131,12 +131,12 @@ const GH_VIEW_FIELDS = "databaseId,workflowName,event,conclusion,createdAt,headB
  *
  * **Example** (A runner that answers every list with no runs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A runner that answers every list with no runs"
  * import type { RouteGhRunner } from "@beep/repo-cli/commands/Ci/RouteCorpus"
  * import * as Effect from "effect/Effect"
  *
  * const runGh: RouteGhRunner = (args) => Effect.succeed(args[1] === "list" ? "[]" : "{}")
- * console.log(typeof runGh) // "function"
+ * typeof runGh // => "function"
  * ```
  *
  * @category services
@@ -160,14 +160,14 @@ export type RouteGhRunner = (
  *
  * **Example** (Refuse a call for the rate limit)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Refuse a call for the rate limit"
  * import { RouteGhRateLimited } from "@beep/repo-cli/commands/Ci/RouteCorpus"
  *
  * const refused = RouteGhRateLimited.make({
  *   command: "gh run view 1 --json jobs",
  *   output: "HTTP 403: API rate limit exceeded for user ID 1.",
  * })
- * console.log(refused._tag) // "RouteGhRateLimited"
+ * refused._tag // => "RouteGhRateLimited"
  * ```
  *
  * @category errors
@@ -226,6 +226,7 @@ class GhRunView extends S.Opaque<GhRunView, { readonly brand: unique symbol }>()
     databaseId: S.Int,
     workflowName: S.NonEmptyString,
     event: S.NonEmptyString,
+    status: S.String,
     conclusion: GhText,
     createdAt: S.NonEmptyString,
     headBranch: S.String,
@@ -448,12 +449,12 @@ type CapturePlan = {
  *
  * **Example** (Build the corpus over a runner that sees no runs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the corpus over a runner that sees no runs"
  * import { makeRouteCorpus } from "@beep/repo-cli/commands/Ci/RouteCorpus"
  * import * as Effect from "effect/Effect"
  *
  * const corpus = makeRouteCorpus(() => Effect.succeed("[]"))
- * console.log(Effect.isEffect(corpus)) // true
+ * Effect.isEffect(corpus) // => true
  * ```
  *
  * @param runGh - Runs one `gh` argument vector in a checkout and yields stdout.
@@ -600,7 +601,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   const fetchRun = Effect.fn("RouteCorpus.fetchRun")(function* (
     repoRoot: string,
     runId: number
-  ): Effect.fn.Return<HostedRun, RouteError> {
+  ): Effect.fn.Return<O.Option<HostedRun>, RouteError> {
     const text = yield* callGh(`gh run view ${runId}`, ["run", "view", `${runId}`, "--json", GH_VIEW_FIELDS], repoRoot);
     const view = yield* decodeGhRunView(text).pipe(
       Effect.mapError(RouteError.mapError("corpus-fetch", `gh run view ${runId} returned an unreadable payload.`))
@@ -608,7 +609,9 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     if (view.databaseId !== runId) {
       return yield* RouteError.new("corpus-fetch", `gh run view ${runId} answered for run ${view.databaseId}.`);
     }
-    return hostedRunOf(view);
+    // A rerun can start between the list and the view: the view then shows the
+    // newer, unfinished attempt, which is not evidence yet.
+    return view.status === "completed" ? O.some(hostedRunOf(view)) : O.none();
   });
 
   // Where this capture starts and what the receipt already covers. A receipt
@@ -761,10 +764,15 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         A.fromIterable,
         A.sort(Order.Number)
       );
-      const fetched = yield* Effect.forEach(pending, (runId) => fetchRun(options.repoRoot, runId), {
+      const viewed = yield* Effect.forEach(pending, (runId) => fetchRun(options.repoRoot, runId), {
         concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
       });
-      const open = state.open && isLaterDay(DateTime.formatIsoDateUtc(now), day) && A.every(eligible, isFinishedRun);
+      const fetched = A.getSomes(viewed);
+      const open =
+        state.open &&
+        isLaterDay(DateTime.formatIsoDateUtc(now), day) &&
+        A.every(eligible, isFinishedRun) &&
+        A.length(fetched) === A.length(viewed);
       yield* Effect.logDebug("route corpus day captured").pipe(
         Effect.annotateLogs({ day, listed: A.length(listed), fetched: A.length(fetched), complete: open })
       );
@@ -825,7 +833,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
  *
  * **Example** (Load a pinned corpus)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Load a pinned corpus"
  * import { RouteCorpusLive } from "@beep/repo-cli/commands/Ci/RouteCorpus"
  * import { RouteCorpus } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
@@ -834,7 +842,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
  *   const corpus = yield* RouteCorpus
  *   return yield* corpus.load("goals/verification-route/research/corpus/RECEIPTS.json")
  * }).pipe(Effect.provide(RouteCorpusLive))
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category layers

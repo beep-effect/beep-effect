@@ -68,10 +68,10 @@ const $I = $RepoCliId.create("commands/Ci/RouteClassify");
  *
  * **Example** (Guard a deletion)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Guard a deletion"
  * import { ChangedPathStatus } from "@beep/repo-cli/commands/Ci/RouteClassify"
  *
- * console.log(ChangedPathStatus.is.D("D")) // true
+ * ChangedPathStatus.is.D("D") // => true
  * ```
  *
  * @category schemas
@@ -96,11 +96,11 @@ export type ChangedPathStatus = typeof ChangedPathStatus.Type;
  *
  * **Example** (A modified markdown file)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A modified markdown file"
  * import { ChangedPathEntry } from "@beep/repo-cli/commands/Ci/RouteClassify"
  *
  * const entry = ChangedPathEntry.make({ path: "docs/guide.md", status: "M" })
- * console.log(entry.status) // "M"
+ * entry.status // => "M"
  * ```
  *
  * @category models
@@ -130,7 +130,7 @@ export class ChangedPathEntry extends S.Opaque<ChangedPathEntry, { readonly bran
  *
  * **Example** (A diff that touches the lockfile)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A diff that touches the lockfile"
  * import { ChangedPathEntry, ClassifyDiff } from "@beep/repo-cli/commands/Ci/RouteClassify"
  *
  * const diff = ClassifyDiff.make({
@@ -138,7 +138,7 @@ export class ChangedPathEntry extends S.Opaque<ChangedPathEntry, { readonly bran
  *   head: "bbbb",
  *   entries: [ChangedPathEntry.make({ path: "bun.lock", status: "M" })],
  * })
- * console.log(diff.entries.length) // 1
+ * diff.entries.length // => 1
  * ```
  *
  * @category models
@@ -163,13 +163,13 @@ export class ClassifyDiff extends S.Opaque<ClassifyDiff, { readonly brand: uniqu
  *
  * **Example** (A read source over an empty tree)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A read source over an empty tree"
  * import type { RouteReadAt } from "@beep/repo-cli/commands/Ci/RouteClassify"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const empty: RouteReadAt = () => Effect.succeed(O.none())
- * console.log(Effect.isEffect(empty("HEAD", "package.json"))) // true
+ * Effect.isEffect(empty("HEAD", "package.json")) // => true
  * ```
  *
  * @category type-level
@@ -243,7 +243,7 @@ const nameStatusRecord = (
  *
  * **Example** (Split a rename)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Split a rename"
  * import { changedPathEntriesFromNameStatus } from "@beep/repo-cli/commands/Ci/RouteClassify"
  * import * as A from "effect/Array"
  * import * as O from "effect/Option"
@@ -378,12 +378,12 @@ const PATH_RULES: ReadonlyArray<readonly [ChangeAtomKind, P.Predicate<PathFacts>
  *
  * **Example** (Place a source module and a packet document)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Place a source module and a packet document"
  * import { pathAtomKind } from "@beep/repo-cli/commands/Ci/RouteClassify"
  * import * as O from "effect/Option"
  *
- * console.log(pathAtomKind("packages/app/src/index.ts", O.some("packages/app"))) // "src:module"
- * console.log(pathAtomKind("goals/route/SPEC.md", O.none())) // "packet"
+ * pathAtomKind("packages/app/src/index.ts", O.some("packages/app")) // => "src:module"
+ * pathAtomKind("goals/route/SPEC.md", O.none()) // => "packet"
  * ```
  *
  * @category utilities
@@ -843,7 +843,7 @@ const shortSha = Str.slice(0, 12);
  *
  * **Example** (Classify a docs edit without git)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Classify a docs edit without git"
  * import { ChangedPathEntry, ClassifyDiff, classifyChangedPaths } from "@beep/repo-cli/commands/Ci/RouteClassify"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
@@ -854,7 +854,7 @@ const shortSha = Str.slice(0, 12);
  *   entries: [ChangedPathEntry.make({ path: "docs/guide.md", status: "M" })],
  * })
  * const program = classifyChangedPaths(diff, () => Effect.succeed(O.none()))
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @category utilities
@@ -952,11 +952,11 @@ const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(funct
  *
  * **Example** (Provide the live classifier)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Provide the live classifier"
  * import { ChangeClassifierLive } from "@beep/repo-cli/commands/Ci/RouteClassify"
  * import * as Layer from "effect/Layer"
  *
- * console.log(Layer.isLayer(ChangeClassifierLive)) // true
+ * Layer.isLayer(ChangeClassifierLive) // => true
  * ```
  *
  * @category layers
