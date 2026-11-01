@@ -1,0 +1,96 @@
+[
+  {
+    "runId": 301,
+    "workflow": "Check",
+    "event": "pull_request",
+    "headBranch": "feat/base-green",
+    "headSha": "a1",
+    "createdAt": "2026-10-02T00:00:00Z",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [
+      { "name": "Heavy / Check", "conclusion": "failure" },
+      { "name": "Security", "conclusion": "failure" },
+      { "name": "Lint", "conclusion": "success" },
+      { "name": "PR Size Label", "conclusion": "failure" }
+    ]
+  },
+  {
+    "runId": 302,
+    "workflow": "Check",
+    "event": "pull_request",
+    "headBranch": "feat/ancestor-base",
+    "headSha": "b2",
+    "createdAt": "2026-10-04T00:00:00Z",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [
+      { "name": "SAST", "conclusion": "failure" },
+      { "name": "Codegen Drift", "conclusion": "failure" }
+    ]
+  },
+  {
+    "runId": 303,
+    "workflow": "Check",
+    "event": "pull_request",
+    "headBranch": "feat/base-unknown",
+    "headSha": "c3",
+    "createdAt": "2026-10-05T00:00:00Z",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [{ "name": "Lint (lint-a)", "conclusion": "failure" }]
+  },
+  {
+    "runId": 401,
+    "workflow": "Check",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "m1",
+    "createdAt": "2026-10-01T00:00:00Z",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [
+      { "name": "Heavy / Check", "conclusion": "success" },
+      { "name": "Security", "conclusion": "success" }
+    ]
+  },
+  {
+    "runId": 402,
+    "workflow": "Check",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "m0",
+    "createdAt": "2026-09-30T00:00:00Z",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [
+      { "name": "SAST", "conclusion": "success" },
+      { "name": "Codegen Drift", "conclusion": "failure" }
+    ]
+  },
+  {
+    "runId": 403,
+    "workflow": "Check",
+    "event": "push",
+    "headBranch": "main",
+    "headSha": "m2",
+    "createdAt": "2026-10-03T00:00:00Z",
+    "conclusion": "failure",
+    "attempt": 1,
+    "jobs": [
+      { "name": "SAST", "conclusion": "failure" },
+      { "name": "Codegen Drift", "conclusion": "success" }
+    ]
+  },
+  {
+    "runId": 404,
+    "workflow": "Check",
+    "event": "push",
+    "headBranch": "feat/not-main",
+    "headSha": "m0",
+    "createdAt": "2026-10-06T00:00:00Z",
+    "conclusion": "success",
+    "attempt": 1,
+    "jobs": [{ "name": "Codegen Drift", "conclusion": "success" }]
+  }
+]
