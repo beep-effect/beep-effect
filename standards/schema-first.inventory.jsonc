@@ -1980,32 +1980,6 @@
       "reason": "Hot-path finding record constructed as plain literals by every inventory rule; S.Struct keeps that construction allocation-light while the annotated schema still owns the shape. Values are aggregated in-process and never decoded from IO."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
-      "symbol": "JSDocMigrateBlockStats",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Derived per-block counters computed in the same corpus walk; plain-literal construction in the hot loop with the annotated S.Struct owning the shape. Never decoded from IO."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
-      "symbol": "JSDocMigrateRewriteData",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Structural parameter contract of the pure block rewriter; its last caller, the effected port runner DocsMigrate.ts (deleted with the lab at the effected-promotion close), built it directly from in-memory extraction results, so this struct is never decoded itself."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",
-      "symbol": "jsdocMigrateConservationFindings",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 438,
-      "owner": "@beep/repo-cli",
-      "reason": "Inline input pairs in-memory block bytes with token allowances the rewriter computed in the same call; nothing crosses an IO boundary and the findings are transient strings consumed by quarantine reporting."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
       "symbol": "ReviewerAnnotation",
       "kind": "plain-data-schema-class",
