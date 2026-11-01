@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "agent-observability-rebuild",
+    "title": "Agent observability: coverage, evidence, and improvement",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/agent-observability-foundation",
+        "goals/harness-telemetry-enrollment",
+        "goals/agent-outcome-experiments"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-27",
+    "updated": "2026-10-27"
+  }
+}

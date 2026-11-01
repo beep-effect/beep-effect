@@ -1,0 +1,52 @@
+{
+  "recordedAt": "2026-10-29T04:34:58.341379+00:00",
+  "scope": "Bounded observation install plan and actual bundled user-service installation",
+  "result": "scoped CLI and installed-unit verification passed; full acceptance incomplete",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "b4220e80d0dbe2b41982228d2a6379dc0343acf0bc52e351130fb41bbea72762",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts": "bddd3e906afe6cf7a49a2526af5990c76e40b22ec8c05bd4a935803bd7cfce1c",
+    "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts": "624f551e0f459ec2417a480b9c8ad68703b4b89f49cead53614667ac614df901",
+    "goals/agent-observability-foundation/ops/managed-owner-typecheck.json": "91a2dcc4c1507be4fd6a77f8e25dd91012d2861e5c33c1af8e23cd1f3b694e31",
+    "goals/agent-observability-foundation/ops/verify-observation-deployment.py": "faa491d415a40dd06ef99bbda68ab1ff16c35367156061e23072ab4c14f5eaef"
+  },
+  "scopedCli": {
+    "typechecks": ["tsgo --noEmit", "tsrs --noEmit"],
+    "config": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+    "tests": 28,
+    "testFiles": 4,
+    "lint": "three changed TypeScript files passed Biome",
+    "log": "/tmp/foundation-observation-deployment-cli-final.log",
+    "resourceGuard": "goals/agent-observability-foundation/ops/observation-deployment-cli-resource-guard.json",
+    "broadCliGatePassed": false
+  },
+  "installedProof": "goals/agent-observability-foundation/ops/observation-deployment-installed-verification.json",
+  "proofSummary": {
+    "registeredPlanCommand": true,
+    "bundledEntrypoint": true,
+    "unitsValidatedAndActuallyInstalled": true,
+    "startsPaused": true,
+    "privateRoutesDenied": true,
+    "listenerOwnedByInstalledFrontend": true,
+    "changedBundleRefusedBeforeJournalMutation": true,
+    "unrelatedArchiveCredentialsRemoved": true,
+    "sharedCaddyAutosaveUnchangedInFinalProof": true,
+    "frontendAutosaveDisabled": true,
+    "ownedProcessesStopped": 2,
+    "ownedUnitFilesRemoved": 2,
+    "deliberateMemoryExhaustion": false
+  },
+  "initialFailures": [
+    "Unmapped encoder error channel at CLI boundary",
+    "WorkingDirectory and EnvironmentFile incorrectly used executable quoting",
+    "Default Caddy persistence changed its shared autosave; exact owned output preserved and removed, persistence disabled and paths isolated"
+  ],
+  "autosaveRepair": "goals/agent-observability-foundation/ops/deployment-autosave-repair.json",
+  "remaining": [
+    "Actual collector/Phoenix bounded route canary and rollback",
+    "Production source/storage/backup and external health ownership",
+    "Broad CLI gate, review panel, repository/hosted/merge/closeout"
+  ]
+}

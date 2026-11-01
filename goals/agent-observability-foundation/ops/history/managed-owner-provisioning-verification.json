@@ -1,0 +1,67 @@
+{
+  "scope": "Explicit independent claim initialization and durable managed-owner enrollment through registered CLI commands",
+  "recordedAt": "2026-10-29T03:22:12.731112+00:00",
+  "result": "focused and actual-command synthetic qualification passed; full acceptance incomplete",
+  "syntheticOnly": true,
+  "actualProviderSessions": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "739f7c555d0deff5ee7bec7b7459cb97d677899caeb673ed0d2071c6af4d7ff9",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts": "63194104a47fc1d90aaa74e7280d4da1a163cca036ca071618941d4697428ec1",
+    "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts": "237bbe17f455935c099260dedbdc5a8b440c5402336fa738d8add54f26659c8d",
+    "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts": "0375a9ee94ad991bbd2e27bb1ce915736694e451891bca062e79222a3e3f6ab4",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "8469956b9dd8320f07f92484b100dae66ed59f38c90a8db82c7ad3bff403e261",
+    "goals/agent-observability-foundation/ops/managed-owner-typecheck.json": "73d22eb148dae90af3be6e0f08882426fb5dd6e7cc9585453543baf444416504"
+  },
+  "focusedCliVerification": {
+    "result": "passed",
+    "typecheckConfig": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+    "typecheckTools": ["tsgo --noEmit", "tsrs --noEmit"],
+    "lint": "biome check four changed CLI source/test files",
+    "testFiles": 2,
+    "tests": 18,
+    "log": "/tmp/foundation-owner-provision-final.log",
+    "runtimeSeconds": 9.623,
+    "memoryPeakGiB": 1.8,
+    "swapLimitBytes": 0
+  },
+  "workerProof": {
+    "result": "passed",
+    "receipt": "goals/agent-observability-foundation/ops/managed-owner-provisioning-worker-verification.json",
+    "rawEvidence": "/tmp/obs-entry-x5bsjncy/evidence.json",
+    "ownedProcessesStopped": 10,
+    "committedLaunchFacts": 16,
+    "managedCommand": {
+      "actualServeCommand": true,
+      "actualRecoveryCommand": true,
+      "actualInitializeClaimsCommand": true,
+      "actualEnrollmentCommand": true,
+      "actualChildLaunches": 1,
+      "actualProviderSessions": 0,
+      "localCaptureWhileCollectorPaused": true,
+      "childStoppedBeforeFinished": true,
+      "facts": 4,
+      "recoveredAfterOwnerExitAndCollectorRestart": true,
+      "independentClaimRefusedRelaunch": true,
+      "recoveryChildLaunches": 0,
+      "backendVisibilityRemainsUnknown": true,
+      "processLivenessRemainsUnknown": true,
+      "privateMetadataAbsent": true
+    }
+  },
+  "bounds": [
+    "Private 32 KiB strict input and explicit identity/epoch",
+    "Existing or partial stores/targets preserved",
+    "Missing/consumed claim refusal",
+    "Exclusive file creation and file/directory sync before acknowledgment",
+    "No process launch or collector request during setup"
+  ],
+  "remaining": [
+    "Independent population adapter with explicit cohort/window semantics",
+    "Operational claim-store backup/recovery ownership proof",
+    "Broad CLI verification and final review panel",
+    "Real CLI/desktop bounded canaries, deployment, repository delivery and full SPEC acceptance"
+  ]
+}

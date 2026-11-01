@@ -1,0 +1,66 @@
+{
+  "base": "92db2438c19425bc55ee629673eadebaed43aed4",
+  "metadataUnchanged": true,
+  "reviewSubjects": ["//", "@beep/repo-ai-metrics"],
+  "projectionChanges": [
+    {
+      "computation": "//#lint:policy-fingerprint:goals-doctor",
+      "changedFields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:goals-index",
+      "changedFields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:knowledge",
+      "changedFields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:lint-deprecated-apis",
+      "changedFields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:lint-roadmap-refs",
+      "changedFields": ["configuration"]
+    },
+    {
+      "computation": "//#lint:policy-fingerprint:quality",
+      "changedFields": ["configuration"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#audit",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#build",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#check",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#coverage",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#lint:deprecated-apis",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#package-test-typecheck",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#test",
+      "changedFields": ["dependencies"]
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#test:property",
+      "changedFields": ["dependencies"]
+    }
+  ],
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "cacheFlagsCommandsOutputsUnchanged": true,
+  "audit": "Cache policy: 0 blocking findings; 1655 unassessed cached computations."
+}

@@ -1,0 +1,105 @@
+{
+  "observedAt": "2026-10-29T20:50:58.876584+00:00",
+  "host": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 39939198976,
+    "SwapTotal": 51539603456,
+    "SwapFree": 53723136
+  },
+  "pressure": "some avg10=0.36 avg60=0.60 avg300=0.39 total=660561563\nfull avg10=0.30 avg60=0.49 avg300=0.33 total=590807114\n",
+  "distinctOomDecisions": 9,
+  "lastKernelDecision": {
+    "timestamp": "2026-10-29T10:56:06-05:00",
+    "constraint": "CONSTRAINT_MEMCG",
+    "scope": "cgroup",
+    "task": "python3"
+  },
+  "largeProcesses": [
+    {
+      "processCategory": "python workload",
+      "rssBytes": 37329911808,
+      "swapBytes": 15152095232
+    },
+    {
+      "processCategory": "desktop assistant",
+      "rssBytes": 1555447808,
+      "swapBytes": 293666816
+    },
+    {
+      "processCategory": "local model server",
+      "rssBytes": 1274306560,
+      "swapBytes": 380276736
+    },
+    {
+      "processCategory": "browser",
+      "rssBytes": 1192837120,
+      "swapBytes": 534122496
+    }
+  ],
+  "mutations": "Read-only host inspection; no unrelated apps or swap settings changed",
+  "kernelDecisions": [
+    {
+      "timestamp": "2026-10-27T07:16:09-05:00",
+      "constraint": "CONSTRAINT_NONE",
+      "scope": "global",
+      "task": "python"
+    },
+    {
+      "timestamp": "2026-10-28T05:57:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T05:59:29-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:04:08-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:06:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T14:26:17-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T21:13:20-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "tsc"
+    },
+    {
+      "timestamp": "2026-10-29T07:54:53-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    },
+    {
+      "timestamp": "2026-10-29T10:56:06-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    }
+  ],
+  "largestProcessAttribution": {
+    "processCategory": "python media workflow",
+    "interpretation": "Working-directory attribution was inspected privately; full command arguments were not read."
+  },
+  "publicRepresentation": {
+    "kind": "sanitized-derivative",
+    "originalSha256": "8790defb1ae921628f1d1b1a63bc657002d8b59af2a78cb3363d2d5e8e890557",
+    "policy": "Home paths normalized; machine/session/process identities and unrelated workload locations omitted. Measurements, timestamps, source hashes and uncertainty retained. Exact original is retained privately; see public-receipt-sanitization-20261031.json."
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "scope": "Opt-in observation enrollment in existing agent-message serve owner, local lifecycle persistence and conservative closure",
+  "recordedAt": "2026-10-29T02:45:35.806912+00:00",
+  "result": "focused qualification passed; broad CLI gate unverified",
+  "syntheticOnly": true,
+  "actualProviderSessions": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "57f3976f65539d343466a91b57912648956f511b3c981321bb07281add44adb2",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts": "286a399084bbb92e1f5a0b82ee7cab23717a3d6c7dc8ea4df29dc67ba102ffa6",
+    "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts": "6d13bddda63e9a4175bf60fc671102da9461b886990b4f81691925c84ce0e61c",
+    "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts": "050d3d461b2602881704d540890cddd8ce765cd8237231c46bab92e2eb51cae6",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "57cf1da887a27350407d88cfa0b01b22c65ecf349e5d2cbbec80371d994f7800",
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "3109badba4fbbd6944ac7826d33ecc34d41ca9c73a60af9a4814110fb2dfe5b1",
+    "packages/tooling/library/ai-metrics/test/observation-launch.test.ts": "9020068519569557eb2758cf891c5e47017778b47ac8dacc2fa618393c7c4ec4",
+    "packages/tooling/library/ai-metrics/test/observation-launch-outbox.test.ts": "a5d661044f3c1c877af0baf5791163f439db1c1b2cb6a25570a490f04261815f",
+    "goals/agent-observability-foundation/ops/managed-owner-typecheck.json": "094576d4570c69d070b8b53df5e213d8dd53bbe5278f134d585fc67ed245ff6c"
+  },
+  "focusedCliVerification": {
+    "result": "passed",
+    "typecheckConfig": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+    "typecheckTools": ["tsgo --noEmit", "tsrs --noEmit"],
+    "lint": "biome check exact three CLI files",
+    "files": 2,
+    "tests": 16,
+    "newScenarios": 5,
+    "runtimeSeconds": 35.686,
+    "memoryPeakGiB": 5.0,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-managed-enrollment-final-check.log"
+  },
+  "metricsPackageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 125.4,
+    "docgenSeconds": 12.2,
+    "runtimeSeconds": 139.208,
+    "memoryPeakGiB": 5.5,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-managed-enrollment-metrics-quality-v2.log",
+    "execution": "Serialized agent-runs.slice; MemoryHigh 7 GiB, MemoryMax 8 GiB, zero swap, CPUQuota 200%, TasksMax 256, RuntimeMaxSec 360; BIOME_THREADS=2 and RAYON_NUM_THREADS=2."
+  },
+  "existingWorkerProof": {
+    "result": "passed",
+    "receipt": "goals/agent-observability-foundation/ops/managed-owner-worker-verification.json",
+    "ownedProcessesStopped": 8,
+    "boundary": "Refreshed existing worker/client proof; it does not invoke the new agent-message serve integration."
+  },
+  "broadCliTypecheck": {
+    "result": "unverified",
+    "initialAttempt": {
+      "unit": "foundation-managed-enrollment-types.service",
+      "result": "oom-kill",
+      "memoryLimitGiB": 6,
+      "memoryPeakGiB": 6,
+      "log": "/tmp/foundation-managed-enrollment-types.log"
+    },
+    "guardedAttempt": {
+      "unit": "foundation-managed-enrollment-wide-types.service",
+      "result": "timeout with growth guard at deadline",
+      "runtimeSeconds": 303.762,
+      "memoryPeakGiB": 12.1,
+      "swapBytes": 0,
+      "guard": "goals/agent-observability-foundation/ops/managed-owner-wide-typecheck-guard.json",
+      "softLimitAdjustment": "8 GiB to 12 GiB on the same live job after observing reclaim pressure; no restart",
+      "log": "/tmp/foundation-managed-enrollment-wide-types.log"
+    },
+    "waived": false
+  },
+  "remaining": [
+    "Complete broad CLI verification with measured adequate admission, investigate compilation resource growth if necessary",
+    "Exercise this exact managed-owner command against the actual collector and expose bounded standalone recovery/status",
+    "Provisioning/claim-store recovery ownership and independent expected-launch population publication",
+    "Real CLI/desktop canary and rollback, service installation and external health publication",
+    "Final review panel, hosted repository delivery and full SPEC acceptance"
+  ]
+}

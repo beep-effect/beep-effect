@@ -1,0 +1,56 @@
+{
+  "scope": "Complete owned-table inventory during journal reopen, backup capture and snapshot restoration.",
+  "result": "passed",
+  "recordedAt": "2026-10-28T19:01:45.478131-05:00",
+  "syntheticOnly": true,
+  "productionDeployment": false,
+  "historicalStoresReadOrChanged": false,
+  "launchIntegrationImplemented": false,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/transcript-intake.ts": "d950e8e483573b5ed56a95df39f8a4b6d716ba9a61ed9e3b1d65307badafef13",
+    "packages/tooling/library/ai-metrics/src/observation-backup.ts": "d65786f7b3f34bfbc386cba88ba79307b8b88b0888cca45996dba6cd4cb006e7",
+    "packages/tooling/library/ai-metrics/test/observation-worker.test.ts": "75662ccd2d9005ae6dc60602f1851d0ef42d58ccb2378945f6591ba3b64fb1ca",
+    "packages/tooling/library/ai-metrics/test/observation-backup.test.ts": "e462bea87318dee7a9891bf7d1279b09a64f64192decea8096ffe554eedc8dc5"
+  },
+  "regressions": {
+    "lateTableReopenAndCapture": {
+      "beforeRepair": "2 tests failed because unexpected table was accepted",
+      "log": "/tmp/foundation-table-boundary-red.log"
+    },
+    "digestValidHistoricalSnapshot": {
+      "beforeRepair": "1 test failed because restoration incorrectly succeeded",
+      "log": "/tmp/foundation-restore-boundary-red.log"
+    }
+  },
+  "focusedVerification": {
+    "result": "passed",
+    "files": 4,
+    "tests": 26,
+    "runtimeSeconds": 6.387,
+    "memoryPeakMiB": 518.9,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-ownership-boundary-green.log"
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 112.5,
+    "docgenSeconds": 11.4,
+    "runtimeSeconds": 130.755,
+    "memoryPeakGiB": 5.7,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-ownership-quality.log"
+  },
+  "behavior": {
+    "queryBound": "canonical owned table count plus one sentinel",
+    "unexpectedOrExcessTablesRefused": true,
+    "copiedSnapshotsInspected": true,
+    "restoreMarkerNotPublishedOnRefusal": true,
+    "partialRestoreDestinationMayRemain": true,
+    "sourceAndPriorBackupPreserved": true,
+    "schemaMigrationPerformed": false,
+    "deliberateOomExercise": false
+  }
+}

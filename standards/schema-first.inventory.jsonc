@@ -1480,6 +1480,76 @@
       "reason": "Not a data model: a named surface interface extending the annotated SourceKind schema's own type, exported so declaration emit references the name instead of serializing the literal-kit statics structurally at every consumer position (typecheck-cost mitigation, goals/ci-fleet-endgame research/ci-graph-check-baseline.md)."
     },
     {
+      "file": "packages/tooling/library/ai-metrics/test/evidence-retention.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 35,
+      "owner": "@beep/repo-ai-metrics",
+      "reason": "Deterministic native SQLite lifecycle regressions exercise retirement, bounded recovery, corruption refusal, disposition accounting and atomic failure boundaries. Codecs encode fixed synthetic inputs and decode SQL evidence; generated round trips would not test transaction or recovery ordering. Exit: reusable schema laws move here or an independently modeled randomized lifecycle invariant is introduced. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/native-http.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 79,
+      "owner": "@beep/repo-ai-metrics",
+      "reason": "Real-socket regressions qualify exact JSON/protobuf acknowledgments, gzip/streaming limits, malformed input, concurrent admission, commit failure and expired-event rejection. Codecs construct controlled wire fixtures and inspect receipt identity. Exit: reusable codec laws move here; generated transport testing must retain the malformed/incomplete-body and controlled fault cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 14,
+      "owner": "@beep/repo-ai-metrics",
+      "reason": "Deterministic regressions serialize fixed policy/submission fixtures across real child processes, kill producers at four exact durability/operation boundaries, and race independent producers for one private file-backed claim. Schema-generated round trips do not establish crash ordering or exclusive claims. Exit: reusable schema laws or an independently modeled claim-state property move here; preserve exact SIGKILL boundaries and the process race. Independently reviewed by Astra; no property coverage elsewhere is claimed."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/observation-launch-http.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 47,
+      "owner": "@beep/repo-ai-metrics",
+      "reason": "Real loopback HTTP and SQLite regressions verify committed acknowledgment/replay, private-field and destination/epoch/route refusal, conflicts, streaming limits, incomplete bodies, concurrent admission, disabled enrollment and rollback without acknowledgment. Codecs support controlled failure fixtures and receipts. Exit: reusable codec laws move here or normalization/stream decoding gains an independently specified generated invariant; preserve malformed requests, privacy canary, rollback and timing cases. Independently reviewed by Astra; no property coverage elsewhere is claimed."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 73,
+      "owner": "@beep/repo-ai-metrics",
+      "reason": "Integration fixtures create specific Git repositories/worktrees and declared retired, missing or inaccessible roots to verify pseudonymous identity, attribution and privacy. Codecs serialize declarations and inspect inventory evidence, not schema laws. Exit: pure schema laws move here or are separated; preserve retired-root no-access and private-path assertions. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 62,
+      "owner": "@beep/repo-ai-metrics",
+      "reason": "Composed-worker regressions exercise native SQLite, actual listeners, pause/drain ownership, scheduler delivery and private maintenance/backup/retirement. Codecs support exact requests and receipts at controlled lifecycle boundaries. Exit: reusable schema laws move here or a meaningful independent worker reference model is designed; preserve refusal and resource-ordering cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/transcript-page.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 23,
+      "owner": "@beep/repo-ai-metrics",
+      "reason": "Deterministic byte-level regressions cover UTF-8/CRLF offsets, incomplete tails, persisted-cursor restart, truncation/replacement, copied occurrences, oversized/malformed lines and privacy. Codecs preserve exact fixture/cursor evidence for bounded incremental reading. Exit: a changed segmentation/identity algorithm motivates an independently designed partition-invariance property. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
+    },
+    {
       "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",
       "symbol": "CollectorRunning",
       "kind": "exported-interface",
@@ -2172,6 +2242,16 @@
       "reason": "Command integration regressions decode fixed CLI/protocol fixtures to prove private-file refusal, exact operator-attempt fencing and durable idempotent output without HTTP. Schema-derived envelope/reference and AmbiguityResolution evidence transport properties live in agent-message-models.test.ts; these golden scenarios assert command effects rather than codec laws. Reconsider if reusable schemas or schema-law tests move here."
     },
     {
+      "file": "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 50,
+      "owner": "@beep/repo-cli",
+      "reason": "Managed-command integration regressions use fixed synthetic owner/enrollment/grant records, actual child lifecycle and independent private claim/outbox files. They verify offline recording with an absent collector, refusal before spawn, preserved authority and uncertain closure. No schema-law or successful collector-delivery coverage is claimed. Exit: pure model laws move here; retain child, zero-receipt and no-relaunch assertions. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
+    },
+    {
       "file": "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -2190,6 +2270,16 @@
       "line": 55,
       "owner": "@beep/repo-cli",
       "reason": "Store regression scenarios use exact SQLite rows, staged process termination and injected audit-write failure to prove transaction, lease and resolution recovery contracts. Arbitrary operator-evidence transport properties live in agent-message-models.test.ts; random codec round-trips cannot replace these deterministic failure points."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 54,
+      "owner": "@beep/repo-cli",
+      "reason": "Deterministic command/rendering regressions verify expected unit/proxy configuration, journal-derived limits, interpolation/path-overlap refusal, malformed inputs and absence of installation side effects. Deliberate adversarial literals and boundaries are the subject. Exit: a changed escaping/path contract motivates an independently designed rendering property, or reusable schema laws move here. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
     {
       "file": "packages/tooling/tool/cli/test/explore-graduate-write.test.ts",

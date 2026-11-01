@@ -1,0 +1,20 @@
+{
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "previous": "1b8a9e66553c922ce33218a24bcd1ceeb2fae2aafbd2c82fe3bbca1521d93af6",
+  "subjects": ["//", "@beep/repo-ai-metrics"],
+  "review": {
+    "reviewer": "GPT-6-Astra independent foundation panel",
+    "reason": "Re-record eleven blocking configuration findings plus derived uncached edges after canonical per-task policy seal generation and foundation manifest integration; no qualification or exception added.",
+    "basis": {
+      "path": "goals/agent-observability-foundation/research/CACHE-MAIN-SYNC-20261031.md",
+      "sha256": "f6d3db0e25ff9fea09dc1a0471f690818b0b25cd1347db4fdd556b12630c5818"
+    }
+  }
+}
