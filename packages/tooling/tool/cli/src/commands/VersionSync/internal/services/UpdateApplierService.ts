@@ -19,9 +19,14 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { updateBiomeSchema } from "../resolvers/BiomeResolver.ts";
+import { EFFECT_SOURCE_FIELD_PREFIX } from "../resolvers/EffectResolver.ts";
 import { TURBO_SCHEMA_FIELD } from "../resolvers/TurboResolver.ts";
 import { updateJsoncSchemaUrl } from "../updaters/JsoncSchemaUpdater.ts";
-import { updateCatalogEntry, updatePackageManagerField } from "../updaters/PackageJsonUpdater.ts";
+import {
+  updateCatalogEntry,
+  updateEffectSourceField,
+  updatePackageManagerField,
+} from "../updaters/PackageJsonUpdater.ts";
 import { updatePlainTextFile } from "../updaters/PlainTextUpdater.ts";
 import { updateVercelBunVersion } from "../updaters/VercelJsonUpdater.ts";
 import { replaceNodeVersionWithFile, updateYamlValue } from "../updaters/YamlFileUpdater.ts";
@@ -197,6 +202,22 @@ const applyEffectUpdates = Effect.fn(function* (repoRoot: string, report: Versio
   let filesChanged = 0;
 
   for (const item of report.items) {
+    if (Str.startsWith(EFFECT_SOURCE_FIELD_PREFIX)(item.field)) {
+      // An errored report means the release commit is unknown; writing the
+      // version alone would pair it with a stale commit.
+      if (O.isSome(report.error)) {
+        continue;
+      }
+
+      const changed = yield* updateEffectSourceField(
+        packageJsonPath,
+        Str.slice(EFFECT_SOURCE_FIELD_PREFIX.length)(item.field),
+        item.expected
+      );
+      filesChanged = countChangedFile(filesChanged, changed);
+      continue;
+    }
+
     if (!Str.startsWith(EFFECT_CATALOG_FIELD_PREFIX)(item.field)) {
       continue;
     }

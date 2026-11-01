@@ -39,7 +39,7 @@ import * as Protobuf from "protobufjs";
 const sqlLayer = Layer.merge(makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver }), NodeCrypto.layer);
 const id = (char: string) => Sha256Hex.make(Str.repeat(64)(char));
 const proto = Protobuf.parse(
-  `syntax="proto3"; message Value { string string_value=1; bool bool_value=2; int64 int_value=3; } message Attr { string key=1; Value value=2; } message Span { repeated Attr attributes=9; } message Scope { repeated Span spans=2; } message Resource { repeated Scope scope_spans=2; } message Request { repeated Resource resource_spans=1; }`
+  `syntax="proto3"; message Value { oneof value { string string_value=1; bool bool_value=2; int64 int_value=3; } } message Attr { string key=1; Value value=2; } message Span { repeated Attr attributes=9; } message Scope { repeated Span spans=2; } message Resource { repeated Scope scope_spans=2; } message Request { repeated Resource resource_spans=1; }`
 ).root.lookupType("Request");
 const attribute = S.Struct({
   key: S.String,
