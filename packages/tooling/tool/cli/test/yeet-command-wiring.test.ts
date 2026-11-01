@@ -1,5 +1,6 @@
 import { YeetCommandError, yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
 import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
+import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
 import {
   MemoryStats,
   provideRuntimeRootForTesting,
@@ -24,6 +25,7 @@ import {
   ProofJobRequest,
   ProofJobSubmitter,
   ProofJobUnit,
+  proofLedgerPathForCheckout,
   RepoRunContext,
   runArtifactPathForContext,
   runPlanExecutionForTesting,
@@ -50,7 +52,7 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -1484,22 +1486,40 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
 
 // The publish attempt starts on the checked-out commit and then creates its own
 // commit. Goal completion binds a publish verdict to the merged PR head through
-// `resolvedHeadSha`, so the verdict and the terminal journal row must name the
-// commit the publish created and pushed, not the one it started from.
+// `resolvedHeadSha`, so every fact written after that commit (the cheap-gates
+// admission lease, the proof-shadow fact, the verdict and the terminal journal
+// row) must name the commit the publish created, not the one it started from.
+const encodeInnerLaneReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+const decodeLedgerFactHead = S.decodeUnknownOption(
+  S.fromJsonString(S.Struct({ fact: S.Struct({ provenance: S.Struct({ headSha: S.String }) }) }))
+);
+
+type CommittingPublishOutcome = "pushed" | "push-failed" | "commit-failed" | "interrupted-after-commit";
+
 it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdict identity", (it) => {
-  const publish = Effect.fn("YeetCommittingPublishTest.publish")(function* (
-    outcome: "pushed" | "push-failed" | "commit-failed"
-  ) {
+  const publish = Effect.fn("YeetCommittingPublishTest.publish")(function* (outcome: CommittingPublishOutcome) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const directory = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-committing-publish-" });
     const root = path.join(directory, "work");
     const remote = path.join(directory, "remote.git");
+    const runtimeDir = path.join(directory, "runtime");
+    const observedLease = path.join(directory, "observed-lease.json");
+    const gateHeld = path.join(directory, "gate-held");
     yield* fs.makeDirectory(root);
     yield* runFixtureGit(directory, ["init", "--bare", "-q", remote]);
     yield* runFixtureGit(root, ["init", "-q", "--initial-branch=main"]);
+    // The proof-shadow epoch reads these six root files.
+    const policyPackDir = path.join(root, "packages", "tooling", "policy-pack", "lint-rules");
+    yield* fs.makeDirectory(policyPackDir, { recursive: true });
     yield* fs.writeFileString(path.join(root, ".gitignore"), ".beep/\nnode_modules/\n");
-    yield* runFixtureGit(root, ["add", ".gitignore"]);
+    yield* fs.writeFileString(path.join(root, "bun.lock"), "lockfile\n");
+    yield* fs.writeFileString(path.join(root, ".bun-version"), "1.4.0\n");
+    yield* fs.writeFileString(path.join(root, ".nvmrc"), "24\n");
+    yield* fs.writeFileString(path.join(root, "turbo.json"), "{}\n");
+    yield* fs.writeFileString(path.join(root, "tsconfig.base.json"), "{}\n");
+    yield* fs.writeFileString(path.join(policyPackDir, "package.json"), '{"version":"9.8.7"}\n');
+    yield* runFixtureGit(root, ["add", "."]);
     yield* runFixtureGit(root, ["commit", "-q", "-m", "test: starting head"]);
     yield* runFixtureGit(root, ["remote", "add", "origin", remote]);
     const readHead = fs.readFileString(path.join(root, ".git/refs/heads/main")).pipe(Effect.map(Str.trim));
@@ -1546,6 +1566,51 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       mutability: "publish",
       resume: "never",
     });
+    // The cheap-gates stand-in copies its own admission lease out of the
+    // checkout, leaves one shadowable inner lane, and optionally holds so the
+    // test can interrupt the attempt after its commit.
+    const gate = RepoPlanStep.make({
+      ...commit,
+      id: "full:00-cheap-gates",
+      label: "full:cheap-gates",
+      phase: "full",
+      command: "bun",
+      args: [
+        "--eval",
+        `
+          import { copyFileSync, readdirSync, writeFileSync } from "node:fs";
+          const leases = process.env.TEST_ADMISSION_LEASES;
+          const [lease] = readdirSync(leases);
+          copyFileSync(leases + "/" + lease, process.env.TEST_OBSERVED_LEASE);
+          writeFileSync(process.env.BEEP_YEET_INNER_LANE_REPORT_PATH, process.env.TEST_INNER_LANE_REPORT + "\\n");
+          if (process.env.TEST_GATE_HELD) {
+            writeFileSync(process.env.TEST_GATE_HELD, "held\\n");
+            setInterval(() => {}, 1000);
+          }
+        `,
+      ],
+      mutability: "readonly",
+      env: {
+        TEST_ADMISSION_LEASES: path.join(runtimeDir, "beep", "admit", "leases"),
+        TEST_OBSERVED_LEASE: observedLease,
+        TEST_INNER_LANE_REPORT: yield* encodeInnerLaneReportJson(
+          QualityTaskLaneRunReport.make({
+            schemaVersion: "quality-task-lane-run/v1",
+            parentLaneId: O.some("full:00-cheap-gates"),
+            lanes: [
+              QualityTaskLaneRun.make({
+                id: "check",
+                label: "ci:check",
+                status: "passed",
+                inputDigest: O.none(),
+                commandText: O.some("bun run check"),
+              }),
+            ],
+          })
+        ),
+        ...(outcome === "interrupted-after-commit" ? { TEST_GATE_HELD: gateHeld } : {}),
+      },
+    });
     const push = RepoPlanStep.make({
       ...commit,
       id: "publish:01-git-push",
@@ -1553,31 +1618,48 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       phase: "publish",
       command: "git",
       args: ["push", "-q", outcome === "push-failed" ? "missing-remote" : "origin", "HEAD:refs/heads/main"],
-      mutability: "publish",
     });
-    const exit = yield* runPlanExecutionForTesting(
-      RepoRunPlan.make({ context, steps: [commit, push] }),
+    const run = yield* runPlanExecutionForTesting(
+      RepoRunPlan.make({ context, steps: [commit, gate, push] }),
       defaultYeetRunOptions({ mode: "publish", pr: false, message }),
       O.some(message)
     ).pipe(
-      provideRuntimeRootForTesting(
-        RuntimeRootChoice.make({ kind: "test-override", root: path.join(directory, "runtime") })
-      ),
+      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
       Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
       TestClock.withLive,
-      Effect.exit
+      Effect.forkChild
     );
+    if (outcome === "interrupted-after-commit") {
+      // The held gate proves the commit step already ran; each check is a real
+      // file-system round trip, so no clock is involved in the wait.
+      yield* fs.exists(gateHeld).pipe(Effect.repeat({ until: (held) => held }));
+      yield* Fiber.interrupt(run);
+    }
+    const exit = yield* Fiber.await(run);
     const verdict = yield* fs
       .readFileString(yield* runArtifactPathForContext(context, "verdict.json"))
-      .pipe(Effect.flatMap(YeetVerdictJson.decode));
+      .pipe(Effect.flatMap(YeetVerdictJson.decode), Effect.option);
     const journal = yield* fs.readFileString(yield* attemptJournalPath(context));
     const events = yield* Effect.forEach(pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
       decodeYeetAttemptJournalEvent(line)
     );
+    const ledgerHeads = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root)).pipe(
+      Effect.map(
+        flow(
+          Str.split("\n"),
+          A.map((line) => O.map(decodeLedgerFactHead(line), (row) => row.fact.provenance.headSha)),
+          A.getSomes
+        )
+      ),
+      Effect.orElseSucceed(A.empty<string>)
+    );
+    const lease = yield* fs.readFileString(observedLease).pipe(Effect.flatMap(decodeAdmissionLease), Effect.option);
     return {
-      exit,
       events,
+      exit,
       finalHead: yield* readHead,
+      leaseHead: O.flatMap(lease, (value) => value.resolvedHeadSha),
+      ledgerHeads,
       remoteHead: yield* fs
         .readFileString(path.join(remote, "refs/heads/main"))
         .pipe(Effect.map(Str.trim), Effect.option),
@@ -1596,6 +1678,8 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       A.findFirst(events, YeetAttemptJournalEvent.guards["attempt-finished"]),
       O.flatMap((finished) => finished.resolvedHeadSha)
     );
+  const terminated = (events: ReadonlyArray<YeetAttemptJournalEvent>) =>
+    A.findFirst(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
 
   it.effect("records the commit a successful publish created and pushed as the resolved head", () =>
     Effect.gen(function* () {
@@ -1603,13 +1687,17 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       assertTrue(run.exit._tag === "Success");
       expect(run.finalHead).not.toBe(run.startingHead);
       assertSome(run.remoteHead, run.finalHead);
-      expect(run.verdict.mode).toBe("publish");
-      expect(run.verdict.outcome).toBe("success");
-      assertSome(run.verdict.resolvedHeadSha, run.finalHead);
-      assertSome(run.verdict.publishedHeadSha, GitObjectId.make(run.finalHead));
-      expect(run.verdict.head).toBe(run.startingHead);
+      const verdict = O.getOrThrow(run.verdict);
+      expect(verdict.mode).toBe("publish");
+      expect(verdict.outcome).toBe("success");
+      assertSome(verdict.resolvedHeadSha, run.finalHead);
+      assertSome(verdict.publishedHeadSha, GitObjectId.make(run.finalHead));
+      expect(verdict.head).toBe(run.startingHead);
       assertSome(startedHead(run.events), run.startingHead);
       assertSome(finishedHead(run.events), run.finalHead);
+      // The cheap-gates admission ran after the commit, on the commit's tree.
+      assertSome(run.leaseHead, run.finalHead);
+      expect(run.ledgerHeads).toEqual([run.finalHead]);
     })
   );
 
@@ -1619,10 +1707,28 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       assertTrue(run.exit._tag === "Failure");
       expect(run.finalHead).not.toBe(run.startingHead);
       assertNone(run.remoteHead);
-      expect(run.verdict.outcome).toBe("failure");
-      assertSome(run.verdict.resolvedHeadSha, run.finalHead);
-      assertNone(run.verdict.publishedHeadSha);
+      const verdict = O.getOrThrow(run.verdict);
+      expect(verdict.outcome).toBe("failure");
+      assertSome(verdict.resolvedHeadSha, run.finalHead);
+      assertNone(verdict.publishedHeadSha);
       assertSome(finishedHead(run.events), run.finalHead);
+      assertSome(run.leaseHead, run.finalHead);
+      expect(run.ledgerHeads).toEqual([run.finalHead]);
+    })
+  );
+
+  it.effect("names the created commit in the terminal row of an attempt interrupted after its commit", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("interrupted-after-commit");
+      assertTrue(run.exit._tag === "Failure" && Cause.hasInterruptsOnly(run.exit.cause));
+      expect(run.finalHead).not.toBe(run.startingHead);
+      assertNone(run.verdict);
+      assertNone(finishedHead(run.events));
+      const terminal = O.getOrThrow(terminated(run.events));
+      expect(terminal.reason).toBe("interrupted");
+      assertSome(terminal.resolvedHeadSha, run.finalHead);
+      assertSome(startedHead(run.events), run.startingHead);
+      assertSome(run.leaseHead, run.finalHead);
     })
   );
 
@@ -1631,9 +1737,11 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       const run = yield* publish("commit-failed");
       assertTrue(run.exit._tag === "Failure");
       expect(run.finalHead).toBe(run.startingHead);
-      expect(run.verdict.outcome).toBe("failure");
-      assertSome(run.verdict.resolvedHeadSha, run.startingHead);
+      const verdict = O.getOrThrow(run.verdict);
+      expect(verdict.outcome).toBe("failure");
+      assertSome(verdict.resolvedHeadSha, run.startingHead);
       assertSome(finishedHead(run.events), run.startingHead);
+      assertNone(run.leaseHead);
     })
   );
 });
