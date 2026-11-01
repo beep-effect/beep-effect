@@ -134,9 +134,6 @@ import {
   collectPublishIntent,
   enforceBaseFreshness,
   failPublishScopeWithPacket,
-  formatPublishPaths,
-  prePushLocalShasFromStdin,
-  prePushShaMismatches,
   restorePublishStashOnFailure,
   restoreStashedWorktree,
   stageReviewedPublishIntent,
@@ -307,10 +304,6 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { repoRoot, branch } = yield* currentRepoRootAndBranch();
-  if (options.mode === "pre-push-hook") {
-    return readOnlyRunContext(repoRoot, branch, options);
-  }
-
   if (options.mode === "status") {
     if (options.remote) {
       yield* refreshBaseRef(repoRoot, options.base);
@@ -1320,52 +1313,6 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   );
 });
 
-const readPrePushHookStdin = Effect.fn("Yeet.readPrePushHookStdin")(function* (): Effect.fn.Return<
-  string,
-  YeetCommandError
-> {
-  if (process.stdin.isTTY) {
-    return "";
-  }
-
-  return yield* Effect.tryPromise({
-    try: () => Bun.stdin.text(),
-    catch: (cause) =>
-      YeetCommandError.make({
-        message: `Failed to read git pre-push stdin: ${cause instanceof Error ? cause.message : String(cause)}`,
-        exitCode: 1,
-      }),
-  });
-});
-
-const runPrePushHookMode = Effect.fn("Yeet.runPrePushHookMode")(function* (
-  context: RepoRunContext
-): Effect.fn.Return<
-  YeetRunResult,
-  YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const currentSha = yield* currentCommitSha(context);
-  const stdinText = yield* readPrePushHookStdin();
-  const pushedLocalShas = prePushLocalShasFromStdin(stdinText);
-  const localShas = A.isReadonlyArrayEmpty(pushedLocalShas) ? [currentSha] : pushedLocalShas;
-  const mismatchedShas = prePushShaMismatches(localShas, currentSha);
-
-  if (!A.isReadonlyArrayEmpty(mismatchedShas)) {
-    return yield* YeetCommandError.make({
-      message: `yeet pre-push-hook cannot reuse proof for pushed SHA(s) outside current HEAD:\n${formatPublishPaths(
-        mismatchedShas
-      )}`,
-      command: "git push",
-      exitCode: 1,
-    });
-  }
-
-  yield* assertReusableVerifiedState(context);
-  yield* Console.log(`[yeet] pre-push hook reused full proof for ${Str.slice(0, 12)(currentSha)}`);
-  return yield* emptyPlanResult(context);
-});
-
 const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
   context: RepoRunContext,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
@@ -2370,7 +2317,6 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
       monitor: () => runMonitorMode(plan.context, monitorSteps, recorder, extras),
       closeout: () => runCloseoutMode(plan.context, options, attempt.attemptId),
       status: () => runStatusMode(plan.context, options),
-      "pre-push-hook": () => runPrePushHookMode(plan.context),
     });
   });
 

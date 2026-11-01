@@ -510,14 +510,6 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts": {
-      "complexity_high": {
-        "count": 1
-      },
-      "crap_high": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts": {
       "complexity_moderate": {
         "count": 1
@@ -615,7 +607,6 @@
     "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts:complexity",
     "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:complexity",
     "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts:complexity",
-    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts:complexity",
     "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts:complexity",
     "packages/foundation/ui-system/ui/src/components/live-waveform.tsx:complexity",
     "packages/foundation/ui-system/ui/src/components/orb.tsx:complexity"
