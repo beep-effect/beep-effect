@@ -603,6 +603,19 @@ describe("YamlFormat", () => {
   });
 
   describe("leading byte-order mark is preserved on whole-document re-emit (#694)", () => {
+    it.effect("modify edits a BOM-prefixed directive or --- document instead of refusing it as a stream", () =>
+      Effect.gen(function* () {
+        const directive = "\uFEFF%YAML 1.2\n---\na: 1\n";
+        assert.strictEqual(yield* YamlFormat.modifyToString(directive, ["a"], 2), "\uFEFF%YAML 1.2\n---\na: 2\n");
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString(directive, ["b"], [2]),
+          "\uFEFF%YAML 1.2\n---\na: 1\nb:\n- 2\n"
+        );
+        assert.strictEqual(yield* YamlFormat.modifyToString("\uFEFF---\na: 1\n", ["b"], 2), "\uFEFF---\na: 1\nb: 2\n");
+        assert.strictEqual(YamlFormat.formatToString(directive), directive);
+      })
+    );
+
     it("format keeps the BOM", () => {
       assert.strictEqual(YamlFormat.formatToString("\uFEFFa:   1\nb: 2\n"), "\uFEFFa: 1\nb: 2\n");
       assert.deepStrictEqual(YamlFormat.format("\uFEFFa: 1\nb: 2\n"), []);
