@@ -102,7 +102,9 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  * `"single"` and `"double"` name one quote character for every scalar.
  * `"auto"` picks per value the way the `yaml` npm package does by default:
  * single quotes for a value holding `"` and no `'`, double quotes otherwise,
- * and it leaves an interior tab plain where a plain scalar keeps it.
+ * and it leaves an interior tab plain where a plain scalar keeps it. A
+ * value that starts with a document marker (`---`, `...`) stays quoted, where
+ * that package leaves it plain inside a collection.
  *
  * **Example** (Decode QuoteStyle vocabulary)
  *

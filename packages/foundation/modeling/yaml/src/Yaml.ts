@@ -147,7 +147,9 @@ export class YamlParseOptions extends S.Opaque<YamlParseOptions, { readonly bran
  * `"auto"` reproduces the `yaml` npm package's default choice per value:
  * single quotes for a value holding `"` and no `'` (`'say "hi"'`), double
  * quotes otherwise, and an interior tab left plain (`a<TAB>b`), or kept
- * literal inside single quotes when the value needs them. On that plain
+ * literal inside single quotes when the value needs them. One difference
+ * stays: a value that starts with a document marker (`---`, `...`) is quoted
+ * under every style, where `yaml` leaves it plain inside a collection. On that plain
  * fallback path, values carrying a carriage return or any other C0 control
  * character are always emitted double-quoted whichever `quoteStyle` is set,
  * since only double quotes can escape them into a form that round-trips
