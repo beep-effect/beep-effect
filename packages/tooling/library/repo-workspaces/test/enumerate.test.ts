@@ -105,3 +105,41 @@ describe("enumerate — skipMissingBaseDirs skips only a base whose stat fails N
     );
   });
 });
+
+describe("enumerate — an unreadable root-level wildcard base names the root", () => {
+  // A root-level wildcard (`*`) has an empty base, so its unreadable verdict names the root itself.
+  const DeniedRoot = Layer.mergeAll(
+    MemoryFileSystem.layerWith(
+      {
+        "/repo/package.json": '{ "name": "root", "version": "1.0.0" }',
+        "/repo/a/package.json": '{ "name": "@x/a", "version": "1.0.0" }',
+      },
+      {
+        faults: {
+          stat: (path: string) =>
+            path === "/repo"
+              ? Effect.fail(
+                  PlatformError.systemError({
+                    _tag: "PermissionDenied",
+                    module: "FileSystem",
+                    method: "stat",
+                    pathOrDescriptor: path,
+                  })
+                )
+              : undefined,
+        },
+      }
+    ),
+    Path.layer
+  );
+
+  it.layer(DeniedRoot, { timeout: "30 seconds" })((it) => {
+    it.effect("reports the root path as the unreadable directory", () =>
+      Effect.gen(function* () {
+        const globs = yield* GlobSet.compile(["*"]);
+        const failure = yield* Effect.flip(enumerate("/repo", globs, { skipMissingBaseDirs: true }));
+        assert.deepStrictEqual(failure, { kind: "unreadableDirectory", pattern: "*", detail: "/repo" });
+      })
+    );
+  });
+});
