@@ -24,7 +24,6 @@ import {
 import { AttachmentMagicSniffer } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex.contracts";
 import { MagicSniffResult } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex.schemas";
 import { it } from "@beep/test-runner";
-import { BunCrypto, BunServices } from "@effect/platform-bun";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -42,10 +41,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const encodeFixtureJson = S.encodeEffect(S.Unknown.pipe(S.fromJsonString));
 
-const platform =
-  process.versions.bun === undefined
-    ? Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
-    : Layer.mergeAll(BunServices.layer, BunCrypto.layer);
+const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const Services = Layer.mergeAll(
   MailExportTreeIndexerLive,
   AttachmentRepairJournalLive,
