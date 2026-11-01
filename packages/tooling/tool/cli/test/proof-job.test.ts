@@ -1943,6 +1943,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
               mergeReady: O.none(),
               stash: O.none(),
               publishedHeadSha: O.none(),
+              committedHeadSha: O.none(),
             });
             yield* Job.writeRunVerdictForTesting(
               plan,

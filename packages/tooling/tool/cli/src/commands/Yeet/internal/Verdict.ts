@@ -590,16 +590,19 @@ export const YeetMergeReadyFromEncoded = YeetMergeReadyEncoded.pipe(
  *
  * **Gotchas**
  *
- * Attempt identity, immutable input facts (`resolvedHeadSha`,
+ * Attempt identity, attempt input facts (`resolvedHeadSha`,
  * `diffFingerprint`, `proofTier`), and the run-timing trio (`startedAt`,
  * `endedAt`, `elapsedMs`) are `Option`-typed optional keys. Verdict documents
  * written before those facts landed still decode as `None`; current attempt
  * writers supply every fact.
  *
  * `publishedHeadSha` records transport identity after a successful owned push.
- * The starting `head` and immutable proof facts remain unchanged. Older records,
- * unsuccessful pushes and pushes whose head changes retain `None`; this field
- * alone grants no proof reuse, qualification or hosted-status authority.
+ * `head` and `diffFingerprint` keep the state the attempt started from. A publish
+ * whose commit step succeeds sets `resolvedHeadSha` to the commit it created, the
+ * head its gates proved and its push sent; any other run keeps the starting head.
+ * Older records, unsuccessful pushes and pushes whose head changes retain `None`
+ * for `publishedHeadSha`; that field alone grants no proof reuse, qualification
+ * or hosted-status authority.
  *
  * **Example** (Construct a yeet verdict)
  *

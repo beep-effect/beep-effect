@@ -10,7 +10,9 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
+  attemptJournalPath,
   buildYeetRunPlanWithMode,
+  decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
   findLiveReadyMonitorJob,
   finishPublishWithPullRequestForTesting,
@@ -23,13 +25,16 @@ import {
   ProofJobSubmitter,
   ProofJobUnit,
   RepoRunContext,
+  runArtifactPathForContext,
   runPlanExecutionForTesting,
   runPushFirstPublishPhasesForTesting,
   runStandardPublishPhasesForTesting,
   TurboPlanSnapshot,
+  YeetAttemptJournalEvent,
   YeetAttemptStarted,
   YeetEnsuredPullRequest,
   YeetRunPlanModeOptions,
+  YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { fcRuns } from "@beep/test-utils";
@@ -686,6 +691,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("cheap-gates admission", (
           mergeReady: O.none(),
           stash: O.none(),
           publishedHeadSha: O.none(),
+          committedHeadSha: O.none(),
         });
 
         const execution =
@@ -1067,6 +1073,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       mergeReady: O.none(),
       stash: O.none(),
       publishedHeadSha: O.none(),
+      committedHeadSha: O.none(),
     });
     const ensurePullRequest = () =>
       Effect.succeed(
@@ -1301,6 +1308,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       mergeReady: O.none(),
       stash: O.none(),
       publishedHeadSha: O.none(),
+      committedHeadSha: O.none(),
     });
     const push = RepoPlanStep.make({
       id: "publish:01-git-push",
@@ -1470,6 +1478,162 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("published commit identity
       expect(yield* current.readHead).not.toBe(current.committedHead);
       assertNone((yield* Ref.get(current.extras)).publishedHeadSha);
       expect(yield* current.fs.exists(current.path.join(current.remote, "refs/heads/main"))).toBe(false);
+    })
+  );
+});
+
+// The publish attempt starts on the checked-out commit and then creates its own
+// commit. Goal completion binds a publish verdict to the merged PR head through
+// `resolvedHeadSha`, so the verdict and the terminal journal row must name the
+// commit the publish created and pushed, not the one it started from.
+it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdict identity", (it) => {
+  const publish = Effect.fn("YeetCommittingPublishTest.publish")(function* (
+    outcome: "pushed" | "push-failed" | "commit-failed"
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-committing-publish-" });
+    const root = path.join(directory, "work");
+    const remote = path.join(directory, "remote.git");
+    yield* fs.makeDirectory(root);
+    yield* runFixtureGit(directory, ["init", "--bare", "-q", remote]);
+    yield* runFixtureGit(root, ["init", "-q", "--initial-branch=main"]);
+    yield* fs.writeFileString(path.join(root, ".gitignore"), ".beep/\nnode_modules/\n");
+    yield* runFixtureGit(root, ["add", ".gitignore"]);
+    yield* runFixtureGit(root, ["commit", "-q", "-m", "test: starting head"]);
+    yield* runFixtureGit(root, ["remote", "add", "origin", remote]);
+    const readHead = fs.readFileString(path.join(root, ".git/refs/heads/main")).pipe(Effect.map(Str.trim));
+    const startingHead = yield* readHead;
+    // The commit-message guard resolves commitlint from the checkout first.
+    const commitlint = path.join(root, "node_modules", ".bin", "commitlint");
+    yield* fs.makeDirectory(path.dirname(commitlint), { recursive: true });
+    yield* fs.writeFileString(commitlint, "#!/bin/sh\nexit 0\n");
+    yield* fs.chmod(commitlint, 0o755);
+    yield* fs.writeFileString(path.join(root, "change.txt"), "staged change\n");
+    yield* runFixtureGit(root, ["add", "change.txt"]);
+    const context = RepoRunContext.make({
+      base: startingHead,
+      branch: "main",
+      cwd: root,
+      head: "HEAD",
+      originalArgv: [],
+      packetDir: ".beep/yeet",
+      repoRoot: root,
+      turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+    });
+    const message = "fix(repo-cli): record the pushed head";
+    const commit = RepoPlanStep.make({
+      id: "commit:01-git-commit",
+      label: "commit:git:commit",
+      phase: "commit",
+      command: outcome === "commit-failed" ? "false" : "git",
+      args: [
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "commit",
+        "-q",
+        "-m",
+        message,
+      ],
+      cwd: root,
+      scope: "repo",
+      mutability: "publish",
+      resume: "never",
+    });
+    const push = RepoPlanStep.make({
+      ...commit,
+      id: "publish:01-git-push",
+      label: "publish:git:push",
+      phase: "publish",
+      command: "git",
+      args: ["push", "-q", outcome === "push-failed" ? "missing-remote" : "origin", "HEAD:refs/heads/main"],
+      mutability: "publish",
+    });
+    const exit = yield* runPlanExecutionForTesting(
+      RepoRunPlan.make({ context, steps: [commit, push] }),
+      defaultYeetRunOptions({ mode: "publish", pr: false, message }),
+      O.some(message)
+    ).pipe(
+      provideRuntimeRootForTesting(
+        RuntimeRootChoice.make({ kind: "test-override", root: path.join(directory, "runtime") })
+      ),
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+      TestClock.withLive,
+      Effect.exit
+    );
+    const verdict = yield* fs
+      .readFileString(yield* runArtifactPathForContext(context, "verdict.json"))
+      .pipe(Effect.flatMap(YeetVerdictJson.decode));
+    const journal = yield* fs.readFileString(yield* attemptJournalPath(context));
+    const events = yield* Effect.forEach(pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+      decodeYeetAttemptJournalEvent(line)
+    );
+    return {
+      exit,
+      events,
+      finalHead: yield* readHead,
+      remoteHead: yield* fs
+        .readFileString(path.join(remote, "refs/heads/main"))
+        .pipe(Effect.map(Str.trim), Effect.option),
+      startingHead,
+      verdict,
+    };
+  });
+
+  const startedHead = (events: ReadonlyArray<YeetAttemptJournalEvent>) =>
+    pipe(
+      A.findFirst(events, YeetAttemptJournalEvent.guards["attempt-started"]),
+      O.flatMap((started) => started.resolvedHeadSha)
+    );
+  const finishedHead = (events: ReadonlyArray<YeetAttemptJournalEvent>) =>
+    pipe(
+      A.findFirst(events, YeetAttemptJournalEvent.guards["attempt-finished"]),
+      O.flatMap((finished) => finished.resolvedHeadSha)
+    );
+
+  it.effect("records the commit a successful publish created and pushed as the resolved head", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("pushed");
+      assertTrue(run.exit._tag === "Success");
+      expect(run.finalHead).not.toBe(run.startingHead);
+      assertSome(run.remoteHead, run.finalHead);
+      expect(run.verdict.mode).toBe("publish");
+      expect(run.verdict.outcome).toBe("success");
+      assertSome(run.verdict.resolvedHeadSha, run.finalHead);
+      assertSome(run.verdict.publishedHeadSha, GitObjectId.make(run.finalHead));
+      expect(run.verdict.head).toBe(run.startingHead);
+      assertSome(startedHead(run.events), run.startingHead);
+      assertSome(finishedHead(run.events), run.finalHead);
+    })
+  );
+
+  it.effect("keeps the created commit as the resolved head when the push fails", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("push-failed");
+      assertTrue(run.exit._tag === "Failure");
+      expect(run.finalHead).not.toBe(run.startingHead);
+      assertNone(run.remoteHead);
+      expect(run.verdict.outcome).toBe("failure");
+      assertSome(run.verdict.resolvedHeadSha, run.finalHead);
+      assertNone(run.verdict.publishedHeadSha);
+      assertSome(finishedHead(run.events), run.finalHead);
+    })
+  );
+
+  it.effect("keeps the starting head when the commit step fails", () =>
+    Effect.gen(function* () {
+      const run = yield* publish("commit-failed");
+      assertTrue(run.exit._tag === "Failure");
+      expect(run.finalHead).toBe(run.startingHead);
+      expect(run.verdict.outcome).toBe("failure");
+      assertSome(run.verdict.resolvedHeadSha, run.startingHead);
+      assertSome(finishedHead(run.events), run.startingHead);
     })
   );
 });

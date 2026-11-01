@@ -816,6 +816,8 @@ const stageAndCommitPublishIntent = Effect.fn("Yeet.stageAndCommitPublishIntent"
     if (A.some(commitResults, (result) => result.exitCode !== 0)) {
       return yield* failWithIssueArtifacts(plan.context, commitSteps, commitResults, "yeet commit phase failed.");
     }
+    const committedHead = yield* readPublishedHead(plan.context);
+    yield* Ref.update(extras, (state) => ({ ...state, committedHeadSha: O.some(committedHead) }));
   }).pipe(restorePublishStashOnFailure({ context: plan.context, stash }));
   return [false, stash];
 });
@@ -1328,6 +1330,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     extras,
     reusableSkipCommit
   );
+  const committedAttempt = attemptAtCommittedHead(attempt, yield* Ref.get(extras));
 
   if (!options.pr) {
     yield* Console.error(
@@ -1345,7 +1348,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
           recorder,
           extras,
           skipCommit,
-          attempt
+          committedAttempt
         )
       : runPushFirstPublishPhases(
           plan,
@@ -1356,7 +1359,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
           recorder,
           extras,
           skipCommit,
-          O.some(attempt)
+          O.some(committedAttempt)
         );
 
   return yield* pipe(
@@ -1893,7 +1896,18 @@ type YeetVerdictExtras = {
   readonly mergeReady: O.Option<YeetMergeReady>;
   readonly stash: O.Option<YeetStashState>;
   readonly publishedHeadSha: YeetVerdict["publishedHeadSha"];
+  readonly committedHeadSha: YeetVerdict["publishedHeadSha"];
 };
+
+// A publish that commits proves and pushes the commit it created, so every fact
+// written after that commit (scheduler tickets, the proof shadow, the verdict and
+// the terminal journal row) resolves to it. The started row, `head` and the diff
+// fingerprint keep the state the attempt began from.
+const attemptAtCommittedHead = (attempt: YeetAttemptStarted, extras: YeetVerdictExtras): YeetAttemptStarted =>
+  O.match(extras.committedHeadSha, {
+    onNone: () => attempt,
+    onSome: (committedHead) => YeetAttemptStarted.make({ ...attempt, resolvedHeadSha: O.some(committedHead) }),
+  });
 
 const readPublishedHead = Effect.fn("Yeet.readPublishedHead")(
   flow(
@@ -2018,6 +2032,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   const path = yield* Path.Path;
   const executed = yield* Ref.get(recorder);
   const extraState = yield* Ref.get(extras);
+  const reached = attemptAtCommittedHead(attempt, extraState);
   const innerLaneReports = yield* readInnerLaneReports(plan.context);
   yield* pipe(
     summarizePrePushInnerLanesForTesting(innerLaneReports),
@@ -2035,7 +2050,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   yield* Console.log(`[yeet] ${renderProofChangedPackages(changedPackages)}`);
   yield* recordProofShadowForAttempt(
     plan.context.repoRoot,
-    proofShadowAttemptFacts(attempt),
+    proofShadowAttemptFacts(reached),
     innerLaneReports,
     changedPackages
   ).pipe(
@@ -2102,7 +2117,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
       failurePolicy: options.collectAll ? "collect-all" : "fail-fast",
       flakeQuarantine,
       head: attempt.head,
-      resolvedHeadSha: attempt.resolvedHeadSha,
+      resolvedHeadSha: reached.resolvedHeadSha,
       publishedHeadSha: extraState.publishedHeadSha,
       diffFingerprint: attempt.diffFingerprint,
       proofTier: attempt.proofTier,
@@ -2145,7 +2160,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
       attemptId: attempt.attemptId,
       recordedAt: endedAt,
       verdict,
-      resolvedHeadSha: attempt.resolvedHeadSha,
+      resolvedHeadSha: reached.resolvedHeadSha,
       diffFingerprint: attempt.diffFingerprint,
       proofTier: attempt.proofTier,
       envProfile: attempt.envProfile,
@@ -2363,6 +2378,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
     mergeReady: O.none(),
     stash: O.none(),
     publishedHeadSha: O.none(),
+    committedHeadSha: O.none(),
   });
   const terminalWritten = yield* Ref.make(false);
   yield* appendYeetAttemptJournalEvent(plan.context, attempt).pipe(Effect.uninterruptible);
@@ -2486,7 +2502,11 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
             Effect.uninterruptible
           )
     ),
-    Effect.onExit((exit) => ensureAttemptTerminated(plan.context, attempt, terminalWritten, exit))
+    Effect.onExit((exit) =>
+      Effect.flatMap(Ref.get(extras), (state) =>
+        ensureAttemptTerminated(plan.context, attemptAtCommittedHead(attempt, state), terminalWritten, exit)
+      )
+    )
   );
 });
 

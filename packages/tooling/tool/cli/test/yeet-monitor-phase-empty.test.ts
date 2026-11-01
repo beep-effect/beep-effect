@@ -37,6 +37,7 @@ const emptyExtras: YeetVerdictExtrasForTesting = {
   mergeReady: O.none(),
   stash: O.none(),
   publishedHeadSha: O.none(),
+  committedHeadSha: O.none(),
 };
 
 // Regression for the publish-without---monitor P0: the planner emits monitor
