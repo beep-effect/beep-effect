@@ -54,16 +54,6 @@ const schedulePolicy = NativeSchedulePolicy.make({
   reconcileDelayMillis: 100,
   tickTimeoutMillis: 1000,
 });
-// The query-delay case asserts a tick lands INSIDE the reconcile window, so its window is wide enough
-// that a loaded host cannot stall past it between two consecutive ticks.
-const widePolicy = NativeSchedulePolicy.make({
-  maxEvents: 1,
-  retryDelayMillis: 2000,
-  maxRetryDelayMillis: 8000,
-  reconcileDelayMillis: 2000,
-  tickTimeoutMillis: 1000,
-});
-const wideDelayWait = 2100;
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
@@ -203,6 +193,20 @@ const fixedClock = (clock: Clock.Clock, millis: number): Clock.Clock => ({
   currentTimeMillisUnsafe: () => millis,
 });
 
+// Runs effects under a pinned clock that only `advance` moves, so a loaded host cannot
+// stretch a delay window between two ticks that assert on it.
+const pinnedClock = Effect.fnUntraced(function* () {
+  const clock = yield* Clock.Clock;
+  const now = yield* Ref.make(yield* Clock.currentTimeMillis);
+  return {
+    pin: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+      Effect.flatMap(Ref.get(now), (millis) =>
+        effect.pipe(Effect.provideService(Clock.Clock, fixedClock(clock, millis)))
+      ),
+    advance: (millis: number) => Ref.update(now, (current) => current + millis),
+  };
+});
+
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("visits each event once per tick when the event budget exceeds the backlog", () =>
     Effect.gen(function* () {
@@ -247,14 +251,8 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture();
       const scheduler = yield* f.reopen(replayPolicy(f.config.targetId, 400));
-      // The scheduler reads the time through a pinned clock that only the test advances,
-      // so a loaded host cannot stretch a delay window between two ticks.
-      const clock = yield* Clock.Clock;
-      const now = yield* Ref.make(yield* Clock.currentTimeMillis);
-      const tick = Effect.flatMap(Ref.get(now), (millis) =>
-        scheduler.tick.pipe(Effect.provideService(Clock.Clock, fixedClock(clock, millis)))
-      );
-      const advance = (millis: number) => Ref.update(now, (current) => current + millis);
+      const { pin, advance } = yield* pinnedClock();
+      const tick = pin(scheduler.tick);
       yield* tick;
       yield* advance(120);
       expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }] });
@@ -495,12 +493,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const scheduler = yield* f.reopen(
         NativeSchedulePolicy.make({ ...schedulePolicy, retryDelayMillis: 400, maxRetryDelayMillis: 400 })
       );
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Retryable" } } }] });
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "retry-delay" }] });
+      const { pin, advance } = yield* pinnedClock();
+      const tick = pin(scheduler.tick);
+      expect(yield* tick).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Retryable" } } }] });
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "retry-delay" }] });
       expect(yield* Ref.get(f.posts)).toBe(1);
-      yield* Effect.sleep(420);
+      yield* advance(420);
       yield* Ref.set(f.status, 200);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Accepted" } } }] });
+      expect(yield* tick).toMatchObject({ outcomes: [{ result: { outcome: { _tag: "Accepted" } } }] });
       const attempts = yield* f.sql`SELECT attempt_id FROM observation_delivery_attempts`;
       expect(attempts).toHaveLength(2);
       expect(attempts[0]).not.toEqual(attempts[1]);
@@ -664,22 +664,24 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("persists capped read-back delay across reconstruction without more sends", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      yield* (yield* f.reopen()).tick;
-      yield* Effect.sleep(120);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
-      yield* Effect.sleep(120);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
-      yield* Effect.sleep(120);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
-      yield* Effect.sleep(110);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
-      yield* Effect.sleep(220);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
-      yield* Effect.sleep(220);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
-      yield* Effect.sleep(420);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      const { pin, advance } = yield* pinnedClock();
+      const tick = pin(Effect.flatMap(f.reopen(), (scheduler) => scheduler.tick));
+      yield* tick;
+      yield* advance(120);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      yield* advance(120);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      yield* advance(120);
+      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      yield* advance(110);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      yield* advance(220);
+      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      yield* advance(220);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
+      yield* advance(420);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled" }] });
       expect(yield* Ref.get(f.reads)).toBe(5);
       expect(yield* Ref.get(f.posts)).toBe(1);
     })
@@ -690,19 +692,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("reserves query delay before failed or interrupted read-back", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      yield* (yield* f.reopen(widePolicy)).tick;
-      yield* Effect.sleep(wideDelayWait);
+      const { pin, advance } = yield* pinnedClock();
+      const tick = pin(Effect.flatMap(f.reopen(), (scheduler) => scheduler.tick));
+      yield* tick;
+      yield* advance(120);
       yield* Ref.set(f.readStatus, 503);
-      expect(yield* (yield* f.reopen(widePolicy)).tick).toMatchObject({
-        outcomes: [{ _tag: "Failed", reason: "readback" }],
-      });
-      expect(yield* (yield* f.reopen(widePolicy)).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
-      yield* Effect.sleep(wideDelayWait);
-      const interrupted = yield* makeNativeDeliveryScheduler(f.intake, f.config, widePolicy, f.sender, {
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
+      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      yield* advance(120);
+      const interrupted = yield* makeNativeDeliveryScheduler(f.intake, f.config, schedulePolicy, f.sender, {
         reconcile: () => Effect.interrupt,
       });
-      yield* interrupted.tick.pipe(Effect.exit);
-      expect(yield* (yield* f.reopen(widePolicy)).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      yield* pin(interrupted.tick).pipe(Effect.exit);
+      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       expect(yield* Ref.get(f.reads)).toBe(1);
       expect(yield* Ref.get(f.posts)).toBe(1);
     })
