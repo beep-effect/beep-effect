@@ -20,6 +20,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
 import type { YamlPath } from "@beep/yaml/YamlEdit";
+import type { YamlNode } from "@beep/yaml/YamlNode";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/updaters/YamlFileUpdater");
 
@@ -40,23 +41,42 @@ const decodeYamlNodeValueAsString = S.decodeUnknownOption(YamlNodeValueAsString)
 const yamlNodeValueAsString = (value: unknown): string =>
   O.getOrElse(decodeYamlNodeValueAsString(value), () => `${value}`);
 
-// The resolved value at `yamlPath`, or none when the path is absent.
-const valueAtPath = (document: YamlDocument, yamlPath: YamlPath): O.Option<unknown> =>
+// The node at `yamlPath`, or none when the path is absent.
+const nodeAtPath = (document: YamlDocument, yamlPath: YamlPath): O.Option<YamlNode> =>
   pipe(
     O.fromNullishOr(document.contents),
-    O.flatMap((root) => root.find(yamlPath)),
-    O.map((node) => node.toValue())
+    O.flatMap((root) => root.find(yamlPath))
   );
+
+// The resolved value at `yamlPath`, or none when the path is absent.
+const valueAtPath = (document: YamlDocument, yamlPath: YamlPath): O.Option<unknown> =>
+  O.map(nodeAtPath(document, yamlPath), (node) => node.toValue());
+
+// Whether `updated` keeps every byte of `original` outside `node`'s source span.
+const changesOnlySpan = (original: string, updated: string, node: YamlNode): boolean => {
+  const prefix = Str.slice(0, node.offset)(original);
+  const suffix = Str.slice(node.offset + node.length)(original);
+  return (
+    Str.length(updated) >= Str.length(prefix) + Str.length(suffix) &&
+    Str.startsWith(prefix)(updated) &&
+    Str.endsWith(suffix)(updated)
+  );
+};
 
 const parseYamlFile = (filePath: string, text: string) =>
   YamlDocument.parse(text).pipe(VersionSyncError.mapError(`Failed to parse ${filePath}`, filePath));
 
-// A removal or an insertion re-serializes the whole document. These are the
-// `yaml` npm defaults the updater wrote with before R4 (sequences indented
-// under their key, double quotes when quoting is needed), which is also the
-// layout of the repo's workflow files. A scalar replacement passes no options,
-// so `modify` splices only the target scalar.
-const restructureOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "double" });
+// A removal, an insertion, or a replacement the kit cannot splice in place
+// re-serializes the whole document. These are the `yaml` npm defaults the
+// updater wrote with before R4 (sequences indented under their key, quotes
+// chosen per value as that package chooses them), which is also the layout of
+// the repo's workflow files.
+const restructureOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" });
+
+// A scalar replacement first tries the splice: `quoteStyle` is not a
+// document-shaping option, so `modify` still replaces only the target span,
+// and a plain target that now needs quotes takes the same per-value quote.
+const spliceOptions = YamlStringifyOptions.make({ quoteStyle: "auto" });
 
 const modifyYamlFile = (
   filePath: string,
@@ -77,8 +97,17 @@ type UpdateYamlValueOptions = {
  * Update a value at a specific path in a YAML file, preserving comments and formatting.
  *
  * Reads the current value through `YamlDocument.parse` and writes the new one
- * with `YamlFormat.modifyToString`, which splices only the target scalar.
- * Returns `true` when the file was modified, `false` when already correct.
+ * with `YamlFormat.modifyToString`. Returns `true` when the file was modified,
+ * `false` when already correct.
+ *
+ * **Details**
+ *
+ * An existing single-line scalar is spliced in place: only its bytes change.
+ * When the kit cannot splice (the key is missing, so the edit is an
+ * insertion; or the target is a block, multi-line, tagged or anchored scalar,
+ * or a collection), the whole document is re-serialized in the `yaml` npm
+ * layout: sequences indented under their key, quotes chosen per value.
+ * Comments survive both paths.
  *
  * @category utilities
  * @since 0.0.0
@@ -103,13 +132,23 @@ export const updateYamlValue: {
       .pipe(VersionSyncError.mapError(`Failed to read ${filePath}`, filePath));
 
     const document = yield* parseYamlFile(filePath, original);
-    const currentValue = O.getOrUndefined(valueAtPath(document, yamlPath));
+    const target = nodeAtPath(document, yamlPath);
+    const currentValue = O.getOrUndefined(O.map(target, (node) => node.toValue()));
 
     if (Str.equivalence(yamlNodeValueAsString(currentValue), options.value)) {
       return false;
     }
 
-    const updated = yield* modifyYamlFile(filePath, original, yamlPath, options.value);
+    const restructured = modifyYamlFile(filePath, original, yamlPath, options.value, restructureOptions);
+    const updated = yield* O.match(target, {
+      onNone: () => restructured,
+      onSome: (node) =>
+        modifyYamlFile(filePath, original, yamlPath, options.value, spliceOptions).pipe(
+          Effect.flatMap((spliced) =>
+            changesOnlySpan(original, spliced, node) ? Effect.succeed(spliced) : restructured
+          )
+        ),
+    });
 
     if (Str.equivalence(updated, original)) {
       return false;

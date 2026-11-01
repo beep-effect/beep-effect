@@ -1,9 +1,10 @@
 // The VersionSync YAML updater writes through the `@beep/yaml` kit (R4). A
 // scalar replacement splices only the target scalar, so comments, flow
-// collections and folded blocks around it keep their bytes; the node-version
-// fix removes and inserts a key, which re-serializes the document in the
-// layout the npm `yaml` writer used before R4 (sequences indented under their
-// key), keeping every comment.
+// collections and folded blocks around it keep their bytes; an insertion of a
+// missing key and the node-version fix (which removes and inserts a key)
+// re-serialize the document in the layout the npm `yaml` writer used before
+// R4 (sequences indented under their key, quotes chosen per value), keeping
+// every comment.
 
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { replaceNodeVersionWithFile, updateYamlValue } from "@beep/repo-cli/test/VersionSync";
@@ -77,6 +78,31 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
       const file = yield* writeFixture("docker-compose.yml", compose);
       assertFalse(yield* updateYamlValue(file, ["services", "postgres", "image"], { value: "pgvector/pgvector:pg17" }));
       strictEqual(yield* fs.readFileString(file), compose);
+    })
+  );
+
+  it.effect("inserts a missing key in the yaml npm layout, keeping indented sequences and comments", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const source = A.join(["services:", "  redis:", "    ports:", '      - "6379:6379" # keep', ""], "\n");
+      const file = yield* writeFixture("docker-compose.yml", source);
+      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
+      strictEqual(
+        yield* fs.readFileString(file),
+        A.join(
+          ["services:", "  redis:", "    ports:", '      - "6379:6379" # keep', "    image: redis:8.12.0", ""],
+          "\n"
+        )
+      );
+    })
+  );
+
+  it.effect("splices a value that needs quotes with the quote the yaml npm writer picks", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const file = yield* writeFixture("docker-compose.yml", compose);
+      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: 'say "8": now' }));
+      strictEqual(yield* fs.readFileString(file), Str.replace("redis:8.10.3", `'say "8": now'`)(compose));
     })
   );
 
