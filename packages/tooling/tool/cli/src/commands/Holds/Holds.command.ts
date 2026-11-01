@@ -18,7 +18,15 @@ import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { HoldsError } from "./Holds.errors.ts";
-import { HoldsProbeInput, runHoldsLint, runHoldsList, runHoldsProbe } from "./Holds.program.ts";
+import {
+  HoldsProbeInput,
+  HoldsUpdateInput,
+  runHoldsLint,
+  runHoldsList,
+  runHoldsProbe,
+  runHoldsUpdate,
+  runHoldsWhy,
+} from "./Holds.program.ts";
 import { HoldLedger, HoldProbe, makeHoldLedger, makeHoldProbe } from "./Holds.service.ts";
 import { HoldSites, makeHoldSites } from "./Holds.sites.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
@@ -41,6 +49,11 @@ const scratchRootFor = Effect.fn("Holds.scratchRoot")(function* () {
     Effect.mapError((cause) => HoldsError.make({ reason: "usage", message: "HOME is not set.", cause }))
   );
   return path.join(home, ".cache", "beep", "holds");
+});
+
+const headCommitSha = Effect.fn("Holds.headCommitSha")(function* () {
+  const root = yield* resolveRoot;
+  return Str.trim(yield* runGitOutput(root, ["rev-parse", "HEAD"], gitAdapter));
 });
 
 const layerHoldLedgerLive = Layer.effect(HoldLedger, Effect.flatMap(resolveRoot, makeHoldLedger));
@@ -94,8 +107,7 @@ export const holdsProbeCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ holdId, dryRun }) {
-    const root = yield* resolveRoot;
-    const commitSha = Str.trim(yield* runGitOutput(root, ["rev-parse", "HEAD"], gitAdapter));
+    const commitSha = yield* headCommitSha();
     const lines = yield* runHoldsProbe(HoldsProbeInput.make({ holdId, dryRun, commitSha }));
     yield* Console.log(A.join(lines, "\n"));
   })
@@ -134,6 +146,62 @@ export const holdsLintCommand = Command.make(
 );
 
 /**
+ * `beep holds update [--dry-run]`: the `deps:update` pre-step. Probe due holds,
+ * then retire flipped holds that a catalog bump completes.
+ *
+ * **Example** (Read the command name)
+ *
+ * ```ts
+ * import { holdsUpdateCommand } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(holdsUpdateCommand.name) // "update"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const holdsUpdateCommand = Command.make(
+  "update",
+  {
+    dryRun: Flag.Boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Probe and report without recording runs, tombstones or the held list")
+    ),
+  },
+  Effect.fn(function* ({ dryRun }) {
+    const commitSha = yield* headCommitSha();
+    const lines = yield* runHoldsUpdate(HoldsUpdateInput.make({ dryRun, commitSha }));
+    yield* Console.log(A.join(lines, "\n"));
+  })
+).pipe(
+  Command.withDescription("Probe due holds and retire flipped holds before a catalog bump"),
+  Command.provide(Layer.mergeAll(layerHoldLedgerLive, layerHoldProbeLive))
+);
+
+/**
+ * `beep holds why <package>`: every hold record that governs a package.
+ *
+ * **Example** (Read the command name)
+ *
+ * ```ts
+ * import { holdsWhyCommand } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(holdsWhyCommand.name) // "why"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const holdsWhyCommand = Command.make(
+  "why",
+  { packageName: Argument.String("package").pipe(Argument.withDescription("The package to explain")) },
+  ({ packageName }) => Effect.flatMap(runHoldsWhy(packageName), (lines) => Console.log(A.join(lines, "\n")))
+).pipe(
+  Command.withDescription("Explain the live and tombstoned holds on a package"),
+  Command.provide(layerHoldLedgerLive)
+);
+
+/**
  * `beep holds`: the hold ledger command group.
  *
  * **Example** (Read the command name)
@@ -149,9 +217,9 @@ export const holdsLintCommand = Command.make(
  */
 export const holdsCommand = Command.make("holds", {}, () =>
   Console.log(
-    "Hold ledger commands: bun run beep holds list | bun run beep holds probe <hold-id> [--dry-run] | bun run beep holds lint [--write]"
+    "Hold ledger commands: bun run beep holds list | bun run beep holds why <package> | bun run beep holds probe <hold-id> [--dry-run] | bun run beep holds update [--dry-run] | bun run beep holds lint [--write]"
   )
 ).pipe(
   Command.withDescription("Temporary repo decisions as probe-backed holds"),
-  Command.withSubcommands([holdsListCommand, holdsProbeCommand, holdsLintCommand])
+  Command.withSubcommands([holdsListCommand, holdsWhyCommand, holdsProbeCommand, holdsUpdateCommand, holdsLintCommand])
 );

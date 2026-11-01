@@ -105,12 +105,12 @@ Higher sources outrank lower sources when they conflict.
       points to the ledger.
 - [x] `beep holds lint` runs in the cheap gate and fails on an unrecorded
       hold-shaped entry and on an orphaned record.
-- [ ] `bun run deps:update` runs due probes first, and unpins and tombstones a
+- [x] `bun run deps:update` runs due probes first, and unpins and tombstones a
       flipped hold in the same commit. A fixture test covers a flipped hold
       and a held one.
-- [ ] `beep holds why <pkg>` prints live and tombstoned records with their
+- [x] `beep holds why <pkg>` prints live and tombstoned records with their
       evidence.
-- [ ] Agent guidance (a skill or runbook) documents admit, probe, renew and
+- [x] Agent guidance (a skill or runbook) documents admit, probe, renew and
       escalate.
 - [ ] No unrelated refactors or formatting churn.
 
@@ -139,6 +139,8 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-11-01 | `bun run deps:update` runs `beep holds update` first. It probes every scripted hold whose lease is two-thirds spent, then tombstones each hold confirmed `Flipped` whose exit is `Unpin` and whose anchors are only catalog entries, manifest dependencies or held-list patterns. A flipped hold with any other anchor is reported for a reviewed change. A probe that cannot run is reported and leaves the hold in place. | The tombstone drops the pattern from the regenerated held list, so the same `syncpack update` moves the package; an override, patch or OSV exception is a config edit the catalog bump cannot make. Due probes have no jitter here because `deps:update` is one deterministic run; fleet wakes belong to `goals/wake-service`. | Restore `deps:update` to the bare `syncpack update` and drop `holds update`. |
+| 2026-11-01 | The agent guidance is a runbook, `docs/runbooks/hold-ledger.md`, not a skill. | The steps are commands run at known moments (adding a hold-shaped entry, `deps:update`); a runbook linked from the ledger, the docs index and `syncpack.config.ts` reaches them without adding always-loaded skill frontmatter. | Promote the runbook into a skill. |
 | 2026-10-31 | `HoldAnchor` is a tagged union of typed config sites (`CatalogEntry`, `ManifestDependency`, `SyncpackHeld`, `SyncpackVersionGroup`, `RootOverride`, `PatchedDependency`, `OsvPackageOverride`). The single slice-1 statelyai row was rewritten in place to the typed form, keeping its id so its two probe runs stay bound. | Free-text `{file, key}` anchors could not be linted, and the slice-1 key (`workspaces.catalog.statelyai`) was already wrong: the catalog is top-level. No consumer read the ledger between the two slices. | Restore the `{file, key}` struct and the slice-1 line from git. |
 | 2026-10-31 | A live hold is a ledger row that no later row names in `supersedes`, that is not `Retracted` and whose knowledge interval is open. A tombstone is a superseding row with `review: Retracted`. | Slice 1 filtered on `knowledge.expiredAt`, which an append-only file never sets on the row a renewal replaces, so a renewal would have left two current versions. | Revert `liveHoldVersions` to the `expiredAt` filter. |
 | 2026-10-31 | Required sites are root overrides, patched dependencies and OSV package overrides; catalog entries, manifest dependencies and syncpack version-group labels are anchor-only. Exact catalog pins are not enumerated. | The catalog pins every version exactly as policy, so an exact pin is hold-shaped only when it is also held from `deps:update`; those holds carry a `SyncpackHeld` anchor. | Add a site kind to `HoldSites.snapshot` and its lint rule. |

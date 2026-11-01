@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -208,3 +209,100 @@ export const holdLintFindingText = (finding: HoldLintFinding): string =>
     HeldListStale: ({ expected }) =>
       `stale: hold-ledger/syncpack-held.generated.json differs from the ledger (expected ${A.join(expected, ", ")})`,
   });
+
+/**
+ * Whether a hold's probe is due: two-thirds of its lease has elapsed.
+ *
+ * **Details**
+ *
+ * A hold with an unknown or open-ended lease is always due, since nothing else
+ * would ever re-check it. `deps:update` runs due probes before it bumps the
+ * catalog; jitter for fleet-wide wakes belongs to the wake service.
+ *
+ * **Example** (A hold with no runs yet)
+ *
+ * ```ts
+ * import { isProbeDue } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(typeof isProbeDue) // "function"
+ * ```
+ *
+ * @param version - The live hold version.
+ * @param now - The current time.
+ * @returns `true` once the probe should run again.
+ * @category policies
+ * @since 0.0.0
+ */
+export const isProbeDue: {
+  (now: DateTime.Utc): (version: HoldClaimVersion) => boolean;
+  (version: HoldClaimVersion, now: DateTime.Utc): boolean;
+} = dual(2, (version: HoldClaimVersion, now: DateTime.Utc): boolean => {
+  const lease = version.validTime;
+  return lease._tag === "Interval"
+    ? O.match(lease.validTo, {
+        onNone: () => true,
+        onSome: (validTo) => {
+          const from = DateTime.toEpochMillis(lease.validFrom);
+          return DateTime.toEpochMillis(now) >= from + ((DateTime.toEpochMillis(validTo) - from) * 2) / 3;
+        },
+      })
+    : true;
+});
+
+/**
+ * Whether a flipped hold can be retired by `deps:update` alone.
+ *
+ * **Details**
+ *
+ * Only an `Unpin` exit whose anchors are all catalog entries, manifest
+ * dependencies or held-list patterns qualifies: tombstoning the record drops
+ * the pattern from the held list and the catalog bump does the rest. A hold
+ * that also anchors an override, patch, OSV exception or version group needs
+ * a reviewed change to those files.
+ *
+ * **Example** (Check a hold record)
+ *
+ * ```ts
+ * import { isUnpinnedByCatalogBump } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(typeof isUnpinnedByCatalogBump) // "function"
+ * ```
+ *
+ * @param version - The flipped hold version.
+ * @returns `true` when the catalog bump alone ends the hold.
+ * @category policies
+ * @since 0.0.0
+ */
+export const isUnpinnedByCatalogBump = (version: HoldClaimVersion): boolean =>
+  version.proposition.exitAction._tag === "Unpin" &&
+  A.every(
+    version.proposition.subject.anchors,
+    (anchor) => anchor._tag === "CatalogEntry" || anchor._tag === "ManifestDependency" || anchor._tag === "SyncpackHeld"
+  );
+
+/**
+ * Whether a hold governs a package, directly or through a `scope/**` group pattern.
+ *
+ * **Example** (A lockstep family pattern)
+ *
+ * ```ts
+ * import { holdPackageMatches } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(holdPackageMatches("@lexical/**", "@lexical/react")) // true
+ * console.log(holdPackageMatches("@lexical/**", "lexical")) // false
+ * ```
+ *
+ * @param pattern - A package name or `scope/**` pattern from a hold subject.
+ * @param packageName - The package to look up.
+ * @returns `true` when the pattern covers the package.
+ * @category policies
+ * @since 0.0.0
+ */
+export const holdPackageMatches: {
+  (packageName: string): (pattern: string) => boolean;
+  (pattern: string, packageName: string): boolean;
+} = dual(
+  2,
+  (pattern: string, packageName: string): boolean =>
+    pattern === packageName || (Str.endsWith("/**")(pattern) && Str.startsWith(Str.slice(0, -2)(pattern))(packageName))
+);

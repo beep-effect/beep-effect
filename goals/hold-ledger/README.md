@@ -34,14 +34,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — in progress. Slice 1 (`beep holds list` and `probe`, the
-statelyai record) merged in #2404. Slice 2 (`feat/hold-ledger-inventory`) records
-every dependency-shaped site, derives the syncpack held list from the ledger and
-adds `beep holds lint` to the cheap gate. Slice 3 is `deps:update`, `holds why`
-and agent guidance.
+P1 Implement — final slice in review. Slice 1 (`beep holds list` and `probe`,
+the statelyai record) merged in #2404; slice 2 (every site recorded, the syncpack
+held list derived from the ledger, `beep holds lint` in the cheap gate) merged
+in #2450. Slice 3 (`feat/hold-ledger-sweep`) adds `beep holds update` as the
+`deps:update` pre-step, `beep holds why` and the
+[hold ledger runbook](../../docs/runbooks/hold-ledger.md); it meets the last
+acceptance criteria.
 
 ## Latest Evidence
 
+- 2026-11-01: [sweep slice](history/receipts/2026-11-01-sweep-slice.md).
+  `holds update --dry-run` on main reports statelyai as confirmed `Flipped` and
+  unpinnable, so the next `deps:update` retires it and bumps the catalog.
 - 2026-10-31: [inventory slice](history/receipts/2026-10-31-inventory-slice.md).
   30 live holds cover every root override, patch and OSV package override;
   syncpack's update dry run is identical with the ledger-derived held list, and
