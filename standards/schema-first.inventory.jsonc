@@ -1993,7 +1993,7 @@
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/repo-cli",
-      "reason": "Structural parameter contract of the pure block rewriter; its one caller, the effected port runner scratchpad/effected/runner/DocsMigrate.ts, builds it directly from in-memory extraction results, so this struct is never decoded itself."
+      "reason": "Structural parameter contract of the pure block rewriter; its last caller, the effected port runner DocsMigrate.ts (deleted with the lab at the effected-promotion close), built it directly from in-memory extraction results, so this struct is never decoded itself."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts",

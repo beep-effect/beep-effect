@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-01T07:45:55.611Z
+Generated: 2026-11-01T09:27:22.899Z
 
 ## Scope
 
@@ -11,12 +11,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 184 |
-| cleanPackages | 166 |
+| cleanPackages | 167 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 16 |
-| publicModules | 3640 |
-| publicExports | 25772 |
-| openModules | 161 |
+| packagesNeedingRemediation | 15 |
+| publicModules | 3572 |
+| publicExports | 25348 |
+| openModules | 115 |
 | openExports | 94 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
@@ -228,7 +228,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 170 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 171 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 172 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 73 | 346 | 0 | 0 |
-| 173 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 69 | 429 | 46 | 0 |
+| 173 | `@beep/scratchpad` | `scratchpad` | clean | 1 | 5 | 0 | 0 |
 | 174 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
 | 175 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
 | 176 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
@@ -520,58 +520,6 @@ Path: `packages/documents/server`
 Module findings:
 - `src/aggregates/Sync/DmsMirrorBox.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 - `src/aggregates/Sync/DmsMirrorFixture.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
-
-### @beep/scratchpad
-
-Path: `scratchpad`
-
-Module findings:
-- `effected/cli/ui-testing.ts:1` (packageDocumentation) - missing @since
-- `effected/cli/ui.ts:1` (packageDocumentation) - missing @since
-- `effected/cli/ui/CliUi.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/CliUiLive.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/Confirm.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/DocView.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/KeyHelp.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/KeyTable.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/MultiSelect.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/Select.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/Tabs.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/TextInput.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/Toggle.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/UiKey.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/UiProvider.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/UiStreams.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/UiTheme.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/Viewport.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/ErrorBoundary.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/Holder.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/ScreenContext.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/UiProviders.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/ink.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/inkChalk.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/inkConsole.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/lazyView.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/lineText.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/mountPermit.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/perfDrain.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/renderOptions.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/internal/screenElement.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/testing/CliUiTest.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/testing/fakeStreams.ts:1` (none) - missing summary; missing @since
-- `effected/cli/ui/testing/terminalModel.ts:1` (none) - missing summary; missing @since
-- `effected/engine/Distribution.ts:1` (none) - missing summary; missing @since
-- `effected/engine/LaunchContext.ts:1` (none) - missing summary; missing @since
-- `effected/engine/ProcessGuard.ts:1` (none) - missing summary; missing @since
-- `effected/engine/Remediation.ts:1` (none) - missing summary; missing @since
-- `effected/engine/guard.ts:1` (packageDocumentation) - missing @since
-- `effected/engine/index.ts:1` (packageDocumentation) - missing @since
-- `effected/npm/NpmExecutor.ts:1` (none) - missing summary; missing @since
-- `effected/npm/NpmRegistry.ts:1` (none) - missing summary; missing @since
-- `effected/npm/PackagePublish.ts:1` (none) - missing summary; missing @since
-- `effected/npm/PackageTarball.ts:1` (none) - missing summary; missing @since
-- `effected/npm/PublishError.ts:1` (none) - missing summary; missing @since
-- `effected/sbom/SigstoreSigner.ts:1` (none) - missing summary; missing @since
 
 ### @beep/professional-desktop
 
