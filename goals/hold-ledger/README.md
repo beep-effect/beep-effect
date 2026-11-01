@@ -34,7 +34,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — final slice in review. Slice 1 (`beep holds list` and `probe`,
+P3/P4 — the final PR #2453 meets the last acceptance criteria; the closeout reflection is in `history/reflections/`. The `completed-retained` proposal follows once #2453 has gating Yeet readiness evidence. Slice 1 (`beep holds list` and `probe`,
 the statelyai record) merged in #2404; slice 2 (every site recorded, the syncpack
 held list derived from the ledger, `beep holds lint` in the cheap gate) merged
 in #2450. Slice 3 (`feat/hold-ledger-sweep`) adds `beep holds update` as the

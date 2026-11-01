@@ -112,7 +112,7 @@ Higher sources outrank lower sources when they conflict.
       evidence.
 - [x] Agent guidance (a skill or runbook) documents admit, probe, renew and
       escalate.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -139,6 +139,7 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-11-01 | The final PR (#2453) records the goal's PRs in the completion gate and lands the closeout reflection, but not the `completed-retained` proposal. | `GoalProposedCloseoutCheck` requires a gating `yeet-verdict` evidence reference, and #2453 merges under the operator's merge-now ruling with package-scoped checks, so no genuine verdict file exists to cite. Citing one would fabricate evidence. | Add `proposedCloseout` with the verdict reference once the readiness evidence exists. |
 | 2026-11-01 | `bun run deps:update` runs `beep holds update` first. It probes every scripted hold whose lease is two-thirds spent, then tombstones each hold confirmed `Flipped` whose exit is `Unpin` and whose anchors are only catalog entries, manifest dependencies or held-list patterns. A flipped hold with any other anchor is reported for a reviewed change. A probe that cannot run is reported and leaves the hold in place. | The tombstone drops the pattern from the regenerated held list, so the same `syncpack update` moves the package; an override, patch or OSV exception is a config edit the catalog bump cannot make. Due probes have no jitter here because `deps:update` is one deterministic run; fleet wakes belong to `goals/wake-service`. | Restore `deps:update` to the bare `syncpack update` and drop `holds update`. |
 | 2026-11-01 | The agent guidance is a runbook, `docs/runbooks/hold-ledger.md`, not a skill. | The steps are commands run at known moments (adding a hold-shaped entry, `deps:update`); a runbook linked from the ledger, the docs index and `syncpack.config.ts` reaches them without adding always-loaded skill frontmatter. | Promote the runbook into a skill. |
 | 2026-10-31 | `HoldAnchor` is a tagged union of typed config sites (`CatalogEntry`, `ManifestDependency`, `SyncpackHeld`, `SyncpackVersionGroup`, `RootOverride`, `PatchedDependency`, `OsvPackageOverride`). The single slice-1 statelyai row was rewritten in place to the typed form, keeping its id so its two probe runs stay bound. | Free-text `{file, key}` anchors could not be linted, and the slice-1 key (`workspaces.catalog.statelyai`) was already wrong: the catalog is top-level. No consumer read the ledger between the two slices. | Restore the `{file, key}` struct and the slice-1 line from git. |
