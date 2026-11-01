@@ -664,7 +664,7 @@ export class DependencyReviewUnavailableError extends S.TaggedError<
  * const counts = DependencyReviewCounts.make({
  *   rows: 3,
  *   excludedRows: 1,
- *   excludedManifests: ["scratchpad/test/workspaces/fixtures/peers/npm/package-lock.json"],
+ *   excludedManifests: ["packages/tooling/library/repo-workspaces/test/fixtures/peers/npm/package-lock.json"],
  *   reviewedRows: 2,
  *   unlicensedRows: 0,
  * })

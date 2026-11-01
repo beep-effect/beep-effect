@@ -11,8 +11,8 @@ upstream `packages/env/src/<Module>.ts` maps to `src/<Module>.ts` for `Audience`
 `src/internal/` keeps its layout, and upstream `__test__/` maps to `test/`, with the
 shared helpers under `test/support/`. The upstream `SourceBoundary` purity scan is
 `test/purity.test.ts` over the bundled source text, with no `@effected/workspaces`
-devDependency. Other names: `@effected/cli` is still the lab module `scratchpad/effected/cli`
-(planned as `@beep/cli-kit`). The upstream `pnpm vitest` / `pnpm build` commands map to
+devDependency. Other names: `@effected/cli` is `@beep/cli-kit`
+(its `ui` half is deferred as `@beep/ink`). The upstream `pnpm vitest` / `pnpm build` commands map to
 `bun run test` / `bun run build` in the package, or
 `bun run beep quality package-verify @beep/runtime-env` from the repository root.
 

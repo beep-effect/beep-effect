@@ -216,7 +216,7 @@ bun run docgen            # API docs, with every JSDoc example typechecked
 
 ## Provenance
 
-Ported from upstream `@effected/jsonc` (MIT, C. Spencer Beggs) through the effected kit port, which landed it as the scratchpad module `scratchpad/effected/jsonc`, and promoted into this workspace package by `goals/effected-promotion`. The promotion moved the sources to `src/` and the tests to `test/`, renamed the schema identities from `@beep/scratchpad/effected/jsonc/<Name>` to `@beep/jsonc/<Name>`, and changed no behaviour.
+Ported from upstream `@effected/jsonc` (MIT, C. Spencer Beggs) through the effected kit port, which landed it as the scratchpad module `scratchpad/effected/jsonc` (last held at `3c931bbaefd4e860cbb7cbb5dae01064e0b3c8bb`), and promoted into this workspace package by `goals/effected-promotion`. The promotion moved the sources to `src/` and the tests to `test/`, renamed the schema identities from `@beep/scratchpad/effected/jsonc/<Name>` to `@beep/jsonc/<Name>`, and changed no behaviour.
 
 ## License
 

@@ -103,7 +103,7 @@ Ported from upstream `@effected/tsconfig-json` (MIT, C. Spencer Beggs) through t
 
 Promoted here, the pure half: `CompilerOptions`, `CompilerOptionsFromProgrammatic`, `JsxConfig`, `PortableTsconfig`, `ResolvedTsconfig`, `TsconfigJson` and `TsEnumCodec`, with their tests.
 
-Still in `scratchpad/effected/tsconfig-json`, the filesystem half: `TsconfigLoader`, `TsconfigLoaderSync`, `TsconfigDiscovery` and `internal/extendsTarget`. They read configs through `FileSystem` and `Path`, and discovery walks ancestor directories through the upstream walker, which has no `@beep` home yet. Wave 3 promotes them as `@beep/repo-tsconfig` in the tooling library family once `@beep/walker` exists; until then they import this package's modules by subpath.
+The filesystem half, `TsconfigLoader`, `TsconfigLoaderSync`, `TsconfigDiscovery` and `internal/extendsTarget`, reads configs through `FileSystem` and `Path` and walks ancestor directories through `@beep/walker`. Wave 3-2 promoted it as `@beep/repo-tsconfig` in the tooling library family; it imports this package's modules by subpath.
 
 ## Port notes
 

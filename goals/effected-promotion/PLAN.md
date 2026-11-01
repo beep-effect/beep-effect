@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `active` — P1 in progress. The state of each wave and PR lives in its row in the tables below: a PR edits only its own row, and this line names no wave or PR, so concurrent lanes never conflict on it (SPEC W4-v).
+Status: `active` — implementation and verification are complete, and the closing PR proposes the closeout (`proposedCloseout` in `ops/manifest.json`); the status stays active until `bun run beep goals completion refresh --slug effected-promotion` verifies that proposal. The state of each wave and PR lives in its row in the tables below: a PR edits only its own row, and this line names no wave or PR, so concurrent lanes never conflict on it (SPEC W4-v).
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Map every module to a package home, sweep the repo for reuse sites, design the `@beep/md` merge. | `research/promotion-map-2026-10-20.md`; decisions D-01..D-18 in `SPEC.md`. |
-| P1 Implement | in-progress | Promote the waves, then run the adoption PRs (D-04). | Acceptance criteria in `SPEC.md`. |
-| P2 Verify | pending | `package-verify` per package, scratchpad check, identity registry, typos. | Verification matrix green. |
-| P3 Yeet: PR to mergeable | pending | One PR per wave and per adoption step, each driven to mergeable. | Each PR merge-ready; zero unresolved threads. |
-| P4 Close | pending | Closeout reflection and packet flip. | Reflection exists; `proposedCloseout` in the final PR. |
+| P1 Implement | complete | Promote the waves, then run the adoption PRs (D-04). | Acceptance criteria in `SPEC.md`. |
+| P2 Verify | complete | `package-verify` per package, scratchpad check, identity registry, typos. | Verification matrix green. |
+| P3 Yeet: PR to mergeable | in-progress | One PR per wave and per adoption step, each driven to mergeable. | Each PR merge-ready; zero unresolved threads. C, the last, carries this phase. |
+| P4 Close | in-progress | Closeout reflection and packet flip. | Reflection exists; `proposedCloseout` in the final PR. C carries both. |
 
 ## Waves
 
@@ -45,7 +45,7 @@ the sub-wave order, dependencies and parallel lanes, and its decisions are recor
 | 3-A3 (merged, #2270) | repo-utils re-base | W3-f (3-A3 part), W3-h (3-A3 part), W4-h (3-A3 part), W4-i (3-A3 part), W4-j (3-A3 part). `PackageJson` extends `PackageManifest` (2,111 → 1,322 lines); dependency maps, `scripts` and `WorkspaceDeps` buckets are `HashMap`; `NpmPackageJson`, `npmPackageJsonJsonSchema` and `UniqueDeps.ts` deleted; repo-cli consumers migrated. Parity: 193 manifests, 801 mutations, 170 intended differences (148 raw-encoder reorders), 0 unclassified. Stacked on 3-A4 (#2246, D-54). |
 | 3-A4 (merged, #2246) | package.json readers | W3-f (3-A4 part), W4-h (3-A4 part), W4-i (3-A4 part). repo-cli's projection readers (ChangesetGraph, ChangesetStatus, PackageVerify, QualityArtifactSupport, Tasks, CatalogUsage, BunResolver, `RootCatalog.ts` package.json half, PackageTestTypecheck, EffectSchemaInventoryModules) read through `LenientManifest` via one `internal/ManifestRead.ts` adapter; docgen `Version.ts` and `Configuration.ts` through `PackageJsonFile`; the VersionSync updaters through `PackageJsonFormat.modifyToString`. Old-versus-new parity over 193 manifests (`ops/package-json-readers-parity.ts`); the JSONC, `workspaces` and updater behaviour changes are pinned by tests. Narrows the "Duplicate package.json field models" Exception Ledger row to 3-A3's repo-utils site. |
 | 3-A5 (merged, #2294) | CheckCensus onto `TsconfigLoader.compilerOptions` | W3-c (3-A5 part), W4-h (3-A5 part). repo-cli `Quality/CheckCensus.ts` reads the package `references` and the check-overlay `include`/`exclude` through `TsconfigLoader.load`, and each referenced project's `outDir` through `TsconfigLoader.compilerOptions` (inherited through `extends`, `${configDir}` substituted); the three local schemas and the `jsonc-parser` import are gone. Parity: `ops/check-census-adoption-parity.ts` (185 census packages, 1,273 references, 0 overlay or declaration-index differences, `research/check-census-adoption-parity-3-a5.json`) and the real census before/after with timing keys stripped (`research/check-census-parity-3-a5.md`). The inherited-`outDir` shift is pinned by a test. After 3-2. |
-| 3-A6 (in review, this PR) | `TsconfigValidator` + docgen `readTSConfig` | W3-c (3-A6 part), D-56, W4-h (3-A6 part), W4-i (3-A6 part). `@beep/tsconfig` gains the closed views `ClosedCompilerOptions` / `ClosedTsconfigJson`; `@beep/repo-tsconfig/TsconfigValidator` layers tsc's uniqueness and cross-field rules over them (`StrictTsconfig`, `StrictCompilerOptions`, `TsconfigValidationError`; `validate`, `validateCompilerOptions`, `load`, `compilerOptions`). docgen `Configuration.readTSConfig` reads a named tsconfig through `TsconfigValidator.compilerOptions` (extends chain merged), `CompilerOptionsShape` is the closed view's encoded side, `encodeExamplesTsconfig` renders the examples tsconfig; `CLI.ts` and `Core.ts` follow. repo-utils `schemas/TSConfig.ts` and its test are deleted (no repo-cli importer existed). Parity: `ops/tsconfig-validator-parity.ts` over 686 tracked `*tsconfig*.json` (683 identical verdicts, 3 classified tsc-7 `allowImportingTsExtensions` flips) and 181 `docgen.json` (170 loaded, resolved options identical; `research/tsconfig-validator-parity-3-a6.md`). The docgen parity is vacuous for a `parseCompilerOptions: "<file>"` string input (no `docgen.json` in the repo names a tsconfig file), so the string-input shift (the `extends` chain merged and path options absolutized where the legacy read took the single named file) is pinned only by the two `test/Configuration.test.ts` cases `merges the extends chain` and `falls back`. Every other shift is an inverted test (D-56). After 3-2, 3-3, 3-A3, 3-A4. |
+| 3-A6 (merged, #2329) | `TsconfigValidator` + docgen `readTSConfig` | W3-c (3-A6 part), D-56, W4-h (3-A6 part), W4-i (3-A6 part). `@beep/tsconfig` gains the closed views `ClosedCompilerOptions` / `ClosedTsconfigJson`; `@beep/repo-tsconfig/TsconfigValidator` layers tsc's uniqueness and cross-field rules over them (`StrictTsconfig`, `StrictCompilerOptions`, `TsconfigValidationError`; `validate`, `validateCompilerOptions`, `load`, `compilerOptions`). docgen `Configuration.readTSConfig` reads a named tsconfig through `TsconfigValidator.compilerOptions` (extends chain merged), `CompilerOptionsShape` is the closed view's encoded side, `encodeExamplesTsconfig` renders the examples tsconfig; `CLI.ts` and `Core.ts` follow. repo-utils `schemas/TSConfig.ts` and its test are deleted (no repo-cli importer existed). Parity: `ops/tsconfig-validator-parity.ts` over 686 tracked `*tsconfig*.json` (683 identical verdicts, 3 classified tsc-7 `allowImportingTsExtensions` flips) and 181 `docgen.json` (170 loaded, resolved options identical; `research/tsconfig-validator-parity-3-a6.md`). The docgen parity is vacuous for a `parseCompilerOptions: "<file>"` string input (no `docgen.json` in the repo names a tsconfig file), so the string-input shift (the `extends` chain merged and path options absolutized where the legacy read took the single named file) is pinned only by the two `test/Configuration.test.ts` cases `merges the extends chain` and `falls back`. Every other shift is an inverted test (D-56). After 3-2, 3-3, 3-A3, 3-A4. |
 | 3-A7 (merged, #2311) | `TsconfigSync.schemas` onto `@beep/tsconfig` | W4-h, W4-i (3-A7 part). repo-cli `TsconfigSync.plan.ts` decodes its six tsconfig parse sites through `TsconfigJson` (strict kit: all 666 tracked `tsconfig*.json` files decode); the four partial projections are deleted. A non-string or empty reference `path`, an invalid `compilerOptions` value and a malformed root `paths` value now fail the sync (pinned). Byte parity: `ops/tsconfig-sync-parity.ts`, 13 mutations, 0 differences (`research/tsconfig-sync-parity-3-a7{,-head}.json`). repo-cli gains `@beep/tsconfig` (cache baseline request `research/cache-baseline-request-3-a7.json`). |
 | 3-A8 (merged, #2202) | `GitHubMarkdown.table` adoption | repo-cli `Ci/RunnerLossRerun.ts` (fixes the unescaped `\|` cells, pinned red-then-green) and `Ci/CiOperational.service.ts`; repo-cli gains the `@beep/github-reporting` dependency (cache baseline request `research/cache-baseline-request-w3-a8.json`). Parity: every other recorded summary byte-identical (W4-h, 3-A8 part). `LaneTimings` and `Ci.command` tables stay excluded. |
 | 3-A9 (merged, #2190) | `ScopedPackageName` | observability `catalog/Catalog.names.ts`: `PackageName` is `ScopedPackageName` re-annotated, and observability depends on `@beep/package-json` (leaf import only). Parity over the 2,407 distinct repo names (196 tracked manifests, 3,348 `bun.lock` packages): 0 disagreements (`ops/observability-package-name-parity.ts`, `research/observability-package-name-parity-3-a9.json`). Intended divergences pinned by inverted tests: a leading `-` in the scope or name is accepted, and names over 214 characters are rejected. Cache review `research/cache-baseline-review-3-a9.md`. |
@@ -105,32 +105,43 @@ subpath", because the knowledge doctor reads a dot-slash span as a packet-relati
 | 4-W-b (merged, #2241) | `@beep/repo-workspaces/testing` + PackedInstall fix + `LayerPolicy` re-key + lab cli/engine boundary retargets | 4-W-a |
 | 4-X-A (merged, #2242) | XDG adoption: ai-metrics forwarder/data-root, `BeepCacheRoot`, `Fleet`, `HarnessLedger`, `AIMetrics/Programs`, `MatchPerson`, apps docket-intake and practice-m365-contacts (#183 excluded) | 4-X |
 | 4-C-A (merged, #2309) | `CliRuntime.main` in `bin-main.ts`/`FailureRendering.ts` (EPIPE latching kept); `CliPrompt.gateTerminal` in SkillsReview; one `TestTerminal` swap | 4-C |
-| R5a (in review, this PR) | DeletePackage key removal, typed frontmatter (`ReflectionArtifact`, `SkillFrontmatterCheck`), KnowledgeDoctor `beep-historical` | #2143, 4-CI |
+| R5a (merged, #2330) | DeletePackage key removal, typed frontmatter (`ReflectionArtifact`, `SkillFrontmatterCheck`), KnowledgeDoctor `beep-historical` | #2143, 4-CI |
 | R8 (merged, #2298) | managed-section templates: Observability render, Explore Atlas, Models.render (LabIdentitySegment excluded; GhOps to the follow-up goal) | main |
 | 3-A6 (merged, #2329) | `TsconfigValidator` + docgen `readTSConfig`; delete repo-utils `schemas/TSConfig.ts`; `@beep/tsconfig` closed view | 3-2, 3-3, 3-A3, 3-A4 |
 | 4-A1 (merged, #2380) | repo-cli QAS discovery onto `WorkspaceDiscovery` (#143), discovery only, kit `containWithinRoot` plus the `resolvePathWithinCanonicalRoot` guard | 3-A4 (merged), 4-W-a (merged) |
 | 4-A2 (merged, #2433) | public `WorkspacePatterns` leaf; CreatePackage, TsconfigSync.plan, ConfigUpdater, ChangesetGraph, Tasks pattern readers (3 fallow suppressions out) | 3-A4 (merged), 4-W-a (merged), R2b (merged), 4-A1 (merged) |
 | 4-A3 (merged, #2445) | repo-utils Workspaces/Dependencies/DependencyIndex onto the kit; `beep topo-sort` onto `DependencyGraph.sort()` with the jsdoc-inventory reorder in the same PR | 3-A3, 4-W-a, 4-A1 |
-| 4-A4 (in review, this PR) | `Lint/EcosystemPolarity.ts` onto `SourceBoundary.scan` | 4-W-b |
+| 4-A4 (merged, #2340) | `Lint/EcosystemPolarity.ts` onto `SourceBoundary.scan` | 4-W-b |
 | R4 (merged, #2469) | `yaml` out of repo-cli and ai-metrics runtime deps (Runners, ChangesetGraph, FallowQuality and the workflow tests on `effect/encoding/Yaml`; the writers, `YamlFileUpdater` and Models.locator on `@beep/yaml`, whose composed AST carries the node spans and whose new `auto` quote style keeps the writers byte-identical, so nothing keeps `yaml`) | 3-3, 3-A4, 4-A2 (merged) |
 | R6 (merged, #2454) | one fence extractor: `@beep/markdown` `MarkdownFence` (W4-q passed at 366 lines); docgen `Core.ts`, `EffectImports.ts`, `TypeScriptFences.ts`, `Doctest.ts`, `JSDocSections.ts` onto it | R2b (merged), R5b (merged), #2144 |
 | W5 (merged, #2245) | `@beep/github-actions` (drivers); runner-file adopters (`CiOperational`, `Ci.command`, `CiAdmission`, `CiRerunRunnerLoss`, github-commands #87); `@azure/storage-blob` exact pin; `ActionCache.resolvePaths` split first | 4-S, 3-A8, W4-j resolved |
 | R3a (merged, #2430) | `@beep/schema/Jsonc` owner switch and deletion | 3-A6, R5a |
-| R3b (in review, this PR) | `jsonc-parser` out of repo-cli, repo-configs and the root devDependencies (every site on `@beep/jsonc`: the editing facade on `JsoncModifier.modifyWithFormattingResult`, `Json.ts` and the five Skills copies on `JsoncFormatter`, the trees on `JsoncNode`, the parses on `Jsonc.parseResult`); the kit formatter and the new formatted modifier are byte-compatible ports of `jsonc-parser` 3.3.1, which stays only as the `@beep/config-file` and `@beep/jsonc` oracle | R3a, R4, R5a |
-| C | close (Closeout definition of done) | every row above |
+| R3b (merged, #2473) | `jsonc-parser` out of repo-cli, repo-configs and the root devDependencies (every site on `@beep/jsonc`: the editing facade on `JsoncModifier.modifyWithFormattingResult`, `Json.ts` and the five Skills copies on `JsoncFormatter`, the trees on `JsoncNode`, the parses on `Jsonc.parseResult`); the kit formatter and the new formatted modifier are byte-compatible ports of `jsonc-parser` 3.3.1, which stays only as the `@beep/config-file` and `@beep/jsonc` oracle | R3a, R4, R5a |
+| C (in review, this PR) | close (Closeout definition of done): the `scratchpad/effected` lab and `scratchpad/test/{cli,engine,npm,runner,sbom,workspaces}` deleted and unwired (SPEC D-60), the four lab notes, the deferred modules' port reviews and canon exceptions archived under `history/`, the Deferred shas filled, `proposedCloseout` and the reflection | every row above |
 
 ## Deferred
 
-W4-m: each deferred module leaves the lab in C, pinned by the last sha that holds it. C fills in the
-sha column; restore with `git checkout <sha> -- scratchpad/effected/<m> scratchpad/test/<m>`.
+W4-m: each deferred module leaves the lab in C, pinned by the last sha that holds it. For every row
+that is `bb2134fcb952e07580c4cebf2586c901f090ef5b`, the parent of C's deletion commit; `main` did not touch
+`scratchpad/effected` or `scratchpad/test` after it (`git diff --stat` from the pin to `main` over both prints
+nothing). Each row names its restore command. A restored module also needs the lab wiring that C's unwiring commit
+(`dc35c67219` on the C branch, squashed into C's merge commit) removed, all present at the pin:
+`git checkout bb2134fcb952e07580c4cebf2586c901f090ef5b -- scratchpad/effected/tsconfig.lab.json scratchpad/effected/audit.ts
+scratchpad/effected/runner scratchpad/test/runner scratchpad/effected/.canary scratchpad/effected/PORT_LEDGER.json
+scratchpad/vitest.effected.config.ts scratchpad/docgen.effected.template.json .oxlintrc.effected.json` (`audit.ts`
+runs the port runner, whose gates read `.canary` and `PORT_LEDGER.json` and whose docs command reads the docgen
+template), then the `*:effected` scripts and the module's lab-only dependencies from the pin's
+`scratchpad/package.json`, then `bun install` and `bun run beep tsconfig-sync` for the scratchpad references.
+Restoring `cli/ui*` also needs the `ink-8-zero-width-markers` hold back in `hold-ledger/claims.jsonl` (C tombstoned it
+when `ink` left the last manifest).
 
-| Module | Future package | Trigger consumer | Last sha holding it |
-| --- | --- | --- | --- |
-| npm registry/publish half | npm driver | mcpb-kit tarball | filled at C |
-| `sbom/SigstoreSigner.ts` | `@beep/sigstore` | a release attestation step | filled at C |
-| `cli/ui*` | `@beep/ink` | the Accounts TUI | filled at C |
-| `engine` | `@beep/mcp-kit` | an MCP server ProcessGuard | filled at C |
-| `PORT_LEDGER.json` (W4-n) | none | none; referenced by sha only | filled at C |
+| Module | Future package | Trigger consumer | Last sha holding it | Restore |
+| --- | --- | --- | --- | --- |
+| npm registry/publish half | npm driver | mcpb-kit tarball | `bb2134fcb952e07580c4cebf2586c901f090ef5b` | `git checkout bb2134fcb952e07580c4cebf2586c901f090ef5b -- scratchpad/effected/npm scratchpad/test/npm` |
+| `sbom/SigstoreSigner.ts` | `@beep/sigstore` | a release attestation step | `bb2134fcb952e07580c4cebf2586c901f090ef5b` | `git checkout bb2134fcb952e07580c4cebf2586c901f090ef5b -- scratchpad/effected/sbom scratchpad/test/sbom` |
+| `cli/ui*` | `@beep/ink` | the Accounts TUI | `bb2134fcb952e07580c4cebf2586c901f090ef5b` | `git checkout bb2134fcb952e07580c4cebf2586c901f090ef5b -- scratchpad/effected/cli scratchpad/test/cli` |
+| `engine` | `@beep/mcp-kit` | an MCP server ProcessGuard | `bb2134fcb952e07580c4cebf2586c901f090ef5b` | `git checkout bb2134fcb952e07580c4cebf2586c901f090ef5b -- scratchpad/effected/engine scratchpad/test/engine` |
+| `PORT_LEDGER.json` (W4-n) | none | none; referenced by sha only | `bb2134fcb952e07580c4cebf2586c901f090ef5b` | `git show bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json` |
 
 ## Adoption steps (after the wave that provides the package)
 

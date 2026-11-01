@@ -6,7 +6,7 @@
     "title": "Effected kit promotion",
     "status": "active",
     "created": "2026-10-21",
-    "updated": "2026-10-21",
+    "updated": "2026-11-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effected-promotion",
@@ -19,7 +19,18 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/chore_effected-promotion-closeout-bba3983f1dc1/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2476
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -198,22 +209,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

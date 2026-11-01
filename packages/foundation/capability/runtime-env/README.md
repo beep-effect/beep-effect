@@ -82,7 +82,7 @@ The capability gate for `foundation/capability` requires at least two importing 
 - `@beep/chalk`: the per-stream colour level behind `supportsColor` and `supportsColorStderr` (`SupportsColor`), which delegates to `ColorLevel.fromEnv`.
 - `@beep/colors`: colour detection for `supportsColor` and `isColorSupported` (`Colors`), which delegates to `ColorLevel.fromEnv`.
 
-The lab's `scratchpad/effected/cli` module builds its presentation layer on these services until it is promoted as `@beep/cli-kit`.
+`@beep/cli-kit` builds its presentation layer on these services.
 
 ## Development
 

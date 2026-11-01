@@ -261,9 +261,7 @@ const appendSchemaClassEntries = (
   const scan = SchemaFirstSchemaClass.scanSourceFile(sourceFile.compilerNode);
   A.forEach(scan.referencedNames, (name) => MutableHashSet.add(referencedNames, name));
   if (!scanned) return;
-  const plainDataEligible =
-    SchemaFirstSchemaClass.isPlainDataEligibleFilePath(filePath) &&
-    !SchemaFirstSchemaClass.isGeneratedSourceText(sourceFile.getFullText());
+  const plainDataEligible = !SchemaFirstSchemaClass.isGeneratedSourceText(sourceFile.getFullText());
   for (const declaration of scan.declarations) {
     appendOptionEntry(entries, SchemaFirstSchemaClass.unbrandedEntry(declaration, filePath, owner));
     if (plainDataEligible) A.appendInPlace(plainDataCandidates, { declaration, file: filePath, owner });

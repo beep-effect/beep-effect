@@ -280,7 +280,8 @@ API-shape changes that are not behaviour deviations:
 ### Deviations
 
 Each entry gives the lab test that pins it, upstream behaviour, lab behaviour
-and the reason, in the section 14 format of `scratchpad/EFFECTED_PORT_GOAL.md`.
+and the reason, in the section 14 format of the lab port goal
+(`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/EFFECTED_PORT_GOAL.md`).
 A reason is `law:<id>` or `upstream-bug:<evidence>`. Numbered laws come from
 `standards/effect-laws-v1.md`, `EF-*` laws from
 `standards/effect-first-development.md`, and `D*` from the port goal's locked
@@ -818,7 +819,8 @@ runtime the port imports only `effect` and the workspace packages
 ## Provenance
 
 Ported from upstream `@effected/jsonl` (MIT, C. Spencer Beggs) through the
-effected port, then promoted from `scratchpad/effected/jsonl` into this package
-by `goals/effected-promotion`. [LICENSE](./LICENSE) carries both the beep-effect
+effected port, then promoted from `scratchpad/effected/jsonl` (last held at
+`3c931bbaefd4e860cbb7cbb5dae01064e0b3c8bb`) into this package by
+`goals/effected-promotion`. [LICENSE](./LICENSE) carries both the beep-effect
 and the upstream copyright notices. [KNOWLEDGE.md](./KNOWLEDGE.md) carries the
 upstream knowledge bundle verbatim; port decisions live in Port notes above.

@@ -6,7 +6,7 @@
  * This module imports NOTHING from `@sigstore/*`, deliberately. A bundle is
  * what crosses the seam to `@beep/github`'s attestation upload, and it is what
  * a verifier reads; neither should have to load Fulcio's transport to name the
- * shape. The signer that produces it stays in the effected lab (`sbom`). The media-type constants are therefore written out rather than
+ * shape. The signer that produces it is deferred as `@beep/sigstore`. The media-type constants are therefore written out rather than
  * re-exported from `@sigstore/bundle`.
  *
  * @packageDocumentation

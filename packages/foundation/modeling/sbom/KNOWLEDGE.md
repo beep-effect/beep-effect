@@ -5,19 +5,19 @@ Relative `okf/...` links refer to that checkout. Content is carried verbatim; po
 decisions live in README.md → Port notes, not here.
 
 Upstream paths map onto this repository as follows. `packages/sbom/src/` is split: its eight pure modules
-(`SbomDocument`, `Sbom`, `SbomMetadataSource`, `NtiaReport`, `InTotoStatement`, `SlsaProvenance`,
-`SigstoreBundle`, `IdentityToken`) are `packages/foundation/modeling/sbom/src/` here, and `SigstoreSigner.ts` stays
-in the effected lab at `scratchpad/effected/sbom/` as the deferred `@beep/sigstore` half (effected-promotion W4-b,
-W4-m). `packages/sbom/__test__/` is `test/` here for the pure half, with `test/support/` helpers, and
-`scratchpad/test/sbom/` for the signer. Upstream package names map the same way: `@effected/sbom` is `@beep/sbom`
-(plus the lab signer), and `@effected/spdx`, `@effected/package-json` and `@effected/github` are `@beep/spdx`,
-`@beep/package-json` and `@beep/github`; `@effected/github-actions` is still the lab `github-actions` module (wave
-5). Upstream `pnpm` commands map to `bun run test`, `bun run check` and
-`bun run beep quality package-verify @beep/sbom`; there is no `savvy.build.ts`. Four upstream facts below no longer
-hold here: the root barrel does not export `SigstoreSigner` (the signer and its `@sigstore/*` edge are not in this
-package at all); the models are branded `S.Opaque` records, not class instances, so membership is `S.is` and
-`make` copies; the reachability test reads Vite-inlined source text rather than the filesystem; and the full
-CycloneDX schema is validated with an `ajv` devDependency (`test/conformance.ajv.test.ts`), which upstream declined.
+(`SbomDocument`, `Sbom`, `SbomMetadataSource`, `NtiaReport`, `InTotoStatement`, `SlsaProvenance`, `SigstoreBundle`,
+`IdentityToken`) are `packages/foundation/modeling/sbom/src/` here, and `SigstoreSigner.ts` is the deferred
+`@beep/sigstore` half, deleted from the effected lab when the packet closed (effected-promotion W4-b, W4-m; last held
+at `bb2134fcb952e07580c4cebf2586c901f090ef5b`). `packages/sbom/__test__/` is `test/` here for the pure half, with
+`test/support/` helpers; the signer's tests left with it. Upstream package names map the same way: `@effected/sbom` is
+`@beep/sbom` (plus the deferred signer), and `@effected/spdx`, `@effected/package-json` and `@effected/github` are
+`@beep/spdx`, `@beep/package-json` and `@beep/github`; `@effected/github-actions` is `@beep/github-actions` (wave 5).
+Upstream `pnpm` commands map to `bun run test`, `bun run check` and `bun run beep quality package-verify @beep/sbom`;
+there is no `savvy.build.ts`. Four upstream facts below no longer hold here: the root barrel does not export
+`SigstoreSigner` (the signer and its `@sigstore/*` edge are not in this package at all); the models are branded
+`S.Opaque` records, not class instances, so membership is `S.is` and `make` copies; the reachability test reads
+Vite-inlined source text rather than the filesystem; and the full CycloneDX schema is validated with an `ajv`
+devDependency (`test/conformance.ajv.test.ts`), which upstream declined.
 
 ---
 <!-- packages/sbom/CLAUDE.md -->

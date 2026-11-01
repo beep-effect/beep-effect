@@ -441,7 +441,7 @@ The unit suites run on `@beep/memfs` volumes and scripted processes, and read th
 
 ## Provenance
 
-Ported from upstream `@effected/workspaces` (MIT, C. Spencer Beggs) through the effected port, which landed it in the scratchpad module `scratchpad/effected/workspaces`. Wave 4-W-a of `goals/effected-promotion` then promoted the core and config-dependency half into this package, and wave 4-W-b the `testing` cluster (`WorkspaceLayering`, `LayerPolicy`, `SourceBoundary`, `PackedInstall`) behind the `./testing` subpath, so no lab source directory remains; the lab-wide layering and peer-closure integration tests stay under `scratchpad/test/workspaces/integration/` until the packet closes. Each promotion moved the sources to `src/`, the tests to `test/` and the fixtures to `test/fixtures/`, renamed the schema identities from `@beep/scratchpad/effected/workspaces/<Name>` to `@beep/repo-workspaces/<Name>`, and made the changes listed under Deviations. The lab review rounds and canon exceptions are archived under `goals/effected-promotion/history/`.
+Ported from upstream `@effected/workspaces` (MIT, C. Spencer Beggs) through the effected port, which landed it in the scratchpad module `scratchpad/effected/workspaces` (last held whole at `093c7d751df1c5cb7f99b12b6d5db78e750e10a2`). Wave 4-W-a of `goals/effected-promotion` then promoted the core and config-dependency half into this package, and wave 4-W-b the `testing` cluster (`WorkspaceLayering`, `LayerPolicy`, `SourceBoundary`, `PackedInstall`) behind the `./testing` subpath, so no lab source directory remains; the lab-wide layering and peer-closure integration tests were deleted when the packet closed (last held under `scratchpad/test/workspaces/integration/` at `bb2134fcb952e07580c4cebf2586c901f090ef5b`). Each promotion moved the sources to `src/`, the tests to `test/` and the fixtures to `test/fixtures/`, renamed the schema identities from `@beep/scratchpad/effected/workspaces/<Name>` to `@beep/repo-workspaces/<Name>`, and made the changes listed under Deviations. The lab review rounds and canon exceptions are archived under `goals/effected-promotion/history/`.
 
 ### Attribution
 
@@ -460,7 +460,7 @@ Ported from upstream `@effected/workspaces` (MIT, C. Spencer Beggs) through the 
 
 ### Deviations
 
-One entry per class of change (law- or ruling-forced) and one per behavioural divergence. The lab ledger rows hold the full upstream and port behaviour for the port-era entries.
+One entry per class of change (law- or ruling-forced) and one per behavioural divergence. The lab ledger rows (`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json`) hold the full upstream and port behaviour for the port-era entries, and their `scratchpad/test/workspaces/` citations resolve at that commit.
 
 Promotion (wave 4-W-a):
 

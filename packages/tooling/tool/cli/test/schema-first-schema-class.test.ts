@@ -145,11 +145,6 @@ describe("SchemaFirstSchemaClass predicates", () => {
     expect(SchemaFirstSchemaClass.isGeneratedSourceText("// Hand-written module.\nexport {}\n")).toBe(false);
     expect(SchemaFirstSchemaClass.isGeneratedSourceText("export {}\n// @generated\n")).toBe(false);
   });
-
-  it("excludes the effected port from the plain-data kind", () => {
-    expect(SchemaFirstSchemaClass.isPlainDataEligibleFilePath("scratchpad/effected/src/Foo.ts")).toBe(false);
-    expect(SchemaFirstSchemaClass.isPlainDataEligibleFilePath("packages/example/src/Foo.ts")).toBe(true);
-  });
 });
 
 describe("SchemaFirstSchemaClass inventory entries", () => {

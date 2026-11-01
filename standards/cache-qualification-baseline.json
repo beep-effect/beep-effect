@@ -1234,11 +1234,11 @@
       }
     },
     "@beep/scratchpad": {
-      "reviewer": "Claude Fable 5.1 (tsrs-gates, feat/tsrs-gates)",
-      "reason": "Re-record the legacy cache posture of all 189 subjects after the root manifest (a turbo global input) moved its catalog pins to @effect/tsgo 0.59.0 and tsrs 0.20.0-ts7.1.0-beta, added --tsrs to prepare and switched check:configs, and every workspace beep:build, beep:check and beep:check:tests command changed from tsc-rs to tsrs (goals/tsrs-gates). Task names, project files, inputs, outputs, cache flags and turbo.json are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion closeout C, chore/effected-promotion-closeout)",
+      "reason": "Record the closeout manifest edit that drops the six *:effected scripts and the 44 lab-only dependencies from @beep/scratchpad after the effected lab is deleted; the closure shrinks by one package and no other subject changes; no qualification is granted.",
       "basis": {
-        "path": "goals/tsrs-gates/research/cache-baseline-review-2026-10-26.md",
-        "sha256": "ab95a272cfdb7722c4a127f2e128ae30f8e2baee542cf39a0c61820d3ad57d95"
+        "path": "goals/effected-promotion/research/cache-baseline-review-c.md",
+        "sha256": "d9b26c3e594f6193bceeed994bc37ccdce157c9531d8129ad42acd29cb476e72"
       }
     },
     "@beep/semantic-web": {
@@ -112414,7 +112414,7 @@
       {
         "computation": "@beep/scratchpad#docgen",
         "command": "bunx --bun --no-install docgen",
-        "commandDigest": "86f5345bfd5bc980eb685de5738619e25202122eec8811305a0770028badf93b",
+        "commandDigest": "b3aa0d0077c0b46cf4185d5906aed91a064fd1a11cb6c113e80ca4b6a42d72e5",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/scratchpad#transit"
