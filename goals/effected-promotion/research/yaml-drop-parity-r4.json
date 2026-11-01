@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/yaml-drop-parity.ts",
-  "commit": "2f666e4bd8d90dfe9b906cd4197f63f4faf2d9ac",
+  "commit": "589cf0dcfedc2ecfcace85f5983e9278333d0693",
   "stringify": {
     "sites": [
       {
@@ -20,9 +20,9 @@
       },
       {
         "site": "repo-cli Research/internal/Vault.ts",
-        "cases": 4159,
+        "cases": 4184,
         "outcomes": {
-          "identical": 4159
+          "identical": 4184
         }
       }
     ],
