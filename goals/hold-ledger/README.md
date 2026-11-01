@@ -44,6 +44,10 @@ acceptance criteria.
 
 ## Latest Evidence
 
+- 2026-11-01: first ledger-driven unpin. `beep holds update` re-probed
+  statelyai (0.15.0 still 404s, latest 0.19.0 installs), tombstoned
+  `statelyai-model-testing-404@2` and dropped it from the held list; the
+  catalog moved 0.14.3 → 0.19.0 in the same PR (OSV and `bun audit` clean).
 - 2026-11-01: [sweep slice](history/receipts/2026-11-01-sweep-slice.md).
   `holds update --dry-run` re-probes statelyai (0.15.0 still 404s, `latest`
   0.19.0 installs) and plans its unpin, so the next `deps:update` retires it and
