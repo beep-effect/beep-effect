@@ -1,0 +1,64 @@
+{
+  "module": "npm",
+  "groups": [
+    {
+      "id": "g1",
+      "files": ["scratchpad/effected/npm/Manifest.ts"],
+      "tests": ["scratchpad/test/npm/Manifest.test.ts"],
+      "findings": ["npm-2-1"]
+    },
+    {
+      "id": "g2",
+      "files": ["scratchpad/effected/npm/IntegrityHash.ts"],
+      "tests": ["scratchpad/test/npm/IntegrityHash.test.ts"],
+      "findings": ["npm-2-2", "npm-2-3"]
+    },
+    {
+      "id": "g3",
+      "files": ["scratchpad/effected/npm/ReleaseAgeGate.ts"],
+      "tests": [],
+      "findings": ["npm-2-4"]
+    },
+    {
+      "id": "g4",
+      "files": ["scratchpad/effected/npm/CatalogAssemblyError.ts"],
+      "tests": [
+        "scratchpad/test/npm/CatalogAssemblyError.test.ts",
+        "scratchpad/test/npm/CatalogAssemblyError.property.test.ts"
+      ],
+      "findings": ["npm-2-5"]
+    }
+  ],
+  "findings": {
+    "npm-2-1": {
+      "file": "scratchpad/effected/npm/Manifest.ts",
+      "class": "bug",
+      "summary": "Manifest.resolve silently loses an own __proto__ dependency key in every assignment branch.",
+      "fix": "Collect resolved entries and construct every dependency section with effect/Record.fromEntries. Add a Manifest.test.ts regression preserving all own keys, including __proto__, for concrete and resolver-produced specifiers. Supply verified upstream-bug evidence to the central deviation codemod without editing ledger or Port notes."
+    },
+    "npm-2-2": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "effect-idiom",
+      "summary": "Integrity parsing and conversion retain direct native string helpers forbidden by EF-5.",
+      "fix": "Use effect/String slice, indexOf, startsWith, and endsWith at all cited sites, preserving Option-to--1 missing-index behavior, substring cuts, quote handling, and strict base64 validation. Keep the custom base64 sextet loops and validated Number.parseInt hex loop; replace that loop's string slicing without adding a Hex.decode failure channel. Preserve or extend the corresponding IntegrityHash.test.ts contract assertions."
+    },
+    "npm-2-3": {
+      "file": "scratchpad/effected/npm/IntegrityHash.ts",
+      "class": "effect-idiom",
+      "summary": "hexOfBytes hand-builds lowercase hex with native map/padStart/join despite an equivalent Effect encoder.",
+      "fix": "Replace the encoder body with Hex.encode(new Uint8Array(bytes)) using effect/encoding/Hex. Retain the strict custom base64 codec and the known digest/canonical SRI inverse assertions in IntegrityHash.test.ts; extend those assertions only if needed for byte-for-byte lowercase hex equivalence."
+    },
+    "npm-2-4": {
+      "file": "scratchpad/effected/npm/ReleaseAgeGate.ts",
+      "class": "effect-idiom",
+      "summary": "matchesPattern uses native pattern.includes instead of the equivalent effect/String helper.",
+      "fix": "Replace !pattern.includes(\"*\") with !Str.includes(\"*\")(pattern). Preserve the existing exact-name and two-pointer pnpm wildcard semantics; no test-file edit is required."
+    },
+    "npm-2-5": {
+      "file": "scratchpad/effected/npm/CatalogAssemblyError.ts",
+      "class": "schema",
+      "summary": "Independent source and optional reason fields lack a normalized source-specific internal union.",
+      "fix": "Add annotated manifest/catalog variants without reason and a hooks variant with optional reason. Project the compatible public payload into that internal union through a facade/transform, following NpmRegistry's pattern, and use it for source-specific interpretation. Preserve public tag, fields, messages, cause behavior, and encoded inputs. Add projection regressions in CatalogAssemblyError.test.ts and adjust CatalogAssemblyError.property.test.ts as needed for the normalized contract. Supply any law-forced test adjustments to the central deviation codemod."
+    }
+  }
+}

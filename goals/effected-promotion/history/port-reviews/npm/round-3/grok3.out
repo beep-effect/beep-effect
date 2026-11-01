@@ -1,0 +1,4 @@
+I'll review the npm port read-only against the pinned upstream oracle and the round-2 inventory, and I won't repeat closed items or recorded deviations.Round 2 left five required defects. I'll check whether this commit closed them, then look only for new issues the gates would miss.I'll finish the read-only npm review against the pinned oracle and the closed round-2 inventory, then report only new findings.The pinned review commit is an ancestor of HEAD; later commits are other modules. I'll compare the npm behavior that round 2 left open against the oracle.NO FINDINGS
+
+REQUIRED: 0
+BACKLOG: 0

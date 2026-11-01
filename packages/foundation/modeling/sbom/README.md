@@ -157,8 +157,8 @@ workspace package by `goals/effected-promotion` (wave 4-S, SPEC W4-b); the Sigst
 `@beep/sigstore` half, deleted from the lab when the packet closed (restore it from
 `bb2134fcb952e07580c4cebf2586c901f090ef5b`). The package [LICENSE](./LICENSE) carries both the beep-effect and the
 upstream copyright notices. [KNOWLEDGE.md](./KNOWLEDGE.md) holds the upstream knowledge bundle verbatim; its relative
-links point into the upstream checkout. The port reviews left with the deferred signer; the lab's canon exceptions are
-archived under `goals/effected-promotion/history/`.
+links point into the upstream checkout. The port reviews and the lab's canon exceptions are archived under
+`goals/effected-promotion/history/`.
 
 Promotion changes, beyond the lab port recorded below:
 
@@ -202,7 +202,7 @@ One entry per class of change (law- or ruling-forced) and one per behavioural di
 package that pin it. The `sbom` row of the lab ledger
 (`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json`) keeps the lab-era evidence under the
 pre-promotion `scratchpad/test/sbom/` paths, which resolve at `a6ca837ca9d641e797833ff43d18e192a428c7d4`; the port
-reviews left the lab with the signer (`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/sbom/.review`).
+reviews are archived in `goals/effected-promotion/history/port-reviews/sbom/`.
 
 - **native-runtime** — The lab replaces upstream `Object.entries`, `Date.parse`, `Object.assign` schema statics and native `Error` with Effect Record/Schema facilities, `S.Opaque` statics and a tagged error. (test/Sbom.test.ts; test/NtiaReport.test.ts; test/InTotoStatement.test.ts)
 - **identity-keys** — The lab registers `IdentityToken` with a package `IdentityComposer` key instead of the upstream `@effected/sbom` service key. (test/IdentityToken.test.ts)
