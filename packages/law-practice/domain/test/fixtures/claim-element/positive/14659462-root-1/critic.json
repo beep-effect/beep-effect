@@ -1,0 +1,205 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "entityMentionConvention": "entity-mentions/v1",
+  "familyId": "14659462-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "findings": [],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "entityMentionConvention": "entity-mentions/v1",
+      "familyId": "14659462-root-1",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "findings": [
+        {
+          "id": "C1",
+          "category": "inconsistent-nested-list-boundary",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 2,
+              "path": "2.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 263,
+                "quote": "the barrel nut unit comprises: a nut with a cylindrical bore floatably seated in a slug; said nut further comprising a flange at its base featuring at least one chamfer; a plurality of pins connecting opposite ends of said slug; and,"
+              }
+            },
+            {
+              "claimNumber": 2,
+              "path": "2.a.iv",
+              "anchor": {
+                "startChar": 272,
+                "endChar": 355,
+                "quote": "said pins are operably configured to retain said nut in a floatably seated position"
+              }
+            }
+          ],
+          "reason": "The nested-list parent 2.a ends in dangling delimiter text ; and, before its own fourth listed child. Other explicit assembly-list parents 10.a and 14.a cover their complete lists. The fourth child is already explicitly represented under 2.a, so this clipped parent boundary is inconsistent with the chosen structure and the protocol instruction to trim boundary delimiters consistently. This is a source-boundary finding, not a claim that the schema requires every part-of edge to have physically contained spans; preamble-root part-of links are not at issue.",
+          "correction": "Extend 2.a to [30,355), ending in a floatably seated position and excluding the sentence period, to match its four retained children. Preserve all child anchors, terms and their functional relations. Alternatively rederive a consistently header-only/list structure from the source, but do not leave the current dangling partial-list boundary."
+        },
+        {
+          "id": "C2",
+          "category": "omitted-clear-local-reference",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 8,
+              "path": "8.a",
+              "anchor": {
+                "startChar": 126,
+                "endChar": 135,
+                "quote": "said ends"
+              }
+            },
+            {
+              "claimNumber": 2,
+              "path": "2.a.iii",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 244,
+                "quote": "opposite ends"
+              }
+            }
+          ],
+          "reason": "Claim 8 first names the opposite ends of said slugs, then places points along the periphery of said ends in the same sentence. The existing the opposite ends [57,74) edge already points to the explicit opposite ends introduction in 2.a.iii. The shorter said ends has that same source-clear referent; the singular/plural slug concern does not introduce a second competing set of ends.",
+          "correction": "Add antecedent from said ends [126,135) in 8.a to opposite ends [231,244) in 2.a.iii. Keep said slugs uncertainty separate; do not fabricate a plural slug introduction."
+        },
+        {
+          "id": "C3",
+          "category": "lost-meaningful-numeral-in-bare-head",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 14,
+              "path": "14.a.iii",
+              "anchor": {
+                "startChar": 163,
+                "endChar": 180,
+                "quote": "at least two pins"
+              }
+            }
+          ],
+          "reason": "The bare term is anchored as at least two pins but its head is pins, deleting the meaningful minimum count two. The schema has no at-least-two determiner surface; bare does not authorize dropping that count. The protocol explicitly preserves meaningful numerals in heads, and nearby two items/two chamfers/two indentations retain theirs.",
+          "correction": "Keep the exact anchor and bare determiner, and preserve the count in the lowercase lexical head, for example at least two pins. Recheck later term references without changing the source count or inventing individual pins."
+        }
+      ],
+      "priorRounds": [],
+      "sourceConcerns": [],
+      "reviewScope": {
+        "selectedClaimCount": 20,
+        "resolvedTreesReviewed": 20,
+        "unresolvedClaimNumbers": [],
+        "elementCount": 57,
+        "termCount": 139,
+        "edgeCount": 171,
+        "functionalRelationCount": 33
+      },
+      "reviewNotes": [
+        "Exact a access hole, transition there, thereover and distinct shaft/nut/slug/flange references remain literal. No sibling pin holes/apertures or floatably seated position is borrowed. The source-qualified 18 parsed original nodes versus 20 numbered claims reconciliation is retained; no independent reauthentication of original documents is claimed.",
+        "The uncertain qualified flange in 13, unintroduced pin holes in 9, plural said slugs in 8 and indefinite indentation in 18 are not forcibly resolved. The clear local said ends reference is separately actionable.",
+        "Read full canonical family/context, native claims text, provenance/source audit, accepted source critic, extractor receipt, protocol and ClaimElement schema contracts. Source eligibility and the semantic verdict are separate. Every submitted tree decoded through the actual ClaimElementTree schema. Exact UTF-16 element/term anchors, nonoverlap, actual term-reference endpoints, actual natural ancestry and complete ordered functional partitions checked; these passing checks do not remove the listed semantic/boundary findings.",
+        "Frozen attorney-sample membership does not change the review bar. Preserve this receipt, correct findings through an independent extractor round and obtain the next critic review before representing these labels as stabilized. No attorney acceptance or overall corpus accuracy is claimed."
+      ],
+      "independence": "Independent semantic critic only. No production/P2-DESIGN/implementation rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only locate/check manually reviewed source anchors and structure, decode schema contracts, and serialize this receipt. Only this family current critic.json written; source/expected/extractor/code unchanged.",
+      "attorneyAdjudication": "pending actual attorney review; agent confidence is not attorney agreement"
+    }
+  ],
+  "findingDispositions": [
+    {
+      "findingId": "C1",
+      "status": "addressed",
+      "anchor": {
+        "startChar": 30,
+        "endChar": 355
+      },
+      "reason": "Current 2.a includes the final wherein said pins clause and ends after floatably seated position, excluding the period. Its selected four-child list structure now has a complete parent anchor; all child boundaries and terms remain unchanged."
+    },
+    {
+      "findingId": "C2",
+      "status": "addressed",
+      "reason": "Current 8.a said ends [126,135) points to 2.a.iii opposite ends [231,244). This is the same end set named earlier in the local source sentence; plural slug uncertainty remains separate."
+    },
+    {
+      "findingId": "C3",
+      "status": "addressed",
+      "reason": "Current 14.a.iii retains exact at least two pins [163,180), bare determiner and head at least two pins. Minimum count two is preserved and existing group-level references still identify the exact introducing term."
+    }
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 20,
+    "resolvedTreesReviewed": 20,
+    "unresolvedClaimNumbers": [],
+    "elementCount": 57,
+    "termCount": 139,
+    "edgeCount": 172,
+    "functionalRelationCount": 33
+  },
+  "extractorConfidence": 0.96,
+  "reviewNotes": [
+    "Exact a access hole, transition there, thereover and distinct shaft/nut/slug/flange references remain literal. No sibling pin holes/apertures or floatably seated position is borrowed. The source-qualified 18 parsed original nodes versus 20 numbered claims reconciliation is retained; no independent reauthentication of original documents is claimed.",
+    "The uncertain qualified flange in 13, unintroduced pin holes in 9, plural said slugs in 8 and indefinite indentation in 18 are not forcibly resolved. The clear local said ends reference is separately actionable.",
+    "Independent round-2 semantic reassessment of the exact current source, round-1 findings, retained prior trees/receipts and current changed structure. The only tree changes are the listed correction(s); no scope, source, sibling ancestry, extra member introduction or functional granularity change was introduced. Residual literal structure and local reference concerns were rechecked under unchanged semantic-reference/v2 and entity-mentions/v1.",
+    "Every current tree decoded through ClaimElementTree. Native/canonical bodies agree modulo permitted printed-number removal/whitespace; source XML digest matches provenance. Exact UTF-16 element/term/functional-text anchors, term ownership/order/nonoverlap, actual term endpoints, actual natural dependency ancestry and complete functional partitions pass. Passing geometry/schema checks are supporting evidence, separate from the semantic reading.",
+    "No remaining actionable critic finding. Explicit unresolved identities/missing introductions retained in extractor source-family concerns do not force whole-claim abstention or an invented edge. The frozen attorney sample and pending packet did not change the acceptance bar. Source qualification remains separately accepted; original-document/PDF authentication was not newly rerun."
+  ],
+  "priorReceiptPreservation": "Complete round-1 critic retained in this previousRounds; round-1 expected/extractor/critic also retained in extractor.previousRounds. No separate history files or source labels were mutated by this critic.",
+  "independence": "Independent round-2 semantic critic. No production/P2-DESIGN/implementation rules, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only checked manually reviewed source anchors/reference geometry, decoded schema contracts and serialized this receipt. Only current critic.json written; expected/extractor/source/code unchanged.",
+  "attorneyAdjudication": "pending actual attorney review; agent acceptance/confidence is not attorney agreement",
+  "corpusStatus": "This family reference is accepted by agents under the stated protocol. No attorney agreement, system accuracy, full-corpus acceptance or full-goal completion claimed."
+}

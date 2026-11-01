@@ -1,0 +1,24 @@
+{
+  "result": "passed",
+  "receipt": "native-qualified-recovery-hop-verification.json",
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/delivery-ledger.ts": "e7282c513aa9d09bb85afe3b89379ab0e9b07b2ad193325d8811d7a3b0b04d9a",
+    "packages/tooling/library/ai-metrics/src/native-schedule.ts": "45ed0c3cd1191a04d843ecfb5b6cd75af077bfc1754f4b2ec376f08b35f468b8",
+    "packages/tooling/library/ai-metrics/test/native-schedule.test.ts": "f9919e1c0e33ac13b1950d376cfa922e73e26cf084b240eed624bd2cc687dbf5",
+    "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts": "575d0cfb0f4571ed7e5c7b56728e66a2dc323b86ce4e0b5f9e0c1004f1042571",
+    "goals/agent-observability-foundation/ops/verify-native-collector-route.py": "f97b0a411b41e687a90ca6561d719045fcbd8fe85a0fb75498bdcd2d19534a23"
+  },
+  "terminalRefusalRegression": {
+    "unit": "foundation-review-terminal-refusal-green.service",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 76319502336,
+    "peakObservedBytes": 425959424,
+    "minimumAvailableBytes": 74193952768,
+    "stoppedFor": null,
+    "exitCode": 0
+  },
+  "terminalRefusalTests": 20,
+  "goalComplete": false,
+  "productionRollout": false
+}

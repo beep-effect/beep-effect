@@ -1,0 +1,77 @@
+{
+  "familyId": "11670278-root-61",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 61,
+      "examinerPhrase": "the location",
+      "nativeQuote": "the location",
+      "literalMatch": true,
+      "explanation": "Exact native61."
+    },
+    {
+      "claimNumber": 61,
+      "examinerPhrase": "the current location",
+      "nativeQuote": "the current location",
+      "literalMatch": true,
+      "explanation": "Exact61."
+    },
+    {
+      "claimNumber": 61,
+      "examinerPhrase": "the contour",
+      "nativeQuote": "the contour",
+      "literalMatch": true,
+      "explanation": "Exact61."
+    },
+    {
+      "claimNumber": 62,
+      "examinerPhrase": "the intensity",
+      "nativeQuote": "the intensity",
+      "literalMatch": true,
+      "explanation": "Exact62."
+    },
+    {
+      "claimNumber": 62,
+      "examinerPhrase": "the polarity",
+      "nativeQuote": "the polarity",
+      "literalMatch": true,
+      "explanation": "Exact62."
+    }
+  ],
+  "concerns": [
+    "No originalComparisons; EXNQQ9WGPPOPPY4 original XML absent from supplied cache. Native164-claim set matches OA rejected range, but original operative text/count cannot be independently checked.",
+    "Publication identity/digest matches app11670278/US20080186197A1;2008-08-07 precedes2009-05-07;52/52 inventory assertion alone is insufficient."
+  ],
+  "rationale": "Actual secondparagraph rejection and multiple same-number phrases are established; natural dependencies61-family agree. Hold eligibility for missing original version evidence.",
+  "sourceIdentity": {
+    "applicationNumber": "11670278",
+    "publicationNumber": "US20080186197A1",
+    "publicationDate": "2008-08-07",
+    "officeActionMailDate": "2009-05-07",
+    "officeActionDocumentIdentifiers": ["FUEAL66WPPOPPY5"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20080186197 A1 20080807",
+      "application-reference": "US 11670278 20070201",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "EXNQQ9WGPPOPPY4",
+        "officialDate": "2007-02-01T00:00:00.000-0500"
+      }
+    ],
+    "originalComparisons": [],
+    "documentInventoryCount": 52,
+    "documentInventoryRows": 52,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

@@ -1154,6 +1154,36 @@ export type RunCapturedStreamsOptions = SpawnFields & {
   readonly trim?: boolean | undefined;
 };
 
+// Spawns an admitted child with piped stdout and stderr and drains both under
+// the shared pipe deadline: stdout through the caller's collector, stderr into
+// bounded text, alongside the exit code.
+const runPipedChild = <A>(
+  options: SpawnFields & { readonly command: string; readonly args: ReadonlyArray<string> },
+  collectStdout: (
+    stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+  ) => Effect.Effect<A, PlatformError.PlatformError>,
+  stderrBound: OutputBound | undefined
+) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* makeAdmittedChild(options, {
+        stdin: options.stdin ?? "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
+      const [stdout, stderr, exitCode] = yield* Effect.all(
+        [
+          collectStdout(handle.stdout.pipe(Stream.interruptWhen(deadline))),
+          foldDecodedText(decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)), stderrBound, false),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
+      return { stdout, stderr, exitCode };
+    })
+  );
+
 /**
  * Spawn a command and capture stdout and stderr as separate strings.
  *
@@ -1191,38 +1221,113 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
   PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* makeAdmittedChild(options, {
-        stdin: options.stdin ?? "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [
-          foldDecodedText(
-            decodedText(handle.stdout).pipe(Stream.interruptWhen(deadline)),
-            options.stdoutBound ?? options.bound,
-            false
-          ),
-          foldDecodedText(
-            decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)),
-            options.stderrBound ?? options.bound,
-            false
-          ),
-          handle.exitCode,
-        ],
-        { concurrency: "unbounded" }
-      );
-      return CapturedStreams.make({
-        exitCode,
-        stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
-        stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
-        truncated: stdout.truncated || stderr.truncated,
-      });
-    })
+  const { stdout, stderr, exitCode } = yield* runPipedChild(
+    options,
+    (stream) => foldDecodedText(decodedText(stream), options.stdoutBound ?? options.bound, false),
+    options.stderrBound ?? options.bound
   );
+  return CapturedStreams.make({
+    exitCode,
+    stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
+    stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
+    truncated: stdout.truncated || stderr.truncated,
+  });
+});
+
+/**
+ * Result of {@link runFoldedStdout}: the folded stdout value beside the bounded stderr text.
+ *
+ * **Example** (Read a folded stdout value)
+ *
+ * ```ts
+ * import { FoldedStdout } from "@beep/repo-cli/test/Process"
+ *
+ * const result = FoldedStdout.make({ exitCode: 0, value: "digest", stderr: "", truncated: false })
+ * console.log(result.value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FoldedStdout extends S.Opaque<FoldedStdout, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exitCode: S.Finite,
+    value: S.String,
+    stderr: S.String,
+    truncated: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("FoldedStdout", {
+      description:
+        "Subprocess result whose stdout was folded while streaming, with bounded stderr flagged when it hit the bound.",
+    })
+  )
+) {}
+
+/**
+ * Options for {@link runFoldedStdout}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunFoldedStdoutOptions = SpawnFields & {
+  readonly command: string;
+  readonly args: ReadonlyArray<string>;
+  /** Consumes the raw stdout bytes as they arrive and reduces them to one value. */
+  readonly fold: (
+    stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+  ) => Effect.Effect<string, PlatformError.PlatformError>;
+  readonly stderrBound?: OutputBound | undefined;
+};
+
+/**
+ * Spawn a command and fold its stdout while it streams, never buffering it whole.
+ *
+ * **Details**
+ *
+ * For output too large for a bounded capture that the caller only needs reduced (a digest, a
+ * count), the `fold` consumes stdout chunk by chunk, so memory stays at whatever the fold keeps.
+ * stderr is captured separately under `stderrBound` (default {@link repoRunOutputBound}) for the
+ * failure message; `truncated` reports only whether that stderr capture was clipped. Nonzero exit
+ * codes are represented in the result, stdin defaults to `"ignore"`, and the same pipe deadline as
+ * {@link runCapturedStreams} ends a fold whose pipe an escaped descendant holds open.
+ *
+ * **Example** (Count stdout bytes without buffering them)
+ *
+ * ```ts
+ * import { runFoldedStdout } from "@beep/repo-cli/test/Process"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ *
+ * const size = runFoldedStdout({
+ *   command: "git",
+ *   args: ["log", "--oneline"],
+ *   fold: (stdout) =>
+ *     stdout.pipe(
+ *       Stream.runFold(() => 0, (total: number, chunk: Uint8Array) => total + chunk.length),
+ *       Effect.map(String)
+ *     )
+ * })
+ * console.log(Effect.isEffect(size)) // true
+ * ```
+ *
+ * @param options - Command, spawn fields, stdout fold, and stderr bound.
+ * @returns The folded stdout value, bounded stderr, exit code, and stderr truncation flag.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runFoldedStdout = Effect.fn("StepExec.runFoldedStdout")(function* (
+  options: RunFoldedStdoutOptions
+): Effect.fn.Return<
+  FoldedStdout,
+  PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const { stdout, stderr, exitCode } = yield* runPipedChild(
+    options,
+    options.fold,
+    options.stderrBound ?? repoRunOutputBound
+  );
+  return FoldedStdout.make({ exitCode, value: stdout, stderr: stderr.text, truncated: stderr.truncated });
 });
 
 /**

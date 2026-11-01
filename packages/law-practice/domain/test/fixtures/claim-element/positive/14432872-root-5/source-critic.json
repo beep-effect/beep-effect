@@ -1,0 +1,115 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14432872-root-5",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [5, 6, 7, 8],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20160346041", "A1", "20161201"],
+    "applicationReference": ["US", "14432872", "20131021"],
+    "officeActionDocumentIdentifiers": ["J2SZPL3ZRXEAPX2"],
+    "officeActionMailDate": "2017-05-19"
+  },
+  "digestEvidence": [
+    {
+      "file": "14432872.publication.xml",
+      "sha256": "732db18c06d12e3e099bdcd1e49381cfc5d1e86f64d21234f8abab6ee05c44e0",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14432872.claims.xml",
+      "sha256": "f85d043d70d8516106de0b96f9bb291c8f611adeef4c545ffcbff3eed3df5fbb",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "f85d043d70d8516106de0b96f9bb291c8f611adeef4c545ffcbff3eed3df5fbb",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "I7Z34TWPPXXIFW3",
+      "available": true,
+      "sha256": "b03c191c4bbc2683738d0df6068674bdea19d3170ff9559969d27718bae65e8f",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "I7Z34U1FPXXIFW3",
+      "available": true,
+      "sha256": "0db5c63bd79d84b78f995a302a82a876c40fa4f9ea34c627fe0bae5e1a9332a9",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 55,
+    "actualRows": 55,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2015-04-01T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "I7Z34TWAPXXIFW3"
+      },
+      {
+        "officialDate": "2015-04-01T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "I7Z34TWPPXXIFW3"
+      },
+      {
+        "officialDate": "2015-04-01T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "I7Z34TXHPXXIFW3"
+      },
+      {
+        "officialDate": "2015-04-01T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "I7Z34U1FPXXIFW3"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the device",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the device"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the optical fiber",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the optical fiber"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the laser",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the laser"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the type of laser",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the type of laser"
+    }
+  ],
+  "assessment": "Original5-8 substantive wording and6-8->5 dependencies agree; quote typography and isolated page/line numerals explain differences. Examiner explicitly questions whether5 should depend on1, so independent5 is preserved. OA covers1-8 and discusses5-8.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1-8 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ]
+}

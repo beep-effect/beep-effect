@@ -1,0 +1,82 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A detachable spraying machine, including:
+<claim-text>a front end cover;</claim-text>
+<claim-text>a drive motor, wherein the drive motor is set on one side of the front end cover;</claim-text>
+<claim-text>a pump assembly, wherein the pump assembly is set on the side of the front end cover away from the drive motor;</claim-text>
+<claim-text>a reduction gearbox, set between the drive motor and the front end cover, and transmission connected to the drive motor;</claim-text>
+<claim-text>an eccentric shaft, transmission connected to the output end of the reduction gearbox;</claim-text>
+<claim-text>An eccentric bearing, installed on the eccentric part of the eccentric shaft; and</claim-text>
+<claim-text>a slide mechanism, including a sliding member and a pressure plate detachably installed on the front end cover, wherein a track is formed between the pressure plate and the front end cover, and the sliding member is slidably set in the track;</claim-text>
+<claim-text>wherein, the middle of the sliding member is provided with an opening, and the eccentric bearing is accommodated in the opening and contacts the inner wall of the opening; and</claim-text>
+<claim-text>when the drive motor starts, the eccentric shaft drives the eccentric bearing to perform eccentric circular motion, and through the constraint of the inner wall of the opening on the eccentric bearing, drives the sliding member to perform linear reciprocating motion along the track; and</claim-text>
+<claim-text>The pump assembly is detachably installed on the front end cover, and the plunger rod of the pump assembly is transmission connected to the sliding member, and the sliding member drives the plunger rod to perform linear reciprocating motion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that the eccentric shaft adopts a hollow structure, and a lubrication oil passage extending axially is provided inside; the end of the lubrication oil passage communicates with the eccentric bearing installation position.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that a support part is provided below the reduction gearbox, the support part is integrally formed with the reduction gearbox, and is used to stably support the entire spraying machine; and
+<claim-text>the surface of the support part is provided with multiple mounting holes, which are connected to a mobile device or a fixed surface through screws to improve stability.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that the number of pressure plates of the slide mechanism is two, and they are symmetrically distributed along the sliding member.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that the front end cover is provided with at least two locking bosses, the locking bosses are symmetrically distributed and fit with the pressure plate, and the fitting parts of the locking bosses and the pressure plate are dimensionally matched; and
+<claim-text>the track is formed by the gap between the pressure plate and the front end cover.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The detachable spraying machine according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the detachable spraying machine is characterized in that the locking bosses are provided with at least two fixing holes, and the pressure plate is detachably connected to the front end cover by bolts passing through its through-holes and screwing into the fixing holes.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that the pump assembly includes a card base, and the front end cover is provided with a mounting base, and the card base is detachably installed on the mounting base, realizing the detachable connection between the pump assembly and the front end cover.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The detachable spraying machine according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the detachable spraying machine is characterized in that the mounting base is provided with at least two positioning protrusions for positioning the card base during installation.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The detachable spraying machine according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the detachable spraying machine is characterized in that the card base can be composed of a connecting barrel and a mounting plate: the connecting barrel is sleeved on the plunger rod, and the mounting plate is detachably connected to the mounting base; and a curved groove is opened in the center of the mounting base, and its size is adapted to the connecting barrel.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The detachable spraying machine according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the detachable spraying machine is characterized in that a sealing sleeve is provided in the connecting barrel of the card base, the sealing sleeve is sleeved on the plunger rod, and slides in cooperation with the plunger rod.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that a top sleeve is provided at one end of the plunger rod near the sliding member, and the end of the top sleeve away from the plunger rod abuts against the eccentric bearing.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that a guide groove is opened on the side of the sliding member facing the pump assembly, the bottom of the guide groove communicates with the opening, and the plunger rod is slidably assembled in the guide groove.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The detachable spraying machine according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the detachable spraying machine is characterized in that the guide groove extends parallel to the direction of the pressure plate, and its two side walls are open and communicate with the outside.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The detachable spraying machine according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the detachable spraying machine is characterized in that a concave groove is opened on the inner bottom wall of the opening, the concave groove communicates with the guide groove and its two sides communicate with the outside, the size of the concave groove matches the size of the top sleeve, and the top sleeve is located inside the concave groove, so that the top sleeve is completely accommodated inside the concave groove for operation.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that the opening is elliptical, and the short axis direction of the elliptical opening is parallel to the extension direction of the pressure plate.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that a retaining ring is provided on the eccentric shaft, and the retaining ring is used to limit the axial displacement of the eccentric bearing.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that the slide mechanism includes:
+<claim-text>a guide rail seat fixed to the front end cover; and</claim-text>
+<claim-text>a slider integrally formed with the sliding member, the slider and the guide rail seat cooperate by rolling balls.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that the eccentric part of the eccentric shaft adopts a split eccentric sleeve structure, the eccentric sleeve is provided with at least two sets of mounting positions with different eccentric distances, and the eccentric bearing is fixed to different mounting positions by a positioning pin to adjust the stroke distance of the plunger rod.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that replaceable limit blocks are provided at both ends of the track, used to limit the effective stroke of the sliding member, and the limit blocks are fixed to the inner side of the pressure plate by screws.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The detachable spraying machine according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the detachable spraying machine is characterized in that a U-shaped fixing plate is fixedly installed on the side of the reduction gearbox facing the drive motor, and a central hole communicating with the reduction gearbox is fixedly installed in the center of the fixing plate; and
+<claim-text>when the output end of the drive motor is installed inside the reduction gearbox, it can limit and support the top and bottom of the drive motor.</claim-text>
+</claim-text>
+</claim>
+</claims>

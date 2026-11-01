@@ -1,0 +1,84 @@
+{
+  "familyId": "17755831-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "confidenceScope": "Declared P2 contract only; independent critic and attorney pending.",
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    "Office action MKEEAXEVX137X95 dated 2026-01-15 explicitly rejects claims 1-15; US20220387188A1 publication on 2022-12-08 precedes it. Examiner cites offset/orientation in 1/6/12/14, possessive its end regions in 9, said engaging members in 10, and dependency concern in 13.",
+    "Claim 13 expressly says of claim 9, matching XML. Examiner treats it as depending on 10 only for examination purposes. Preserve source 9; no silent correction or inferred antecedent chain. Both routes still reach selected root 1.",
+    "Claim 15 is a method expressly according to claim 1; preserve source dependency. Two offset-selector introductions in its preamble preclude a unique local exact-head antecedent for later the offset selector.",
+    "Original OCR comparisons have no exact matches; source/in-force association relies on retained native XML and no-intervening-CLM inventory assertion. Attorney confirmation pending.",
+    "Claim 9 retains its end regions as a bare term for explicit unsupported-determiner abstention. Claim 10 a plurality of said engaging members yields said engaging members because the quantified head is empty at said.",
+    "P2 head quirks retained: a snap body stops before receiving; a latching member engageable includes engageable; the other one remains an idiom-bearing term; source claim 6 omits a connector between devices and is preserved."
+  ],
+  "rationale": "Claims 1-14 have one limitation each; claim 15 has a colon-ended limitation and five absorbed sub-limitations. Boundaries/term surfaces/heads and exact-head local edges were selected manually; no generic decomposer used. All element and term UTF16 slices and edge references were checked locally. Round 2: source-verified preamble terms corrected under participle-boundary; according is excluded from head and quote. Element anchors unchanged; all affected edge references checked coherently.",
+  "independence": "No decomposer/policy, existing rule fixtures or predictions inspected/run. Helpers only locate manual selections and verify spans/edge endpoints.",
+  "familyStatus": "extractor-proposed; critic-and-attorney-pending",
+  "sourceChecks": {
+    "selectedClaimsMatchNativeXml": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  },
+  "roundHistory": [
+    {
+      "round": 1,
+      "confidence": 0.98,
+      "rationale": "Claims 1-14 have one limitation each; claim 15 has a colon-ended limitation and five absorbed sub-limitations. Boundaries/term surfaces/heads and exact-head local edges were selected manually; no generic decomposer used. All element and term UTF16 slices and edge references were checked locally.",
+      "criticCorrection": "According ends in ing after the first head token; apply participle-boundary to the preamble referring term."
+    }
+  ],
+  "round2Corrections": [
+    {
+      "claimNumber": 2,
+      "previousAnchor": {
+        "startChar": 0,
+        "endChar": 29,
+        "quote": "The offset selector according"
+      },
+      "correctedAnchor": {
+        "startChar": 0,
+        "endChar": 19,
+        "quote": "The offset selector"
+      },
+      "correctedHead": "offset selector"
+    }
+  ]
+}

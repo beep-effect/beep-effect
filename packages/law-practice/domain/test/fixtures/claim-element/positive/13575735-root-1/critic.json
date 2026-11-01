@@ -1,0 +1,535 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "13575735-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "findings": [],
+  "priorFindingDispositions": [
+    {
+      "priorRound": 1,
+      "findingId": "C1",
+      "disposition": "resolved",
+      "reason": "All six determiner-bearing a manner terms added in round 2 remain present with exact anchors/head manner and ordered owned functional parts."
+    },
+    {
+      "priorRound": 1,
+      "findingIds": [
+        "C2",
+        "C3"
+      ],
+      "disposition": "superseded-by-explicit-convention",
+      "reason": "The prior critic incorrectly treated every reciprocal/relative reference as a compulsory entity node. Entity-mentions/v1 now explicitly assigns these particular linkers/operators to source-anchored functional text with explicit participants preserved. Their round-2 additions and present reversals are retained in history; no claim is made that the prior compulsory findings remain valid."
+    }
+  ],
+  "reviewedGranularityCases": [
+    {
+      "claimNumber": 1,
+      "path": "1.b.iii",
+      "anchor": {
+        "startChar": 449,
+        "endChar": 460,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Reciprocal one another operates on the explicit supporting frames named immediately before it. Preserve the connection function and participant terms; no additional entity node.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "1.b.iii",
+            "anchor": {
+              "startChar": 449,
+              "endChar": 460,
+              "quote": "one another"
+            }
+          },
+          "introducing": {
+            "path": "1.b.ii",
+            "anchor": {
+              "startChar": 254,
+              "endChar": 271,
+              "quote": "supporting frames"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 1,
+      "path": "1.c.ii.i",
+      "anchor": {
+        "startChar": 1109,
+        "endChar": 1114,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Into which modifies the explicit an introducing portion in this same relation. Keep the portion term and full introduction relation as connecting text.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "1.c.ii.i",
+            "anchor": {
+              "startChar": 1109,
+              "endChar": 1114,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "1.c.ii.i",
+            "anchor": {
+              "startChar": 1081,
+              "endChar": 1103,
+              "quote": "an introducing portion"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 1,
+      "path": "1.c.ii.i",
+      "anchor": {
+        "startChar": 1174,
+        "endChar": 1179,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "From which modifies the explicit a discharging portion in this same relation. Keep the portion term and complete discharge relation as connecting text.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "1.c.ii.i",
+            "anchor": {
+              "startChar": 1174,
+              "endChar": 1179,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "1.c.ii.i",
+            "anchor": {
+              "startChar": 1147,
+              "endChar": 1168,
+              "quote": "a discharging portion"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "path": "3.a.ii",
+      "anchor": {
+        "startChar": 557,
+        "endChar": 568,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Reciprocal one another connects explicitly named the rollers. The guide-roller plurality and all roller terms remain; reciprocal connection stays complete functional text.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "3.a.ii",
+            "anchor": {
+              "startChar": 557,
+              "endChar": 568,
+              "quote": "one another"
+            }
+          },
+          "introducing": {
+            "path": "3.a.i",
+            "anchor": {
+              "startChar": 254,
+              "endChar": 276,
+              "quote": "a plurality of rollers"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "path": "3.a.iv",
+      "anchor": {
+        "startChar": 801,
+        "endChar": 811,
+        "quote": "each other"
+      },
+      "action": "term-to-functional-text",
+      "reason": "Each other expresses mutual spacing of the explicit pressurizing springs. The spring introduction and spacing predicate remain complete; no additional claimed entity.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "3.a.iv",
+            "anchor": {
+              "startChar": 801,
+              "endChar": 811,
+              "quote": "each other"
+            }
+          },
+          "introducing": {
+            "path": "3.a.iv",
+            "anchor": {
+              "startChar": 745,
+              "endChar": 765,
+              "quote": "pressurizing springs"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verifiedExactChanges": {
+    "removedTerms": [
+      {
+        "path": "1.b.iii",
+        "anchor": {
+          "startChar": 449,
+          "endChar": 460,
+          "quote": "one another"
+        },
+        "determiner": "bare",
+        "head": "one another"
+      },
+      {
+        "path": "1.c.ii.i",
+        "anchor": {
+          "startChar": 1109,
+          "endChar": 1114,
+          "quote": "which"
+        },
+        "determiner": "bare",
+        "head": "which"
+      },
+      {
+        "path": "1.c.ii.i",
+        "anchor": {
+          "startChar": 1174,
+          "endChar": 1179,
+          "quote": "which"
+        },
+        "determiner": "bare",
+        "head": "which"
+      },
+      {
+        "path": "3.a.ii",
+        "anchor": {
+          "startChar": 557,
+          "endChar": 568,
+          "quote": "one another"
+        },
+        "determiner": "bare",
+        "head": "one another"
+      },
+      {
+        "path": "3.a.iv",
+        "anchor": {
+          "startChar": 801,
+          "endChar": 811,
+          "quote": "each other"
+        },
+        "determiner": "bare",
+        "head": "each other"
+      }
+    ],
+    "addedTerms": [],
+    "removedNonfunctionalEdges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b.iii",
+          "anchor": {
+            "startChar": 449,
+            "endChar": 460,
+            "quote": "one another"
+          }
+        },
+        "introducing": {
+          "path": "1.b.ii",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 271,
+            "quote": "supporting frames"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c.ii.i",
+          "anchor": {
+            "startChar": 1109,
+            "endChar": 1114,
+            "quote": "which"
+          }
+        },
+        "introducing": {
+          "path": "1.c.ii.i",
+          "anchor": {
+            "startChar": 1081,
+            "endChar": 1103,
+            "quote": "an introducing portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c.ii.i",
+          "anchor": {
+            "startChar": 1174,
+            "endChar": 1179,
+            "quote": "which"
+          }
+        },
+        "introducing": {
+          "path": "1.c.ii.i",
+          "anchor": {
+            "startChar": 1147,
+            "endChar": 1168,
+            "quote": "a discharging portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.ii",
+          "anchor": {
+            "startChar": 557,
+            "endChar": 568,
+            "quote": "one another"
+          }
+        },
+        "introducing": {
+          "path": "3.a.i",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 276,
+            "quote": "a plurality of rollers"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.iv",
+          "anchor": {
+            "startChar": 801,
+            "endChar": 811,
+            "quote": "each other"
+          }
+        },
+        "introducing": {
+          "path": "3.a.iv",
+          "anchor": {
+            "startChar": 745,
+            "endChar": 765,
+            "quote": "pressurizing springs"
+          }
+        }
+      }
+    ],
+    "unchangedElementStructure": true,
+    "unchangedFunctionalSourceReconstruction": true,
+    "referenceSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81"
+  },
+  "reviewScope": {
+    "claimCount": 5,
+    "elementCount": 31,
+    "termCount": 136,
+    "edgeCount": 123
+  },
+  "reviewNotes": [
+    "Targeted independent review under semantic-reference/v2/entity-mentions/v1 and the specific SPEC granularity decision; read the per-family granularity-review receipt, exact canonical changed contexts, prior/current reference snapshots and prior critic receipt. This is not a new source-eligibility or full original-document audit.",
+    "Independently compared the immediate pre-repair snapshot with current expected: element paths, kinds and spans are unchanged; term changes are exactly the listed removals/additions; nonfunctional edge changes are exactly the associated antecedent removals; every functional edge reconstructs the identical entire owner text before and after, with contiguous ordered source spans and valid local term ownership.",
+    "All current element/term/functional/antecedent anchors were checked against canonical UTF-16 text. Owned terms are ordered and nonoverlapping, local/foreign references exist, and typed containment/dependency endpoints are coherent. No source wording or unsupported introduction was supplied. Runtime schema success is reported in the extractor granularity receipt; this critic independently checked the specified geometry/schema constraints without rerunning production code.",
+    "Each removed relative/reciprocal surface retains its complete literal source clause or functional text and explicit governing participant(s). This applies source grammar individually; it is not a spelling-based blanket pronoun deletion rule."
+  ],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "13575735-root-1",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "findings": [
+        {
+          "id": "C1",
+          "category": "omitted-determiner-phrases",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 1,
+              "path": "1.b.iv",
+              "anchor": {
+                "startChar": 681,
+                "endChar": 689,
+                "quote": "a manner"
+              }
+            },
+            {
+              "claimNumber": 1,
+              "path": "1.c.ii.ii",
+              "anchor": {
+                "startChar": 1305,
+                "endChar": 1313,
+                "quote": "a manner"
+              }
+            },
+            {
+              "claimNumber": 1,
+              "path": "1.c.ii.iii",
+              "anchor": {
+                "startChar": 1472,
+                "endChar": 1480,
+                "quote": "a manner"
+              }
+            },
+            {
+              "claimNumber": 2,
+              "path": "2.a",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 226,
+                "quote": "a manner"
+              }
+            },
+            {
+              "claimNumber": 3,
+              "path": "3.a.i",
+              "anchor": {
+                "startChar": 303,
+                "endChar": 311,
+                "quote": "a manner"
+              }
+            },
+            {
+              "claimNumber": 3,
+              "path": "3.a.ii",
+              "anchor": {
+                "startChar": 522,
+                "endChar": 530,
+                "quote": "a manner"
+              }
+            }
+          ],
+          "reason": "Each quoted a manner is a determiner-bearing noun phrase. They are currently absorbed into functional connecting text although the protocol does not exclude adverbial noun phrases. Repeated phrasing does not remove their independent source anchors.",
+          "correction": "Add each exact term to the listed narrowest owning element with determiner a and head manner, in text order. Split the corresponding functional text part around the new local term part. Keep parent list ownership nonduplicated and add no unsupported same-manner antecedent."
+        },
+        {
+          "id": "C2",
+          "category": "omitted-referential-phrases",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 1,
+              "path": "1.b.iii",
+              "anchor": {
+                "startChar": 449,
+                "endChar": 460,
+                "quote": "one another"
+              }
+            },
+            {
+              "claimNumber": 3,
+              "path": "3.a.ii",
+              "anchor": {
+                "startChar": 557,
+                "endChar": 568,
+                "quote": "one another"
+              }
+            },
+            {
+              "claimNumber": 3,
+              "path": "3.a.iv",
+              "anchor": {
+                "startChar": 801,
+                "endChar": 811,
+                "quote": "each other"
+              }
+            }
+          ],
+          "reason": "The reciprocal pronouns explicitly identify the supporting frames, guide rollers, and pressurizing springs, respectively. They are source referential phrases, just as the retained thereof/therethrough phrases are; leaving them inside text parts drops those mentions.",
+          "correction": "Add bare terms with heads one another / one another / each other at the quoted anchors and split their functional parts. Add antecedents respectively to 1.b.ii supporting frames [254,271), 3.a.i a plurality of rollers [254,276), and 3.a.iv pressurizing springs [745,765); those are the explicit plural introductions, without inventing a selected individual member."
+        },
+        {
+          "id": "C3",
+          "category": "omitted-relative-references",
+          "actionable": true,
+          "evidence": [
+            {
+              "claimNumber": 1,
+              "path": "1.c.ii.i",
+              "anchor": {
+                "startChar": 1109,
+                "endChar": 1114,
+                "quote": "which"
+              }
+            },
+            {
+              "claimNumber": 1,
+              "path": "1.c.ii.i",
+              "anchor": {
+                "startChar": 1174,
+                "endChar": 1179,
+                "quote": "which"
+              }
+            }
+          ],
+          "reason": "The relative references in into which the paperboard is introduced and from which the paperboard is discharged identify the explicitly introduced introducing and discharging portions. The references currently survive only as connecting text.",
+          "correction": "Add both exact bare which terms to 1.c.ii.i and their ordered functional term parts. Link [1109,1114) to an introducing portion [1081,1103), and [1174,1179) to a discharging portion [1147,1168), both in 1.c.ii.i. Preserve the complete existing portion heads."
+        }
+      ],
+      "sourceConcerns": [],
+      "reviewScope": {
+        "claimCount": 5,
+        "elementCount": 31,
+        "termCount": 130,
+        "functionalRelationCount": 25
+      },
+      "reviewNotes": [
+        "Read canonical claims including context, native claims XML, provenance, source audit and independent source critic, extractor rationale, and all expected elements/terms/edges. Source eligibility remains the separate accepted source-critic conclusion; this semantic review does not repeat or supersede its original-document/PDF authentication.",
+        "Audited subject/transition grammar, explicit and nested lists, complete lexical heads, true natural dependency ancestry, missing and ambiguous introductions, local/cross-claim antecedents, term ownership, and ordered typed functional parts. No sibling claim was treated as an ancestor.",
+        "Manual schema/geometry helper checked exact UTF-16 spans for elements, terms, functional parts and antecedent references; terms are ordered/nonoverlapping inside owners, functional term parts name their owner terms, and part spans are ordered inside owners. Geometry alone is not semantic approval."
+      ],
+      "independence": "Independent bounded semantic critic session. Read only task-authorized source/reference/schema material. No P2-DESIGN, production decomposer/policy, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Only critic.json written; helpers locate manually selected quotations, serialize these findings and check schema/span geometry.",
+      "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+      "corpusStatus": "Incremental proposed references only; no goal completion or active sample acceptance claimed."
+    }
+  ],
+  "sourceConcerns": [],
+  "attorneyAdjudication": "pending; critic confidence is not attorney agreement",
+  "roundLimit": {
+    "finalPermittedRound": true,
+    "noFourthAgentRound": true
+  },
+  "independence": "Independent targeted semantic critic. Only this family critic.json written. No expected/source/code edits, production rules/predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers compare authorized reference snapshots and check exact span/schema geometry only.",
+  "corpusStatus": "Incremental reference consistency review; no active sample admission, goal completion, or attorney agreement claimed."
+}

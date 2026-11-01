@@ -1,0 +1,47 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "18087856-root-11",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "findings": [],
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 53,
+    "termCount": 203,
+    "edgeCount": 211,
+    "functionalRelationCount": 42
+  },
+  "verification": [
+    "Read all selected exact canonical claims, native claims XML, extractor rationale and complete expected element/term/typed-edge structures. Reviewed retained independent source-critic eligibility evidence. Source qualification remains separately accepted at confidence0.98; no fresh original-PDF/full-inventory authentication claimed.",
+    "Independent checks passed every exact UTF-16 anchor, normalized head shape, ordered nonoverlapping term ownership, complete contiguous functional-source reconstruction and exact participating terms, endpoint membership and natural dependency ancestry, unique paths and no duplicate typed edges. Native claims XML digest matches provenance and all canonical/native claim strings agree under permitted number/whitespace normalization. Geometry supplements manual semantic review; no decomposer called."
+  ],
+  "referenceSha256": "6947163537bcd71d43ac861fe99a0262aad9ca1d163c3b5cb3fadab4febc3fbc",
+  "extractorSha256": "e21aace850b9313c0104b2bdeac1a8be4053f4ba547b32fd1682af2477fc9192",
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json written. Source/model/tree/edge schema evidence only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "reviewNotes": [
+    "All10selectedclaims11–20 audited. Base-station11 and terminal16 processor-controlled step lists preserve actual subject and numbered natural dependencies. Terminal16 explicitly depends11 but has its own indefinite transceiver/processors/codebook/pilot/data roles; it is not rewritten as another base-station root. Root11 transceiver remains an explicit missing-introduction concern rather than borrowing a transmitter from context claims1–10.",
+    "Each pilot random-selection versus real-time-generation branch remains separate and exact, and pilot-generation-unit aliases resolve only where that unit is explicitly recited on the actual chain. Multiple codebook introductions12 prevent arbitrary codebook selection13; separate indefinite base stations16 prevent nearest-head merging in16/17/18/20. Singular references to an unspecified one-or-more terminal subset remain unlinked without selecting a physical member.",
+    "Above-mentioned is a substantive source qualifier preserved in full heads and anchors, with quantities retained beneath the supported outer determiner. Active-user information, received data, pilot and channel-estimation references have their unique local earlier mentions; generated terminal data and base-station receiving populations are not silently identified.",
+    "Neural-network, first/second learning and actual versus estimated activation-state information are complete anchored participants. The ambiguous control it in14 is preserved as its only entity mention with no unsupported candidate choice. Information-length condition/request branches15/20 and local state-information identities14/19 remain exact. No actionable semantic finding remains."
+  ]
+}

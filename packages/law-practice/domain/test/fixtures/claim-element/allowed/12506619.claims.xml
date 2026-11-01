@@ -1,0 +1,144 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for controlling access to cryptographic resources, the system comprising:
+<claim-text>one or more processors; and</claim-text>
+<claim-text>one or more non-transitory computer-readable storage media storing instructions, which when executed by the one or more processors cause the one or more processors to perform operations comprising:
+<claim-text>receiving a request to transfer control of a number of cryptographic resources from a first user to a second user;</claim-text>
+<claim-text>retrieving, from a key vault using a user identifier associated with the first user, an encrypted key object that represents a private key, wherein the encrypted key object comprises a plurality of encrypted key shards, and wherein each key shard of the plurality of encrypted key shards, when decrypted, is used to generate a corresponding portion of a cryptographic signature for a blockchain operation to transfer control of the number of cryptographic resources to the second user;</claim-text>
+<claim-text>transmitting, to a first security device, a decryption command to decrypt the encrypted key object, wherein the first security device decrypts the encrypted key object into the plurality of encrypted key shards;</claim-text>
+<claim-text>receiving, from the first security device, the plurality of encrypted key shards representing the private key;</claim-text>
+<claim-text>transmitting, to a second security device, the plurality of encrypted key shards and a command to generate the cryptographic signature for signing the blockchain operation, wherein the second security device transmits each encrypted key shard of the plurality of encrypted key shards to a corresponding node that encrypted each shard, and wherein each corresponding node generates the corresponding portion of the cryptographic signature corresponding to an encrypted shard of the plurality of encrypted key shards;</claim-text>
+<claim-text>generating the cryptographic signature from each corresponding portion of the cryptographic signature;</claim-text>
+<claim-text>generating the blockchain operation based on the request and the cryptographic signature, wherein the cryptographic signature is used by a blockchain node of a blockchain to authorize the blockchain operation; and</claim-text>
+<claim-text>transmitting the blockchain operation to the blockchain node.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to perform operations comprising:
+<claim-text>receiving a new account generation request for a new user;</claim-text>
+<claim-text>transmitting a key generation request to the second security device, wherein the second security device generates a new private key and a new public key for the new user, the new private key comprising a new plurality of key shards, sends each new key shard to the corresponding node, wherein each corresponding node encrypts a corresponding new keys shard, each corresponding node generating a new encrypted plurality of key shards using a corresponding first encryption key generated at each node;</claim-text>
+<claim-text>receiving the new encrypted plurality of key shards and the new public key from the second security device;</claim-text>
+<claim-text>transmitting the new encrypted plurality of key shards to the first security device with an encryption command to encrypt the new encrypted plurality of key shards into a new encrypted private key, wherein the first security device encrypts the new plurality of key shards into the new encrypted private key using a second encryption key that is generated on the first security device; and</claim-text>
+<claim-text>transmitting the new encrypted private key to a database server that stores the new encrypted private key in the key vault.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the instructions for transmitting the new encrypted private key to the database server further cause the one or more processors to perform operations comprising:
+<claim-text>retrieving user data associated with the new user;</claim-text>
+<claim-text>determining based on the user data associated with user a user's location, wherein the user's location comprises a jurisdiction of the user;</claim-text>
+<claim-text>identifying, based on the user's location, the database server within the jurisdiction of the user, wherein the database server is one of a plurality of database servers active in a plurality of different jurisdictions; and</claim-text>
+<claim-text>transmitting the new encrypted private key to the database server identified based on the jurisdiction corresponding to the user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions for retrieving, from the key vault using the user identifier, the encrypted key object associated with the first user further cause the one or more processors to perform operations comprising:
+<claim-text>retrieving, from the request, the user identifier associated with the first user;</claim-text>
+<claim-text>transmitting, to the key vault, the user identifier associated with the first user; and</claim-text>
+<claim-text>receiving, from the key vault, the encrypted key object associated with the first user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions further cause the one or more processors to perform operations comprising:
+<claim-text>receiving, from the second security device, a plurality of portions of the cryptographic signature generated based on the plurality of encrypted key shards, wherein the cryptographic signature is used to cryptographically sign the blockchain operation; and</claim-text>
+<claim-text>combining the plurality of portions of the cryptographic signature into the cryptographic signature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the instructions for transmitting, to the second security device, the plurality of encrypted key shards and the command to generate the cryptographic signature for signing the blockchain operation further cause the one or more processors to perform operations comprising:
+<claim-text>generating a hash of the blockchain operation, wherein the hash comprises one or more of a source blockchain address associated with the first user, a target blockchain address associated with the second user, or the number of cryptographic resources; and</claim-text>
+<claim-text>transmit the hash together with the command, wherein the command instructs the second security device to generate a plurality of portions of the cryptographic signature using the hash.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A method for controlling access to cryptographic resources using double encryption, the method comprising:
+<claim-text>receiving a request to transfer control of a first number of cryptographic resources from a first user to a second user;</claim-text>
+<claim-text>retrieving, from a key vault using a user identifier associated with the first user, an encrypted key object that represents a private key, wherein the encrypted key object comprises a plurality of encrypted key shards;</claim-text>
+<claim-text>transmitting, to a first security device, a decryption command to decrypt the encrypted key object, wherein the first security device decrypts the encrypted key object into the plurality of encrypted key shards;</claim-text>
+<claim-text>receiving, from the first security device, the plurality of encrypted key shards representing the private key;</claim-text>
+<claim-text>transmitting, to a second security device, the plurality of encrypted key shards and a command to generate a cryptographic signature for signing a blockchain operation;</claim-text>
+<claim-text>generating the blockchain operation based on the request and the cryptographic signature, wherein the cryptographic signature is used by a blockchain node of a blockchain to authorize the blockchain operation; and</claim-text>
+<claim-text>transmitting the blockchain operation to the blockchain node.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein each key shard of the plurality of encrypted key shards, when decrypted, is used to generate a corresponding portion of the cryptographic signature for the blockchain operation to transfer control of the first number of cryptographic resources to be controlled by the second user.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the second security device transmits each encrypted key shard of the plurality of encrypted key shards to a corresponding node that encrypted each shard, and wherein each corresponding node generates a corresponding portion of the cryptographic signature corresponding to an encrypted shard of the plurality of encrypted key shards.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, further comprising:
+<claim-text>receiving a new account generation request for a new user;</claim-text>
+<claim-text>transmitting a key generation request to the second security device, wherein the second security device generates a new private key and a new public key for the new user, the new private key comprising a new plurality of key shards, sends each new key shard to a corresponding node, wherein each corresponding node encrypts a corresponding new keys shard, each corresponding node generating a new encrypted plurality of key shards using a corresponding first encryption key generated at each node;</claim-text>
+<claim-text>receiving the new encrypted plurality of key shards and the new public key from the second security device;</claim-text>
+<claim-text>transmitting the new encrypted plurality of key shards to the first security device with an encryption command to encrypt the new encrypted plurality of key shards into a new encrypted private key, wherein the first security device encrypts the new plurality of key shards into the new encrypted private key using a second encryption key that is generated on the first security device; and</claim-text>
+<claim-text>transmitting the new encrypted private key to a database server that stores the new encrypted private key in the key vault.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein transmitting the new encrypted private key to the database server comprises:
+<claim-text>retrieving user data associated with the new user;</claim-text>
+<claim-text>determining based on the user data associated with user a user's location, wherein the user's location comprises a jurisdiction of the user;</claim-text>
+<claim-text>identifying, based on the user's location, the database server within the jurisdiction of the user, wherein the database server is one of a plurality of database servers active in a plurality of different jurisdictions; and</claim-text>
+<claim-text>transmitting the new encrypted private key to the database server identified based on the jurisdiction corresponding to the user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein for retrieving, from the key vault using the user identifier, the encrypted key object associated with the first user further comprises:
+<claim-text>retrieving, from the request, the user identifier associated with the first user;</claim-text>
+<claim-text>transmitting, to the key vault, the user identifier associated with the first user; and</claim-text>
+<claim-text>receiving, from the key vault, the encrypted key object associated with the first user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, further comprising:
+<claim-text>receiving, from the second security device, a plurality of portions of the cryptographic signature generated based on the plurality of encrypted key shards, wherein the cryptographic signature is used to cryptographically sign the blockchain operation; and</claim-text>
+<claim-text>combining the plurality of portions of the cryptographic signature into the cryptographic signature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein transmitting, to the second security device, the plurality of encrypted key shards and the command to generate the cryptographic signature for signing the blockchain operation further comprises:
+<claim-text>generating a hash of the blockchain operation, wherein the hash comprises one or more of a source blockchain address associated with the first user, a target blockchain address associated with the second user, or a number of cryptographic resources; and</claim-text>
+<claim-text>transmit the hash together with the command, wherein the command instructs the second security device to generate a plurality of portions of the cryptographic signature using the hash.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. One or more non-transitory, computer-readable storage media storing instructions that when executed by one or more processors cause the one or more processors to perform operations comprising:
+<claim-text>receiving a request to transfer control of a first number of cryptographic resources from a first user to a second user;</claim-text>
+<claim-text>retrieving, from a key vault using a user identifier associated with the first user, an encrypted key object that represents a private key, wherein the encrypted key object comprises a plurality of encrypted key shards;</claim-text>
+<claim-text>transmitting, to a first security device, a decryption command to decrypt the encrypted key object, wherein the first security device decrypts the encrypted key object into the plurality of encrypted key shards;</claim-text>
+<claim-text>receiving, from the first security device, the plurality of encrypted key shards representing the private key;</claim-text>
+<claim-text>transmitting, to a second security device, the plurality of encrypted key shards and a command to generate a cryptographic signature for signing a blockchain operation;</claim-text>
+<claim-text>generating the blockchain operation based on the request and the cryptographic signature, wherein the cryptographic signature is used by a blockchain node of a blockchain to authorize the blockchain operation; and</claim-text>
+<claim-text>transmitting the blockchain operation to the blockchain node.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein each key shard of the plurality of encrypted key shards, when decrypted, is used to generate a corresponding portion of the cryptographic signature for the blockchain operation to transfer control of the first number of cryptographic resources to be controlled by the second user.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the second security device transmits each encrypted key shard of the plurality of encrypted key shards to a corresponding node that encrypted each shard, and wherein each corresponding node generates a corresponding portion of the cryptographic signature corresponding to an encrypted shard of the plurality of encrypted key shards.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the instructions further cause the one or more processors to perform operations comprising:
+<claim-text>receiving a new account generation request for a new user;</claim-text>
+<claim-text>transmitting a key generation request to the second security device, wherein the second security device generates a new private key and a new public key for the new user, the new private key comprising a new plurality of key shards, sends each new key shard to a corresponding node, wherein each corresponding node encrypts a corresponding new keys shard, each corresponding node generating a new encrypted plurality of key shards using a corresponding first encryption key generated at each node;</claim-text>
+<claim-text>receiving the new encrypted plurality of key shards and the new public key from the second security device;</claim-text>
+<claim-text>transmitting the new encrypted plurality of key shards to the first security device with an encryption command to encrypt the new encrypted plurality of key shards into a new encrypted private key, wherein the first security device encrypts the new plurality of key shards into the new encrypted private key using a second encryption key that is generated on the first security device; and</claim-text>
+<claim-text>transmitting the new encrypted private key to a database server that stores the new encrypted private key in the key vault.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the instructions further cause the one or more processors to perform operations comprising:
+<claim-text>receiving, from the second security device, a plurality of portions of the cryptographic signature generated based on the plurality of encrypted key shards, wherein the cryptographic signature is used to cryptographically sign the blockchain operation; and</claim-text>
+<claim-text>combining the plurality of portions of the cryptographic signature into the cryptographic signature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the instructions for transmitting, to the second security device, the plurality of encrypted key shards and the command to generate the cryptographic signature for signing the blockchain operation further cause the one or more processors to perform operations comprising:
+<claim-text>generating a hash of the blockchain operation, wherein the hash comprises one or more of a source blockchain address associated with the first user, a target blockchain address associated with the second user, or a number of cryptographic resources; and</claim-text>
+<claim-text>transmit the hash together with the command, wherein the command instructs the second security device to generate a plurality of portions of the cryptographic signature using the hash.</claim-text>
+</claim-text>
+</claim>
+</claims>

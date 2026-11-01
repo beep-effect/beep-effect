@@ -1,0 +1,107 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12360911-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20090202035", "A1", "20090813"],
+    "applicationReference": ["US", "12360911", "20090128"],
+    "officeActionDocumentIdentifiers": ["GMZ2D8MJPPOPPY5"],
+    "officeActionMailDate": "2011-04-28"
+  },
+  "digestEvidence": [
+    {
+      "file": "12360911.publication.xml",
+      "sha256": "169f47bffeccbe49603555f934046eb3d9f35b081e85ccaf1fa33f14596f304b",
+      "matchesProvenance": true
+    },
+    {
+      "file": "12360911.claims.xml",
+      "sha256": "c6d77250fa54b66ca80a84615252de7791facfd15fcd16103e86506601a48918",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "c6d77250fa54b66ca80a84615252de7791facfd15fcd16103e86506601a48918",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "FQI85ZJ6PPOPPY4",
+      "available": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 46,
+    "actualRows": 46,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2009-01-28T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "FQI85ZJ6PPOPPY4"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "an image",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "an image"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the contrast medium density",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the contrast medium density"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the switch timing",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the switch timing"
+    }
+  ],
+  "assessment": "Visual comparison of complete PDF pages1-2 (printed24-25) corroborates selected1-9 full native wording and dependency references:2->1,3->2,4->1,5/6->4,7-9->1. The missing original XML no longer blocks source eligibility; PDF supplies independent corroboration without changing native reference text.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Second-paragraph OA covers1-28, with selected1-9 root1 family and same numbered phrases. FQI85ZJ6PPOPPY4 original is absent.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Second-paragraph OA covers1-28, with selected1-9 root1 family and same numbered phrases. FQI85ZJ6PPOPPY4 original is absent.",
+          "requiredAction": "Obtain original FQI85ZJ6PPOPPY4 and corroborate operative selected text; chronology alone is insufficient."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "FQI85ZJ6PPOPPY4",
+    "sha256": "58986fc7f4fafe1ae80a66b1e29ac18e0e09f2bfb0785b190a57c61fb43704ff",
+    "pdfPagesInspected": [1, 2],
+    "printedPages": [24, 25],
+    "purpose": "Independent visual corroboration only; native source remains authoritative annotation text."
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-28 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ]
+}

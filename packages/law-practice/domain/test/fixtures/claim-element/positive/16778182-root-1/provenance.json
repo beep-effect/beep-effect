@@ -1,0 +1,49 @@
+{
+  "applicationNumber": "16778182",
+  "publicationNumber": "US20200250554A1",
+  "publicationDate": "2020-08-06",
+  "nativeXmlSha256": "2e50c23d511a9b8689fcf2d20572c7af94f616bca09574fe86c13cad8819c8ba",
+  "claimsXmlSha256": "71568d42f9f2666720d7e05ac2217639d15527f90dd3d1c86ed51d71763e2b7d",
+  "officeActionDocumentIdentifiers": [
+    "L47DNZ32GREENX1"
+  ],
+  "officeActionMailDate": "2022-06-13",
+  "officeActionSection112Text": [
+    "claims 1-8 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\nclaim 1:\r\n-in line 1, “the dosage” lacks antecedent basis.\r\n-in line 7, “the feature extraction” lacks antecedent basis.\r\n-in line 8, “the optimal sub-tree” lacks antecedent basis.\r\n-in line 9, “the required dosage” lacks antecedent basis.\r\n-in line 10, “the established decision tree” lacks antecedent basis.\r\nclaim 2:\r\n-in line 2, “the output” lacks antecedent basis.\r\nclaim 3:\r\nclaim 4:\r\n-in line 2, “the gini index” lacks antecedent basis.\r\n-in line 2, “the optimal feature” lacks antecedent basis.\r\n-in line 3, “the optimal splitting point” lacks antecedent basis.\r\n-in line 3, “the feature” lacks antecedent basis.\r\nclaim 5:\r\n-in line 2, “the sub-trees” lacks antecedent basis.\r\n-in line 2, “the complete tree form” lacks antecedent basis.\r\n-in line 3, “the sequence of the sub-trees” lacks antecedent basis.\r\n-in line 3, “the independent verification data set” lacks antecedent basis.\r\n-in line 4, “the cross-validation method” lacks antecedent basis.\r\nclaim 6:\r\nin line 2, “the time axis” lacks antecedent basis.\r\nclaim 7:\r\nin line 2, “the output data” lacks antecedent basis.\r\nclaim 8:\r\n-in line 9, “the feature extraction” lacks antecedent basis.\r\n-in line 10, “the optimal sub-tree” lacks antecedent basis.\r\n-in line 11, “the required dosage” lacks antecedent basis.\r\n-in line 12, “the established decision tree” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "K62G095NRXEAPX3",
+      "officialDate": "2020-01-31T12:29:51.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "K62G095NRXEAPX3",
+      "officialDate": "2020-01-31T12:29:51.000-0500",
+      "sha256": "8b2eb7487419667710be5ae0bd44b4585b130c366064600629a009dcc642ea8f",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "sourceClaimCount": 8
+    }
+  ],
+  "documentInventoryCount": 50,
+  "documentInventoryRows": 50,
+  "primaryCpc": "G16H  50/20",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/16778182",
+    "https://api.uspto.gov/api/v1/patent/applications/16778182/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

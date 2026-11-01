@@ -1,0 +1,1359 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "An X-ray CT apparatus"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 21,
+              "quote": "An X-ray CT apparatus"
+            },
+            "determiner": "an",
+            "head": "x-ray ct apparatus"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 34,
+          "endChar": 224,
+          "quote": "an imaging unit that irradiates a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructs an image by detecting X-rays passed through the subject"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 34,
+              "endChar": 49,
+              "quote": "an imaging unit"
+            },
+            "determiner": "an",
+            "head": "imaging unit"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 75,
+              "quote": "a subject"
+            },
+            "determiner": "a",
+            "head": "subject"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 177,
+              "quote": "an image"
+            },
+            "determiner": "an",
+            "head": "image"
+          },
+          {
+            "anchor": {
+              "startChar": 213,
+              "endChar": 224,
+              "quote": "the subject"
+            },
+            "determiner": "the",
+            "head": "subject"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 226,
+          "endChar": 384,
+          "quote": "an index-value detecting unit that detects an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 240,
+              "quote": "an index-value"
+            },
+            "determiner": "an",
+            "head": "index-value"
+          },
+          {
+            "anchor": {
+              "startChar": 269,
+              "endChar": 283,
+              "quote": "an index value"
+            },
+            "determiner": "an",
+            "head": "index value"
+          },
+          {
+            "anchor": {
+              "startChar": 299,
+              "endChar": 324,
+              "quote": "a contrast medium density"
+            },
+            "determiner": "a",
+            "head": "contrast medium density"
+          },
+          {
+            "anchor": {
+              "startChar": 328,
+              "endChar": 336,
+              "quote": "an image"
+            },
+            "determiner": "an",
+            "head": "image"
+          },
+          {
+            "anchor": {
+              "startChar": 354,
+              "endChar": 377,
+              "quote": "the imaging unit during"
+            },
+            "determiner": "the",
+            "head": "imaging unit during"
+          },
+          {
+            "anchor": {
+              "startChar": 378,
+              "endChar": 384,
+              "quote": "a scan"
+            },
+            "determiner": "a",
+            "head": "scan"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 386,
+          "endChar": 537,
+          "quote": "a switch-timing detecting unit that detects switch timing of the scanning conditions based on an index value detected by the index-value detecting unit"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 386,
+              "endChar": 401,
+              "quote": "a switch-timing"
+            },
+            "determiner": "a",
+            "head": "switch-timing"
+          },
+          {
+            "anchor": {
+              "startChar": 447,
+              "endChar": 470,
+              "quote": "the scanning conditions"
+            },
+            "determiner": "the",
+            "head": "scanning conditions"
+          },
+          {
+            "anchor": {
+              "startChar": 480,
+              "endChar": 494,
+              "quote": "an index value"
+            },
+            "determiner": "an",
+            "head": "index value"
+          },
+          {
+            "anchor": {
+              "startChar": 507,
+              "endChar": 522,
+              "quote": "the index-value"
+            },
+            "determiner": "the",
+            "head": "index-value"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 543,
+          "endChar": 820,
+          "quote": "an imaging control unit that controls the imaging unit so as to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition upon detecting switch timing of the scanning conditions by the switch-timing detecting unit"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 543,
+              "endChar": 566,
+              "quote": "an imaging control unit"
+            },
+            "determiner": "an",
+            "head": "imaging control unit"
+          },
+          {
+            "anchor": {
+              "startChar": 581,
+              "endChar": 597,
+              "quote": "the imaging unit"
+            },
+            "determiner": "the",
+            "head": "imaging unit"
+          },
+          {
+            "anchor": {
+              "startChar": 612,
+              "endChar": 620,
+              "quote": "the rest"
+            },
+            "determiner": "the",
+            "head": "rest"
+          },
+          {
+            "anchor": {
+              "startChar": 624,
+              "endChar": 630,
+              "quote": "a scan"
+            },
+            "determiner": "a",
+            "head": "scan"
+          },
+          {
+            "anchor": {
+              "startChar": 636,
+              "endChar": 643,
+              "quote": "a first"
+            },
+            "determiner": "a",
+            "head": "first"
+          },
+          {
+            "anchor": {
+              "startChar": 689,
+              "endChar": 695,
+              "quote": "a scan"
+            },
+            "determiner": "a",
+            "head": "scan"
+          },
+          {
+            "anchor": {
+              "startChar": 701,
+              "endChar": 709,
+              "quote": "a second"
+            },
+            "determiner": "a",
+            "head": "second"
+          },
+          {
+            "anchor": {
+              "startChar": 761,
+              "endChar": 784,
+              "quote": "the scanning conditions"
+            },
+            "determiner": "the",
+            "head": "scanning conditions"
+          },
+          {
+            "anchor": {
+              "startChar": 788,
+              "endChar": 805,
+              "quote": "the switch-timing"
+            },
+            "determiner": "the",
+            "head": "switch-timing"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 213,
+            "endChar": 224,
+            "quote": "the subject"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 66,
+            "endChar": 75,
+            "quote": "a subject"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 507,
+            "endChar": 522,
+            "quote": "the index-value"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 240,
+            "quote": "an index-value"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 581,
+            "endChar": 597,
+            "quote": "the imaging unit"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 34,
+            "endChar": 49,
+            "quote": "an imaging unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 788,
+            "endChar": 805,
+            "quote": "the switch-timing"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 386,
+            "endChar": 401,
+            "quote": "a switch-timing"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 254,
+          "quote": "the imaging unit performs a dynamic scan through which a dynamic image of a scan subject portion of the subject is reconstructed by repeatedly irradiating a region including the scan subject portion with X-rays"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 69,
+              "quote": "the imaging unit performs"
+            },
+            "determiner": "the",
+            "head": "imaging unit performs"
+          },
+          {
+            "anchor": {
+              "startChar": 70,
+              "endChar": 84,
+              "quote": "a dynamic scan"
+            },
+            "determiner": "a",
+            "head": "dynamic scan"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 114,
+              "quote": "a dynamic image"
+            },
+            "determiner": "a",
+            "head": "dynamic image"
+          },
+          {
+            "anchor": {
+              "startChar": 118,
+              "endChar": 140,
+              "quote": "a scan subject portion"
+            },
+            "determiner": "a",
+            "head": "scan subject portion"
+          },
+          {
+            "anchor": {
+              "startChar": 144,
+              "endChar": 155,
+              "quote": "the subject"
+            },
+            "determiner": "the",
+            "head": "subject"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 207,
+              "quote": "a region"
+            },
+            "determiner": "a",
+            "head": "region"
+          },
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 242,
+              "quote": "the scan subject portion"
+            },
+            "determiner": "the",
+            "head": "scan subject portion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 218,
+            "endChar": 242,
+            "quote": "the scan subject portion"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 118,
+            "endChar": 140,
+            "quote": "a scan subject portion"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 218,
+          "quote": "the imaging unit detects X-rays with a Flat Panel Detector of multiple arrays that can simultaneously detect X-rays passed through a region including the scan subject portion"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 75,
+              "quote": "the imaging unit detects X-rays"
+            },
+            "determiner": "the",
+            "head": "imaging unit detects x-rays"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 102,
+              "quote": "a Flat Panel Detector"
+            },
+            "determiner": "a",
+            "head": "flat panel detector"
+          },
+          {
+            "anchor": {
+              "startChar": 175,
+              "endChar": 183,
+              "quote": "a region"
+            },
+            "determiner": "a",
+            "head": "region"
+          },
+          {
+            "anchor": {
+              "startChar": 194,
+              "endChar": 218,
+              "quote": "the scan subject portion"
+            },
+            "determiner": "the",
+            "head": "scan subject portion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 278,
+          "quote": "the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density based on the index value, and detects switch timing of the scanning conditions based on a gradient of the created curve"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 61,
+              "quote": "the switch-timing"
+            },
+            "determiner": "the",
+            "head": "switch-timing"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 92,
+              "quote": "a curve"
+            },
+            "determiner": "a",
+            "head": "curve"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 158,
+              "quote": "the contrast medium density"
+            },
+            "determiner": "the",
+            "head": "contrast medium density"
+          },
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 183,
+              "quote": "the index value"
+            },
+            "determiner": "the",
+            "head": "index value"
+          },
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 237,
+              "quote": "the scanning conditions"
+            },
+            "determiner": "the",
+            "head": "scanning conditions"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 257,
+              "quote": "a gradient"
+            },
+            "determiner": "a",
+            "head": "gradient"
+          },
+          {
+            "anchor": {
+              "startChar": 261,
+              "endChar": 278,
+              "quote": "the created curve"
+            },
+            "determiner": "the",
+            "head": "created curve"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 358,
+          "quote": "the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 59,
+              "quote": "the index-value"
+            },
+            "determiner": "the",
+            "head": "index-value"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 97,
+              "quote": "an index value"
+            },
+            "determiner": "an",
+            "head": "index value"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 138,
+              "quote": "a contrast medium density"
+            },
+            "determiner": "a",
+            "head": "contrast medium density"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 151,
+              "quote": "an region"
+            },
+            "determiner": "an",
+            "head": "region"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 180,
+              "quote": "the image"
+            },
+            "determiner": "the",
+            "head": "image"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 199,
+              "quote": "the index value"
+            },
+            "determiner": "the",
+            "head": "index value"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 222,
+              "quote": "the switch-timing"
+            },
+            "determiner": "the",
+            "head": "switch-timing"
+          },
+          {
+            "anchor": {
+              "startChar": 246,
+              "endChar": 253,
+              "quote": "a curve"
+            },
+            "determiner": "a",
+            "head": "curve"
+          },
+          {
+            "anchor": {
+              "startChar": 292,
+              "endChar": 319,
+              "quote": "the contrast medium density"
+            },
+            "determiner": "the",
+            "head": "contrast medium density"
+          },
+          {
+            "anchor": {
+              "startChar": 323,
+              "endChar": 333,
+              "quote": "the region"
+            },
+            "determiner": "the",
+            "head": "region"
+          },
+          {
+            "anchor": {
+              "startChar": 349,
+              "endChar": 358,
+              "quote": "the curve"
+            },
+            "determiner": "the",
+            "head": "curve"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 184,
+            "endChar": 199,
+            "quote": "the index value"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 97,
+            "quote": "an index value"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 292,
+            "endChar": 319,
+            "quote": "the contrast medium density"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 138,
+            "quote": "a contrast medium density"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 323,
+            "endChar": 333,
+            "quote": "the region"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 142,
+            "endChar": 151,
+            "quote": "an region"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 349,
+            "endChar": 358,
+            "quote": "the curve"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 246,
+            "endChar": 253,
+            "quote": "a curve"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 4"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 194,
+          "quote": "the switch-timing detecting unit detects the switch timing by detecting an inflection point that appears on the curve based on a gradient of the curve"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 61,
+              "quote": "the switch-timing"
+            },
+            "determiner": "the",
+            "head": "switch-timing"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 95,
+              "quote": "the switch"
+            },
+            "determiner": "the",
+            "head": "switch"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 135,
+              "quote": "an inflection point"
+            },
+            "determiner": "an",
+            "head": "inflection point"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 161,
+              "quote": "the curve"
+            },
+            "determiner": "the",
+            "head": "curve"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 181,
+              "quote": "a gradient"
+            },
+            "determiner": "a",
+            "head": "gradient"
+          },
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 194,
+              "quote": "the curve"
+            },
+            "determiner": "the",
+            "head": "curve"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "4"
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 284,
+          "quote": "the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when an index value detected by the index-value detecting unit becomes below a termination threshold value"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 77,
+              "quote": "the imaging control unit controls"
+            },
+            "determiner": "the",
+            "head": "imaging control unit controls"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 94,
+              "quote": "the imaging unit"
+            },
+            "determiner": "the",
+            "head": "imaging unit"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 117,
+              "quote": "the rest"
+            },
+            "determiner": "the",
+            "head": "rest"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 137,
+              "quote": "a scan currently"
+            },
+            "determiner": "a",
+            "head": "scan currently"
+          },
+          {
+            "anchor": {
+              "startChar": 183,
+              "endChar": 197,
+              "quote": "an index value"
+            },
+            "determiner": "an",
+            "head": "index value"
+          },
+          {
+            "anchor": {
+              "startChar": 210,
+              "endChar": 225,
+              "quote": "the index-value"
+            },
+            "determiner": "the",
+            "head": "index-value"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 284,
+              "quote": "a termination threshold value"
+            },
+            "determiner": "a",
+            "head": "termination threshold value"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "The apparatus according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 44,
+          "endChar": 267,
+          "quote": "the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when a total scan time from a start of the scan reaches a predetermined maximum scan time"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 77,
+              "quote": "the imaging control unit controls"
+            },
+            "determiner": "the",
+            "head": "imaging control unit controls"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 94,
+              "quote": "the imaging unit"
+            },
+            "determiner": "the",
+            "head": "imaging unit"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 117,
+              "quote": "the rest"
+            },
+            "determiner": "the",
+            "head": "rest"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 137,
+              "quote": "a scan currently"
+            },
+            "determiner": "a",
+            "head": "scan currently"
+          },
+          {
+            "anchor": {
+              "startChar": 183,
+              "endChar": 200,
+              "quote": "a total scan time"
+            },
+            "determiner": "a",
+            "head": "total scan time"
+          },
+          {
+            "anchor": {
+              "startChar": 206,
+              "endChar": 213,
+              "quote": "a start"
+            },
+            "determiner": "a",
+            "head": "start"
+          },
+          {
+            "anchor": {
+              "startChar": 217,
+              "endChar": 233,
+              "quote": "the scan reaches"
+            },
+            "determiner": "the",
+            "head": "scan reaches"
+          },
+          {
+            "anchor": {
+              "startChar": 234,
+              "endChar": 267,
+              "quote": "a predetermined maximum scan time"
+            },
+            "determiner": "a",
+            "head": "predetermined maximum scan time"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "The apparatus according to claim 1, further"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 13,
+              "quote": "The apparatus"
+            },
+            "determiner": "the",
+            "head": "apparatus"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 55,
+          "endChar": 244,
+          "quote": "a display control unit that displays during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 55,
+              "endChar": 77,
+              "quote": "a display control unit"
+            },
+            "determiner": "a",
+            "head": "display control unit"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 105,
+              "quote": "a scan"
+            },
+            "determiner": "a",
+            "head": "scan"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 113,
+              "quote": "a curve"
+            },
+            "determiner": "a",
+            "head": "curve"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 179,
+              "quote": "the contrast medium density"
+            },
+            "determiner": "the",
+            "head": "contrast medium density"
+          },
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 229,
+              "quote": "the index-value"
+            },
+            "determiner": "the",
+            "head": "index-value"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      }
+    ]
+  }
+]

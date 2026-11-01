@@ -1,0 +1,82 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "14657939-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "previousRound": 2,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 1,
+      "path": "1.a",
+      "anchor": {
+        "startChar": 159,
+        "endChar": 196,
+        "quote": "two to four original chamfered bevels"
+      },
+      "determiner": "bare",
+      "beforeHead": "original chamfered bevels",
+      "afterHead": "two to four original chamfered bevels",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": " slab, wherein the chamfered continuous casting slab is provided with two to four original chamfered bevels, and each original chamfered bevel has an obtuse angle on the wide fa",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 1,
+      "path": "1.d",
+      "anchor": {
+        "startChar": 910,
+        "endChar": 934,
+        "quote": "two larger obtuse angles"
+      },
+      "determiner": "bare",
+      "beforeHead": "larger obtuse angles",
+      "afterHead": "two larger obtuse angles",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "d continuous casting slab, so that each obtuse angle is squeezed into two larger obtuse angles.",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 2,
+      "path": "2.a",
+      "anchor": {
+        "startChar": 273,
+        "endChar": 293,
+        "quote": "two chamfered bevels"
+      },
+      "determiner": "bare",
+      "beforeHead": "chamfered bevels",
+      "afterHead": "two chamfered bevels",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "ack-up roll device is: each original chamfered bevel is squeezed into two chamfered bevels, and the total length of L1+L2 of the two squeezed chamfered bevels i",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round2.json",
+      "sha256": "e8f0fe0ead6483c43e44313728ca8924fc6b9f052f1170c7b9b62d934f9f68d5"
+    },
+    {
+      "file": "extractor.round2.json",
+      "sha256": "2926e838297c3865f8f241e3ad798ac5b4b873e896f4a4140be4d796ab1d51a9"
+    },
+    {
+      "file": "critic.round2.json",
+      "sha256": "8fb683b30aec747653a461c6413b779d3e6dc6a626af03f43a5e0486603470bc"
+    }
+  ],
+  "missingPriorCritic": null,
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

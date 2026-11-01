@@ -332,6 +332,40 @@ const optionalUsptoMetadataText = (description: string) =>
   );
 
 /**
+ * Native publication XML located by the application's authoritative bulk-data metadata.
+ *
+ * **Example** (Locate a native publication)
+ *
+ * ```ts import.meta.vitest name="Locate a native publication"
+ * import { UsptoPublishedDocumentReference } from "@beep/uspto"
+ *
+ * const reference = UsptoPublishedDocumentReference.make({
+ *   productIdentifier: "APPXML",
+ *   xmlFileName: "application.xml",
+ *   fileLocationURI: "https://api.uspto.gov/application.xml",
+ * })
+ * reference.productIdentifier // => "APPXML"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UsptoPublishedDocumentReference extends S.Opaque<
+  UsptoPublishedDocumentReference,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    productIdentifier: S.NonEmptyString,
+    xmlFileName: S.NonEmptyString,
+    fileLocationURI: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("UsptoPublishedDocumentReference", {
+      description: "USPTO native publication XML reference from a file-wrapper metadata response.",
+    })
+  )
+) {}
+
+/**
  * Official application metadata resolved from the Open Data Portal.
  *
  * **Example** (Log application metadata schema)
@@ -364,6 +398,12 @@ export class UsptoApplicationMetadata extends S.Opaque<UsptoApplicationMetadata,
     grantDate: optionalUsptoMetadataText("Patent grant date string when the application has issued."),
     inventionTitle: optionalUsptoMetadataText("Published invention title when included in the wrapper metadata."),
     patentNumber: optionalUsptoMetadataText("Issued patent number associated with the application when present."),
+    grantDocumentMetaData: UsptoPublishedDocumentReference.pipe(S.optionalKey).annotateKey({
+      description: "Native grant XML reference when supplied by the wrapper.",
+    }),
+    pgpubDocumentMetaData: UsptoPublishedDocumentReference.pipe(S.optionalKey).annotateKey({
+      description: "Native pre-grant publication XML reference when supplied by the wrapper.",
+    }),
   }).pipe(
     $I.annoteSchema("UsptoApplicationMetadata", {
       description: "Official USPTO application metadata projected from a patent file wrapper response.",
@@ -406,11 +446,43 @@ export class UsptoContinuity extends S.Opaque<UsptoContinuity, { readonly brand:
 }
 
 /**
+ * One published representation of a file-wrapper document, with its source format label.
+ *
+ * **Example** (Describe an XML download)
+ *
+ * ```ts import.meta.vitest name="Describe an XML download"
+ * import { UsptoDocumentDownloadOption } from "@beep/uspto"
+ *
+ * const option = UsptoDocumentDownloadOption.make({
+ *   downloadUrl: "https://api.uspto.gov/docs/claims.xml",
+ *   mimeTypeIdentifier: "XML",
+ * })
+ * option.mimeTypeIdentifier // => "XML"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UsptoDocumentDownloadOption extends S.Opaque<
+  UsptoDocumentDownloadOption,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    downloadUrl: S.String,
+    mimeTypeIdentifier: S.optionalKey(S.String),
+  }).pipe(
+    $I.annoteSchema("UsptoDocumentDownloadOption", {
+      description: "A document download URL and its optional USPTO format label.",
+    })
+  )
+) {}
+
+/**
  * Reference to one document in an application file wrapper.
  *
  * **Example** (Log document reference schema)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Log document reference schema"
  * import { UsptoDocumentReference } from "@beep/uspto"
  *
  * console.log(UsptoDocumentReference)
@@ -431,7 +503,10 @@ export class UsptoDocumentReference extends S.Opaque<UsptoDocumentReference, { r
       description: "USPTO file-wrapper document identifier.",
     }),
     downloadUrl: S.optionalKey(S.String).annotateKey({
-      description: "Published document download URL when the document can be fetched.",
+      description: "First published download URL, retained for callers that do not select a format.",
+    }),
+    downloadOptions: UsptoDocumentDownloadOption.pipe(S.Array, S.optionalKey).annotateKey({
+      description: "All published download options in source order, including their format labels.",
     }),
     officialDate: S.optionalKey(S.String).annotateKey({
       description: "Official USPTO date string associated with the document record.",

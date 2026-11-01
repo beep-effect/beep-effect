@@ -1,0 +1,250 @@
+{
+  "observedAt": "2026-10-29T17:52:53.154721+00:00",
+  "baseHead": "1ed9704cc640a24fe880a5b1dc161b009d1ca1ef",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-http-intake-pu2d88gb",
+  "artifacts": [
+    {
+      "file": "audit.repair-v13.combined.txt",
+      "bytes": 93191,
+      "sha256": "442858ffc13a61bd022b475135da404ddf166d6b587337a183a6b72ecbdbd560"
+    },
+    {
+      "file": "audit.repair-v13.json",
+      "bytes": 9332,
+      "sha256": "d4e970066f516bb66568bbb4b9798ac6da617a98693fd3d93fd90f64d7792254"
+    },
+    {
+      "file": "audit.repair-v12.combined.txt",
+      "bytes": 97088,
+      "sha256": "7f4984a1187268427e06f6fb445edfaf5e480f1c1b6741840f365b50a9254f3e"
+    },
+    {
+      "file": "audit.repair-v12.json",
+      "bytes": 10013,
+      "sha256": "2f2d0b518be83193d313cbba0830a04c3b0895477b3fc22b132db833291f66f7"
+    },
+    {
+      "file": "delivery-fallow-worklist.json",
+      "bytes": 10268,
+      "sha256": "332c7433ee9b691dd09148cd9ea47e81fb85641945a0ff1024511e6db79f5ef9"
+    },
+    {
+      "file": "HTTP-INTAKE-REFACTOR-REVIEW.md",
+      "bytes": 3558,
+      "sha256": "93662bb46fcd433d15c20db60f1d8b0e45178d802bf8d54022d59184143b7e1b"
+    },
+    {
+      "file": "foundation-bounded-job.py",
+      "bytes": 7421,
+      "sha256": "e7d72f286ed9cbb662eceaab93df404f8ecee8462f3998e320b6557eb828c4ee"
+    },
+    {
+      "file": "foundation-launch-http-before.ts",
+      "bytes": 10286,
+      "sha256": "c173247d0ade3132c9a2a35cc3b433e6adbf94c21f06d3184d0817132059f2fe"
+    },
+    {
+      "file": "foundation-launch-http-before-routing.ts",
+      "bytes": 10227,
+      "sha256": "c28380b0bd4237bb00a1dda89d85df82fed4e42b8722d859c26230036380b729"
+    },
+    {
+      "file": "foundation-native-http-before.ts",
+      "bytes": 14380,
+      "sha256": "2b377713771e5ccb8168e73f74518c7dfd5a0113af2e1ba7529894ba9fc95114"
+    },
+    {
+      "file": "foundation-native-http-before-response.ts",
+      "bytes": 14948,
+      "sha256": "a7c807131a76046641a36bd4e2b56910f5db99ebf1eca86b9252bf2bf089a5f2"
+    },
+    {
+      "file": "foundation-native-http-health-v2.json",
+      "bytes": 8469,
+      "sha256": "6c33880cd20395e1e9d26ee5983f7eb57b107b376acf93259ec81aed0f333ce6"
+    },
+    {
+      "file": "foundation-native-http-health-v4.json",
+      "bytes": 5926,
+      "sha256": "66e6e89b10c6d49a8b4bddf1e856acbfdffd83eb0bfcc266a120b13a2b55ec0f"
+    },
+    {
+      "file": "foundation-launch-http-health-v4.json",
+      "bytes": 6087,
+      "sha256": "1ea655be824ba2d754347c168cfab558f84a7520dba962ea1db54e8b30e333aa"
+    },
+    {
+      "file": "foundation-launch-http-v1.log",
+      "bytes": 1507,
+      "sha256": "d2d7a8ab1574ad3f61c43a6dbea2fec1ce2737956b2aebef433651d5e4b3b7b5"
+    },
+    {
+      "file": "foundation-launch-http-v1-guard.json",
+      "bytes": 346,
+      "sha256": "8e1b8db7b84a5226e92d6a7a4bfe1e7244aaf3a086d18b34a6d8d4dc5b591841"
+    },
+    {
+      "file": "foundation-native-http-v1.log",
+      "bytes": 15053,
+      "sha256": "e85569aba2dcbfe8aaca34701b55c4cba455ca6c3b9b9034a802307bada97718"
+    },
+    {
+      "file": "foundation-native-http-v1-guard.json",
+      "bytes": 346,
+      "sha256": "e7cac67f4b9157ceb7629bc9ea432fcea52ae6efe7ee0e650091b73b376a0ccc"
+    },
+    {
+      "file": "foundation-http-v2.log",
+      "bytes": 2996,
+      "sha256": "1d05a16fb80377524a1fc706ad896b401f08bfe3d434bf3c48ed57d30adac132"
+    },
+    {
+      "file": "foundation-http-v2-guard.json",
+      "bytes": 339,
+      "sha256": "f5c3a01ec118e8cbea36c3b43f601b5e037c11e2f4b9f5168b44bc7aef81b3a5"
+    },
+    {
+      "file": "foundation-http-v3.log",
+      "bytes": 4191,
+      "sha256": "8147a1f87e4dc34c403d9a7628389af123b3a9d46237b82a5061c81d13ebe8a0"
+    },
+    {
+      "file": "foundation-http-v3-guard.json",
+      "bytes": 338,
+      "sha256": "803231076f28875bfdf6fc5c6275c9dec434ad87b8b4922c52a54ad10434376f"
+    },
+    {
+      "file": "foundation-http-v4.log",
+      "bytes": 3172,
+      "sha256": "06eb1de3847778be1f89be478c3c798def5727690c901fd3d291c5aaf7aae684"
+    },
+    {
+      "file": "foundation-http-v4-guard.json",
+      "bytes": 339,
+      "sha256": "e5a0308cdd4190650fcd7cbfc32e1f061089f87f54a0b4ef9478a450a897a6d7"
+    },
+    {
+      "file": "foundation-http-final.log",
+      "bytes": 10143,
+      "sha256": "1222757b3aec718f9c153dac08646e66bc4646215b8da35b5191f84481f4de63"
+    },
+    {
+      "file": "foundation-http-final-guard.json",
+      "bytes": 342,
+      "sha256": "f18a8f2154187ddf1ef0b2a70e216555d50897036be88a36259abd9bd48dd12f"
+    }
+  ],
+  "currentSourceSha256": {
+    "packages/tooling/library/ai-metrics/src/native-http.ts": "f05649b9dc34b67cb4752c7d215d3d1be06c98417b1aabb3f8728a025c52fa4d",
+    "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": "5a698aa03cc5c0464484a9b3071c92d0589678bd43ba78d9ea5b61ae43004996"
+  },
+  "verification": {
+    "distinctFocusedCasesAcrossWave": 36,
+    "finalCombinedFocusedCases": 36,
+    "finalAiMetricsAudit": "passed",
+    "finalAiMetricsDocgen": "passed",
+    "targetedComplexityFindings": 0,
+    "independentReview": "accepted both exact current source hashes including encoding guard, response mapping and route stages",
+    "fallowAttribution": {
+      "gate": "new-only",
+      "dead_code_introduced": 0,
+      "dead_code_inherited": 0,
+      "complexity_introduced": 31,
+      "complexity_inherited": 0,
+      "duplication_introduced": 3,
+      "duplication_inherited": 4,
+      "styling_introduced": 0,
+      "styling_inherited": 0,
+      "duplication_demoted": 0,
+      "diff_risk_introduced": 0
+    },
+    "maximumRemainingCyclomatic": 15
+  },
+  "guards": {
+    "foundation-launch-http-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-launch-http-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 26334142464,
+      "peakObservedBytes": 5419147264,
+      "minimumAvailableBytes": 14796554240,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-native-http-v1": {
+      "ownedScopes": {},
+      "unit": "foundation-native-http-v1.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 20513681408,
+      "peakObservedBytes": 5291864064,
+      "minimumAvailableBytes": 14330462208,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "foundation-http-v2": {
+      "ownedScopes": {},
+      "unit": "foundation-http-v2.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 18870329344,
+      "peakObservedBytes": 5262524416,
+      "minimumAvailableBytes": 15081725952,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "foundation-http-v3": {
+      "ownedScopes": {},
+      "unit": "foundation-http-v3.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 19269378048,
+      "peakObservedBytes": 5292896256,
+      "minimumAvailableBytes": 8838832128,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "foundation-http-v4": {
+      "ownedScopes": {},
+      "unit": "foundation-http-v4.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 20260777984,
+      "peakObservedBytes": 5202464768,
+      "minimumAvailableBytes": 15871234048,
+      "stoppedFor": null,
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "foundation-http-final": {
+      "ownedScopes": {},
+      "unit": "foundation-http-final.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 8589934592,
+      "initialAvailableBytes": 18501677056,
+      "peakObservedBytes": 5840261120,
+      "minimumAvailableBytes": 11072987136,
+      "stoppedFor": null,
+      "exitCode": 1,
+      "orphanCleanup": []
+    }
+  },
+  "limitations": [
+    "Final combined command exits 1 for remaining Fallow findings after focused tests and full package audit/docgen pass. No quality thresholds or allowances changed.",
+    "Intermediate quick checks failed TS2345 and then import order; corrected via schema-derived encoding guard and import organization. Failed results retained and not counted as passing.",
+    "No synthetic case replaces real harness coverage evidence. Installed canary/entrypoint proof must refresh against final source before delivery.",
+    "Whole CLI runtime abort remains unresolved. Remaining policy/catalog, publication and hosted review/merge remain open.",
+    "Recovery hold and historical data preserved; no production rollout or deliberate OOM."
+  ]
+}

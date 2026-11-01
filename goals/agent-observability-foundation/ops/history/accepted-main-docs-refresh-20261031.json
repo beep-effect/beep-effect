@@ -1,0 +1,119 @@
+{
+  "kind": "accepted-main-documentation-metadata-refresh",
+  "sourceCheckpointCommit": "dd5763445fb8972cde3bbca0d2f19bd57611d041",
+  "sourceTreeObjectId": "a88566c20ddc5e7c84a462667e91a708450c7190",
+  "workerGitHeadDuringIndexedOverlay": "11da49d99a77befddded395b3afd8441df7eacae",
+  "acceptedMain": "adedee335a862464e3a4997e2842daf7efd1e9a9",
+  "acceptedCoverageRepair": "ac8993e7773065c55b11e6b71b0f1471a0105d2f",
+  "commands": [
+    {
+      "name": "fallow-boundaries",
+      "exitCode": 0
+    },
+    {
+      "name": "jsdoc-inventory",
+      "exitCode": 0
+    },
+    {
+      "name": "cache-audit",
+      "exitCode": 0
+    }
+  ],
+  "wholeJobPassed": false,
+  "jobOutcome": "Outer time limit interrupted cleanup after all three recorded commands exited zero. This is not a passing whole-job receipt. Generated outputs were captured before cleanup and independently hashed.",
+  "cleanupRecovery": {
+    "sourceTree": "a88566c20ddc5e7c84a462667e91a708450c7190",
+    "baseHead": "11da49d99a77befddded395b3afd8441df7eacae",
+    "verifiedOwnedPaths": 146,
+    "startedAtEpochSeconds": 1793467285.585496,
+    "method": "Exact path-limited Git restore of verified temporary overlay; no reset, force, stash, or unrelated path.",
+    "exitCode": 0,
+    "clean": true,
+    "head": "11da49d99a77befddded395b3afd8441df7eacae",
+    "endedAtEpochSeconds": 1793467286.1480396
+  },
+  "artifactsSha256": {
+    "standards/fallow.boundaries.generated.jsonc": "b31609bc2030e6ddab39e47d4e39e8a5c44f194fa87d925713314c81d139030b",
+    "standards/jsdoc-documentation.inventory.jsonc": "f6c7b765416657e4ee0ed508b1a1ec73f54fb00aee9212b613c59d36321cdeee",
+    "standards/jsdoc-documentation.inventory.md": "274de79fb74570f2a12f4be9669c8be9f305fd96bdd225512e6e4c1453f007e9"
+  },
+  "jsdoc": {
+    "packages": 183,
+    "openExports": 97,
+    "openModules": 166,
+    "rootPolicyOpen": 0,
+    "previousIncomingMainOpenExports": 99,
+    "previousPublicModules": 3576,
+    "currentPublicModules": 3614,
+    "previousPublicExports": 25334,
+    "currentPublicExports": 25582,
+    "scope": "Canonical output covers the combined accepted-main and foundation source tree, including the foundation modules absent from incoming main inventory."
+  },
+  "cacheAudit": {
+    "findings": 0,
+    "unassessed": 1655,
+    "unassessedAreNotQualified": true,
+    "baselineWriterRun": false,
+    "changedComputations": [
+      "@beep/repo-ai-metrics#audit",
+      "@beep/repo-ai-metrics#build",
+      "@beep/repo-ai-metrics#check",
+      "@beep/repo-ai-metrics#coverage",
+      "@beep/repo-ai-metrics#lint:deprecated-apis",
+      "@beep/repo-ai-metrics#package-test-typecheck",
+      "@beep/repo-ai-metrics#test",
+      "@beep/repo-ai-metrics#test:property"
+    ],
+    "deltaOnlyDependencies": true,
+    "otherReviewsPreserved": 188,
+    "globalConfigurationUnchanged": true,
+    "membershipUnchanged": true
+  },
+  "schemaReanchor": {
+    "file": "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts",
+    "oldLine": 13,
+    "newLine": 14,
+    "entriesBefore": 272,
+    "entriesAfter": 272,
+    "statusesReasonsAndOtherEntriesUnchanged": true,
+    "method": "Actual one-file SchemaFirstArbitraryCoverage detector, existing-identity mergeSchemaFirstInventory reconciliation, canonical writeSchemaFirstInventoryDocument persistence. Unchanged reviewed entries are reused; not a global scan.",
+    "fullLocalScan": "Interrupted at workstation host reserve before writing; not a passed scan. Fresh hosted full scan required."
+  },
+  "sourceEquivalenceReceipt": {
+    "path": "jsdoc-source-binding-20261031.json",
+    "sha256": "f9d55bb31ba7d7d09a08926df2fc1c2e7a1833b3bead261d08f32a3330e74af5"
+  },
+  "sourceCheckpointHooks": {
+    "allPassed": true,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-source-checkpoint3-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 54999412736,
+      "peakObservedBytes": 4997754880,
+      "minimumAvailableBytes": 48147537920,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 48,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "noHookBypass": true
+  },
+  "limits": {
+    "workerMemoryHighGiB": 5,
+    "workerMemoryMaxGiB": 6,
+    "sharedWorkerMemoryMaxGiB": 8,
+    "swapMax": 0,
+    "cpuPercent": 200,
+    "tasksMax": 384,
+    "outerRuntimeSeconds": 900
+  },
+  "recoveryHold": "Unchanged; no real harness enrollment, production deployment, archive reingestion or protected-service activation.",
+  "publicationScope": "Scoped artifact generation, source equivalence and targeted metadata repair. Current-head hosted policy, coverage, review/window and actual merge remain required.",
+  "privateArtifacts": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup/combined-review"
+}

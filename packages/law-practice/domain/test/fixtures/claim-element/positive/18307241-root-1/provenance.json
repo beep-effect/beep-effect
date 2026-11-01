@@ -1,0 +1,59 @@
+{
+  "applicationNumber": "18307241",
+  "publicationNumber": "US20230288444A1",
+  "publicationDate": "2023-09-14",
+  "nativeXmlSha256": "e8344b0796c78e70a4e1980bb9872a8776c142d6d4f90db741877c6975b6cdf4",
+  "claimsXmlSha256": "e8319938f7fb7d4881925209229d8626162091ff54dc3b1e27faeee9aee14a37",
+  "officeActionDocumentIdentifiers": [
+    "LRP4L33UBLUEX11"
+  ],
+  "officeActionMailDate": "2024-01-24",
+  "officeActionSection112Text": [
+    "claims 1-18 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\nin claim 1, line 40, the phrase “the lateral faces” is lacks antecedent basis.\r\nin claim 2, lines 34-35, the phrase “the lateral faces” lacks antecedent basis.\r\nin claim 3, line 33, the phrase “the lateral faces” lacks antecedent basis.\r\nin claim 5, lines 2-3, 9 and 11, the phrase “the principal tangential axis” lacks antecedent basis. in lines 4, 8 and 12, the phrase “the secondary tangential axis” lacks antecedent basis. in lines 5, 7 and 13, the phrase “the normal axis” lacks antecedent basis.\r\nin claim 7, lines 4-5, the phrase “the secondary tangential axis” lacks antecedent basis. in line 6, the phrase “the normal axis” lacks antecedent basis.\r\nin claim 9, line 1, the phrase “the first lateral face” lacks antecedent basis. in line 2, the phrase “the tangential axis” lacks antecedent basis.\r\nin claim 10, lines 10-11, the phrase “the second continuous electrically conductive coating” lacks antecedent basis.\r\nin claim 12, line 4, the phrase “the secondary tangential axis” lacks antecedent basis.\r\nin claim 13, lines 3, 9 and 11 the phrase “the principal tangential axis” lacks antecedent basis. in lines 4, 8 and 12, the phrase “the secondary tangential axis” lacks antecedent basis. in lines 5, 7 and 13, the phrase “the normal axis” lacks antecedent basis.\r\nin claim 14, lines 2-3, 9 and 11 the phrase “the principal tangential axis” lacks antecedent basis. in lines 4, 8 and 12, the phrase “the secondary tangential axis” lacks antecedent basis. in lines 5, 7 and 13, the phrase “the normal axis” lacks antecedent basis.\r\nin claim 15, line 2, the phrase “the principal tangential axis” lacks antecedent basis.\r\nin claim 16, line 2, the phrase “the principal tangential axis” lacks antecedent basis.\r\nin claim 16, line 2, the phrase “the secondary tangential axis” lacks antecedent basis.\r\nin claim 17, line 2, the phrase “the principal tangential axis” lacks antecedent basis.\r\nin claim 18, lines 2-3, the phrase “the secondary tangential axis” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "LGXZCYZJXBLUEX0",
+      "officialDate": "2023-04-26T13:36:29.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "LGXZCYZJXBLUEX0",
+      "officialDate": "2023-04-26T13:36:29.000-0400",
+      "sha256": "07011b039f6e4df8b8d4e480860a5b620cf88c7e8671411bf69cf8f5a3c10ff4",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "sourceClaimCount": 18
+    }
+  ],
+  "documentInventoryCount": 62,
+  "documentInventoryRows": 62,
+  "primaryCpc": "G01P  15/09",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/18307241",
+    "https://api.uspto.gov/api/v1/patent/applications/18307241/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

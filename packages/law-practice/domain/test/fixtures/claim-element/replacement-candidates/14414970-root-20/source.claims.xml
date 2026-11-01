@@ -1,0 +1,68 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for forming a joint in a stack of at least two sheets of material, at least one of the sheets being a light metal alloy, using a self-piercing rivet comprising the steps of: positioning the material over a die; providing a substantially cylindrical self-piercing rivet that is fully hollow so as to define a bore that extends along its entire length, the rivet having been coated at least along a portion of its bore by a lubricant; positioning the rivet over the sheet material at a position opposite the die; using a punch to set the rivet and force it into the sheet material such that it pierces the upper surface thereof and such that a shank of the rivet deforms outwardly to interlock with the material but without penetration to the die side of the material; wherein the rivet has a shank with an outside diameter of 5.4 mm or less, and the die has a volume that is 60% or less of the effective solid volume of the rivet.</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, where the sheets have an ultimate tensile strength in the range of 50-600 MPa.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sheets have an ultimate tensile strength in the range of 180 MPa-600 MPa.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the die has a die cavity having a maximum depth in the range of 0.5 mm to 2.0 mm.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, in which the stack of sheet material has a thickness of at least 6.0 mm.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, in which the stack of sheet material has a thickness of at least 1.0 mm.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the rivet is coated with lubricant along the full length of its bore.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A method according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the rivet is further coated with lubricant on at least part of the exterior surface of a shank of the rivet.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the lubricant is a dry film.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sheet material is high strength aluminum alloy having an ultimate tensile strength in the range of 330-600 MPa.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sheet material is wrought magnesium alloy having an ultimate tensile strength in the range of 180-440 MPa.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the diameter of the bore of the rivet is at least 3.1 mm.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the outside diameter of the shank is 3.36 mm or less.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. A method according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the inside diameter of the bore of the rivet is at least 2.0 mm.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the rivet has a countersunk head.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the rivet has at least one formation at an upper portion of the bore, the method including allowing the sheet material to deform such that a slug of material from the upper sheet and inside the bore engages with said formation.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the formation comprises a groove or recess.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A method according to <claim-ref idref="CLM-00017">claim 17</claim-ref>, further comprising using a punch to insert the rivet into the sheet material, the punch having a projection that contacts the slug of material so as to deform it outwardly.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A method for manufacturing a component or product including forming a joint in accordance with the method of <claim-ref idref="CLM-00001">claim 1</claim-ref>.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A method for forming a joint in a stack of at least two sheets material, at least one of the sheets being a light metal alloy, using a self-piercing rivet comprising the steps of: positioning the material over a die; providing a substantially cylindrical self-piercing rivet that is fully hollow so as to define a bore that extends along its entire length, the rivet having been coated at least along a portion of its bore by a lubricant; positioning the rivet over the sheet material at a position opposite the die; using a punch to set the rivet and force it into the sheet material such that it pierces the upper surface thereof and such that a shank of the rivet deforms outwardly to interlock with the material but without penetration to the die side of the material; wherein the die has a volume that is 70% or less of the effective solid volume of the rivet.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. A method according to <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein the die volume is 60% or less of the effective solid volume of the rivet.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. A method for manufacturing a component or product including forming a joint in accordance with the method of <claim-ref idref="CLM-00020">claim 20</claim-ref>. </claim-text>
+</claim>
+</claims>

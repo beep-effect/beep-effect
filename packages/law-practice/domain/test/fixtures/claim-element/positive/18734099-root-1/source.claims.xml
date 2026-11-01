@@ -1,0 +1,78 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>: A chair with improved comfort, characterized by comprising:
+<claim-text>an upper backrest,</claim-text>
+<claim-text>a lower backrest,</claim-text>
+<claim-text>a backrest bracket, and</claim-text>
+<claim-text>a base,</claim-text>
+<claim-text>wherein the backrest bracket is rotatably mounted on the base, the upper backrest is rotatably mounted on the backrest bracket, and the lower backrest is rotatably connected to the upper backrest; a transfer rod and a transmission device are also provided between the upper backrest and the base, with two ends of the transfer rod rotatably connected to the upper backrest and the transmission device, respectively;</claim-text>
+<claim-text>wherein when the backrest bracket tilts backward, under the action of the transmission device, the transfer rod moves relative to the backrest bracket, causing the upper backrest to rotate forward relative to the backrest bracket due to the action of the transfer rod, the lower end of the upper backrest approaches the backrest bracket backward, and the angle between the upper backrest and the lower backrest decreases.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>: The chair with improved comfort according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that:
+<claim-text>a lower end of the transfer rod is connected to the transmission device,</claim-text>
+<claim-text>an upper end of the transfer rod is rotatably connected to the lower end of the upper backrest, with the rotational connection point of the transfer rod and the upper backrest being located in front of the rotational connection point between the backrest bracket and the upper backrest,</claim-text>
+<claim-text>the lower end of the lower backrest is rotatably connected to the transfer rod, and the upper end of the lower backrest is rotatably connected to the lower end of the upper backrest;</claim-text>
+<claim-text>wherein when the backrest bracket tilts backward, the lower end of the transfer rod moves forward, the upper end of the transfer rod moves backward, the lower end of the upper backrest and the upper end of the lower backrest move backward approaching the backrest bracket, and the lower end of the lower backrest moves forward away from the backrest bracket.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>: The chair with improved comfort according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, characterized in that:
+<claim-text>the transfer rod comprises a main rod,</claim-text>
+<claim-text>a first connecting rod located at the upper end of the main rod, and</claim-text>
+<claim-text>a second connecting rod located at the lower end of the main rod,</claim-text>
+<claim-text>wherein both the first connecting rod and the second connecting rod protrude forward from the main rod;</claim-text>
+<claim-text>wherein the first connecting rod is connected to the upper end of the upper backrest, and the second connecting rod is connected to the lower end of the lower backrest.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>: The chair with improved comfort according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, characterized in that:
+<claim-text>the first connecting rod is integrally formed with the main rod and is inclined forward and upward relative to the main rod, and</claim-text>
+<claim-text>the second connecting rod is rotatably connected to the main rod, with the rotational range of the second connecting rod relative to the main rod being 8-10°.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>: The chair with improved comfort according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that:
+<claim-text>the transmission device comprises a rotating member,</claim-text>
+<claim-text>the rotating member is rotatably disposed relative to the backrest bracket,</claim-text>
+<claim-text>the transfer rod is rotatably connected to the rotating member, and</claim-text>
+<claim-text>the rotating member is configured to drive the transfer rod to move relative to the backrest bracket when the rotating member rotates relative to the backrest bracket.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>: The chair with improved comfort according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, characterized in that:
+<claim-text>the transmission device further comprises a first connecting rod, a second connecting rod, an intermediate seat, and a swing rod; the intermediate seat is fixed relative to the backrest bracket and rotates synchronously with the backrest bracket relative to the base; one end of the first connecting rod is rotatably connected to the base; the upper end of the second connecting rod is rotatably connected to the other end of the first connecting rod; the lower end of the second connecting rod is rotatably connected to the intermediate seat; the swing rod is rotatably connected to the upper end of the second connecting rod; the rotating member is rotatably disposed on the intermediate seat; the front end of the rotating member is rotatably connected to the swing rod; the rear end of the rotating member is rotatably connected to the transfer rod;</claim-text>
+<claim-text>wherein when the backrest bracket tilts backward, the backrest bracket rotates downward and backward relative to the base, the intermediate seat fixed to the backrest bracket also rotates synchronously, driving the second connecting rod to move downward and forward, the second connecting rod drives the first connecting rod to rotate downward and backward relative to the base, simultaneously pulling the swing rod to move forward and downward, the swing rod pulls the rotating member to rotate forward relative to the intermediate seat, thereby driving the transfer rod to move relative to the intermediate seat and the backrest bracket.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>: The chair with improved comfort according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that:
+<claim-text>the intermediate seat extends rearward to form a connecting seat, the connecting seat is hollow and forms a receiving slot, the rotating member is located in the receiving slot and is rotatably connected to the connecting seat via a rotating shaft.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>: The chair with improved comfort according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that the rotating member is triangular in shape.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>: The chair with improved comfort according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that:
+<claim-text>the backrest bracket has an L-shaped structure, comprising a horizontal section and a vertical section; the horizontal section is located on the left and right sides of the rear part of the base, with the front end of the horizontal section rotatably connected to the rear end of the base; support seats are fixedly provided on the left and right sides of the upper end of the middle position of the horizontal section; the support seats are connected by a connecting beam; the connecting beam presses on the intermediate seat, so that when the backrest bracket rotates, the horizontal section can press down the intermediate seat through the connecting beam to rotate synchronously.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>: The chair with improved comfort according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that:
+<claim-text>the base comprises a bottom shell and the base seat member, the bottom shell is fixedly connected to the base seat member, the intermediate seat and the backrest bracket are both rotatably connected to the bottom shell, the first connecting rod is rotatably connected to the base seat member.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>: The chair with improved comfort according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that:
+<claim-text>the lower backrest is of a frame structure, the upper backrest comprises an upper backrest support body and an upper backrest frame, the upper backrest support body is fixedly connected to the upper backrest frame, the upper backrest support body is of a frame structure, and the lower end of the upper backrest frame is rotatably connected to the upper end of the backrest bracket.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The chair with improved comfort according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, characterized in that:
+<claim-text>the upper backrest frame comprises a forward-extending third connecting rod, and</claim-text>
+<claim-text>the third connecting rod is fixedly connected to the upper backrest support body and is rotatably connected to the upper end of the transfer rod.</claim-text>
+</claim-text>
+</claim>
+</claims>

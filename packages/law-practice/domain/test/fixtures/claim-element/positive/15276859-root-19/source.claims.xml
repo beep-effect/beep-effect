@@ -1,0 +1,72 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An axial turbine engine splitter nose, said nose comprising:
+<claim-text>an annular separation surface with a circular leading edge, the surface structured and operable to separate an upstream flow into two annular flows; and</claim-text>
+<claim-text>an electrical de-icing device with an electrical heating element; the electrical heating element comprises at least one electric heating strip which is structured and operable to prevent the formation of ice on the annular surface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each strip crosses radially the circular leading edge.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a heated annular zone in which each strip is inset, the at least one strip occupying at least 10% of the heated zone.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each strip performs U-turns.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the electrical heating element comprises a plurality of heating strips and two connectors each connected to the strips, wherein one connector is an internal connector arranged radially on the inside of the leading edge and one connector is an external connector arranged radially on the outside of the leading edge.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the de-icing device comprises a plurality of heating strips that are parallel.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the heating element comprises a plurality of heating strips that are parallel and extend alongside each other.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising an annular hook for fixing an external shroud, each strip axially straddling the annular hook.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a layer of dielectric material with two strata of dielectric material, each strip being arranged at an interface between the strata.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the strata comprise a downstream stratum and an upstream stratum having a thermal conductivity that is greater than that of the downstream stratum, each strip being inset in a thickness of the upstream stratum.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein all strips radially intersect a majority of the circumference of the leading edge.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising an annular cavity and an annular partition separating the annular cavity from the annular flows.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the heating element is arranged at an interface between the cavity and the annular partition.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising an annular partition with a variable-thickness portion forming an annular body, the body having a maximum thickness in a region of the leading edge.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the annular body comprises an external annular step delimiting axially the heating element and the dielectric layer.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The axial turbine engine splitter nose according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising an organically based composite material forming the partition.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. An axial turbine engine compressor comprising a splitter nose, the splitter nose comprising:
+<claim-text>an annular separation surface with a compressor circular leading edge, the surface structured and operable to separate an upstream flow into a primary flow entering the compressor and a secondary flow; and</claim-text>
+<claim-text>an electrical de-icing device with an electric heating element; the electric heating element comprises at least one electric heating strip which is structured and operable to prevent the formation of ice on the annular surface, the electric heating strip strengthening the annular separation surface level of the compressor circular leading edge.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The axial turbine engine compressor according to <claim-ref idref="CLM-00017">claim 17</claim-ref>, further comprising an external shroud and an annular series of stator vanes extending radially from the external shroud, the shroud being fixed to the splitter nose via an annular hook.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A turbine engine, said engine comprising:
+<claim-text>a splitter nose, wherein the splitter nose comprises:</claim-text>
+<claim-text>an annular wall with an annular separation surface with a circular leading edge, the surface structured and operable to separate an upstream flow into a primary flow and a secondary flow; and</claim-text>
+<claim-text>an electrical de-icing device with an electric heating element, the electric heating element comprises at least one electric heating strip that is disposed upstream the annular wall.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The turbine engine according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, further comprising an electric source structured and operable to produce electric current and electrically power each strip.</claim-text>
+</claim>
+</claims>

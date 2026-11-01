@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "head-review/v2",
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "11279554-root-25",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "previousRound": 1,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 25,
+      "path": "25.b.ii",
+      "anchor": {
+        "startChar": 310,
+        "endChar": 323,
+        "quote": "each solution"
+      },
+      "determiner": "bare",
+      "beforeHead": "each solution",
+      "afterHead": "solution",
+      "action": "changed",
+      "reason": "Each solution in the population quantifies the members whose feasible production states are specified. Each is the outer determiner; it does not form a lexical compound with solution.",
+      "sourceContext": ": i) read input data, wherein the input data describes the pipeline system to be optimized; ii) generate a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; iii) evaluate each solution in the population of solutions; iv) perform a gene",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 25,
+      "path": "25.b.iii",
+      "anchor": {
+        "startChar": 419,
+        "endChar": 432,
+        "quote": "each solution"
+      },
+      "determiner": "bare",
+      "beforeHead": "each solution",
+      "afterHead": "solution",
+      "action": "changed",
+      "reason": "Evaluate each solution in the population is an explicitly distributive object noun phrase. Each is grammatical determination, not a cardinal bound or selected solution identity.",
+      "sourceContext": "pulation of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system; iii) evaluate each solution in the population of solutions; iv) perform a genetic optimization process on the population until a termination condition specified by the input data is satis",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round1.json",
+      "sha256": "3f8ec8cacf15fe47d0f855dd94ae64ee52f3cb19c82e206e893f0f395e8068dd"
+    },
+    {
+      "file": "extractor.round1.json",
+      "sha256": "0f08fbe87318ee79b011e2020fc9cc3851e9f93206fc02576966e0a435d04fca"
+    },
+    {
+      "file": "critic.round1.json",
+      "sha256": "171172a71a71a593f385e52b94f736abcdb2e0852e6224dfc89ab996e69e9753"
+    }
+  ],
+  "structureInvariant": "Reversing exactly these manually adjudicated head fields restores the complete prior expected JSON tree. Raw expected text differs only at the declared head string values; all source anchors, determiners, functional parts, typed edges, element structure and source/claim scope remain unchanged.",
+  "sourceValidation": {
+    "claimsXmlSha256": "574a7e67dcbe0787ab3339416900cfcda6355d75262d1d9997cd011562d45e4b",
+    "nativeCanonical": "All canonical/context claims match native XML under permitted printed-number/whitespace normalization; digest matches provenance. Every action anchor checked as exact half-open UTF-16 source span."
+  },
+  "independence": "Bounded source-based lexical-head/v1 extractor review. Each listed source phrase manually judged before serialization; no automatic regex head selection, decomposition implementation, P2-DESIGN, predictions or conformance rules used. No new source gold derivation or semantic acceptance claimed.",
+  "attorneyAdjudication": "unchanged; agent confidence is not attorney agreement",
+  "humanHolds": "Known six count/selector head holds and16068637 each edge/each other preserved; no round4 or out-of-scope modification."
+}

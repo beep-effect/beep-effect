@@ -1,0 +1,132 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method of recovering access to a user account, the method comprising:
+<claim-text>receiving user characteristics comprising one or more biometrics corresponding to the user;</claim-text>
+<claim-text>generating a persistent unique identifier (PUI) for the user characteristics;</claim-text>
+<claim-text>generating one or more biometric references respectively corresponding to the one or more biometrics;</claim-text>
+<claim-text>blocking subsequent access to the one or more biometrics by discarding any storage of the one or more biometrics in response to the generation of the PUI and the one or more biometric references;</claim-text>
+<claim-text>enrolling the user for account recovery of the user account based on a transmission of the PUI causing a generation of one or more biometric keys respectively corresponding to the one or more biometric references;</claim-text>
+<claim-text>generating one or more recovery tokens respectively corresponding to the one or more biometric keys,</claim-text>
+<claim-text>in response to the generating one or more recovery tokens, blocking subsequent access to the one or more biometric keys by discarding the one or more biometric keys from any storage thereof;</claim-text>
+<claim-text>generating a candidate recovery token; and</claim-text>
+<claim-text>granting access to the user account in response to a matching between the one or more recovery tokens and the candidate recovery token.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the one or more biometric references each comprise a numerical representation of a respective biometric of the user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the one or more biometric keys are generated according to either fuzzy extraction or application of a machine learning model on the respective one or more biometric references.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens each comprises the PUI and a respective one of the one or more biometric keys respectively corresponding to the one or more biometric references.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens each comprises a counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens each comprise the PUI and the counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein:
+<claim-text>the candidate recovery token comprises a candidate biometric key based on a candidate biometric reference corresponding to a candidate biometric received from the user at a time other than receipt of the one or more biometrics.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein:
+<claim-text>each of the one or more biometric keys is generated according to either fuzzy extraction or application of a machine learning model on the respective one or more biometric references, and the candidate biometric key is generated to align with generation of the one or more biometric keys according to a same fuzzy extraction or application of a machine learning model on the candidate biometric reference corresponding to the candidate biometric.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein:
+<claim-text>the candidate recovery token comprises the PUI and the counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein:
+<claim-text>in response to the recovery token and the candidate recovery token matching, the recovery token is updated to replace the counter value with a different counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens are generated at an account recovery service or at a user device of the user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A computing system for recovering access to a user account, the computing system comprising:
+<claim-text>one or more processors; and</claim-text>
+<claim-text>one or more memories storing instructions that, when executed by the one or more processors, cause the computing system to perform a process comprising:
+<claim-text>receiving user characteristics comprising one or more biometrics corresponding to the user;</claim-text>
+<claim-text>generating a persistent unique identifier (PUI) for the user characteristics;</claim-text>
+<claim-text>generating one or more biometric references respectively corresponding to the one or more biometrics;</claim-text>
+<claim-text>blocking subsequent access to the one or more biometrics by discarding any storage of the one or more biometrics in response to the generation of the PUI and the one or more biometric references;</claim-text>
+<claim-text>enrolling the user for account recovery of the user account based on a transmission of the PUI causing a generation of one or more biometric keys respectively corresponding to the one or more biometric references;</claim-text>
+<claim-text>generating one or more recovery tokens respectively corresponding to the one or more biometric keys,</claim-text>
+</claim-text>
+<claim-text>in response to the generating one or more recovery tokens, blocking subsequent access to the one or more biometric keys by discarding the one or more biometric keys from any storage thereof;
+<claim-text>generating a candidate recovery token; and</claim-text>
+<claim-text>granting access to the user account in response to a matching between the one or more recovery tokens and the candidate recovery token.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The computing system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein:
+<claim-text>the one or more biometric references each comprise a numerical representation of a respective biometric of the user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The computing system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein:
+<claim-text>the process further comprises generating the one or more biometric keys according to either fuzzy extraction or application of a machine learning model on the respective one or more biometric references.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The computing system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens each comprises the PUI and a respective one of the one or more biometric keys respectively corresponding to the one or more biometric references.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The computing system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens each comprises a counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The computing system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens each comprise the PUI and the counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The computing system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein:
+<claim-text>the candidate recovery token comprises a candidate biometric key based on a candidate biometric reference corresponding to a candidate biometric received from the user at a time other than receipt of the one or more biometrics.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The computing system of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein:
+<claim-text>the process further comprises generating each of the one or more biometric keys according to either fuzzy extraction or application of a machine learning model on the respective one or more biometric references, and generating the candidate biometric key to align with generation of the one or more biometric keys according to a same fuzzy extraction or application of a machine learning model on the candidate biometric reference corresponding to the candidate biometric.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The computing system of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein:
+<claim-text>the candidate recovery token comprises the PUI and the counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The computing system of <claim-ref idref="CLM-00020">claim 20</claim-ref>, wherein:
+<claim-text>the process further comprises, in response to the recovery token and the candidate recovery token matching, updating the recovery token to replace the counter value with a different counter value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The computing system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein:
+<claim-text>the one or more recovery tokens are generated at an account recovery service or at a user device of the user.</claim-text>
+</claim-text>
+</claim>
+</claims>

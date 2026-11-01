@@ -1,0 +1,422 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13822885-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20130183571", "A1", "20130718"],
+    "applicationReference": ["US", "13822885", "20110927"],
+    "officeActionDocumentIdentifiers": ["IC3CHHCXPXXIFW4"],
+    "officeActionMailDate": "2015-07-16"
+  },
+  "digestEvidence": [
+    {
+      "file": "13822885.publication.xml",
+      "sha256": "5a9a95c87be66fc04ee09437c6fcc4f8661e58e5b41ea0038442bd84dc100e70",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13822885.claims.xml",
+      "sha256": "48d2db856e0528556512d6a61440fd8c8dbd077bd2d8449187ed7b447ae12a2b",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "48d2db856e0528556512d6a61440fd8c8dbd077bd2d8449187ed7b447ae12a2b",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HE8XIC5HPXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "9b351c9df385819b998fb012b2660e0d818f39989baf15f7300fe2166fbfefb8",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "HE8XICWCPXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "b9b0daa187f3370e0bc0617daa1c4833f77f516ac7cf27d353a69498538e8f1f",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 101,
+    "actualRows": 101,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2013-03-13T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "HE8XIC5HPXXIFW3"
+      },
+      {
+        "officialDate": "2013-03-13T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "HE8XICVOPXXIFW3"
+      },
+      {
+        "officialDate": "2013-03-13T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "HE8XICWCPXXIFW3"
+      },
+      {
+        "officialDate": "2013-03-13T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "HE8XICWNPXXIFW3"
+      },
+      {
+        "officialDate": "2013-03-13T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "HE8XICWWPXXIFW3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "8. claims 1-14 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the side-by-side arrangement directional end surfaces",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side-by-side arrangement directional end surfaces"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the both end parts",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the both end parts"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the bind bar",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bind bar"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the bar edge side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bar edge side"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said bent part",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said bent part"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the bent part",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bent part"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the end plate",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the end plate"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said bent-part-side engagement structures",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said bent-part-side engagement structures"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the end-plate-side engagement structures",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the end-plate-side engagement structures"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the bind bar",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "The battery pack according to claim 1, wherein said bind bar is constructed so that the bent parts on both ends of said bind bar can be in press contact with the outside surfaces of said end plates."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the outside surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the outside surface"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the end plate",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "The battery pack according to claim 3, wherein said end plate includes a metal plate, wherein the metal plate is partially bent so that said engagement protrusion is formed."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the end plate",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "The battery pack according to claim 1, wherein said end plate includes an inclined surface on a side part of the outside surface that is located on the engagement side where the substantially rectangular U-shaped opening of said bind bar is coupled, wherein the inclined surface descends toward the substantially rectangular U-shaped opening."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the outside surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the outside surface"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the engagement side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the engagement side"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the substantially rectangular u-shaped opening",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the substantially rectangular U-shaped opening"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "said bind bar",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said bind bar"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the inclined surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the inclined surface"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the end plate",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "The battery pack according to claim 1, wherein said end plate includes a main plate that is formed of plastic, and a metal plate that is arranged on the outside surface of the main plate, wherein said metal plate is coupled to said main plate and arranged in a predetermined position on the main plate by a positioning mechanism, and the bent part of said bind bar is arranged in a predetermined position on said end plate by said positioning mechanism."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the bent part",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bent part"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "said bind bar",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said bind bar"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the bent part",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bent part"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said bind bar",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said bind bar"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said end plate",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said end plate"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the side surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side surface"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the vertical direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the vertical direction"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the side surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side surface"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the height",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the height"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the both ends",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the both ends"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the bind bar",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bind bar"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the strip-shaped main part",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the strip-shaped main part"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "upper and lower bar portions",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "upper and lower bar portions"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the upper and lower parts",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the upper and lower parts"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the side surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side surface"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the both ends",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the both ends"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said upper bar portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said upper bar portion"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said lower bar portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said lower bar portion"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said bind bar",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said bind bar"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the central part",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the central part"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "said bind bar",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said bind bar"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the side surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side surface"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the upper surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the upper surface"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the bottom surfaces",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the bottom surfaces"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "dimensioned to cover",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "dimensioned to cover"
+    }
+  ],
+  "assessment": "Authoritative marked PDF pages1-3 (printed4-6) verifies complete selected1-14. Printed3 deletes claim1or2 and inserts claim1;5 deletes3or4 and inserts3;6/7/9 delete ranges and insert1;14 deletes1to13 and inserts1. All original body text and unchanged dependencies agree. Native14 vehicle is separately printed despite clean XML merge into13. Missing marked SVG headers are now visually corroborated. Explicit amendment evidence resolves original dependency-version conflict.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Clean original has substantive alternative dependencies unlike native; printed14 vehicle is embedded under13. Marked HE8XICWCPXXIFW3 contains missing external SVG claim headers, leaving several numbered accepted dependencies uncorroborated. OA body phrase correspondence does not resolve the operative choice.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Clean original has substantive alternative dependencies unlike native; printed14 vehicle is embedded under13. Marked HE8XICWCPXXIFW3 contains missing external SVG claim headers, leaving several numbered accepted dependencies uncorroborated. OA body phrase correspondence does not resolve the operative choice.",
+          "requiredAction": "Supply authoritative source evidence resolving this identified ground or operative-version gap; do not alter native source to force correspondence."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "HE8XICWCPXXIFW3",
+    "sha256": "33041ba64af57cf9287fc66427e92542c95727628c94b1d21885e4bfe82eafec",
+    "pdfPagesInspected": [1, 2, 3],
+    "printedPages": [4, 5, 6],
+    "purpose": "Independent visual corroboration only."
+  }
+}

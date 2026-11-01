@@ -1,0 +1,92 @@
+{
+  "familyId": "12267381-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the hoisting roping",
+      "nativeQuote": "the hoisting roping",
+      "literalMatch": true,
+      "explanation": "Exact1."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the rope reels",
+      "nativeQuote": "the rope reels",
+      "literalMatch": true,
+      "explanation": "Exact2."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the kicking roller",
+      "nativeQuote": "the kicking roller",
+      "literalMatch": true,
+      "explanation": "Exact5."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the kicking roller",
+      "nativeQuote": "the kicking roller",
+      "literalMatch": true,
+      "explanation": "Exact11."
+    }
+  ],
+  "concerns": [
+    "Original FNHIZYSWPPOPPY2 amended-looking set11 versus FN9GI0X2PPOPPY4 original5 includes substantive dependency changes: native3->1 whereas originals3->1or2; native4->1 whereas originals4->1,2or3;5 originally any preceding. No explicit Del/Ins is available to distinguish removed source text from current references.",
+    "Reference numeral removals, characterized/wherein replacements, page headers and OCR garbling are mixed; cannot explain substantive reference changes away as OCR without authoritative rendering.",
+    "Publication identity/digest and53/53 chronology original2008-11-07 before OA2010-12-09 verified. Native refs remain root1 family, but exact operative version uncertain."
+  ],
+  "rationale": "Actual secondparagraph numbered grounds match native; unresolved original amendment rendering prevents source eligibility.",
+  "sourceIdentity": {
+    "applicationNumber": "12267381",
+    "publicationNumber": "US20090114487A1",
+    "publicationDate": "2009-05-07",
+    "officeActionMailDate": "2010-12-09",
+    "officeActionDocumentIdentifiers": ["GHFDDI6IPPOPPY5"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20090114487 A1 20090507",
+      "application-reference": "US 12267381 20081107",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "FNHIZYSWPPOPPY2",
+        "officialDate": "2008-11-07T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "FN9GI0X2PPOPPY4",
+        "officialDate": "2008-11-07T00:00:00.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "FNHIZYSWPPOPPY2",
+        "officialDate": "2008-11-07T00:00:00.000-0500",
+        "sha256": "d0a65e2caeb1043ce548c484330703c09577f3ecfa81e242865c1591b78c8399",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [6, 8, 10],
+        "sourceClaimCount": 11
+      },
+      {
+        "documentIdentifier": "FN9GI0X2PPOPPY4",
+        "officialDate": "2008-11-07T00:00:00.000-0500",
+        "sha256": "7355f4be33b9e7c943e52ed85b69f5ca465a368e5af75c016cfa497cd13a63f9",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 5
+      }
+    ],
+    "documentInventoryCount": 53,
+    "documentInventoryRows": 53,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

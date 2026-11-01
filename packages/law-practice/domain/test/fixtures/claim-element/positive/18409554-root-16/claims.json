@@ -1,0 +1,165 @@
+{
+  "familyId": "18409554-root-16",
+  "rootClaimNumber": 16,
+  "labelClaimNumbers": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for determining an ablation lesion zone (width or depth) projected onto an electro-anatomical map, the method comprising: delivering pulsed energy between at least two electrodes in contact with biological tissues; storing a magnitude of a contact force as applied by the at least two electrodes to the biological tissues; calculating one or more ablation zone from the delivering step based on the magnitude of the contact force; and projecting the one or more ablation zones onto an electro-anatomical map.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1 wherein the ablation zone comprises depth or width of an ablated region, the depth or width is calculated from V = Vm - ( Vm - V ⁢ 0 ) * exp ⁢ ( - ( b ⁢ 0 * log ⁢ ( n ) ) * x ) where V is a depth or width of a lesion, x is contact force measured, n is the application number of ablations applied by the electrodes, Vm is the max value of V (of the depth or width) of a probable lesion, V0 is the initial value of the depth or width of the lesion, and b0 is a selectable parameter based on the number of n via a lookup table.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 1, wherein the determining of the ablation comprises a multi-parameter regression.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 1, wherein the determining of the ablation comprises a single-parameter regression.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 1, wherein the electroporation comprising irreversible.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 1, wherein the electro-anatomical map comprising three-dimensional representation of a heart on a display screen.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 1, further comprising presenting information about the ablation lesions.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 1, wherein the ablation application parameter comprises tissue wall thickness, type of tissues nearby and orientation of myocardial fibers.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 8, wherein the type of nearby tissues comprises at least of myocardium and smooth muscle.",
+      "sourceXmlParentClaimNumbers": [
+        8
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method of claim 1, wherein the projecting provides a viewer of the map with a visual of the ablation lesion including lesion width, lesion depth and cardiac tissue in the zone of electroporation.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 10, wherein the projecting further includes color coding of the ablation lesion.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 11, wherein the color-coding denotes at least one of irreversible electroporation and reversible electroporation.",
+      "sourceXmlParentClaimNumbers": [
+        11
+      ]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method of claim 10, wherein the size of the visual of the ablation lesion correlates with the size of the lesion.",
+      "sourceXmlParentClaimNumbers": [
+        10
+      ]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 1, wherein the performed regression includes pre-clinical work that relates the ablation parameters to the lesion depth and width.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 1, further comprising validating the performed regression pre-clinical work that relates the ablation parameters to at least one known lesion depth and width.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A system for determining an ablation lesion zone (width or depth) projected onto an electro-anatomical map, the system comprising: an ablation catheter; at least one sensor operating in conjunction with the ablation catheter and communicatively connected via hardware including at least one processor; and a monitor communicatively coupled to the controller operating the ablation catheter and the at least one sensor, storage to store information representing contact force as applied by at least two electrodes on biological tissues and the number of times energy were delivered; a controller to calculate one or more zones of electroporation based on a magnitude of contact force and number of times energy were delivered; the monitor projecting the determined one or more ablation zones onto an electro-anatomical map.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The system of claim 16, wherein the processor conducts a multi-parameter regression from predetermined pre-clinical data.",
+      "sourceXmlParentClaimNumbers": [
+        16
+      ]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The system of claim 16, wherein the processor conducts a single-parameter regression from predetermined pre-clinical data.",
+      "sourceXmlParentClaimNumbers": [
+        16
+      ]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The system of claim 16, wherein the projecting provides a viewer of the map with a visual of the ablation lesion including lesion width, lesion depth and cardiac tissue in the zone of electroporation.",
+      "sourceXmlParentClaimNumbers": [
+        16
+      ]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The system of claim 19, wherein the projecting further includes color coding of the ablation lesion.",
+      "sourceXmlParentClaimNumbers": [
+        19
+      ]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The system of claim 19, wherein the size of the visual of the ablation lesion correlates with the size of the lesion.",
+      "sourceXmlParentClaimNumbers": [
+        19
+      ]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The system of claim 16, wherein the performed regression includes pre-clinical work that relates the ablation parameters to the lesion depth and width.",
+      "sourceXmlParentClaimNumbers": [
+        16
+      ]
+    }
+  ]
+}

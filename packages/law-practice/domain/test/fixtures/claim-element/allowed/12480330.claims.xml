@@ -1,0 +1,50 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A door lock of recreational vehicle with a locking tongue and a safety pin that move synchronously, comprising a lock body and an outer handle fixedly mounted on an outer end surface of the lock body, wherein
+<claim-text>a first sliding chamber, a second sliding chamber and a mounting chamber are formed in the lock body;</claim-text>
+<claim-text>both the first sliding chamber and the second sliding chamber are in communication with the mounting chamber;</claim-text>
+<claim-text>the locking tongue and a spring are arranged in the first sliding chamber;</claim-text>
+<claim-text>the spring abuts against the locking tongue, and under an action of the spring, a top end of the locking tongue is capable of remaining in a state of popping out outward;</claim-text>
+<claim-text>the safety pin is arranged in the second sliding chamber;</claim-text>
+<claim-text>inner ends of the locking tongue and the safety pin are arranged in the mounting chamber and each is provided with an elongated slot;</claim-text>
+<claim-text>the lock body comprises a lock core arranged on the outer handle, and the lock core sequentially extends through the outer handle and an outer shell of the lock body and is located in the mounting chamber;</claim-text>
+<claim-text>a first rotary disk is connected to an output shaft of the lock core, and the first rotary disk is sleeved with a second rotary disk driven by the first rotary disk;</claim-text>
+<claim-text>a first eccentric rod is disposed on the first rotary disk, and the first eccentric rod is arranged in the elongated slot of the locking tongue, and is configured to push the locking tongue outwardly or pull the locking tongue inwardly through a rotation of the first rotary disk;</claim-text>
+<claim-text>a side edge of the second rotary disk is provided with a gear face and a limiting protrusion;</claim-text>
+<claim-text>a limiting block is arranged in the mounting chamber in a movement track of the limiting protrusion;</claim-text>
+<claim-text>a toggle gear is mounted in the mounting chamber, the toggle gear meshes with the gear face of the second rotary disk, and a second eccentric rod is disposed on the toggle gear; and</claim-text>
+<claim-text>the second eccentric rod is arranged in the elongated slot of the safety pin.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The door lock of recreational vehicle of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein
+<claim-text>the limiting block is rotatably connected in the mounting chamber;</claim-text>
+<claim-text>a limiting cavity is formed in the mounting chamber at a position of the limiting block, so that the limiting block is only allowed to rotate within a specific range; and</claim-text>
+<claim-text>a side edge of the second rotary disk adjacent to the limiting protrusion is provided with an abutting surface, and an edge of the abutting surface touches a side end of the limiting block.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The door lock of recreational vehicle of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein both ends of the abutting surface of the second rotary disk and the side end of the limiting block are all configured as smooth surfaces.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The door lock of recreational vehicle of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein two convex portions are symmetrically disposed on a side wall of the first rotary disk, the second rotary disk is provided with a sleeving aperture and two 90-degree grooves spaced apart and in communication with the sleeving aperture, and the convex portions are respectively disposed in the 90-degree grooves.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The door lock of recreational vehicle of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein a coaxial gear is mounted in the mounting chamber, and the coaxial gear meshes with the gear face of the second rotary disk; a rotation knob is disposed on an inner end surface of the lock body, a rotation shaft of the rotation knob is disposed in the mounting chamber and provided with a linkage gear, and the linkage gear is connected to the coaxial gear.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The door lock of recreational vehicle of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein
+<claim-text>a first reduction motor is arranged in the mounting chamber, and an output shaft of the first reduction motor is connected with the coaxial gear as a whole;</claim-text>
+<claim-text>a third sliding chamber and a second reduction motor are arranged in the lock body, and a sliding bar is arranged in the third sliding chamber, with an end of the sliding bar being bent to form a lapping end, and another end of the sliding bar being provided with a guide block;</claim-text>
+<claim-text>a guide hole is formed in the third sliding chamber at a position of the guide block, and the guide block is arranged in the guide hole;</claim-text>
+<claim-text>the sliding bar is provided with a rack face, and the second reduction motor meshes with the rack face through a gear set; and</claim-text>
+<claim-text>the locking tongue comprises a lapping edge, and the lapping end is located at a position corresponding to the lapping edge and configured to drag the locking tongue to retract as the sliding bar moves.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The door lock of recreational vehicle of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein a tactile switch is disposed at an end of the guide hole.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The door lock of recreational vehicle of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein an inner end surface of the lock body is hinged with an inner handle, and the inner handle is provided with an insertion rod; and the locking tongue is provided with an insertion opening, and the insertion rod is inserted in the insertion opening.</claim-text>
+</claim>
+</claims>

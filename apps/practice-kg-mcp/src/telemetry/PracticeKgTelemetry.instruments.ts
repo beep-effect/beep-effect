@@ -41,13 +41,14 @@ const owner = PackageName.make("@beep/practice-kg-mcp");
  * import { PracticeKgToolId } from "../../src/telemetry/PracticeKgTelemetry.instruments.ts"
  *
  * console.log(PracticeKgToolId.is.kg_find("kg_find")) // true
- * console.log(PracticeKgToolId.literals.length) // 11
+ * console.log(PracticeKgToolId.literals.length) // 12
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const PracticeKgToolId = LiteralKit([
+  "claim_self_check",
   "kg_clients",
   "kg_docket_family",
   "kg_application_lookup",

@@ -1,0 +1,70 @@
+{
+  "scope": "Bounded local managed-launch observations and reversible retention; synthetic journal tests only",
+  "recordedAt": "2026-10-28T19:22:16.926405-05:00",
+  "result": "passed",
+  "productionDeployment": false,
+  "actualHarnessIntegration": false,
+  "historicalStoresReadOrChanged": false,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": "b32ff47d7190ff0738ebd820ad262e7a6390a2ed2c68585eb1b08413ffcc6f2f",
+    "packages/tooling/library/ai-metrics/src/transcript-intake.ts": "c10823086e39e529e50b8dcdb525d75210cb93ffacd4ed5674cd51324dbb8d61",
+    "packages/tooling/library/ai-metrics/src/native-intake.ts": "19d988b482dcf4c63df6b5e9c24e10a13a6174ae3188bfcd0585aa3080a923aa",
+    "packages/tooling/library/ai-metrics/src/evidence-window.ts": "866a0dd86859cf9904463ddb46fb23591c70600b3bdaef837bff2a00d313026a",
+    "packages/tooling/library/ai-metrics/src/evidence-retention.ts": "4831f8a04e5821789ef5249dea45dceb1848c4510e8ddca8249027a4c431aac2",
+    "packages/tooling/library/ai-metrics/src/internal/evidence-recovery.ts": "9524567c87870bfa76903ed8b5ad5fc3221936319fae8fe7aff57ff7b0e16e18",
+    "packages/tooling/library/ai-metrics/src/internal/observation-journal-tables.ts": "9ff9bc5e59eb66269f122431289de8677c5d0a2991095b39313a4f510eeb481a",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "2cdbb1691bd3535f93f6e0bab3d52ca39c7eb880b8c5a708f7956490759d3c51",
+    "packages/tooling/library/ai-metrics/src/index.ts": "26f12a05c73fa88e8414e8e6abbc400fc40c1191d56256779426c38aab7f71fb",
+    "packages/tooling/library/ai-metrics/test/observation-launch-facts.test.ts": "82c54e7f5822e402fc2ca609e5dded3c790f6b5f42a5002c652a9a4066ffae42"
+  },
+  "focusedVerification": {
+    "result": "passed",
+    "files": 4,
+    "tests": 38,
+    "runtimeSeconds": 4.017,
+    "memoryPeakMiB": 487.8,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-facts-isolated.log"
+  },
+  "testTypecheck": {
+    "result": "passed",
+    "runtimeSeconds": 4.944,
+    "memoryPeakGiB": 1.9,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-types.log"
+  },
+  "initialFullPackageVerification": {
+    "result": "failed-import-order-only",
+    "log": "/tmp/foundation-launch-quality.log",
+    "runtimeSeconds": 127.087,
+    "memoryPeakGiB": 5.5,
+    "swapBytes": 0
+  },
+  "packageVerification": {
+    "result": "passed",
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "exitCode": 0,
+    "auditSeconds": 106.3,
+    "docgenSeconds": 10.4,
+    "runtimeSeconds": 118.316,
+    "memoryPeakGiB": 5.7,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-launch-quality-final.log"
+  },
+  "limits": {
+    "launchFactsPerLaunch": 4,
+    "maximumFactBytes": 8192,
+    "reservedBytesPerOpenLaunch": 32768,
+    "launchCountLimit": "intake.maxPages",
+    "sharedLogicalPayloadLimit": "intake.maxPayloadBytes",
+    "physicalLimit": "existing SQLite max_page_count"
+  },
+  "remaining": [
+    "Wire verified managed-launch/session producer",
+    "Bind real source, repository, task and attempt evidence",
+    "Exercise actual CLI and desktop canaries",
+    "Qualify launch writes against physical exhaustion, mixed-intake reservation and fresh-process restart",
+    "Complete coverage query adapters, rollbacks, review and repository delivery"
+  ]
+}

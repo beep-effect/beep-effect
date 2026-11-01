@@ -1,0 +1,80 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method of cleaning a cold box of an exchanger, the method comprising:
+<claim-text>performing a methanol pre-flush of a cold box system including
+<claim-text>filters in a first filtration unit;</claim-text>
+<claim-text>adding toluene reformate to a first circulation tank;</claim-text>
+<claim-text>circulating the toluene reformate through the cold box system, including:
+<claim-text>measuring sulfur levels in the circulating toluene reformate; and</claim-text>
+<claim-text>starting a circulating pump and resuming the circulation in a bottom to top flow path;</claim-text>
+<claim-text>reversing a circulation flow path of the toluene reformate to a top to bottom flow path, including:</claim-text>
+<claim-text>returning the circulation flow path of the toluene reformate to the bottom to top flow path and circulating the toluene reformate in the bottom to top flow path;</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>starting the circulation pump and resuming the circulation of the toluene reformate in the bottom to top flow path until the sulfur levels are below a predetermined threshold for at least 2 hours;
+<claim-text>emptying the toluene reformate from the system;</claim-text>
+</claim-text>
+<claim-text> flushing the system;
+<claim-text>performing a methanol post wash; and</claim-text>
+<claim-text>dedusting the system.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein performing a methanol pre-flush comprises:
+<claim-text>attaching the first circulation tank to one or more nozzles;</claim-text>
+<claim-text>replacing the filters in the first filtration unit;</claim-text>
+<claim-text>adding the methanol from a storage container into a bottom connection of the exchanger and collecting returns of the methanol in a second circulation tank from a top connection;</claim-text>
+<claim-text>circulating the methanol and maintaining the temperature of the methanol in the circulation tank; and</claim-text>
+<claim-text>draining the methanol from the bottom connection back into the storage container until all methanol is recovered.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein circulating the methanol lasts for at least about 30 minutes.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein maintaining the temperature of the methanol comprises maintaining the temperature above 50° C.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the method further comprising replacing circulating toluene with new toluene when the sulfur content of the toluene reformate is greater than 2000 ppm.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the method further comprising circulating the toluene reformate until the sulfur level is maintained at a level less than 500 ppm.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each time the circulating pump is restarted and circulation of the toluene reformate is restarted in the bottom to top flow path, circulation of the toluene reformate in the bottom to top flow path continues for at least about 1 hour and includes measuring the sulfur content every hour.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein reversing the circulation flow path to a top to bottom flow continues for at least about 1 hour and comprises measuring the sulfur content every hour.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein returning the circulation flow path to the bottom top flow and circulating the toluene reformate continues for at least about 2 hours and comprises measuring sulfur content every 2 hours.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein starting the circulation pump and resuming the circulation in the bottom to top flow continues for at least about 2 hours.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the sulfur content is analyzed every hour.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein circulation continues for up to about 24 to 26 hours.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein flushing the system comprises adding light naphtha to the system and circulating the light naphtha for at least one hour, measuring the density of the light naphtha, continuing to circulate the light naphtha in the system until a density of the light naphtha is at or below at least 0.65, and removing the light naphtha I from the system.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein performing a methanol post wash comprises replacing filters into the first filtration system, adding methanol in to the bottom connection of the exchanger and collecting returns in the circulation tank from the top connection, circulating the methanol for at least about 30 minutes, reversing the flow path to the top bottom flow and circulating for at least about 30 minutes, and draining the methanol from the bottom connection into waste tank until all the methanol is drained from system.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the filters are 25-micron filters.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein dedusting is performed at 4 bar forward until removal of all liquid.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising restoring the exchanger to design level.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the reformate is made from naphtha.</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,3530 @@
+[
+  {
+    "claimNumber": 15,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "15",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 17,
+          "quote": "A membrane system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 17,
+              "quote": "A membrane system"
+            },
+            "determiner": "a",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 29,
+          "endChar": 98,
+          "quote": "at least two adjacent membranes adapted to be connected to each other"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 29,
+              "endChar": 60,
+              "quote": "at least two adjacent membranes"
+            },
+            "determiner": "bare",
+            "head": "at least two adjacent membranes"
+          }
+        ]
+      },
+      {
+        "path": "15.b",
+        "anchor": {
+          "startChar": 110,
+          "endChar": 290,
+          "quote": "at least one sensor adapted to measure at least one of the following: a) quality of a fluid passing through said membrane; and b) flow rate of a fluid passing through said membrane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 110,
+              "endChar": 129,
+              "quote": "at least one sensor"
+            },
+            "determiner": "at-least-one",
+            "head": "sensor"
+          }
+        ]
+      },
+      {
+        "path": "15.b.i",
+        "anchor": {
+          "startChar": 183,
+          "endChar": 231,
+          "quote": "quality of a fluid passing through said membrane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 183,
+              "endChar": 190,
+              "quote": "quality"
+            },
+            "determiner": "bare",
+            "head": "quality"
+          },
+          {
+            "anchor": {
+              "startChar": 194,
+              "endChar": 201,
+              "quote": "a fluid"
+            },
+            "determiner": "a",
+            "head": "fluid"
+          },
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 231,
+              "quote": "said membrane"
+            },
+            "determiner": "said",
+            "head": "membrane"
+          }
+        ]
+      },
+      {
+        "path": "15.b.ii",
+        "anchor": {
+          "startChar": 240,
+          "endChar": 290,
+          "quote": "flow rate of a fluid passing through said membrane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 240,
+              "endChar": 249,
+              "quote": "flow rate"
+            },
+            "determiner": "bare",
+            "head": "flow rate"
+          },
+          {
+            "anchor": {
+              "startChar": 253,
+              "endChar": 260,
+              "quote": "a fluid"
+            },
+            "determiner": "a",
+            "head": "fluid"
+          },
+          {
+            "anchor": {
+              "startChar": 277,
+              "endChar": 290,
+              "quote": "said membrane"
+            },
+            "determiner": "said",
+            "head": "membrane"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "15.a",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 29,
+                "endChar": 60,
+                "quote": "at least two adjacent membranes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 98,
+              "quote": " adapted to be connected to each other"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "15.b",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 110,
+                "endChar": 129,
+                "quote": "at least one sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 290,
+              "quote": " adapted to measure at least one of the following: a) quality of a fluid passing through said membrane; and b) flow rate of a fluid passing through said membrane"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "15.b.i",
+        "parent": "15.b"
+      },
+      {
+        "kind": "functional",
+        "element": "15.b.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b.i",
+              "anchor": {
+                "startChar": 183,
+                "endChar": 190,
+                "quote": "quality"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 190,
+              "endChar": 194,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b.i",
+              "anchor": {
+                "startChar": 194,
+                "endChar": 201,
+                "quote": "a fluid"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 201,
+              "endChar": 218,
+              "quote": " passing through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b.i",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 231,
+                "quote": "said membrane"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "15.b.ii",
+        "parent": "15.b"
+      },
+      {
+        "kind": "functional",
+        "element": "15.b.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b.ii",
+              "anchor": {
+                "startChar": 240,
+                "endChar": 249,
+                "quote": "flow rate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 249,
+              "endChar": 253,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b.ii",
+              "anchor": {
+                "startChar": 253,
+                "endChar": 260,
+                "quote": "a fluid"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 260,
+              "endChar": 277,
+              "quote": " passing through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b.ii",
+              "anchor": {
+                "startChar": 277,
+                "endChar": 290,
+                "quote": "said membrane"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 16,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "16",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The membrane system of claim 15"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "16.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 124,
+          "quote": "said sensor is operated continuously, measuring parameters throughout its operation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 52,
+              "quote": "said sensor"
+            },
+            "determiner": "said",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 99,
+              "quote": "parameters"
+            },
+            "determiner": "bare",
+            "head": "parameters"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 124,
+              "quote": "its operation"
+            },
+            "determiner": "bare",
+            "head": "operation"
+          }
+        ]
+      },
+      {
+        "path": "16.b",
+        "anchor": {
+          "startChar": 128,
+          "endChar": 238,
+          "quote": "said sensor is adapted to operate in bursts, sampling the above parameters along predetermined periods of time"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 128,
+              "endChar": 139,
+              "quote": "said sensor"
+            },
+            "determiner": "said",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 165,
+              "endChar": 171,
+              "quote": "bursts"
+            },
+            "determiner": "bare",
+            "head": "bursts"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 202,
+              "quote": "the above parameters"
+            },
+            "determiner": "the",
+            "head": "above parameters"
+          },
+          {
+            "anchor": {
+              "startChar": 209,
+              "endChar": 238,
+              "quote": "predetermined periods of time"
+            },
+            "determiner": "bare",
+            "head": "predetermined periods of time"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "16.a",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 52,
+                "quote": "said sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 52,
+              "endChar": 89,
+              "quote": " is operated continuously, measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 99,
+                "quote": "parameters"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 99,
+              "endChar": 111,
+              "quote": " throughout "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 111,
+                "endChar": 124,
+                "quote": "its operation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "16.b",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 128,
+                "endChar": 139,
+                "quote": "said sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 139,
+              "endChar": 165,
+              "quote": " is adapted to operate in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 165,
+                "endChar": 171,
+                "quote": "bursts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 171,
+              "endChar": 182,
+              "quote": ", sampling "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 202,
+                "quote": "the above parameters"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 202,
+              "endChar": 209,
+              "quote": " along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 209,
+                "endChar": 238,
+                "quote": "predetermined periods of time"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "16",
+        "ancestor": "15"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "16.a",
+        "ancestor": "15.b"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "16.b",
+        "ancestor": "15.b"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 41,
+            "endChar": 52,
+            "quote": "said sensor"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.b",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 139,
+            "quote": "said sensor"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.b",
+          "anchor": {
+            "startChar": 182,
+            "endChar": 202,
+            "quote": "the above parameters"
+          }
+        },
+        "introducing": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 89,
+            "endChar": 99,
+            "quote": "parameters"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 17,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "17",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 15"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "17.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 119,
+          "quote": "said sensor is adapted to be operated using an internal power source"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 62,
+              "quote": "said sensor"
+            },
+            "determiner": "said",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 119,
+              "quote": "an internal power source"
+            },
+            "determiner": "an",
+            "head": "internal power source"
+          }
+        ]
+      },
+      {
+        "path": "17.b",
+        "anchor": {
+          "startChar": 123,
+          "endChar": 191,
+          "quote": "said sensor is adapted to be operated using an external power source"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 134,
+              "quote": "said sensor"
+            },
+            "determiner": "said",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 191,
+              "quote": "an external power source"
+            },
+            "determiner": "an",
+            "head": "external power source"
+          }
+        ]
+      },
+      {
+        "path": "17.c",
+        "anchor": {
+          "startChar": 204,
+          "endChar": 265,
+          "quote": "said external power source is optionally electrical induction"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 204,
+              "endChar": 230,
+              "quote": "said external power source"
+            },
+            "determiner": "said",
+            "head": "external power source"
+          },
+          {
+            "anchor": {
+              "startChar": 245,
+              "endChar": 265,
+              "quote": "electrical induction"
+            },
+            "determiner": "bare",
+            "head": "electrical induction"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "17.a",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 62,
+                "quote": "said sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 62,
+              "endChar": 95,
+              "quote": " is adapted to be operated using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 119,
+                "quote": "an internal power source"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.b",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 134,
+                "quote": "said sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 167,
+              "quote": " is adapted to be operated using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b",
+              "anchor": {
+                "startChar": 167,
+                "endChar": 191,
+                "quote": "an external power source"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.c",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.c",
+              "anchor": {
+                "startChar": 204,
+                "endChar": 230,
+                "quote": "said external power source"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 230,
+              "endChar": 245,
+              "quote": " is optionally "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.c",
+              "anchor": {
+                "startChar": 245,
+                "endChar": 265,
+                "quote": "electrical induction"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17",
+        "ancestor": "15"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17.a",
+        "ancestor": "15.b"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17.b",
+        "ancestor": "15.b"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17.c",
+        "ancestor": "15.b"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 62,
+            "quote": "said sensor"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.b",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 134,
+            "quote": "said sensor"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.c",
+          "anchor": {
+            "startChar": 204,
+            "endChar": 230,
+            "quote": "said external power source"
+          }
+        },
+        "introducing": {
+          "path": "17.b",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 191,
+            "quote": "an external power source"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 18,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "18",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 17"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "18.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 160,
+          "quote": "said sensor is adapted to transmit data produced based on the measurement taken thereby, to an outside source"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 62,
+              "quote": "said sensor"
+            },
+            "determiner": "said",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 90,
+              "quote": "data"
+            },
+            "determiner": "bare",
+            "head": "data"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 124,
+              "quote": "the measurement"
+            },
+            "determiner": "the",
+            "head": "measurement"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 138,
+              "quote": "thereby"
+            },
+            "determiner": "bare",
+            "head": "thereby"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 160,
+              "quote": "an outside source"
+            },
+            "determiner": "an",
+            "head": "outside source"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "18.a",
+        "parent": "18"
+      },
+      {
+        "kind": "functional",
+        "element": "18.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 62,
+                "quote": "said sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 62,
+              "endChar": 86,
+              "quote": " is adapted to transmit "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 90,
+                "quote": "data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 90,
+              "endChar": 109,
+              "quote": " produced based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 124,
+                "quote": "the measurement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 131,
+              "quote": " taken "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 131,
+                "endChar": 138,
+                "quote": "thereby"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 138,
+              "endChar": 143,
+              "quote": ", to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 160,
+                "quote": "an outside source"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "18",
+        "ancestor": "17"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "18.a",
+        "ancestor": "15.b"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 62,
+            "quote": "said sensor"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18.a",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 138,
+            "quote": "thereby"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 19,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "19",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 18"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "19.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 309,
+          "quote": "said coupling is further provided with a data reading arrangement comprising a reader connected to a mainframe computer (MFC), a displacement mechanism adapted for displacement of said reader, and a cable connecting said reader to said displacement mechanism"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 64,
+              "quote": "said coupling"
+            },
+            "determiner": "said",
+            "head": "coupling"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 116,
+              "quote": "a data reading arrangement"
+            },
+            "determiner": "a",
+            "head": "data reading arrangement"
+          }
+        ]
+      },
+      {
+        "path": "19.a.i",
+        "anchor": {
+          "startChar": 128,
+          "endChar": 176,
+          "quote": "a reader connected to a mainframe computer (MFC)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 128,
+              "endChar": 136,
+              "quote": "a reader"
+            },
+            "determiner": "a",
+            "head": "reader"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 170,
+              "quote": "a mainframe computer"
+            },
+            "determiner": "a",
+            "head": "mainframe computer"
+          }
+        ]
+      },
+      {
+        "path": "19.a.ii",
+        "anchor": {
+          "startChar": 178,
+          "endChar": 242,
+          "quote": "a displacement mechanism adapted for displacement of said reader"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 178,
+              "endChar": 202,
+              "quote": "a displacement mechanism"
+            },
+            "determiner": "a",
+            "head": "displacement mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 227,
+              "quote": "displacement"
+            },
+            "determiner": "bare",
+            "head": "displacement"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 242,
+              "quote": "said reader"
+            },
+            "determiner": "said",
+            "head": "reader"
+          }
+        ]
+      },
+      {
+        "path": "19.a.iii",
+        "anchor": {
+          "startChar": 248,
+          "endChar": 309,
+          "quote": "a cable connecting said reader to said displacement mechanism"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 255,
+              "quote": "a cable"
+            },
+            "determiner": "a",
+            "head": "cable"
+          },
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 278,
+              "quote": "said reader"
+            },
+            "determiner": "said",
+            "head": "reader"
+          },
+          {
+            "anchor": {
+              "startChar": 282,
+              "endChar": 309,
+              "quote": "said displacement mechanism"
+            },
+            "determiner": "said",
+            "head": "displacement mechanism"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "19.a",
+        "parent": "19"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.i",
+        "parent": "19.a"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 128,
+                "endChar": 136,
+                "quote": "a reader"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 136,
+              "endChar": 150,
+              "quote": " connected to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.i",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 170,
+                "quote": "a mainframe computer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 170,
+              "endChar": 176,
+              "quote": " (MFC)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.ii",
+        "parent": "19.a"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 178,
+                "endChar": 202,
+                "quote": "a displacement mechanism"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 202,
+              "endChar": 215,
+              "quote": " adapted for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 215,
+                "endChar": 227,
+                "quote": "displacement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 227,
+              "endChar": 231,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.ii",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 242,
+                "quote": "said reader"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.iii",
+        "parent": "19.a"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.iii",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 255,
+                "quote": "a cable"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 267,
+              "quote": " connecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.iii",
+              "anchor": {
+                "startChar": 267,
+                "endChar": 278,
+                "quote": "said reader"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 278,
+              "endChar": 282,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.iii",
+              "anchor": {
+                "startChar": 282,
+                "endChar": 309,
+                "quote": "said displacement mechanism"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "19",
+        "ancestor": "18"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "19.a",
+        "ancestor": "15"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 231,
+            "endChar": 242,
+            "quote": "said reader"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 136,
+            "quote": "a reader"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a.iii",
+          "anchor": {
+            "startChar": 267,
+            "endChar": 278,
+            "quote": "said reader"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 136,
+            "quote": "a reader"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.a.iii",
+          "anchor": {
+            "startChar": 282,
+            "endChar": 309,
+            "quote": "said displacement mechanism"
+          }
+        },
+        "introducing": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 178,
+            "endChar": 202,
+            "quote": "a displacement mechanism"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 20,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "20",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 19"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "20.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 94,
+          "quote": "said reader constitutes said outside source"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 62,
+              "quote": "said reader"
+            },
+            "determiner": "said",
+            "head": "reader"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 94,
+              "quote": "said outside source"
+            },
+            "determiner": "said",
+            "head": "outside source"
+          }
+        ]
+      },
+      {
+        "path": "20.b",
+        "anchor": {
+          "startChar": 107,
+          "endChar": 169,
+          "quote": "said sensor is optionally adapted for operation by said reader"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 118,
+              "quote": "said sensor"
+            },
+            "determiner": "said",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 154,
+              "quote": "operation"
+            },
+            "determiner": "bare",
+            "head": "operation"
+          },
+          {
+            "anchor": {
+              "startChar": 158,
+              "endChar": 169,
+              "quote": "said reader"
+            },
+            "determiner": "said",
+            "head": "reader"
+          }
+        ]
+      },
+      {
+        "path": "20.c",
+        "anchor": {
+          "startChar": 182,
+          "endChar": 240,
+          "quote": "said reader is optionally used as an external power source"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 193,
+              "quote": "said reader"
+            },
+            "determiner": "said",
+            "head": "reader"
+          },
+          {
+            "anchor": {
+              "startChar": 216,
+              "endChar": 240,
+              "quote": "an external power source"
+            },
+            "determiner": "an",
+            "head": "external power source"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "20.a",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 62,
+                "quote": "said reader"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 62,
+              "endChar": 75,
+              "quote": " constitutes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 75,
+                "endChar": 94,
+                "quote": "said outside source"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "20.b",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.b",
+              "anchor": {
+                "startChar": 107,
+                "endChar": 118,
+                "quote": "said sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 145,
+              "quote": " is optionally adapted for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.b",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 154,
+                "quote": "operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 154,
+              "endChar": 158,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.b",
+              "anchor": {
+                "startChar": 158,
+                "endChar": 169,
+                "quote": "said reader"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "20.c",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.c",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 193,
+                "quote": "said reader"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 193,
+              "endChar": 216,
+              "quote": " is optionally used as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.c",
+              "anchor": {
+                "startChar": 216,
+                "endChar": 240,
+                "quote": "an external power source"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20",
+        "ancestor": "19"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20.a",
+        "ancestor": "19.a.i"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20.b",
+        "ancestor": "19.a.i"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20.c",
+        "ancestor": "19.a.i"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 62,
+            "quote": "said reader"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 136,
+            "quote": "a reader"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 75,
+            "endChar": 94,
+            "quote": "said outside source"
+          }
+        },
+        "introducing": {
+          "path": "18.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 160,
+            "quote": "an outside source"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 107,
+            "endChar": 118,
+            "quote": "said sensor"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 169,
+            "quote": "said reader"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 136,
+            "quote": "a reader"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.c",
+          "anchor": {
+            "startChar": 182,
+            "endChar": 193,
+            "quote": "said reader"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 136,
+            "quote": "a reader"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 21,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "21",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 19"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "21.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 133,
+          "quote": "transfer of data from said sensor to said reader is performed in a wireless manner"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 59,
+              "quote": "transfer"
+            },
+            "determiner": "bare",
+            "head": "transfer"
+          },
+          {
+            "anchor": {
+              "startChar": 63,
+              "endChar": 67,
+              "quote": "data"
+            },
+            "determiner": "bare",
+            "head": "data"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 84,
+              "quote": "said sensor"
+            },
+            "determiner": "said",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 99,
+              "quote": "said reader"
+            },
+            "determiner": "said",
+            "head": "reader"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 133,
+              "quote": "a wireless manner"
+            },
+            "determiner": "a",
+            "head": "wireless manner"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "21.a",
+        "parent": "21"
+      },
+      {
+        "kind": "functional",
+        "element": "21.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 59,
+                "quote": "transfer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 59,
+              "endChar": 63,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 63,
+                "endChar": 67,
+                "quote": "data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 73,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 84,
+                "quote": "said sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 88,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 99,
+                "quote": "said reader"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 99,
+              "endChar": 116,
+              "quote": " is performed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 116,
+                "endChar": 133,
+                "quote": "a wireless manner"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "21",
+        "ancestor": "19"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "21.a",
+        "ancestor": "19.a.i"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 84,
+            "quote": "said sensor"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 99,
+            "quote": "said reader"
+          }
+        },
+        "introducing": {
+          "path": "19.a.i",
+          "anchor": {
+            "startChar": 128,
+            "endChar": 136,
+            "quote": "a reader"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 22,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "22",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 21"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "22.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 113,
+          "quote": "said membranes are adapted to be received in a pressure vessel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 65,
+              "quote": "said membranes"
+            },
+            "determiner": "said",
+            "head": "membranes"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 113,
+              "quote": "a pressure vessel"
+            },
+            "determiner": "a",
+            "head": "pressure vessel"
+          }
+        ]
+      },
+      {
+        "path": "22.b",
+        "anchor": {
+          "startChar": 126,
+          "endChar": 325,
+          "quote": "data collected from said sensors is used to perform an analysis of conditions of different membranes within different PVs for providing an indication of failure or malfunction in one of the membranes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 126,
+              "endChar": 130,
+              "quote": "data"
+            },
+            "determiner": "bare",
+            "head": "data"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 158,
+              "quote": "said sensors"
+            },
+            "determiner": "said",
+            "head": "sensors"
+          },
+          {
+            "anchor": {
+              "startChar": 178,
+              "endChar": 189,
+              "quote": "an analysis"
+            },
+            "determiner": "an",
+            "head": "analysis"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 203,
+              "quote": "conditions"
+            },
+            "determiner": "bare",
+            "head": "conditions"
+          },
+          {
+            "anchor": {
+              "startChar": 207,
+              "endChar": 226,
+              "quote": "different membranes"
+            },
+            "determiner": "bare",
+            "head": "different membranes"
+          },
+          {
+            "anchor": {
+              "startChar": 234,
+              "endChar": 247,
+              "quote": "different PVs"
+            },
+            "determiner": "bare",
+            "head": "different pvs"
+          },
+          {
+            "anchor": {
+              "startChar": 262,
+              "endChar": 275,
+              "quote": "an indication"
+            },
+            "determiner": "an",
+            "head": "indication"
+          },
+          {
+            "anchor": {
+              "startChar": 279,
+              "endChar": 301,
+              "quote": "failure or malfunction"
+            },
+            "determiner": "bare",
+            "head": "failure or malfunction"
+          },
+          {
+            "anchor": {
+              "startChar": 312,
+              "endChar": 325,
+              "quote": "the membranes"
+            },
+            "determiner": "the",
+            "head": "membranes"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "22.a",
+        "parent": "22"
+      },
+      {
+        "kind": "functional",
+        "element": "22.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 65,
+                "quote": "said membranes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 65,
+              "endChar": 96,
+              "quote": " are adapted to be received in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 113,
+                "quote": "a pressure vessel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "22.b",
+        "parent": "22"
+      },
+      {
+        "kind": "functional",
+        "element": "22.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 126,
+                "endChar": 130,
+                "quote": "data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 146,
+              "quote": " collected from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 146,
+                "endChar": 158,
+                "quote": "said sensors"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 158,
+              "endChar": 178,
+              "quote": " is used to perform "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 178,
+                "endChar": 189,
+                "quote": "an analysis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 189,
+              "endChar": 193,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 193,
+                "endChar": 203,
+                "quote": "conditions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 203,
+              "endChar": 207,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 207,
+                "endChar": 226,
+                "quote": "different membranes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 226,
+              "endChar": 234,
+              "quote": " within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 234,
+                "endChar": 247,
+                "quote": "different PVs"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 247,
+              "endChar": 262,
+              "quote": " for providing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 262,
+                "endChar": 275,
+                "quote": "an indication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 275,
+              "endChar": 279,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 279,
+                "endChar": 301,
+                "quote": "failure or malfunction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 301,
+              "endChar": 312,
+              "quote": " in one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.b",
+              "anchor": {
+                "startChar": 312,
+                "endChar": 325,
+                "quote": "the membranes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "22",
+        "ancestor": "21"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "22.a",
+        "ancestor": "15.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "22.b",
+        "ancestor": "21.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 65,
+            "quote": "said membranes"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 60,
+            "quote": "at least two adjacent membranes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22.b",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 158,
+            "quote": "said sensors"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 129,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 23,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "23",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 15"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "23.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 154,
+          "quote": "the coupling is provided with a coupling unit disposed internally to the main conduits of the membranes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 63,
+              "quote": "the coupling"
+            },
+            "determiner": "the",
+            "head": "coupling"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 96,
+              "quote": "a coupling unit"
+            },
+            "determiner": "a",
+            "head": "coupling unit"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 137,
+              "quote": "the main conduits"
+            },
+            "determiner": "the",
+            "head": "main conduits"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 154,
+              "quote": "the membranes"
+            },
+            "determiner": "the",
+            "head": "membranes"
+          }
+        ]
+      },
+      {
+        "path": "23.b",
+        "anchor": {
+          "startChar": 164,
+          "endChar": 338,
+          "quote": "said coupling unit has a first portion which may be fitted into the conduit of one membrane and a second portion which may be fitted into the conduit of the adjacent membrane"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 164,
+              "endChar": 182,
+              "quote": "said coupling unit"
+            },
+            "determiner": "said",
+            "head": "coupling unit"
+          }
+        ]
+      },
+      {
+        "path": "23.b.i",
+        "anchor": {
+          "startChar": 187,
+          "endChar": 255,
+          "quote": "a first portion which may be fitted into the conduit of one membrane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 187,
+              "endChar": 202,
+              "quote": "a first portion"
+            },
+            "determiner": "a",
+            "head": "first portion"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 239,
+              "quote": "the conduit"
+            },
+            "determiner": "the",
+            "head": "conduit"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 255,
+              "quote": "one membrane"
+            },
+            "determiner": "bare",
+            "head": "one membrane"
+          }
+        ]
+      },
+      {
+        "path": "23.b.ii",
+        "anchor": {
+          "startChar": 260,
+          "endChar": 338,
+          "quote": "a second portion which may be fitted into the conduit of the adjacent membrane"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 260,
+              "endChar": 276,
+              "quote": "a second portion"
+            },
+            "determiner": "a",
+            "head": "second portion"
+          },
+          {
+            "anchor": {
+              "startChar": 302,
+              "endChar": 313,
+              "quote": "the conduit"
+            },
+            "determiner": "the",
+            "head": "conduit"
+          },
+          {
+            "anchor": {
+              "startChar": 317,
+              "endChar": 338,
+              "quote": "the adjacent membrane"
+            },
+            "determiner": "the",
+            "head": "adjacent membrane"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "23.a",
+        "parent": "23"
+      },
+      {
+        "kind": "functional",
+        "element": "23.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 63,
+                "quote": "the coupling"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 81,
+              "quote": " is provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 96,
+                "quote": "a coupling unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 120,
+              "quote": " disposed internally to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 137,
+                "quote": "the main conduits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 137,
+              "endChar": 141,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 141,
+                "endChar": 154,
+                "quote": "the membranes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "23.b",
+        "parent": "23"
+      },
+      {
+        "kind": "part-of",
+        "child": "23.b.i",
+        "parent": "23.b"
+      },
+      {
+        "kind": "functional",
+        "element": "23.b.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.b.i",
+              "anchor": {
+                "startChar": 187,
+                "endChar": 202,
+                "quote": "a first portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 202,
+              "endChar": 228,
+              "quote": " which may be fitted into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.b.i",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 239,
+                "quote": "the conduit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 239,
+              "endChar": 243,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.b.i",
+              "anchor": {
+                "startChar": 243,
+                "endChar": 255,
+                "quote": "one membrane"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "23.b.ii",
+        "parent": "23.b"
+      },
+      {
+        "kind": "functional",
+        "element": "23.b.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.b.ii",
+              "anchor": {
+                "startChar": 260,
+                "endChar": 276,
+                "quote": "a second portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 276,
+              "endChar": 302,
+              "quote": " which may be fitted into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.b.ii",
+              "anchor": {
+                "startChar": 302,
+                "endChar": 313,
+                "quote": "the conduit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 313,
+              "endChar": 317,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.b.ii",
+              "anchor": {
+                "startChar": 317,
+                "endChar": 338,
+                "quote": "the adjacent membrane"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "23",
+        "ancestor": "15"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "23.a",
+        "ancestor": "15.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "23.b",
+        "ancestor": "15.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23.b",
+          "anchor": {
+            "startChar": 164,
+            "endChar": 182,
+            "quote": "said coupling unit"
+          }
+        },
+        "introducing": {
+          "path": "23.a",
+          "anchor": {
+            "startChar": 81,
+            "endChar": 96,
+            "quote": "a coupling unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23.a",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 154,
+            "quote": "the membranes"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 60,
+            "quote": "at least two adjacent membranes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 24,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "24",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "The membrane system according to claim 15"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "The membrane system"
+            },
+            "determiner": "the",
+            "head": "membrane system"
+          }
+        ]
+      },
+      {
+        "path": "24.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 96,
+          "quote": "the coupling is provided with a coupling unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 63,
+              "quote": "the coupling"
+            },
+            "determiner": "the",
+            "head": "coupling"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 96,
+              "quote": "a coupling unit"
+            },
+            "determiner": "a",
+            "head": "coupling unit"
+          }
+        ]
+      },
+      {
+        "path": "24.b",
+        "anchor": {
+          "startChar": 109,
+          "endChar": 214,
+          "quote": "said coupling unit is in the form of a fastener disposed externally to the main conduits of the membranes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 127,
+              "quote": "said coupling unit"
+            },
+            "determiner": "said",
+            "head": "coupling unit"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 142,
+              "quote": "the form"
+            },
+            "determiner": "the",
+            "head": "form"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 156,
+              "quote": "a fastener"
+            },
+            "determiner": "a",
+            "head": "fastener"
+          },
+          {
+            "anchor": {
+              "startChar": 180,
+              "endChar": 197,
+              "quote": "the main conduits"
+            },
+            "determiner": "the",
+            "head": "main conduits"
+          },
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 214,
+              "quote": "the membranes"
+            },
+            "determiner": "the",
+            "head": "membranes"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "24.a",
+        "parent": "24"
+      },
+      {
+        "kind": "functional",
+        "element": "24.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 63,
+                "quote": "the coupling"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 81,
+              "quote": " is provided with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 96,
+                "quote": "a coupling unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "24.b",
+        "parent": "24"
+      },
+      {
+        "kind": "functional",
+        "element": "24.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 127,
+                "quote": "said coupling unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 127,
+              "endChar": 134,
+              "quote": " is in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 142,
+                "quote": "the form"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 142,
+              "endChar": 146,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 146,
+                "endChar": 156,
+                "quote": "a fastener"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 180,
+              "quote": " disposed externally to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 180,
+                "endChar": 197,
+                "quote": "the main conduits"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 197,
+              "endChar": 201,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 201,
+                "endChar": 214,
+                "quote": "the membranes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "24",
+        "ancestor": "15"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "24.a",
+        "ancestor": "15.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "24.b",
+        "ancestor": "15.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 109,
+            "endChar": 127,
+            "quote": "said coupling unit"
+          }
+        },
+        "introducing": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 81,
+            "endChar": 96,
+            "quote": "a coupling unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 201,
+            "endChar": 214,
+            "quote": "the membranes"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 29,
+            "endChar": 60,
+            "quote": "at least two adjacent membranes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 19,
+            "quote": "The membrane system"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 17,
+            "quote": "A membrane system"
+          }
+        }
+      }
+    ]
+  }
+]

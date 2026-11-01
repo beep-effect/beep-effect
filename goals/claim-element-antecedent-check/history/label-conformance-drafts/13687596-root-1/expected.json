@@ -1,0 +1,2840 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "1",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 153,
+          "quote": "A method for elaborating an assembly comprising at least one composite structure part, one metal interface part and one metal structure part, said method"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 25,
+              "endChar": 36,
+              "quote": "an assembly"
+            },
+            "determiner": "an",
+            "head": "assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 85,
+              "quote": "at least one composite structure part"
+            },
+            "determiner": "at-least-one",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 153,
+              "quote": "said method"
+            },
+            "determiner": "said",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 166,
+          "endChar": 1420,
+          "quote": "a step for assembling the composite structure part to the metal interface part in order to form a sub-assembly and a step for assembling by welding the metal interface part of said sub-assembly to the metal structure part in order to form said assembly, wherein, as the composite structure and metal interface parts are pre-equipped with assembling mating connectors of the male/female type and with connection locks locking said connection, said method comprises, during the step for assembling the composite structure part to the metal interface part in order to form a sub-assembly, pre-assembling the composite structure part and the metal interface part by interlocking the assembling male/female mating connectors and locking said interlock by deformation by pressing at least one portion of the connection locks pre-equipping the metal interface part, said connection locks being a mating connection of the male/female type, distinct from the assembling male/female mating connectors and being capable, in the assembled condition of said parts by their assembling connectors, of passing by deformation by simple pressing from a simple press stroke, from the uncoupled condition to the coupled condition corresponding to the active locking position"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 166,
+              "endChar": 172,
+              "quote": "a step"
+            },
+            "determiner": "a",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 188,
+              "endChar": 216,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 220,
+              "endChar": 244,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 262,
+              "endChar": 276,
+              "quote": "a sub-assembly"
+            },
+            "determiner": "a",
+            "head": "sub-assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 281,
+              "endChar": 287,
+              "quote": "a step"
+            },
+            "determiner": "a",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 314,
+              "endChar": 338,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 342,
+              "endChar": 359,
+              "quote": "said sub-assembly"
+            },
+            "determiner": "said",
+            "head": "sub-assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 363,
+              "endChar": 387,
+              "quote": "the metal structure part"
+            },
+            "determiner": "the",
+            "head": "metal structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 405,
+              "endChar": 418,
+              "quote": "said assembly"
+            },
+            "determiner": "said",
+            "head": "assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 432,
+              "endChar": 455,
+              "quote": "the composite structure"
+            },
+            "determiner": "the",
+            "head": "composite structure"
+          },
+          {
+            "anchor": {
+              "startChar": 536,
+              "endChar": 556,
+              "quote": "the male/female type"
+            },
+            "determiner": "the",
+            "head": "male female type"
+          },
+          {
+            "anchor": {
+              "startChar": 591,
+              "endChar": 606,
+              "quote": "said connection"
+            },
+            "determiner": "said",
+            "head": "connection"
+          },
+          {
+            "anchor": {
+              "startChar": 608,
+              "endChar": 619,
+              "quote": "said method"
+            },
+            "determiner": "said",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 638,
+              "endChar": 646,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 662,
+              "endChar": 690,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 694,
+              "endChar": 718,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 736,
+              "endChar": 750,
+              "quote": "a sub-assembly"
+            },
+            "determiner": "a",
+            "head": "sub-assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 767,
+              "endChar": 795,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 800,
+              "endChar": 824,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 841,
+              "endChar": 867,
+              "quote": "the assembling male/female"
+            },
+            "determiner": "the",
+            "head": "assembling male female"
+          },
+          {
+            "anchor": {
+              "startChar": 898,
+              "endChar": 912,
+              "quote": "said interlock"
+            },
+            "determiner": "said",
+            "head": "interlock"
+          },
+          {
+            "anchor": {
+              "startChar": 940,
+              "endChar": 960,
+              "quote": "at least one portion"
+            },
+            "determiner": "at-least-one",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 964,
+              "endChar": 984,
+              "quote": "the connection locks"
+            },
+            "determiner": "the",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 999,
+              "endChar": 1023,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 1025,
+              "endChar": 1046,
+              "quote": "said connection locks"
+            },
+            "determiner": "said",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 1053,
+              "endChar": 1072,
+              "quote": "a mating connection"
+            },
+            "determiner": "a",
+            "head": "mating connection"
+          },
+          {
+            "anchor": {
+              "startChar": 1076,
+              "endChar": 1096,
+              "quote": "the male/female type"
+            },
+            "determiner": "the",
+            "head": "male female type"
+          },
+          {
+            "anchor": {
+              "startChar": 1112,
+              "endChar": 1138,
+              "quote": "the assembling male/female"
+            },
+            "determiner": "the",
+            "head": "assembling male female"
+          },
+          {
+            "anchor": {
+              "startChar": 1179,
+              "endChar": 1202,
+              "quote": "the assembled condition"
+            },
+            "determiner": "the",
+            "head": "assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 1206,
+              "endChar": 1216,
+              "quote": "said parts"
+            },
+            "determiner": "said",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 1220,
+              "endChar": 1247,
+              "quote": "their assembling connectors"
+            },
+            "determiner": "bare",
+            "head": "assembling connectors"
+          },
+          {
+            "anchor": {
+              "startChar": 1299,
+              "endChar": 1320,
+              "quote": "a simple press stroke"
+            },
+            "determiner": "a",
+            "head": "simple press stroke"
+          },
+          {
+            "anchor": {
+              "startChar": 1327,
+              "endChar": 1350,
+              "quote": "the uncoupled condition"
+            },
+            "determiner": "the",
+            "head": "uncoupled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 1354,
+              "endChar": 1375,
+              "quote": "the coupled condition"
+            },
+            "determiner": "the",
+            "head": "coupled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 1393,
+              "endChar": 1403,
+              "quote": "the active"
+            },
+            "determiner": "the",
+            "head": "active"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 142,
+            "endChar": 153,
+            "quote": "said method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 216,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 48,
+            "endChar": 85,
+            "quote": "at least one composite structure part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 342,
+            "endChar": 359,
+            "quote": "said sub-assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 262,
+            "endChar": 276,
+            "quote": "a sub-assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 405,
+            "endChar": 418,
+            "quote": "said assembly"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 25,
+            "endChar": 36,
+            "quote": "an assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 608,
+            "endChar": 619,
+            "quote": "said method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 662,
+            "endChar": 690,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 48,
+            "endChar": 85,
+            "quote": "at least one composite structure part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 767,
+            "endChar": 795,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 48,
+            "endChar": 85,
+            "quote": "at least one composite structure part"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "2",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 549,
+          "quote": "as at least one portion of the connection locks is formed, for the metal interface part with a locking tab, and for the composite structure part, with at least one of an aperture or lumen, said aperture or lumen being able to be positioned matching a tab, said method further comprises, during locking said interlock, deformation by pressing the locking tab of the metal interface part in the direction for introducing said or each tab into the corresponding aperture or lumen of the composite structure part"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 64,
+              "quote": "at least one portion"
+            },
+            "determiner": "at-least-one",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 88,
+              "quote": "the connection locks"
+            },
+            "determiner": "the",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 104,
+              "endChar": 128,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 147,
+              "quote": "a locking tab"
+            },
+            "determiner": "a",
+            "head": "locking tab"
+          },
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 185,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 208,
+              "endChar": 219,
+              "quote": "an aperture"
+            },
+            "determiner": "an",
+            "head": "aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 230,
+              "endChar": 243,
+              "quote": "said aperture"
+            },
+            "determiner": "said",
+            "head": "aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 290,
+              "endChar": 295,
+              "quote": "a tab"
+            },
+            "determiner": "a",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 297,
+              "endChar": 316,
+              "quote": "said method further"
+            },
+            "determiner": "said",
+            "head": "method further"
+          },
+          {
+            "anchor": {
+              "startChar": 343,
+              "endChar": 357,
+              "quote": "said interlock"
+            },
+            "determiner": "said",
+            "head": "interlock"
+          },
+          {
+            "anchor": {
+              "startChar": 383,
+              "endChar": 398,
+              "quote": "the locking tab"
+            },
+            "determiner": "the",
+            "head": "locking tab"
+          },
+          {
+            "anchor": {
+              "startChar": 402,
+              "endChar": 426,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 430,
+              "endChar": 443,
+              "quote": "the direction"
+            },
+            "determiner": "the",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 482,
+              "endChar": 508,
+              "quote": "the corresponding aperture"
+            },
+            "determiner": "the",
+            "head": "corresponding aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 521,
+              "endChar": 549,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 230,
+            "endChar": 243,
+            "quote": "said aperture"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 208,
+            "endChar": 219,
+            "quote": "an aperture"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 383,
+            "endChar": 398,
+            "quote": "the locking tab"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 147,
+            "quote": "a locking tab"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "3",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 2"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 158,
+          "quote": "said locking tab has a V-shaped cross-section, and during the locking phase, said tab is deformed by flattening the V"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 57,
+              "quote": "said locking tab"
+            },
+            "determiner": "said",
+            "head": "locking tab"
+          },
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 86,
+              "quote": "a V-shaped cross-section"
+            },
+            "determiner": "a",
+            "head": "v-shaped cross-section"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 116,
+              "quote": "the locking phase"
+            },
+            "determiner": "the",
+            "head": "locking phase"
+          },
+          {
+            "anchor": {
+              "startChar": 118,
+              "endChar": 126,
+              "quote": "said tab"
+            },
+            "determiner": "said",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 158,
+              "quote": "the V"
+            },
+            "determiner": "the",
+            "head": "v"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "4",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 1"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 366,
+          "quote": "the assembling connectors assembling the composite structure and metal interface parts comprise at least two series of connectors, during the pre-assembling phase, the first series of assembling male/female connectors is assembled together and then the second series of assembling male/female connectors is assembled together"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 66,
+              "quote": "the assembling connectors"
+            },
+            "determiner": "the",
+            "head": "assembling connectors"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 101,
+              "quote": "the composite structure"
+            },
+            "determiner": "the",
+            "head": "composite structure"
+          },
+          {
+            "anchor": {
+              "startChar": 179,
+              "endChar": 203,
+              "quote": "the pre-assembling phase"
+            },
+            "determiner": "the",
+            "head": "pre-assembling phase"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 221,
+              "quote": "the first series"
+            },
+            "determiner": "the",
+            "head": "first series"
+          },
+          {
+            "anchor": {
+              "startChar": 290,
+              "endChar": 307,
+              "quote": "the second series"
+            },
+            "determiner": "the",
+            "head": "second series"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "5",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 31,
+          "quote": "The method according to claim 4"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 40,
+          "endChar": 1072,
+          "quote": ", the first series of assembling connectors being of the tab/aperture type and in that the second series of connectors being of the stud/aperture type, said apertures being preferably borne by the metal interface part, during the pre-assembling phase, the tab of the first series of connectors of the composite structure part is introduced inside the corresponding aperture of the metal interface part and then, by angular displacement of the parts one relative to the other around said connections, the parts are brought closer to each other until studs of the second series of connectors of the composite structure part are positioned inside the matching apertures of the metal interface part and in that during the locking phase, at least one portion of the connection locks is deformed by pressing, for having said locking means pass from an inactive configuration to an active configuration, wherein any angular displacement of the parts, in the direction for having the studs emerge from the apertures, is limited or prevented"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 42,
+              "endChar": 58,
+              "quote": "the first series"
+            },
+            "determiner": "the",
+            "head": "first series"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 114,
+              "quote": "the tab/aperture type"
+            },
+            "determiner": "the",
+            "head": "tab aperture type"
+          },
+          {
+            "anchor": {
+              "startChar": 127,
+              "endChar": 144,
+              "quote": "the second series"
+            },
+            "determiner": "the",
+            "head": "second series"
+          },
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 190,
+              "quote": "the stud/aperture type"
+            },
+            "determiner": "the",
+            "head": "stud aperture type"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 206,
+              "quote": "said apertures"
+            },
+            "determiner": "said",
+            "head": "apertures"
+          },
+          {
+            "anchor": {
+              "startChar": 233,
+              "endChar": 257,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 290,
+              "quote": "the pre-assembling phase"
+            },
+            "determiner": "the",
+            "head": "pre-assembling phase"
+          },
+          {
+            "anchor": {
+              "startChar": 292,
+              "endChar": 299,
+              "quote": "the tab"
+            },
+            "determiner": "the",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 303,
+              "endChar": 319,
+              "quote": "the first series"
+            },
+            "determiner": "the",
+            "head": "first series"
+          },
+          {
+            "anchor": {
+              "startChar": 337,
+              "endChar": 365,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 387,
+              "endChar": 413,
+              "quote": "the corresponding aperture"
+            },
+            "determiner": "the",
+            "head": "corresponding aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 417,
+              "endChar": 441,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 479,
+              "endChar": 501,
+              "quote": "the parts one relative"
+            },
+            "determiner": "the",
+            "head": "parts one relative"
+          },
+          {
+            "anchor": {
+              "startChar": 505,
+              "endChar": 521,
+              "quote": "the other around"
+            },
+            "determiner": "the",
+            "head": "other around"
+          },
+          {
+            "anchor": {
+              "startChar": 522,
+              "endChar": 538,
+              "quote": "said connections"
+            },
+            "determiner": "said",
+            "head": "connections"
+          },
+          {
+            "anchor": {
+              "startChar": 540,
+              "endChar": 549,
+              "quote": "the parts"
+            },
+            "determiner": "the",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 598,
+              "endChar": 615,
+              "quote": "the second series"
+            },
+            "determiner": "the",
+            "head": "second series"
+          },
+          {
+            "anchor": {
+              "startChar": 633,
+              "endChar": 661,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 684,
+              "endChar": 706,
+              "quote": "the matching apertures"
+            },
+            "determiner": "the",
+            "head": "matching apertures"
+          },
+          {
+            "anchor": {
+              "startChar": 710,
+              "endChar": 734,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 754,
+              "endChar": 771,
+              "quote": "the locking phase"
+            },
+            "determiner": "the",
+            "head": "locking phase"
+          },
+          {
+            "anchor": {
+              "startChar": 773,
+              "endChar": 793,
+              "quote": "at least one portion"
+            },
+            "determiner": "at-least-one",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 797,
+              "endChar": 817,
+              "quote": "the connection locks"
+            },
+            "determiner": "the",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 854,
+              "endChar": 877,
+              "quote": "said locking means pass"
+            },
+            "determiner": "said",
+            "head": "locking means pass"
+          },
+          {
+            "anchor": {
+              "startChar": 883,
+              "endChar": 908,
+              "quote": "an inactive configuration"
+            },
+            "determiner": "an",
+            "head": "inactive configuration"
+          },
+          {
+            "anchor": {
+              "startChar": 912,
+              "endChar": 935,
+              "quote": "an active configuration"
+            },
+            "determiner": "an",
+            "head": "active configuration"
+          },
+          {
+            "anchor": {
+              "startChar": 973,
+              "endChar": 982,
+              "quote": "the parts"
+            },
+            "determiner": "the",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 987,
+              "endChar": 1000,
+              "quote": "the direction"
+            },
+            "determiner": "the",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 1012,
+              "endChar": 1028,
+              "quote": "the studs emerge"
+            },
+            "determiner": "the",
+            "head": "studs emerge"
+          },
+          {
+            "anchor": {
+              "startChar": 1034,
+              "endChar": 1047,
+              "quote": "the apertures"
+            },
+            "determiner": "the",
+            "head": "apertures"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "4"
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "6",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 96,
+          "quote": "An assembly capable of being elaborated by applying a method according to claim 1, said assembly"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 19,
+              "quote": "An assembly capable"
+            },
+            "determiner": "an",
+            "head": "assembly capable"
+          },
+          {
+            "anchor": {
+              "startChar": 52,
+              "endChar": 60,
+              "quote": "a method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 96,
+              "quote": "said assembly"
+            },
+            "determiner": "said",
+            "head": "assembly"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 109,
+          "endChar": 1626,
+          "quote": "at least one composite structure part, one metal interface part and one metal structure part, the composite structure part and the metal interface part forming a sub-assembly welded via the metal interface part, to the metal structure part, the composite structure part and the metal interface part being, for maintaining them in the assembled condition, provided with assembling mating connectors of the male/female type and with connection locks pre-equipping said parts, at least one portion of said connection locks pre-equipping the metal interface part being a deformable portion, wherein the connection locks are mating connectors of the male/female type distinct from the assembling male/female mating connectors and in that at least one portion of the connection locks capable of passing under the effect of pressure, from an inactive configuration to an active configuration, in the assembled condition of said parts by their assembling mating connection means, is formed, for the metal interface part, with a locking tab, and for the composite structure part, with an aperture or lumen, each aperture or lumen being able to be positioned matching a tab in the pre-assembled condition of said parts by their assembling connector, said locking tab being a deformable tab capable, under the effect of pressing, of deforming in the direction for introducing the tab into the matching aperture or lumen of the composite structure part, in the pre-assembled condition of said parts by their assembling connectors"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 146,
+              "quote": "at least one composite structure part"
+            },
+            "determiner": "at-least-one",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 231,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 260,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 269,
+              "endChar": 283,
+              "quote": "a sub-assembly"
+            },
+            "determiner": "a",
+            "head": "sub-assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 295,
+              "endChar": 319,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 324,
+              "endChar": 348,
+              "quote": "the metal structure part"
+            },
+            "determiner": "the",
+            "head": "metal structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 350,
+              "endChar": 378,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 383,
+              "endChar": 407,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 439,
+              "endChar": 462,
+              "quote": "the assembled condition"
+            },
+            "determiner": "the",
+            "head": "assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 510,
+              "endChar": 530,
+              "quote": "the male/female type"
+            },
+            "determiner": "the",
+            "head": "male female type"
+          },
+          {
+            "anchor": {
+              "startChar": 571,
+              "endChar": 581,
+              "quote": "said parts"
+            },
+            "determiner": "said",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 583,
+              "endChar": 603,
+              "quote": "at least one portion"
+            },
+            "determiner": "at-least-one",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 607,
+              "endChar": 628,
+              "quote": "said connection locks"
+            },
+            "determiner": "said",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 643,
+              "endChar": 667,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 674,
+              "endChar": 694,
+              "quote": "a deformable portion"
+            },
+            "determiner": "a",
+            "head": "deformable portion"
+          },
+          {
+            "anchor": {
+              "startChar": 704,
+              "endChar": 724,
+              "quote": "the connection locks"
+            },
+            "determiner": "the",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 750,
+              "endChar": 779,
+              "quote": "the male/female type distinct"
+            },
+            "determiner": "the",
+            "head": "male female type distinct"
+          },
+          {
+            "anchor": {
+              "startChar": 785,
+              "endChar": 811,
+              "quote": "the assembling male/female"
+            },
+            "determiner": "the",
+            "head": "assembling male female"
+          },
+          {
+            "anchor": {
+              "startChar": 842,
+              "endChar": 862,
+              "quote": "at least one portion"
+            },
+            "determiner": "at-least-one",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 866,
+              "endChar": 894,
+              "quote": "the connection locks capable"
+            },
+            "determiner": "the",
+            "head": "connection locks capable"
+          },
+          {
+            "anchor": {
+              "startChar": 912,
+              "endChar": 922,
+              "quote": "the effect"
+            },
+            "determiner": "the",
+            "head": "effect"
+          },
+          {
+            "anchor": {
+              "startChar": 941,
+              "endChar": 966,
+              "quote": "an inactive configuration"
+            },
+            "determiner": "an",
+            "head": "inactive configuration"
+          },
+          {
+            "anchor": {
+              "startChar": 970,
+              "endChar": 993,
+              "quote": "an active configuration"
+            },
+            "determiner": "an",
+            "head": "active configuration"
+          },
+          {
+            "anchor": {
+              "startChar": 998,
+              "endChar": 1021,
+              "quote": "the assembled condition"
+            },
+            "determiner": "the",
+            "head": "assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 1025,
+              "endChar": 1035,
+              "quote": "said parts"
+            },
+            "determiner": "said",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 1039,
+              "endChar": 1055,
+              "quote": "their assembling"
+            },
+            "determiner": "bare",
+            "head": "assembling"
+          },
+          {
+            "anchor": {
+              "startChar": 1096,
+              "endChar": 1120,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 1127,
+              "endChar": 1140,
+              "quote": "a locking tab"
+            },
+            "determiner": "a",
+            "head": "locking tab"
+          },
+          {
+            "anchor": {
+              "startChar": 1150,
+              "endChar": 1178,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 1185,
+              "endChar": 1196,
+              "quote": "an aperture"
+            },
+            "determiner": "an",
+            "head": "aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 1267,
+              "endChar": 1272,
+              "quote": "a tab"
+            },
+            "determiner": "a",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 1276,
+              "endChar": 1303,
+              "quote": "the pre-assembled condition"
+            },
+            "determiner": "the",
+            "head": "pre-assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 1307,
+              "endChar": 1317,
+              "quote": "said parts"
+            },
+            "determiner": "said",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 1321,
+              "endChar": 1347,
+              "quote": "their assembling connector"
+            },
+            "determiner": "bare",
+            "head": "assembling connector"
+          },
+          {
+            "anchor": {
+              "startChar": 1349,
+              "endChar": 1365,
+              "quote": "said locking tab"
+            },
+            "determiner": "said",
+            "head": "locking tab"
+          },
+          {
+            "anchor": {
+              "startChar": 1372,
+              "endChar": 1396,
+              "quote": "a deformable tab capable"
+            },
+            "determiner": "a",
+            "head": "deformable tab capable"
+          },
+          {
+            "anchor": {
+              "startChar": 1404,
+              "endChar": 1414,
+              "quote": "the effect"
+            },
+            "determiner": "the",
+            "head": "effect"
+          },
+          {
+            "anchor": {
+              "startChar": 1444,
+              "endChar": 1457,
+              "quote": "the direction"
+            },
+            "determiner": "the",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 1474,
+              "endChar": 1481,
+              "quote": "the tab"
+            },
+            "determiner": "the",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 1487,
+              "endChar": 1508,
+              "quote": "the matching aperture"
+            },
+            "determiner": "the",
+            "head": "matching aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 1521,
+              "endChar": 1549,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 1554,
+              "endChar": 1581,
+              "quote": "the pre-assembled condition"
+            },
+            "determiner": "the",
+            "head": "pre-assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 1585,
+              "endChar": 1595,
+              "quote": "said parts"
+            },
+            "determiner": "said",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 1599,
+              "endChar": 1626,
+              "quote": "their assembling connectors"
+            },
+            "determiner": "bare",
+            "head": "assembling connectors"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 203,
+            "endChar": 231,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 109,
+            "endChar": 146,
+            "quote": "at least one composite structure part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 350,
+            "endChar": 378,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 109,
+            "endChar": 146,
+            "quote": "at least one composite structure part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 1150,
+            "endChar": 1178,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 109,
+            "endChar": 146,
+            "quote": "at least one composite structure part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 1349,
+            "endChar": 1365,
+            "quote": "said locking tab"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 1127,
+            "endChar": 1140,
+            "quote": "a locking tab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 1474,
+            "endChar": 1481,
+            "quote": "the tab"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 1267,
+            "endChar": 1272,
+            "quote": "a tab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 1521,
+            "endChar": 1549,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 109,
+            "endChar": 146,
+            "quote": "at least one composite structure part"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "7",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 33,
+          "quote": "The assembly according to claim 6"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The assembly"
+            },
+            "determiner": "the",
+            "head": "assembly"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 43,
+          "endChar": 135,
+          "quote": "said locking tab of the metal interface part before deformation has a V-shaped cross section"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 43,
+              "endChar": 59,
+              "quote": "said locking tab"
+            },
+            "determiner": "said",
+            "head": "locking tab"
+          },
+          {
+            "anchor": {
+              "startChar": 63,
+              "endChar": 106,
+              "quote": "the metal interface part before deformation"
+            },
+            "determiner": "the",
+            "head": "metal interface part before deformation"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 135,
+              "quote": "a V-shaped cross section"
+            },
+            "determiner": "a",
+            "head": "v-shaped cross section"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "6"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "8",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 33,
+          "quote": "The assembly according to claim 6"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The assembly"
+            },
+            "determiner": "the",
+            "head": "assembly"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 43,
+          "endChar": 173,
+          "quote": "the connectors assembling the composite structure metal interface part are connectors comprising at least two series of connectors"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 43,
+              "endChar": 57,
+              "quote": "the connectors"
+            },
+            "determiner": "the",
+            "head": "connectors"
+          },
+          {
+            "anchor": {
+              "startChar": 69,
+              "endChar": 113,
+              "quote": "the composite structure metal interface part"
+            },
+            "determiner": "the",
+            "head": "composite structure metal interface part"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "6"
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "9",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 33,
+          "quote": "The assembly according to claim 8"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The assembly"
+            },
+            "determiner": "the",
+            "head": "assembly"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 43,
+          "endChar": 274,
+          "quote": "the first series of assembling connectors is of the tab/aperture type and in that the second series of assembling connectors is of the stud/aperture type, said apertures being preferably borne every time by the metal interface part"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 43,
+              "endChar": 59,
+              "quote": "the first series"
+            },
+            "determiner": "the",
+            "head": "first series"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 112,
+              "quote": "the tab/aperture type"
+            },
+            "determiner": "the",
+            "head": "tab aperture type"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 142,
+              "quote": "the second series"
+            },
+            "determiner": "the",
+            "head": "second series"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 196,
+              "quote": "the stud/aperture type"
+            },
+            "determiner": "the",
+            "head": "stud aperture type"
+          },
+          {
+            "anchor": {
+              "startChar": 198,
+              "endChar": 212,
+              "quote": "said apertures"
+            },
+            "determiner": "said",
+            "head": "apertures"
+          },
+          {
+            "anchor": {
+              "startChar": 250,
+              "endChar": 274,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "8"
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "10",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 33,
+          "quote": "The assembly according to claim 8"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The assembly"
+            },
+            "determiner": "the",
+            "head": "assembly"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 43,
+          "endChar": 232,
+          "quote": "the assembling connector of each of the series and the connection locks are each organized as a row of connecting or locking members, said rows being on a same part parallel with each other"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 43,
+              "endChar": 67,
+              "quote": "the assembling connector"
+            },
+            "determiner": "the",
+            "head": "assembling connector"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 89,
+              "quote": "the series"
+            },
+            "determiner": "the",
+            "head": "series"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 114,
+              "quote": "the connection locks"
+            },
+            "determiner": "the",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 142,
+              "quote": "a row"
+            },
+            "determiner": "a",
+            "head": "row"
+          },
+          {
+            "anchor": {
+              "startChar": 177,
+              "endChar": 186,
+              "quote": "said rows"
+            },
+            "determiner": "said",
+            "head": "rows"
+          },
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 216,
+              "quote": "a same part parallel"
+            },
+            "determiner": "a",
+            "head": "same part parallel"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "8"
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "11",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 33,
+          "quote": "The assembly according to claim 6"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 12,
+              "quote": "The assembly"
+            },
+            "determiner": "the",
+            "head": "assembly"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 43,
+          "endChar": 311,
+          "quote": "the composite structure part is a basin-shaped part capable of forming a spare wheel bin, in that the metal structure part is a chassis of rolling stock and in that the metal interface part appears as an elongated body able to be positioned along an edge of said basin"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 43,
+              "endChar": 71,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 75,
+              "endChar": 102,
+              "quote": "a basin-shaped part capable"
+            },
+            "determiner": "a",
+            "head": "basin-shaped part capable"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 131,
+              "quote": "a spare wheel bin"
+            },
+            "determiner": "a",
+            "head": "spare wheel bin"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 165,
+              "quote": "the metal structure part"
+            },
+            "determiner": "the",
+            "head": "metal structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 169,
+              "endChar": 178,
+              "quote": "a chassis"
+            },
+            "determiner": "a",
+            "head": "chassis"
+          },
+          {
+            "anchor": {
+              "startChar": 208,
+              "endChar": 240,
+              "quote": "the metal interface part appears"
+            },
+            "determiner": "the",
+            "head": "metal interface part appears"
+          },
+          {
+            "anchor": {
+              "startChar": 244,
+              "endChar": 266,
+              "quote": "an elongated body able"
+            },
+            "determiner": "an",
+            "head": "elongated body able"
+          },
+          {
+            "anchor": {
+              "startChar": 290,
+              "endChar": 297,
+              "quote": "an edge"
+            },
+            "determiner": "an",
+            "head": "edge"
+          },
+          {
+            "anchor": {
+              "startChar": 301,
+              "endChar": 311,
+              "quote": "said basin"
+            },
+            "determiner": "said",
+            "head": "basin"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "6"
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "12",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 26,
+          "quote": "A sub-assembly of the type"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 14,
+              "quote": "A sub-assembly"
+            },
+            "determiner": "a",
+            "head": "sub-assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 18,
+              "endChar": 26,
+              "quote": "the type"
+            },
+            "determiner": "the",
+            "head": "type"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 38,
+          "endChar": 1247,
+          "quote": "a composite structure part and a metal interface part, said sub-assembly being intended, via its metal interface part, to be welded to a metal structure part in order to form an assembly according to claim 6, wherein the composite structure part and the metal interface part are, for maintaining them in the assembled condition, provided with assembling male/female type mating connectors and with connection locks pre-equipping said parts, at least one portion of said connection locks being a deformable part capable of passing, under the effect of pressure and in the assembled condition of said parts by their assembling connectors, from an inactive configuration to an active configuration, at least one portion of these connection locks being formed, for the metal interface part, with a locking tab and for the composite structure part, with an aperture or lumen, each aperture or lumen being able to be positioned matching a tab, said tab being a deformable tab capable, under the effect of pressing, of deforming in the direction for introducing the tab into the matching aperture or the lumen of the composite structure part in the pre-assembled condition of said part by their assembling connectors"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 64,
+              "quote": "a composite structure part"
+            },
+            "determiner": "a",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 69,
+              "endChar": 91,
+              "quote": "a metal interface part"
+            },
+            "determiner": "a",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 110,
+              "quote": "said sub-assembly"
+            },
+            "determiner": "said",
+            "head": "sub-assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 155,
+              "quote": "its metal interface part"
+            },
+            "determiner": "bare",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 195,
+              "quote": "a metal structure part"
+            },
+            "determiner": "a",
+            "head": "metal structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 213,
+              "endChar": 224,
+              "quote": "an assembly"
+            },
+            "determiner": "an",
+            "head": "assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 283,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 288,
+              "endChar": 312,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 342,
+              "endChar": 365,
+              "quote": "the assembled condition"
+            },
+            "determiner": "the",
+            "head": "assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 467,
+              "endChar": 477,
+              "quote": "said parts"
+            },
+            "determiner": "said",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 479,
+              "endChar": 499,
+              "quote": "at least one portion"
+            },
+            "determiner": "at-least-one",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 503,
+              "endChar": 524,
+              "quote": "said connection locks"
+            },
+            "determiner": "said",
+            "head": "connection locks"
+          },
+          {
+            "anchor": {
+              "startChar": 531,
+              "endChar": 556,
+              "quote": "a deformable part capable"
+            },
+            "determiner": "a",
+            "head": "deformable part capable"
+          },
+          {
+            "anchor": {
+              "startChar": 575,
+              "endChar": 585,
+              "quote": "the effect"
+            },
+            "determiner": "the",
+            "head": "effect"
+          },
+          {
+            "anchor": {
+              "startChar": 605,
+              "endChar": 628,
+              "quote": "the assembled condition"
+            },
+            "determiner": "the",
+            "head": "assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 632,
+              "endChar": 642,
+              "quote": "said parts"
+            },
+            "determiner": "said",
+            "head": "parts"
+          },
+          {
+            "anchor": {
+              "startChar": 646,
+              "endChar": 673,
+              "quote": "their assembling connectors"
+            },
+            "determiner": "bare",
+            "head": "assembling connectors"
+          },
+          {
+            "anchor": {
+              "startChar": 680,
+              "endChar": 705,
+              "quote": "an inactive configuration"
+            },
+            "determiner": "an",
+            "head": "inactive configuration"
+          },
+          {
+            "anchor": {
+              "startChar": 709,
+              "endChar": 732,
+              "quote": "an active configuration"
+            },
+            "determiner": "an",
+            "head": "active configuration"
+          },
+          {
+            "anchor": {
+              "startChar": 734,
+              "endChar": 754,
+              "quote": "at least one portion"
+            },
+            "determiner": "at-least-one",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 799,
+              "endChar": 823,
+              "quote": "the metal interface part"
+            },
+            "determiner": "the",
+            "head": "metal interface part"
+          },
+          {
+            "anchor": {
+              "startChar": 830,
+              "endChar": 843,
+              "quote": "a locking tab"
+            },
+            "determiner": "a",
+            "head": "locking tab"
+          },
+          {
+            "anchor": {
+              "startChar": 852,
+              "endChar": 880,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 887,
+              "endChar": 898,
+              "quote": "an aperture"
+            },
+            "determiner": "an",
+            "head": "aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 969,
+              "endChar": 974,
+              "quote": "a tab"
+            },
+            "determiner": "a",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 976,
+              "endChar": 984,
+              "quote": "said tab"
+            },
+            "determiner": "said",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 991,
+              "endChar": 1015,
+              "quote": "a deformable tab capable"
+            },
+            "determiner": "a",
+            "head": "deformable tab capable"
+          },
+          {
+            "anchor": {
+              "startChar": 1023,
+              "endChar": 1033,
+              "quote": "the effect"
+            },
+            "determiner": "the",
+            "head": "effect"
+          },
+          {
+            "anchor": {
+              "startChar": 1063,
+              "endChar": 1076,
+              "quote": "the direction"
+            },
+            "determiner": "the",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 1093,
+              "endChar": 1100,
+              "quote": "the tab"
+            },
+            "determiner": "the",
+            "head": "tab"
+          },
+          {
+            "anchor": {
+              "startChar": 1106,
+              "endChar": 1127,
+              "quote": "the matching aperture"
+            },
+            "determiner": "the",
+            "head": "matching aperture"
+          },
+          {
+            "anchor": {
+              "startChar": 1131,
+              "endChar": 1140,
+              "quote": "the lumen"
+            },
+            "determiner": "the",
+            "head": "lumen"
+          },
+          {
+            "anchor": {
+              "startChar": 1144,
+              "endChar": 1172,
+              "quote": "the composite structure part"
+            },
+            "determiner": "the",
+            "head": "composite structure part"
+          },
+          {
+            "anchor": {
+              "startChar": 1176,
+              "endChar": 1203,
+              "quote": "the pre-assembled condition"
+            },
+            "determiner": "the",
+            "head": "pre-assembled condition"
+          },
+          {
+            "anchor": {
+              "startChar": 1207,
+              "endChar": 1216,
+              "quote": "said part"
+            },
+            "determiner": "said",
+            "head": "part"
+          },
+          {
+            "anchor": {
+              "startChar": 1220,
+              "endChar": 1247,
+              "quote": "their assembling connectors"
+            },
+            "determiner": "bare",
+            "head": "assembling connectors"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "6"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 93,
+            "endChar": 110,
+            "quote": "said sub-assembly"
+          }
+        },
+        "introducing": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A sub-assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 255,
+            "endChar": 283,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 38,
+            "endChar": 64,
+            "quote": "a composite structure part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 288,
+            "endChar": 312,
+            "quote": "the metal interface part"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 69,
+            "endChar": 91,
+            "quote": "a metal interface part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 799,
+            "endChar": 823,
+            "quote": "the metal interface part"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 69,
+            "endChar": 91,
+            "quote": "a metal interface part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 852,
+            "endChar": 880,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 38,
+            "endChar": 64,
+            "quote": "a composite structure part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 976,
+            "endChar": 984,
+            "quote": "said tab"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 969,
+            "endChar": 974,
+            "quote": "a tab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 1093,
+            "endChar": 1100,
+            "quote": "the tab"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 969,
+            "endChar": 974,
+            "quote": "a tab"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 1144,
+            "endChar": 1172,
+            "quote": "the composite structure part"
+          }
+        },
+        "introducing": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 38,
+            "endChar": 64,
+            "quote": "a composite structure part"
+          }
+        }
+      }
+    ]
+  }
+]

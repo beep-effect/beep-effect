@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "13070851",
+  "publicationNumber": "US20110274057A1",
+  "publicationDate": "2011-11-10",
+  "nativeXmlSha256": "8c31676fd8c2981faadc66c68c18b80d86ef7b624ed7aa3cf6752a57c698f9db",
+  "claimsXmlSha256": "d0cfa17ca520ecf770cc83a16479773c803740d9a7e592c8883ad830a6180645",
+  "officeActionDocumentIdentifiers": [
+    "HB9GFHSLPXXIFW4"
+  ],
+  "officeActionMailDate": "2013-01-02",
+  "officeActionSection112Text": [
+    "claim 1 recites the limitation the harq entity in line 5. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 2 recites the limitation the dl cc in line 2. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 3 recites the limitation the dl cc in line 1. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 4 recites the limitation the dl cc in line 1. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 7 recites the limitation the dl cc in line 1. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 6 recites the limitation the dl cc in line 1. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 8 recites the limitation the harq entity in line 8. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 9 recites the limitation the dl cc in line 2. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 10 recites the limitation the dl cc in line 2. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 11 recites the limitation the dl cc in line 2. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 14 recites the limitation the dl cc in lien 1. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc.\r\nclaim 13 recites the limitation the dl cc in line 1. there is insufficient antecedent basis for this limitation in the claim. there is sufficient antecedent basis support for the limitation “the linked dl cc."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "GLO1NLRJPPOPPY2",
+      "officialDate": "2011-03-24T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "GLO1NLRJPPOPPY2",
+      "officialDate": "2011-03-24T00:00:00.000-0400",
+      "sha256": "1ee5b7b9fc51e87700bf580bee2c5fe8f71d4127c54be53c69b1e3c3c615b18c",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 30,
+  "documentInventoryRows": 30,
+  "primaryCpc": "H04L   5/0094",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13070851",
+    "https://api.uspto.gov/api/v1/patent/applications/13070851/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13822885-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14
+  ],
+  "unresolved": [],
+  "referenceConcerns": [
+    {
+      "claimNumbers": [
+        1,
+        2,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "reason": "Definitely recited structural properties (end surfaces, end parts, edge side, outside surfaces, U-shaped opening, side surfaces, height, main part, directional/upper/lower/central/bottom surfaces) may lack an earlier explicit nominal introduction. No property term is fabricated from the mere existence of a body. Repeated owner-identified property mentions can link their first explicit nominal mention."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "said strip-shaped bars",
+      "reason": "Claim12 depends9, not10; strip-shaped bar introduction in sibling10 is not a donor. No antecedent edge."
+    },
+    {
+      "claimNumber": 12,
+      "quotes": [
+        "said upper bar portion",
+        "said lower bar portion"
+      ],
+      "reason": "The coordinated upper/lower group phrase names both parts without independent introduction terms. Avoid selecting one group member as an invented single antecedent; preserve exact separate references."
+    },
+    {
+      "claimNumber": 8,
+      "quotes": [
+        "the predetermined position",
+        "the predetermined position"
+      ],
+      "reason": "Claim7 separately introduces metal-plate position on main plate and bar position on end plate. Owner-specific references retain those distinct positions, avoiding nearest-head conflation."
+    }
+  ],
+  "sourceFamilyConcerns": [],
+  "annotationRationale": "Fresh source-semantic annotation across14 selected claims. Root battery assembly/cell, end-plate pair and bind-bar structures preserve complete lexical phrases, reciprocal relationships and bent engagement geometry. Natural dependencies follow canonical operative text corroborated by accepted source critic; historical source-audit uncertainty is not silently repaired. Unique mechanism/plate/hole references link across actual ancestry. Missing property introductions, sibling-only strip bar reference, and coordinated member ambiguity remain explicit. Vehicle14 recites the claim1 pack as a contained limitation with dependency on1, not a fabricated same-subject preamble.",
+  "independence": "Fresh source-semantic annotations from canonical claims, protocol and schemas only; no production/decomposer, implementation design, predictions, synthetic or conformance labels inspected. Mechanical helper locates manually chosen quotes and validates spans; semantic grouping, terms and antecedents are manually declared. Independent critic pending."
+}

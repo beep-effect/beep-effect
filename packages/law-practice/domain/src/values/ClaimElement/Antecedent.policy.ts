@@ -28,6 +28,11 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { AntecedentFinding, AntecedentRuleId } from "./AntecedentFinding.model.ts";
 import { ClaimTermIntroducingDeterminer, ClaimTermReferringDeterminer } from "./ClaimElement.behavior.ts";
 import { ClaimTermDeterminer, ClaimTermRef } from "./ClaimElement.model.ts";
+import {
+  isCountedHead,
+  isExplicitAbbreviatedHead,
+  isSingleModifiedHead as isSingleModifiedOf,
+} from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimTerm } from "./ClaimElement.model.ts";
 import type { ClaimElementTree } from "./ClaimElement.tree.model.ts";
@@ -106,6 +111,7 @@ export type AntecedentPolicy = (
 ) => ReadonlyArray<AntecedentFinding>;
 
 const rule = {
+  unsupportedDeterminer: AntecedentRuleId.make("unsupported-determiner"),
   definiteWithoutIntroduction: AntecedentRuleId.make("definite-without-introduction"),
   multipleIntroductions: AntecedentRuleId.make("multiple-introductions"),
   determinerNumberMismatch: AntecedentRuleId.make("determiner-number-mismatch"),
@@ -118,7 +124,12 @@ const rule = {
 };
 
 /** One term of one tree, with the claim it belongs to and its reference. */
-type LocatedTerm = { readonly claimNumber: number; readonly ref: ClaimTermRef; readonly term: ClaimTerm };
+type LocatedTerm = {
+  readonly claimNumber: number;
+  readonly ref: ClaimTermRef;
+  readonly term: ClaimTerm;
+  readonly inheritedSubject: boolean;
+};
 
 /** A dependency chain from the checked claim towards its root, and whether every step could be followed. */
 type Chain = { readonly claims: A.NonEmptyReadonlyArray<number>; readonly resolvable: boolean };
@@ -136,8 +147,10 @@ type Verdict = O.Option<AntecedentFinding>;
 
 const isIntroducingDeterminer = S.is(ClaimTermIntroducingDeterminer);
 const isReferringDeterminer = S.is(ClaimTermReferringDeterminer);
-const isIntroducing = ({ term }: LocatedTerm): boolean => isIntroducingDeterminer(term.determiner);
-const isReferring = ({ term }: LocatedTerm): boolean => isReferringDeterminer(term.determiner);
+const isIntroducing = ({ term, inheritedSubject }: LocatedTerm): boolean =>
+  isIntroducingDeterminer(term.determiner) && !inheritedSubject;
+const isReferring = ({ term }: LocatedTerm): boolean =>
+  isReferringDeterminer(term.determiner) || ClaimTermDeterminer.is.bare(term.determiner);
 
 // Rule `non-referential-idiom`: "the same", "the art", ... carry no antecedent.
 const idiomWords = HashSet.make("same", "like", "art", "other", "following", "case");
@@ -150,6 +163,10 @@ const locatedTerms = (tree: ClaimElementTree): ReadonlyArray<LocatedTerm> =>
       claimNumber: tree.claimNumber,
       ref: ClaimTermRef.make({ path: element.path, anchor: term.anchor }),
       term,
+      inheritedSubject:
+        element.path === `${tree.claimNumber}` &&
+        O.exists(A.head(element.terms), (first) => first.anchor.startChar === term.anchor.startChar) &&
+        A.some(tree.edges, (edge) => edge.kind === "depends-on-element" && edge.dependent === element.path),
     }))
   );
 
@@ -249,13 +266,6 @@ const singularHead = (head: string): string => {
   return A.join(A.append(A.initNonEmpty(words), singularWord(A.lastNonEmpty(words))), " ");
 };
 
-// "first sensor" or "optical sensor" for "sensor": exactly one modifier word before the referring head.
-const isSingleModifiedOf =
-  (head: string) =>
-  (candidate: string): boolean =>
-    Str.endsWith(` ${head}`)(candidate) &&
-    !pipe(Str.slice(0, Str.length(candidate) - Str.length(head) - 1)(candidate), Str.includes(" "));
-
 // Zero matches: the step does not apply. One or many: the step decides.
 const byCount = <B>(
   matches: ReadonlyArray<LocatedTerm>,
@@ -310,6 +320,20 @@ const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: Lo
             })
           ),
         ambiguous(rule.determinerNumberMismatch)
+      )
+    ),
+    O.orElse(() =>
+      byCount(
+        A.filter(introductions, ({ term }) => isExplicitAbbreviatedHead(head)(term.head)),
+        resolved,
+        ambiguous(rule.multipleIntroductions)
+      )
+    ),
+    O.orElse(() =>
+      byCount(
+        A.filter(introductions, ({ term }) => isCountedHead(head)(term.head)),
+        resolved,
+        ambiguous(rule.multipleIntroductions)
       )
     ),
     // Rule `single-modified-introduction` resolves one modified introduction; several are `ordinal-variants`.
@@ -403,15 +427,22 @@ const verdictFor =
     decomposed: HashSet.HashSet<number>,
     referring: LocatedTerm,
     chain: Chain
-  ): Verdict =>
-    chain.resolvable
+  ): Verdict => {
+    if (ClaimTermDeterminer.is.bare(referring.term.determiner)) {
+      return O.some(uncovered(referring, rule.unsupportedDeterminer));
+    }
+    return chain.resolvable
       ? readableVerdict(introductionsByHead, remaining)(terms, decomposed, referring, chain)
       : O.some(uncovered(referring, rule.chainUnresolvable));
+  };
 
 /**
  * Deterministic rule policy: resolves every referring term along each dependency chain of its claim.
  *
  * **Details**
+ *
+ * Unsupported possessives (`its` / `their`) are retained as `bare` terms and
+ * yield `pattern-not-covered`, without attempting antecedent resolution.
  *
  * Referring terms are `the`/`said` terms, except the idioms `the same`,
  * `the like`, `the art`, `the other`, `the following` and `the case`. Along one

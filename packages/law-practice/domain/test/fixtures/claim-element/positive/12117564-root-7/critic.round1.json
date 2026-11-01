@@ -1,0 +1,69 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12117564-root-7",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    7,
+    8
+  ],
+  "findings": [
+    {
+      "id": "C1",
+      "category": "fragmented-complete-pair-noun-phrases",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 7,
+          "path": "7.a",
+          "anchor": {
+            "startChar": 203,
+            "endChar": 233,
+            "quote": "a pair of detection electrodes"
+          },
+          "currentTerms": [
+            "a pair",
+            "detection electrodes"
+          ]
+        },
+        {
+          "claimNumber": 7,
+          "path": "7.a",
+          "anchor": {
+            "startChar": 542,
+            "endChar": 568,
+            "quote": "a pair of detected signals"
+          },
+          "currentTerms": [
+            "a pair",
+            "detected signals"
+          ]
+        }
+      ],
+      "reason": "The source recites complete pair-of noun phrases without a nested determiner before detection electrodes/detected signals. Rule2 splits nested determiner phrases; it does not truncate the complete lexical complement of a pair into an extra bare noun phrase. The current pair-only heads lose which pair is named and create two term/antecedent endpoints for one complete determiner-bearing NP.",
+      "correction": "Retain each complete pair NP as one nonoverlapping term:7.a [203,233) a pair of detection electrodes (a; head pair of detection electrodes);7.a [272,304) and[606,638),7.b [690,722) the pair of detection electrodes (the; head pair of detection electrodes);7.a [542,568) a pair of detected signals (a; head pair of detected signals);7.c [731,759) and7.f [1039,1067) the pair of detected signals (the; head pair of detected signals). Remove absorbed bare complement terms, rebuild affected functional parts, and replace duplicate pair/complement antecedents with one full-NP edge to the matching full introduction. Keep electrode pair and signal pair distinct; no source or signal identity changes."
+    }
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 2,
+    "resolvedTreesReviewed": 2,
+    "elementCount": 11,
+    "termCount": 56,
+    "functionalRelationCount": 9
+  },
+  "reviewNotes": [
+    "Full initial semantic review of selected independent7 and dependent8; other gyro roots remain context only. Main method transition follows the lengthy explicit gyro context. Bias, summing, first-phase amplitude control, differential amplification, second-phase and synchronous-detection steps remain source ordered.",
+    "First/second sides, electrodes, drive signal, phases and later summed-signal mentions have source-supported identities, with original summed-signal/differential-signal nominal-introduction gaps explicitly retained. Claim8 correctly references gyro7 without sibling donors. Pair NP segmentation requires the concrete correction above.",
+    "All trees decode through ClaimElementTree. Exact UTF-16 element/term spans, ordering/nonoverlap/ownership, antecedent endpoints and complete contiguous functional reconstruction checked. All canonical/context claims match native XML under permitted normalization; source XML digest matches provenance.",
+    "Read retained source critic, application/publication identity and numbered rejection evidence. Source eligibility remains separately accepted; no fresh original-PDF/inventory authentication or attorney agreement claimed."
+  ],
+  "independence": "Independent full semantic critic; did not author these references. Read exact canonical/native source/context, extractor, provenance, retained source critic, schema contracts and protocol. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only check manually reviewed source annotations. Only assigned critic receipts written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+}

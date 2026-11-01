@@ -1,0 +1,2690 @@
+{
+  "schemaVersion": "claim-antecedent-allowed-sample/v1",
+  "date": "2026-10-28",
+  "status": "source-qualified; predictions-and-attorney-adjudication-pending",
+  "selection": "pre-prediction, fixed CPC quotas, SHA256(claim-antecedent-allowed-v1:<patentNumber>) ordering within each stratum",
+  "quotas": {
+    "A": 30,
+    "B": 25,
+    "E": 10,
+    "F": 20,
+    "G": 55,
+    "H": 60
+  },
+  "sourcePoolCount": 291,
+  "eligiblePoolCount": 224,
+  "selectedSetCount": 200,
+  "selectedClaimCount": 3184,
+  "excluded": [
+    {
+      "patentNumber": "D1107786",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1107977",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "PP37117",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "PP37187",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12497618",
+      "reason": "excluded-ParseError"
+    },
+    {
+      "patentNumber": "D1107687",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1107079",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1105004",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1106006",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12503662",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12501981",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "D1106342",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1106349",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1107995",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12503690",
+      "reason": "excluded-ParseError"
+    },
+    {
+      "patentNumber": "12507946",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "D1102533",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1105689",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12503703",
+      "reason": "excluded-ParseError"
+    },
+    {
+      "patentNumber": "D1102499",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12497438",
+      "reason": "excluded-ParseError"
+    },
+    {
+      "patentNumber": "D1105321",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "PP37090",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1100137",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12509443",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12500447",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12493399",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12491658",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "PP37161",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1098355",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "PP37181",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1106993",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1103607",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1104633",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12500810",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "D1105976",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1103595",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1102059",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1100034",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1106277",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12494500",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "D1105371",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1102746",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1104347",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1100903",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1104750",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1106999",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1107000",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1104768",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1107222",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1099477",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12502352",
+      "reason": "excluded-ParseError"
+    },
+    {
+      "patentNumber": "D1105208",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "D1101475",
+      "reason": "design-or-plant-patent-number"
+    },
+    {
+      "patentNumber": "12503738",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12454462",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12478642",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12478956",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12455776",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12513936",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12457840",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12497554",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12466751",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12495886",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12509357",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    },
+    {
+      "patentNumber": "12434799",
+      "reason": "markush-or-chemical-claim-pattern"
+    },
+    {
+      "patentNumber": "12486163",
+      "reason": "primary-cpc-chemistry-or-biological-subject"
+    }
+  ],
+  "sets": [
+    {
+      "applicationNumber": "19274800",
+      "patentNumber": "12458444",
+      "grantDate": "2025-11-04",
+      "cpcSection": "A",
+      "primaryCpc": "A61B  34/10",
+      "claimCount": 20,
+      "xmlFileName": "19274800_12458444.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19274800_12458444.xml",
+      "nativeXmlSha256": "a0b7ae355cb44232c6f9edb0cadf65952dc394e790c65308741c88484358c6a5",
+      "claimsXmlSha256": "6aaa3dcd2910a878613b207783792aea3656d8690475af00999403b8268ae50b"
+    },
+    {
+      "applicationNumber": "19262256",
+      "patentNumber": "12465814",
+      "grantDate": "2025-11-11",
+      "cpcSection": "A",
+      "primaryCpc": "A61B   5/0533",
+      "claimCount": 11,
+      "xmlFileName": "19262256_12465814.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19262256_12465814.xml",
+      "nativeXmlSha256": "06d9c0501af703122594f1224477f6466fa05aee5aa7c0533b67ba65018a7f93",
+      "claimsXmlSha256": "701fc2abc8d587bf8b10de222fa51c970a3f3f5b88ddf912206fc6944646379a"
+    },
+    {
+      "applicationNumber": "19259650",
+      "patentNumber": "12495892",
+      "grantDate": "2025-12-16",
+      "cpcSection": "A",
+      "primaryCpc": "A46B   5/0095",
+      "claimCount": 8,
+      "xmlFileName": "19259650_12495892.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19259650_12495892.xml",
+      "nativeXmlSha256": "63c696e335d95460b715e013415858a7cf478d2061496c07de7662f809369903",
+      "claimsXmlSha256": "8a720a09e1e238e9abce8a9c8270071f15c650a5989e9be235ff78c8928f9741"
+    },
+    {
+      "applicationNumber": "19284600",
+      "patentNumber": "12501522",
+      "grantDate": "2025-12-16",
+      "cpcSection": "A",
+      "primaryCpc": "A47J  39/02",
+      "claimCount": 7,
+      "xmlFileName": "19284600_12501522.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19284600_12501522.xml",
+      "nativeXmlSha256": "f955fab2be8e9759681e45d8d05642c9ab9cb7d8e94199440d89b7e61105b6d8",
+      "claimsXmlSha256": "e8731060cc8e9c5b0a779ad853eeccac17ee5ce3ea1bf5c53d94d57d9bbc0d69"
+    },
+    {
+      "applicationNumber": "19262803",
+      "patentNumber": "12426823",
+      "grantDate": "2025-09-30",
+      "cpcSection": "A",
+      "primaryCpc": "A61B   5/293",
+      "claimCount": 16,
+      "xmlFileName": "19262803_12426823.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250930/19262803_12426823.xml",
+      "nativeXmlSha256": "a40a89ea253952261363cc763ca2aa9b7701d40d405365403ff774528cfb898c",
+      "claimsXmlSha256": "59d466501b561dcaffc99b7bbbcae4a589ca568842cd8eaefa55b66ea4a1783e"
+    },
+    {
+      "applicationNumber": "19307480",
+      "patentNumber": "12485306",
+      "grantDate": "2025-12-02",
+      "cpcSection": "A",
+      "primaryCpc": "A63B  21/0726",
+      "claimCount": 10,
+      "xmlFileName": "19307480_12485306.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19307480_12485306.xml",
+      "nativeXmlSha256": "980c27f513ece55d89a195d0a868b5f989ed56cf48038d8c2a2356765de916a5",
+      "claimsXmlSha256": "c95d9379393f4b12f5addc4571ec36d2b28e6fcbd30ecf62fa35f588dfe20d77"
+    },
+    {
+      "applicationNumber": "19259052",
+      "patentNumber": "12446668",
+      "grantDate": "2025-10-21",
+      "cpcSection": "A",
+      "primaryCpc": "A44C   5/04",
+      "claimCount": 27,
+      "xmlFileName": "19259052_12446668.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251021/19259052_12446668.xml",
+      "nativeXmlSha256": "50a10676edfa1cf97a3a3869bd5605bf5fc9082c4e7cfe52832e00f66a246bdd",
+      "claimsXmlSha256": "0e358fbe46888a42e594d1d36475fdb63242d1182b4ab876f707ecbcde69b1a8"
+    },
+    {
+      "applicationNumber": "19265835",
+      "patentNumber": "12440032",
+      "grantDate": "2025-10-14",
+      "cpcSection": "A",
+      "primaryCpc": "A47C   7/666",
+      "claimCount": 11,
+      "xmlFileName": "19265835_12440032.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251014/19265835_12440032.xml",
+      "nativeXmlSha256": "a47900b784982e020f7f414e8f467e7139b5d5103fc5d472c98dd0f308661062",
+      "claimsXmlSha256": "3c1b0140632d4bc14740db7fc2015fdd306481444532e030a4c4060d5e5c883f"
+    },
+    {
+      "applicationNumber": "19259049",
+      "patentNumber": "12478485",
+      "grantDate": "2025-11-25",
+      "cpcSection": "A",
+      "primaryCpc": "A61F   2/32",
+      "claimCount": 6,
+      "xmlFileName": "19259049_12478485.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19259049_12478485.xml",
+      "nativeXmlSha256": "4e209e10a4f7264d9faf617199e4f78a73691bd540a356724bd85fa2ade71a0d",
+      "claimsXmlSha256": "d818fcfd064d3771de3da698b7a4d7c6c117714500361f591a99f0b74f64f6d2"
+    },
+    {
+      "applicationNumber": "19308892",
+      "patentNumber": "12495940",
+      "grantDate": "2025-12-16",
+      "cpcSection": "A",
+      "primaryCpc": "A47K  13/14",
+      "claimCount": 2,
+      "xmlFileName": "19308892_12495940.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19308892_12495940.xml",
+      "nativeXmlSha256": "3fe77c20e00b13238ac799a04fb4e2ca4c3ae5a9b7957ec89ea8f279f8e97891",
+      "claimsXmlSha256": "45026fc3eba0ad78dccd83ddf613bd91041dcca87edd5d309f921a3e2dada596"
+    },
+    {
+      "applicationNumber": "19273783",
+      "patentNumber": "12433555",
+      "grantDate": "2025-10-07",
+      "cpcSection": "A",
+      "primaryCpc": "A61B   6/481",
+      "claimCount": 2,
+      "xmlFileName": "19273783_12433555.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251007/19273783_12433555.xml",
+      "nativeXmlSha256": "67eb1b69695c3e900976306917b111342db95231270d2f86070f168c8c5643df",
+      "claimsXmlSha256": "78b0da29dd340272b9ca8a217ed085346ed457a54f13e237b40997ed2c7d8cde"
+    },
+    {
+      "applicationNumber": "19264628",
+      "patentNumber": "12465024",
+      "grantDate": "2025-11-11",
+      "cpcSection": "A",
+      "primaryCpc": "A01K  29/002",
+      "claimCount": 13,
+      "xmlFileName": "19264628_12465024.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19264628_12465024.xml",
+      "nativeXmlSha256": "3a0ea510121cfd7575f562c2360482050060f09500af459c2d8d255e82161bcc",
+      "claimsXmlSha256": "643bf4681b209920a93d84245773747dd2abb9c5ec4f9381754af5b240958797"
+    },
+    {
+      "applicationNumber": "19348493",
+      "patentNumber": "12507844",
+      "grantDate": "2025-12-30",
+      "cpcSection": "A",
+      "primaryCpc": "A47K  13/26",
+      "claimCount": 20,
+      "xmlFileName": "19348493_12507844.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19348493_12507844.xml",
+      "nativeXmlSha256": "f017afd36df04f7c4f94ed1dcfdae9b9be0c93a063073eb8de4ecd2fa6ca5078",
+      "claimsXmlSha256": "eea2a62768f517f4430f7f67fc1a7f4ced7de5f585cc4d74ce80d244fb0860b6"
+    },
+    {
+      "applicationNumber": "19257087",
+      "patentNumber": "12465499",
+      "grantDate": "2025-11-11",
+      "cpcSection": "A",
+      "primaryCpc": "A61F   2/4611",
+      "claimCount": 18,
+      "xmlFileName": "19257087_12465499.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19257087_12465499.xml",
+      "nativeXmlSha256": "9c78f473b97209a2a0c795cce40a2510f272f96db01b3f0bcae40c5cc29c9683",
+      "claimsXmlSha256": "7f097b878387998ff66f7f49c5872774f79162409e089a3071a35677c344b49e"
+    },
+    {
+      "applicationNumber": "19274719",
+      "patentNumber": "12491073",
+      "grantDate": "2025-12-09",
+      "cpcSection": "A",
+      "primaryCpc": "A61B  17/688",
+      "claimCount": 20,
+      "xmlFileName": "19274719_12491073.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19274719_12491073.xml",
+      "nativeXmlSha256": "641676f96963b7015031a07d84426b9c1d38f5f1cd16883a045ecc36fbb36c2f",
+      "claimsXmlSha256": "3c8250d152266d4f3ffdc9ae948e64f0259e2d8cf49482f428067d3f7e6bdf50"
+    },
+    {
+      "applicationNumber": "19276140",
+      "patentNumber": "12486970",
+      "grantDate": "2025-12-02",
+      "cpcSection": "A",
+      "primaryCpc": "A47K   3/281",
+      "claimCount": 19,
+      "xmlFileName": "19276140_12486970.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19276140_12486970.xml",
+      "nativeXmlSha256": "38c67122c48c1e536576e45366ef23fd6fe85613016621c65bcd337c56c42728",
+      "claimsXmlSha256": "878d5759743681a624f7aa609d876797e1c6fe070992a396277397e10070a994"
+    },
+    {
+      "applicationNumber": "19280434",
+      "patentNumber": "12427086",
+      "grantDate": "2025-09-30",
+      "cpcSection": "A",
+      "primaryCpc": "A61H  33/065",
+      "claimCount": 20,
+      "xmlFileName": "19280434_12427086.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250930/19280434_12427086.xml",
+      "nativeXmlSha256": "9953e3fbd4d90be66a75d563f8a3e686fe16685905d3273a2f3a1acd9607ef1e",
+      "claimsXmlSha256": "c0d8c390b23f00158607663a6d6c41afdff8657d94ca86b15c16cb42666f69e9"
+    },
+    {
+      "applicationNumber": "19260382",
+      "patentNumber": "12507709",
+      "grantDate": "2025-12-30",
+      "cpcSection": "A",
+      "primaryCpc": "A23G   9/045",
+      "claimCount": 2,
+      "xmlFileName": "19260382_12507709.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19260382_12507709.xml",
+      "nativeXmlSha256": "e475156a05331091078b9f3dfe7187b6c1e2f3cb527d5c82a66baea6257186b2",
+      "claimsXmlSha256": "ff3a1c53baaabd37f7c6090a60651bb501297ceeda472d7011a998b3f291be73"
+    },
+    {
+      "applicationNumber": "18870326",
+      "patentNumber": "12491125",
+      "grantDate": "2025-12-09",
+      "cpcSection": "A",
+      "primaryCpc": "A61G   7/053",
+      "claimCount": 2,
+      "xmlFileName": "18870326_12491125.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/18870326_12491125.xml",
+      "nativeXmlSha256": "2ab19ba8d548ebc0a12f62a3e1a81d509a068c24c8a65b6779aecc6c11be7431",
+      "claimsXmlSha256": "7e1da66b79eb8af66e7af5cbeff2f9c8c0667fcc1b07605ecf948541b6112a2b"
+    },
+    {
+      "applicationNumber": "19297835",
+      "patentNumber": "12491327",
+      "grantDate": "2025-12-09",
+      "cpcSection": "A",
+      "primaryCpc": "A61M  16/0409",
+      "claimCount": 14,
+      "xmlFileName": "19297835_12491327.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19297835_12491327.xml",
+      "nativeXmlSha256": "d05d117cc0f50e6bd0d6d65ae8b808393378a28d1fb08865d4e67198d48d7e80",
+      "claimsXmlSha256": "922ff5fefa8efaee424622ad8be8a36ec5b16d8a00aa0aa9dd4430cb1245d8c2"
+    },
+    {
+      "applicationNumber": "19291669",
+      "patentNumber": "12471567",
+      "grantDate": "2025-11-18",
+      "cpcSection": "A",
+      "primaryCpc": "A01K  15/022",
+      "claimCount": 9,
+      "xmlFileName": "19291669_12471567.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19291669_12471567.xml",
+      "nativeXmlSha256": "7134c5bf434f6caa114a02b53d2376baa59fe02fb07b2499b4d1f8ef9bf7e75c",
+      "claimsXmlSha256": "b02b20278e3bcd580fd30d9de67cb0bbc1a2b496383e4606d2a1a3640e8a3ab5"
+    },
+    {
+      "applicationNumber": "19265869",
+      "patentNumber": "12447068",
+      "grantDate": "2025-10-21",
+      "cpcSection": "A",
+      "primaryCpc": "A61F  13/47245",
+      "claimCount": 19,
+      "xmlFileName": "19265869_12447068.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251021/19265869_12447068.xml",
+      "nativeXmlSha256": "a94e8b222e35261420667e67c00ccd8b659523fdd80155d0ceff6a871a83842a",
+      "claimsXmlSha256": "af58eeef421d055f57e186d0f25c7364318ba8ded1608ca97c59048a8b609eda"
+    },
+    {
+      "applicationNumber": "19259097",
+      "patentNumber": "12458116",
+      "grantDate": "2025-11-04",
+      "cpcSection": "A",
+      "primaryCpc": "A44C   5/102",
+      "claimCount": 20,
+      "xmlFileName": "19259097_12458116.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19259097_12458116.xml",
+      "nativeXmlSha256": "9009d40d40090bc497338ffacb5b67d9a6b73f3790926ded5404249155c0958f",
+      "claimsXmlSha256": "d3779c107d852647260dcece3551f943183070137e1281d30cca50bd7cfd3b19"
+    },
+    {
+      "applicationNumber": "19299155",
+      "patentNumber": "12503273",
+      "grantDate": "2025-12-23",
+      "cpcSection": "A",
+      "primaryCpc": "A47G  21/18",
+      "claimCount": 19,
+      "xmlFileName": "19299155_12503273.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19299155_12503273.xml",
+      "nativeXmlSha256": "a609b1b052348ba156d216a3e93ec7eaed019fa0f718ae0244a17108e1ff5091",
+      "claimsXmlSha256": "a0be2f2ec1430a3fcdf50bc770b8eacd4e64b6c76916e7b1db9687c77274c79b"
+    },
+    {
+      "applicationNumber": "19273177",
+      "patentNumber": "12508610",
+      "grantDate": "2025-12-30",
+      "cpcSection": "A",
+      "primaryCpc": "A47K   5/16",
+      "claimCount": 10,
+      "xmlFileName": "19273177_12508610.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19273177_12508610.xml",
+      "nativeXmlSha256": "4da5863a3f0de1fbcd1b378c90e54cfe6ce2b60cfbf79964eae44092dc03907c",
+      "claimsXmlSha256": "76e93502b4f0a657c859a3dead43da250a76eee33c109363244262be08472ee9"
+    },
+    {
+      "applicationNumber": "19285870",
+      "patentNumber": "12453398",
+      "grantDate": "2025-10-28",
+      "cpcSection": "A",
+      "primaryCpc": "A45C  15/00",
+      "claimCount": 19,
+      "xmlFileName": "19285870_12453398.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251028/19285870_12453398.xml",
+      "nativeXmlSha256": "3c797c80b2753c67a2b764420ed1f9f7f75fb1217f8fea3c7a519c6dea7615b8",
+      "claimsXmlSha256": "9315dd5ca61dae84c050e737154ff4cc8cac000036df0845b1ec3eba3c269b9f"
+    },
+    {
+      "applicationNumber": "19325018",
+      "patentNumber": "12507761",
+      "grantDate": "2025-12-30",
+      "cpcSection": "A",
+      "primaryCpc": "A43B  13/125",
+      "claimCount": 22,
+      "xmlFileName": "19325018_12507761.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19325018_12507761.xml",
+      "nativeXmlSha256": "cfd5198227eac40147d85401115566d621f9248ae839dc58307d1484de960cc0",
+      "claimsXmlSha256": "0855cf45db9827a809b953fc1afaf413639250aea8f577d26523251c7d08fbba"
+    },
+    {
+      "applicationNumber": "19304527",
+      "patentNumber": "12495765",
+      "grantDate": "2025-12-16",
+      "cpcSection": "A",
+      "primaryCpc": "A01K   7/04",
+      "claimCount": 20,
+      "xmlFileName": "19304527_12495765.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19304527_12495765.xml",
+      "nativeXmlSha256": "67ec079185a801331638145851635d7fb6f78cf33788f9a6a8a2da900b3d7b68",
+      "claimsXmlSha256": "f508e85d9d1729a1466c7aa459bf750f013d998f331cff7ae2ce6595d6b5eca5"
+    },
+    {
+      "applicationNumber": "19284985",
+      "patentNumber": "12485361",
+      "grantDate": "2025-12-02",
+      "cpcSection": "A",
+      "primaryCpc": "A63H  33/26",
+      "claimCount": 7,
+      "xmlFileName": "19284985_12485361.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19284985_12485361.xml",
+      "nativeXmlSha256": "0105278fa3a477a423c3098e3169f868ab514ae7156a4fd0f6812137821af5af",
+      "claimsXmlSha256": "3ba8eba4330369df30a49a06e403d46da2891e98441f99da65bfaee7a5ecec10"
+    },
+    {
+      "applicationNumber": "19322576",
+      "patentNumber": "12507847",
+      "grantDate": "2025-12-30",
+      "cpcSection": "A",
+      "primaryCpc": "A47L   5/14",
+      "claimCount": 11,
+      "xmlFileName": "19322576_12507847.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19322576_12507847.xml",
+      "nativeXmlSha256": "26640f1e316a8285af24853bb476cada038e709ff44ddc764e1a57d50725334b",
+      "claimsXmlSha256": "f44f0aec8e43a33f23986c6ef8e7a0c998ad9cecf938ac8dd9316e29bdbf4b0b"
+    },
+    {
+      "applicationNumber": "19258795",
+      "patentNumber": "12502657",
+      "grantDate": "2025-12-23",
+      "cpcSection": "B",
+      "primaryCpc": "B01J  35/393",
+      "claimCount": 6,
+      "xmlFileName": "19258795_12502657.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19258795_12502657.xml",
+      "nativeXmlSha256": "033bed07df70dc43cc75164eeb88bf798b703cb997c83c0b9f68eff0bb802373",
+      "claimsXmlSha256": "323dc44f5d4fde15fa5e0f5664b6f0726edadf1b81404331929e788fc285b9c4"
+    },
+    {
+      "applicationNumber": "19301286",
+      "patentNumber": "12479352",
+      "grantDate": "2025-11-25",
+      "cpcSection": "B",
+      "primaryCpc": "B60P   7/0807",
+      "claimCount": 19,
+      "xmlFileName": "19301286_12479352.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19301286_12479352.xml",
+      "nativeXmlSha256": "4ce3f1d20da921f74613a06a0d04a95afa3cc93f063a6cc3ad786615462b7b6b",
+      "claimsXmlSha256": "6821478ff965c19b5c564975c4309d25b96a57e3261bacb34b498f2dee8146f2"
+    },
+    {
+      "applicationNumber": "19256934",
+      "patentNumber": "12420242",
+      "grantDate": "2025-09-23",
+      "cpcSection": "B",
+      "primaryCpc": "B01D  71/383",
+      "claimCount": 16,
+      "xmlFileName": "19256934_12420242.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250923/19256934_12420242.xml",
+      "nativeXmlSha256": "0b6b937bc8e110a73a758266f108bb0496265d101c84136eb382ad26acfd0cbf",
+      "claimsXmlSha256": "8b8ec3a941fdd1c300ff35a30690c16e6a130080b495736fe211915a8b43b432"
+    },
+    {
+      "applicationNumber": "19297564",
+      "patentNumber": "12486036",
+      "grantDate": "2025-12-02",
+      "cpcSection": "B",
+      "primaryCpc": "B64D  27/33",
+      "claimCount": 19,
+      "xmlFileName": "19297564_12486036.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19297564_12486036.xml",
+      "nativeXmlSha256": "dfab08464f356b84ac722e2d61ae0ac707193a0d405b3de0761416b0c9dfade7",
+      "claimsXmlSha256": "d24e03aed604300e5c9b8077040f9a30e226ab145dfc26d7329e804824773149"
+    },
+    {
+      "applicationNumber": "19299534",
+      "patentNumber": "12485985",
+      "grantDate": "2025-12-02",
+      "cpcSection": "B",
+      "primaryCpc": "B62J   1/005",
+      "claimCount": 20,
+      "xmlFileName": "19299534_12485985.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19299534_12485985.xml",
+      "nativeXmlSha256": "4a2b65cd7912bf23922d74f42a7a4da34ba2ce636adc97c3ba4556faf6952879",
+      "claimsXmlSha256": "3762753648418a672ec51fabbf91813cebaa83ffb4f80b2eab257fa77cf18d5b"
+    },
+    {
+      "applicationNumber": "19317264",
+      "patentNumber": "12473192",
+      "grantDate": "2025-11-18",
+      "cpcSection": "B",
+      "primaryCpc": "B67D   7/3209",
+      "claimCount": 8,
+      "xmlFileName": "19317264_12473192.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19317264_12473192.xml",
+      "nativeXmlSha256": "56dc00b40b508f7d02825afff72cb3ba02165ffd08a700fa4e7f6fc169e8e8c1",
+      "claimsXmlSha256": "4edcfbbd8498258389424dcaa5ef9b648f5ad099f06b1412e3a5dde9e4fc1721"
+    },
+    {
+      "applicationNumber": "19281579",
+      "patentNumber": "12486181",
+      "grantDate": "2025-12-02",
+      "cpcSection": "B",
+      "primaryCpc": "B01J  37/342",
+      "claimCount": 20,
+      "xmlFileName": "19281579_12486181.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19281579_12486181.xml",
+      "nativeXmlSha256": "f872ca435bb1ca169d66890126cca1ee7471d94bfd48cc79bf40d0ec0155a8ab",
+      "claimsXmlSha256": "43c252d8d0e69121588e65a6f615febfb25981f70804e3c9642ba8748f9172cf"
+    },
+    {
+      "applicationNumber": "19263713",
+      "patentNumber": "12472672",
+      "grantDate": "2025-11-18",
+      "cpcSection": "B",
+      "primaryCpc": "B29C  48/02",
+      "claimCount": 6,
+      "xmlFileName": "19263713_12472672.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19263713_12472672.xml",
+      "nativeXmlSha256": "01bb6814e5b15847b1119c1b27ea91be2c6f8f3e4d5e0e2f839ea69d2ec285de",
+      "claimsXmlSha256": "9514d7fab65ca1020dfc1529a8743d97f4fdc0ca0b10fb3266b043fddd2e432d"
+    },
+    {
+      "applicationNumber": "19281459",
+      "patentNumber": "12502738",
+      "grantDate": "2025-12-23",
+      "cpcSection": "B",
+      "primaryCpc": "B23P  15/26",
+      "claimCount": 10,
+      "xmlFileName": "19281459_12502738.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19281459_12502738.xml",
+      "nativeXmlSha256": "69744688d047aa35aa62c0da8684e977a3c71aaf1d80c2ecf9aad204bfa772e9",
+      "claimsXmlSha256": "2f6239bb7d847d44e9b4068dbd20d773a34932f2f119ac4e1de2554611b2687d"
+    },
+    {
+      "applicationNumber": "19266096",
+      "patentNumber": "12434344",
+      "grantDate": "2025-10-07",
+      "cpcSection": "B",
+      "primaryCpc": "B23Q  17/0971",
+      "claimCount": 10,
+      "xmlFileName": "19266096_12434344.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251007/19266096_12434344.xml",
+      "nativeXmlSha256": "f5ccb4a4624be4ee4a9eda7babdf039913479c778f6c379589f4885a216d329a",
+      "claimsXmlSha256": "40ce2e6ffbd4365f5d7ff8a046d5fe5cec24fbb77a14b132e749a0bd01de51d1"
+    },
+    {
+      "applicationNumber": "19256405",
+      "patentNumber": "12502656",
+      "grantDate": "2025-12-23",
+      "cpcSection": "B",
+      "primaryCpc": "B01J  21/08",
+      "claimCount": 21,
+      "xmlFileName": "19256405_12502656.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19256405_12502656.xml",
+      "nativeXmlSha256": "c9a11701daa644423045be96d60ba04263e0785644809680c837ba8a5bd7cc11",
+      "claimsXmlSha256": "976ccb50b73a04de27db5911637fff1be6a79b96f4b7413f2d5b111831134b70"
+    },
+    {
+      "applicationNumber": "19265255",
+      "patentNumber": "12485924",
+      "grantDate": "2025-12-02",
+      "cpcSection": "B",
+      "primaryCpc": "B60W  60/0015",
+      "claimCount": 20,
+      "xmlFileName": "19265255_12485924.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19265255_12485924.xml",
+      "nativeXmlSha256": "3b75e1bc81aa384f48720d8435fa6c0fe3f0c34e2ca75d4bc53df5b92736afca",
+      "claimsXmlSha256": "2575dcd03a6efc837093683d2b3d7571207192df3c92a1f833a5945950e8c58b"
+    },
+    {
+      "applicationNumber": "19300396",
+      "patentNumber": "12485663",
+      "grantDate": "2025-12-02",
+      "cpcSection": "B",
+      "primaryCpc": "B32B  37/12",
+      "claimCount": 10,
+      "xmlFileName": "19300396_12485663.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19300396_12485663.xml",
+      "nativeXmlSha256": "53339d527b571e7581c0d523bf13daabffc0ec5f96b80f22b80c57a37875ae6a",
+      "claimsXmlSha256": "ddcbb09279cc9176906b498337052fba12e2b32d418f064a26de189ee8b22ae6"
+    },
+    {
+      "applicationNumber": "19285907",
+      "patentNumber": "12486082",
+      "grantDate": "2025-12-02",
+      "cpcSection": "B",
+      "primaryCpc": "B65D  21/086",
+      "claimCount": 20,
+      "xmlFileName": "19285907_12486082.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19285907_12486082.xml",
+      "nativeXmlSha256": "5b090d1ff38a86f63081428d182a9c4f4ed4fdbdf7d7cccab3216104ba803764",
+      "claimsXmlSha256": "eb47ea6da04ed685d9da0406d6775f404175aec5ba4962943386cc8a96786f3f"
+    },
+    {
+      "applicationNumber": "19273489",
+      "patentNumber": "12466093",
+      "grantDate": "2025-11-11",
+      "cpcSection": "B",
+      "primaryCpc": "B26B  19/3853",
+      "claimCount": 14,
+      "xmlFileName": "19273489_12466093.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19273489_12466093.xml",
+      "nativeXmlSha256": "d4ae1bfdc488e3e9e5ad4358f4a06e18b2a9237ce71ba5d8de7e3313f5c29f3a",
+      "claimsXmlSha256": "764b8088cec97708857e2999b3f8a3011e92a742f36ecae911b8f3e8050cf789"
+    },
+    {
+      "applicationNumber": "19320233",
+      "patentNumber": "12501195",
+      "grantDate": "2025-12-16",
+      "cpcSection": "B",
+      "primaryCpc": "B63B  22/24",
+      "claimCount": 20,
+      "xmlFileName": "19320233_12501195.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19320233_12501195.xml",
+      "nativeXmlSha256": "968fce993b0b9f3c5c7a384ee9392dbe4bc7924b113061a006907d65b699672e",
+      "claimsXmlSha256": "a565a4c4faa84a09b1bb8540802681fd4b029efa9586c4ae69e266d398c259ea"
+    },
+    {
+      "applicationNumber": "19307395",
+      "patentNumber": "12502629",
+      "grantDate": "2025-12-23",
+      "cpcSection": "B",
+      "primaryCpc": "B01D  45/06",
+      "claimCount": 12,
+      "xmlFileName": "19307395_12502629.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19307395_12502629.xml",
+      "nativeXmlSha256": "a8a32340ca2c023df82cd5501142db572ea947b8bc31e94d0b1d132e31943159",
+      "claimsXmlSha256": "4d261949c546bb9ee4b19c794eee934b32321fbca5a4f6bbd125ebcc6de94593"
+    },
+    {
+      "applicationNumber": "19282888",
+      "patentNumber": "12502685",
+      "grantDate": "2025-12-23",
+      "cpcSection": "B",
+      "primaryCpc": "B05B  15/18",
+      "claimCount": 20,
+      "xmlFileName": "19282888_12502685.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19282888_12502685.xml",
+      "nativeXmlSha256": "41fa39cca0d82ac541181b0cb2688fa89c73e36bfc3e438b691a0498694f84b2",
+      "claimsXmlSha256": "76d87ecd15b356397417060f7a0be328def1511eab22ffb2dda847dbf4ee49e2"
+    },
+    {
+      "applicationNumber": "19262415",
+      "patentNumber": "12479127",
+      "grantDate": "2025-11-25",
+      "cpcSection": "B",
+      "primaryCpc": "B28B   3/025",
+      "claimCount": 6,
+      "xmlFileName": "19262415_12479127.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19262415_12479127.xml",
+      "nativeXmlSha256": "594bb6fcd9f5e6c62c5a718382ed753ad8e49abdaaab1dcc4dc40d9148970107",
+      "claimsXmlSha256": "2121aa17c14e6de2d810a94ef898a8faaedddee248a16d6912d605eba2fe79c8"
+    },
+    {
+      "applicationNumber": "19278023",
+      "patentNumber": "12479667",
+      "grantDate": "2025-11-25",
+      "cpcSection": "B",
+      "primaryCpc": "B65G  15/08",
+      "claimCount": 14,
+      "xmlFileName": "19278023_12479667.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19278023_12479667.xml",
+      "nativeXmlSha256": "a966c6ca0cbccd36094003b27fb6b0f1154632afeb9b340e11ae1875dedf2526",
+      "claimsXmlSha256": "d92d8c1a4e268ba5ba2f8fa9a859abb3ec86631f71f12ebf296d075e5d63ff28"
+    },
+    {
+      "applicationNumber": "19261375",
+      "patentNumber": "12420230",
+      "grantDate": "2025-09-23",
+      "cpcSection": "B",
+      "primaryCpc": "B01D  53/261",
+      "claimCount": 20,
+      "xmlFileName": "19261375_12420230.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250923/19261375_12420230.xml",
+      "nativeXmlSha256": "241d48f280e57def8911ffce25d2bd0dc72207b802348dfae5f61a77da67ee80",
+      "claimsXmlSha256": "fa4460010e1eca11cdb7298a2ebc051bdd3785183464ec5b7b657e637fa6773f"
+    },
+    {
+      "applicationNumber": "19263403",
+      "patentNumber": "12420663",
+      "grantDate": "2025-09-23",
+      "cpcSection": "B",
+      "primaryCpc": "B60L  50/60",
+      "claimCount": 9,
+      "xmlFileName": "19263403_12420663.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250923/19263403_12420663.xml",
+      "nativeXmlSha256": "477b4a710f49f5d935107c47541e27c0b8703b19b9e16184f34362cc7eb126a7",
+      "claimsXmlSha256": "8dfd3004a473dabc38728738b7043d8a63582b9ab56878e50079ceeba5cf76db"
+    },
+    {
+      "applicationNumber": "19260913",
+      "patentNumber": "12441518",
+      "grantDate": "2025-10-14",
+      "cpcSection": "B",
+      "primaryCpc": "B65D  25/20",
+      "claimCount": 20,
+      "xmlFileName": "19260913_12441518.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251014/19260913_12441518.xml",
+      "nativeXmlSha256": "6f3813b1587a0e90c5d4618146ce2d3a3eae42b402c4f65d68219e761d1e6e35",
+      "claimsXmlSha256": "a4f7c691b3854ed5f4a0edd005f8f20dbb114a5afa86404989338817bc9d3ed4"
+    },
+    {
+      "applicationNumber": "19273520",
+      "patentNumber": "12459604",
+      "grantDate": "2025-11-04",
+      "cpcSection": "B",
+      "primaryCpc": "B63B  21/04",
+      "claimCount": 20,
+      "xmlFileName": "19273520_12459604.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19273520_12459604.xml",
+      "nativeXmlSha256": "cdc9e4ed7545411bbd6de523701f17cc5e5bce389b23ac0b931998ff12ac9748",
+      "claimsXmlSha256": "71a3de36f592c2f81770efc1b527b99b68842e390941fd9350e47d870556ca93"
+    },
+    {
+      "applicationNumber": "19283770",
+      "patentNumber": "12479105",
+      "grantDate": "2025-11-25",
+      "cpcSection": "B",
+      "primaryCpc": "B25J   9/163",
+      "claimCount": 20,
+      "xmlFileName": "19283770_12479105.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19283770_12479105.xml",
+      "nativeXmlSha256": "4f2326b591407c6210ec9159427506afe88b995123f14183e3b715a2f48717f4",
+      "claimsXmlSha256": "cc5cf56dcced03019a624c58c5c9562047526105465a8e4d7798c60320170f3f"
+    },
+    {
+      "applicationNumber": "19281605",
+      "patentNumber": "12497773",
+      "grantDate": "2025-12-16",
+      "cpcSection": "E",
+      "primaryCpc": "E04B   1/215",
+      "claimCount": 2,
+      "xmlFileName": "19281605_12497773.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19281605_12497773.xml",
+      "nativeXmlSha256": "ec2650bcb75320d64a526719ae4e0a1e61566a09ce0c5af87eb914f6f758ba28",
+      "claimsXmlSha256": "bf0f0658fd6cbc80bebfc63c445896ed1630287713e6ebcd1eda44ea282343fd"
+    },
+    {
+      "applicationNumber": "19304453",
+      "patentNumber": "12509900",
+      "grantDate": "2025-12-30",
+      "cpcSection": "E",
+      "primaryCpc": "E04H   4/1654",
+      "claimCount": 20,
+      "xmlFileName": "19304453_12509900.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19304453_12509900.xml",
+      "nativeXmlSha256": "762853f518939ea7b20fd8d21d7e7de7da7a037239ae6c6da36e7833f025416a",
+      "claimsXmlSha256": "4cc2e0942f184bc399ce70b7075ac0484e9b64cc50752b62d4cacd3e1d85e19d"
+    },
+    {
+      "applicationNumber": "19260541",
+      "patentNumber": "12480330",
+      "grantDate": "2025-11-25",
+      "cpcSection": "E",
+      "primaryCpc": "E05B  13/10",
+      "claimCount": 8,
+      "xmlFileName": "19260541_12480330.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19260541_12480330.xml",
+      "nativeXmlSha256": "1b8f2c4ac656a0d574df58949c9dfe7ab5fd1203f41f1644217eccf5bbe36f99",
+      "claimsXmlSha256": "188dccca20fc7c783957d0cb82d1d4b815e43f36741c933ff07db763bfde769d"
+    },
+    {
+      "applicationNumber": "19303468",
+      "patentNumber": "12497798",
+      "grantDate": "2025-12-16",
+      "cpcSection": "E",
+      "primaryCpc": "E04H  15/50",
+      "claimCount": 20,
+      "xmlFileName": "19303468_12497798.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19303468_12497798.xml",
+      "nativeXmlSha256": "54aeb32e9fa826bb71125bdcb247e17c5c0ff4f81eab709bc530c46dbd64753b",
+      "claimsXmlSha256": "d78a081d4bdbe2560a590d015dc4bdd72fc9a666d0f3d89766e06acdb22324fb"
+    },
+    {
+      "applicationNumber": "19284302",
+      "patentNumber": "12509899",
+      "grantDate": "2025-12-30",
+      "cpcSection": "E",
+      "primaryCpc": "E04H   4/1654",
+      "claimCount": 2,
+      "xmlFileName": "19284302_12509899.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19284302_12509899.xml",
+      "nativeXmlSha256": "c4dc192a7936cebeeee19e9e4dce00b633d1e53708ab9242337186e588f51ad3",
+      "claimsXmlSha256": "16f3c7fe2ed90d66f719ac5093d2d4da4f535de83140305c401314771ab810b3"
+    },
+    {
+      "applicationNumber": "19273770",
+      "patentNumber": "12454797",
+      "grantDate": "2025-10-28",
+      "cpcSection": "E",
+      "primaryCpc": "E01C   5/22",
+      "claimCount": 15,
+      "xmlFileName": "19273770_12454797.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251028/19273770_12454797.xml",
+      "nativeXmlSha256": "7cb052becba8e5fb92dbf5477bafb1c00862d9322c3282712630f7ace66c98e2",
+      "claimsXmlSha256": "7deac475df8a86b7ed8ebeb8b7aaec750d10cd0a8cbbf8200e17c1c14b162d02"
+    },
+    {
+      "applicationNumber": "19283285",
+      "patentNumber": "12473718",
+      "grantDate": "2025-11-18",
+      "cpcSection": "E",
+      "primaryCpc": "E03B   1/02",
+      "claimCount": 9,
+      "xmlFileName": "19283285_12473718.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19283285_12473718.xml",
+      "nativeXmlSha256": "163596fbe6dbcd18f13578856f1d88a9767fe8136c2940ca6ea06147c30bfb98",
+      "claimsXmlSha256": "3f123e67589875132bd2ace46cd4407ebf7e0808e77e0c31ba56c1d6d57d7b7d"
+    },
+    {
+      "applicationNumber": "19300781",
+      "patentNumber": "12497739",
+      "grantDate": "2025-12-16",
+      "cpcSection": "E",
+      "primaryCpc": "E01C  19/2005",
+      "claimCount": 21,
+      "xmlFileName": "19300781_12497739.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19300781_12497739.xml",
+      "nativeXmlSha256": "65b971039f54b08024406abd67d826d11b4b8558a5e807316f3970a16dd33600",
+      "claimsXmlSha256": "4ceccc49ab5cc1de803d29b7e1fb7166350e8be31629e30b9bef52be8100b887"
+    },
+    {
+      "applicationNumber": "19292247",
+      "patentNumber": "12480266",
+      "grantDate": "2025-11-25",
+      "cpcSection": "E",
+      "primaryCpc": "E01D  15/124",
+      "claimCount": 13,
+      "xmlFileName": "19292247_12480266.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19292247_12480266.xml",
+      "nativeXmlSha256": "9bfeae0c82d5f8214741b99e63dbe0a72047302ffc87793dc62e309de356895f",
+      "claimsXmlSha256": "1c082783716b8456d4802755c2274374be08790900e6f5802415f292d1a3ffba"
+    },
+    {
+      "applicationNumber": "19293137",
+      "patentNumber": "12503874",
+      "grantDate": "2025-12-23",
+      "cpcSection": "E",
+      "primaryCpc": "E04H   4/108",
+      "claimCount": 20,
+      "xmlFileName": "19293137_12503874.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19293137_12503874.xml",
+      "nativeXmlSha256": "8581f6a330b514f570e218bf0593cb91254651e7caf74652264658cd547d580c",
+      "claimsXmlSha256": "0b02ed73540ef4cf89159407b6732c335951a01b3d19aaae55b455801d32995c"
+    },
+    {
+      "applicationNumber": "19256156",
+      "patentNumber": "12492881",
+      "grantDate": "2025-12-09",
+      "cpcSection": "F",
+      "primaryCpc": "F41B  11/62",
+      "claimCount": 19,
+      "xmlFileName": "19256156_12492881.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19256156_12492881.xml",
+      "nativeXmlSha256": "cb023ab8a2c77aa79260a3dffe3e1c691b32846311fda554857c737f3632a970",
+      "claimsXmlSha256": "b3c3b9fa36bcd635c0cfaaa51a73be35351c944be098f91cd99acfaa7c582e9d"
+    },
+    {
+      "applicationNumber": "19297400",
+      "patentNumber": "12510001",
+      "grantDate": "2025-12-30",
+      "cpcSection": "F",
+      "primaryCpc": "F01D  11/08",
+      "claimCount": 20,
+      "xmlFileName": "19297400_12510001.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19297400_12510001.xml",
+      "nativeXmlSha256": "a09453e5724b2ff199c1cd700345824bdaf94c60f19a98c1e4c9f965718a961d",
+      "claimsXmlSha256": "2712077402fd13c26085a7e1cb5b5c77d17cfed5ac5fe48ada5d57f864f20a68"
+    },
+    {
+      "applicationNumber": "19301069",
+      "patentNumber": "12510213",
+      "grantDate": "2025-12-30",
+      "cpcSection": "F",
+      "primaryCpc": "F21K   9/237",
+      "claimCount": 7,
+      "xmlFileName": "19301069_12510213.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19301069_12510213.xml",
+      "nativeXmlSha256": "bcb8c3820be10665297da2154901cfeecf695a22e36b78ce24749b61eb257c9b",
+      "claimsXmlSha256": "b604bbd8f23a23a9abcc23c5b4d9bc34df972fbc9ae16f757aa97b17a3ec06da"
+    },
+    {
+      "applicationNumber": "19277394",
+      "patentNumber": "12504021",
+      "grantDate": "2025-12-23",
+      "cpcSection": "F",
+      "primaryCpc": "F04D  17/122",
+      "claimCount": 20,
+      "xmlFileName": "19277394_12504021.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19277394_12504021.xml",
+      "nativeXmlSha256": "12c23114520766028e42f872cd85f9645c7a0adadc010d9139ef22181f3c49af",
+      "claimsXmlSha256": "b4335448cc4c6ce5a2691ef5ff5b41ece958983b0597b23c4509b3a60ce800fb"
+    },
+    {
+      "applicationNumber": "19260281",
+      "patentNumber": "12442562",
+      "grantDate": "2025-10-14",
+      "cpcSection": "F",
+      "primaryCpc": "F24H  15/37",
+      "claimCount": 8,
+      "xmlFileName": "19260281_12442562.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251014/19260281_12442562.xml",
+      "nativeXmlSha256": "a3691dd8e38608e1c67feee7966f5579de62852d1ab89dcd26875ce282efa041",
+      "claimsXmlSha256": "421295d2867a1cabd0db3972b71ce5eec9e48fd3d0e5e6da8665e68333e6b991"
+    },
+    {
+      "applicationNumber": "19263418",
+      "patentNumber": "12486998",
+      "grantDate": "2025-12-02",
+      "cpcSection": "F",
+      "primaryCpc": "F24F  11/77",
+      "claimCount": 8,
+      "xmlFileName": "19263418_12486998.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19263418_12486998.xml",
+      "nativeXmlSha256": "471ca5f535ea6af8bf038d7cfbdb7e67928586b4182f93219e47b49c0ac7fcad",
+      "claimsXmlSha256": "a550816dcfa18eade203d2ec456790642d98c770bd63d1d24320de4125c1b201"
+    },
+    {
+      "applicationNumber": "19280613",
+      "patentNumber": "12497985",
+      "grantDate": "2025-12-16",
+      "cpcSection": "F",
+      "primaryCpc": "F16B   7/105",
+      "claimCount": 20,
+      "xmlFileName": "19280613_12497985.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19280613_12497985.xml",
+      "nativeXmlSha256": "d6e6941c5c70b0d2dffdb0ac7754acc554ab1cf94a5893440cc26d8990bf3169",
+      "claimsXmlSha256": "36a738dd1830717850e2a0ad67e28318e472a17e626a66e795d662c69394cba3"
+    },
+    {
+      "applicationNumber": "19257175",
+      "patentNumber": "12455028",
+      "grantDate": "2025-10-28",
+      "cpcSection": "F",
+      "primaryCpc": "F16L  27/0824",
+      "claimCount": 13,
+      "xmlFileName": "19257175_12455028.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251028/19257175_12455028.xml",
+      "nativeXmlSha256": "7f8bb1ffc0f999f3be896620195bb8f96b668ac166bbc6001f51560d0e8c22bd",
+      "claimsXmlSha256": "2d9bfb764730ef02cc2c9c26f7a6806ca6e7a2b3132b94bf4f21b865ba8aa904"
+    },
+    {
+      "applicationNumber": "19288370",
+      "patentNumber": "12487053",
+      "grantDate": "2025-12-02",
+      "cpcSection": "F",
+      "primaryCpc": "F41G   1/35",
+      "claimCount": 10,
+      "xmlFileName": "19288370_12487053.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19288370_12487053.xml",
+      "nativeXmlSha256": "51f3608a11a0df3995a66cc755dafb503a0bfe9cbc6f121de5614783ccb8a187",
+      "claimsXmlSha256": "5766c566b0a317cf0102097107256f6fd3772fd516c0f66aef85b017ff943b56"
+    },
+    {
+      "applicationNumber": "19286855",
+      "patentNumber": "12473999",
+      "grantDate": "2025-11-18",
+      "cpcSection": "F",
+      "primaryCpc": "F16L   9/006",
+      "claimCount": 20,
+      "xmlFileName": "19286855_12473999.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19286855_12473999.xml",
+      "nativeXmlSha256": "05085fe3e0ae74c37c569db22c3e15e80d7e59f2079cdc93d23053a50ba4fde8",
+      "claimsXmlSha256": "b5ff3981a604a9b69a9c4804b9a82df1cfd77f05101c86ae03b126db4ce91af5"
+    },
+    {
+      "applicationNumber": "19263579",
+      "patentNumber": "12504135",
+      "grantDate": "2025-12-23",
+      "cpcSection": "F",
+      "primaryCpc": "F21S   4/10",
+      "claimCount": 12,
+      "xmlFileName": "19263579_12504135.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19263579_12504135.xml",
+      "nativeXmlSha256": "76cb17895034887058d33d7857537af43058b8bd2afb286c1ca1245e69ef24e2",
+      "claimsXmlSha256": "8d7576973dfc0520b99878eefe165983dd75ef221bc554a076d26b79769e3244"
+    },
+    {
+      "applicationNumber": "19289092",
+      "patentNumber": "12480513",
+      "grantDate": "2025-11-25",
+      "cpcSection": "F",
+      "primaryCpc": "F04D  29/04",
+      "claimCount": 6,
+      "xmlFileName": "19289092_12480513.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19289092_12480513.xml",
+      "nativeXmlSha256": "7cfacc747eeac182cbf1ecbd7f3034e0a97250279d3080be3829b87654859c88",
+      "claimsXmlSha256": "ccacf5cb2295f87cc476c133ead5bd5bc8d3ee3a970d7fb7de76289e0ff48650"
+    },
+    {
+      "applicationNumber": "19259810",
+      "patentNumber": "12454942",
+      "grantDate": "2025-10-28",
+      "cpcSection": "F",
+      "primaryCpc": "F03D   7/0202",
+      "claimCount": 19,
+      "xmlFileName": "19259810_12454942.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251028/19259810_12454942.xml",
+      "nativeXmlSha256": "aaa7a5e673996efff034f4540d4be51c24c7e026a5ef5bd619b261a7d59fafde",
+      "claimsXmlSha256": "fef138eee71c5f647ff7d980182402dd546cfcbefa535c7e78750065f2f6bdc0"
+    },
+    {
+      "applicationNumber": "19320789",
+      "patentNumber": "12498173",
+      "grantDate": "2025-12-16",
+      "cpcSection": "F",
+      "primaryCpc": "F26B  21/37",
+      "claimCount": 5,
+      "xmlFileName": "19320789_12498173.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19320789_12498173.xml",
+      "nativeXmlSha256": "00eae9849244a8e75bef96e16e3619a88d6b6302907f5436032f0dc1457a4ddd",
+      "claimsXmlSha256": "928835671a5a226449b30a632256ef30e7dad0738f0dea38d9a94332d45e00ef"
+    },
+    {
+      "applicationNumber": "19259562",
+      "patentNumber": "12467534",
+      "grantDate": "2025-11-11",
+      "cpcSection": "F",
+      "primaryCpc": "F16H  63/18",
+      "claimCount": 9,
+      "xmlFileName": "19259562_12467534.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19259562_12467534.xml",
+      "nativeXmlSha256": "a0871ba2914f56a4c194ebad99fd720b06d8f9ee6d679a88230f4bd8a84b803c",
+      "claimsXmlSha256": "1cec3f545f85e3e9a28f5d7fd0e4324ac6534651d16ee443e5c46b3e5dc7375e"
+    },
+    {
+      "applicationNumber": "19288302",
+      "patentNumber": "12510099",
+      "grantDate": "2025-12-30",
+      "cpcSection": "F",
+      "primaryCpc": "F04D  19/002",
+      "claimCount": 16,
+      "xmlFileName": "19288302_12510099.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19288302_12510099.xml",
+      "nativeXmlSha256": "bca76b950a0b2000926974ccc811fd9bd1e142dad654ae4bb25930b7f67a51c4",
+      "claimsXmlSha256": "1210707579a8bc1fa11328aace15de6d815c98566ed384b05bf2fa8c196372e7"
+    },
+    {
+      "applicationNumber": "19277913",
+      "patentNumber": "12510313",
+      "grantDate": "2025-12-30",
+      "cpcSection": "F",
+      "primaryCpc": "F28G   9/00",
+      "claimCount": 18,
+      "xmlFileName": "19277913_12510313.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19277913_12510313.xml",
+      "nativeXmlSha256": "69bf97d35a3b6f3438caf4a151f689b5ebb1264d3c89bfb52fa6504984320cce",
+      "claimsXmlSha256": "97131096c07a22f9ba162e6d1e072413715bc776d8e4a7f7a8b9337af27e634c"
+    },
+    {
+      "applicationNumber": "19290161",
+      "patentNumber": "12498206",
+      "grantDate": "2025-12-16",
+      "cpcSection": "F",
+      "primaryCpc": "F42B  33/04",
+      "claimCount": 30,
+      "xmlFileName": "19290161_12498206.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19290161_12498206.xml",
+      "nativeXmlSha256": "b5dbccbf752c0878df7b9dab884b639f67a4b12f394471a25c1b70e39a80a31a",
+      "claimsXmlSha256": "41d01f41fec6fabf1beaf9d939904aff9b333da2d95ceae57d62da5fd356d043"
+    },
+    {
+      "applicationNumber": "19308133",
+      "patentNumber": "12510318",
+      "grantDate": "2025-12-30",
+      "cpcSection": "F",
+      "primaryCpc": "F41A  17/46",
+      "claimCount": 20,
+      "xmlFileName": "19308133_12510318.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19308133_12510318.xml",
+      "nativeXmlSha256": "6cd6536bc2507436e94b0aad5a81e6095d1079303f2c190df34e38bb5aa12dbe",
+      "claimsXmlSha256": "191ffd0ad76794cdc8c8ab1e2830b9496d2be14b990373ab53d79882eb37c98e"
+    },
+    {
+      "applicationNumber": "19280588",
+      "patentNumber": "12474037",
+      "grantDate": "2025-11-18",
+      "cpcSection": "F",
+      "primaryCpc": "F21V  21/096",
+      "claimCount": 20,
+      "xmlFileName": "19280588_12474037.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19280588_12474037.xml",
+      "nativeXmlSha256": "7de77217fda5ea3aecbcc96d77f610d3438f58f2acd2b01c73ea1dc18558c02f",
+      "claimsXmlSha256": "b403f4bbf6af5f3c1af5e0ddf9c2348734384f6b41396116d835520e3d4dd829"
+    },
+    {
+      "applicationNumber": "19320248",
+      "patentNumber": "12498471",
+      "grantDate": "2025-12-16",
+      "cpcSection": "G",
+      "primaryCpc": "G01S   7/497",
+      "claimCount": 20,
+      "xmlFileName": "19320248_12498471.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19320248_12498471.xml",
+      "nativeXmlSha256": "ec2b18bd72b96b5434f0001bebc12e39260f69ef4034683f7cc12dcf0bda3a21",
+      "claimsXmlSha256": "75dd1d1c4dbb3e5b92c2a16df3f9afab1b006b9775d8596f48c27ec44dbc9ae3"
+    },
+    {
+      "applicationNumber": "19265903",
+      "patentNumber": "12513853",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06F   1/20",
+      "claimCount": 19,
+      "xmlFileName": "19265903_12513853.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19265903_12513853.xml",
+      "nativeXmlSha256": "da8a8cb133d5772f3b6464d20a7dfc5e18aa4d31e0ee0405b4acf2f4135d8f54",
+      "claimsXmlSha256": "d67f51c217181c126865ba12071c50f8ad3c4934a799d23e15b29c07547dcf83"
+    },
+    {
+      "applicationNumber": "19264907",
+      "patentNumber": "12511598",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06Q  10/06313",
+      "claimCount": 20,
+      "xmlFileName": "19264907_12511598.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19264907_12511598.xml",
+      "nativeXmlSha256": "f78c9fd9ed475731c927726951727c056d15546c794adb9b0e58909a1d28df01",
+      "claimsXmlSha256": "cbb1c111c9a06ba0999b02486fe4fca542956e6d28e72cdf461f4b865921a707"
+    },
+    {
+      "applicationNumber": "19264303",
+      "patentNumber": "12505908",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G16H  20/17",
+      "claimCount": 4,
+      "xmlFileName": "19264303_12505908.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19264303_12505908.xml",
+      "nativeXmlSha256": "c8f6cb6998736d14b2c8d7755b65826bb88c31d5d5ad404e7dc3baae42fa0761",
+      "claimsXmlSha256": "cb16004946e2073d33b415a3cd62b47a22756be89337564f99eb7ad0d4a5911e"
+    },
+    {
+      "applicationNumber": "19259042",
+      "patentNumber": "12469080",
+      "grantDate": "2025-11-11",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/2379",
+      "claimCount": 20,
+      "xmlFileName": "19259042_12469080.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19259042_12469080.xml",
+      "nativeXmlSha256": "5ac23f3a507b68020c9e285b69b77bbd1d7866f99713aa642b5b7c3634849f1c",
+      "claimsXmlSha256": "15ec24cea13291208498e2e63893ff001da84336d07a0d6fcd9620319bce3ab4"
+    },
+    {
+      "applicationNumber": "19318179",
+      "patentNumber": "12494574",
+      "grantDate": "2025-12-09",
+      "cpcSection": "G",
+      "primaryCpc": "G01R  29/0807",
+      "claimCount": 15,
+      "xmlFileName": "19318179_12494574.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19318179_12494574.xml",
+      "nativeXmlSha256": "696b4e99d34dee870983bdeb8951f67ecb0291ee32e29f3dfd582bb83e8bf43f",
+      "claimsXmlSha256": "58b093fc8d9f97eb170d765e094ed4cbfab5722151970113897ac152a37dd5c1"
+    },
+    {
+      "applicationNumber": "19284243",
+      "patentNumber": "12511749",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06V  10/44",
+      "claimCount": 20,
+      "xmlFileName": "19284243_12511749.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19284243_12511749.xml",
+      "nativeXmlSha256": "c44b2f5173f2bde7517f08d21ab3f995a1f9dd66d61c46ae1fb673475cc633b0",
+      "claimsXmlSha256": "2a9824d722834754286e3e4a9bf4c5c835e2369cb4163019bd94482a8c0ad586"
+    },
+    {
+      "applicationNumber": "19331794",
+      "patentNumber": "12510516",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G01N  29/265",
+      "claimCount": 20,
+      "xmlFileName": "19331794_12510516.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19331794_12510516.xml",
+      "nativeXmlSha256": "dc74eba65a2e2a133f1f71f1b492f53b66a6bae19e419d146c40a6bfee2f0472",
+      "claimsXmlSha256": "cfe877f083a8fab49dfd93c9596769a15ea280281cc03af4b34dbf7dce80c2cf"
+    },
+    {
+      "applicationNumber": "19311808",
+      "patentNumber": "12493734",
+      "grantDate": "2025-12-09",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  30/392",
+      "claimCount": 20,
+      "xmlFileName": "19311808_12493734.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19311808_12493734.xml",
+      "nativeXmlSha256": "cdc3a1447bec525b7ee523a2c9acb426b7ea45f3f71b139d931e9ef407448b44",
+      "claimsXmlSha256": "27bf95a5c5e78d791611c7446e60ff44cd9051a411a26387ea919f72062e25d9"
+    },
+    {
+      "applicationNumber": "19307885",
+      "patentNumber": "12511482",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G16C  20/70",
+      "claimCount": 20,
+      "xmlFileName": "19307885_12511482.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19307885_12511482.xml",
+      "nativeXmlSha256": "8d5437a19a01797d0f07b38651cd7972775be2d6d9c8516fc028509b0c13b19c",
+      "claimsXmlSha256": "8e180f0ba01f5aa5b76dc3d8f5871ec534ef0ebc6914db2e0f5e23921b3ecf45"
+    },
+    {
+      "applicationNumber": "19256894",
+      "patentNumber": "12449773",
+      "grantDate": "2025-10-21",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  18/256",
+      "claimCount": 20,
+      "xmlFileName": "19256894_12449773.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251021/19256894_12449773.xml",
+      "nativeXmlSha256": "51c8cd882bba2a86690be3a8e9f31dbe740b6cc53a8f884b14417cebe0f19ead",
+      "claimsXmlSha256": "2c019b9e7c1b6f09c42e9f94f69bab51b50840050e655a2d74e083f79271e074"
+    },
+    {
+      "applicationNumber": "19262135",
+      "patentNumber": "12429404",
+      "grantDate": "2025-09-30",
+      "cpcSection": "G",
+      "primaryCpc": "G01N   1/38",
+      "claimCount": 7,
+      "xmlFileName": "19262135_12429404.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250930/19262135_12429404.xml",
+      "nativeXmlSha256": "76ef383d4d8cda905c67b7b767c4edcb25d99f9752ee7209d1c8ac850466d830",
+      "claimsXmlSha256": "4253a065dececef2d62af00e1fdc2de0c2ba966df91e4f3cebc5c77588c9c9a5"
+    },
+    {
+      "applicationNumber": "19278579",
+      "patentNumber": "12503939",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  30/23",
+      "claimCount": 6,
+      "xmlFileName": "19278579_12503939.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19278579_12503939.xml",
+      "nativeXmlSha256": "502bd1ecf3cf008deb8133e87785d0fae124a53fcab96e705a374292fee43168",
+      "claimsXmlSha256": "e4245b5c369f7b261b30a20b63dc843a0ee0279f318d0d5445ec7a0982929331"
+    },
+    {
+      "applicationNumber": "19259619",
+      "patentNumber": "12467992",
+      "grantDate": "2025-11-11",
+      "cpcSection": "G",
+      "primaryCpc": "G01R  33/307",
+      "claimCount": 14,
+      "xmlFileName": "19259619_12467992.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19259619_12467992.xml",
+      "nativeXmlSha256": "6a8bd0f0e898812e04aec10abfe092c067d361e6c1eaef89c78dcc14587c1c38",
+      "claimsXmlSha256": "993a2cffc970dd3cdfbdf790af4c8f2821329a65191b90b44eedea88621c34fd"
+    },
+    {
+      "applicationNumber": "19265023",
+      "patentNumber": "12444032",
+      "grantDate": "2025-10-14",
+      "cpcSection": "G",
+      "primaryCpc": "G06F   3/04845",
+      "claimCount": 20,
+      "xmlFileName": "19265023_12444032.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251014/19265023_12444032.xml",
+      "nativeXmlSha256": "fb6afbbe2d31d00b1449e95292f5fd308d9ed273fc581225c614e55b02427f51",
+      "claimsXmlSha256": "d49feb382c89aef6970967277460b1d2065588c3d580b0f762a67356a19152ea"
+    },
+    {
+      "applicationNumber": "19264639",
+      "patentNumber": "12512209",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G16H  30/20",
+      "claimCount": 34,
+      "xmlFileName": "19264639_12512209.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19264639_12512209.xml",
+      "nativeXmlSha256": "00583c15c75ffd3d108eea97f7c21e958ce8da2d44c32f3d9a5411aca7069caa",
+      "claimsXmlSha256": "07501502d1bcb922598f9dfdf01d8b8b6c34d9163d2479e726297eac3f83a0df"
+    },
+    {
+      "applicationNumber": "19294844",
+      "patentNumber": "12469187",
+      "grantDate": "2025-11-11",
+      "cpcSection": "G",
+      "primaryCpc": "G06T  11/00",
+      "claimCount": 26,
+      "xmlFileName": "19294844_12469187.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19294844_12469187.xml",
+      "nativeXmlSha256": "53cd7a15774e1763cadbcaeae4cc1d100f6ed16ba4d86c55abed240e09905482",
+      "claimsXmlSha256": "d9730d0ca2ac37114963e58bfabaa78d21adb334ca70aaef142cd7e35f7da594"
+    },
+    {
+      "applicationNumber": "19306592",
+      "patentNumber": "12493459",
+      "grantDate": "2025-12-09",
+      "cpcSection": "G",
+      "primaryCpc": "G06F   8/65",
+      "claimCount": 17,
+      "xmlFileName": "19306592_12493459.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19306592_12493459.xml",
+      "nativeXmlSha256": "d6bd492abc0080582e3fcd6d6a7aa67abd8597ad2bba77776cb48558c519f0c9",
+      "claimsXmlSha256": "cd20ea3c7c0e5f4899624a0260f655e645d175239b24d78eba29b12e4dc3f1d4"
+    },
+    {
+      "applicationNumber": "19315097",
+      "patentNumber": "12511392",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  21/566",
+      "claimCount": 28,
+      "xmlFileName": "19315097_12511392.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19315097_12511392.xml",
+      "nativeXmlSha256": "8828c41340074112ae291a59778cbf3e79dc2e88f87d1823221cd58f5e799534",
+      "claimsXmlSha256": "e261d6927f51c9ce1f0d600bede106e22ce8c654fdd1e916ee9753dad3fbbeb0"
+    },
+    {
+      "applicationNumber": "19259446",
+      "patentNumber": "12482341",
+      "grantDate": "2025-11-25",
+      "cpcSection": "G",
+      "primaryCpc": "G08G   5/22",
+      "claimCount": 20,
+      "xmlFileName": "19259446_12482341.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19259446_12482341.xml",
+      "nativeXmlSha256": "7b7e46ae1530c380823a4ebb70f875977dae1099a64b0911e3c9f480a9ab9d25",
+      "claimsXmlSha256": "6f38f5c629964a4183582ea2af5f23e6262a8cbdd7af56ce2b5e7d283b45d5af"
+    },
+    {
+      "applicationNumber": "19283781",
+      "patentNumber": "12483898",
+      "grantDate": "2025-11-25",
+      "cpcSection": "G",
+      "primaryCpc": "G06N  20/00",
+      "claimCount": 20,
+      "xmlFileName": "19283781_12483898.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19283781_12483898.xml",
+      "nativeXmlSha256": "77edf5fc76fd6e24d06f1024b9ce480e5707ace47fd44cefde738dcbf38fd588",
+      "claimsXmlSha256": "17d2ab2c594777701dde2967cb0884b6776e77327c6032fe7fc717e459411d77"
+    },
+    {
+      "applicationNumber": "19261899",
+      "patentNumber": "12505648",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G06V  10/761",
+      "claimCount": 30,
+      "xmlFileName": "19261899_12505648.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19261899_12505648.xml",
+      "nativeXmlSha256": "089ae611c57d3202cc7dcbcb7160099111659c8d9aed649d8fce8af6c0324200",
+      "claimsXmlSha256": "8ade41cc5fd1f0befd1b09be3e53feb40e2d38abf86037efae6dfb9016497112"
+    },
+    {
+      "applicationNumber": "19285513",
+      "patentNumber": "12481627",
+      "grantDate": "2025-11-25",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/211",
+      "claimCount": 20,
+      "xmlFileName": "19285513_12481627.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19285513_12481627.xml",
+      "nativeXmlSha256": "51e60ffdfd53631c5c9921d235aa8d6ee60cbc969ba9b80ff1a4128db44d8e51",
+      "claimsXmlSha256": "aadec17807079b00306f2ad5a01845d3333b98c966eb49ded5412d9320147980"
+    },
+    {
+      "applicationNumber": "19264635",
+      "patentNumber": "12505205",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  21/54",
+      "claimCount": 20,
+      "xmlFileName": "19264635_12505205.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19264635_12505205.xml",
+      "nativeXmlSha256": "14c54677db0c0b52479b7cbdddea0c320ad13ff35d05070fc6138fbdea24268f",
+      "claimsXmlSha256": "f727014e33debf059a30096912748bc79c1359f0de6c3f0ae2943cb08c48ab30"
+    },
+    {
+      "applicationNumber": "19296653",
+      "patentNumber": "12499243",
+      "grantDate": "2025-12-16",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  21/577",
+      "claimCount": 20,
+      "xmlFileName": "19296653_12499243.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19296653_12499243.xml",
+      "nativeXmlSha256": "8822e6a210a970aa36826b6f3744e39ac8ed9b82f81b5aa0cd001e2d287129aa",
+      "claimsXmlSha256": "e78a93775b661b85b44af2ca316b63e1dbcc9ec26d270b3746a7022e6588dd34"
+    },
+    {
+      "applicationNumber": "19257429",
+      "patentNumber": "12462482",
+      "grantDate": "2025-11-04",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  30/20",
+      "claimCount": 8,
+      "xmlFileName": "19257429_12462482.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19257429_12462482.xml",
+      "nativeXmlSha256": "b38cdcded8e0276351d8d644f5d472c7d163bc449602b7e5db59c6ca10b00b87",
+      "claimsXmlSha256": "f77c341d5235b5656f8936c8ce689d9223fa891b667211da09e9ef6fc179434a"
+    },
+    {
+      "applicationNumber": "19297846",
+      "patentNumber": "12493957",
+      "grantDate": "2025-12-09",
+      "cpcSection": "G",
+      "primaryCpc": "G06N   5/045",
+      "claimCount": 20,
+      "xmlFileName": "19297846_12493957.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19297846_12493957.xml",
+      "nativeXmlSha256": "989e5c434ca102d2eb3f8d90389a8e186b535cd5e6dd9f205aebbb47108bcb4d",
+      "claimsXmlSha256": "9e7c40072cb940863a6307724ecce3452481db89e40bc55d55d81428d62e9c9d"
+    },
+    {
+      "applicationNumber": "19285631",
+      "patentNumber": "12483343",
+      "grantDate": "2025-11-25",
+      "cpcSection": "G",
+      "primaryCpc": "G08G   5/22",
+      "claimCount": 20,
+      "xmlFileName": "19285631_12483343.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19285631_12483343.xml",
+      "nativeXmlSha256": "6920ff72e634997983c201f6fd3fe3cccc525b64114e510aa9f4ec71ea32775e",
+      "claimsXmlSha256": "4d6a20b8e0d17e6fc42dab6da281818c083792acc1122e774a4e9fc757b63855"
+    },
+    {
+      "applicationNumber": "19297912",
+      "patentNumber": "12504288",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G01C  21/20",
+      "claimCount": 20,
+      "xmlFileName": "19297912_12504288.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19297912_12504288.xml",
+      "nativeXmlSha256": "948b198a851f36cf08e0e01a6153f16788dc1c6438c3c522bdd57c0cf2994230",
+      "claimsXmlSha256": "1e377e72de85693ffadeb9b4f92e6843215301d1e8f07a99f723d48b36dcad75"
+    },
+    {
+      "applicationNumber": "19316192",
+      "patentNumber": "12505683",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G06V  20/597",
+      "claimCount": 15,
+      "xmlFileName": "19316192_12505683.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19316192_12505683.xml",
+      "nativeXmlSha256": "e146451a5ca7e50cef4c2bbc12d8e26e370dae50f1c005e188d63cf8c7cbea05",
+      "claimsXmlSha256": "7d63c14d0b0e8c4cfa9734864652d802da090b68a691b239db731970a78844fd"
+    },
+    {
+      "applicationNumber": "19286965",
+      "patentNumber": "12499272",
+      "grantDate": "2025-12-16",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  40/58",
+      "claimCount": 15,
+      "xmlFileName": "19286965_12499272.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19286965_12499272.xml",
+      "nativeXmlSha256": "7883034409d03cb93de04f3195c850d5a42ceb1fee853739918483c3d1da4cee",
+      "claimsXmlSha256": "316bbc48d2362a8782a3f7f7f0a219dec71143cdc5624afe1f6d4c3b7d2dc473"
+    },
+    {
+      "applicationNumber": "19316946",
+      "patentNumber": "12511925",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06V  20/70",
+      "claimCount": 20,
+      "xmlFileName": "19316946_12511925.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19316946_12511925.xml",
+      "nativeXmlSha256": "fa0a05c85504f99305993af98ac287d11870dbb91d63eabac903716ea09577c2",
+      "claimsXmlSha256": "754ace5de63e0121a9f87eebb30e91ac4ae867ed6c6457622f0e536e3d0b910a"
+    },
+    {
+      "applicationNumber": "19295818",
+      "patentNumber": "12469375",
+      "grantDate": "2025-11-11",
+      "cpcSection": "G",
+      "primaryCpc": "G08B  21/10",
+      "claimCount": 20,
+      "xmlFileName": "19295818_12469375.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19295818_12469375.xml",
+      "nativeXmlSha256": "476d9f54ea25710395631f715f3fcc18fa460552e719719269e6d1a811d3b912",
+      "claimsXmlSha256": "c3fc3160721e729dfbac9c6b738e3fc7189cef5926ae5b775e433be98e60f972"
+    },
+    {
+      "applicationNumber": "19262770",
+      "patentNumber": "12430405",
+      "grantDate": "2025-09-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  18/256",
+      "claimCount": 20,
+      "xmlFileName": "19262770_12430405.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250930/19262770_12430405.xml",
+      "nativeXmlSha256": "9b0471908861ea7b7e69e14869fa2002bf3dcc75f0efb8b8fcef2dd3d771b191",
+      "claimsXmlSha256": "90e832a78d679063d82920f7f1e1b566614e0021a02e7003471af6f9b801f846"
+    },
+    {
+      "applicationNumber": "19286169",
+      "patentNumber": "12511301",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/24578",
+      "claimCount": 20,
+      "xmlFileName": "19286169_12511301.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19286169_12511301.xml",
+      "nativeXmlSha256": "9de11ff5d3c6f00737b8d38a02452cb5c1fce50e9e3a57abf8d206c689fe45ac",
+      "claimsXmlSha256": "318fcf106aadca57215ce5660bace83082c81f57e5daa710c9adbe80aa67285a"
+    },
+    {
+      "applicationNumber": "19259014",
+      "patentNumber": "12462305",
+      "grantDate": "2025-11-04",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/2379",
+      "claimCount": 20,
+      "xmlFileName": "19259014_12462305.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19259014_12462305.xml",
+      "nativeXmlSha256": "f315fbb00b0b85ea32a47e65891cf4891b36c423ce053cc34e15a55050ac3c7f",
+      "claimsXmlSha256": "8f043cd7a555a823911f49284ba60fb368f2abd461eb874e23067617ebda88a9"
+    },
+    {
+      "applicationNumber": "19255093",
+      "patentNumber": "12499172",
+      "grantDate": "2025-12-16",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/958",
+      "claimCount": 20,
+      "xmlFileName": "19255093_12499172.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19255093_12499172.xml",
+      "nativeXmlSha256": "db35d41378f69bccaa9ea31d66efa574b6ea08bdd86f2dfdf0621fe58e7a399d",
+      "claimsXmlSha256": "c98ce68f68862060139a1dc6d4e696d46db861b10417f29d6e06d4ad91a53863"
+    },
+    {
+      "applicationNumber": "19278440",
+      "patentNumber": "12492939",
+      "grantDate": "2025-12-09",
+      "cpcSection": "G",
+      "primaryCpc": "G01B  11/02",
+      "claimCount": 8,
+      "xmlFileName": "19278440_12492939.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19278440_12492939.xml",
+      "nativeXmlSha256": "737d6b261d43bbcc8f24c6df22442f8c7855bb3e7914d90050ce31b834e5e9ec",
+      "claimsXmlSha256": "39afe6f06e1d808e8aff4b210a2353b2faecadc6c1667621017fd2853f4b3138"
+    },
+    {
+      "applicationNumber": "19303307",
+      "patentNumber": "12500909",
+      "grantDate": "2025-12-16",
+      "cpcSection": "G",
+      "primaryCpc": "G06Q  30/0185",
+      "claimCount": 26,
+      "xmlFileName": "19303307_12500909.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19303307_12500909.xml",
+      "nativeXmlSha256": "fc71a98ffa7be699722c1c504509140e896d55064f76c5eec96931edd83aadf1",
+      "claimsXmlSha256": "bff5901fa604e32d5628df67cf98a33c88dd902c50131cac2b4aeda3b047324e"
+    },
+    {
+      "applicationNumber": "19261274",
+      "patentNumber": "12455940",
+      "grantDate": "2025-10-28",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  18/256",
+      "claimCount": 20,
+      "xmlFileName": "19261274_12455940.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251028/19261274_12455940.xml",
+      "nativeXmlSha256": "ed5eb36cc0ebe14da9ba11d6c1b5da685e62b85a3da1e2cbb1e86b6f80ce99fe",
+      "claimsXmlSha256": "6dffd880aed0ccb1d4a9ee12a4ee335e3292da440eb28d564a60ddfb8e22b29c"
+    },
+    {
+      "applicationNumber": "19258880",
+      "patentNumber": "12475154",
+      "grantDate": "2025-11-18",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/3347",
+      "claimCount": 14,
+      "xmlFileName": "19258880_12475154.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19258880_12475154.xml",
+      "nativeXmlSha256": "09358913df4ab610218878f43318b17b6c1bbd4f28f7edafebffa947cdf9d17f",
+      "claimsXmlSha256": "b01b5b8430fceb6cd36754c139ee2861a1cc00a237a9493f42e812f15a319418"
+    },
+    {
+      "applicationNumber": "19300691",
+      "patentNumber": "12499859",
+      "grantDate": "2025-12-16",
+      "cpcSection": "G",
+      "primaryCpc": "G10K   1/062",
+      "claimCount": 20,
+      "xmlFileName": "19300691_12499859.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19300691_12499859.xml",
+      "nativeXmlSha256": "b5e42456648e78dfab50951857e8a3fae0a9aefeb0afe6e0ca142697ccd973a4",
+      "claimsXmlSha256": "4fd5039d483bbe8c765d09fe8aa9b3e46768e73974a6bee3e97ead13e3869b0e"
+    },
+    {
+      "applicationNumber": "19261299",
+      "patentNumber": "12456380",
+      "grantDate": "2025-10-28",
+      "cpcSection": "G",
+      "primaryCpc": "G08G   5/22",
+      "claimCount": 20,
+      "xmlFileName": "19261299_12456380.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251028/19261299_12456380.xml",
+      "nativeXmlSha256": "bf2a60c3025b5e9b6478d028ae0809493109253371cd99d310551adea76865ce",
+      "claimsXmlSha256": "e71270d152962adeeef70995e66120c0963fe26ca1c548f5fdc1e11de8b865c9"
+    },
+    {
+      "applicationNumber": "19278730",
+      "patentNumber": "12511550",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G06N   3/12",
+      "claimCount": 4,
+      "xmlFileName": "19278730_12511550.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19278730_12511550.xml",
+      "nativeXmlSha256": "6a3ea55050b2734dcb1cf5a8a48f02fdcabdd3d43909728e279760af6e45f39b",
+      "claimsXmlSha256": "11059a1e25422f4b2b125a3619c1749186c10ad9c4a1d48512e0f9de7b31524d"
+    },
+    {
+      "applicationNumber": "19276308",
+      "patentNumber": "12510405",
+      "grantDate": "2025-12-30",
+      "cpcSection": "G",
+      "primaryCpc": "G01J   1/0252",
+      "claimCount": 6,
+      "xmlFileName": "19276308_12510405.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19276308_12510405.xml",
+      "nativeXmlSha256": "a20b44b53cfaf52eeabdfb9789e1da6d0a07cdf0150059083cad8fbad63d819a",
+      "claimsXmlSha256": "1e6f94d6fed12e2c2bd14711effe1d009a031c284f6666cbc5d39d9da99736dd"
+    },
+    {
+      "applicationNumber": "19288848",
+      "patentNumber": "12487975",
+      "grantDate": "2025-12-02",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/214",
+      "claimCount": 20,
+      "xmlFileName": "19288848_12487975.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19288848_12487975.xml",
+      "nativeXmlSha256": "b6c26b372a78b52880f2f933da20b7640afa82f88948b47db8b8b7c89aeefc74",
+      "claimsXmlSha256": "b46203f41cd1eb74826392c53bc350da82657f99a750421f30ddd4ea16b14314"
+    },
+    {
+      "applicationNumber": "19304284",
+      "patentNumber": "12504499",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G01S   5/12",
+      "claimCount": 20,
+      "xmlFileName": "19304284_12504499.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19304284_12504499.xml",
+      "nativeXmlSha256": "c82a8543b651ca11475a861fab37c3abbe3119db4b1896f6e7b1a6f12766c78d",
+      "claimsXmlSha256": "0a9335ec84ccf5d34682d078f8f6c99a7996563b6bc33585a7a07f55b450305a"
+    },
+    {
+      "applicationNumber": "19274076",
+      "patentNumber": "12498959",
+      "grantDate": "2025-12-16",
+      "cpcSection": "G",
+      "primaryCpc": "G06F   9/45558",
+      "claimCount": 18,
+      "xmlFileName": "19274076_12498959.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19274076_12498959.xml",
+      "nativeXmlSha256": "3ffe3327e4e3a9493712ec588c27220ee6267fe93b35f0ce326202e9d63cb9fb",
+      "claimsXmlSha256": "34510e1a6bd9df02c233b400ef573c82d54ef48be1d7f037213966eca2b466d1"
+    },
+    {
+      "applicationNumber": "19299908",
+      "patentNumber": "12469209",
+      "grantDate": "2025-11-11",
+      "cpcSection": "G",
+      "primaryCpc": "G06T  15/20",
+      "claimCount": 10,
+      "xmlFileName": "19299908_12469209.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19299908_12469209.xml",
+      "nativeXmlSha256": "b707f297b8b0f1ee8f0d6c20b5777c6657fee3ce08282d1e89ed4e0567e8c677",
+      "claimsXmlSha256": "d906f48bcf687abe6a5d445f965b3fce6c9666c1836e9610f2b3bedb9ff221af"
+    },
+    {
+      "applicationNumber": "19276192",
+      "patentNumber": "12467749",
+      "grantDate": "2025-11-11",
+      "cpcSection": "G",
+      "primaryCpc": "G01B   7/16",
+      "claimCount": 6,
+      "xmlFileName": "19276192_12467749.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19276192_12467749.xml",
+      "nativeXmlSha256": "ab3d7f8b9216848a3b907695e8b650a3bc1e18d8dd1ce1468c7b166dfcc6f4c1",
+      "claimsXmlSha256": "74cc4a741ed067e557cf06f5e97cda13fdddc593dc55adaed21c17e832bd0263"
+    },
+    {
+      "applicationNumber": "19279796",
+      "patentNumber": "12488711",
+      "grantDate": "2025-12-02",
+      "cpcSection": "G",
+      "primaryCpc": "G09F  13/0472",
+      "claimCount": 18,
+      "xmlFileName": "19279796_12488711.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19279796_12488711.xml",
+      "nativeXmlSha256": "94bbb1835de45610d3370d19924afe0c2855ed4558528eea30a5b8fa501ac7be",
+      "claimsXmlSha256": "6c9b45d52841f43667d108fcb414e77c21bea89be31af467e40e17c709a29982"
+    },
+    {
+      "applicationNumber": "19301719",
+      "patentNumber": "12505228",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  21/564",
+      "claimCount": 20,
+      "xmlFileName": "19301719_12505228.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19301719_12505228.xml",
+      "nativeXmlSha256": "d437d86ef82e6e7c2688088038886c50f060b934f39899de3a1c46efb63566fd",
+      "claimsXmlSha256": "c6fe84e55b1bda8f670f986a3198ed1939f4629f9c0ec799c766d9fa60724891"
+    },
+    {
+      "applicationNumber": "19264229",
+      "patentNumber": "12461941",
+      "grantDate": "2025-11-04",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/221",
+      "claimCount": 30,
+      "xmlFileName": "19264229_12461941.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19264229_12461941.xml",
+      "nativeXmlSha256": "579e209a9509cf81d7c23f03f4de212224beccef0469aa7b393dd8adf384b326",
+      "claimsXmlSha256": "8a062c9711f4adb120e95a30cc444ead61b17200f7197f28cdf6d05bf0aa6649"
+    },
+    {
+      "applicationNumber": "19263456",
+      "patentNumber": "12505083",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G06F  16/2255",
+      "claimCount": 20,
+      "xmlFileName": "19263456_12505083.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19263456_12505083.xml",
+      "nativeXmlSha256": "da0e854b0f544cfd76de67079ab932f5016b92f853a8d7348b126d55b58c08a5",
+      "claimsXmlSha256": "9930acac1915981057766bbde82933a5f190e26146e2fe2baf6a7dab0cc2a0b8"
+    },
+    {
+      "applicationNumber": "19260485",
+      "patentNumber": "12505335",
+      "grantDate": "2025-12-23",
+      "cpcSection": "G",
+      "primaryCpc": "G06N   3/0475",
+      "claimCount": 18,
+      "xmlFileName": "19260485_12505335.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19260485_12505335.xml",
+      "nativeXmlSha256": "1b70c4c8b80b67fcb83d284c94aba7595c7efd86d9beb7d3a389fb4c866f9322",
+      "claimsXmlSha256": "787ef0272d8479d4443bb6d1837ae80fd0a4eb34b74842d7e8797a148caa8bf3"
+    },
+    {
+      "applicationNumber": "19272214",
+      "patentNumber": "12463819",
+      "grantDate": "2025-11-04",
+      "cpcSection": "H",
+      "primaryCpc": "H04L   9/3239",
+      "claimCount": 20,
+      "xmlFileName": "19272214_12463819.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19272214_12463819.xml",
+      "nativeXmlSha256": "0893f6cc5863324ed3c90394f035648d121f24d1a7af7584276ceaccc43dc126",
+      "claimsXmlSha256": "03495d2fa7e319fe53e2a9e2d79d78f0459acddbfb782f783770eccc0c885cff"
+    },
+    {
+      "applicationNumber": "19257402",
+      "patentNumber": "12457782",
+      "grantDate": "2025-10-28",
+      "cpcSection": "H",
+      "primaryCpc": "H10D  62/126",
+      "claimCount": 4,
+      "xmlFileName": "19257402_12457782.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251028/19257402_12457782.xml",
+      "nativeXmlSha256": "c6813f14d175bd16946509b64e68b31d3b64b34ed2bfa32b795ca9f10349b16c",
+      "claimsXmlSha256": "844bd048f5f6deb935264bc0e4667f6cac9a1f9ee83f5cba97f95e128801d6cd"
+    },
+    {
+      "applicationNumber": "19296689",
+      "patentNumber": "12489778",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  63/1433",
+      "claimCount": 20,
+      "xmlFileName": "19296689_12489778.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19296689_12489778.xml",
+      "nativeXmlSha256": "c588dc768e6c4bce02e3405e4020c7aa12e11ef72f373d18d81641736dc8b30b",
+      "claimsXmlSha256": "c1e2d680cc5f64d7fe917dc7a20e931bad6bfa06085ed4c71e9e9c9c590067d7"
+    },
+    {
+      "applicationNumber": "19293889",
+      "patentNumber": "12471189",
+      "grantDate": "2025-11-11",
+      "cpcSection": "H",
+      "primaryCpc": "H05B   3/36",
+      "claimCount": 2,
+      "xmlFileName": "19293889_12471189.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19293889_12471189.xml",
+      "nativeXmlSha256": "0f3824882b0f1220423eaa708c98316c46efce7331053149ae1c6dcc2ff57270",
+      "claimsXmlSha256": "d7f7961053fd2084480342a49cfdd043673a0fd9e89d9e10857f9cfef4e1f68f"
+    },
+    {
+      "applicationNumber": "19258318",
+      "patentNumber": "12501232",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H04W   4/021",
+      "claimCount": 17,
+      "xmlFileName": "19258318_12501232.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19258318_12501232.xml",
+      "nativeXmlSha256": "326541b572c7f195d266ddefd9bbbfbdc4f3e3608dd112b5841e7a56b72a9c26",
+      "claimsXmlSha256": "cf896d803a4c216526f12ee88d4c8015744309b2d718244db3e176cbd17ffc8f"
+    },
+    {
+      "applicationNumber": "19300474",
+      "patentNumber": "12490284",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  72/25",
+      "claimCount": 10,
+      "xmlFileName": "19300474_12490284.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19300474_12490284.xml",
+      "nativeXmlSha256": "381660fce0b8e78b9eca26fbae7fa0d8604753f4bf38162164c31f8fee37627c",
+      "claimsXmlSha256": "e14514f143e7020da18099926ea0c196f2a4d9c0b1b98b2bb7e8c027009bac1a"
+    },
+    {
+      "applicationNumber": "19261320",
+      "patentNumber": "12464371",
+      "grantDate": "2025-11-04",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  16/14",
+      "claimCount": 20,
+      "xmlFileName": "19261320_12464371.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19261320_12464371.xml",
+      "nativeXmlSha256": "7efc89e6a4a3c31c687de4bcb75c83f05095d6795008a94b1878489d9ca06193",
+      "claimsXmlSha256": "1d81fe60d745d6288d5e67884b3a61aabc55f254e5d0579e4e0ceab1ae897c35"
+    },
+    {
+      "applicationNumber": "18861808",
+      "patentNumber": "12463856",
+      "grantDate": "2025-11-04",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  27/2614",
+      "claimCount": 20,
+      "xmlFileName": "18861808_12463856.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/18861808_12463856.xml",
+      "nativeXmlSha256": "eb4caa637775b0283c43c9fb8dc9720c5a0996b86ab606b7619eca924b50bf38",
+      "claimsXmlSha256": "b4c406259c0938c40388b0fa99aa2d569d3cf660df9bf812aa57214da28517ff"
+    },
+    {
+      "applicationNumber": "19257042",
+      "patentNumber": "12452565",
+      "grantDate": "2025-10-21",
+      "cpcSection": "H",
+      "primaryCpc": "H04Q  11/0062",
+      "claimCount": 20,
+      "xmlFileName": "19257042_12452565.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251021/19257042_12452565.xml",
+      "nativeXmlSha256": "7b5761811f83131437b98a3057f21483ae6b1e05d23b37b6f81ef2b767e72f88",
+      "claimsXmlSha256": "3c272a4d9ff5fdf0e700182929fcaa2474586f8ae97d0cefc91ad2a58bd3e29b"
+    },
+    {
+      "applicationNumber": "19308871",
+      "patentNumber": "12490362",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H05B  47/155",
+      "claimCount": 10,
+      "xmlFileName": "19308871_12490362.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19308871_12490362.xml",
+      "nativeXmlSha256": "df2c3e93dc7ade61d5929fc017047118793a3d0caf9f2830e4f77a5b35579743",
+      "claimsXmlSha256": "9efab5fe7784c41c69141f4fb3bf68bf5c990a1c66222bd2326b03250abdd8af"
+    },
+    {
+      "applicationNumber": "19264244",
+      "patentNumber": "12490105",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  16/10",
+      "claimCount": 17,
+      "xmlFileName": "19264244_12490105.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19264244_12490105.xml",
+      "nativeXmlSha256": "d420cfae3808d65267cc9a138fd1a2541073f8f730c18001c5bdcf4e486ae800",
+      "claimsXmlSha256": "15f823346d49e2336629f5fbae49d2747aafd7379386de602cdf8901d43fb67a"
+    },
+    {
+      "applicationNumber": "19333373",
+      "patentNumber": "12490408",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H05K   7/20272",
+      "claimCount": 10,
+      "xmlFileName": "19333373_12490408.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19333373_12490408.xml",
+      "nativeXmlSha256": "716221a2deaba825d11a22d397db309dfb0a51a94fca486e4aab03975aa7397c",
+      "claimsXmlSha256": "f055a601e2318cfed6d826615ad57e071e071cc51e83ccf00ae782c0e8b6d280"
+    },
+    {
+      "applicationNumber": "19276080",
+      "patentNumber": "12500611",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H04B   1/0007",
+      "claimCount": 20,
+      "xmlFileName": "19276080_12500611.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19276080_12500611.xml",
+      "nativeXmlSha256": "5b13baee1da8d2398aa468cdace185dd3ad4424bb718dc0fb5b9c51d3227e73f",
+      "claimsXmlSha256": "099acac63d1c072b6132cc14ba3d92db3ce3683a672f9cc9b8ae65a457da1298"
+    },
+    {
+      "applicationNumber": "19260204",
+      "patentNumber": "12512566",
+      "grantDate": "2025-12-30",
+      "cpcSection": "H",
+      "primaryCpc": "H01M  50/567",
+      "claimCount": 10,
+      "xmlFileName": "19260204_12512566.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19260204_12512566.xml",
+      "nativeXmlSha256": "2c176febcb3da713cca1adaa64e35cfdad1251c0aeb549df1bb34d9926a97398",
+      "claimsXmlSha256": "5fe8289568dbd116ea1c23ebe482bea89947f0e94a40abecb8e7f622bc2a9b0b"
+    },
+    {
+      "applicationNumber": "19259830",
+      "patentNumber": "12470084",
+      "grantDate": "2025-11-11",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   9/06",
+      "claimCount": 20,
+      "xmlFileName": "19259830_12470084.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19259830_12470084.xml",
+      "nativeXmlSha256": "e54b1c901f2a31986d0a9030b7019757694b89175c39d8aa629d96a8910b8acd",
+      "claimsXmlSha256": "4f694cced5ab0d7dd9a26272abbce924946b507cb738e2ca53c044ae81ed9d29"
+    },
+    {
+      "applicationNumber": "19261636",
+      "patentNumber": "12452296",
+      "grantDate": "2025-10-21",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  63/1416",
+      "claimCount": 30,
+      "xmlFileName": "19261636_12452296.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251021/19261636_12452296.xml",
+      "nativeXmlSha256": "d52d44433807cc8d6daab0009cec2610b365c1eca65d2fb3eac14a5674d12b62",
+      "claimsXmlSha256": "aab8081fc610c043bb21c802e997518864e9a46928be5339bac15f751244efd6"
+    },
+    {
+      "applicationNumber": "19278904",
+      "patentNumber": "12494647",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   3/28",
+      "claimCount": 20,
+      "xmlFileName": "19278904_12494647.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19278904_12494647.xml",
+      "nativeXmlSha256": "65050fe7cd531284c089d5370019045a20f88025606e1130ceb876bae7eaf325",
+      "claimsXmlSha256": "033196b95546a3af9594cfb117060f9fe368c5136294453445d7b5323d26020b"
+    },
+    {
+      "applicationNumber": "19257588",
+      "patentNumber": "12512637",
+      "grantDate": "2025-12-30",
+      "cpcSection": "H",
+      "primaryCpc": "H01R  27/00",
+      "claimCount": 7,
+      "xmlFileName": "19257588_12512637.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19257588_12512637.xml",
+      "nativeXmlSha256": "939ebc7148f9d61a3808cb7b229ac7908bdeb72af928ed136bb74abba3dc8180",
+      "claimsXmlSha256": "8f860b27c5e9908dd1beafdf758f8bee22b5649940c945e48cf6fdd3360cee09"
+    },
+    {
+      "applicationNumber": "19256808",
+      "patentNumber": "12513351",
+      "grantDate": "2025-12-30",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  21/25808",
+      "claimCount": 21,
+      "xmlFileName": "19256808_12513351.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19256808_12513351.xml",
+      "nativeXmlSha256": "2d0bfe8cffedb1e161c5e05d2a7536ed51360090737ce522b3925c66642aa55b",
+      "claimsXmlSha256": "44589c690f94fa31b3437fc446840191a1eaf7f07d3022cdf5a1228638736ae1"
+    },
+    {
+      "applicationNumber": "19295713",
+      "patentNumber": "12500316",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H01M  50/559",
+      "claimCount": 16,
+      "xmlFileName": "19295713_12500316.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19295713_12500316.xml",
+      "nativeXmlSha256": "1d0acfd3f18463d165ae47e06cb377a317f37e561653bf4c29de9190e6acbb2a",
+      "claimsXmlSha256": "5b76184a1d342ef452808f7cca4ceba1f44242237627593cdb0621d6a63c637b"
+    },
+    {
+      "applicationNumber": "19282386",
+      "patentNumber": "12506697",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04B   7/18513",
+      "claimCount": 15,
+      "xmlFileName": "19282386_12506697.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19282386_12506697.xml",
+      "nativeXmlSha256": "9efd702832e9e4209bfc9ef8b4e11088ee63e23c37c0c77874119cd276546804",
+      "claimsXmlSha256": "812cb20ccf30a119f13563e052f7fbf60d7f41be056df7ddecad2cabce3defab"
+    },
+    {
+      "applicationNumber": "19294425",
+      "patentNumber": "12507313",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  76/27",
+      "claimCount": 20,
+      "xmlFileName": "19294425_12507313.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19294425_12507313.xml",
+      "nativeXmlSha256": "a63a03fc7fea3861751d5ec34ff1aaae1238c9b7c37a326276b1f6e35a611f69",
+      "claimsXmlSha256": "47e56ec58abe4ccbfd78a62970e036633841441eb843fd1c06ed1938b5c37fe0"
+    },
+    {
+      "applicationNumber": "19262504",
+      "patentNumber": "12494663",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   7/64",
+      "claimCount": 20,
+      "xmlFileName": "19262504_12494663.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19262504_12494663.xml",
+      "nativeXmlSha256": "4f3679ed7cb4f11882ea6a63678da12ccf46c944d1ca62f43cef79e09ec46ebb",
+      "claimsXmlSha256": "cac145eb2ef9c6f0ba26f390eb5f5de9cc014c7b3b9c5afc6f28da2511f96aed"
+    },
+    {
+      "applicationNumber": "19273271",
+      "patentNumber": "12476458",
+      "grantDate": "2025-11-18",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   3/00",
+      "claimCount": 8,
+      "xmlFileName": "19273271_12476458.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19273271_12476458.xml",
+      "nativeXmlSha256": "a50878447893d8907c6a4a06dd8d85de443936d4cfdc41b87668ede8bd8feb15",
+      "claimsXmlSha256": "2ae636e652fb69bc856a6cf47acf72badc2d5449176a00d54c1c0c5a5fba1e3c"
+    },
+    {
+      "applicationNumber": "19265938",
+      "patentNumber": "12483479",
+      "grantDate": "2025-11-25",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  41/0895",
+      "claimCount": 16,
+      "xmlFileName": "19265938_12483479.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19265938_12483479.xml",
+      "nativeXmlSha256": "33370760ad5a479cea25f9e32d9f4a563ae0c9c684c3c5396005b0deb022ea20",
+      "claimsXmlSha256": "5908bf760b66edca48d3535d87f1b0a15ba36c592ed9716b11644e591e94c2b4"
+    },
+    {
+      "applicationNumber": "19295131",
+      "patentNumber": "12477183",
+      "grantDate": "2025-11-18",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  21/4392",
+      "claimCount": 20,
+      "xmlFileName": "19295131_12477183.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19295131_12477183.xml",
+      "nativeXmlSha256": "39cc870986386686e7c8697d2c36a49756893d105708bbce8c57d32b0540baab",
+      "claimsXmlSha256": "8becbb049ec305f2dc249293acfc12cef611f85e09a6640177e5909da8a22570"
+    },
+    {
+      "applicationNumber": "19279699",
+      "patentNumber": "12489521",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H04B   7/18519",
+      "claimCount": 11,
+      "xmlFileName": "19279699_12489521.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19279699_12489521.xml",
+      "nativeXmlSha256": "611b22b81bcc387b0dc5cda6ea6f68d64e2d379b0930b9535b77b82bc6c4ba27",
+      "claimsXmlSha256": "fd2b6e1ce5cda63ffadc8f8fe2bd1e00e2189128ba626f2199d7b69a93c011cc"
+    },
+    {
+      "applicationNumber": "19262981",
+      "patentNumber": "12501393",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  27/265",
+      "claimCount": 3,
+      "xmlFileName": "19262981_12501393.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19262981_12501393.xml",
+      "nativeXmlSha256": "47ea491f83dc4c486243dbbf41ab92f8876bc178acaf2d5ccc4a544ef43bf3e6",
+      "claimsXmlSha256": "d00fc7f528624b5f73f775cc7f9b29b673babb7a10555dbe0275a63d2aa62ef2"
+    },
+    {
+      "applicationNumber": "19308940",
+      "patentNumber": "12495307",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  16/10",
+      "claimCount": 18,
+      "xmlFileName": "19308940_12495307.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19308940_12495307.xml",
+      "nativeXmlSha256": "3a088b5a27900794972b1376386a98d9efdf93ffc16b12a8fbd19d1d03e9b86c",
+      "claimsXmlSha256": "1e388f86e4b0970e6d3cb329c91b5436223639dfc1a69f86786fc6f2e63479c5"
+    },
+    {
+      "applicationNumber": "19287749",
+      "patentNumber": "12506605",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04L   9/088",
+      "claimCount": 20,
+      "xmlFileName": "19287749_12506605.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19287749_12506605.xml",
+      "nativeXmlSha256": "3f8d17f032cff6f9050834f1e80ee7f5945fe55caa9749bb4971411e9090c57e",
+      "claimsXmlSha256": "6995555d5d10d462d16777f22ce05ca51ca3bf37829559d03b85ab93deaa4843"
+    },
+    {
+      "applicationNumber": "19261226",
+      "patentNumber": "12477047",
+      "grantDate": "2025-11-18",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  67/63",
+      "claimCount": 20,
+      "xmlFileName": "19261226_12477047.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19261226_12477047.xml",
+      "nativeXmlSha256": "b117fd6b751e50d045d063b9e3d514f02a97335e0d3282ff7f35e6af3cddc604",
+      "claimsXmlSha256": "3cc1d445ae3b5c302ab6b530feea9581e45fef861d3cee4ea8367a77933cc8e9"
+    },
+    {
+      "applicationNumber": "19286910",
+      "patentNumber": "12506549",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04B  17/27",
+      "claimCount": 20,
+      "xmlFileName": "19286910_12506549.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19286910_12506549.xml",
+      "nativeXmlSha256": "1a8bd930ee421962c765505feafe62a7beab195baa0ae6b71cda529650157cb4",
+      "claimsXmlSha256": "e188f560f6ede72140f85294f8c5451e8a08ea0827e86bb3cfae83042825a7b2"
+    },
+    {
+      "applicationNumber": "19279569",
+      "patentNumber": "12477359",
+      "grantDate": "2025-11-18",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  24/02",
+      "claimCount": 12,
+      "xmlFileName": "19279569_12477359.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251118/19279569_12477359.xml",
+      "nativeXmlSha256": "9be16120194ade77ae165f2eb90ac1627a6bfe7713bd468d1fe50c7166e58634",
+      "claimsXmlSha256": "8e0317c87c9171e00145014a806b2fa5392aea7e497a40ee676bbc3617311a67"
+    },
+    {
+      "applicationNumber": "19287737",
+      "patentNumber": "12506619",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04L   9/3247",
+      "claimCount": 20,
+      "xmlFileName": "19287737_12506619.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19287737_12506619.xml",
+      "nativeXmlSha256": "d0aea4a94bdab1ca13e202d4decb159aeccceb15063523d63ae3bf03afe8c136",
+      "claimsXmlSha256": "b6d89b171bf944367566f9f7c653aac1f126f42e445649f70aa28c1ecf36f7e5"
+    },
+    {
+      "applicationNumber": "19276264",
+      "patentNumber": "12506028",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H10P  72/0432",
+      "claimCount": 10,
+      "xmlFileName": "19276264_12506028.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19276264_12506028.xml",
+      "nativeXmlSha256": "e764d1dc9c3191c7a4d53f622b0068aaf4688806afdaa932b1505e0f2b41f7ae",
+      "claimsXmlSha256": "c6add6d43e1dd8bb62008b5ffc6e6642c191041bfcad9fa0c8fc8de54bd6da1e"
+    },
+    {
+      "applicationNumber": "19260984",
+      "patentNumber": "12494662",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   7/64",
+      "claimCount": 20,
+      "xmlFileName": "19260984_12494662.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19260984_12494662.xml",
+      "nativeXmlSha256": "d0e12da5d49dda2fb116dbe653a556c7d46a4a08f67a78b9b97ca4535f903cdf",
+      "claimsXmlSha256": "551f513536e1df6b68a9f3486ca2628aae97dda21f1e8cc955f5bea52d56bb16"
+    },
+    {
+      "applicationNumber": "19302310",
+      "patentNumber": "12483706",
+      "grantDate": "2025-11-25",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  19/136",
+      "claimCount": 20,
+      "xmlFileName": "19302310_12483706.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19302310_12483706.xml",
+      "nativeXmlSha256": "4876127e5da403f47d46aec8cd20b30e8050895cb2ac330995a3fef2256f1339",
+      "claimsXmlSha256": "53d0da80862ea39c0495802ed129dbe029072c8688f2bf9ca064a242258bf817"
+    },
+    {
+      "applicationNumber": "19294047",
+      "patentNumber": "12501206",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H04R   1/1041",
+      "claimCount": 9,
+      "xmlFileName": "19294047_12501206.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19294047_12501206.xml",
+      "nativeXmlSha256": "df8f63e9e805dad4bf604651192af680262fd4131e8cdb5cde102f6fff678e69",
+      "claimsXmlSha256": "5205b2f3471f6d6b8d72a2d7e8febea6077077df1f1e9667c62b2969e5d9d830"
+    },
+    {
+      "applicationNumber": "19262957",
+      "patentNumber": "12485779",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H02J  50/12",
+      "claimCount": 16,
+      "xmlFileName": "19262957_12485779.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19262957_12485779.xml",
+      "nativeXmlSha256": "59c3a0ca38d1b541db5ac6ac28e773e22db2874c433528a48d2d6459738230fe",
+      "claimsXmlSha256": "cc1ce4e09d8bb0092bff6c7af8772c7ce7ca203c7587bb1d10e8d5efc061c93b"
+    },
+    {
+      "applicationNumber": "19290977",
+      "patentNumber": "12501120",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  21/8405",
+      "claimCount": 17,
+      "xmlFileName": "19290977_12501120.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19290977_12501120.xml",
+      "nativeXmlSha256": "908179b51a6f9e4b55a698cc1377e02209ba49119da05450d9272a22ad71d19b",
+      "claimsXmlSha256": "0a95da302539194f2b5a6cdf562e4c16828bfea8d4a04ca06b852c8404af1ac2"
+    },
+    {
+      "applicationNumber": "19288553",
+      "patentNumber": "12470072",
+      "grantDate": "2025-11-11",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   3/28",
+      "claimCount": 20,
+      "xmlFileName": "19288553_12470072.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251111/19288553_12470072.xml",
+      "nativeXmlSha256": "2cd020a0bcb7d0514fa5bcf60c16b716b8c8804a8c7ec2826e3f998208eeb373",
+      "claimsXmlSha256": "9bfc9f76eeaae09e5b1973fd50199e1da96dd901a3d93872e4f85ecb494082d3"
+    },
+    {
+      "applicationNumber": "19257520",
+      "patentNumber": "12425356",
+      "grantDate": "2025-09-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  49/10",
+      "claimCount": 18,
+      "xmlFileName": "19257520_12425356.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg250923/19257520_12425356.xml",
+      "nativeXmlSha256": "c21c66c9f8730fb93715a7e248a0ef1430238b55cecb26da8f3d5c2ecfe1e42e",
+      "claimsXmlSha256": "b749590e0a8c4c9cdc39ebcf280655ad3207f777b4dbf0e02b104e3028a38508"
+    },
+    {
+      "applicationNumber": "19256384",
+      "patentNumber": "12512977",
+      "grantDate": "2025-12-30",
+      "cpcSection": "H",
+      "primaryCpc": "H04L   9/0866",
+      "claimCount": 22,
+      "xmlFileName": "19256384_12512977.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19256384_12512977.xml",
+      "nativeXmlSha256": "15c36f233f60425e3fef7ee451bdf76a54de2fd9409adbbf02be69aec3536fdb",
+      "claimsXmlSha256": "2085dc18b0e05a1628f370c624900ced544ff5d0b6d08dcb07e24a9cecf13f95"
+    },
+    {
+      "applicationNumber": "19278692",
+      "patentNumber": "12489633",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H04L   9/3213",
+      "claimCount": 19,
+      "xmlFileName": "19278692_12489633.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19278692_12489633.xml",
+      "nativeXmlSha256": "aac257372aa4971b8a9c6a345d4155c4d0f93661992fb2dda2ee77368f7d9504",
+      "claimsXmlSha256": "b314d92b8e5b718fc48da931aa7da397f64e8d0294764c3c098f838b193151f0"
+    },
+    {
+      "applicationNumber": "19258498",
+      "patentNumber": "12489902",
+      "grantDate": "2025-12-02",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  19/13",
+      "claimCount": 16,
+      "xmlFileName": "19258498_12489902.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251202/19258498_12489902.xml",
+      "nativeXmlSha256": "e7243b5d3c72b316ab82b5181d9f4ffcbe882893bc68cdeabe25167f6e305641",
+      "claimsXmlSha256": "8b77bd90ce49ef7f6fe65e61f990eedcaaf64af9d55a61b71b71c988ed735534"
+    },
+    {
+      "applicationNumber": "19313229",
+      "patentNumber": "12505766",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  13/305",
+      "claimCount": 14,
+      "xmlFileName": "19313229_12505766.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19313229_12505766.xml",
+      "nativeXmlSha256": "f40632f7f415812f164c19c482fb77a8f766581acd6e79b9ff5a870d1de09f8a",
+      "claimsXmlSha256": "7c1980b3925c45e136cac9dd97510026b0c841c6a51244ac17c770ebda608688"
+    },
+    {
+      "applicationNumber": "19261489",
+      "patentNumber": "12501553",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H05K   1/113",
+      "claimCount": 20,
+      "xmlFileName": "19261489_12501553.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19261489_12501553.xml",
+      "nativeXmlSha256": "bfb276d860905101d8cfeab44756e84ff5390e6c6130c3426c56315e25694833",
+      "claimsXmlSha256": "fc02ca9cb9d99f99831b00516c80cb3543dfb68db32ee91eb94fdf8514d79e00"
+    },
+    {
+      "applicationNumber": "19260452",
+      "patentNumber": "12460946",
+      "grantDate": "2025-11-04",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  23/55",
+      "claimCount": 20,
+      "xmlFileName": "19260452_12460946.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251104/19260452_12460946.xml",
+      "nativeXmlSha256": "d7a14bfc9d615744fb93c6a85d6f1b1b2319cf911b1ee045c2264c6daebca525",
+      "claimsXmlSha256": "2e0b8572a614e984b1376a09124e6e497fbe198d67d7a6abb608f53a549b0a11"
+    },
+    {
+      "applicationNumber": "19260585",
+      "patentNumber": "12494660",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   7/64",
+      "claimCount": 20,
+      "xmlFileName": "19260585_12494660.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19260585_12494660.xml",
+      "nativeXmlSha256": "601c18f0494151c7d312d61c2227d5cb2758ac9a3debf137854595134b9da4d9",
+      "claimsXmlSha256": "66c985352672f7a007a67e22af3b896ac59d9f503d6d1ebed37b1d0e5f34a4d9"
+    },
+    {
+      "applicationNumber": "19307137",
+      "patentNumber": "12501021",
+      "grantDate": "2025-12-16",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  13/371",
+      "claimCount": 20,
+      "xmlFileName": "19307137_12501021.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251216/19307137_12501021.xml",
+      "nativeXmlSha256": "e04432f84d91d5858074ad0e26d74ecc225bab1eee9c7bae38e19a215a134df0",
+      "claimsXmlSha256": "a646d79c84ca279c059d5635e3fd7b1ee76408c24f2c420ae2e19117f49c984e"
+    },
+    {
+      "applicationNumber": "19282349",
+      "patentNumber": "12483324",
+      "grantDate": "2025-11-25",
+      "cpcSection": "H",
+      "primaryCpc": "H04B   7/18519",
+      "claimCount": 15,
+      "xmlFileName": "19282349_12483324.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19282349_12483324.xml",
+      "nativeXmlSha256": "e5a8127a1a19ca9fa380b2a730b5dbbf31cee42612f542eae8912bb5ee982434",
+      "claimsXmlSha256": "97846e316ee9fa392fdd56c5050a0837db53186577013231ba667588deca7200"
+    },
+    {
+      "applicationNumber": "19279469",
+      "patentNumber": "12483934",
+      "grantDate": "2025-11-25",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  12/10",
+      "claimCount": 12,
+      "xmlFileName": "19279469_12483934.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19279469_12483934.xml",
+      "nativeXmlSha256": "0f22d42e3515d501c825b19e709f96bbc832add161c44dd1193b656a0b5d0ae0",
+      "claimsXmlSha256": "065dff90802ce01422322e0b4ff2f13a0e6761eaf0b4b83575e089e8ef195f1a"
+    },
+    {
+      "applicationNumber": "19260586",
+      "patentNumber": "12494661",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   7/64",
+      "claimCount": 20,
+      "xmlFileName": "19260586_12494661.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19260586_12494661.xml",
+      "nativeXmlSha256": "11bc59f5d5874156b174ed3458907ece53973273cea7f5f461dfb7a90d0b9fd2",
+      "claimsXmlSha256": "4fbbb201bffba45a9ebe0a853ad85197f7793b3fc7b453dfef1af505c507c101"
+    },
+    {
+      "applicationNumber": "19258797",
+      "patentNumber": "12512877",
+      "grantDate": "2025-12-30",
+      "cpcSection": "H",
+      "primaryCpc": "H04B   7/005",
+      "claimCount": 17,
+      "xmlFileName": "19258797_12512877.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19258797_12512877.xml",
+      "nativeXmlSha256": "51c59e60a05125fafc9f6f138212679bd7db023877350e5e0e5fd8c931903203",
+      "claimsXmlSha256": "cf1af705abbb3347f3f37f2702d246989b5fef36a6f11350644a2971f5f310b2"
+    },
+    {
+      "applicationNumber": "19265591",
+      "patentNumber": "12483038",
+      "grantDate": "2025-11-25",
+      "cpcSection": "H",
+      "primaryCpc": "H02J   3/381",
+      "claimCount": 16,
+      "xmlFileName": "19265591_12483038.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251125/19265591_12483038.xml",
+      "nativeXmlSha256": "c305884393da9aaa2cb75add07bcbc66a4c89d8b45848a7e427a69c32265409a",
+      "claimsXmlSha256": "c839dc29f9493e5ae0f95717e7fe59bbbcc1c23b5d54a9fde26d8581abb6bb47"
+    },
+    {
+      "applicationNumber": "19260790",
+      "patentNumber": "12513272",
+      "grantDate": "2025-12-30",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  13/125",
+      "claimCount": 14,
+      "xmlFileName": "19260790_12513272.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19260790_12513272.xml",
+      "nativeXmlSha256": "ff696437c1ea528adb0db93a0324dd7d7ae902daa3eaed8540e0525caca26998",
+      "claimsXmlSha256": "686263027d295b2a874057835048a3b62de9d01e8b7bbedf41d8fc78eb806d09"
+    },
+    {
+      "applicationNumber": "19286205",
+      "patentNumber": "12513139",
+      "grantDate": "2025-12-30",
+      "cpcSection": "H",
+      "primaryCpc": "H04L  63/0807",
+      "claimCount": 21,
+      "xmlFileName": "19286205_12513139.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251230/19286205_12513139.xml",
+      "nativeXmlSha256": "87239ef6677a2128b350faec0a1013890af8a0b8e031dc91ea4fa4a2dcddb739",
+      "claimsXmlSha256": "9e8e01e52899caa00c2ea24bb520c3569013ce734db99952ca1c382320c3c00c"
+    },
+    {
+      "applicationNumber": "19312376",
+      "patentNumber": "12494675",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H02J  50/10",
+      "claimCount": 10,
+      "xmlFileName": "19312376_12494675.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19312376_12494675.xml",
+      "nativeXmlSha256": "062fd27d9c8be8f155816c7a0280ee98435088a170d44dc5583bb1963743f3d7",
+      "claimsXmlSha256": "f87c2d828abc4e8479985be65cf3328992a73240d0a698be42f9160f368683bd"
+    },
+    {
+      "applicationNumber": "19259139",
+      "patentNumber": "12495342",
+      "grantDate": "2025-12-09",
+      "cpcSection": "H",
+      "primaryCpc": "H04W  36/08",
+      "claimCount": 20,
+      "xmlFileName": "19259139_12495342.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251209/19259139_12495342.xml",
+      "nativeXmlSha256": "24e641101fba73739bf457e410493382ef1b130bbe887825ab7115eace7cf84e",
+      "claimsXmlSha256": "68e8f1a0c84eb4bb6a48f0db332a8253431e357d1fa6c222115ea1953969e43d"
+    },
+    {
+      "applicationNumber": "19273214",
+      "patentNumber": "12504644",
+      "grantDate": "2025-12-23",
+      "cpcSection": "H",
+      "primaryCpc": "H04N  13/305",
+      "claimCount": 11,
+      "xmlFileName": "19273214_12504644.xml",
+      "sourceUri": "https://api.uspto.gov/api/v1/datasets/products/files/PTGRXML-SPLT/2025/ipg251223/19273214_12504644.xml",
+      "nativeXmlSha256": "bcf089e9d731f72022c131f9377b038b3418b9625eb3d7b6166e86a785baafca",
+      "claimsXmlSha256": "3f05cf4ca925038071eee42e4bd55261f256f330b9cffd4406aa0a2d1db3ee78"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "familyId": "14262251-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.97,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the respective spin-lattice relaxation times t1",
+      "nativeQuote": "the respective spin-lattice relaxation times T1",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the signal intensity",
+      "nativeQuote": "the signal intensity",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the resonance frequency",
+      "nativeQuote": "the resonance frequency",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the time interval",
+      "nativeQuote": "the time interval",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the first parameter vector",
+      "nativeQuote": "the first parameter vector",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the spin-spin relaxation time t2",
+      "nativeQuote": "the spin-spin relaxation time T2",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the signal intensity",
+      "nativeQuote": "the signal intensity",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the resonance frequency",
+      "nativeQuote": "the resonance frequency",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the second parameter vector",
+      "nativeQuote": "the second parameter vector",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact native substring; symbols may continue beyond abbreviated examiner phrase."
+    }
+  ],
+  "concerns": [
+    "Cached original1–4 manually inspected; same method/operations with OCR split set ting, page numerals, and T1/T2 spacing. Full native/context10 equals original10; zero exact comparisons reflect OCR, no claim-count conflict. All numbered selected quotes match ignoring case."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness and selected natural dependency references; all selected descendants connect to declared root. Detailed examiner correspondence assessed with original-version evidence. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "14262251",
+    "nativePublicationNumber": "US20140232400A1",
+    "nativePublicationDate": "20140821",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "b19d4f02517a6640c5aa2a3ffe646c880aa649fdc80a9679debe0e507de27eb9",
+    "sourceClaimsXmlSha256": "5261aca87821915f83c5818a1847f954410f70c93deafc9dfdfd8173fbd228b1"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 51,
+    "retainedInventoryCount": 51,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "HUFYJ3Z7PXXIFW3",
+        "officialDate": "2014-04-25T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2017-01-12",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "HUFYJ3Z7PXXIFW3",
+      "officialDate": "2014-04-25T00:00:00.000-0400",
+      "sha256": "0b7003160f6b8d69a36c9a009c43f78f25d8a7be23f2a7d478ca727161169fd4",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 10
+    }
+  ],
+  "nativeContextClaimCount": 10,
+  "selectedClaimNumbers": [1, 2, 3, 4],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "HUFYJ3Z7PXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["14262251"],
+      "headerMailRoomDates": ["2014-04-25"],
+      "applicationMatches": true,
+      "claimNodeCount": 11
+    }
+  ]
+}

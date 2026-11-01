@@ -1,0 +1,35 @@
+{
+  "recordedAt": "2026-10-29T14:01:31.396402+00:00",
+  "result": "passed",
+  "command": "bun run beep lint schema-first",
+  "scope": "Schema policy only; does not replace collected cheap gates, full CLI suite, installed proof or delivery",
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-schema-policy-final-v1.service",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 52570759168,
+    "peakObservedBytes": 6899388416,
+    "minimumAvailableBytes": 44578283520,
+    "stoppedFor": null,
+    "exitCode": 0
+  },
+  "artifacts": [
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-policy-final-v1.log",
+      "sha256": "db9e6a2462477e7c28bccc70438975bbce52674a0b1b57852b0827e5d8b781f6"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-guard-zzy7o8u5/foundation-schema-policy-final-v1-guard.json",
+      "sha256": "6c89f9f9fc202700884040708d0808f7f43121dce00cc0f1d28a0a22adf1639a"
+    }
+  ],
+  "inputs": {
+    "standards/schema-first.inventory.jsonc": "6f924e7af3bd7e7dcab6cb0581e15b1475a430160d04baa475a00a10d54d3a83",
+    "standards/effect-vitest.inventory.jsonc": "820baa8fca3fcc61cbd6fdcd0458f06d4c5eadfbf80c3c4cd9cb022b65ff81da",
+    "standards/cache-qualification-baseline.json": "25b2083517621648fb1b561af262ac8218f0d83b067e9d3ae3240ea31d146d7c",
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts": "773a3f9247c67f93139e2e3fed62fa861473388a26a0b99c842971aeae5e71c9",
+    "packages/tooling/library/ai-metrics/test/observation-launch-http.test.ts": "ec70cc8503e656680b11eb6be5de2c3f90dd5e7fd12426f40d8f0186ff2aaf2e",
+    "goals/agent-observability-foundation/research/schema-advisory-adjudication.json": "b701da28ccfa54df7c61a9d67c923b9f1353ce73e8e2d1da1e5709d306936537"
+  }
+}

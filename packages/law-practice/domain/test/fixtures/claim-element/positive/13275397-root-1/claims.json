@@ -1,0 +1,117 @@
+{
+  "familyId": "13275397-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An inertial sensor, comprising: a plate-shaped membrane; a mass body disposed under a central portion of the membrane; a post disposed under an edge of the membrane so as to support the membrane; and a bottom cap of which the edge is provided with a first cavity into which an adhesive is introduced, the adhesive bonding the edge to a bottom surface of the post so as to cover the mass body and the post.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The inertial sensor as set forth in claim 1, further comprising a spacer having a predetermined thickness disposed between the post and the bottom cap, wherein a gap between the bottom surface of the post and a top surface of the bottom cap is equal to the predetermined thickness.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The inertial sensor as set forth in claim 2, wherein the spacer is disposed along the outermost side or the innermost side between the post and the bottom cap.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The inertial sensor as set forth in claim 1, wherein the bottom cap is provided with at least the two first cavities.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The inertial sensor as set forth in claim 1, wherein a central portion of the bottom cap is provided with a concave portion depressed in a thickness direction so as to be spaced apart from the mass body.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The inertial sensor as set forth in claim 5, wherein the concave portion is provided with a stopper protruded in a direction of the mass body.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The inertial sensor as set forth in claim 5, wherein the spacer having the predetermined thickness is disposed between the post and the bottom cap, the gap between the bottom surface of the post and the top surface of the bottom cap is equal to the predetermined thickness, the concave portion is provided with the stopper protruded in the direction of the mass body, and the gap between the bottom surface of the mass body and the top surface of the stopper is equal to the predetermined thickness.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A method of manufacturing an inertial sensor, comprising: (A) preparing a bottom cap; (B) forming a first cavity at an edge of the bottom cap; (C) preparing a plate-shaped membrane, a mass body disposed under a central portion of the membrane, and a post disposed under the edge of the membrane so as to support the membrane; and (D) bonding the edge of the bottom cap to the bottom surface of the post with an adhesive so as to cover the mass body and the post and introducing the adhesive into the first cavity.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method as set forth in claim 8, further comprising after step (A), forming a spacer having a predetermined thickness on the top surface of the bottom cap, wherein at step (D), the gap between the bottom surface of the post and the top surface of the bottom cap is equal to the predetermined thickness.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method as set forth in claim 9, wherein at the forming of the spacer, the spacer is disposed along the outermost side or the innermost side between the post and the bottom cap.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method as set forth in claim 9, further comprising after step (D), removing a portion corresponding to the top portion of the spacer in the membrane and the post, a portion corresponding to the bottom portion of the spacer in the bottom cap, and the spacer.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method as set forth in claim 9, wherein the forming of the spacer includes: forming an oxide layer, a plating layer, or a photoresist layer on the bottom cap; and forming the spacer by selectively patterning the oxide layer, the plating layer, or the photoresist layer.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method as set forth in claim 8, wherein at step (B), the first cavity is formed by selectively etching the bottom cap.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method as set forth in claim 8, wherein at step (B), at least the two first cavities are formed.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method as set forth in claim 8, further comprising after step (A), forming a concave portion depressed in a thickness direction at the central portion of the bottom cap, wherein at step (D), the concave portion is spaced apart from the mass body.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method as set forth in claim 15, wherein at the forming of the concave portion, the concave portion is formed by selectively etching the bottom cap.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method as set forth in claim 15, further comprising at the forming of the concave portion, foliating a stopper protruded in a direction of the mass body on the concave portion.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method as set forth in claim 17, further comprising simultaneously forming the first cavity, the concave portion, and the stopper by selectively etching the bottom cap.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "An inertial sensor, comprising: a plate-shaped membrane; a mass body disposed under a central portion of the membrane; a post disposed under an edge of the membrane so as to support the membrane; and an upper cap of which the edge is provided with a second cavity into which an adhesive is introduced, the adhesive bonding the edge to a top surface of the membrane so as to cover the membrane.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The inertial sensor as set forth in claim 19, further comprising a spacer having a predetermined thickness disposed between the membrane and the upper cap, wherein a gap between the top surface of the membrane and a bottom surface of the upper cap is equal to the predetermined thickness.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The inertial sensor as set forth in claim 19, wherein a central portion of the upper cap is provided with a concave portion depressed in a thickness direction so as to be spaced apart from the membrane.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The inertial sensor as set forth in claim 21, wherein the spacer having the predetermined thickness is disposed between the membrane and the upper cap, the gap between the top surface of the membrane and the bottom surface of the upper cap is equal to the predetermined thickness, the concave portion is provided with the stopper protruded in the direction of the membrane, and the gap between the top surface of the membrane and the bottom surface of the stopper is equal to the predetermined thickness.",
+      "sourceXmlParentClaimNumbers": [21]
+    }
+  ]
+}

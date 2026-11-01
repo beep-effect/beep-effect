@@ -1,0 +1,6787 @@
+[
+  {
+    "claimNumber": 20,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "20",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 43,
+          "quote": "A system for vertically stabilizing objects"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "determiner": "a",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 36,
+              "endChar": 43,
+              "quote": "objects"
+            },
+            "determiner": "bare",
+            "head": "objects"
+          }
+        ]
+      },
+      {
+        "path": "20.a",
+        "anchor": {
+          "startChar": 57,
+          "endChar": 124,
+          "quote": "a bipedal robot positioned on a support surface in an upright state"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 72,
+              "quote": "a bipedal robot"
+            },
+            "determiner": "a",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 87,
+              "endChar": 104,
+              "quote": "a support surface"
+            },
+            "determiner": "a",
+            "head": "support surface"
+          },
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 124,
+              "quote": "an upright state"
+            },
+            "determiner": "an",
+            "head": "upright state"
+          }
+        ]
+      },
+      {
+        "path": "20.b",
+        "anchor": {
+          "startChar": 126,
+          "endChar": 224,
+          "quote": "a motion system for moving the bipedal robot on the support surface with omnidirectional movements"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 126,
+              "endChar": 141,
+              "quote": "a motion system"
+            },
+            "determiner": "a",
+            "head": "motion system"
+          },
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 170,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 193,
+              "quote": "the support surface"
+            },
+            "determiner": "the",
+            "head": "support surface"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 224,
+              "quote": "omnidirectional movements"
+            },
+            "determiner": "bare",
+            "head": "omnidirectional movements"
+          }
+        ]
+      },
+      {
+        "path": "20.c",
+        "anchor": {
+          "startChar": 226,
+          "endChar": 272,
+          "quote": "a sensor assembly monitoring the bipedal robot"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 243,
+              "quote": "a sensor assembly"
+            },
+            "determiner": "a",
+            "head": "sensor assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 272,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          }
+        ]
+      },
+      {
+        "path": "20.d",
+        "anchor": {
+          "startChar": 278,
+          "endChar": 650,
+          "quote": "a controller with a processor running a stabilizing module to process data from the sensor assembly to determine when the bipedal robot is tipping away from the upright state and, in response, to generate control signals to operate the motion system to move at least one lower contact surface of the bipedal robot contacting the support surface to counter the tipping away"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 278,
+              "endChar": 290,
+              "quote": "a controller"
+            },
+            "determiner": "a",
+            "head": "controller"
+          },
+          {
+            "anchor": {
+              "startChar": 296,
+              "endChar": 307,
+              "quote": "a processor"
+            },
+            "determiner": "a",
+            "head": "processor"
+          },
+          {
+            "anchor": {
+              "startChar": 316,
+              "endChar": 336,
+              "quote": "a stabilizing module"
+            },
+            "determiner": "a",
+            "head": "stabilizing module"
+          },
+          {
+            "anchor": {
+              "startChar": 348,
+              "endChar": 352,
+              "quote": "data"
+            },
+            "determiner": "bare",
+            "head": "data"
+          },
+          {
+            "anchor": {
+              "startChar": 358,
+              "endChar": 377,
+              "quote": "the sensor assembly"
+            },
+            "determiner": "the",
+            "head": "sensor assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 396,
+              "endChar": 413,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 435,
+              "endChar": 452,
+              "quote": "the upright state"
+            },
+            "determiner": "the",
+            "head": "upright state"
+          },
+          {
+            "anchor": {
+              "startChar": 483,
+              "endChar": 498,
+              "quote": "control signals"
+            },
+            "determiner": "bare",
+            "head": "control signals"
+          },
+          {
+            "anchor": {
+              "startChar": 510,
+              "endChar": 527,
+              "quote": "the motion system"
+            },
+            "determiner": "the",
+            "head": "motion system"
+          },
+          {
+            "anchor": {
+              "startChar": 536,
+              "endChar": 570,
+              "quote": "at least one lower contact surface"
+            },
+            "determiner": "at-least-one",
+            "head": "lower contact surface"
+          },
+          {
+            "anchor": {
+              "startChar": 574,
+              "endChar": 591,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 603,
+              "endChar": 622,
+              "quote": "the support surface"
+            },
+            "determiner": "the",
+            "head": "support surface"
+          },
+          {
+            "anchor": {
+              "startChar": 634,
+              "endChar": 650,
+              "quote": "the tipping away"
+            },
+            "determiner": "the",
+            "head": "tipping away"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "20.a",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 72,
+                "quote": "a bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 72,
+              "endChar": 87,
+              "quote": " positioned on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 87,
+                "endChar": 104,
+                "quote": "a support surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 108,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 108,
+                "endChar": 124,
+                "quote": "an upright state"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 170,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 174,
+            "endChar": 193,
+            "quote": "the support surface"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 104,
+            "quote": "a support surface"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "20.b",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.b",
+              "anchor": {
+                "startChar": 126,
+                "endChar": 141,
+                "quote": "a motion system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 141,
+              "endChar": 153,
+              "quote": " for moving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.b",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 170,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 170,
+              "endChar": 174,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.b",
+              "anchor": {
+                "startChar": 174,
+                "endChar": 193,
+                "quote": "the support surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 193,
+              "endChar": 199,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.b",
+              "anchor": {
+                "startChar": 199,
+                "endChar": 224,
+                "quote": "omnidirectional movements"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.c",
+          "anchor": {
+            "startChar": 255,
+            "endChar": 272,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "20.c",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.c",
+              "anchor": {
+                "startChar": 226,
+                "endChar": 243,
+                "quote": "a sensor assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 243,
+              "endChar": 255,
+              "quote": " monitoring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.c",
+              "anchor": {
+                "startChar": 255,
+                "endChar": 272,
+                "quote": "the bipedal robot"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 358,
+            "endChar": 377,
+            "quote": "the sensor assembly"
+          }
+        },
+        "introducing": {
+          "path": "20.c",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 243,
+            "quote": "a sensor assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 413,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 435,
+            "endChar": 452,
+            "quote": "the upright state"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 124,
+            "quote": "an upright state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 510,
+            "endChar": 527,
+            "quote": "the motion system"
+          }
+        },
+        "introducing": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 126,
+            "endChar": 141,
+            "quote": "a motion system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 574,
+            "endChar": 591,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 603,
+            "endChar": 622,
+            "quote": "the support surface"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 104,
+            "quote": "a support surface"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "20.d",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 278,
+                "endChar": 290,
+                "quote": "a controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 290,
+              "endChar": 296,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 296,
+                "endChar": 307,
+                "quote": "a processor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 307,
+              "endChar": 316,
+              "quote": " running "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 316,
+                "endChar": 336,
+                "quote": "a stabilizing module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 336,
+              "endChar": 348,
+              "quote": " to process "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 348,
+                "endChar": 352,
+                "quote": "data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 352,
+              "endChar": 358,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 358,
+                "endChar": 377,
+                "quote": "the sensor assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 377,
+              "endChar": 396,
+              "quote": " to determine when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 396,
+                "endChar": 413,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 413,
+              "endChar": 435,
+              "quote": " is tipping away from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 435,
+                "endChar": 452,
+                "quote": "the upright state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 452,
+              "endChar": 483,
+              "quote": " and, in response, to generate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 483,
+                "endChar": 498,
+                "quote": "control signals"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 498,
+              "endChar": 510,
+              "quote": " to operate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 510,
+                "endChar": 527,
+                "quote": "the motion system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 527,
+              "endChar": 536,
+              "quote": " to move "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 536,
+                "endChar": 570,
+                "quote": "at least one lower contact surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 570,
+              "endChar": 574,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 574,
+                "endChar": 591,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 591,
+              "endChar": 603,
+              "quote": " contacting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 603,
+                "endChar": 622,
+                "quote": "the support surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 622,
+              "endChar": 634,
+              "quote": " to counter "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.d",
+              "anchor": {
+                "startChar": 634,
+                "endChar": 650,
+                "quote": "the tipping away"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 21,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "21",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 20"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "21.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 160,
+          "quote": "the stabilizing module further determines a direction the bipedal robot is moving during the tipping away from the upright state"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 54,
+              "quote": "the stabilizing module"
+            },
+            "determiner": "the",
+            "head": "stabilizing module"
+          },
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 85,
+              "quote": "a direction"
+            },
+            "determiner": "a",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 103,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 137,
+              "quote": "the tipping away"
+            },
+            "determiner": "the",
+            "head": "tipping away"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 160,
+              "quote": "the upright state"
+            },
+            "determiner": "the",
+            "head": "upright state"
+          }
+        ]
+      },
+      {
+        "path": "21.b",
+        "anchor": {
+          "startChar": 170,
+          "endChar": 360,
+          "quote": "the control signals are generated so that movements of the at least one lower contact surface move the lower contact surface in a direction matching the direction the bipedal robot is moving"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 170,
+              "endChar": 189,
+              "quote": "the control signals"
+            },
+            "determiner": "the",
+            "head": "control signals"
+          },
+          {
+            "anchor": {
+              "startChar": 212,
+              "endChar": 221,
+              "quote": "movements"
+            },
+            "determiner": "bare",
+            "head": "movements"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 263,
+              "quote": "the at least one lower contact surface"
+            },
+            "determiner": "the",
+            "head": "at least one lower contact surface"
+          },
+          {
+            "anchor": {
+              "startChar": 269,
+              "endChar": 294,
+              "quote": "the lower contact surface"
+            },
+            "determiner": "the",
+            "head": "lower contact surface"
+          },
+          {
+            "anchor": {
+              "startChar": 298,
+              "endChar": 309,
+              "quote": "a direction"
+            },
+            "determiner": "a",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 319,
+              "endChar": 332,
+              "quote": "the direction"
+            },
+            "determiner": "the",
+            "head": "direction"
+          },
+          {
+            "anchor": {
+              "startChar": 333,
+              "endChar": 350,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          }
+        ]
+      },
+      {
+        "path": "21.c",
+        "anchor": {
+          "startChar": 374,
+          "endChar": 539,
+          "quote": "the movements are selected to move the lower contact surface of the bipedal robot toward a location that is vertically below a center of gravity of the bipedal robot"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 374,
+              "endChar": 387,
+              "quote": "the movements"
+            },
+            "determiner": "the",
+            "head": "movements"
+          },
+          {
+            "anchor": {
+              "startChar": 409,
+              "endChar": 434,
+              "quote": "the lower contact surface"
+            },
+            "determiner": "the",
+            "head": "lower contact surface"
+          },
+          {
+            "anchor": {
+              "startChar": 438,
+              "endChar": 455,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 463,
+              "endChar": 473,
+              "quote": "a location"
+            },
+            "determiner": "a",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 499,
+              "endChar": 518,
+              "quote": "a center of gravity"
+            },
+            "determiner": "a",
+            "head": "center of gravity"
+          },
+          {
+            "anchor": {
+              "startChar": 522,
+              "endChar": 539,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "21",
+        "ancestor": "20"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 54,
+            "quote": "the stabilizing module"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 316,
+            "endChar": 336,
+            "quote": "a stabilizing module"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 103,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 121,
+            "endChar": 137,
+            "quote": "the tipping away"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 634,
+            "endChar": 650,
+            "quote": "the tipping away"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 160,
+            "quote": "the upright state"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 124,
+            "quote": "an upright state"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "21.a",
+        "parent": "21"
+      },
+      {
+        "kind": "functional",
+        "element": "21.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 54,
+                "quote": "the stabilizing module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 74,
+              "quote": " further determines "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 85,
+                "quote": "a direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 85,
+              "endChar": 86,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 103,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 121,
+              "quote": " is moving during "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 121,
+                "endChar": 137,
+                "quote": "the tipping away"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 137,
+              "endChar": 143,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 160,
+                "quote": "the upright state"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.b",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 189,
+            "quote": "the control signals"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 483,
+            "endChar": 498,
+            "quote": "control signals"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.b",
+          "anchor": {
+            "startChar": 225,
+            "endChar": 263,
+            "quote": "the at least one lower contact surface"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 536,
+            "endChar": 570,
+            "quote": "at least one lower contact surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.b",
+          "anchor": {
+            "startChar": 269,
+            "endChar": 294,
+            "quote": "the lower contact surface"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 536,
+            "endChar": 570,
+            "quote": "at least one lower contact surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.b",
+          "anchor": {
+            "startChar": 319,
+            "endChar": 332,
+            "quote": "the direction"
+          }
+        },
+        "introducing": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 85,
+            "quote": "a direction"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.b",
+          "anchor": {
+            "startChar": 333,
+            "endChar": 350,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "21.b",
+        "parent": "21"
+      },
+      {
+        "kind": "functional",
+        "element": "21.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.b",
+              "anchor": {
+                "startChar": 170,
+                "endChar": 189,
+                "quote": "the control signals"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 189,
+              "endChar": 212,
+              "quote": " are generated so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.b",
+              "anchor": {
+                "startChar": 212,
+                "endChar": 221,
+                "quote": "movements"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 221,
+              "endChar": 225,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.b",
+              "anchor": {
+                "startChar": 225,
+                "endChar": 263,
+                "quote": "the at least one lower contact surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 263,
+              "endChar": 269,
+              "quote": " move "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.b",
+              "anchor": {
+                "startChar": 269,
+                "endChar": 294,
+                "quote": "the lower contact surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 294,
+              "endChar": 298,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.b",
+              "anchor": {
+                "startChar": 298,
+                "endChar": 309,
+                "quote": "a direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 309,
+              "endChar": 319,
+              "quote": " matching "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.b",
+              "anchor": {
+                "startChar": 319,
+                "endChar": 332,
+                "quote": "the direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 332,
+              "endChar": 333,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.b",
+              "anchor": {
+                "startChar": 333,
+                "endChar": 350,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 350,
+              "endChar": 360,
+              "quote": " is moving"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.c",
+          "anchor": {
+            "startChar": 374,
+            "endChar": 387,
+            "quote": "the movements"
+          }
+        },
+        "introducing": {
+          "path": "21.b",
+          "anchor": {
+            "startChar": 212,
+            "endChar": 221,
+            "quote": "movements"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.c",
+          "anchor": {
+            "startChar": 409,
+            "endChar": 434,
+            "quote": "the lower contact surface"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 536,
+            "endChar": 570,
+            "quote": "at least one lower contact surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.c",
+          "anchor": {
+            "startChar": 438,
+            "endChar": 455,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.c",
+          "anchor": {
+            "startChar": 522,
+            "endChar": 539,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "21.c",
+        "parent": "21"
+      },
+      {
+        "kind": "functional",
+        "element": "21.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.c",
+              "anchor": {
+                "startChar": 374,
+                "endChar": 387,
+                "quote": "the movements"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 387,
+              "endChar": 409,
+              "quote": " are selected to move "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.c",
+              "anchor": {
+                "startChar": 409,
+                "endChar": 434,
+                "quote": "the lower contact surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 434,
+              "endChar": 438,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.c",
+              "anchor": {
+                "startChar": 438,
+                "endChar": 455,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 455,
+              "endChar": 463,
+              "quote": " toward "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.c",
+              "anchor": {
+                "startChar": 463,
+                "endChar": 473,
+                "quote": "a location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 473,
+              "endChar": 499,
+              "quote": " that is vertically below "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.c",
+              "anchor": {
+                "startChar": 499,
+                "endChar": 518,
+                "quote": "a center of gravity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 518,
+              "endChar": 522,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.c",
+              "anchor": {
+                "startChar": 522,
+                "endChar": 539,
+                "quote": "the bipedal robot"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 22,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "22",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 20"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "22.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 178,
+          "quote": "the motion system comprises devices provided on the bipedal robot or provided as part of a holotile floor system that includes the support surface"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 49,
+              "quote": "the motion system"
+            },
+            "determiner": "the",
+            "head": "motion system"
+          },
+          {
+            "anchor": {
+              "startChar": 60,
+              "endChar": 67,
+              "quote": "devices"
+            },
+            "determiner": "bare",
+            "head": "devices"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 97,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 144,
+              "quote": "a holotile floor system"
+            },
+            "determiner": "a",
+            "head": "holotile floor system"
+          },
+          {
+            "anchor": {
+              "startChar": 159,
+              "endChar": 178,
+              "quote": "the support surface"
+            },
+            "determiner": "the",
+            "head": "support surface"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "22",
+        "ancestor": "20"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 49,
+            "quote": "the motion system"
+          }
+        },
+        "introducing": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 126,
+            "endChar": 141,
+            "quote": "a motion system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 97,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22.a",
+          "anchor": {
+            "startChar": 159,
+            "endChar": 178,
+            "quote": "the support surface"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 104,
+            "quote": "a support surface"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "22.a",
+        "parent": "22"
+      },
+      {
+        "kind": "functional",
+        "element": "22.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 49,
+                "quote": "the motion system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 60,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 60,
+                "endChar": 67,
+                "quote": "devices"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 80,
+              "quote": " provided on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 97,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 97,
+              "endChar": 121,
+              "quote": " or provided as part of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 121,
+                "endChar": 144,
+                "quote": "a holotile floor system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 144,
+              "endChar": 159,
+              "quote": " that includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 159,
+                "endChar": 178,
+                "quote": "the support surface"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 23,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "23",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 22"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "23.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 128,
+          "quote": "the bipedal robot is operable concurrently with the motion system to provide side-to-side motion"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 49,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 97,
+              "quote": "the motion system"
+            },
+            "determiner": "the",
+            "head": "motion system"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 128,
+              "quote": "side-to-side motion"
+            },
+            "determiner": "bare",
+            "head": "side-to-side motion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "23",
+        "ancestor": "22"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 49,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 97,
+            "quote": "the motion system"
+          }
+        },
+        "introducing": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 126,
+            "endChar": 141,
+            "quote": "a motion system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "23.a",
+        "parent": "23"
+      },
+      {
+        "kind": "functional",
+        "element": "23.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 49,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 80,
+              "quote": " is operable concurrently with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 97,
+                "quote": "the motion system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 97,
+              "endChar": 109,
+              "quote": " to provide "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 128,
+                "quote": "side-to-side motion"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 24,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "24",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 20"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "24.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 369,
+          "quote": "the sensor assembly comprises at least one of an inertial measurement unit (IMU) mounted on the bipedal robot, an optical tracker mounted on the bipedal robot combined with an optical sensor for generating the sensor data, and a magnetic tracker mounted on the bipedal robot combined with a magnetic sensor for generating the sensor data"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 51,
+              "quote": "the sensor assembly"
+            },
+            "determiner": "the",
+            "head": "sensor assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 106,
+              "quote": "an inertial measurement unit"
+            },
+            "determiner": "an",
+            "head": "inertial measurement unit"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 141,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 161,
+              "quote": "an optical tracker"
+            },
+            "determiner": "an",
+            "head": "optical tracker"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 190,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 222,
+              "quote": "an optical sensor"
+            },
+            "determiner": "an",
+            "head": "optical sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 238,
+              "endChar": 253,
+              "quote": "the sensor data"
+            },
+            "determiner": "the",
+            "head": "sensor data"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 277,
+              "quote": "a magnetic tracker"
+            },
+            "determiner": "a",
+            "head": "magnetic tracker"
+          },
+          {
+            "anchor": {
+              "startChar": 289,
+              "endChar": 306,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 321,
+              "endChar": 338,
+              "quote": "a magnetic sensor"
+            },
+            "determiner": "a",
+            "head": "magnetic sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 354,
+              "endChar": 369,
+              "quote": "the sensor data"
+            },
+            "determiner": "the",
+            "head": "sensor data"
+          }
+        ]
+      },
+      {
+        "path": "24.b",
+        "anchor": {
+          "startChar": 379,
+          "endChar": 470,
+          "quote": "the controller processes the sensor data to determine an angular rate for the bipedal robot"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 379,
+              "endChar": 393,
+              "quote": "the controller"
+            },
+            "determiner": "the",
+            "head": "controller"
+          },
+          {
+            "anchor": {
+              "startChar": 404,
+              "endChar": 419,
+              "quote": "the sensor data"
+            },
+            "determiner": "the",
+            "head": "sensor data"
+          },
+          {
+            "anchor": {
+              "startChar": 433,
+              "endChar": 448,
+              "quote": "an angular rate"
+            },
+            "determiner": "an",
+            "head": "angular rate"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 470,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          }
+        ]
+      },
+      {
+        "path": "24.c",
+        "anchor": {
+          "startChar": 484,
+          "endChar": 571,
+          "quote": "the controller generates the control signals when the angular rate is greater than zero"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 484,
+              "endChar": 498,
+              "quote": "the controller"
+            },
+            "determiner": "the",
+            "head": "controller"
+          },
+          {
+            "anchor": {
+              "startChar": 509,
+              "endChar": 528,
+              "quote": "the control signals"
+            },
+            "determiner": "the",
+            "head": "control signals"
+          },
+          {
+            "anchor": {
+              "startChar": 534,
+              "endChar": 550,
+              "quote": "the angular rate"
+            },
+            "determiner": "the",
+            "head": "angular rate"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "24",
+        "ancestor": "20"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 51,
+            "quote": "the sensor assembly"
+          }
+        },
+        "introducing": {
+          "path": "20.c",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 243,
+            "quote": "a sensor assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 124,
+            "endChar": 141,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 173,
+            "endChar": 190,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 289,
+            "endChar": 306,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 354,
+            "endChar": 369,
+            "quote": "the sensor data"
+          }
+        },
+        "introducing": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 238,
+            "endChar": 253,
+            "quote": "the sensor data"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "24.a",
+        "parent": "24"
+      },
+      {
+        "kind": "functional",
+        "element": "24.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 51,
+                "quote": "the sensor assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 51,
+              "endChar": 78,
+              "quote": " comprises at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 106,
+                "quote": "an inertial measurement unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 106,
+              "endChar": 124,
+              "quote": " (IMU) mounted on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 124,
+                "endChar": 141,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 141,
+              "endChar": 143,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 161,
+                "quote": "an optical tracker"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 161,
+              "endChar": 173,
+              "quote": " mounted on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 173,
+                "endChar": 190,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 190,
+              "endChar": 205,
+              "quote": " combined with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 205,
+                "endChar": 222,
+                "quote": "an optical sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 222,
+              "endChar": 238,
+              "quote": " for generating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 238,
+                "endChar": 253,
+                "quote": "the sensor data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 253,
+              "endChar": 259,
+              "quote": ", and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 277,
+                "quote": "a magnetic tracker"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 277,
+              "endChar": 289,
+              "quote": " mounted on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 289,
+                "endChar": 306,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 306,
+              "endChar": 321,
+              "quote": " combined with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 321,
+                "endChar": 338,
+                "quote": "a magnetic sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 338,
+              "endChar": 354,
+              "quote": " for generating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 354,
+                "endChar": 369,
+                "quote": "the sensor data"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 379,
+            "endChar": 393,
+            "quote": "the controller"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 290,
+            "quote": "a controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 404,
+            "endChar": 419,
+            "quote": "the sensor data"
+          }
+        },
+        "introducing": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 238,
+            "endChar": 253,
+            "quote": "the sensor data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 453,
+            "endChar": 470,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "24.b",
+        "parent": "24"
+      },
+      {
+        "kind": "functional",
+        "element": "24.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 379,
+                "endChar": 393,
+                "quote": "the controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 393,
+              "endChar": 404,
+              "quote": " processes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 404,
+                "endChar": 419,
+                "quote": "the sensor data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 419,
+              "endChar": 433,
+              "quote": " to determine "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 433,
+                "endChar": 448,
+                "quote": "an angular rate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 448,
+              "endChar": 453,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.b",
+              "anchor": {
+                "startChar": 453,
+                "endChar": 470,
+                "quote": "the bipedal robot"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.c",
+          "anchor": {
+            "startChar": 484,
+            "endChar": 498,
+            "quote": "the controller"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 290,
+            "quote": "a controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.c",
+          "anchor": {
+            "startChar": 509,
+            "endChar": 528,
+            "quote": "the control signals"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 483,
+            "endChar": 498,
+            "quote": "control signals"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.c",
+          "anchor": {
+            "startChar": 534,
+            "endChar": 550,
+            "quote": "the angular rate"
+          }
+        },
+        "introducing": {
+          "path": "24.b",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 448,
+            "quote": "an angular rate"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "24.c",
+        "parent": "24"
+      },
+      {
+        "kind": "functional",
+        "element": "24.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.c",
+              "anchor": {
+                "startChar": 484,
+                "endChar": 498,
+                "quote": "the controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 498,
+              "endChar": 509,
+              "quote": " generates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.c",
+              "anchor": {
+                "startChar": 509,
+                "endChar": 528,
+                "quote": "the control signals"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 528,
+              "endChar": 534,
+              "quote": " when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.c",
+              "anchor": {
+                "startChar": 534,
+                "endChar": 550,
+                "quote": "the angular rate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 550,
+              "endChar": 571,
+              "quote": " is greater than zero"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 238,
+            "endChar": 253,
+            "quote": "the sensor data"
+          }
+        },
+        "introducing": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 348,
+            "endChar": 352,
+            "quote": "data"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 25,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "25",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 20"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "25.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 168,
+          "quote": "the motion system comprises a floor system providing omnidirectional movement of the bipedal robot and wherein the floor system includes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 49,
+              "quote": "the motion system"
+            },
+            "determiner": "the",
+            "head": "motion system"
+          },
+          {
+            "anchor": {
+              "startChar": 60,
+              "endChar": 74,
+              "quote": "a floor system"
+            },
+            "determiner": "a",
+            "head": "floor system"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 109,
+              "quote": "omnidirectional movement"
+            },
+            "determiner": "bare",
+            "head": "omnidirectional movement"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 130,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 159,
+              "quote": "the floor system"
+            },
+            "determiner": "the",
+            "head": "floor system"
+          }
+        ]
+      },
+      {
+        "path": "25.a.i",
+        "anchor": {
+          "startChar": 170,
+          "endChar": 419,
+          "quote": "a plurality of disk assemblies, wherein each of the disk assemblies includes a contact disk with an upper contact surface supported at a tilt angle relative to horizontal whereby the contact disk has a raised portion for supporting the bipedal robot"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 170,
+              "endChar": 200,
+              "quote": "a plurality of disk assemblies"
+            },
+            "determiner": "plurality-of",
+            "head": "disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 218,
+              "endChar": 237,
+              "quote": "the disk assemblies"
+            },
+            "determiner": "the",
+            "head": "disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 261,
+              "quote": "a contact disk"
+            },
+            "determiner": "a",
+            "head": "contact disk"
+          },
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 291,
+              "quote": "an upper contact surface"
+            },
+            "determiner": "an",
+            "head": "upper contact surface"
+          },
+          {
+            "anchor": {
+              "startChar": 305,
+              "endChar": 317,
+              "quote": "a tilt angle"
+            },
+            "determiner": "a",
+            "head": "tilt angle"
+          },
+          {
+            "anchor": {
+              "startChar": 349,
+              "endChar": 365,
+              "quote": "the contact disk"
+            },
+            "determiner": "the",
+            "head": "contact disk"
+          },
+          {
+            "anchor": {
+              "startChar": 370,
+              "endChar": 386,
+              "quote": "a raised portion"
+            },
+            "determiner": "a",
+            "head": "raised portion"
+          },
+          {
+            "anchor": {
+              "startChar": 402,
+              "endChar": 419,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          }
+        ]
+      },
+      {
+        "path": "25.a.ii",
+        "anchor": {
+          "startChar": 421,
+          "endChar": 535,
+          "quote": "a drive system comprising a disk orienting mechanism and a disk rotation mechanism for each of the disk assemblies"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 421,
+              "endChar": 435,
+              "quote": "a drive system"
+            },
+            "determiner": "a",
+            "head": "drive system"
+          },
+          {
+            "anchor": {
+              "startChar": 447,
+              "endChar": 473,
+              "quote": "a disk orienting mechanism"
+            },
+            "determiner": "a",
+            "head": "disk orienting mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 478,
+              "endChar": 503,
+              "quote": "a disk rotation mechanism"
+            },
+            "determiner": "a",
+            "head": "disk rotation mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 516,
+              "endChar": 535,
+              "quote": "the disk assemblies"
+            },
+            "determiner": "the",
+            "head": "disk assemblies"
+          }
+        ]
+      },
+      {
+        "path": "25.a.iii",
+        "anchor": {
+          "startChar": 541,
+          "endChar": 950,
+          "quote": "during each operating period, a floor system controller first operating the disk orienting mechanism for each of the disk assemblies to orient the contact disk to set a location of the raised portion and second operating the disk rotation mechanism for each of the disk assemblies to rotate the contact disk about a rotation axis at a rotation rate, whereby the floor system provides the stabilizing movements"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 548,
+              "endChar": 569,
+              "quote": "each operating period"
+            },
+            "determiner": "bare",
+            "head": "operating period"
+          },
+          {
+            "anchor": {
+              "startChar": 571,
+              "endChar": 596,
+              "quote": "a floor system controller"
+            },
+            "determiner": "a",
+            "head": "floor system controller"
+          },
+          {
+            "anchor": {
+              "startChar": 613,
+              "endChar": 641,
+              "quote": "the disk orienting mechanism"
+            },
+            "determiner": "the",
+            "head": "disk orienting mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 654,
+              "endChar": 673,
+              "quote": "the disk assemblies"
+            },
+            "determiner": "the",
+            "head": "disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 684,
+              "endChar": 700,
+              "quote": "the contact disk"
+            },
+            "determiner": "the",
+            "head": "contact disk"
+          },
+          {
+            "anchor": {
+              "startChar": 708,
+              "endChar": 718,
+              "quote": "a location"
+            },
+            "determiner": "a",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 722,
+              "endChar": 740,
+              "quote": "the raised portion"
+            },
+            "determiner": "the",
+            "head": "raised portion"
+          },
+          {
+            "anchor": {
+              "startChar": 762,
+              "endChar": 789,
+              "quote": "the disk rotation mechanism"
+            },
+            "determiner": "the",
+            "head": "disk rotation mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 802,
+              "endChar": 821,
+              "quote": "the disk assemblies"
+            },
+            "determiner": "the",
+            "head": "disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 832,
+              "endChar": 848,
+              "quote": "the contact disk"
+            },
+            "determiner": "the",
+            "head": "contact disk"
+          },
+          {
+            "anchor": {
+              "startChar": 855,
+              "endChar": 870,
+              "quote": "a rotation axis"
+            },
+            "determiner": "a",
+            "head": "rotation axis"
+          },
+          {
+            "anchor": {
+              "startChar": 874,
+              "endChar": 889,
+              "quote": "a rotation rate"
+            },
+            "determiner": "a",
+            "head": "rotation rate"
+          },
+          {
+            "anchor": {
+              "startChar": 899,
+              "endChar": 915,
+              "quote": "the floor system"
+            },
+            "determiner": "the",
+            "head": "floor system"
+          },
+          {
+            "anchor": {
+              "startChar": 925,
+              "endChar": 950,
+              "quote": "the stabilizing movements"
+            },
+            "determiner": "the",
+            "head": "stabilizing movements"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "25",
+        "ancestor": "20"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 49,
+            "quote": "the motion system"
+          }
+        },
+        "introducing": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 126,
+            "endChar": 141,
+            "quote": "a motion system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 130,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 159,
+            "quote": "the floor system"
+          }
+        },
+        "introducing": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 74,
+            "quote": "a floor system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "25.a",
+        "parent": "25"
+      },
+      {
+        "kind": "functional",
+        "element": "25.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 49,
+                "quote": "the motion system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 60,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a",
+              "anchor": {
+                "startChar": 60,
+                "endChar": 74,
+                "quote": "a floor system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 74,
+              "endChar": 85,
+              "quote": " providing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 109,
+                "quote": "omnidirectional movement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 113,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 130,
+                "quote": "the bipedal robot"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 143,
+              "quote": " and wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 159,
+                "quote": "the floor system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 159,
+              "endChar": 168,
+              "quote": " includes"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 218,
+            "endChar": 237,
+            "quote": "the disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 200,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 349,
+            "endChar": 365,
+            "quote": "the contact disk"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 247,
+            "endChar": 261,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 402,
+            "endChar": 419,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "25.a.i",
+        "parent": "25.a"
+      },
+      {
+        "kind": "functional",
+        "element": "25.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 170,
+                "endChar": 200,
+                "quote": "a plurality of disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 200,
+              "endChar": 218,
+              "quote": ", wherein each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 218,
+                "endChar": 237,
+                "quote": "the disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 237,
+              "endChar": 247,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 247,
+                "endChar": 261,
+                "quote": "a contact disk"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 261,
+              "endChar": 267,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 267,
+                "endChar": 291,
+                "quote": "an upper contact surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 291,
+              "endChar": 305,
+              "quote": " supported at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 305,
+                "endChar": 317,
+                "quote": "a tilt angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 317,
+              "endChar": 349,
+              "quote": " relative to horizontal whereby "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 349,
+                "endChar": 365,
+                "quote": "the contact disk"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 365,
+              "endChar": 370,
+              "quote": " has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 370,
+                "endChar": 386,
+                "quote": "a raised portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 386,
+              "endChar": 402,
+              "quote": " for supporting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.i",
+              "anchor": {
+                "startChar": 402,
+                "endChar": 419,
+                "quote": "the bipedal robot"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.ii",
+          "anchor": {
+            "startChar": 516,
+            "endChar": 535,
+            "quote": "the disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 200,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "25.a.ii",
+        "parent": "25.a"
+      },
+      {
+        "kind": "functional",
+        "element": "25.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.ii",
+              "anchor": {
+                "startChar": 421,
+                "endChar": 435,
+                "quote": "a drive system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 435,
+              "endChar": 447,
+              "quote": " comprising "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.ii",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 473,
+                "quote": "a disk orienting mechanism"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 473,
+              "endChar": 478,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.ii",
+              "anchor": {
+                "startChar": 478,
+                "endChar": 503,
+                "quote": "a disk rotation mechanism"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 503,
+              "endChar": 516,
+              "quote": " for each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.ii",
+              "anchor": {
+                "startChar": 516,
+                "endChar": 535,
+                "quote": "the disk assemblies"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 613,
+            "endChar": 641,
+            "quote": "the disk orienting mechanism"
+          }
+        },
+        "introducing": {
+          "path": "25.a.ii",
+          "anchor": {
+            "startChar": 447,
+            "endChar": 473,
+            "quote": "a disk orienting mechanism"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 654,
+            "endChar": 673,
+            "quote": "the disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 200,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 684,
+            "endChar": 700,
+            "quote": "the contact disk"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 247,
+            "endChar": 261,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 722,
+            "endChar": 740,
+            "quote": "the raised portion"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 370,
+            "endChar": 386,
+            "quote": "a raised portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 762,
+            "endChar": 789,
+            "quote": "the disk rotation mechanism"
+          }
+        },
+        "introducing": {
+          "path": "25.a.ii",
+          "anchor": {
+            "startChar": 478,
+            "endChar": 503,
+            "quote": "a disk rotation mechanism"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 802,
+            "endChar": 821,
+            "quote": "the disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 200,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 832,
+            "endChar": 848,
+            "quote": "the contact disk"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 247,
+            "endChar": 261,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 899,
+            "endChar": 915,
+            "quote": "the floor system"
+          }
+        },
+        "introducing": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 74,
+            "quote": "a floor system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "25.a.iii",
+        "parent": "25.a"
+      },
+      {
+        "kind": "functional",
+        "element": "25.a.iii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 541,
+              "endChar": 548,
+              "quote": "during "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 548,
+                "endChar": 569,
+                "quote": "each operating period"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 569,
+              "endChar": 571,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 571,
+                "endChar": 596,
+                "quote": "a floor system controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 596,
+              "endChar": 613,
+              "quote": " first operating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 613,
+                "endChar": 641,
+                "quote": "the disk orienting mechanism"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 641,
+              "endChar": 654,
+              "quote": " for each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 654,
+                "endChar": 673,
+                "quote": "the disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 673,
+              "endChar": 684,
+              "quote": " to orient "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 684,
+                "endChar": 700,
+                "quote": "the contact disk"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 700,
+              "endChar": 708,
+              "quote": " to set "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 708,
+                "endChar": 718,
+                "quote": "a location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 718,
+              "endChar": 722,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 722,
+                "endChar": 740,
+                "quote": "the raised portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 740,
+              "endChar": 762,
+              "quote": " and second operating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 762,
+                "endChar": 789,
+                "quote": "the disk rotation mechanism"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 789,
+              "endChar": 802,
+              "quote": " for each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 802,
+                "endChar": 821,
+                "quote": "the disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 821,
+              "endChar": 832,
+              "quote": " to rotate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 832,
+                "endChar": 848,
+                "quote": "the contact disk"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 848,
+              "endChar": 855,
+              "quote": " about "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 855,
+                "endChar": 870,
+                "quote": "a rotation axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 870,
+              "endChar": 874,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 874,
+                "endChar": 889,
+                "quote": "a rotation rate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 889,
+              "endChar": 899,
+              "quote": ", whereby "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 899,
+                "endChar": 915,
+                "quote": "the floor system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 915,
+              "endChar": 925,
+              "quote": " provides "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.a.iii",
+              "anchor": {
+                "startChar": 925,
+                "endChar": 950,
+                "quote": "the stabilizing movements"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 26,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "26",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 20"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "26.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 85,
+          "quote": "the motion system comprises a floor system comprising"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 49,
+              "quote": "the motion system"
+            },
+            "determiner": "the",
+            "head": "motion system"
+          },
+          {
+            "anchor": {
+              "startChar": 60,
+              "endChar": 74,
+              "quote": "a floor system"
+            },
+            "determiner": "a",
+            "head": "floor system"
+          }
+        ]
+      },
+      {
+        "path": "26.a.i",
+        "anchor": {
+          "startChar": 87,
+          "endChar": 327,
+          "quote": "a plurality of active tiles each comprising a plurality of disk assemblies, wherein each of the disk assemblies includes a contact disk supported at a tilt angle whereby the contact disk has a raised portion for contacting the bipedal robot"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 87,
+              "endChar": 114,
+              "quote": "a plurality of active tiles"
+            },
+            "determiner": "plurality-of",
+            "head": "active tiles"
+          },
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 161,
+              "quote": "a plurality of disk assemblies"
+            },
+            "determiner": "plurality-of",
+            "head": "disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 179,
+              "endChar": 198,
+              "quote": "the disk assemblies"
+            },
+            "determiner": "the",
+            "head": "disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 208,
+              "endChar": 222,
+              "quote": "a contact disk"
+            },
+            "determiner": "a",
+            "head": "contact disk"
+          },
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 248,
+              "quote": "a tilt angle"
+            },
+            "determiner": "a",
+            "head": "tilt angle"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 273,
+              "quote": "the contact disk"
+            },
+            "determiner": "the",
+            "head": "contact disk"
+          },
+          {
+            "anchor": {
+              "startChar": 278,
+              "endChar": 294,
+              "quote": "a raised portion"
+            },
+            "determiner": "a",
+            "head": "raised portion"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 327,
+              "quote": "the bipedal robot"
+            },
+            "determiner": "the",
+            "head": "bipedal robot"
+          }
+        ]
+      },
+      {
+        "path": "26.a.ii",
+        "anchor": {
+          "startChar": 333,
+          "endChar": 833,
+          "quote": "a drive system for each of the active tiles, wherein the drive system of at least one of the active tiles first operates to orient the contact disks of the plurality of disk assemblies in the at least one of the active tiles to set a location of the raised portion and second operates to rotate each of the contact disks of the plurality of disk assemblies at a rotation rate about a rotation axis, wherein the rotation axes of the disk assemblies in the at least one of the active tiles are parallel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 333,
+              "endChar": 347,
+              "quote": "a drive system"
+            },
+            "determiner": "a",
+            "head": "drive system"
+          },
+          {
+            "anchor": {
+              "startChar": 360,
+              "endChar": 376,
+              "quote": "the active tiles"
+            },
+            "determiner": "the",
+            "head": "active tiles"
+          },
+          {
+            "anchor": {
+              "startChar": 386,
+              "endChar": 402,
+              "quote": "the drive system"
+            },
+            "determiner": "the",
+            "head": "drive system"
+          },
+          {
+            "anchor": {
+              "startChar": 422,
+              "endChar": 438,
+              "quote": "the active tiles"
+            },
+            "determiner": "the",
+            "head": "active tiles"
+          },
+          {
+            "anchor": {
+              "startChar": 464,
+              "endChar": 481,
+              "quote": "the contact disks"
+            },
+            "determiner": "the",
+            "head": "contact disks"
+          },
+          {
+            "anchor": {
+              "startChar": 485,
+              "endChar": 517,
+              "quote": "the plurality of disk assemblies"
+            },
+            "determiner": "the",
+            "head": "plurality of disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 541,
+              "endChar": 557,
+              "quote": "the active tiles"
+            },
+            "determiner": "the",
+            "head": "active tiles"
+          },
+          {
+            "anchor": {
+              "startChar": 565,
+              "endChar": 575,
+              "quote": "a location"
+            },
+            "determiner": "a",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 579,
+              "endChar": 597,
+              "quote": "the raised portion"
+            },
+            "determiner": "the",
+            "head": "raised portion"
+          },
+          {
+            "anchor": {
+              "startChar": 636,
+              "endChar": 653,
+              "quote": "the contact disks"
+            },
+            "determiner": "the",
+            "head": "contact disks"
+          },
+          {
+            "anchor": {
+              "startChar": 657,
+              "endChar": 689,
+              "quote": "the plurality of disk assemblies"
+            },
+            "determiner": "the",
+            "head": "plurality of disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 693,
+              "endChar": 708,
+              "quote": "a rotation rate"
+            },
+            "determiner": "a",
+            "head": "rotation rate"
+          },
+          {
+            "anchor": {
+              "startChar": 715,
+              "endChar": 730,
+              "quote": "a rotation axis"
+            },
+            "determiner": "a",
+            "head": "rotation axis"
+          },
+          {
+            "anchor": {
+              "startChar": 740,
+              "endChar": 757,
+              "quote": "the rotation axes"
+            },
+            "determiner": "the",
+            "head": "rotation axes"
+          },
+          {
+            "anchor": {
+              "startChar": 761,
+              "endChar": 780,
+              "quote": "the disk assemblies"
+            },
+            "determiner": "the",
+            "head": "disk assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 804,
+              "endChar": 820,
+              "quote": "the active tiles"
+            },
+            "determiner": "the",
+            "head": "active tiles"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "26",
+        "ancestor": "20"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 49,
+            "quote": "the motion system"
+          }
+        },
+        "introducing": {
+          "path": "20.b",
+          "anchor": {
+            "startChar": 126,
+            "endChar": 141,
+            "quote": "a motion system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a",
+        "parent": "26"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 49,
+                "quote": "the motion system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 60,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a",
+              "anchor": {
+                "startChar": 60,
+                "endChar": 74,
+                "quote": "a floor system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 74,
+              "endChar": 85,
+              "quote": " comprising"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 179,
+            "endChar": 198,
+            "quote": "the disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 161,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 257,
+            "endChar": 273,
+            "quote": "the contact disk"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 208,
+            "endChar": 222,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 327,
+            "quote": "the bipedal robot"
+          }
+        },
+        "introducing": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 57,
+            "endChar": 72,
+            "quote": "a bipedal robot"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a.i",
+        "parent": "26.a"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a.i",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 87,
+                "endChar": 114,
+                "quote": "a plurality of active tiles"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 114,
+              "endChar": 131,
+              "quote": " each comprising "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 131,
+                "endChar": 161,
+                "quote": "a plurality of disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 161,
+              "endChar": 179,
+              "quote": ", wherein each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 179,
+                "endChar": 198,
+                "quote": "the disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 198,
+              "endChar": 208,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 208,
+                "endChar": 222,
+                "quote": "a contact disk"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 222,
+              "endChar": 236,
+              "quote": " supported at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 248,
+                "quote": "a tilt angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 248,
+              "endChar": 257,
+              "quote": " whereby "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 257,
+                "endChar": 273,
+                "quote": "the contact disk"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 273,
+              "endChar": 278,
+              "quote": " has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 278,
+                "endChar": 294,
+                "quote": "a raised portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 294,
+              "endChar": 310,
+              "quote": " for contacting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 327,
+                "quote": "the bipedal robot"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 360,
+            "endChar": 376,
+            "quote": "the active tiles"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 114,
+            "quote": "a plurality of active tiles"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 386,
+            "endChar": 402,
+            "quote": "the drive system"
+          }
+        },
+        "introducing": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 333,
+            "endChar": 347,
+            "quote": "a drive system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 422,
+            "endChar": 438,
+            "quote": "the active tiles"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 114,
+            "quote": "a plurality of active tiles"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 464,
+            "endChar": 481,
+            "quote": "the contact disks"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 208,
+            "endChar": 222,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 485,
+            "endChar": 517,
+            "quote": "the plurality of disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 161,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 541,
+            "endChar": 557,
+            "quote": "the active tiles"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 114,
+            "quote": "a plurality of active tiles"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 579,
+            "endChar": 597,
+            "quote": "the raised portion"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 294,
+            "quote": "a raised portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 636,
+            "endChar": 653,
+            "quote": "the contact disks"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 208,
+            "endChar": 222,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 657,
+            "endChar": 689,
+            "quote": "the plurality of disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 161,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 740,
+            "endChar": 757,
+            "quote": "the rotation axes"
+          }
+        },
+        "introducing": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 715,
+            "endChar": 730,
+            "quote": "a rotation axis"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 761,
+            "endChar": 780,
+            "quote": "the disk assemblies"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 161,
+            "quote": "a plurality of disk assemblies"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 804,
+            "endChar": 820,
+            "quote": "the active tiles"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 114,
+            "quote": "a plurality of active tiles"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a.ii",
+        "parent": "26.a"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 333,
+                "endChar": 347,
+                "quote": "a drive system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 347,
+              "endChar": 360,
+              "quote": " for each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 360,
+                "endChar": 376,
+                "quote": "the active tiles"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 376,
+              "endChar": 386,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 386,
+                "endChar": 402,
+                "quote": "the drive system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 402,
+              "endChar": 422,
+              "quote": " of at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 422,
+                "endChar": 438,
+                "quote": "the active tiles"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 438,
+              "endChar": 464,
+              "quote": " first operates to orient "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 464,
+                "endChar": 481,
+                "quote": "the contact disks"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 481,
+              "endChar": 485,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 485,
+                "endChar": 517,
+                "quote": "the plurality of disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 517,
+              "endChar": 541,
+              "quote": " in the at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 541,
+                "endChar": 557,
+                "quote": "the active tiles"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 557,
+              "endChar": 565,
+              "quote": " to set "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 565,
+                "endChar": 575,
+                "quote": "a location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 575,
+              "endChar": 579,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 579,
+                "endChar": 597,
+                "quote": "the raised portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 597,
+              "endChar": 636,
+              "quote": " and second operates to rotate each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 636,
+                "endChar": 653,
+                "quote": "the contact disks"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 653,
+              "endChar": 657,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 657,
+                "endChar": 689,
+                "quote": "the plurality of disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 689,
+              "endChar": 693,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 693,
+                "endChar": 708,
+                "quote": "a rotation rate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 708,
+              "endChar": 715,
+              "quote": " about "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 715,
+                "endChar": 730,
+                "quote": "a rotation axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 730,
+              "endChar": 740,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 740,
+                "endChar": 757,
+                "quote": "the rotation axes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 757,
+              "endChar": 761,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 761,
+                "endChar": 780,
+                "quote": "the disk assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 780,
+              "endChar": 804,
+              "quote": " in the at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 804,
+                "endChar": 820,
+                "quote": "the active tiles"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 820,
+              "endChar": 833,
+              "quote": " are parallel"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 27,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "27",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 25"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "27.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 149,
+          "quote": "each of the disk orienting mechanisms comprises a swashplate with an angled upper surface supporting the contact disk"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 69,
+              "quote": "the disk orienting mechanisms"
+            },
+            "determiner": "the",
+            "head": "disk orienting mechanisms"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 92,
+              "quote": "a swashplate"
+            },
+            "determiner": "a",
+            "head": "swashplate"
+          },
+          {
+            "anchor": {
+              "startChar": 98,
+              "endChar": 121,
+              "quote": "an angled upper surface"
+            },
+            "determiner": "an",
+            "head": "angled upper surface"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 149,
+              "quote": "the contact disk"
+            },
+            "determiner": "the",
+            "head": "contact disk"
+          }
+        ]
+      },
+      {
+        "path": "27.b",
+        "anchor": {
+          "startChar": 159,
+          "endChar": 253,
+          "quote": "the swashplate is rotatable about a vertical axis to define the location of the raised portion"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 159,
+              "endChar": 173,
+              "quote": "the swashplate"
+            },
+            "determiner": "the",
+            "head": "swashplate"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 208,
+              "quote": "a vertical axis"
+            },
+            "determiner": "a",
+            "head": "vertical axis"
+          },
+          {
+            "anchor": {
+              "startChar": 219,
+              "endChar": 231,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 235,
+              "endChar": 253,
+              "quote": "the raised portion"
+            },
+            "determiner": "the",
+            "head": "raised portion"
+          }
+        ]
+      },
+      {
+        "path": "27.c",
+        "anchor": {
+          "startChar": 263,
+          "endChar": 412,
+          "quote": "each of the disk rotation mechanisms comprises a drive shaft coupled to a lower surface of the contact disk and driven to rotate at the rotation rate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 271,
+              "endChar": 299,
+              "quote": "the disk rotation mechanisms"
+            },
+            "determiner": "the",
+            "head": "disk rotation mechanisms"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 323,
+              "quote": "a drive shaft"
+            },
+            "determiner": "a",
+            "head": "drive shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 335,
+              "endChar": 350,
+              "quote": "a lower surface"
+            },
+            "determiner": "a",
+            "head": "lower surface"
+          },
+          {
+            "anchor": {
+              "startChar": 354,
+              "endChar": 370,
+              "quote": "the contact disk"
+            },
+            "determiner": "the",
+            "head": "contact disk"
+          },
+          {
+            "anchor": {
+              "startChar": 395,
+              "endChar": 412,
+              "quote": "the rotation rate"
+            },
+            "determiner": "the",
+            "head": "rotation rate"
+          }
+        ]
+      },
+      {
+        "path": "27.d",
+        "anchor": {
+          "startChar": 422,
+          "endChar": 565,
+          "quote": "the drive shaft extends through a center portion of the swashplate, whereby the swashplate is independently rotated relative to the drive shaft"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 422,
+              "endChar": 437,
+              "quote": "the drive shaft"
+            },
+            "determiner": "the",
+            "head": "drive shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 454,
+              "endChar": 470,
+              "quote": "a center portion"
+            },
+            "determiner": "a",
+            "head": "center portion"
+          },
+          {
+            "anchor": {
+              "startChar": 474,
+              "endChar": 488,
+              "quote": "the swashplate"
+            },
+            "determiner": "the",
+            "head": "swashplate"
+          },
+          {
+            "anchor": {
+              "startChar": 498,
+              "endChar": 512,
+              "quote": "the swashplate"
+            },
+            "determiner": "the",
+            "head": "swashplate"
+          },
+          {
+            "anchor": {
+              "startChar": 550,
+              "endChar": 565,
+              "quote": "the drive shaft"
+            },
+            "determiner": "the",
+            "head": "drive shaft"
+          }
+        ]
+      },
+      {
+        "path": "27.e",
+        "anchor": {
+          "startChar": 579,
+          "endChar": 939,
+          "quote": "the drive system of each of the active tiles comprises a first drive assembly for concurrently rotating the swashplates of all the drive assemblies of the active tile to define the location of the raised portion and a second drive assembly for concurrently rotating the drive shafts of all the drive assemblies of the active tile to rotate at the rotation rate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 579,
+              "endChar": 595,
+              "quote": "the drive system"
+            },
+            "determiner": "the",
+            "head": "drive system"
+          },
+          {
+            "anchor": {
+              "startChar": 607,
+              "endChar": 623,
+              "quote": "the active tiles"
+            },
+            "determiner": "the",
+            "head": "active tiles"
+          },
+          {
+            "anchor": {
+              "startChar": 634,
+              "endChar": 656,
+              "quote": "a first drive assembly"
+            },
+            "determiner": "a",
+            "head": "first drive assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 683,
+              "endChar": 698,
+              "quote": "the swashplates"
+            },
+            "determiner": "the",
+            "head": "swashplates"
+          },
+          {
+            "anchor": {
+              "startChar": 706,
+              "endChar": 726,
+              "quote": "the drive assemblies"
+            },
+            "determiner": "the",
+            "head": "drive assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 730,
+              "endChar": 745,
+              "quote": "the active tile"
+            },
+            "determiner": "the",
+            "head": "active tile"
+          },
+          {
+            "anchor": {
+              "startChar": 756,
+              "endChar": 768,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 772,
+              "endChar": 790,
+              "quote": "the raised portion"
+            },
+            "determiner": "the",
+            "head": "raised portion"
+          },
+          {
+            "anchor": {
+              "startChar": 795,
+              "endChar": 818,
+              "quote": "a second drive assembly"
+            },
+            "determiner": "a",
+            "head": "second drive assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 845,
+              "endChar": 861,
+              "quote": "the drive shafts"
+            },
+            "determiner": "the",
+            "head": "drive shafts"
+          },
+          {
+            "anchor": {
+              "startChar": 869,
+              "endChar": 889,
+              "quote": "the drive assemblies"
+            },
+            "determiner": "the",
+            "head": "drive assemblies"
+          },
+          {
+            "anchor": {
+              "startChar": 893,
+              "endChar": 908,
+              "quote": "the active tile"
+            },
+            "determiner": "the",
+            "head": "active tile"
+          },
+          {
+            "anchor": {
+              "startChar": 922,
+              "endChar": 939,
+              "quote": "the rotation rate"
+            },
+            "determiner": "the",
+            "head": "rotation rate"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "27",
+        "ancestor": "25"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 40,
+            "endChar": 69,
+            "quote": "the disk orienting mechanisms"
+          }
+        },
+        "introducing": {
+          "path": "25.a.ii",
+          "anchor": {
+            "startChar": 447,
+            "endChar": 473,
+            "quote": "a disk orienting mechanism"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 133,
+            "endChar": 149,
+            "quote": "the contact disk"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 247,
+            "endChar": 261,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "27.a",
+        "parent": "27"
+      },
+      {
+        "kind": "functional",
+        "element": "27.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 32,
+              "endChar": 40,
+              "quote": "each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 40,
+                "endChar": 69,
+                "quote": "the disk orienting mechanisms"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 80,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 92,
+                "quote": "a swashplate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 98,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 98,
+                "endChar": 121,
+                "quote": "an angled upper surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 133,
+              "quote": " supporting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 149,
+                "quote": "the contact disk"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.b",
+          "anchor": {
+            "startChar": 159,
+            "endChar": 173,
+            "quote": "the swashplate"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 92,
+            "quote": "a swashplate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.b",
+          "anchor": {
+            "startChar": 219,
+            "endChar": 231,
+            "quote": "the location"
+          }
+        },
+        "introducing": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 708,
+            "endChar": 718,
+            "quote": "a location"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.b",
+          "anchor": {
+            "startChar": 235,
+            "endChar": 253,
+            "quote": "the raised portion"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 370,
+            "endChar": 386,
+            "quote": "a raised portion"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "27.b",
+        "parent": "27"
+      },
+      {
+        "kind": "functional",
+        "element": "27.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.b",
+              "anchor": {
+                "startChar": 159,
+                "endChar": 173,
+                "quote": "the swashplate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 173,
+              "endChar": 193,
+              "quote": " is rotatable about "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.b",
+              "anchor": {
+                "startChar": 193,
+                "endChar": 208,
+                "quote": "a vertical axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 208,
+              "endChar": 219,
+              "quote": " to define "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.b",
+              "anchor": {
+                "startChar": 219,
+                "endChar": 231,
+                "quote": "the location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 231,
+              "endChar": 235,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.b",
+              "anchor": {
+                "startChar": 235,
+                "endChar": 253,
+                "quote": "the raised portion"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.c",
+          "anchor": {
+            "startChar": 271,
+            "endChar": 299,
+            "quote": "the disk rotation mechanisms"
+          }
+        },
+        "introducing": {
+          "path": "25.a.ii",
+          "anchor": {
+            "startChar": 478,
+            "endChar": 503,
+            "quote": "a disk rotation mechanism"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.c",
+          "anchor": {
+            "startChar": 354,
+            "endChar": 370,
+            "quote": "the contact disk"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 247,
+            "endChar": 261,
+            "quote": "a contact disk"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.c",
+          "anchor": {
+            "startChar": 395,
+            "endChar": 412,
+            "quote": "the rotation rate"
+          }
+        },
+        "introducing": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 874,
+            "endChar": 889,
+            "quote": "a rotation rate"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "27.c",
+        "parent": "27"
+      },
+      {
+        "kind": "functional",
+        "element": "27.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 263,
+              "endChar": 271,
+              "quote": "each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.c",
+              "anchor": {
+                "startChar": 271,
+                "endChar": 299,
+                "quote": "the disk rotation mechanisms"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 299,
+              "endChar": 310,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.c",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 323,
+                "quote": "a drive shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 323,
+              "endChar": 335,
+              "quote": " coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.c",
+              "anchor": {
+                "startChar": 335,
+                "endChar": 350,
+                "quote": "a lower surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 350,
+              "endChar": 354,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.c",
+              "anchor": {
+                "startChar": 354,
+                "endChar": 370,
+                "quote": "the contact disk"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 370,
+              "endChar": 395,
+              "quote": " and driven to rotate at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.c",
+              "anchor": {
+                "startChar": 395,
+                "endChar": 412,
+                "quote": "the rotation rate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.d",
+          "anchor": {
+            "startChar": 422,
+            "endChar": 437,
+            "quote": "the drive shaft"
+          }
+        },
+        "introducing": {
+          "path": "27.c",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 323,
+            "quote": "a drive shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.d",
+          "anchor": {
+            "startChar": 474,
+            "endChar": 488,
+            "quote": "the swashplate"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 92,
+            "quote": "a swashplate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.d",
+          "anchor": {
+            "startChar": 498,
+            "endChar": 512,
+            "quote": "the swashplate"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 92,
+            "quote": "a swashplate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.d",
+          "anchor": {
+            "startChar": 550,
+            "endChar": 565,
+            "quote": "the drive shaft"
+          }
+        },
+        "introducing": {
+          "path": "27.c",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 323,
+            "quote": "a drive shaft"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "27.d",
+        "parent": "27"
+      },
+      {
+        "kind": "functional",
+        "element": "27.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.d",
+              "anchor": {
+                "startChar": 422,
+                "endChar": 437,
+                "quote": "the drive shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 437,
+              "endChar": 454,
+              "quote": " extends through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.d",
+              "anchor": {
+                "startChar": 454,
+                "endChar": 470,
+                "quote": "a center portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 470,
+              "endChar": 474,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.d",
+              "anchor": {
+                "startChar": 474,
+                "endChar": 488,
+                "quote": "the swashplate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 488,
+              "endChar": 498,
+              "quote": ", whereby "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.d",
+              "anchor": {
+                "startChar": 498,
+                "endChar": 512,
+                "quote": "the swashplate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 512,
+              "endChar": 550,
+              "quote": " is independently rotated relative to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.d",
+              "anchor": {
+                "startChar": 550,
+                "endChar": 565,
+                "quote": "the drive shaft"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.e",
+          "anchor": {
+            "startChar": 579,
+            "endChar": 595,
+            "quote": "the drive system"
+          }
+        },
+        "introducing": {
+          "path": "25.a.ii",
+          "anchor": {
+            "startChar": 421,
+            "endChar": 435,
+            "quote": "a drive system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.e",
+          "anchor": {
+            "startChar": 683,
+            "endChar": 698,
+            "quote": "the swashplates"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 80,
+            "endChar": 92,
+            "quote": "a swashplate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.e",
+          "anchor": {
+            "startChar": 756,
+            "endChar": 768,
+            "quote": "the location"
+          }
+        },
+        "introducing": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 708,
+            "endChar": 718,
+            "quote": "a location"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.e",
+          "anchor": {
+            "startChar": 772,
+            "endChar": 790,
+            "quote": "the raised portion"
+          }
+        },
+        "introducing": {
+          "path": "25.a.i",
+          "anchor": {
+            "startChar": 370,
+            "endChar": 386,
+            "quote": "a raised portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.e",
+          "anchor": {
+            "startChar": 845,
+            "endChar": 861,
+            "quote": "the drive shafts"
+          }
+        },
+        "introducing": {
+          "path": "27.c",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 323,
+            "quote": "a drive shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.e",
+          "anchor": {
+            "startChar": 922,
+            "endChar": 939,
+            "quote": "the rotation rate"
+          }
+        },
+        "introducing": {
+          "path": "25.a.iii",
+          "anchor": {
+            "startChar": 874,
+            "endChar": 889,
+            "quote": "a rotation rate"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "27.e",
+        "parent": "27"
+      },
+      {
+        "kind": "functional",
+        "element": "27.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 579,
+                "endChar": 595,
+                "quote": "the drive system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 595,
+              "endChar": 607,
+              "quote": " of each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 607,
+                "endChar": 623,
+                "quote": "the active tiles"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 623,
+              "endChar": 634,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 634,
+                "endChar": 656,
+                "quote": "a first drive assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 656,
+              "endChar": 683,
+              "quote": " for concurrently rotating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 683,
+                "endChar": 698,
+                "quote": "the swashplates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 698,
+              "endChar": 706,
+              "quote": " of all "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 706,
+                "endChar": 726,
+                "quote": "the drive assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 726,
+              "endChar": 730,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 730,
+                "endChar": 745,
+                "quote": "the active tile"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 745,
+              "endChar": 756,
+              "quote": " to define "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 756,
+                "endChar": 768,
+                "quote": "the location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 768,
+              "endChar": 772,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 772,
+                "endChar": 790,
+                "quote": "the raised portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 790,
+              "endChar": 795,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 795,
+                "endChar": 818,
+                "quote": "a second drive assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 818,
+              "endChar": 845,
+              "quote": " for concurrently rotating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 845,
+                "endChar": 861,
+                "quote": "the drive shafts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 861,
+              "endChar": 869,
+              "quote": " of all "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 869,
+                "endChar": 889,
+                "quote": "the drive assemblies"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 889,
+              "endChar": 893,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 893,
+                "endChar": 908,
+                "quote": "the active tile"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 908,
+              "endChar": 922,
+              "quote": " to rotate at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.e",
+              "anchor": {
+                "startChar": 922,
+                "endChar": 939,
+                "quote": "the rotation rate"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,74 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "16135952-root-20",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27
+  ],
+  "findings": [
+    {
+      "id": "sensor-data-semantic-antecedent",
+      "claimNumbers": [
+        24
+      ],
+      "path": "24.a",
+      "anchor": {
+        "startChar": 238,
+        "endChar": 253,
+        "quote": "the sensor data"
+      },
+      "kind": "missing-source-supported-antecedent",
+      "evidence": {
+        "earlierNominalIntroduction": {
+          "path": "20.d",
+          "anchor": {
+            "startChar": 348,
+            "endChar": 352,
+            "quote": "data"
+          }
+        },
+        "rootSourceContext": "a stabilizing module to process data from the sensor assembly",
+        "dependentSourceContext": "the sensor assembly comprises at least one of an inertial measurement unit (IMU) mounted on the bipedal robot, an optical tracker mounted on the bipedal robot combined with an optical sensor for generating the sensor data, and a magnetic tracker mounted on the bipedal robot combined with a magnetic sensor for generating the sensor data"
+      },
+      "reason": "Root claim 20 explicitly recites nominal data sourced from its unique sensor assembly. Claim 24 further limits that same assembly and calls its generated data the sensor data. The extractor withholds the first reference because there is no exact sensor-data term introduction, but semantic-reference/v2 does not impose exact-head identity. The data noun is already introduced and its sensor-assembly source is explicit; this is not an antecedent fabricated from a verb.",
+      "correction": "Add the source-supported antecedent from the first claim24 sensor-data term to root20.d data [348,352), preserving all source anchors and heads. Existing later sensor-data links may remain chained through the first explicit claim24 mention. Revise the extractor concern so absence of an exact compound-head match is not characterized as missing nominal introduction."
+    }
+  ],
+  "reviewScope": {
+    "claimCount": 8,
+    "elementCount": 32,
+    "termCount": 163,
+    "edgeCount": 149,
+    "functionalRelationCount": 24
+  },
+  "referenceSha256": "507d002fe4e991d51330928de5614e87cac3d9d93a17e1f4f34972324a66fc66",
+  "extractorSha256": "e5ff1fc1c994158c85fd653614dece6a40691295d578ade1805c031fee04b50c",
+  "verification": [
+    "Read every selected canonical claim, expected element/term/typed edge and extractor rationale; reviewed native XML, provenance and source-critic eligibility evidence. Source verification remains separately accepted at confidence 0.98; no fresh original-PDF or full-inventory authentication claimed.",
+    "Independent checks passed exact UTF-16 element/term/functional/antecedent source anchors, normalized head shape, ordered nonoverlapping owned terms, contiguous complete functional reconstruction, exact functional term participation, unique paths and absence of duplicate edges. All referenced endpoints exist, and cross-claim endpoints lie in the actual natural dependency ancestry. Native claims XML SHA-256 matches provenance and every canonical/native claim matches after permitted printed-number removal and whitespace normalization. These checks supplement semantic review; no decomposer was called."
+  ],
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json files written. Read source and ClaimElement model/tree/edge schemas; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, accuracy result or human agreement claimed.",
+  "reviewNotes": [
+    "Root 20 retains system/objects and four substantive limitations. Claims 25/26 retain their nested floor-system lists and full disk orientation/rotation/control relationships. Cardinal bounds and lower-contact-surface modifiers are complete; each operating period removes its outer distributive determiner without deleting source anchor words.",
+    "Actual ancestry is 23→22→20 and 27→25→20; other selected claims depend directly on 20. In particular claim27 active-tile references cannot borrow sibling26 introductions. Their missing introductions and ambiguous drive-assemblies set remain explicit and unlinked. Plural swashplates/drive shafts resolve to distributive each-mechanism introductions in the same claim.",
+    "Angular rate, control signals, motion system, sensor assembly, floor system and ordered disk/drive participants were audited against full source. The tipping-away nominal is first introduced definitely and later resolved to that exact nominal; no noun is fabricated from the earlier tipping predicate. Stabilizing-movements wording remains source-specific and explicitly uncertain rather than silently reworded.",
+    "The single actionable sensor-data finding prevents acceptance of this round. No correction to source eligibility or dependency wording is requested."
+  ],
+  "roundLimit": "Round1 of at most3 extractor/critic rounds; return the exact finding to extractor rather than editing expected labels."
+}

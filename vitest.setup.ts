@@ -100,6 +100,7 @@ type BunFileShim = {
 type BunServeOptions = {
   readonly fetch: (request: Request, server: ReturnType<BunTestShim["serve"]>) => Promise<Response> | Response;
   readonly hostname?: string;
+  readonly unix?: string;
   readonly port?: number;
   readonly maxRequestBodySize?: number;
 };
@@ -148,7 +149,7 @@ type BunTestShim = {
   readonly shimPortLockDirectory: string;
   readonly serve: (options: BunServeOptions) => {
     readonly hostname: string;
-    readonly port: number;
+    readonly port: number | undefined;
     readonly reload: (options: Pick<BunServeOptions, "fetch">) => void;
     readonly stop: (force?: boolean) => Promise<void>;
   };
@@ -510,7 +511,8 @@ const respondToRequest = async (
   handler: BunServeOptions["fetch"]
 ): Promise<void> => {
   try {
-    const fetchRequest = toFetchRequest(request, chunks, `${handle.hostname}:${handle.port}`);
+    const fallbackHost = handle.port === undefined ? "localhost" : `${handle.hostname}:${handle.port}`;
+    const fetchRequest = toFetchRequest(request, chunks, fallbackHost);
     await writeResponse(response, await handler(fetchRequest, handle));
   } catch (error) {
     response.statusCode = 500;
@@ -536,7 +538,8 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
   let handler = options.fetch;
   let stopped: Promise<void> | undefined;
   const hostname = options.hostname ?? "0.0.0.0";
-  const port = listenPort(options.port);
+  // Unix listeners must not reserve or bind an unrelated TCP port.
+  const port = options.unix === undefined ? listenPort(options.port) : undefined;
   let bindError: Error | undefined;
   let bindFailed = false;
   const server = NodeHttp.createServer((request, response) => {
@@ -549,7 +552,8 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
     bindError = error;
     bindFailed = true;
   });
-  server.listen(port, hostname);
+  if (options.unix !== undefined) server.listen(options.unix);
+  else server.listen(port, hostname);
 
   const handle: ReturnType<BunTestShim["serve"]> = {
     hostname,
@@ -563,7 +567,9 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
       handler = options.fetch;
     },
     stop: () =>
-      (bindFailed ? Promise.resolve() : (stopped ??= stopServer(server))).finally(() => releaseShimPort(port)),
+      (bindFailed ? Promise.resolve() : (stopped ??= stopServer(server))).finally(() => {
+        if (port !== undefined) releaseShimPort(port);
+      }),
   };
   return handle;
 };
@@ -772,4 +778,19 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
 // Node coverage runs use the same native primitive through this platform shim.
 if (!hasFunctionProperty(globalThis.crypto, "timingSafeEqual")) {
   Reflect.set(globalThis.crypto, "timingSafeEqual", NodeCrypto.timingSafeEqual);
+}
+
+// Effect's Bun HTTP adapter consumes Bun's batched reader API. Node readers
+// expose read() only; one returned chunk is a valid readMany() batch. Keep
+// cancellation and locking on the original reader, and leave native Bun alone.
+if (!hasFunctionProperty(ReadableStreamDefaultReader.prototype, "readMany")) {
+  Object.defineProperty(ReadableStreamDefaultReader.prototype, "readMany", {
+    configurable: true,
+    writable: true,
+    value: function <T>(this: ReadableStreamDefaultReader<T>) {
+      return this.read().then((result) =>
+        result.done ? { done: true, value: undefined } : { done: false, value: [result.value] }
+      );
+    },
+  });
 }

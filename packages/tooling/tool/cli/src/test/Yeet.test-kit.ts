@@ -40,6 +40,7 @@ export {
   lockfileChangedSinceBase,
   optionFromNonEmpty,
   refreshBaseRef,
+  runGitFoldedStdout,
   safeOriginBranchFromBaseForTesting,
 } from "../commands/Yeet/internal/GitExec.ts";
 export * from "../commands/Yeet/internal/Guards.ts";

@@ -1,0 +1,30 @@
+{
+  "kind": "accepted-main-census-integration",
+  "acceptedMain": "e2264f334cc5bd782e6faf4d6ca52f609139fe89",
+  "sourceMerge": "bb15b0f91228145f804fe3d4687619ffe8da992c",
+  "mainPullRequest": 2405,
+  "resolution": "Canonical accepted two-line removal of stale isolation declarations; no duplicate branch repair.",
+  "nodeRuntime": "22.23.4",
+  "censusTestsPassed": 1,
+  "declaredAndActualSuites": 83,
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-census-proof-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 48475992064,
+    "peakObservedBytes": 524136448,
+    "minimumAvailableBytes": 47590928384,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 74,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "priorFailure": "85vs83 diagnostic preserved in post-main-runtime-proof-20261031.json",
+  "hostedFinalHeadPending": true,
+  "recoveryHold": "preserved"
+}

@@ -1,0 +1,212 @@
+{
+  "evidence": {
+    "version": "observation-coverage/v1",
+    "inventory": {
+      "schemaVersion": "agent-observation-inventory/v1",
+      "observedAt": "2026-10-28T23:25:26.790Z",
+      "populationWindowStart": "2026-10-26T07:33:20.000Z",
+      "populationWindowEnd": "2026-10-26T07:33:21.000Z",
+      "boundaryEvidenceId": "f3890ce7a6176451854dcbabc15d68f230c2f4bde3f3329b0517815d9d7950b8",
+      "hosts": [
+        {
+          "hostId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "identityNamespaceId": "a9f79079b0644d369b465f0151da5ea16a7ccdab916255619aaf9657759c684e"
+        }
+      ],
+      "roots": [],
+      "routes": [
+        {
+          "routeId": "1111111111111111111111111111111111111111111111111111111111111111",
+          "hostId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "harness": "claude-code",
+          "surface": "worker",
+          "transport": "native-otlp",
+          "root": { "_tag": "Unknown" },
+          "capability": { "_tag": "Unknown" },
+          "policy": { "_tag": "Included" },
+          "heartbeat": { "_tag": "Unknown" },
+          "knownLaunches": { "_tag": "Unknown" },
+          "expectedEvents": {
+            "_tag": "Enumerated",
+            "ids": [
+              "df0eedea2c0e84fcfd0ced95633801bfb83d819aa50735e2a99c35e1f6980340"
+            ],
+            "evidenceId": "22a3f3ca9a04f242cd59fe79dd11f5e432619ba4d26455fc2c1bc80b845c4389"
+          }
+        },
+        {
+          "routeId": "2222222222222222222222222222222222222222222222222222222222222222",
+          "hostId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "harness": "claude-code",
+          "surface": "worker",
+          "transport": "native-otlp",
+          "root": { "_tag": "Unknown" },
+          "capability": { "_tag": "Unknown" },
+          "policy": { "_tag": "Included" },
+          "heartbeat": { "_tag": "Unknown" },
+          "knownLaunches": { "_tag": "Unknown" },
+          "expectedEvents": {
+            "_tag": "Enumerated",
+            "ids": [
+              "fcaaa84fb9061fd6397f0b71821b559a72132f4a79bf13f5c89745434605ada5"
+            ],
+            "evidenceId": "22a3f3ca9a04f242cd59fe79dd11f5e432619ba4d26455fc2c1bc80b845c4389"
+          }
+        },
+        {
+          "routeId": "3333333333333333333333333333333333333333333333333333333333333333",
+          "hostId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "harness": "claude-code",
+          "surface": "worker",
+          "transport": "native-otlp",
+          "root": { "_tag": "Unknown" },
+          "capability": { "_tag": "Unknown" },
+          "policy": { "_tag": "Included" },
+          "heartbeat": { "_tag": "Unknown" },
+          "knownLaunches": { "_tag": "Unknown" },
+          "expectedEvents": {
+            "_tag": "Enumerated",
+            "ids": [
+              "64e2557e0ae7be7c316e3f8beaa29eb6981dd878a33f29e8ee649918bda9be10"
+            ],
+            "evidenceId": "22a3f3ca9a04f242cd59fe79dd11f5e432619ba4d26455fc2c1bc80b845c4389"
+          }
+        }
+      ]
+    },
+    "boundaryEvidenceId": "f3890ce7a6176451854dcbabc15d68f230c2f4bde3f3329b0517815d9d7950b8",
+    "populationWindowStart": "2026-10-26T07:33:20.000Z",
+    "populationWindowEnd": "2026-10-26T07:33:21.000Z",
+    "observedAt": "2026-10-28T23:25:26.790Z",
+    "routes": [
+      {
+        "routeId": "1111111111111111111111111111111111111111111111111111111111111111",
+        "launches": { "_tag": "Unknown" },
+        "acceptedEvents": {
+          "_tag": "Observed",
+          "ids": [
+            "df0eedea2c0e84fcfd0ced95633801bfb83d819aa50735e2a99c35e1f6980340"
+          ],
+          "evidenceId": "a6581e9d4b21c010f3ae42dbb4c4151cf03172ed3669953846bd74595d5abc77",
+          "exhaustive": false
+        },
+        "visibleEvents": {
+          "_tag": "Observed",
+          "ids": [
+            "df0eedea2c0e84fcfd0ced95633801bfb83d819aa50735e2a99c35e1f6980340"
+          ],
+          "evidenceId": "a6581e9d4b21c010f3ae42dbb4c4151cf03172ed3669953846bd74595d5abc77",
+          "exhaustive": false
+        }
+      },
+      {
+        "routeId": "2222222222222222222222222222222222222222222222222222222222222222",
+        "launches": { "_tag": "Unknown" },
+        "acceptedEvents": {
+          "_tag": "Observed",
+          "ids": [
+            "fcaaa84fb9061fd6397f0b71821b559a72132f4a79bf13f5c89745434605ada5"
+          ],
+          "evidenceId": "a6581e9d4b21c010f3ae42dbb4c4151cf03172ed3669953846bd74595d5abc77",
+          "exhaustive": false
+        },
+        "visibleEvents": {
+          "_tag": "Observed",
+          "ids": [
+            "fcaaa84fb9061fd6397f0b71821b559a72132f4a79bf13f5c89745434605ada5"
+          ],
+          "evidenceId": "a6581e9d4b21c010f3ae42dbb4c4151cf03172ed3669953846bd74595d5abc77",
+          "exhaustive": false
+        }
+      },
+      {
+        "routeId": "3333333333333333333333333333333333333333333333333333333333333333",
+        "launches": { "_tag": "Unknown" },
+        "acceptedEvents": {
+          "_tag": "Observed",
+          "ids": [
+            "64e2557e0ae7be7c316e3f8beaa29eb6981dd878a33f29e8ee649918bda9be10"
+          ],
+          "evidenceId": "a6581e9d4b21c010f3ae42dbb4c4151cf03172ed3669953846bd74595d5abc77",
+          "exhaustive": false
+        },
+        "visibleEvents": {
+          "_tag": "Observed",
+          "ids": [
+            "64e2557e0ae7be7c316e3f8beaa29eb6981dd878a33f29e8ee649918bda9be10"
+          ],
+          "evidenceId": "a6581e9d4b21c010f3ae42dbb4c4151cf03172ed3669953846bd74595d5abc77",
+          "exhaustive": false
+        }
+      }
+    ]
+  },
+  "routes": [
+    {
+      "routeId": "1111111111111111111111111111111111111111111111111111111111111111",
+      "launches": { "_tag": "Unassessed" },
+      "acceptedEvents": {
+        "_tag": "Compared",
+        "expected": 1,
+        "observed": 1,
+        "matched": 1,
+        "notObserved": 0,
+        "unexpected": 0,
+        "exhaustive": false
+      },
+      "visibleEvents": {
+        "_tag": "Compared",
+        "expected": 1,
+        "observed": 1,
+        "matched": 1,
+        "notObserved": 0,
+        "unexpected": 0,
+        "exhaustive": false
+      }
+    },
+    {
+      "routeId": "2222222222222222222222222222222222222222222222222222222222222222",
+      "launches": { "_tag": "Unassessed" },
+      "acceptedEvents": {
+        "_tag": "Compared",
+        "expected": 1,
+        "observed": 1,
+        "matched": 1,
+        "notObserved": 0,
+        "unexpected": 0,
+        "exhaustive": false
+      },
+      "visibleEvents": {
+        "_tag": "Compared",
+        "expected": 1,
+        "observed": 1,
+        "matched": 1,
+        "notObserved": 0,
+        "unexpected": 0,
+        "exhaustive": false
+      }
+    },
+    {
+      "routeId": "3333333333333333333333333333333333333333333333333333333333333333",
+      "launches": { "_tag": "Unassessed" },
+      "acceptedEvents": {
+        "_tag": "Compared",
+        "expected": 1,
+        "observed": 1,
+        "matched": 1,
+        "notObserved": 0,
+        "unexpected": 0,
+        "exhaustive": false
+      },
+      "visibleEvents": {
+        "_tag": "Compared",
+        "expected": 1,
+        "observed": 1,
+        "matched": 1,
+        "notObserved": 0,
+        "unexpected": 0,
+        "exhaustive": false
+      }
+    }
+  ]
+}

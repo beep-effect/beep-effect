@@ -1,0 +1,48 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "15958729-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "referenceConcernsDisposition": "Source-specific reference concerns independently reviewed. Unintroduced, collective and ambiguous member/result references remain explicit without forced identity; those local concerns do not preclude the clear whole-claim trees. No actionable correction remains in this bounded review.",
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 25,
+    "termCount": 95,
+    "edgeCount": 76,
+    "functionalRelationCount": 15
+  },
+  "reviewNotes": [
+    "The method subject precedes its native wherein transition. Claim 1 preserves the piercing/support/cut-out relation and the coordinated sheet-metal contact/optional pressing relation, including complete possessive its oppositely disposed side and source-qualified first-side terms.",
+    "The latter [530,540) is a standalone source proform for a first side [150,162), not a modifying-clause linker. It is supported by the explicit action of bringing the sheet metal part against that side and optionally pressing it into that side; no sheet-metal/body identity is invented.",
+    "Actual dependencies are 2/7/9/10->1, 3/4/5->2, 6->5 and 8->7. Claim 8 has the three explicit following-functions children in source order. It inherits the piercing head from 7, while direct-root children 9 and 10 correctly leave their piercing-head terms without that sibling introduction.",
+    "The optionality, any claim 1 and malformed foam material cardboard, card or wood remain literal. The core phrase does not gain an inferred separator. Collective first/second cover layers do not receive an arbitrary member introduction. Definite piercing body, sheet metal part and same stroke references retain their missing introductions; they do not trigger whole-claim abstention."
+  ],
+  "verification": [
+    "Read canonical full family context, native selected-claim XML, provenance, independent source critic and extractor rationale under v2/entity-mentions/v1 and the declared ClaimElement schemas. Source eligibility remains separately qualified; no fresh original-PDF/full-inventory authentication is claimed.",
+    "Audited every expected element, term and typed edge for source grammar, complete lexical heads, explicit list nesting, actual local/ancestor references and functional participants. Relative/reciprocal connectors remain source-anchored relation text when their participants are explicit; no blanket extra-node rule was applied.",
+    "Independent geometry/schema helpers verified exact canonical UTF-16 anchors for elements, terms, functional parts and antecedents; normalized heads; unique paths; ordered nonoverlapping owned terms; complete contiguous functional partitions; local functional term ownership; actual ancestor membership of foreign references; coherent typed endpoints; and absence of duplicate edges. Native claims XML SHA256 matches provenance. These bounded checks supplement semantic review and do not invoke a production decomposer."
+  ],
+  "referenceSha256": "0953d41a2a9635dd6eed9af759b56d239af07fbafa9bd6c939f35a6670e6855c",
+  "independence": "Independent source-semantic critic, separate from extractor. Only this family critic.json written. No expected/source/code edits, production rules/P2-DESIGN, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers only check manually reviewed source spans/schema geometry and serialize the receipt.",
+  "attorneyAdjudication": "pending; confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference review only; no goal completion, active sample admission, or human agreement claimed."
+}
