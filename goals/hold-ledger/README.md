@@ -44,6 +44,14 @@ acceptance criteria.
 
 ## Latest Evidence
 
+- 2026-11-01: jsdom unpinned by hand (a `Judgement` hold, so `holds update`
+  never retires it): on jsdom 30.1.3 all 11 jsdom workspaces (126 files, 1,225
+  tests) pass under `bunx --bun vitest`; tombstone
+  `jsdom-vitest-bun-eventtarget@2` and catalog 30.0.1 → 30.1.3 in the same PR.
+- 2026-11-01: first ledger-driven unpin. `beep holds update` re-probed
+  statelyai (0.15.0 still 404s, latest 0.19.0 installs), tombstoned
+  `statelyai-model-testing-404@2` and dropped it from the held list; the
+  catalog moved 0.14.3 → 0.19.0 in the same PR (OSV and `bun audit` clean).
 - 2026-11-01: [sweep slice](history/receipts/2026-11-01-sweep-slice.md).
   `holds update --dry-run` re-probes statelyai (0.15.0 still 404s, `latest`
   0.19.0 installs) and plans its unpin, so the next `deps:update` retires it and
@@ -56,5 +64,4 @@ acceptance criteria.
 
 ## Notes
 
-The jsdom record is due: its control no longer reproduces, so its unpin PR is
-the next consumer of the ledger. The wake service depends on this ledger.
+The wake service depends on this ledger.

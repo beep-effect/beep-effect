@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-01T03:23:21.734Z
+Generated: 2026-11-01T04:33:28.972Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 166 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 16 |
-| publicModules | 3639 |
-| publicExports | 25767 |
+| publicModules | 3640 |
+| publicExports | 25772 |
 | openModules | 161 |
 | openExports | 94 |
 | missingExportExamples | 0 |
@@ -112,7 +112,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 54 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 14 | 41 | 1 | 0 |
 | 55 | `@beep/m365` | `packages/drivers/m365` | clean | 8 | 166 | 0 | 0 |
 | 56 | `@beep/managed-section` | `packages/foundation/modeling/managed-section` | clean | 7 | 31 | 0 | 0 |
-| 57 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 18 | 101 | 0 | 0 |
+| 57 | `@beep/markdown` | `packages/foundation/modeling/markdown` | clean | 19 | 104 | 0 | 0 |
 | 58 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | clean | 12 | 113 | 0 | 0 |
 | 59 | `@beep/mcpb-kit` | `packages/tooling/library/mcpb-kit` | clean | 5 | 25 | 0 | 0 |
 | 60 | `@beep/nlp` | `packages/foundation/modeling/nlp` | clean | 28 | 313 | 0 | 0 |
@@ -197,7 +197,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 497 | 4634 | 46 | 35 |
+| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 497 | 4636 | 46 | 35 |
 | 143 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 144 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 145 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |

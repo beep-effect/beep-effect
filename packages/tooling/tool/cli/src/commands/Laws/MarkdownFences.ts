@@ -64,6 +64,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { runCaptured } from "../../internal/process/StepExec.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
@@ -72,11 +73,11 @@ import { messageGitErrorAdapter, scanTrackedTextFiles } from "./internal/Tracked
 import { typescriptFences } from "./internal/TypeScriptFences.ts";
 import { MarkdownFencesCompilerError, MarkdownFencesExecutionError } from "./Laws.errors.ts";
 import {
-  MarkdownFence,
   MarkdownFenceDiagnostic,
   MarkdownFenceLanguage,
   MarkdownFencesSummary,
   MarkdownFenceVerdict,
+  TypecheckFence,
 } from "./MarkdownFences.model.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -126,14 +127,14 @@ const SUPPRESSION_PATTERN = /@ts-(?:nocheck|ignore)\b/gu;
 
 const decodeLanguage = S.decodeUnknownOption(MarkdownFenceLanguage);
 const byLocation = Order.combine(
-  Order.mapInput(Order.String, (fence: MarkdownFence) => fence.path),
-  Order.mapInput(Order.Number, (fence: MarkdownFence) => fence.line)
+  Order.mapInput(Order.String, (fence: TypecheckFence) => fence.path),
+  Order.mapInput(Order.Number, (fence: TypecheckFence) => fence.line)
 );
 
 const hasPrefix = (file: string, prefixes: ReadonlyArray<string>): boolean =>
   A.some(prefixes, (prefix) => Str.startsWith(prefix)(file));
 
-const bodyLineCount = (fence: MarkdownFence): number =>
+const bodyLineCount = (fence: TypecheckFence): number =>
   A.length(Str.split("\n")(Str.replace(TRAILING_NEWLINE_PATTERN, "")(fence.body)));
 
 const baseName = (file: string): string => A.lastNonEmpty(Str.split("/")(file));
@@ -229,22 +230,66 @@ const dispositionOf = (
  * @since 0.0.0
  */
 export const collectMarkdownFences: {
-  (content: string): (file: string) => ReadonlyArray<MarkdownFence>;
-  (file: string, content: string): ReadonlyArray<MarkdownFence>;
-} = dual(2, (file: string, content: string): ReadonlyArray<MarkdownFence> => {
+  (content: string): (file: string) => ReadonlyArray<TypecheckFence>;
+  (file: string, content: string): ReadonlyArray<TypecheckFence>;
+} = dual(
+  2,
+  (file: string, content: string): ReadonlyArray<TypecheckFence> => A.getSuccesses(scanMarkdownFenceFile(file, content))
+);
+
+/**
+ * Scan one Markdown text for its TypeScript fences, failing closed on a text the parser refuses.
+ *
+ * **Details**
+ *
+ * The successes are {@link collectMarkdownFences}'s fences. A text the
+ * CommonMark parser refuses (a nesting or inline guard tripped) yields no
+ * fences and one `markdown-parse` diagnostic at line 1, which the law reports
+ * as unreadable instead of passing the file.
+ *
+ * **Example** (Report a text nested past the parser's depth guard)
+ *
+ * ```ts import.meta.vitest name="Report a text nested past the parser's depth guard"
+ * import { scanMarkdownFenceFile } from "@beep/repo-cli/commands/Laws/MarkdownFences"
+ * import * as A from "effect/Array"
+ *
+ * const fence = "`".repeat(3)
+ * const [diagnostic] = A.getFailures(scanMarkdownFenceFile("docs/deep.md", `${">".repeat(300)} ${fence}ts\n`))
+ * diagnostic?.code // => "markdown-parse"
+ * ```
+ *
+ * @param file - Repository-relative Markdown path recorded on each fence and diagnostic.
+ * @param content - Markdown text.
+ * @returns The parse diagnostic, if any, then the fences in source order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const scanMarkdownFenceFile: {
+  (content: string): (file: string) => ReadonlyArray<Result.Result<TypecheckFence, MarkdownFenceDiagnostic>>;
+  (file: string, content: string): ReadonlyArray<Result.Result<TypecheckFence, MarkdownFenceDiagnostic>>;
+} = dual(2, (file: string, content: string): ReadonlyArray<Result.Result<TypecheckFence, MarkdownFenceDiagnostic>> => {
+  const [fences, warnings] = typescriptFences(content);
   const regions = docgenRegionLines(content);
-  return A.getSomes(
-    A.map(typescriptFences(content), (fence) =>
-      O.map(decodeLanguage(fence.language), (language) =>
-        MarkdownFence.make({
-          path: file,
-          line: fence.openingLineIndex + 1,
-          infoString: fence.infoString,
-          language,
-          body: fence.code,
-          disposition: dispositionOf(fence.infoString, fence.openingLineIndex, regions),
-        })
-      )
+  return A.appendAll(
+    A.map(warnings, (message) =>
+      Result.fail(MarkdownFenceDiagnostic.make({ path: file, line: 1, column: 1, code: "markdown-parse", message }))
+    ),
+    A.map(
+      A.getSomes(
+        A.map(fences, (fence) =>
+          O.map(decodeLanguage(fence.language), (language) =>
+            TypecheckFence.make({
+              path: file,
+              line: fence.openingLineIndex + 1,
+              infoString: fence.infoString,
+              language,
+              body: fence.code,
+              disposition: dispositionOf(fence.infoString, fence.openingLineIndex, regions),
+            })
+          )
+        )
+      ),
+      Result.succeed
     )
   );
 });
@@ -331,11 +376,11 @@ export const stagedFenceFileName: {
  *
  * **Example** (Map a missing-name diagnostic)
  *
- * ```ts
- * import { MarkdownFence } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
+ * ```ts import.meta.vitest name="Map a missing-name diagnostic"
+ * import { TypecheckFence } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  * import { mapFenceDiagnostics } from "@beep/repo-cli/commands/Laws/MarkdownFences"
  *
- * const fence = MarkdownFence.make({
+ * const fence = TypecheckFence.make({
  *   path: "docs/demo.md",
  *   line: 3,
  *   infoString: "ts",
@@ -345,7 +390,8 @@ export const stagedFenceFileName: {
  * })
  * const [diagnostic] = mapFenceDiagnostics([fence], "fence-0.ts(1,1): error TS2304: Cannot find name 'missing'.")
  *
- * console.log(`${diagnostic?.path}:${diagnostic?.line}`) // "docs/demo.md:4"
+ * diagnostic?.path // => "docs/demo.md"
+ * diagnostic?.line // => 4
  * ```
  *
  * @param fences - The checked fences in staged order.
@@ -355,11 +401,11 @@ export const stagedFenceFileName: {
  * @since 0.0.0
  */
 export const mapFenceDiagnostics: {
-  (output: string): (fences: ReadonlyArray<MarkdownFence>) => ReadonlyArray<MarkdownFenceDiagnostic>;
-  (fences: ReadonlyArray<MarkdownFence>, output: string): ReadonlyArray<MarkdownFenceDiagnostic>;
+  (output: string): (fences: ReadonlyArray<TypecheckFence>) => ReadonlyArray<MarkdownFenceDiagnostic>;
+  (fences: ReadonlyArray<TypecheckFence>, output: string): ReadonlyArray<MarkdownFenceDiagnostic>;
 } = dual(
   2,
-  (fences: ReadonlyArray<MarkdownFence>, output: string): ReadonlyArray<MarkdownFenceDiagnostic> =>
+  (fences: ReadonlyArray<TypecheckFence>, output: string): ReadonlyArray<MarkdownFenceDiagnostic> =>
     A.getSomes(
       A.map(A.fromIterable(Str.matchAll(DIAGNOSTIC_PATTERN)(output)), ([, index, line, column, code, message]) =>
         O.map(A.get(fences, Number(index)), (fence) =>
@@ -400,7 +446,7 @@ export class MarkdownFenceTypechecker extends Context.Service<
   {
     readonly typecheck: (
       repoRoot: string,
-      fences: ReadonlyArray<MarkdownFence>
+      fences: ReadonlyArray<TypecheckFence>
     ) => Effect.Effect<
       ReadonlyArray<MarkdownFenceDiagnostic>,
       MarkdownFencesExecutionError | MarkdownFencesCompilerError
@@ -467,7 +513,7 @@ export class MarkdownFenceTypechecker extends Context.Service<
 
 const typecheckStaged = Effect.fnUntraced(function* (
   repoRoot: string,
-  fences: ReadonlyArray<MarkdownFence>
+  fences: ReadonlyArray<TypecheckFence>
 ): Effect.fn.Return<
   ReadonlyArray<MarkdownFenceDiagnostic>,
   MarkdownFencesExecutionError | MarkdownFencesCompilerError,
@@ -558,7 +604,7 @@ const typecheckStaged = Effect.fnUntraced(function* (
   );
 });
 
-const suppressionDiagnostics = (fence: MarkdownFence): ReadonlyArray<MarkdownFenceDiagnostic> =>
+const suppressionDiagnostics = (fence: TypecheckFence): ReadonlyArray<MarkdownFenceDiagnostic> =>
   A.flatMap(Str.split("\n")(fence.body), (text, index) =>
     A.map(A.fromIterable(Str.matchAll(SUPPRESSION_PATTERN)(text)), (match) =>
       MarkdownFenceDiagnostic.make({
@@ -572,7 +618,7 @@ const suppressionDiagnostics = (fence: MarkdownFence): ReadonlyArray<MarkdownFen
   );
 
 const verdictsFor = (
-  fences: ReadonlyArray<MarkdownFence>,
+  fences: ReadonlyArray<TypecheckFence>,
   diagnostics: ReadonlyArray<MarkdownFenceDiagnostic>
 ): ReadonlyArray<MarkdownFenceVerdict> => {
   const byFence = A.groupBy(diagnostics, (diagnostic) => diagnostic.path);
@@ -599,11 +645,11 @@ const verdictsFor = (
  *
  * **Example** (Format a failed verdict)
  *
- * ```ts
- * import { MarkdownFence, MarkdownFenceDiagnostic, MarkdownFenceVerdict } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
+ * ```ts import.meta.vitest name="Format a failed verdict"
+ * import { TypecheckFence, MarkdownFenceDiagnostic, MarkdownFenceVerdict } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  * import { formatMarkdownFenceFailure } from "@beep/repo-cli/commands/Laws/MarkdownFences"
  *
- * const fence = MarkdownFence.make({
+ * const fence = TypecheckFence.make({
  *   path: "docs/demo.md",
  *   line: 3,
  *   infoString: "ts",
@@ -619,8 +665,8 @@ const verdictsFor = (
  *   message: "Cannot find name 'missing'.",
  * })
  *
- * console.log(formatMarkdownFenceFailure(MarkdownFenceVerdict.cases.failed.make({ fence, diagnostics: [diagnostic] })))
- * // ["docs/demo.md:4:1  TS2304 Cannot find name 'missing'."]
+ * const failure = MarkdownFenceVerdict.cases.failed.make({ fence, diagnostics: [diagnostic] })
+ * formatMarkdownFenceFailure(failure) // => ["docs/demo.md:4:1  TS2304 Cannot find name 'missing'."]
  * ```
  *
  * @param failure - A failed verdict.
@@ -637,7 +683,7 @@ export const formatMarkdownFenceFailure = (
       `${diagnostic.path}:${diagnostic.line}:${diagnostic.column}  ${diagnostic.code} ${diagnostic.message}`
   );
 
-const countBy = (fences: ReadonlyArray<MarkdownFence>, disposition: MarkdownFenceDisposition): number =>
+const countBy = (fences: ReadonlyArray<TypecheckFence>, disposition: MarkdownFenceDisposition): number =>
   A.length(A.filter(fences, (fence) => fence.disposition === disposition));
 
 /**
@@ -696,9 +742,10 @@ export const runMarkdownFences = Effect.fn("MarkdownFences.runMarkdownFences")(f
     gitErrors: messageGitErrorAdapter(MarkdownFencesExecutionError.new),
     mapError: MarkdownFencesExecutionError.mapError,
     isSkipped: isOffSurface,
-    scan: collectMarkdownFences,
+    scan: scanMarkdownFenceFile,
   });
-  const fences = A.sort(scan.findings, byLocation);
+  const [scanned, unreadable] = A.separate(scan.findings);
+  const fences = A.sort(scanned, byLocation);
   const checked = A.filter(fences, (fence) => fence.disposition === "checked");
   const typechecker = yield* MarkdownFenceTypechecker;
   const diagnostics = yield* typechecker.typecheck(repoRoot, checked);
@@ -711,6 +758,8 @@ export const runMarkdownFences = Effect.fn("MarkdownFences.runMarkdownFences")(f
     optOutFences: countBy(fences, "opt-out"),
     generatedFences: countBy(fences, "generated"),
     failures,
-    strictFailure: options.strictCheck && A.isReadonlyArrayNonEmpty(failures),
+    unreadable,
+    strictFailure:
+      options.strictCheck && (A.isReadonlyArrayNonEmpty(failures) || A.isReadonlyArrayNonEmpty(unreadable)),
   });
 });

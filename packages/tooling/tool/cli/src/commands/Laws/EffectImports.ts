@@ -18,7 +18,7 @@ import { A, Str } from "@beep/utils";
 import { compileAndExpand } from "@beep/walker/Expand";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -30,7 +30,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { createRepoTsMorphProject } from "../../internal/tsmorph/index.ts";
+import { scriptFences } from "./internal/TypeScriptFences.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
+import type { FencedCodeBlockDetail } from "@beep/repo-docgen/Core";
 import type {
   ExportDeclaration,
   ExportDeclarationStructure,
@@ -40,6 +42,7 @@ import type {
   OptionalKind,
   SourceFile,
 } from "ts-morph";
+import type { ScriptFence } from "./internal/TypeScriptFences.ts";
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 
@@ -1504,27 +1507,6 @@ class EffectImportFenceTransformSummary extends S.Opaque<
   )
 ) {}
 
-const markdownImportFencePattern =
-  /^ {0,3}(`{3,}|~{3,})(typescript|javascript|tsx|jsx|mts|cts|mjs|cjs|ts|js)(?![\w-])[^\r\n]*\r?\n([\s\S]*?)^ {0,3}\1[ \t]*$/gim;
-
-const markdownImportFences = (content: string) =>
-  pipe(
-    Str.matchAll(markdownImportFencePattern)(content),
-    A.fromIterable,
-    A.map((match) => {
-      const openingLength = O.getOrElse(Str.indexOf("\n")(match[0]), constant(-1)) + 1;
-      const code = match[3] ?? "";
-      const codeStart = (match.index ?? 0) + openingLength;
-      const language = Str.toLowerCase(match[2] ?? "ts");
-      return {
-        code,
-        codeStart,
-        codeEnd: codeStart + Str.length(code),
-        extension: language === "tsx" || language === "jsx" ? (".tsx" as const) : (".ts" as const),
-      };
-    })
-  );
-
 const ROOT_EFFECT_IMPORT_PATTERN = /["']effect(?:\/[^"']+)?["']/u;
 
 const tryTransformSourceFile = (
@@ -1534,15 +1516,40 @@ const tryTransformSourceFile = (
 ): O.Option<ReturnType<typeof transformSourceFile>> =>
   Result.getSuccess(Result.try(() => transformSourceFile(mappings, file, sourceFile)));
 
+type FenceTransform = {
+  readonly summary: ReturnType<typeof transformSourceFile>;
+  readonly replacement: string;
+};
+
+// The transform of one fence and its rewritten body, or the warning for a fence that cannot be parsed
+// or that sits in a blockquote or list item, where splicing the rewritten code would end the container.
+const transformFence = (
+  mappings: RootImportMappings,
+  file: string,
+  fence: ScriptFence | FencedCodeBlockDetail,
+  ordinal: number
+): Result.Result<FenceTransform, string> => {
+  const fenceProject = new Project({ useInMemoryFileSystem: true });
+  const fenceSource = fenceProject.createSourceFile(`fence-${ordinal}${fence.extension}`, fence.code);
+  return O.match(tryTransformSourceFile(mappings, `${file}#fence-${ordinal}`, fenceSource), {
+    onNone: () => Result.fail(`${file}#fence-${ordinal}: cannot parse root Effect import`),
+    onSome: (summary) =>
+      summary.rewritten && !fence.inPlace
+        ? Result.fail(
+            `${file}#fence-${ordinal}: root Effect import in a fence inside a blockquote or list item; rewrite it by hand`
+          )
+        : Result.succeed({ summary, replacement: `${Str.trimEnd(fenceSource.getFullText())}\n` }),
+  });
+};
+
 const transformFencedContent = (
   mappings: RootImportMappings,
   file: string,
   content: string,
   markdown = false
 ): EffectImportFenceTransformSummary => {
-  const [fences, parserWarnings] = markdown
-    ? [markdownImportFences(content), A.empty<string>()]
-    : extractFencedCodeBlockDetails(content);
+  const [fences, parserWarnings]: readonly [ReadonlyArray<ScriptFence | FencedCodeBlockDetail>, ReadonlyArray<string>] =
+    markdown ? scriptFences(content) : extractFencedCodeBlockDetails(content);
   let warnings = A.fromIterable(parserWarnings);
   let rewrittenContent = content;
   let rootImportsRewritten = 0;
@@ -1557,14 +1564,17 @@ const transformFencedContent = (
     if (!ROOT_EFFECT_IMPORT_PATTERN.test(fence.code)) {
       continue;
     }
-    const fenceProject = new Project({ useInMemoryFileSystem: true });
-    const fenceSource = fenceProject.createSourceFile(`fence-${ordinal}${fence.extension}`, fence.code);
-    const transformed = tryTransformSourceFile(mappings, `${file}#fence-${ordinal}`, fenceSource);
-    if (O.isNone(transformed)) {
-      warnings = A.append(warnings, `${file}#fence-${ordinal}: cannot parse root Effect import`);
+    const transformed = transformFence(mappings, file, fence, ordinal);
+    if (Result.isFailure(transformed)) {
+      warnings = A.append(warnings, transformed.failure);
       continue;
     }
-    const sourceSummary = transformed.value;
+    const { summary: sourceSummary } = transformed.success;
+    // A Markdown fence's `code` is the CommonMark value, which uses LF only; a CRLF body keeps its line endings.
+    const writtenBody = Str.slice(fence.codeStart, fence.codeEnd)(rewrittenContent);
+    const replacement = Str.includes("\r\n")(writtenBody)
+      ? Str.replace(/\r?\n/gu, "\r\n")(transformed.success.replacement)
+      : transformed.success.replacement;
     rootImportsRewritten += sourceSummary.rootImportsRewritten;
     rootExportsRewritten += sourceSummary.rootExportsRewritten;
     emittedImports += sourceSummary.emittedImports;
@@ -1573,7 +1583,6 @@ const transformFencedContent = (
     manualReviews = A.appendAll(manualReviews, sourceSummary.manualReviews);
 
     if (sourceSummary.rewritten) {
-      const replacement = `${Str.trimEnd(fenceSource.getFullText())}\n`;
       rewrittenContent = `${Str.slice(0, fence.codeStart)(rewrittenContent)}${replacement}${Str.slice(fence.codeEnd)(
         rewrittenContent
       )}`;

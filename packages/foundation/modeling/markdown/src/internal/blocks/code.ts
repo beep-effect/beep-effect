@@ -115,6 +115,7 @@ const continueFenced = (scanner: BlockScanner, block: BlockNode): BlockContinueR
   const closing = closingFenceLength(scanner, block);
   if (closing > 0) {
     // A closing fence ends the block and the line together.
+    block.data.fenceClosed = true;
     scanner.setLastLineLength(scanner.offset + scanner.indent + closing);
     scanner.finalizeBlock(block, scanner.lineNumber);
     return 2;
@@ -171,7 +172,7 @@ export const codeConstruct = new BlockConstruct("code", true, {
     }
   }),
   materialize: leafMaterializer((block, context) => {
-    const { isFenced, fenceChar, fenceLength, lang, meta } = block.data;
+    const { isFenced, fenceChar, fenceClosed, fenceLength, lang, meta } = block.data;
     return trustedNode<Code>({
       type: "code",
       value: block.stringContent,
@@ -180,6 +181,7 @@ export const codeConstruct = new BlockConstruct("code", true, {
       ...O.getSomesStruct({ meta: O.fromUndefinedOr(meta) }),
       ...(isFenced === true && fenceChar !== undefined ? { fenceChar } : {}),
       ...(isFenced === true && fenceLength !== undefined ? { fenceLength } : {}),
+      ...(isFenced === true && fenceClosed !== true ? { unterminated: true } : {}),
     });
   }),
 });

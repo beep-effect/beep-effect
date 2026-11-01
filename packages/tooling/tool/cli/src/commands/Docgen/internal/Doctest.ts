@@ -36,11 +36,13 @@ import {
   ImpureFence,
   MarkPlan,
   PureFence,
+  ScannedDoctestFence,
   TypeOnlyFence,
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { RawJSDocSpan } from "../../../internal/jsdoc/JSDocSections.ts";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { DoctestCliConfig, ImpurityReason, PurityVerdict } from "../Doctest.schemas.ts";
 import type { DoctestFenceAnalyzerShape, DoctestFenceRewriterShape } from "../Doctest.service.ts";
@@ -52,10 +54,8 @@ const sourceDigest = (source: string): string => `effect-hash:${Hash.string(sour
 const lineAtOffset = (source: string, offset: number): number =>
   Str.split(/\r?\n/)(Str.slice(0, offset)(source)).length;
 
-const maskJSDocStars: (comment: string) => string = flow(
-  Str.replace(/^([ \t]*)\* /gm, "$1  "),
-  Str.replace(/^([ \t]*)\*(?!\/)/gm, "$1 ")
-);
+// The comment with each line's leading `*` frame removed; lines stay one to one with the source.
+const unwrapJSDocStars: (comment: string) => string = Str.replace(/^[ \t]*\*(?!\/) ?/gm, "");
 
 const ownersByJSDocStart = (file: string, source: string): MutableHashMap.MutableHashMap<number, Node> => {
   const project = createInMemoryTsMorphProject();
@@ -503,46 +503,62 @@ const parseFenceInfo = (raw: string): FenceInfo => {
 const canonicalInfoString = (title: string): O.Option<string> =>
   O.map(quotedDoctestName(title), (name) => `ts ${doctestSourceMarker} ${name}`);
 
-type ScannedFence = {
-  readonly code: string;
-  readonly codeStartLine: number;
-  readonly infoString: string;
-  readonly location: FenceLocation;
-};
+type ScannedFence = ScannedDoctestFence;
 
-const scanSourceFences = (file: string, source: string): ReadonlyArray<ScannedFence> => {
+// The first line of a fence-extraction warning, which otherwise repeats the whole comment text.
+const warningHeadline: (warning: string) => string = flow(Str.split("\n"), A.headNonEmpty, Str.replace(/:$/, ""));
+
+// A comment whose Markdown was refused or holds an unterminated fence fails the scan: its fences
+// cannot be read reliably, so passing it would let `doctest verify` skip its marked examples.
+const unreadableJSDoc = (file: string, line: number, warning: string): DoctestAnalysisError =>
+  DoctestAnalysisError.make({
+    message: `JSDoc Markdown could not be read, so its fences were not checked: ${warningHeadline(warning)}.`,
+    file,
+    line,
+  });
+
+const scanSourceFences = (
+  file: string,
+  source: string
+): Result.Result<ReadonlyArray<ScannedFence>, DoctestAnalysisError> => {
   const owners = ownersByJSDocStart(file, source);
-  return A.flatMap(rawJSDocSpans(source), (span) => {
-    const masked = maskJSDocStars(span.text);
-    const [details] = extractFencedCodeBlockDetails(masked);
+  const spanFences = (span: RawJSDocSpan): Result.Result<ReadonlyArray<ScannedFence>, DoctestAnalysisError> => {
+    const unwrapped = unwrapJSDocStars(span.text);
+    const [details, warnings] = extractFencedCodeBlockDetails(unwrapped);
+    const firstLine = lineAtOffset(source, span.start);
+    const lineAt = (offset: number): number => firstLine + lineAtOffset(unwrapped, offset) - 1;
     const exampleTitles = pipe(
       parseJSDocSections(ParseJSDocSectionsOptions.make({ commentText: span.text })).sections,
       A.filter((section) => section.name === "Example"),
       A.map((section) => section.title)
     );
     const owner = MutableHashMap.get(owners, span.start);
-    return A.map(details, (detail, index) => {
-      const absoluteStart = span.start + detail.fenceStart;
-      const absoluteEnd = span.start + detail.fenceEnd;
-      const rawCode = Str.slice(detail.codeStart, detail.codeEnd)(masked);
-      const trimmedCodeOffset = O.getOrElse(Str.indexOf(detail.code)(rawCode), () => 0);
-      const title = exampleTitles[index];
-      return {
-        code: detail.code,
-        codeStartLine: lineAtOffset(source, span.start + detail.codeStart + trimmedCodeOffset),
-        infoString: detail.infoString,
-        location: FenceLocation.make({
-          file,
-          startLine: lineAtOffset(source, absoluteStart),
-          endLine: lineAtOffset(source, absoluteEnd),
-          ...O.getSomesStruct({
-            enclosingSymbol: O.flatMap(owner, ownJSDocNodeName),
-            exampleTitle: O.fromUndefinedOr(title),
+    const fences = (): ReadonlyArray<ScannedFence> =>
+      A.map(details, (detail, index) => {
+        const rawCode = Str.slice(detail.codeStart, detail.codeEnd)(unwrapped);
+        const trimmedCodeOffset = O.getOrElse(Str.indexOf(detail.code)(rawCode), () => 0);
+        const title = exampleTitles[index];
+        return ScannedDoctestFence.make({
+          code: detail.code,
+          codeStartLine: lineAt(detail.codeStart + trimmedCodeOffset),
+          infoString: detail.infoString,
+          location: FenceLocation.make({
+            file,
+            startLine: lineAt(detail.fenceStart),
+            endLine: lineAt(detail.fenceEnd),
+            ...O.getSomesStruct({
+              enclosingSymbol: O.flatMap(owner, ownJSDocNodeName),
+              exampleTitle: O.fromUndefinedOr(title),
+            }),
           }),
-        }),
-      };
+        });
+      });
+    return A.match(warnings, {
+      onEmpty: () => Result.succeed(fences()),
+      onNonEmpty: ([warning]) => Result.fail(unreadableJSDoc(file, firstLine, warning)),
     });
-  });
+  };
+  return Result.map(Result.all(A.map(rawJSDocSpans(source), spanFences)), A.flatten);
 };
 
 const markedImpureFindings = (
@@ -705,28 +721,115 @@ type DoctestSourceInspection = {
   readonly findings: ReadonlyArray<DoctestFinding>;
 };
 
+// The fences of one source file and their findings, or the error for a JSDoc comment it cannot read.
+const inspectSource = (
+  file: string,
+  source: string
+): Result.Result<
+  { readonly fences: ReadonlyArray<ScannedFence>; readonly findings: ReadonlyArray<DoctestFinding> },
+  DoctestAnalysisError
+> =>
+  Result.map(scanSourceFences(file, source), (fences) => ({
+    fences,
+    findings: A.flatMap(fences, (fence) => findingForFence(source, fence)),
+  }));
+
 /**
  * Analyzes an in-memory source file without filesystem or Git dependencies.
  *
+ * **Details**
+ *
+ * The result fails with a {@link DoctestAnalysisError} when a JSDoc comment's
+ * Markdown cannot be read, as `doctest verify` does, instead of reporting the
+ * file without that comment's fences.
+ *
  * **Example** (Inspect empty source)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Inspect empty source"
  * import { analyzeDoctestSourceForTesting } from "@beep/repo-cli/test/Docgen"
+ * import * as Result from "effect/Result"
  *
  * const inspection = analyzeDoctestSourceForTesting("packages/example/src/index.ts", "")
- * console.log(inspection.fences)
+ * Result.getOrUndefined(inspection)?.fences // => 0
  * ```
  *
  * @category testing
  * @since 0.0.0
  */
 export const analyzeDoctestSourceForTesting: {
-  (source: string): (file: string) => DoctestSourceInspection;
-  (file: string, source: string): DoctestSourceInspection;
-} = dual(2, (file: string, source: string): DoctestSourceInspection => {
-  const fences = scanSourceFences(file, source);
-  return { fences: fences.length, findings: A.flatMap(fences, (fence) => findingForFence(source, fence)) };
-});
+  (source: string): (file: string) => Result.Result<DoctestSourceInspection, DoctestAnalysisError>;
+  (file: string, source: string): Result.Result<DoctestSourceInspection, DoctestAnalysisError>;
+} = dual(
+  2,
+  (file: string, source: string): Result.Result<DoctestSourceInspection, DoctestAnalysisError> =>
+    Result.map(inspectSource(file, source), ({ fences, findings }) => ({ fences: fences.length, findings }))
+);
+
+/**
+ * Scans an in-memory source file for the JSDoc TypeScript fences the analyzer reads.
+ *
+ * **Details**
+ *
+ * A JSDoc comment whose Markdown the parser refuses, or that holds an
+ * unterminated fence, fails the scan with a {@link DoctestAnalysisError} at the
+ * comment's first line, so its fences are never silently left unchecked.
+ *
+ * **Example** (Scan one example fence)
+ *
+ * ```ts import.meta.vitest name="Scan one example fence"
+ * import { scanDoctestFencesForTesting } from "@beep/repo-cli/test/Docgen"
+ * import * as Result from "effect/Result"
+ *
+ * const fence = "`".repeat(3)
+ * const source = ["/**", " * **Example** (One)", " *", ` * ${fence}ts`, " * 1 + 1", ` * ${fence}`, " *" + "/"].join("\n")
+ * const scanned = scanDoctestFencesForTesting("packages/example/src/index.ts", source)
+ * Result.getOrUndefined(scanned)?.[0]?.codeStartLine // => 5
+ * ```
+ *
+ * **Example** (Refuse an unreadable comment)
+ *
+ * ```ts import.meta.vitest name="Refuse an unreadable comment"
+ * import { scanDoctestFencesForTesting } from "@beep/repo-cli/test/Docgen"
+ * import * as Result from "effect/Result"
+ *
+ * const fence = "~".repeat(3)
+ * const source = ["/**", ` * ${">".repeat(300)} deep`, " *", ` * ${fence}ts`, " * 1 + 1", ` * ${fence}`, " *" + "/"].join("\n")
+ * Result.isFailure(scanDoctestFencesForTesting("packages/example/src/index.ts", source)) // => true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const scanDoctestFencesForTesting: {
+  (source: string): (file: string) => Result.Result<ReadonlyArray<ScannedDoctestFence>, DoctestAnalysisError>;
+  (file: string, source: string): Result.Result<ReadonlyArray<ScannedDoctestFence>, DoctestAnalysisError>;
+} = dual(2, scanSourceFences);
+
+/**
+ * Computes the analyzer findings for one scanned fence of a source file.
+ *
+ * **Example** (Find an unmarked pure fence)
+ *
+ * ```ts import.meta.vitest name="Find an unmarked pure fence"
+ * import { FenceLocation, ScannedDoctestFence } from "@beep/repo-cli/commands/Docgen"
+ * import { doctestFenceFindingsForTesting } from "@beep/repo-cli/test/Docgen"
+ *
+ * const fence = ScannedDoctestFence.make({
+ *   code: "1 + 1",
+ *   codeStartLine: 5,
+ *   infoString: "ts",
+ *   location: FenceLocation.make({ file: "packages/example/src/index.ts", startLine: 4, endLine: 6, exampleTitle: "One" }),
+ * })
+ * doctestFenceFindingsForTesting("", fence)[0]?.kind // => "pure-unmarked"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const doctestFenceFindingsForTesting: {
+  (fence: ScannedDoctestFence): (source: string) => ReadonlyArray<DoctestFinding>;
+  (source: string, fence: ScannedDoctestFence): ReadonlyArray<DoctestFinding>;
+} = dual(2, findingForFence);
 
 const gitErrorAdapter: GitCommandErrorAdapter<DoctestAnalysisError> = {
   onSpawnFailure: (commandLine) => () => DoctestAnalysisError.make({ message: `Failed to spawn ${commandLine}.` }),
@@ -838,8 +941,7 @@ const analyzeWithServices = Effect.fn("Doctest.analyze")(function* (config: Doct
       const source = yield* fs
         .readFileString(path.join(repoRoot, file))
         .pipe(Effect.mapError(() => DoctestAnalysisError.make({ message: "Failed to read source file.", file })));
-      const fences = scanSourceFences(file, source);
-      return { fences, findings: A.flatMap(fences, (fence) => findingForFence(source, fence)) };
+      return yield* Effect.fromResult(inspectSource(file, source));
     }),
     { concurrency: 8 }
   );
@@ -907,7 +1009,7 @@ const applyMarkerEdit = (
 ): Effect.Effect<ReadonlyArray<string>, DoctestRewriteError> => {
   const openingIndex = plan.location.startLine - 1;
   const opening = lines[openingIndex];
-  if (opening === undefined || !/(?:```|~~~)/.test(opening)) {
+  if (opening === undefined || !/`{3,}|~{3,}/.test(opening)) {
     return DoctestRewriteError.make({
       message: "Opening fence no longer matches the analyzed location.",
       file,
@@ -917,7 +1019,8 @@ const applyMarkerEdit = (
   return replaceSourceLine(
     lines,
     openingIndex,
-    Str.replace(/((?:```|~~~)).*$/, `$1${plan.expectedInfoString}`)(opening),
+    // Keep the whole marker run: a four-backtick opener cut to three would let a ``` line in the body close it.
+    Str.replace(/(`{3,}|~{3,}).*$/, `$1${plan.expectedInfoString}`)(opening),
     DoctestRewriteError.make({
       message: "Opening fence no longer matches the analyzed location.",
       file,
@@ -977,16 +1080,16 @@ const applyRewritePlans = (
     )
   );
 
-const invalidRewrittenPlan = (file: string, rewritten: string, plans: ReadonlyArray<MarkPlan>): O.Option<MarkPlan> =>
-  A.findFirst(plans, (plan) => {
-    const rescanned = A.findFirst(
-      scanSourceFences(file, rewritten),
-      (fence) => fence.location.startLine === plan.location.startLine
-    );
+// A rewrite whose result no longer scans finds none of its fences, so every plan counts as invalid.
+const invalidRewrittenPlan = (file: string, rewritten: string, plans: ReadonlyArray<MarkPlan>): O.Option<MarkPlan> => {
+  const fences = Result.getOrElse(scanSourceFences(file, rewritten), A.empty<ScannedFence>);
+  return A.findFirst(plans, (plan) => {
+    const rescanned = A.findFirst(fences, (fence) => fence.location.startLine === plan.location.startLine);
     return (
       O.isNone(rescanned) || O.isSome(validateDoctestAssertions(rescanned.value.code, file, plan.location.startLine))
     );
   });
+};
 
 const validateRewrittenSource = (
   file: string,

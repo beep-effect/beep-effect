@@ -431,6 +431,12 @@ layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update over flippe
     })
   );
 
+  it.effect("prints the dry-run plan through `beep holds update --dry-run`", () =>
+    Effect.map(captureOutput(runHolds(["update", "--dry-run"])), (output) =>
+      expect(output).toContain("[holds] update planned (dry run): 2 probed, 1 unpinned.")
+    )
+  );
+
   it.effect("tombstones the flipped catalog hold, keeps the rest and regenerates the held list", () =>
     Effect.gen(function* () {
       expect(lastLine(yield* runHoldsUpdate(updateInput(false)))).toBe("[holds] update done: 2 probed, 1 unpinned.");
@@ -685,4 +691,39 @@ describe("holdsPlatformError", () => {
     expect(error.reason).toBe("io");
     expect(Str.startsWith("Could not read the ledger: ")(error.message)).toBe(true);
   });
+});
+
+// A live hold whose exit rewrites a file and whose lease is open, beside one whose valid time is unknown.
+const rewriteHold = pipe(
+  holdLine({
+    holdId: "rewrite-hold",
+    packageName: "left-pad",
+    anchors: '[{"_tag":"CatalogEntry","packageName":"left-pad"}]',
+    falsifier: judgement,
+    exitAction: '{"_tag":"Rewrite","path":"patches/left-pad.patch"}',
+  }),
+  Str.replace('"validTo":1000', '"validTo":null')
+);
+const unknownLeaseHold = pipe(
+  holdLine({
+    holdId: "unknown-lease-hold",
+    packageName: "right-pad",
+    anchors: '[{"_tag":"CatalogEntry","packageName":"right-pad"}]',
+    falsifier: judgement,
+  }),
+  Str.replace('{"_tag":"Interval","validFrom":0,"validTo":1000}', '{"_tag":"Unknown"}')
+);
+
+layer(layerFor({ "hold-ledger/claims.jsonl": `${A.join([rewriteHold, unknownLeaseHold], "\n")}\n` }), {
+  timeout: "30 seconds",
+})("holds why over open and unknown leases", (it) => {
+  it.effect("names a rewrite exit, an open lease and an unknown lease", () =>
+    Effect.gen(function* () {
+      const rewrite = yield* runHoldsWhy("left-pad");
+      expect(A.some(rewrite, Str.includes("live, open lease"))).toBe(true);
+      expect(A.some(rewrite, Str.includes("exit: Rewrite patches/left-pad.patch"))).toBe(true);
+      const unknown = yield* runHoldsWhy("right-pad");
+      expect(A.some(unknown, Str.includes("live, unknown lease"))).toBe(true);
+    })
+  );
 });

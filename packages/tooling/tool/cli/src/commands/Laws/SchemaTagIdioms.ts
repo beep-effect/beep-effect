@@ -13,6 +13,9 @@
  *   must be `S.TaggedClass` or `S.TaggedError`.
  * - `single-literal-field`: a required schema field whose value is one
  *   `S.Literal(v)` must be `S.tag(v)`.
+ * - `unreadable-markdown`: a Markdown file or JSDoc block that may bind
+ *   `effect/Schema` but that the CommonMark parser refused, so its fences
+ *   could not be checked; the law fails closed rather than passing it.
  *
  * A field is fixed when its value is `S.Literal(v)` (or `S.tag(v)` for a
  * `_tag`), optionally followed by annotation steps, `S.mutableKey`, and
@@ -823,43 +826,77 @@ const matchIndex = (match: RegExpMatchArray): number => O.getOrElse(O.fromNullis
 
 const lineIndexAt = (text: string, index: number): number => A.length(Str.split("\n")(Str.slice(0, index)(text))) - 1;
 
-const typescriptFences = (content: string): ReadonlyArray<Fence> =>
-  A.map(
-    sharedTypeScriptFences(content),
-    (fence): Fence => ({
-      code: fence.code,
-      lineOffset: fence.codeLineIndex,
-      scriptKind: fence.language === "tsx" ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-    })
-  );
+type FenceRead = {
+  readonly fences: ReadonlyArray<Fence>;
+  readonly unreadable: ReadonlyArray<SchemaTagIdiomFinding>;
+};
+
+// The TypeScript fences of a Markdown or JSDoc text starting at line `lineOffset`, and an
+// `unreadable-markdown` finding when the parser refused a text that may bind `effect/Schema`.
+const typescriptFences = (file: string, content: string, lineOffset = 0): FenceRead => {
+  const [fences, warnings] = sharedTypeScriptFences(content);
+  return {
+    fences: A.map(
+      fences,
+      (fence): Fence => ({
+        code: fence.code,
+        lineOffset: lineOffset + fence.codeLineIndex,
+        scriptKind: fence.language === "tsx" ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+      })
+    ),
+    unreadable: SCHEMA_IMPORT_PATTERN.test(content)
+      ? A.map(warnings, (warning) =>
+          SchemaTagIdiomFinding.make({
+            file,
+            line: lineOffset + 1,
+            column: 1,
+            rule: "unreadable-markdown",
+            match: compact(warning),
+            suggestion: "Flatten the blockquote or list nesting so the CommonMark parser can read the fences.",
+          })
+        )
+      : A.empty(),
+  };
+};
 
 const jsDocLine = (line: string): string =>
   pipe(line, Str.replace(/^\s*\/\*\*/u, ""), Str.replace(/\*\/\s*$/u, ""), Str.replace(/^\s*\* ?/u, ""));
 
 // TypeScript fences inside the JSDoc blocks of a source file; lines map one to one.
-const jsDocFences = (text: string): ReadonlyArray<Fence> =>
-  pipe(
+const jsDocFences = (file: string, text: string): FenceRead => {
+  const reads = pipe(
     Str.matchAll(JSDOC_BLOCK_PATTERN)(text),
     A.fromIterable,
     A.filter((block) => SCHEMA_IMPORT_PATTERN.test(groupText(block, 0))),
-    A.flatMap((block) => {
-      const lineOffset = lineIndexAt(text, matchIndex(block));
-      const inner = pipe(groupText(block, 0), Str.split("\n"), A.map(jsDocLine), A.join("\n"));
-      return A.map(typescriptFences(inner), (fence) => ({ ...fence, lineOffset: lineOffset + fence.lineOffset }));
-    })
+    A.map((block) =>
+      typescriptFences(
+        file,
+        pipe(groupText(block, 0), Str.split("\n"), A.map(jsDocLine), A.join("\n")),
+        lineIndexAt(text, matchIndex(block))
+      )
+    )
   );
+  return {
+    fences: A.flatMap(reads, (read) => read.fences),
+    unreadable: A.flatMap(reads, (read) => read.unreadable),
+  };
+};
 
-// Scan the fences that can bind `effect/Schema`; the count is of those fences.
-const scanFences = (file: string, fences: ReadonlyArray<Fence>): SourceScan => {
-  const schemaFences = A.filter(fences, (fence) => SCHEMA_IMPORT_PATTERN.test(fence.code));
+// Scan the fences that can bind `effect/Schema`; the count is of those fences. A text the parser
+// refused contributes its `unreadable-markdown` finding first.
+const scanFences = (file: string, read: FenceRead): SourceScan => {
+  const schemaFences = A.filter(read.fences, (fence) => SCHEMA_IMPORT_PATTERN.test(fence.code));
   return {
     fences: A.length(schemaFences),
-    findings: A.flatMap(schemaFences, (fence) => scanCode(file, fence.code, fence.lineOffset, fence.scriptKind)),
+    findings: A.appendAll(
+      read.unreadable,
+      A.flatMap(schemaFences, (fence) => scanCode(file, fence.code, fence.lineOffset, fence.scriptKind))
+    ),
   };
 };
 
 const scanTypeScriptText = (file: string, text: string): SourceScan => {
-  const fences = scanFences(file, jsDocFences(text));
+  const fences = scanFences(file, jsDocFences(file, text));
   return { fences: fences.fences, findings: A.appendAll(scanCode(file, text, 0, scriptKindOf(file)), fences.findings) };
 };
 
@@ -931,7 +968,7 @@ export const scanSchemaTagIdiomsMarkdown: {
 } = dual(
   2,
   (file: string, content: string): ReadonlyArray<SchemaTagIdiomFinding> =>
-    scanFences(file, typescriptFences(content)).findings
+    scanFences(file, typescriptFences(file, content)).findings
 );
 
 /**
@@ -1021,7 +1058,7 @@ const scanTrackedFile = Effect.fnUntraced(function* (repoRoot: string, file: str
     SchemaTagIdiomsExecutionError.mapError(`Failed to read ${file}`)
   );
   return O.map(content, (text) =>
-    markdown ? scanFences(file, typescriptFences(text)) : scanTypeScriptText(file, text)
+    markdown ? scanFences(file, typescriptFences(file, text)) : scanTypeScriptText(file, text)
   );
 });
 
