@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "13687596",
+  "publicationNumber": "US20130136529A1",
+  "publicationDate": "2013-05-30",
+  "nativeXmlSha256": "2cfad4500296ee6210d6b4ebce0f217b9553bfac3c93057c807212e256ab155c",
+  "claimsXmlSha256": "6bc822b8639ea93b2b55ca9fba3e69b6089698a485d3cd27e79b9e4b34be5a0f",
+  "officeActionDocumentIdentifiers": [
+    "I41GT52DPXXIFW4"
+  ],
+  "officeActionMailDate": "2014-12-26",
+  "officeActionSection112Text": [
+    "claims 1-12 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 9, “the male/female type” lacks antecedent basis.\r\nclaim 1, line 15, “said interlock’ lacks antecedent basis.\r\nclaim 1, line 20, “the uncoupled condition” lacks antecedent basis.\r\nclaim 1, line 20, “the coupled condition” lacks antecedent basis.\r\nclaim 1, line 21, “the active locking position” lacks antecedent basis.\r\nclaim 3, line 2, “the locking phase’ lacks antecedent basis.\r\nclaim 4, line 3, “the pre-assembling phase” lacks antecedent basis.\r\nclaim 4, line 4, the first series” lacks antecedent basis.\r\nclaim 4, line 5, “the second series” lacks antecedent basis.\r\nclaim 5, line 2, “the tab/aperture type” lacks antecedent basis.\r\nclaim 5, line 3, “the stud/aperture type” lacks antecedent basis.\r\nclaim 5, line 9, the matching aperture” lacks antecedent basis.\r\nclaim 5, line 11, “said locking means” lacks antecedent basis.\r\nclaim 6, line 7, “the assembled condition” lacks antecedent basis.\r\nclaim 6, line 18 “ the pre-assembled condition” lacks antecedent basis.\r\nclaim 9, line 3, “said apertures preferably borne” is not understood.\r\nclaim 12, line 8, “the effect’ lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "HA5BUNXZPXXIFW2",
+      "officialDate": "2012-11-28T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "HA5BUNXZPXXIFW2",
+      "officialDate": "2012-11-28T00:00:00.000-0500",
+      "sha256": "e2a6ccc6f0e4aae4c91406c6df3fbc015222393b386b01b89c438f574ed3a884",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 46,
+  "documentInventoryRows": 46,
+  "primaryCpc": "B23P  11/00",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13687596",
+    "https://api.uspto.gov/api/v1/patent/applications/13687596/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

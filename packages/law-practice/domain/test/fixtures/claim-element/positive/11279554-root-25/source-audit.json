@@ -1,0 +1,120 @@
+{
+  "familyId": "11279554-root-25",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the operations",
+      "nativeQuote": "the operations",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the feasible operational state",
+      "nativeQuote": "the feasible operational state",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the operational state",
+      "nativeQuote": "the operational state",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the modified solution",
+      "nativeQuote": "the modified solution",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the performance",
+      "nativeQuote": "the performance",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the poorest evaluation",
+      "nativeQuote": "the poorest evaluation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 27,
+      "examinerPhrase": "the feasible operational state",
+      "nativeQuote": "the feasible operational state",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the feasible operational state",
+      "nativeQuote": "the feasible operational state",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the feasible operational state",
+      "nativeQuote": "the feasible operational state",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the one or more solutions",
+      "nativeQuote": "the one or more solutions",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    },
+    {
+      "claimNumber": 32,
+      "examinerPhrase": "the generation of a solution",
+      "nativeQuote": "the generation of a solution",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact phrase in numbered native claim."
+    }
+  ],
+  "concerns": [
+    "No original comparisons. Selected numbered phrases match. Action misprints21 adjacent31 discussion, but31 expressly rejected and has quoted wording."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness ground; natural language selected dependencies manually checked and all connect to selected root. Original/date/inventory evidence retained; identity checks follow before handoff. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "11279554",
+    "nativePublicationNumber": "US20060241924A1",
+    "nativePublicationDate": "20061026",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "b58d5ce029daf21b9b7a09b20566032567d8596c2730b943e0b7a0bf4083dfb2",
+    "sourceClaimsXmlSha256": "574a7e67dcbe0787ab3339416900cfcda6355d75262d1d9997cd011562d45e4b"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 64,
+    "retainedInventoryCount": 64,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "ELYE47L3PPOPPY2",
+        "officialDate": "2006-04-12T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2009-02-23",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 39,
+  "selectedClaimNumbers": [25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

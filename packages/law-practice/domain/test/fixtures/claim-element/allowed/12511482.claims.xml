@@ -1,0 +1,106 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A multi-modal artificial intelligence (AI) system comprising:
+<claim-text>an encoder configured to encode a data string into a tokenized string, the data string corresponding to a first modality, wherein the data string comprises a plurality of units, wherein each unit is encoded in the tokenized string as a plurality of hierarchical tokens representing one or more attributes of the unit, wherein a first hierarchical token in a hierarchy represents one or more most significant bits (MSBs) of an attribute of the unit and a second hierarchical token represents one or more less significant bits (LSBs) of the attribute; and</claim-text>
+<claim-text>a computing system comprising memory and one or more processors, the memory storing executable instructions, wherein the instructions, when executed, cause the one or more processors to:
+<claim-text>instantiate a text-based deep neural network (DNN), wherein text used to train the text-based DNN corresponds to a second modality;</claim-text>
+<claim-text>receive the data string;</claim-text>
+<claim-text>apply the text-based DNN to the data string to select the hierarchical tokens in the tokenized string, wherein selecting the hierarchical tokens is performed according to both a first direction of the data string and a second direction of the hierarchy of the hierarchical tokens from the MSBs to the LSBs; and</claim-text>
+<claim-text>output, by the text-based DNN, selected hierarchical tokens as a representation of the data string, wherein the selected hierarchical tokens contain information of the attributes of the plurality of units in the data string.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the text-based DNN is trained using the text in the first modality as training data and then trained using a plurality of data strings in the second modality.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the text-based DNN is trained using a plurality of data strings in the second modality, and wherein training of the text-based DNN comprises:
+<claim-text>determining, in forward propagation, a plurality of tokenized strings, the plurality of tokenized strings representing different configurations corresponding to the data string;</claim-text>
+<claim-text>determining first differences in attribute values among the plurality of tokenized strings, wherein the first differences in the attribute values are determined through the forward propagation of the text-based DNN;</claim-text>
+<claim-text>comparing the first differences with second differences obtained from ground truth; and</claim-text>
+<claim-text>adjusting parameters of the text-based DNN based on comparing the first differences with the second differences.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the first differences in the attribute values are determined at least partially through aggregating values obtained from a plurality of attention blocks in the text-based DNN.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the attribute of the unit with the MSBs and the LSBs is a coordinate of the unit.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein encoding the data string into the tokenized string comprises:
+<claim-text>tokenizing the data string to produce a tokenized structural expression;</claim-text>
+<claim-text>tokenizing, for each unit in the data string, coordinates for the unit to produce tokenized coordinates for the unit, wherein the tokenized coordinates are in the hierarchy of hierarchical tokens; and</claim-text>
+<claim-text>combining the tokenized structural expression and the tokenized coordinates for each unit to produce the tokenized string.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein tokenizing, for each unit in the data string, the coordinates for the unit comprises:
+<claim-text>pixelating a rendered sphere to produce a set of pixels each corresponding to a location on a surface of the rendered sphere;</claim-text>
+<claim-text>tokenizing, for a first unit in the data string, coordinates at a center of the sphere; and</claim-text>
+<claim-text>tokenizing, for each additional units in the data string, coordinates corresponding to a pixel selected from the set of pixels based on a location of the additional unit relative to the center of the sphere.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the hierarchy of the hierarchical tokens is relative to the center of the sphere.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the coordinates are in a Cartesian coordinate system, an xyz coordinate system, an octree coordinate system, a polar coordinate system, a cylindrical coordinate system, or a barycentric coordinate system.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein selecting the hierarchical tokens is through inference of the text-based DNN based on aggregating activation outputs from attention blocks in the text-based DNN.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A computer-implemented method, comprising:
+<claim-text>encoding a data string into a tokenized string, the data string corresponding to a first modality, wherein the data string comprises a plurality of units, wherein each unit is encoded in the tokenized string as a plurality of hierarchical tokens representing one or more attributes of the unit, wherein a first hierarchical token in a hierarchy represents one or more most significant bits (MSBs) of an attribute of the unit and a second hierarchical token represents one or more less significant bits (LSBs) of the attribute</claim-text>
+<claim-text>instantiating a text-based deep neural network (DNN), wherein text used to train the text-based DNN corresponds to a second modality;</claim-text>
+<claim-text>applying the text-based DNN to the data string to select the hierarchical tokens in the tokenized string, wherein selecting the hierarchical tokens is performed according to both a first direction of the data string and a second direction of the hierarchy of the hierarchical tokens from the MSBs to the LSBs; and</claim-text>
+<claim-text>outputting, by the text-based DNN, selected hierarchical tokens as a representation of the data string, wherein the selected hierarchical tokens contain information of the attributes of the plurality of units in the data string.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The computer-implemented method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the text-based DNN is trained using the text in the first modality as training data and then trained using a plurality of data strings in the second modality.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The computer-implemented method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the text-based DNN is trained using a plurality of data strings in the second modality, and wherein training of the text-based DNN comprises:
+<claim-text>determining, in forward propagation, a plurality of tokenized strings, the plurality of tokenized strings representing different configurations corresponding to the data string;</claim-text>
+<claim-text>determining first differences in attribute values among the plurality of tokenized strings, wherein the first differences in the attribute values are determined through the forward propagation of the text-based DNN;</claim-text>
+<claim-text>comparing the first differences with second differences obtained from ground truth; and</claim-text>
+<claim-text>adjusting parameters of the text-based DNN based on comparing the first differences with the second differences.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The computer-implemented method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the first differences in the attribute values are determined at least partially through aggregating values obtained from a plurality of attention blocks in the text-based DNN.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The computer-implemented method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the attribute of the unit with the MSBs and the LSBs is a coordinate of the unit.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The computer-implemented method of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein encoding the data string into the tokenized string comprises:
+<claim-text>tokenizing the data string to produce a tokenized structural expression;</claim-text>
+<claim-text>tokenizing, for each unit in the data string, coordinates for the unit to produce tokenized coordinates for the unit, wherein the tokenized coordinates are in the hierarchy of hierarchical tokens; and</claim-text>
+<claim-text>combining the tokenized structural expression and the tokenized coordinates for each unit to produce the tokenized string.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The computer-implemented method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein tokenizing, for each unit in the data string, the coordinates for the unit comprises:
+<claim-text>pixelating a rendered sphere to produce a set of pixels each corresponding to a location on a surface of the rendered sphere;</claim-text>
+<claim-text>tokenizing, for a first unit in the data string, coordinates at a center of the sphere; and</claim-text>
+<claim-text>tokenizing, for each additional units in the data string, coordinates corresponding to a pixel selected from the set of pixels based on a location of the additional unit relative to the center of the sphere.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The computer-implemented method of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the hierarchy of the hierarchical tokens is relative to the center of the sphere.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The computer-implemented method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the coordinates are in a Cartesian coordinate computer-implemented method, an xyz coordinate computer-implemented method, an octree coordinate computer-implemented method, a polar coordinate computer-implemented method, a cylindrical coordinate computer-implemented method, or a barycentric coordinate computer-implemented method.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A non-transitory computer-readable medium configured to store code comprising instructions, wherein the instructions, when executed by one or more processors, cause the one or more processors to perform steps comprising:
+<claim-text>encoding a data string into a tokenized string, the data string corresponding to a first modality, wherein the data string comprises a plurality of units, wherein each unit is encoded in the tokenized string as a plurality of hierarchical tokens representing one or more attributes of the unit, wherein a first hierarchical token in a hierarchy represents one or more most significant bits (MSBs) of an attribute of the unit and a second hierarchical token represents one or more less significant bits (LSBs) of the attribute</claim-text>
+<claim-text>instantiating a text-based deep neural network (DNN), wherein text used to train the text-based DNN corresponds to a second modality;</claim-text>
+<claim-text>applying the text-based DNN to the data string to select the hierarchical tokens in the tokenized string, wherein selecting the hierarchical tokens is performed according to both a first direction of the data string and a second direction of the hierarchy of the hierarchical tokens from the MSBs to the LSBs; and</claim-text>
+<claim-text>outputting, by the text-based DNN, selected hierarchical tokens as a representation of the data string, wherein the selected hierarchical tokens contain information of the attributes of the plurality of units in the data string.</claim-text>
+</claim-text>
+</claim>
+</claims>

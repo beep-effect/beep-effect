@@ -1,0 +1,65 @@
+{
+  "familyId": "15276859-root-19",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "said engine",
+      "nativeQuote": "said engine",
+      "literalMatch": true,
+      "explanation": "Exact selected root19."
+    },
+    {
+      "claimNumber": 19,
+      "examinerPhrase": "the surface",
+      "nativeQuote": "the surface",
+      "literalMatch": true,
+      "explanation": "Exact19."
+    }
+  ],
+  "concerns": [
+    "Original ITLKKJUERXEAPX3 selected19 matches exactly;20 differs only appended page16 after full stop. Parsed extra21st Claim node is an unnumbered heading; numbered count20 agrees with native20/OA range.",
+    "Actual112(b) grounds explicitly cite19;20 is selected dependent context and naturally refers19. Publication identity/digest and exact inventory counts retained in versionEvidence; original2016-09-27 before OA2018-10-01 verified."
+  ],
+  "rationale": "Eligible native publication positive family with same-number examiner evidence and no substantive selected-version conflict.",
+  "sourceIdentity": {
+    "applicationNumber": "15276859",
+    "publicationNumber": "US20170101888A1",
+    "publicationDate": "2017-04-13",
+    "officeActionMailDate": "2018-10-01",
+    "officeActionDocumentIdentifiers": ["JMQIZ4MERXEAPX3"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20170101888 A1 20170413",
+      "application-reference": "US 15276859 20160927",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "ITLKKJUERXEAPX3",
+        "officialDate": "2016-09-27T00:00:00.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "ITLKKJUERXEAPX3",
+        "officialDate": "2016-09-27T00:00:00.000-0400",
+        "sha256": "862918fbfa0b2c68177a17f83c44796c5ef3e23553cf577d5a673fa643921ac1",
+        "ocrCorroborationOnly": false,
+        "exactNonWhitespaceClaimNumbers": [1, 17, 19],
+        "sourceClaimCount": 20
+      }
+    ],
+    "documentInventoryCount": 67,
+    "documentInventoryRows": 67,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

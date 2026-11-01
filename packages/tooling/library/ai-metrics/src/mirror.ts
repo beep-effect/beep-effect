@@ -210,6 +210,7 @@ const mirrorTableProjections = [
       "source_path_hash",
       "source_role",
       "repo_root_hash",
+      "collector_root_hash",
       "config_snapshot_id",
       "created_at_epoch_ms",
       "first_seen_at",

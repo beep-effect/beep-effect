@@ -1,0 +1,132 @@
+{
+  "familyId": "18107161-root-18",
+  "rootClaimNumber": 18,
+  "labelClaimNumbers": [18, 19, 20, 21, 25, 26],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A fastener magazine for a fastener driving tool, comprising: (a) a magazine housing including a first end and a second end, and a longitudinal axis that extends between said first and second ends, said magazine housing configured to hold a plurality of fasteners that are placed between said first and second ends and are movable therebetween; (b) a mounting bracket on said magazine housing proximal to said first end; (c) a fastener pusher that biases said plurality of fasteners toward said first end; (d) a movable fastener guide secured to said mounting bracket; (e) said movable fastener guide having an engaged position and a disengaged position; wherein: (f) if in said engaged position, said movable fastener guide sequentially directs one of said plurality of fasteners toward said first end of the magazine in a manner such that said fastener is prevented from completely backtracking, by mechanically interfering with a movement of said one of said plurality of fasteners that becomes misaligned; and (g) if in said disengaged position, said movable fastener guide does not mechanically interfere with a movement of said one of said plurality of fasteners.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The magazine of claim 1, wherein, said movable fastener guide comprises: (a) a movable knob that is connected by a stem to a movable gate, in which said knob is rotatable along a pivot axis that extends along said stem between said knob and said gate, in which said knob and said gate rotate together between a first angular position and a second angular position, wherein said first angular position corresponds to said engaged position of said movable fastener guide, and wherein said second angular position corresponds to said disengaged position of said movable fastener guide; (b) a spring that is mounted along said stem, between said knob and a surface of said magazine, such that: (i) if said knob is rotated to said second angular position, said spring biases said knob away from the magazine surface so that the knob is forced by said spring to an extended, distal position that is spaced-apart from the magazine surface; (ii) if said knob is actuated by being rotated to said first angular position and pressed toward said surface of said magazine, it thereby moves into a non-extended position that is proximal to the magazine surface; and (c) a knob mounting pin that runs through said stem and which keeps said knob from moving away from said proximal, non-extended position, so long as the knob is not rotated to said second angular position.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The magazine of claim 2, wherein: if said knob is actuated, said gate is pivotable between said first angular position and said second angular position; said first angular position is an engaged position wherein said gate mechanically interferes with a misaligned fastener of said plurality of fasteners; said second angular position is a disengaged position wherein said gate does not mechanically interfere with said plurality of fasteners, and instead is moved into a pocket that is formed in said magazine.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The magazine of claim 3, wherein: said gate is positioned in a first plane if the knob is moved to said first angular position, in which said gate is not aligned with said pocket; and said gate is positioned in a second plane if the knob is moved to said second angular position, in which said gate is aligned with said pocket.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The magazine of claim 2, wherein: said gate includes a ramp surface that acts as the mechanical interference with a misaligned fastener, if the knob and gate are in the first angular position.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A fastener driving tool, comprising: (a) a working cylinder that includes a movable piston, said cylinder including a variable displacement volume on a first side of said piston, and said cylinder including a variable venting volume on a second, opposite side of said piston; (b) a storage chamber; (c) an end cap that is attached to at least one of said cylinder and said storage chamber near an end portion of said fastener driving tool; (d) a movable driver that is in mechanical communication with said piston; (e) a guide body that guides movements of said driver; (f) a magazine housing including a first end and a second end, said magazine housing configured to hold a plurality of fasteners; (g) a mounting bracket on said magazine housing proximal to said first end; (h) a movable fastener guide secured to said mounting bracket; (i) said movable fastener guide including an engaged position and a disengaged position; wherein: (j) in said engaged position, said movable fastener guide sequentially directs one of said plurality of fasteners in a manner such that said fastener is prevented from completely backtracking; and (k) in said disengaged position, said movable fastener guide does not sequentially direct said plurality of fasteners.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The magazine of claim 6, wherein: said movable fastener guide comprises: a gate; a knob including a stem, which is mounted on said mounting bracket; and a spring, wherein: said spring is mounted on said stem between said knob and said mounting bracket; and said spring biases said knob from said mounting bracket.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The magazine of claim 7, wherein: said knob is mechanically attached to said gate by said stem, such that when said knob is rotated said gate pivots between said engaged position and said disengaged position; if in said engaged position, said gate is moved out of a pocket and directly in line with a fastener path to said guide body; if in disengaged position, said gate is moved into said pocket and out of line with said fastener path to said guide body; and said spring biases said gate into a direction toward said pocket.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A movable guide for use in a fastener magazine for use with a fastener driving tool, said movable guide comprising: (a) a rotatable knob that is sized and shaped for actuation by a human hand, said knob being mounted on a surface of a fastener magazine, proximal to an exit end of said fastener magazine; (b) a rotatable gate that is also located proximal to said exit end of the fastener magazine; (c) a stem that resides between said knob and said gate, and has sufficient structural rigidity so that said gate is forced to move rotationally if said knob is moved rotationally; (d) a spring that creates a biasing force against said knob and against said surface of the fastener magazine; and (e) a knob holding pin that secures the knob at said surface of the fastener magazine; wherein: (f) said knob and gate are movable between a disengaged position and an engaged position, such that: (i) if said knob and said gate are in said disengaged position, then the gate resides in a non-interfering location, and a fastener moving through said magazine will not make physical contact with the guide; and (ii) if said knob and said gate are in said engaged position, then the knob holding protrusion keeps the knob in that engaged position until released by an action of a human hand, and the gate resides in an interfering location, in which a misaligned fastener will make physical contact with a ramp portion of the guide, as the fastener is being driven by a moving driver of a fastener driving tool that is adjacent to said exit end of the fastener magazine.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The movable guide of claim 9, wherein: said ramp portion of the gate is sized and shaped to re-direct a fastener that is in the process of being driven by the moving driver, if said fastener becomes misaligned while being fed from said exit end of the fastener magazine",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The movable guide of claim 9, wherein: said spring comprise a coil spring that is mounted along said stem, between said knob and the surface of the fastener magazine.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The movable guide of claim 11, wherein: (a) if said knob is in the disengaged position, then said knob is biased away from the surface of the fastener magazine by the coil spring, and into a distal position that is spaced-apart from the surface of the fastener magazine; (b) if said knob is in the engaged position, then said knob has been pushed toward the surface of the fastener magazine into a proximal position, and then rotated, and said knob holding protrusion acts as a detent to hold the knob in said engaged position.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The movable guide of claim 12, wherein: (a) if said knob is in the disengaged position, then said gate is located in a first plane that includes said non-interfering location of the gate; and (b) if said knob is in the engaged position, then said gate is located in a second plane that includes said interfering location of the gate, in which said first and second planes are substantially parallel to one another.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The movable guide of claim 13, wherein, if said knob is in the disengaged position, then said gate resides in a pocket that is formed in said magazine, in which said first plane intersects said pocket.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A method for attaching a removable fastener magazine to a fastener driving tool, the method comprising: (a) providing a fastener driving tool that includes at least a housing, a handle portion, a front end subassembly proximal to an exit end of the tool; said front end subassembly comprising a rounded receptacle subassembly, and a guide body having a bottom portion and a backplate, said rounded receptacle subassembly including at least: (i) an opening in the backplate of said guide body, said opening exhibiting a geometric center; (ii) a ramp surface; and (iii) a first corner between said opening and said ramp surface; (b) providing a removably attachable fastener magazine having a magazine housing including a first end and a second, opposite end, and a longitudinal axis that extends between said first and second ends, said magazine housing configured to hold a plurality of fasteners that are placed between said first and second ends and are movable therebetween, said fastener magazine exhibiting a fulcrum portion that includes: (i) a cylindrical outer surface; (ii) a side protrusion proximal to said cylindrical outer surface of the fulcrum; and (iii) an extension portion that extends between said cylindrical outer surface and said first end of the magazine, said extension portion having an upper surface portion and a lower surface portion; and (c) attaching said fastener magazine to said fastener driving tool by: (i) inserting said side protrusion into said opening of the backplate; (ii) rotating said fulcrum portion around said geometric center of the opening in the backplate; (iii) pressing said upper surface portion of the magazine against said bottom portion of the guide body; and (iv) engaging a mounting bracket on said tool with a latch subassembly on said magazine.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claim 15, wherein: said fulcrum of the fastener magazine is rotatable about said geometric center if said side protrusion is engaged with said opening; and said mounting bracket on said tool is engageable with said latch subassembly on said magazine if the magazine is rotated in a direction towards said tool.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method of claim 16, wherein: said fastener magazine is rotatable in a planar direction towards said tool if said side protrusion is engaged with said opening.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A fastener driving tool having a removable fastener magazine, said tool comprising: (a) a housing, a handle portion, and a nose portion that includes a guide body having a fastener track and a first mounting bracket receiving portion, said nose portion exhibiting a rounded receptacle subassembly that includes: (i) a bottom portion; (ii) a rounded opening in said bottom portion; (iii) a ramp surface proximal to said rounded opening; and (iv) a geometric center proximal to said rounded opening; and (b) a removable fastener magazine having a first end, a second end, and a longitudinal axis that extends between said first and second ends, said removable fastener magazine configured to hold a plurality of fasteners placed between said first and second ends and are movable therebetween, said removable fastener magazine including a first mounting bracket with a fulcrum portion that exhibits: (i) a fulcrum having a cylindrical outer surface; and (ii) an extension portion having an upper surface portion and a lower surface portion, said extension portion extending to said fulcrum; wherein, said removable fastener magazine pivotally attaches to said tool at said geometric center of the rounded opening of the nose portion rounded receptacle subassembly.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The tool of claim 18, further comprising: (a) a second mounting bracket on a motor housing of the tool; and (b) a magazine latch pin that is mounted along an elongated side portion of said removable fastener magazine.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The tool of claim 19, wherein: said removable fastener magazine is secured to said tool when: (a) said fulcrum is seated into said rounded opening of the nose portion rounded receptacle subassembly; (b) said fulcrum portion is rotated about said geometric center in a direction towards said fastener driving tool housing; (c) said first mounting bracket is seated into said first mounting bracket receiving portion of the nose portion; and (d) said second mounting bracket is seated with said magazine latch pin.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The tool of claim 18, wherein: (a) said guide body includes a backplate that exhibits an opening; (b) said geometric center of the rounded opening is concentric with said opening of the backplate of the guide body; (c) said fulcrum portion includes a side protrusion that is co-linear with said fulcrum; and (d) said side protrusion is sized and shaped to fit into said opening of the backplate of the guide body. 22. The tool of claim 21, wherein said ramp surface assists in guiding said fulcrum of the removable fastener magazine into said rounded opening of the nose portion rounded receptacle subassembly.",
+      "sourceXmlParentClaimNumbers": [18, 21]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The tool of claim 22, further comprising: a first corner between said rounded opening and said ramp surface; wherein: said first corner assists in holding said fulcrum of the removable fastener magazine in place in said rounded opening of the bottom portion of the rounded receptacle subassembly.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The tool of claim 23, further comprising: a second corner between said lower surface portion and said cylindrical outer surface of the fulcrum portion of the magazine; wherein: said second corner assists in seating said fulcrum portion of the magazine into said rounded opening of the bottom portion of the rounded receptacle subassembly.",
+      "sourceXmlParentClaimNumbers": [23]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "The tool of claim 21, further comprising: (a) a second mounting bracket on a motor housing of the tool; and (b) a magazine latch pin that is mounted along an elongated side portion of said removable fastener magazine.",
+      "sourceXmlParentClaimNumbers": [21]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The tool of claim 25, wherein: said removable fastener magazine is secured to said fastener driving tool when: (a) said side protrusion of the fulcrum portion is seated into said opening of the backplate of the guide body; (b) said fulcrum portion is rotated about said geometric center in a direction towards said fastener driving tool housing; (c) said first mounting bracket is seated into said first mounting bracket receiving portion of the nose portion; and (d) said second mounting bracket is seated with said magazine latch pin.",
+      "sourceXmlParentClaimNumbers": [25]
+    }
+  ]
+}

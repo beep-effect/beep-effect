@@ -1,0 +1,165 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method comprising:
+<claim-text>performing a plurality of operations comprising:
+<claim-text>constructing a schema segment from a schema segment definition, wherein the schema segment comprises a plurality of schema elements,</claim-text>
+<claim-text>generating, by an embedding model, a plurality of embeddings corresponding to the plurality of schema elements,</claim-text>
+<claim-text>grouping the plurality of schema elements and the plurality of embeddings into a plurality of categories,</claim-text>
+<claim-text>detecting a semantic collision between a first embedding of a first schema element and a second embedding of a second schema element of a category of the plurality of categories, to obtain a set of semantic collisions,</claim-text>
+<claim-text>resolving, by a large language model (LLM), the set of semantic collisions to obtain a corresponding plurality of updated schema elements, and</claim-text>
+<claim-text>updating the schema segment with the corresponding plurality of updated schema elements.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>detecting, after updating, at least one additional semantic collision added to the set of semantic collisions responsive to updating the schema segment,</claim-text>
+<claim-text>wherein the plurality of operations is iteratively performed until the set of semantic collisions is resolved.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein constructing the schema segment further comprises:
+<claim-text>parsing the schema segment definition, wherein the schema segment definition comprises a plurality of string representations, to obtain the plurality of schema elements, wherein each schema element comprises a name, a description, and a schema element kind.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the plurality of embeddings corresponding to the plurality of schema elements further comprises:
+<claim-text>responsive to a schema element of the plurality of schema elements being an atomic element,
+<claim-text>generating, for the schema element, an embedding encoding at least a name of the schema element, a description of the schema element, and a schema element kind of the schema element by the embedding model.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the plurality of embeddings corresponding to the plurality of schema elements further comprises:
+<claim-text>responsive to a schema element of the plurality of schema elements being a composite element, comprising a set of schema elements,
+<claim-text>generating, for the schema element, an embedding encoding at least a name of the schema element, a description of the schema element, a schema element kind of the schema element, and respective embeddings of the set of schema elements.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein grouping the schema elements further comprises:
+<claim-text>selecting a sub-plurality of schema elements from the plurality of schema elements, based on schema element kinds of the sub-plurality of schema elements; and</claim-text>
+<claim-text>adding the sub-plurality of schema elements and corresponding schema element embeddings to a category, to obtain the plurality of categories.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>for a category of the plurality of categories,
+<claim-text>constructing a cosine distance matrix, comprising cosine distance values of embeddings of schema element pairs, wherein the schema element pairs have matching schema element kinds, and wherein the cosine distance values are obtained by applying a cosine distance function to the embeddings of the schema element pairs; and</claim-text>
+<claim-text>determining a collision threshold corresponding to the category, based on a statistical property of the cosine distance matrix.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>identifying the semantic collision between the first embedding of the first schema element and the second embedding of the second schema element responsive to a cosine distance value of the first embedding and the second embedding falling below a collision threshold, wherein the cosine distance value is obtained by applying a cosine distance function to the first embedding and the second embedding.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>generating, by the LLM, a first description corresponding to the first schema element and a second description corresponding to the second schema element, wherein the first description is dissimilar to the second description; and</claim-text>
+<claim-text>updating the schema segment with the first schema element and the second schema element.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>responsive to the second schema element being a near-duplicate of the first schema element,
+<claim-text>defining, by the LLM, a canonical schema element comprising common data types and descriptions of the first schema element and the second schema element,</claim-text>
+<claim-text>replacing the first schema element and the second schema element with the canonical schema element in the schema segment, and</claim-text>
+<claim-text>updating references to the first schema element and the second schema element in the schema segment with a reference to the canonical schema element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A system comprising:
+<claim-text>a computer processor;</claim-text>
+<claim-text>an embedding model, executing on the computer processor;</claim-text>
+<claim-text>a large language model (LLM), executing on the computer processor;</claim-text>
+<claim-text>a developer application, executing on the computer processor; and</claim-text>
+<claim-text>a schema improvement engine, executing on the computer processor and configured for performing a plurality of operations, comprising:
+<claim-text>constructing a schema segment from a schema segment definition, wherein the schema segment comprises a plurality of schema elements,</claim-text>
+<claim-text>causing the embedding model to generate a plurality of embeddings corresponding to the plurality of schema elements,</claim-text>
+<claim-text>grouping the plurality of schema elements and the corresponding plurality of embeddings into a plurality of categories,</claim-text>
+<claim-text>detecting a semantic collision between a first embedding of a first schema element and a second embedding of a second schema element of a category of the plurality of categories, to obtain a set of semantic collisions,</claim-text>
+<claim-text>causing the LLM to resolve the set of semantic collisions, to obtain a corresponding plurality of updated schema elements, and</claim-text>
+<claim-text>updating the schema segment with the corresponding plurality of updated schema elements.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further configured for:
+<claim-text>detecting, by the schema improvement engine, after updating, at least one additional semantic collision added to the set of semantic collisions responsive to updating the schema segment,</claim-text>
+<claim-text>wherein the plurality of operations is iteratively performed until the set of semantic collisions is resolved.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein constructing the schema segment further comprises:
+<claim-text>parsing, by the schema improvement engine, the schema segment definition, wherein the schema segment definition comprises a plurality of string representations, to obtain the plurality of schema elements, wherein each schema element comprises a name, a description, and a schema element kind.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein generating the plurality of embeddings corresponding to the plurality of schema elements further comprises:
+<claim-text>responsive to a schema element of the plurality of schema elements being an atomic element,
+<claim-text>generating, by the embedding model, for the schema element, an embedding encoding at least a name of the schema element, a description of the schema element, and a schema element kind of the schema element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein generating the plurality of embeddings corresponding to the plurality of schema elements further comprises:
+<claim-text>responsive to a schema element of the plurality of schema elements being a composite element, comprising a set of schema elements,
+<claim-text>generating, by the embedding model, for the schema element, an embedding encoding at least a name of the schema element, a description of the schema element, a schema element kind of the schema element, and respective embeddings of the set of schema elements.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein grouping the schema elements further comprises:
+<claim-text>selecting a sub-plurality of schema elements from the plurality of schema elements, based on schema element kinds of the sub-plurality of schema elements; and</claim-text>
+<claim-text>adding the sub-plurality of schema elements and corresponding schema element embeddings to a category, to obtain the plurality of categories.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further configured for:
+<claim-text>for a category of the plurality of categories,</claim-text>
+<claim-text>constructing, by the schema improvement engine, a cosine distance matrix,
+<claim-text>comprising cosine distance values of embeddings of schema element pairs, wherein the schema element pairs have matching schema element kinds, and wherein the cosine distance values are obtained by applying a cosine distance function to the embeddings of the schema element pairs; and</claim-text>
+<claim-text>determining a collision threshold corresponding to the category, based on a statistical property of the cosine distance matrix.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>identifying the semantic collision between the first embedding of the first schema element and the second embedding of the second schema element responsive to a cosine distance value of the first embedding and the second embedding falling below a collision threshold, wherein the cosine distance value is obtained by applying a cosine distance function to the first embedding and the second embedding.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>generating, by the LLM, a first description corresponding to the first schema element and a second description corresponding to the second schema element, wherein the first description is dissimilar to the second description;</claim-text>
+<claim-text>updating the schema segment with the first schema element and the second schema element; and</claim-text>
+<claim-text>responsive to the second schema element being a near-duplicate of the first schema element,
+<claim-text>defining, by the LLM, a canonical schema element comprising common data types and descriptions of the first schema element and the second schema element,</claim-text>
+<claim-text>replacing the first schema element and the second schema element with the canonical schema element in the schema segment, and</claim-text>
+<claim-text>updating references to the first schema element and the second schema element in the schema segment with a reference to the canonical schema element.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A method comprising:
+<claim-text>obtaining a plurality of semantic collisions corresponding to a plurality of schema element pairs of a category, wherein the category comprises a plurality of schema elements of a schema segment; and</claim-text>
+<claim-text>performing, by an LLM, operations comprising:
+<claim-text>obtaining a schema element pair corresponding to a semantic collision,</claim-text>
+<claim-text>responsive to at least one schema element of the schema element pair having a missing description,
+<claim-text>generating a description of the at least one schema element, and updating the at least one schema element,</claim-text>
+</claim-text>
+<claim-text>responsive to a first schema element and a second schema element of the schema element pair having near-duplicate descriptions,
+<claim-text>generating a first description for the first schema element and a second description for the second schema element, wherein the first description is dissimilar to the second description, and</claim-text>
+<claim-text>updating the first schema element and the second schema element, and</claim-text>
+</claim-text>
+<claim-text>responsive to the first schema element and the second schema element of the schema element pair being near-duplicates,
+<claim-text>defining a canonical schema element, comprising common data types and descriptions of the first schema element and the second schema element,</claim-text>
+<claim-text>replacing the first schema element and the second schema element with the canonical schema element in the schema segment, and</claim-text>
+<claim-text>updating references to the first schema element and the second schema element in the schema segment with a reference to the canonical schema element.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

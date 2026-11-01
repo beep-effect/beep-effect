@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "14262251",
+  "publicationNumber": "US20140232400A1",
+  "publicationDate": "2014-08-21",
+  "nativeXmlSha256": "b19d4f02517a6640c5aa2a3ffe646c880aa649fdc80a9679debe0e507de27eb9",
+  "claimsXmlSha256": "5261aca87821915f83c5818a1847f954410f70c93deafc9dfdfd8173fbd228b1",
+  "officeActionDocumentIdentifiers": [
+    "IXRP377QRXEAPX5"
+  ],
+  "officeActionMailDate": "2017-01-12",
+  "officeActionSection112Text": [
+    "claims 1-10 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nas to claim 1, line 3, “the respective spin-lattice relaxation times t1” lack antecedent basis.\r\nas to claim 2, line 7, “the signal intensity lacks antecedent basis.\r\nas to claim 2, line 7, “the resonance frequency” lacks antecedent basis.\r\nas to claim 2, line 9, “the time interval” lacks antecedent basis.\r\nas to claim 2, line 12, “the first parameter vector” lacks antecedent basis.\r\nas to claim 3, line 2, “the spin-spin relaxation time t2” lacks antecedent basis.\r\nas to claim 4, line 9, “the signal intensity” lacks antecedent basis.\r\nas to claim 4, line 9, “the resonance frequency” lacks antecedent basis.\r\nas to claim 4, line 11, “the second parameter vector” lacks antecedent basis.\r\nas to claim 5, line 3, “the signal line width” lacks antecedent basis.\r\nas to claim 5, line 3, “the resonance frequency” lacks antecedent basis.\r\nas to claim 5, line 4, “the measured free induction decay (fid) signal” lacks antecedent basis.\r\nas to claim 6, line 11, the third parameter vector is unclear since there are no first parameter and second parameter previously recited.\r\nas to claim 7, line 3, “the first parameter vector” lacks antecedent basis.\r\nas to claim 7, lines 3-4, “the respective spin-lattice relaxation time” lacks antecedent basis.\r\nas to claim 7, line 6, “the second parameter vector” lacks antecedent basis.\r\nas to claim 7, line 9, “the third parameter vector” lacks antecedent basis.\r\nas to claim 7, line 10, “the strength” lacks antecedent basis.\r\nas to claim 7, line 14, “the variety” lacks antecedent basis.\r\nas to claim 8, line 3, “the first parameter vector” lacks antecedent basis.\r\nas to claim 8, lines 3-4, “the respective spin-lattice relaxation times” lack antecedent basis.\r\nas to claim 8, line 5, “the second parameter vector” lacks antecedent basis.\r\nas to claim 8, line 6, “the resonance frequency” lacks antecedent basis.\r\nas to claim 8, line 8, “the third parameter vector” lacks antecedent basis.\r\nas to claim 8, line 9, “the strength” lacks antecedent basis.\r\nas to claim 9, lines 3-4, “a measurement target” is not clear as to how it is located in the object discrimination apparatus.\r\nas to claim 9, line 13, “the respective spin-lattice relaxation times t1 lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "HUFYJ3Z7PXXIFW3",
+      "officialDate": "2014-04-25T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "HUFYJ3Z7PXXIFW3",
+      "officialDate": "2014-04-25T00:00:00.000-0400",
+      "sha256": "0b7003160f6b8d69a36c9a009c43f78f25d8a7be23f2a7d478ca727161169fd4",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 10
+    }
+  ],
+  "documentInventoryCount": 51,
+  "documentInventoryRows": 51,
+  "primaryCpc": "G01N  24/08",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/14262251",
+    "https://api.uspto.gov/api/v1/patent/applications/14262251/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

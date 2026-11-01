@@ -1,0 +1,176 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18643465-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "findings": [
+    {
+      "id": "C1",
+      "category": "overbroad-whole-claim-abstention",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 10,
+          "path": "10",
+          "anchor": {
+            "startChar": 391,
+            "endChar": 408,
+            "quote": "an electric motor"
+          }
+        },
+        {
+          "claimNumber": 10,
+          "path": "10.a",
+          "anchor": {
+            "startChar": 584,
+            "endChar": 601,
+            "quote": "an electric motor"
+          }
+        }
+      ],
+      "reason": "The examiner-identified same-versus-new motor ambiguity is real, but it affects identity between the repeated indefinite motor mentions. Claim 10 still has exact source wording, a clear dependent method subject, the actual claim-1 dependency, and two explicit characterised/in-that machining/assembly limitations. ClaimElementTree can preserve both motor mentions as separate anchored terms without asserting either identity or difference. Withholding the whole tree discards independently clear structure.",
+      "correction": "Supply the claim-10 tree with its actual preamble/main transition and two ordered substantive limitations, full terms and clear dependencies/functional relations. Preserve both indefinite motor anchors separately; do not add an identity/antecedent edge between them or merge the mentions. Move the motor ambiguity from whole-claim unresolved to an exact reference concern pending attorney review, and reassess extractor confidence honestly. This does not decide whether there are one or two motors."
+    },
+    {
+      "id": "C2",
+      "category": "omitted-resumptive-subject",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "path": "1",
+          "anchor": {
+            "startChar": 1132,
+            "endChar": 1142,
+            "quote": "the method"
+          }
+        }
+      ],
+      "reason": "The extensive root preamble correctly avoids its embedded apparatus comprising clauses, but ends at [0,1130) before the explicit resumptive subject the method. That determiner-bearing method phrase belongs immediately before the main being characterised in that transition and currently appears in no element/term.",
+      "correction": "Extend the root preamble anchor through [0,1142), preserving its internal source comma and the method but excluding the following being characterised in that transition. Add local the method [1132,1142), determiner the/head method, and its antecedent to A method [0,8) in root 1. Keep the four machining function elements and their existing source boundaries."
+    },
+    {
+      "id": "C3",
+      "category": "withheld-clear-qualified-references",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 2,
+          "path": "2.b",
+          "anchor": {
+            "startChar": 234,
+            "endChar": 260,
+            "quote": "the first machined portion"
+          }
+        },
+        {
+          "claimNumber": 2,
+          "path": "2.b",
+          "anchor": {
+            "startChar": 268,
+            "endChar": 295,
+            "quote": "the second machined portion"
+          }
+        },
+        {
+          "claimNumber": 3,
+          "path": "3.a",
+          "anchor": {
+            "startChar": 376,
+            "endChar": 402,
+            "quote": "the first machined portion"
+          }
+        },
+        {
+          "claimNumber": 4,
+          "path": "4.a",
+          "anchor": {
+            "startChar": 384,
+            "endChar": 411,
+            "quote": "the second machined portion"
+          }
+        },
+        {
+          "claimNumber": 3,
+          "path": "3.a",
+          "anchor": {
+            "startChar": 450,
+            "endChar": 474,
+            "quote": "the front radial bearing"
+          }
+        },
+        {
+          "claimNumber": 3,
+          "path": "3.a",
+          "anchor": {
+            "startChar": 652,
+            "endChar": 676,
+            "quote": "the front radial bearing"
+          }
+        },
+        {
+          "claimNumber": 4,
+          "path": "4.a",
+          "anchor": {
+            "startChar": 459,
+            "endChar": 482,
+            "quote": "the rear radial bearing"
+          }
+        },
+        {
+          "claimNumber": 4,
+          "path": "4.a",
+          "anchor": {
+            "startChar": 665,
+            "endChar": 688,
+            "quote": "the rear radial bearing"
+          }
+        }
+      ],
+      "reason": "The extractor withholds these edges because the examiner alleges changed-name antecedent defects. Semantic identity is nonetheless source-clear here: first/second machined portions are the uniquely ordered first/second shaft workpiece portions machined by 1.c/1.d, and front/rear bearings retain the identical source numerals (18)/(22) and positions of the unique front/rear air-or-gas radial bearings in claim 1. No alternative candidate is present on the actual ancestry. An examiner allegation does not itself make these semantic identities unresolved.",
+      "correction": "Add antecedents for the four portion references to a first workpiece portion [1942,1967) in 1.c, or a second workpiece portion [2337,2363) in 1.d, respectively. Add the two front-bearing references to a front air or gas radial bearing [747,780) in root 1 and the two rear-bearing references to a rear air or gas radial bearing [831,863) in root 1. Preserve shortened surface heads and exact anchors; do not rewrite source terminology or claim that this resolves the legal rejection."
+    }
+  ],
+  "sourceConcerns": [],
+  "representationalObservations": [],
+  "reviewScope": {
+    "selectedClaimCount": 15,
+    "resolvedTreesReviewed": 14,
+    "unresolvedClaimNumbers": [
+      10
+    ],
+    "elementCount": 35,
+    "termCount": 292,
+    "functionalRelationCount": 21
+  },
+  "reviewNotes": [
+    "Read exact canonical claims/full family context, native claims XML, provenance, accepted source critic, extractor receipt, v2 protocol and ClaimElement schema contracts. Source eligibility is separately qualified and no fresh original-PDF/inventory authentication is claimed.",
+    "Reviewed subject/main-transition grammar, complete noun heads, explicit/nested source lists, actual dependency ancestry, typed edges, term ownership, exact anchors and ordered functional parts. Manual geometry checks found no mismatched UTF-16 anchors, out-of-order/overlapping owned terms, or invalid local functional term ownership in the submitted trees. Those checks do not establish semantic approval.",
+    "Pure pronominal/relative token coverage is under independent protocol review. This receipt does not silently impose a blanket requirement to turn every pronoun or relative word into a ClaimTerm. Exact optional coverage observations are separate from compulsory noun-phrase/structure corrections.",
+    "Selected 11-15 remain frozen family context, not separately asserted examiner-rejected claims. Claim 10 identity ambiguity does not require an entire-tree abstention; no proposed correction resolves motor identity by assumption. Alternative flange/shoulder branches and collective two-face references remain separately uncertain without an arbitrary member target."
+  ],
+  "independence": "Independent bounded semantic critic. No implementation rules, P2-DESIGN, production policy/decomposer, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Helpers only locate manually selected quotations, serialize the receipt and check schema/span geometry. Only this family critic.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental reference review; no goal completion, active sample admission or attorney agreement claimed."
+}

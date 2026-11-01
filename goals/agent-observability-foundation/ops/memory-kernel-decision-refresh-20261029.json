@@ -1,0 +1,8 @@
+{
+  "observedAt": "2026-10-29T20:39:21.586121+00:00",
+  "queryScope": "all retained boots via _TRANSPORT=kernel; -k alone defaults current boot",
+  "decisions": 9,
+  "serviceLimited": 8,
+  "global": 1,
+  "lastDecisionTime": "2026-10-29T10:56:06-05:00"
+}

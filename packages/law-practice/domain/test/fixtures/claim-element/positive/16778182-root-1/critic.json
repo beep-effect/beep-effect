@@ -1,0 +1,46 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "16778182-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "claimCount": 7,
+    "elementCount": 24,
+    "termCount": 63,
+    "edgeCount": 60,
+    "functionalRelationCount": 13
+  },
+  "reviewNotes": [
+    "Root method preserves acquisition, preprocessing, decision-tree generation/pruning and subsequent user input/dosage prediction. Nested generation/pruning operations remain under the tree-establishment limitation. All selected dependents2–7 actually refer directly to1, and none borrows sibling postprocessing/pruning/preprocessing introductions.",
+    "User’s ownership in a user's human physiological parameter data is an explicit lexical genitive and remains in the normalized head; no pronominal-owner stripping applies. Required dosage denotes the same target as root the dosage. Generated/established decision-tree phrases resolve to the one explicitly established decision tree without exact-head restrictions.",
+    "Generation, pruning and preprocessing are event nominalizations referring to root actions; the reference does not fabricate noun term endpoints from those verbs. Output/output data, feature extraction, Gini index, optimal-splitting point and time axis retain their actual definite first mentions. Local feature and sub-tree repetitions resolve to explicit earlier nominal mentions.",
+    "The independent verification data set is not forced onto the root validation data set without a source identity assertion. ETL, BADT, generalized regression neural network and null-data phrases remain exact. Claim7 preserves iterative output-data reuse as input without inventing an identity with an earlier training-set instance. No actionable semantic correction remains."
+  ],
+  "verification": [
+    "Read all selected exact canonical claims, native XML, expected terms/element structures/typed edges, extractor rationale and retained independent source-critic evidence. Source identity/rejection eligibility is separately accepted at source-critic confidence0.98; no fresh original-PDF/inventory authentication claimed.",
+    "Independent checks passed all exact UTF-16 anchors, head normalization shape, term ordering/nonoverlap/ownership, complete contiguous functional reconstruction, functional term participation, endpoint membership, true dependency ancestry, unique paths and no duplicate edges. Native claims XML SHA-256 matches provenance and all native/canonical claim strings agree under permitted printed-number/whitespace normalization. Schema shape/geometry supplements the manual semantic audit; no decomposer was invoked."
+  ],
+  "referenceSha256": "a52b1081bab2b627e40bd7ec67e251f4070070a750fa4e06a6d2ca653f4167e0",
+  "extractorSha256": "5f705b159faab751c39389c479beb6bcf2e0c0218643a55ee80fbc1c4d3f1ddd",
+  "referenceConcernsDisposition": "Localized missing-introduction and source-specific identity concerns reviewed and retained without invented antecedents. No remaining actionable critic finding.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only assigned critic.json files written. Source and model/tree/edge schemas only; no production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference review only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

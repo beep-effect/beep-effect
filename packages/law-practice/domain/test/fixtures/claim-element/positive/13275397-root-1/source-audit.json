@@ -1,0 +1,111 @@
+{
+  "familyId": "13275397-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.96,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the two first cavities",
+      "nativeQuote": "the two first cavities",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the spacer",
+      "nativeQuote": "the spacer",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the predetermined thickness",
+      "nativeQuote": "the predetermined thickness",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the gap",
+      "nativeQuote": "the gap",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the bottom surface",
+      "nativeQuote": "the bottom surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the top surface",
+      "nativeQuote": "the top surface",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the stopper",
+      "nativeQuote": "the stopper",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    }
+  ],
+  "concerns": [
+    "Selected-family claim4/7 wording exactly corresponds. Original comparison extracted0 claims, so no exact original corroboration. Detailed multiple numbered examiner phrases support correspondence; no substantive conflict observed."
+  ],
+  "rationale": "Actual112(b)/second-paragraph rejection ground and selected natural dependency membership reviewed. Examiner-to-numbered-native correspondence verified rather than chronology alone; underlying inventory assertion remains independently unverified. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "13275397",
+    "nativePublicationNumber": "US20130036818A1",
+    "nativePublicationDate": "20130214",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "a479af8e953f27c4027502c3fd039a6261d63b4c6cdf00c956d23a5d032c84ca",
+    "sourceClaimsXmlSha256": "140c2dea315258a5a42506040f0c037cbefc7cdf8e464f15d8c877cd8be4c400"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 61,
+    "retainedInventoryCount": 61,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "GTX1CWC0PPOPPY2",
+        "officialDate": "2011-10-18T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2013-10-25",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "GTX1CWC0PPOPPY2",
+      "officialDate": "2011-10-18T00:00:00.000-0400",
+      "sha256": "6e77b20486c20d373154fb56034a61e558a7b00bd8fb1f1c1f1fe79326f04265",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "nativeContextClaimCount": 22,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "GTX1CWC0PPOPPY2",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 0
+    }
+  ]
+}

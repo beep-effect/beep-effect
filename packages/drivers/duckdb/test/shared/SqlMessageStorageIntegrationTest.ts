@@ -97,7 +97,11 @@ const expectDuplicateReply = Effect.fnUntraced(function* (tag: "Chunk" | "WithEx
   assert(result._tag === "Duplicate" && Option.isSome(result.lastReceivedReply));
   expect(result.lastReceivedReply.value._tag).toEqual(tag);
 });
-const expectRequestIdForKey = Effect.fnUntraced(function* (request: Message.OutgoingRequest<Rpc.Any>, id: string) {
+// beep: Preserve the concrete request RPC through helpers instead of erasing its invariant envelope type.
+const expectRequestIdForKey = Effect.fnUntraced(function* <R extends Rpc.Any>(
+  request: Message.OutgoingRequest<R>,
+  id: string
+) {
   const storage = yield* MessageStorage.MessageStorage;
   const requestId = yield* storage.requestIdForPrimaryKey({
     address: request.envelope.address,
@@ -106,9 +110,9 @@ const expectRequestIdForKey = Effect.fnUntraced(function* (request: Message.Outg
   });
   expect(requestId).toEqual(Option.some(request.envelope.requestId));
 });
-const expectDuplicateOf = Effect.fnUntraced(function* (
-  request: Message.OutgoingRequest<Rpc.Any>,
-  duplicate: Message.OutgoingRequest<Rpc.Any>,
+const expectDuplicateOf = Effect.fnUntraced(function* <R extends Rpc.Any>(
+  request: Message.OutgoingRequest<R>,
+  duplicate: Message.OutgoingRequest<R>,
   id: string
 ) {
   const storage = yield* MessageStorage.MessageStorage;
@@ -398,7 +402,7 @@ describe("SqlMessageStorage", () => {
 
         // rows written by previous versions store the plaintext composed
         // key, so short keys must stay byte-identical to keep deduplicating
-        const plaintext = Envelope.primaryKey(request.envelope);
+        const plaintext = Envelope.primaryKey<typeof PrimaryKeyTest>(request.envelope);
         const rows = yield* selectMessageIds;
         expect(rows).toHaveLength(1);
         expect(rows[0]?.message_id).toEqual(plaintext);
@@ -422,7 +426,7 @@ describe("SqlMessageStorage", () => {
         yield* storage.saveRequest(request);
 
         // simulate a row written before message_id values were hashed
-        const plaintext = Envelope.primaryKey(request.envelope) ?? "";
+        const plaintext = Envelope.primaryKey<typeof LongKeyRpc>(request.envelope) ?? "";
         expect(plaintext.length).toBeGreaterThan(255);
         yield* sql`UPDATE cluster_messages SET message_id = ${plaintext} WHERE id = ${String(
           request.envelope.requestId

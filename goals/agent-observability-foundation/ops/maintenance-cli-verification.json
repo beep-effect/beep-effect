@@ -1,0 +1,24 @@
+{
+  "initialHostAvailableBytes": 56283721728,
+  "stopReason": null,
+  "peakObservedBytes": 2865889280,
+  "minimumHostAvailableBytes": 44095893504,
+  "exitCode": 0,
+  "finalState": {
+    "ActiveState": "inactive",
+    "MainPID": "0",
+    "Result": "success",
+    "MemoryCurrent": "[not set]",
+    "MemoryPeak": "[not set]"
+  },
+  "result": "passed",
+  "scope": "Scoped tsgo and tsrs including installed worker entrypoint, plus 29 CLI tests; full CLI package gate remains open",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "f30ee3f563ac61b90a735243ca6c466ab5e49a1fdc6a582cfa936e80f3a279fb",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "5ac1064a61c118ef8d00c6fd0c4d9d214ebf3a658bf4d4fe20899b8083e55d8a",
+    "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts": "6f3001b2f3ee551bb498c7dcb860bbac483f03cd8ea0e8bc3385339e586baf2d",
+    "goals/agent-observability-foundation/ops/managed-owner-typecheck.json": "30fa5344f3b745ff35f9b7436b8bde1e26fb516b34f540ac4664be6f2ed35643",
+    "packages/tooling/library/ai-metrics/src/observation-maintenance-http.ts": "64a72de25365722f610582db4e35f1c0e14b23a15a8a7c60e6dc8f95ccfa7f5c",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "285d694d033ac879816cbb45f93c3b250486db3a74d3dd1b2aca35cea73b9854"
+  }
+}

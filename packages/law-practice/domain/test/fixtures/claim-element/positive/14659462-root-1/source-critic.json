@@ -1,0 +1,180 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14659462-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20150192169", "A1", "20150709"],
+    "applicationReference": ["US", "14659462", "20150316"],
+    "officeActionDocumentIdentifiers": ["IOAAT5U4RXEAPX4"],
+    "officeActionMailDate": "2016-05-17"
+  },
+  "digestEvidence": [
+    {
+      "file": "14659462.publication.xml",
+      "sha256": "5219d69e084510b969a647809cfeb3c8ea2ed4b1deba247000917b384d01f168",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14659462.claims.xml",
+      "sha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "I7CKNTCNPXXIFW3",
+      "xmlAvailable": true,
+      "sha256": "51d739934e30f89c831553be337853018fe44faab0975a3118051c62986d4454",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 43,
+    "actualRows": 43,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2015-03-16T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "I7CKNTCNPXXIFW3"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-20 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the first item",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first item"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the axis"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the second item",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second item"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the base",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the base"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the base portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the base portion"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the periphery",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the periphery"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the distance",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the distance"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "said pin hole",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said pin hole"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "said floatably seated position",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said floatably seated position"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the flange base",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the flange base"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the barrel nut assembly",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the barrel nut assembly"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the outer periphery",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the outer periphery"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the distance",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the distance"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the center point",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the center point"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the aperture",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the aperture"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the edge",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the edge"
+    }
+  ],
+  "assessment": "Original18 Claim nodes serialize printed5 inside Claim4 and printed18 inside Claim17 with complete numbers/bodies, so20 substantive numbered claims are present. Other differences are line/page numbers and clipped initial letters Th/axi/aid. Natural references and OA numbering agree; examiner pin hole/aperture abbreviate native plurals.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

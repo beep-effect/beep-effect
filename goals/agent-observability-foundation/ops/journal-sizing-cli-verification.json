@@ -1,0 +1,21 @@
+{
+  "initialHostAvailableBytes": 71306940416,
+  "stopReason": null,
+  "peakObservedBytes": 2795634688,
+  "minimumHostAvailableBytes": 71306940416,
+  "exitCode": 0,
+  "finalState": {
+    "ActiveState": "inactive",
+    "MainPID": "0",
+    "Result": "success",
+    "MemoryCurrent": "[not set]",
+    "MemoryPeak": "[not set]"
+  },
+  "result": "passed",
+  "scope": "Scoped tsgo/tsrs checks and 29 CLI tests; full CLI package gate remains open",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "28307480c5d501d7fddc5a8b218b4ffc97aebeaf10451efd2e52be47ad66edd5",
+    "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts": "ff30cd6d6ceeb5212db1fa653536ec638cd4a0336d91d24f7b610689d3decdae",
+    "goals/agent-observability-foundation/ops/verify-observation-deployment.py": "67f8666bba391918ef6d73c3bc0423d7a51d14e281ca3162be2d49f667a03b36"
+  }
+}

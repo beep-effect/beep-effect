@@ -1,0 +1,149 @@
+{
+  "familyId": "18018354-root-6",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "resolvedClaimNumbers": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "resolvedLabelSetVerdict": "accepted",
+  "familyCoverage": "structural-labels-accepted",
+  "findings": [],
+  "unresolved": [],
+  "audit": {
+    "resolvedTrees": 12,
+    "elements": 25,
+    "terms": 291,
+    "typedEdges": 32,
+    "allProposedElementAndTermUtf16SlicesVerified": true,
+    "allSelectedClaimsMatchNativeXml": true,
+    "claimsXmlSha256Matches": true,
+    "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  },
+  "rationale": [
+    "Round 2 re-review confirms both round 1 missing terms are now present: claim 10 [690,713), the “positive relevance, determiner the, head positive relevance; claim 11 [660,683), the “negative relevance, determiner the, head negative relevance. Both stop before stored, preserve exact source wording and require no new antecedent edge.",
+    "All 316 current element/term anchors were rechecked against UTF-16 source slices; selected native XML normalization and claims XML hash still match. Original family membership, boundaries, existing heads/determiners/edges and source qualifications remain as independently reviewed in round 1.",
+    "Both prior findings are resolved. The exact prior round receipt, including its findings and rationale, is preserved in priorRounds. No further actionable finding remains. Root schema checks and attorney sampling are still separate."
+  ],
+  "sourceQualification": "Native publication supplies label characters. Retained hashes, dates, inventory counts and examiner recitations were checked for consistency; the underlying full document inventory and original office-action pages were not independently retrieved in this offline lane. Original comparison records are corroboration, never a replacement gold source. No attorney in-force confirmation is claimed.",
+  "independence": "No decomposer/policy implementation, rule fixtures, predictions or live reports read or executed. Read source/proposal artifacts and protocol/design/schema. Helpers checked source normalization, hashes and existing source slices, and located manually identified corrective quotes only.",
+  "acceptanceScope": "No legal definiteness or complete semantic coverage is asserted. A changes-required verdict blocks resolved-label acceptance until revision and re-review; unresolved claims remain in frozen coverage denominators. Root schema/span checks and attorney sampling remain separate.",
+  "priorRounds": [
+    {
+      "familyId": "18018354-root-6",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.98,
+      "verdict": "changes-required",
+      "reviewedClaimNumbers": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "resolvedClaimNumbers": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "resolvedLabelSetVerdict": "changes-required",
+      "familyCoverage": "label-corrections-required",
+      "findings": [
+        {
+          "claimNumber": 10,
+          "evidence": {
+            "path": "10.a",
+            "startChar": 690,
+            "endChar": 713,
+            "quote": "the “positive relevance",
+            "sourceContext": "the “positive relevance” stored in the database for ea"
+          },
+          "requiredCorrection": "Add this missing term at the listed span in text order with determiner the and head positive relevance. Curly quotes are not P2 punctuation stops; stored ends the head by the participle boundary. Keep the opening curly quote in the anchor and exclude the closing quote after the final head token. No unique earlier same-claim introduction matches this head, so add no antecedent edge."
+        },
+        {
+          "claimNumber": 11,
+          "evidence": {
+            "path": "11.a",
+            "startChar": 660,
+            "endChar": 683,
+            "quote": "the “negative relevance",
+            "sourceContext": "the “negative relevance” stored in the database."
+          },
+          "requiredCorrection": "Add this missing term at the listed span in text order with determiner the and head negative relevance. Curly quotes are not P2 punctuation stops; stored ends the head by the participle boundary. Keep the opening curly quote in the anchor and exclude the closing quote after the final head token. No unique earlier same-claim introduction matches this head, so add no antecedent edge."
+        }
+      ],
+      "unresolved": [],
+      "audit": {
+        "resolvedTrees": 12,
+        "elements": 25,
+        "terms": 289,
+        "typedEdges": 32,
+        "allProposedElementAndTermUtf16SlicesVerified": true,
+        "allSelectedClaimsMatchNativeXml": true,
+        "claimsXmlSha256Matches": true,
+        "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+        "schemaDecode": "pending-root",
+        "attorneySpotCheck": "pending"
+      },
+      "rationale": [
+        "Natural-language family is independent 6 followed by the chain 7->6 through 17->16. All selected claims use supported including/wherein source boundaries, and no unsupported-transition abstention is required.",
+        "All 314 proposed anchors are exact, but claims 10 and 11 each omit one curly-quoted definite term. These are actionable completeness errors listed in findings; source-slice equality alone cannot establish term completeness.",
+        "Remaining terms were individually reviewed under the declared five-token and participle boundary rules, including scalp/hair conjunction truncation, transtheoretical model before providing, hair/scalp token normalization, network jointly, user progresses/causes, five-token heads and the decision before making. The corrected terms should preserve the same quoted-token treatment as 15773469 claim 5.",
+        "Claim 15 semicolon splits two limitations despite curly braces because only parentheses and square brackets protect separators. All existing containment/dependency edges and the listed antecedent edges are correct: mobile terminal and two transtheoretical model edges in 6; cycle, normal state, dry state and sensitive state in 15; first the case in 17 before the second a case. Policy idiom exclusion does not suppress decomposition edges. No additional antecedent edges arise from the two missing terms.",
+        "Office action MBF31JZIWFYBX95 of 2025-06-03 rejects claims 1-19, expressly enumerates antecedent issues in 6 and 7, and reaches selected descendants through the blanket rejection and verified chain. Publication 2023-11-09 predates rejection. Selected exact original OCR comparisons are partial; native publication remains the source and in-force association remains qualified."
+      ],
+      "sourceQualification": "Native publication supplies label characters. Retained hashes, dates, inventory counts and examiner recitations were checked for consistency; the underlying full document inventory and original office-action pages were not independently retrieved in this offline lane. Original comparison records are corroboration, never a replacement gold source. No attorney in-force confirmation is claimed.",
+      "independence": "No decomposer/policy implementation, rule fixtures, predictions or live reports read or executed. Read source/proposal artifacts and protocol/design/schema. Helpers checked source normalization, hashes and existing source slices, and located manually identified corrective quotes only.",
+      "acceptanceScope": "No legal definiteness or complete semantic coverage is asserted. A changes-required verdict blocks resolved-label acceptance until revision and re-review; unresolved claims remain in frozen coverage denominators. Root schema/span checks and attorney sampling remain separate."
+    }
+  ]
+}

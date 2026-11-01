@@ -1,0 +1,137 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12447956-root-7",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "reviewedClaimNumbers": [7, 11, 12, 13, 14, 15, 16, 17, 18],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20100071148", "A1", "20100325"],
+    "applicationReference": ["US", "12447956", "20071203"],
+    "officeActionDocumentIdentifiers": ["GSU9LW9JPPOPPY5"],
+    "officeActionMailDate": "2011-09-23"
+  },
+  "digestEvidence": [
+    {
+      "file": "12447956.publication.xml",
+      "sha256": "d64c88ac15b1e18c1d353b2e3b536f63581e5e425b9c7231e5ef253935d46569",
+      "matchesProvenance": true
+    },
+    {
+      "file": "12447956.claims.xml",
+      "sha256": "c19301baafcce2ade19dda970b28ea2f19ab830af045cb8e1c92fa857083bd56",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "c19301baafcce2ade19dda970b28ea2f19ab830af045cb8e1c92fa857083bd56",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "FU5OT1MZPPOPPY4",
+      "available": true,
+      "sha256": "7cd968209e55adecc17d9015019fb1bfbe404bfdd7ccfcc3741a5b7ed2a8e8c5",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "FUCN268SPPOPPY2",
+      "available": true,
+      "sha256": "c96b82d038df5b5b0f3fd9de6f2bb2dd061d2257ea54eaaa6aa13fb16da84773",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 49,
+    "actualRows": 49,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2009-04-30T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "FU5OT1MFPPOPPY4"
+      },
+      {
+        "officialDate": "2009-04-30T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "FU5OT1MZPPOPPY4"
+      },
+      {
+        "officialDate": "2009-04-30T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "FU5OT1NRPPOPPY4"
+      },
+      {
+        "officialDate": "2009-04-30T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "FUCN268SPPOPPY2"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the tip",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the tip"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the open state",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the open state"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the longitudinal direction",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the longitudinal direction"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the pivoting angle",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the pivoting angle"
+    }
+  ],
+  "assessment": "Marked original PDF2 (printed3) resolves root7 rendering: with after having is struck through; the before underlined a head strip is struck through; trailing as claimed in one of preceding claims is struck through. Independent7 wording now corroborates native. PDF3 (printed4) confirms full selected11-18 wording/dependencies, also exact in original XML. Claim8 is separately printed under7, proving prior XML merge is segmentation rather than source numbering uncertainty. Actual statutory ground and selected numbered phrases remain verified.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1-18 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ],
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Amended FU5OT1MZPPOPPY4 new11-18 exactly match native. Original Claim7 contains merged8 plus having with a lid, facing the a head strip and residual dependency words without reliable deletion markup. OA phrases bind numbers but do not prove root7 accepted wording.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Amended FU5OT1MZPPOPPY4 new11-18 exactly match native. Original Claim7 contains merged8 plus having with a lid, facing the a head strip and residual dependency words without reliable deletion markup. OA phrases bind numbers but do not prove root7 accepted wording.",
+          "requiredAction": "Inspect rendered amended7/8/deletions before resolving root7 text/dependency."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "FU5OT1MZPPOPPY4",
+    "sha256": "f1071110a62916879e97486210fbc277554976432eca382e21fb840f651d64dd",
+    "pdfPagesInspected": [2, 3],
+    "printedPages": [3, 4],
+    "purpose": "Independent visual corroboration only."
+  }
+}

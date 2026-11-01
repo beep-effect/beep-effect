@@ -1,0 +1,86 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computer system for non-invasive computational biopsy for tissue classification and characterization, the system comprising:
+<claim-text>a data synthesis module, and wherein the data synthesizer module is configured to receive images from a plurality of data sources and laboratory data from plurality of supplementary data sources, and wherein the data sources comprises at least one of X-ray scans, clinical images, and MRI images, and wherein the data synthesizer module is configured to process the received images for data synthesis, and the data synthesizer module is configured to create a multidimensional dataset (mdd), wherein multidimensional dataset is created by co-registering each voxel of the image with a vector of values, and the data synthesizer module is configured to create a mapped image by merging the multidimensional dataset with supplementary data sources;</claim-text>
+<claim-text>an anomaly detector configured to create an anomaly score for each voxel of the merged dataset using an anomaly detection algorithms;</claim-text>
+<claim-text>a Signal Filtering module, and wherein the Signal Filtering module is configured to receive the output from the anomaly detector for signal purification, wherein the Signal Filtering module generates filtered signals after signal purification;</claim-text>
+<claim-text>a signal classification module, and wherein the signal classifier module is configured to compare the filtered signals with a database of pre-defined samples for classification, wherein the pre-defined samples are retrieved from a tissue definition database (TDD);</claim-text>
+<claim-text>an Analysis Module, and wherein the Analysis Module is configured to analyze images based on multivariate statistics and machine learning to characterize tissues, wherein characterization enables visualization of tissue anomalies on a user interface; and a display module.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the anomaly detector is further configured to:
+<claim-text>generate a list of anomalous voxels for the merged dataset from the anomaly score; and</claim-text>
+<claim-text>map a group of voxels into clusters by comparing the list of anomalous voxels with a similarity metric of tissues.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the Signal Filtering module is configured to:
+<claim-text>separate voxels in the merged dataset into a group of clusters and ‘noise’ voxels; and</claim-text>
+<claim-text>eliminate noise voxels from the merged dataset to generate statistical processing data, wherein the statistical processing data is fed as filtered signal to the analysis module.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the supplementary clinically relevant data sources comprise blood test results, family medical history, hematocrit, and computed tomography.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the anomaly detection algorithms include one of statistical techniques (projection, dimensionality reduction, Mahalanobis based techniques) or machine learning techniques (clustering, classification).</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the Signal Filtering module is configured to filter out non-relevant data and ghost image data, thereby providing filtered image outputs, and wherein the Signal Filtering module is configured to perform an Image filtering process by a combination of unsupervised machine learning techniques (clustering, unsupervised neural nets), and supervised machine learning techniques (ensemble methods, decision trees, SVM's, DNN).</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, the Signal Filtering module is configured to employ image filtering techniques using EM-GMM (expectation maximization for Gaussian mixture models), K-Means, and projection isolation.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the Signal Filtering module is configured to perform the image filtering is performed manually by human classification, and wherein, a visual output of dimensionality reduction techniques/raw images is utilized to select image signals and labels in the human classification process.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the classifier module is configured to compare the filtered signals with database of known samples from an internally developed Tissue Definition Database (TDD) for classification, and wherein the classification module is configured to implement statistical metrics and a plurality of machine learning methods (SVM/neural networks). Alternatively, the filtered signals are sent to an anomaly detector for further analysis.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the Analysis Module is configured to provide the classified data in layers for visualization and analysis, and wherein the Analysis Module is configured to detect new anomalies that are not defined in the TDD and are deemed clinically relevant, and wherein the Analysis Module is configured to classify the new anomalies as unobserved tumor, infection, normal unobserved tissue, and wherein the Analysis Module is configured to integrated the newly detected anomalies into the TDD, for future reference for the radiologist and for possible physical biopsy.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a graphical interface of the Display module is configured to output a layered 2D or 3D image to a user after processing/visualization by the Analysis Module, and wherein each of the tissue element is translated into a 2D or 3D layered image, and wherein each layer in the image is isolated or removed from the output to allow specific visualization of key anomalies, and wherein the tissue is 3D printed to enable a more accurate model for an actual invasive biopsy.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the graphical interface of the display module is provided with a set of Computational Biopsy metrics to indicate a patient health parameters to allow the doctor to prescribe remedies, and wherein the clinically relevant patient health parameters are output to the display, and wherein the clinical data includes blood test results (Triglycerides, HDL and LDL).</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the computing device is any one of a server device, a client device, and a personal computing device.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system as claimed in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the display module is a display device.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A computer implemented method comprising instructions stored on a non-transitory computer readable storage medium and executed on a hardware processor of a computing device comprising processors (e.g. CPUs and/or GPUs) and a memory, for non-invasive tissue classification and characterization, the method comprising:
+<claim-text>receiving images from a plurality of data sources and a supplementary data sources, wherein the data sources comprises clinical images, CT Scan, MRI images, etc.;</claim-text>
+<claim-text>processing the received images by a data synthesis/analysis module to create a set of observation vectors, and wherein the set of observation vectors include high level objects and low level objects;</claim-text>
+<claim-text>creating a multidimensional dataset (mdd) by the data synthesis module, wherein multidimensional dataset is created by co-registering each voxel of the image with a vector of values;</claim-text>
+<claim-text>creating a mapped image using the data synthesis module by merging the multidimensional dataset with supplementary data sources;</claim-text>
+<claim-text>computing an anomaly score for each voxel of the merged dataset using anomaly detectors;</claim-text>
+<claim-text>receiving an output from an anomaly detector by a Signal Filtering module for signal purification, wherein the Signal Filtering module is configured to generate filtered signals after signal purification;</claim-text>
+<claim-text>comparing the filtered signals with a database of pre-defined samples for classification by a classifier module, wherein the pre-defined samples are retrieved from a tissue definition database (TDD); and</claim-text>
+<claim-text>analyzing images based on multivariate statistics and machine learning techniques by the analysis module to characterize tissues, wherein the characterization is performed to display tissue anomalies on a user interface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method as claimed in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the supplementary data sources comprise blood test results, family medical history, hematocrit, and computed tomography.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method as claimed in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the tissues are classified as a tissue known to the TDD or as an anomaly that is not classified yet.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method as claimed in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the step of executing anomaly detectors to create an anomaly score further comprises:
+<claim-text>generating a list of anomalous voxels for the merged dataset from the anomaly score; and</claim-text>
+<claim-text>mapping a group of voxels into clusters by comparing the list of anomalous voxels with a similarity metric of tissues.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method as claimed in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the step of signal purification further comprises:
+<claim-text>separating voxels in the merged dataset into a group of clusters and ‘noise’ voxels; and</claim-text>
+<claim-text>eliminating noise voxels from the merged dataset to generate statistical processing data, wherein the statistical processing data is fed as filtered signal to the analysis module.</claim-text>
+</claim-text>
+</claim>
+</claims>

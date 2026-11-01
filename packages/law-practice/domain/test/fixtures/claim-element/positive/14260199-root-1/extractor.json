@@ -1,0 +1,79 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "14260199-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "the drain / the orifice",
+      "reason": "Claim6 depends directly on1 and first definite drain/orifice6.a cannot borrow sibling5 introductions. Later6.b/7 references now link the exact6.a local mentions: absence of earlier indefinite introduction does not erase explicit local identity. Portion/screen ownership remains distinct."
+    },
+    {
+      "quote": "the temperature and liquid water",
+      "reason": "Complete coordinated threshold quantities retained; earlier property mentions have no indefinite introduction and final joint NP is not collapsed onto just one component."
+    },
+    {
+      "quote": "the cathode inlet air / the air",
+      "reason": "Root1 explicitly supplies cathode air through the cathode inlet line. Claim4 cooler/transfer-unit conditions refer to that same inlet stream; shortened the air and inlet-qualified mentions link by this unique source role. This does not equate different amounts of condensed/liquid water or borrow sibling3."
+    },
+    {
+      "quote": "a sump",
+      "reason": "Separate sump introductions1 and5 retain local ownership; no physical identity is forced across drip-rail and drain locations."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [],
+  "sourceValidation": {
+    "claimsXmlSha256": "5b2ce81b0552054f82bf832063dcf66a518267969ed212c5016d9b9b10c233e3",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 8,
+    "elements": 27,
+    "terms": 104,
+    "edges": 104
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decode through declared ClaimElementTree schema; production decomposer not invoked.",
+    "anchors": "Exact UTF-16 spans, source order, nonoverlapping ordered terms, source-contained ownership, all antecedent endpoints and complete ordered functional reconstruction checked.",
+    "native": "All canonical/context claims match native XML under permitted normalization; source claims XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor checks are not independent acceptance."
+  },
+  "previousRounds": [
+    {
+      "round": 1,
+      "expected": "expected.round1.json",
+      "extractor": "extractor.round1.json",
+      "criticRound": 1,
+      "criticVerdict": "changes-required"
+    }
+  ],
+  "round2Changes": [
+    {
+      "findingId": "local-drain-orifice-reference-chains",
+      "disposition": "accepted",
+      "caseCount": 6,
+      "reason": "First definite drain/orifice6.a remain unlinked to absent sibling5 introductions. These exact noun mentions nevertheless establish local referents for6.b and actual dependent7. Independently reread screen/portion/drain/orifice ownership; all six links address the same local objects without sibling borrowing."
+    }
+  ],
+  "criticReview": "Independent round2 critic pending.",
+  "round2Independence": "Original extractor independently adjudicated exact critic cases against canonical source and protocol. No production, decomposer, design, predictions or conformance inspected. Only listed source-supported references/head/order changed; full previous receipts preserved."
+}

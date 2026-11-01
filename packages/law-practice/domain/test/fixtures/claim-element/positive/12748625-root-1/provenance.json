@@ -1,0 +1,52 @@
+{
+  "applicationNumber": "12748625",
+  "publicationNumber": "US20100254278A1",
+  "publicationDate": "2010-10-07",
+  "nativeXmlSha256": "fb639bd18f2bdbbe24fe62a0c7f2a32771cc1b8822f9c5ca8fc30573e366cf5b",
+  "claimsXmlSha256": "8354a47b43fd799ab2503318e98ab2b84a96b0c1877e06706887ebfc0c3f3b61",
+  "officeActionDocumentIdentifiers": [
+    "HAY25ZNXPXXIFW4"
+  ],
+  "officeActionMailDate": "2012-12-24",
+  "officeActionSection112Text": [
+    "claim 1 recites the limitation the selected nodes in line 20. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for the limitation “the selected at least portion of the plurality of nodes”.\r\nclaim 2 recites the limitation the channel assessment node in line 2. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for “the channel assessment operation node” (of claim 1, line 16)\r\nclaim 3 recites the limitation the second probe operation in lines 2-3. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 4 recites the limitation the channel assessment node. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for “the channel assessment operation node” (of claim 1, line 16)\r\nclaim 4 recites the limitation the achievable capacity. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 4 recites the limitation the assessed channel. there is insufficient antecedent basis for this limitation in the claim. specifically, the claims do not state that a channel was assessed.\r\nclaim 5 recites the limitation the achievable capacity. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 5 recites the limitation the assessed channel. there is insufficient antecedent basis for this limitation in the claim. specifically, the claims do not state that a channel was assessed.\r\nclaim 7 recites the limitation the network. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for the limitation “the home communication network”.\r\nclaim 9 recites the limitation the media access plan (“map”). there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 9 recites the limitation the channel assessment operation. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 10 recites the limitation the selected nodes in line 23. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for the limitation “the selected at least portion of the plurality of nodes”.\r\nclaim 10 recites the limitation the selected nodes in lines 27-28. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for the limitation “the selected at least portion of the plurality of nodes”.\r\nclaim 11 recites the limitation the channel assessment node. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for “the channel assessment operation node” (of claim 10, lines 18-19)\r\nclaim 12 recites the limitation the channel assessment node. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for “the channel assessment operation node” (of claim 10, lines 18-19).\r\nclaim 12 recites the limitation the selected nodes in line 23. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for the limitation “the selected at least portion of the plurality of nodes”.\r\nclaim 13 recites the limitation the channel assessment node. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for “the channel assessment operation node” (of claim 10, lines 18-19).\r\nclaim 14 recites the limitation the channel assessment node. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for “the channel assessment operation node” (of claim 10, lines 18-19).\r\nclaim 16 recites the limitation the network. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for “the channel assessment operation node” (of claim 10, lines 18-19).\r\nclaim 17 recites the limitation the selected nodes in line 23. there is insufficient antecedent basis for this limitation in the claim. there is antecedent basis support for the limitation “the selected at least portion of the plurality of nodes”."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "G7GLC1O3PPOPPY3",
+      "officialDate": "2010-03-29T00:00:00.000-0400"
+    },
+    {
+      "documentIdentifier": "G7GLD2J5PPOPPY3",
+      "officialDate": "2010-03-29T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "G7GLC1O3PPOPPY3",
+      "officialDate": "2010-03-29T00:00:00.000-0400",
+      "sha256": "cb5354efe01d7c993e7a9b564ebe439f62e41102fb6364977d7aa1f255ea5ab7",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    },
+    {
+      "documentIdentifier": "G7GLD2J5PPOPPY3",
+      "officialDate": "2010-03-29T00:00:00.000-0400",
+      "sha256": "370d39c698d4af556ec54778f375db4d068df55dd80dbd2bfcc3636429947367",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 90,
+  "documentInventoryRows": 90,
+  "primaryCpc": "H04L  43/12",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12748625",
+    "https://api.uspto.gov/api/v1/patent/applications/12748625/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

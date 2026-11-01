@@ -1,0 +1,54 @@
+{
+  "applicationNumber": "16052309",
+  "publicationNumber": "US20190038021A1",
+  "publicationDate": "2019-02-07",
+  "nativeXmlSha256": "dfbb5b4d018d49cef40c900302e24564c1fa0d48c913a2612a99fbfc692c363f",
+  "claimsXmlSha256": "84c8c1daf7b3301a5ee3b0c4192bb4b69d0fdb638b558e8f7aa19fed35490990",
+  "officeActionDocumentIdentifiers": [
+    "JV5BLJF5RXEAPX3"
+  ],
+  "officeActionMailDate": "2019-05-03",
+  "officeActionSection112Text": [
+    "the following is a quotation of 35 u.s.c. 112(b):\r\n(b) conclusion.—the specification shall conclude with one or more claims particularly pointing out and distinctly claiming the subject matter which the inventor or a joint inventor regards as the invention.\r\nclaims 1-6 are rejected under 35 u.s.c. 112(b) as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor regards as the invention.\r\nwith respect to claim 1: in line 2, the recitation “the backside section” lacks antecedent basis. in line 3, the recitation “the upper and lower ends” lacks antecedent basis. in lines 4-5, the recitation “the bend angled in 180° (1d)” lacks antecedent basis. in line 5, the recitation “the bend angled in 180° (1e)” lacks antecedent basis.\r\nwith respect to claim 2: in lines 2-3, the recitation “the corners” lacks antecedent basis. in line 3, the recitation “its l-shaped lower bend angled in 90° (2c)” lacks antecedent basis. in lines 3-4, the recitation “the corners” lacks antecedent basis. in line 4, the recitation “its upper bend having an u-shaped bend (2d)” lacks antecedent basis.\r\nwith respect to claim 3: in line 2, the recitation “the side part (2)” lacks antecedent basis. in line 3, the recitation “the tab (2a)” lacks antecedent basis. in line 4, the recitation “the four coincident corners” lacks antecedent basis.\r\nwith respect to claim 4: in lines 2-3, the recitation “the top and / or bottom part (3)” lacks antecedent basis. in line 4, the recitation “the top / bottom part” lacks antecedent basis. in lines 4-5, the recitation “the upper section (1d)” lacks antecedent basis. in line 5, the recitation “the side parts (2b)” lacks antecedent basis.\r\nwith respect to claim 5: in line 3, the recitation “the cabinet box” lacks antecedent basis. in line 3, the recitation “the pieces” lacks antecedent basis. in lines 3-4, the recitation “the shelf and doors” lacks antecedent basis. in line 4, the recitation “these pieces” lacks antecedent basis. in line 4, the recitation “the lower bend (3a)” lacks antecedent basis. in lines 4-5, the recitation “the top and bottom parts” lacks antecedent basis. in line 6, the recitation “the side parts (2)” lacks antecedent basis. in line 6, the recitation “the side bends (3b)” lacks antecedent basis. in line 6, the recitation “the top and bottom parts” lacks antecedent basis. in line 7, the recitation “the main slots (2b)” lacks antecedent basis. in line 7, each recitation of “the side parts (2)” lacks antecedent basis. in line 8, the recitation “the top and bottom parts (3)” lacks antecedent basis. in line 9, the recitation “the cabinet box” lacks antecedent basis.\r\nwith respect to claim 6: in line 2, the recitation “the pieces” lacks antecedent basis. in line 2, the recitation “the box” lacks antecedent basis. in line 3, the recitation “the four corners” lacks antecedent basis. in line 3, the recitation “the side part (2)” lacks antecedent basis. in line 4, the recitation “the top or bottom part (3)” lacks antecedent basis. in line 4, the recitation “the locking” lacks antecedent basis. in line 5, the recitation “the tab (2a)” lacks antecedent basis. in line 5, the recitation “the steel” lacks antecedent basis. in lines 5-6, the recitation “the cabinet box” lacks antecedent basis. in line 6, the recitation “the shelf and doors” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "JKBMWGYKRXEAPX0",
+      "officialDate": "2018-08-01T17:19:16.000-0400"
+    },
+    {
+      "documentIdentifier": "JKBMWGYNRXEAPX0",
+      "officialDate": "2018-08-01T17:19:16.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "JKBMWGYKRXEAPX0",
+      "officialDate": "2018-08-01T17:19:16.000-0400",
+      "sha256": "b54eed0fdcaca735f61d00d3b028debc3512012d6f142e2c763fc76141204a19",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2
+      ],
+      "sourceClaimCount": 6
+    },
+    {
+      "documentIdentifier": "JKBMWGYNRXEAPX0",
+      "officialDate": "2018-08-01T17:19:16.000-0400",
+      "sha256": "d72706fde3d47ecfe8b0b4f2c20bfe8cdd12351426644ac87c31a6f7d1a5f56f",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 6
+    }
+  ],
+  "documentInventoryCount": 58,
+  "documentInventoryRows": 58,
+  "primaryCpc": "A47B  47/025",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/16052309",
+    "https://api.uspto.gov/api/v1/patent/applications/16052309/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

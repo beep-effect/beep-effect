@@ -1,0 +1,67 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11670278-root-61",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    61,
+    62,
+    63,
+    64,
+    65,
+    67
+  ],
+  "findings": [],
+  "reviewScope": {
+    "kind": "independent lexical-head-only revision review",
+    "headCount": 1,
+    "preservedSemanticReview": "critic.round2.json",
+    "previousRound": 2,
+    "currentRound": 3
+  },
+  "headReviewEvidence": [
+    {
+      "claimNumber": 65,
+      "path": "65.a",
+      "anchor": {
+        "startChar": 95,
+        "endChar": 113,
+        "quote": "at least two pairs"
+      },
+      "determiner": "bare",
+      "priorHead": "pairs",
+      "acceptedHead": "at least two pairs",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    }
+  ],
+  "reviewNotes": [
+    "Claim 65 expressly requires a minimum of two pairs, rather than a generic pair or series of fields. Bare encodes none of at least two, so at least two pairs is the complete normalized head. The following of orthogonal magnetic fields remains separately represented as before.",
+    "The current change is accepted as a lexical-head-only revision of the prior independently accepted semantic reference. Earlier full semantic/source review evidence remains in the immutable prior-round critic receipt; this review does not claim fresh original-PDF or attorney authentication."
+  ],
+  "verification": [
+    "Read lexical-head/v1 and manually adjudicated each listed correction against exact canonical and native source claim context. Checked nearby pronominal/cardinal/minimum/partitive term heads for consistency with supported determiner tags.",
+    "Verified all head-review preservedPriorReceipts SHA-256 values, including the prior critic receipt. Existing critic.json was byte-identical to that preserved prior-round receipt before replacement.",
+    "Independently reversed exactly the reviewed head fields and compared the entire resulting JSON tree with expected.round2.json: equal. All anchors, determiners, elements, typed edges, dependency structure, functional parts and claim scope therefore remain unchanged.",
+    "Checked each changed term source anchor as half-open UTF-16 offsets. Native source.claims.xml SHA-256 matches provenance.claimsXmlSha256, and all native claims match canonical claims after only printed-number removal and whitespace normalization. No decomposer or implementation rule was used."
+  ],
+  "referenceSha256": "1e9602d977ed29d60630035ded7f46d98238a7327837d8874bd741bf64971750",
+  "extractorSha256": "e72f08da985cef2447be1a612098009da817d9a0f48c80949a13baf6ddc1ead6",
+  "headReviewSha256": "4e7bd4421d28e2397bbc0454a4238cdbda3d5d93f33fd5c1f0a6afc857d28c11",
+  "preservedPriorCritic": {
+    "file": "critic.round2.json",
+    "sha256": "ed1eae73e029c0282d8d62112b644ee9b9180564aa6327c473f06bcb0af24fed",
+    "round": 2,
+    "verdict": "accepted",
+    "confidence": 0.97
+  },
+  "referenceConcernsDisposition": "Prior semantic and source concerns remain unchanged and explicitly documented in extractor.json and the preserved prior-round critic. Head changes add no antecedent, identity assertion, source repair or scope expansion.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only current critic.json files written. Reviewed protocol, canonical/native sources, existing semantic receipts and head-review diffs. No production/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source/expected/extractor edits.",
+  "attorneyAdjudication": "unchanged; pending actual human review where required; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference acceptance only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

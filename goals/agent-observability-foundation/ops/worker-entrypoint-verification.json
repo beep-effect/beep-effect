@@ -1,0 +1,137 @@
+{
+  "recordedAt": "2026-10-28T22:17:30.046753+00:00",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "deliberateMemoryExhaustion": false,
+  "goalComplete": false,
+  "runs": [
+    {
+      "unit": "beep-observation-entry-proof-24660969d0f9.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-79b15a01b775.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-79d577278542.service",
+      "refused": "ownership",
+      "mainPid": 0
+    },
+    {
+      "unit": "beep-observation-entry-proof-6f9d431705aa.service",
+      "refused": "resources",
+      "mainPid": 0
+    },
+    {
+      "unit": "beep-observation-entry-proof-a17fd92a83bd.service",
+      "refused": "ownership",
+      "mainPid": 0
+    },
+    {
+      "unit": "beep-observation-entry-proof-bcf65b55b823.service",
+      "refused": "socket",
+      "mainPid": 0
+    }
+  ],
+  "result": "passed",
+  "startsPaused": true,
+  "autonomousSend": true,
+  "acceptedMissingReadbackDegraded": true,
+  "exactReceiptReplayAfterRestart": true,
+  "noBlindResend": true,
+  "privateCanaryAbsent": true,
+  "scopedSocketCleanup": true,
+  "noFixtureRoutes": true,
+  "databaseIntegrity": true,
+  "backendPostCount": 1,
+  "unsafeCreationModeRefused": true,
+  "missingLockRefused": true,
+  "symlinkDatabasePreserved": true,
+  "activeSocketPreserved": true,
+  "cleanup": [
+    {
+      "unit": "beep-observation-entry-proof-24660969d0f9.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-79b15a01b775.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-79d577278542.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-6f9d431705aa.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-a17fd92a83bd.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-bcf65b55b823.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "c91549ab1020bea7eab50f2751a9470bef43b43a32bd4b205fbfbd8b2263ee5e",
+    "packages/tooling/library/ai-metrics/test/fixtures/write-observation-launch.ts": "d69ab0637c1e73e08cd1d2d23c8f0f123c2ae09de2ce7fae6daddd28944e74a5",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "a4e22d0ca2907d52e0ed8778ac2a0581cbd94cf8f1d324ab98474d4020309260",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "c73c1dd2b9db3c270f718a603ba73e50458c681b39d2a6789eecb5b1225f76d8",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "746e8035b90800d2d212f921df2d863a4d0dea9655c8ab99a72296d77fc738e8",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-config.ts": "f0f153524dc5c5391dc43adf83dc16224ac172ba48d4c2a28d850714766ce8c8",
+    "packages/tooling/library/ai-metrics/test/observation-launch.test.ts": "3bcb9a649d802821570a998fcabb727bc680e9eba80d3795afb00bc71f438ca4",
+    "packages/tooling/library/ai-metrics/src/index.ts": "26552d820b3b78dc03beb9c6a1e47d10d7750ae11150eddb2a142f07555146f7"
+  },
+  "configurationTests": {
+    "passed": 4,
+    "command": "bunx --bun vitest run test/observation-launch.test.ts"
+  },
+  "metricsFormat": {
+    "tool": "promtool 3.15.1",
+    "command": "promtool check metrics",
+    "result": "passed",
+    "sample": "ops/worker-entrypoint-metrics.prom"
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 140.4,
+    "docgenSeconds": 13.3,
+    "execution": "One bounded agent-runs.slice job; MemoryHigh 7 GiB, MemoryMax 8 GiB, zero additional swap, CPUQuota 200%, 300-second lifetime; RAYON_NUM_THREADS=2 and BIOME_THREADS=2."
+  },
+  "cliTypecheck": {
+    "result": "passed",
+    "command": "bunx --bun tsgo -p packages/tooling/tool/cli/tsconfig.json --noEmit",
+    "exitCode": 0,
+    "firstAttempt": "120-second resource deadline; no success claim for that attempt",
+    "execution": "One owned agent-runs.slice job with MemoryHigh 7 GiB, MemoryMax 8 GiB, zero additional swap, CPUQuota 200%, 300-second lifetime."
+  }
+}

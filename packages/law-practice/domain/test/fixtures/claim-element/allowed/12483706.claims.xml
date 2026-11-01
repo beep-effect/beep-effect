@@ -1,0 +1,127 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method comprising:
+<claim-text>receiving a plurality of primitives that define visual changes that occur to dynamic three-dimensional (3D) content across a plurality of frames;</claim-text>
+<claim-text>determining a first set of primitives from the plurality of primitives that remain unchanged for at least N frames of the plurality of frames and a second set of primitives from the plurality of primitives that remain unchanged for less than the N frames, wherein N is a value greater than 1;</claim-text>
+<claim-text>generating a first data stream that encodes the first set of primitives at a reduced frame rate that is less than a desired frame rate, wherein the first data stream encodes the first set of primitives with temporal values that specify which two or more frames of the plurality of frames at which to present different primitives of the first set of primitives;</claim-text>
+<claim-text>generating a second data stream that encodes the second set of primitives without temporal values at the desired frame rate and with each different frame at the desired frame rate encoding data of one or more primitives from the second set of primitives that are presented without change at that different frame;</claim-text>
+<claim-text>receiving a request for the 3D content; and</claim-text>
+<claim-text>streaming the first data stream and the second data stream in response to the request.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising:
+<claim-text>determining a third set of primitives from the plurality of primitives that do not change across the plurality of frames; and</claim-text>
+<claim-text>encoding the third set of primitives as a single set of one or more grids.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00002">claim 2</claim-ref> further comprising:
+<claim-text>streaming the single set of one or more grids representing the third set of primitives with the first data stream and the second data stream.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising:
+<claim-text>defining temporal values for different primitives of the plurality of primitives based on an amount of time or a number of the plurality of frames that each primitive of the different primitives remains unchanged.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising:
+<claim-text>classifying the plurality of primitives to a plurality of bins based on a number of frames that each of the plurality of primitives is presented without change across the plurality of frames, wherein said classifying comprises grouping the first set of primitives to a first bin of the plurality of bins and grouping the second set of primitives to a second bin of the plurality of bins.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein generating the first data stream comprises encoding the first set of primitives as different sets of one or more grids across a subset of the plurality of frames covered by the reduced frame rate; and</claim-text>
+<claim-text>wherein generating the second data stream comprises encoding the second set of primitives with a different set of one or more grids for each frame of the plurality of frames and with the different set of one or more grids for a particular frame of the plurality of frames encoding data of one or more primitives from the second set of primitives that are presented at the particular frame without change.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref> further comprising:
+<claim-text>compressing the different sets of one or more grids from the first data stream at a first frame rate using a video codec; and</claim-text>
+<claim-text>compressing each different set of one or more grids from the second data stream at a second frame rate using the video codec.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein encoding a particular set of one or more grids for the first data stream comprises:
+<claim-text>encoding a positional attribute of a different primitive from a subset of the first set of primitives to a different cell of a first grid from the particular set of one or more grids; and</claim-text>
+<claim-text>encoding a visual characteristic attribute of a different primitive from the subset of the first set of primitives to a corresponding different cell of a second grid from the particular set of one or more grids.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref> further comprising:
+<claim-text>optimizing the first data stream and the second data stream for compression by sorting data in each set of one or more grids for smoothness.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein generating the first data stream comprises encoding positional and visual characteristic attributes of the first set of primitives with the temporal values that specify which of the plurality of frames each primitive of the first set of primitives is presented; and</claim-text>
+<claim-text>wherein generating the second data stream comprises encoding positional and visual characteristic attributes of the second set of primitives without temporal values.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein streaming the first data stream and the second data stream comprises:
+<claim-text>streaming a different set of grids associated with the first data stream at a different one of a subset of the plurality of frames, wherein the subset of the plurality of frames comprises fewer frames than the plurality of frames; and</claim-text>
+<claim-text>streaming a different set of grids associated with the second data stream with a different frame of the plurality of frames.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein streaming the first data stream and the second data stream comprises streaming less data than streaming all data associated with the plurality of primitives.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said determining comprises:
+<claim-text>analyzing positional and visual characteristic attributes of the plurality of primitives across pairs of consecutive frames; and</claim-text>
+<claim-text>differentiating the first set of primitives from the second set of primitives based on said analyzing of the positional and visual characteristic attributes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the first data stream comprises:
+<claim-text>encoding a first set of grids with data for a first subset of the first set of primitives that are defined without change in the at least N frames across a first set of the plurality of frames; and</claim-text>
+<claim-text>encoding a second of grids with data for a second subset of the first set of primitives that are defined without change in the at least N frames across a second set of the plurality of frames.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00014">claim 14</claim-ref>,
+<claim-text>wherein encoding the first set of grids comprises defining the temporal values that specify which of the first set of the plurality of frames each primitive of the first subset of primitives is defined without change; and</claim-text>
+<claim-text>wherein encoding the second set of grids comprises defining the temporal values that specify which of the second set of the plurality of frames each primitive of the second subset of primitives is defined without change.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A streaming system comprising:
+<claim-text>one or more hardware processors configured to:
+<claim-text>receive a plurality of primitives that define visual changes that occur to dynamic three-dimensional (3D) content across a plurality of frames;</claim-text>
+<claim-text>determine a first set of primitives from the plurality of primitives that remain unchanged for at least N frames of the plurality of frames and a second set of primitives from the plurality of primitives that remain unchanged for less than the N frames, wherein N is a value greater than 1;</claim-text>
+<claim-text>generate a first data stream that encodes the first set of primitives at a reduced frame rate that is less than a desired frame rate, wherein the first data stream encodes the first set of primitives with temporal values that specify which two or more frames of the plurality of frames at which to present different primitives of the first set of primitives;</claim-text>
+<claim-text>generate a second data stream that encodes the second set of primitives without temporal values at the desired frame rate and with each different frame at the desired frame rate encoding data of one or more primitives from the second set of primitives that are presented without change at that different frame;</claim-text>
+<claim-text>receive a request for the 3D content; and</claim-text>
+<claim-text>stream the first data stream and the second data stream in response to the request.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The streaming system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the one or more hardware processors are further configured to:
+<claim-text>determine a third set of primitives from the plurality of primitives that do not change across the plurality of frames; and</claim-text>
+<claim-text>encode the third set of primitives as a single set of one or more grids.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The streaming system of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the one or more hardware processors are further configured to:
+<claim-text>stream the single set of one or more grids representing the third set of primitives with the first data stream and the second data stream.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The streaming system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the one or more hardware processors are further configured to:
+<claim-text>define temporal values for different primitives of the plurality of primitives based on an amount of time or a number of the plurality of frames that each primitive of the different primitives remains unchanged.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A non-transitory computer-readable medium storing instructions that, when executed by one or more processors of a streaming system, cause the streaming system to perform operations comprising:
+<claim-text>receiving a plurality of primitives that define visual changes that occur to dynamic three-dimensional (3D) content across a plurality of frames;</claim-text>
+<claim-text>determining a first set of primitives from the plurality of primitives that remain unchanged for at least N frames of the plurality of frames and a second set of primitives from the plurality of primitives that remain unchanged for less than the N frames, wherein N is a value greater than 1;</claim-text>
+<claim-text>generating a first data stream that encodes the first set of primitives at a reduced frame rate that is less than a desired frame rate, wherein the first data stream encodes the first set of primitives with temporal values that specify which two or more frames of the plurality of frames at which to present different primitives of the first set of primitives;</claim-text>
+<claim-text>generating a second data stream that encodes the second set of primitives without temporal values at the desired frame rate and with each different frame at the desired frame rate encoding data of one or more primitives from the second set of primitives that are presented without change at that different frame;</claim-text>
+<claim-text>receiving a request for the 3D content; and</claim-text>
+<claim-text>streaming the first data stream and the second data stream in response to the request.</claim-text>
+</claim-text>
+</claim>
+</claims>

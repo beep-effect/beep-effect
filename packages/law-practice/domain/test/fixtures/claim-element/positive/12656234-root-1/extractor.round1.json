@@ -1,0 +1,68 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12656234-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "canonical MathML formula strings",
+      "reason": "Native XML mfrac/msqrt and indices are present and accepted by retained source critic. Canonical text flattens formulas, including OR ratio and radius radical/fraction. Exact canonical strings are anchored as functional text, without inventing missing operators. This is representation/normalization coverage, not source-version or gold uncertainty."
+    },
+    {
+      "quote": "each transaction / the transaction information",
+      "reason": "Root generic transaction definition and received concrete transaction are distinct scoped mentions. Repeated generic information and physical member/stock/transaction identities are not forced across possible instances. Shortened order-book/interface/side-variable aliases have unique roles; native use graphic interface spelling is retained."
+    },
+    {
+      "quote": "the first buy level / the first sell level",
+      "reason": "First definite level phrases describe specific book levels. Later identical qualified level mentions refer to those explicit source descriptions; no additional level or buy/sell identity is invented."
+    },
+    {
+      "quote": "said pressure / PR / PRA / volume and gradient properties",
+      "reason": "Distinct pressure measures and price/time indexed quantities retain their source qualification. Formula variables remain exact functional text unless explicitly defined as prose entity mentions. Color values and first-level identifiers are retained without selecting a population member."
+    },
+    {
+      "quote": "the member / the two members",
+      "reason": "Transaction10 has two members; singular member used in per-member computation does not select one global participant. Exact distributed quantifiers and separate indefinite member NPs remain. Distinct quadrants, volume subsets and lower/right proforms are retained without coercing a subset to the entire four-volume/square group."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [
+    "Main metadata list is retained before the method execution sequence. Explicit method steps and parameter definitions are separately source-ordered; all formula strings and condition alternatives remain complete anchored functional text.",
+    "The source includes malformed beingthe, native use graphic interface, y, determinated and private-use math glyphs; none is corrected. No financial recommendation or claim construction is performed."
+  ],
+  "sourceValidation": {
+    "claimsXmlSha256": "d170c033eaed8c8abcc41ee7478140c5d6a6b43685ccd26ec9f3214f25195f3a",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 10,
+    "elements": 52,
+    "terms": 372
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decoded through declared ClaimElementTree schema; production decomposer not invoked.",
+    "anchors": "Exact canonical UTF-16 spans, element source order, term nonoverlap/ownership, local/foreign term endpoints and contiguous complete functional reconstruction checked.",
+    "native": "All canonical/context claims equal native claim text under permitted printed-number/whitespace normalization; claims XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor checks do not establish independent acceptance."
+  }
+}

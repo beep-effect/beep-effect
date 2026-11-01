@@ -1,0 +1,289 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A computer-implemented method for real-time detection and mitigation of malicious electronic communications, the method comprising:
+<claim-text>at a threat detection and response service:
+<claim-text>detecting, in real-time, an electronic communication transmitted to a message storage repository monitored by the threat detection and response service;</claim-text>
+<claim-text>retrieving, by one or more computers, unstructured message data of the electronic communication in response to detecting the transmission of the electronic communication to the message storage repository;</claim-text>
+<claim-text>transforming, by the one or more computers, the unstructured message data of the electronic communication into a structured message data object interpretable by the threat detection and response service, wherein transforming the unstructured message data of the electronic communication into the structured message data object includes:
+<claim-text>instantiating a message data object based on a message data model schema defined by the threat detection and response service for representing electronic communications of a target type,</claim-text>
+<claim-text>extracting, from the unstructured message data of the electronic communication, a plurality of message components specified by the message data model schema, and</claim-text>
+<claim-text>populating, within the message data object, the plurality of message components in accordance with the message data model schema to create the structured message data object corresponding to the electronic communication;</claim-text>
+</claim-text>
+<claim-text>assessing, by the one or more computers, the structured message data object that corresponds to the electronic communication against (i) a set of subscriber-agnostic threat detection instructions provided by the threat detection and response service and (ii) a set of subscriber-specific threat detection instructions created by a subscribing entity that controls the message storage repository;</claim-text>
+<claim-text>automatically detecting, by the one or more computers, the electronic communication as malicious based on the assessment of the structured message data object of the electronic communication against the set of subscriber-agnostic threat detection instructions and the set of subscriber-specific threat detection instructions; and</claim-text>
+<claim-text>executing, in real-time, a threat mitigation action that mitigates a security threat associated with the electronic communication in response to detecting the electronic communication as malicious.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the threat detection and response service provides the subscribing entity with a distinct instance of the threat detection and response service in response to receiving a service enrollment request from the subscribing entity, and</claim-text>
+<claim-text>the computer-implemented method further includes:
+<claim-text>receiving, via a graphical user interface of the threat detection and response service, a code repository connection request from the subscribing entity to digitally connect a private threat detection code repository hosted by a remote code repository service to the distinct instance of the threat detection and response service, wherein the private threat detection code repository includes the set of subscriber-specific threat detection instructions;</claim-text>
+<claim-text>retrieving, in real-time or near real-time, the set of subscriber-specific threat detection instructions included in the private threat detection code repository in response to receiving the code repository connection request; and</claim-text>
+<claim-text>storing the set of subscriber-specific threat detection instructions retrieved from the private threat detection code repository within the distinct instance of the threat detection and response service, wherein the threat detection and response service does not use the set of subscriber-specific threat detection instructions when assessing inbound electronic communications that correspond to other subscribing entities.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the threat detection and response service provisions a distinct instance of the threat detection and response service for the subscribing entity in response to receiving a service enrollment request from the subscribing entity, and</claim-text>
+<claim-text>provisioning the distinct instance of the threat detection and response service for the subscribing entity includes:
+<claim-text>automatically retrieving the set of subscriber-agnostic threat detection instructions provided by the threat detection and response service by downloading a copy of a publicly accessible threat detection code repository hosted by a remote code repository service, wherein:
+<claim-text>the publicly accessible threat detection code repository includes the set of subscriber-agnostic threat detection instructions, and</claim-text>
+<claim-text>the publicly accessible threat detection code repository is controlled by the threat detection and response service; and</claim-text>
+</claim-text>
+<claim-text>storing, within the distinct instance of the threat detection and response service, the set of subscriber-agnostic threat detection instructions retrieved from the publicly accessible threat detection code repository.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the threat detection and response service provisions a distinct instance of the threat detection and response service for the subscribing entity in response to receiving a service enrollment request from the subscribing entity, and</claim-text>
+<claim-text>the computer-implemented method further includes after detecting the electronic communication as malicious:
+<claim-text>receiving, via a graphical user interface of the threat detection and response service, a code repository connection request from the subscribing entity to digitally connect a third-party threat detection code repository hosted by a remote code repository service to the distinct instance of the threat detection and response service, wherein:
+<claim-text>the third-party threat detection code repository includes a corpus of third-party threat detection instructions created by a third-party entity external to the subscribing entity and the threat detection and response service;</claim-text>
+</claim-text>
+<claim-text>retrieving, in real-time or near real-time, the corpus of third-party threat detection instructions included in the third-party threat detection code repository in response to receiving the code repository connection request; and</claim-text>
+<claim-text>storing the corpus of third-party threat detection instructions retrieved from the third-party threat detection code repository within the distinct instance of the threat detection and response service.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The computer-implemented method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, further comprising:
+<claim-text>detecting, in real-time, a second electronic communication transmitted to the message storage repository;</claim-text>
+<claim-text>generating, by the one or more computers, a second structured message data object for the second electronic communication using unstructured message data that corresponds to the second electronic communication;</claim-text>
+<claim-text>automatically assessing, by the one or more computers, the second structured message data object that corresponds to the second electronic communication against (i) the set of subscriber-agnostic threat detection instructions provided by the threat detection and response service, (ii) the set of subscriber-specific threat detection instructions created by the subscribing entity that controls the message storage repository, and (iii) the corpus of third-party threat detection instructions created by the third-party entity external to the subscribing entity and the threat detection and response service;</claim-text>
+<claim-text>automatically detecting, by the one or more computers, the second electronic communication as malicious based on the second structured message data object satisfying at least one third-party threat detection instruction of the corpus of third-party threat detection instructions; and</claim-text>
+<claim-text>executing, in real-time, a second threat mitigation action that mitigates a security threat associated with the second electronic communication in response to detecting the second electronic communication as malicious.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the message storage repository is used by an end user associated with the subscribing entity, and</claim-text>
+<claim-text>executing the threat mitigation action includes automatically routing the electronic communication from the message storage repository to a threat containment queue that is not accessible by the end user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the electronic communication is stored in a primary directory of the message storage repository, and</claim-text>
+<claim-text>executing the threat mitigation action includes:
+<claim-text>automatically removing the electronic communication from the primary directory of the message storage repository, and</claim-text>
+<claim-text>automatically routing the electronic communication removed from the primary directory to a message disposal directory of the message storage repository.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the message storage repository corresponds to an electronic mail service used by the subscribing entity, and</claim-text>
+<claim-text>executing the threat mitigation action includes:
+<claim-text>generating, by the one or more computers, a security alert message that includes a precis of the electronic communication detected as malicious, and</claim-text>
+<claim-text>transmitting the security alert message to the subscribing entity using a real-time messaging service different from the electronic mail service.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>after executing the threat mitigation action that mitigates the security threat associated with the electronic communication:
+<claim-text>instantiating, by the one or more computers, a detection repository graphical user interface that includes:
+<claim-text>a first selectable detection repository user interface element that corresponds to the set of subscriber-agnostic threat detection instructions, and</claim-text>
+<claim-text>a second selectable detection repository user interface element that corresponds to the set of subscriber-specific threat detection instructions;</claim-text>
+</claim-text>
+<claim-text>receiving, by the one or computers, a first input from the subscribing entity selecting the first selectable detection repository user interface element; and</claim-text>
+<claim-text>in response to receiving the first input, instantiating a detection instruction control user interface that includes a plurality of selectable detection instruction elements, wherein each distinct selectable detection instruction element corresponds to a distinct subscriber-agnostic threat detection instruction of the set of subscriber-agnostic threat detection instructions.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The computer-implemented method according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein:
+<claim-text>a first selectable detection instruction element of the plurality of selectable detection instruction elements corresponds to a first subscriber-agnostic threat detection instruction of the set of subscriber-agnostic threat detection instructions, wherein:
+<claim-text>the first selectable detection instruction element includes a visual indication that indicates the first subscriber-agnostic threat detection instruction is an active detection instruction that is used by the threat detection and response service when assessing inbound electronic communications associated with the subscribing entity, and</claim-text>
+</claim-text>
+<claim-text>a second selectable detection instruction element of the plurality of selectable detection instruction elements corresponds to a second subscriber-agnostic threat detection instruction of the set of subscriber-agnostic threat detection instructions, wherein:
+<claim-text>the second selectable detection instruction element includes a visual indication that indicates the second subscriber-agnostic threat detection instruction is an inactive detection instruction that is not used by the threat detection and response service when assessing the inbound electronic communications associated with the subscribing entity.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The computer-implemented method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>receiving, via the detection instruction control user interface, a second input from the subscribing entity selecting the first selectable detection instruction element,</claim-text>
+<claim-text>instantiating, while the first selectable detection instruction element is selected, a detection instructions action menu that includes a detection instruction deactivation button,</claim-text>
+<claim-text>receiving, from the subscribing entity, an additional user input selecting the detection instruction deactivation button while the first selectable detection instruction element is selected, and</claim-text>
+<claim-text>transitioning the first subscriber-agnostic threat detection instruction from an active detection state to an inactive detection state based on receiving the additional user input, wherein the threat detection and response service does not use the first subscriber-agnostic threat detection instruction when assessing a threat of any future inbound electronic communication while the first subscriber-agnostic threat detection instruction remains in the inactive detection state.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The computer-implemented method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>receiving, via the detection instruction control user interface, a second input from the subscribing entity selecting the second selectable detection instruction element,</claim-text>
+<claim-text>instantiating, while the second selectable detection instruction control object is selected, a detection instructions action menu that includes a detection instruction activation button,</claim-text>
+<claim-text>receiving, from the subscribing entity, an additional user input selecting the detection instruction activation button while the second selectable detection instruction control object is selected, and</claim-text>
+<claim-text>transitioning the second subscriber-agnostic threat detection instruction from an inactive detection state to an active detection state based on receiving the additional user input, wherein the threat detection and response service uses the second subscriber-agnostic threat detection instruction when assessing a threat of any future inbound electronic communication while the second subscriber-agnostic threat detection instruction remains in the active detection state.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. A computer-implemented system comprising:
+<claim-text>one or more processors;</claim-text>
+<claim-text>a memory;</claim-text>
+<claim-text>a computer-readable medium operably coupled to the one or more processors, the computer-readable medium having computer-readable instructions stored thereon that, when executed by the one or more processors, cause a computing device to perform operations comprising:
+<claim-text>detecting, in real-time, an electronic communication transmitted to a message storage repository monitored by a threat detection and response service;</claim-text>
+<claim-text>retrieving, by the one or more processors, unstructured message data of the electronic communication in response to detecting the transmission of the electronic communication to the message storage repository;</claim-text>
+<claim-text>transforming, by the one or more processors, the unstructured message data of the electronic communication into a structured message data object interpretable by the threat detection and response service;</claim-text>
+<claim-text>assessing, by the one or more processors, the structured message data object that corresponds to the electronic communication against (i) a set of subscriber-agnostic threat detection instructions provided by the threat detection and response service and (ii) a set of subscriber-specific threat detection instructions created by a subscribing entity that controls the message storage repository;</claim-text>
+<claim-text>automatically detecting, by the one or more processors, the electronic communication as malicious based on the assessment of the structured message data object of the electronic communication against the set of subscriber-agnostic threat detection instructions and the set of subscriber-specific threat detection instructions; and</claim-text>
+<claim-text>executing, in real-time, a threat mitigation action that mitigates a security threat associated with the electronic communication in response to detecting the electronic communication as malicious.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The computer-implemented system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the structured message data object that corresponds to the electronic communication includes:
+<claim-text>a plurality of parent-level electronic communication data objects, wherein each distinct parent-level electronic communication data object of the plurality of parent-level electronic communication data objects represents a distinct portion of the electronic communication, and</claim-text>
+<claim-text>each distinct parent-level electronic communication data object of the plurality of parent-level electronic communication data objects stores a plurality of message attribute identifiers and a corresponding set of message attribute values that correspond to the distinct portion of the electronic communication.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The computer-implemented system according to <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein:
+<claim-text>at least one subscriber-agnostic threat detection instruction of the set of subscriber-agnostic threat detection instructions is encoded with a data object traversal path that specifies a distinct sequence of message attribute identifiers configured to extract a target message attribute value from the structured message data object of the electronic communication,</claim-text>
+<claim-text>the at least one subscriber-agnostic threat detection instruction is further encoded with one or more attribute value conditions to evaluate the target message attribute value extracted from the structured message data object of the electronic communication, and</claim-text>
+<claim-text>the at least one subscriber-agnostic threat detection instruction is further encoded to detect the electronic communication as malicious in response to identifying the target message attribute value extracted from the structured message data object satisfies the one or more attribute value conditions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The computer-implemented system according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein:
+<claim-text>the at least one subscriber-agnostic threat detection instruction is digitally linked to the threat mitigation action, and</claim-text>
+<claim-text>the threat mitigation action is automatically executed by the threat detection and response service in response to identifying the at least one subscriber-agnostic threat detection instruction detecting the electronic communication as malicious.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. A computer-program product comprising a non-transitory machine-readable storage medium storing computer instructions that, when executed by one or more processors, perform operations comprising:
+<claim-text>detecting, in real-time, an electronic communication transmitted to a message storage repository monitored by a threat detection and response service;</claim-text>
+<claim-text>retrieving, by the one or more processors, unstructured message data of the electronic communication in response to detecting the transmission of the electronic communication to the message storage repository;</claim-text>
+<claim-text>transforming, by the one or more processors, the unstructured message data of the electronic communication into a structured message data object interpretable by the threat detection and response service, wherein transforming the unstructured message data of the electronic communication into the structured message data object includes:
+<claim-text>instantiating a message data object based on a message data model schema defined by the threat detection and response service for representing electronic communications of a target type,</claim-text>
+<claim-text>extracting, from the unstructured message data of the electronic communication, a plurality of message components specified by the message data model schema, and</claim-text>
+<claim-text>populating, within the message data object, the plurality of message components in accordance with the message data model schema to create the structured message data object corresponding to the electronic communication;</claim-text>
+</claim-text>
+<claim-text>assessing, by the one or more processors, the structured message data object that corresponds to the electronic communication against (i) a set of subscriber-agnostic threat detection instructions provided by the threat detection and response service and (ii) a set of subscriber-specific threat detection instructions created by a subscribing entity that controls the message storage repository;</claim-text>
+<claim-text>automatically detecting, by the one or more processors, the electronic communication as suspicious based on the assessment of the structured message data object of the electronic communication against the set of subscriber-agnostic threat detection instructions and the set of subscriber-specific threat detection instructions; and</claim-text>
+<claim-text>executing a threat mitigation action that mitigates a security threat associated with the electronic communication in response to detecting the electronic communication as suspicious.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The computer-program product according to <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the computer instructions, when executed by the one or more processors, perform operations further comprising:
+<claim-text>determining a total number of message open events associated with the electronic communication using the one or more processors that tracks when the subscribing entity opens the electronic communication;</claim-text>
+<claim-text>determining a total number of message reply events associated with the electronic communication using the one or more processors that tracks when the subscribing entity replies to the electronic communication, and</claim-text>
+<claim-text>determining a total number of message forward events associated with the electronic communication using the one or more processors that tracks when the subscribing entity forwards the electronic communication.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. The computer-program product according to <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein:
+<claim-text>executing the threat mitigation action includes automatically routing the electronic communication to an electronic communication review queue, and</claim-text>
+<claim-text>the computer instructions, when executed by the one or more processors, perform operations further comprising:
+<claim-text>displaying, using a graphical user interface, the electronic communication review queue, wherein the graphical user interface includes a selectable representation that corresponds to the electronic communication;</claim-text>
+<claim-text>receiving, via the graphical user interface, an input from a user selecting the selectable representation that corresponds to the electronic communication; and</claim-text>
+<claim-text>displaying, by the one or more processors, an electronic communication details user interface that corresponds to the electronic communication, wherein the electronic communication details user interface includes a message activity history section that includes:
+<claim-text>the total number of message open events associated with the electronic communication,</claim-text>
+<claim-text>the total number of message reply events associated with the electronic communication, and</claim-text>
+<claim-text>the total number of message forward events associated with the electronic communication.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. The computer-program product according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the electronic communication details user interface that corresponds to the electronic communication further includes:
+<claim-text>a screen shot of the electronic communication, and</claim-text>
+<claim-text>a subset of the set of subscriber-agnostic threat detection instructions or the set of subscriber-specific threat detection instructions that the threat detection and response service used to detect the electronic communication as suspicious.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text>21. The computer-program product according to <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein:
+<claim-text>a subject threat detection instruction of the set of subscriber-agnostic threat detection instructions or the set of subscriber-specific threat detection instructions is encoded with a computer-executable enrichment function that is configured to perform an enrichment operation,</claim-text>
+<claim-text>assessing the structured message data object that corresponds to the electronic communication against the set of subscriber-agnostic threat detection instructions and the set of subscriber-specific threat detection instructions further includes assessing the structured message data object against the subject threat detection instruction, and</claim-text>
+<claim-text>the computer-program product further comprises computer instructions for performing operations including:
+<claim-text>invoking the computer-executable enrichment function during the assessment of the structured message data object against the subject threat detection instruction;</claim-text>
+<claim-text>transmitting a request to a backend service of the threat detection and response service to perform the enrichment operation in response to invoking the computer-executable enrichment function; and</claim-text>
+<claim-text>receiving a response from the backend service that includes an enrichment output in response to the backend service performing the enrichment operation, wherein the subject threat detection instruction determines the electronic communication is suspicious based at least in part on the enrichment output.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text>22. The computer-program product according to <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the computer-executable enrichment function corresponds to a message screenshot enrichment function,</claim-text>
+<claim-text>the message screenshot enrichment function captures a message screenshot of the electronic communication, and</claim-text>
+<claim-text>the subject threat detection instruction determines the electronic communication is suspicious based on providing the message screenshot as input to an additional enrichment function that detects the message screenshot includes a company logo that corresponds to a brand or an organization historically impersonated in phishing attacks.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text>23. The computer-program product according to <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the computer-executable enrichment function corresponds to a message screenshot enrichment function,</claim-text>
+<claim-text>the message screenshot enrichment function captures a message screenshot of the electronic communication,</claim-text>
+<claim-text>the subject threat detection instruction further provides the message screenshot as input to an additional enrichment function that performs optical character recognition (OCR) on the message screenshot to identify textual content included in the screenshot, and</claim-text>
+<claim-text>the subject threat detection instruction determines the electronic communication is suspicious based on the textual content including one or more phrases referencing free products, giveaways, or promotional offers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text>24. The computer-program product according to <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the structured message data object includes a base64 encoded value,</claim-text>
+<claim-text>the computer-executable enrichment function corresponds to a base64 scanning enrichment function,</claim-text>
+<claim-text>the base64 scanning enrichment function is invoked in response to providing the base64 encoded value of the structured message data object as input to the base64 scanning enrichment function,</claim-text>
+<claim-text>the base64 scanning enrichment function outputs a decoded value that corresponds to the base64 encoded value, and</claim-text>
+<claim-text>the subject threat detection instruction determines the electronic communication is suspicious based on the decoded value satisfying one or more threat detection conditions of the subject threat detection instruction.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text>25. The computer-program product according to <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the structured message data object includes a file attachment,</claim-text>
+<claim-text>the computer-executable enrichment function corresponds to a file screenshot enrichment function,</claim-text>
+<claim-text>the file screenshot enrichment function captures a screenshot of one or more pieces of content included within the file attachment, and</claim-text>
+<claim-text>the subject threat detection instruction determines the electronic communication is suspicious based on providing the screenshot as input to an additional enrichment function that detects the screenshot includes a company logo that corresponds to a brand or an organization historically impersonated in phishing attacks.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text>26. The computer-program product according to <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the structured message data object includes a hyperlink,</claim-text>
+<claim-text>the computer-executable enrichment function corresponds to a machine learning-based link analysis enrichment function,</claim-text>
+<claim-text>the machine learning-based link analysis enrichment function is invoked in response to providing the hyperlink of the structured message data object as input to the machine learning-based link analysis enrichment function, and</claim-text>
+<claim-text>in response to invoking the machine learning-based link analysis enrichment function, the machine learning-based link analysis enrichment function:
+<claim-text>navigates to a destination webpage that corresponds to the hyperlink,</claim-text>
+<claim-text>captures a screenshot of the destination webpage, and</claim-text>
+<claim-text>executes one or more machine learning-based object detection models to determine if the screenshot includes one or more objects of a predetermined object type, and</claim-text>
+<claim-text>outputs a classification label indicating the hyperlink is suspicious based on the screenshot having at least one object of the predetermined object type, wherein the subject threat detection instruction determines the electronic communication is suspicious based on the classification label outputted by the machine learning-based link analysis enrichment function satisfying one or more threat detection conditions of the subject threat detection instruction.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text>27. The computer-program product according to <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the structured message data object includes a file attachment,</claim-text>
+<claim-text>the computer-executable enrichment function corresponds to a machine learning-based logo detection enrichment function,</claim-text>
+<claim-text>the machine learning-based logo detection enrichment function is invoked in response to providing the file attachment of the structured message data object as input to the machine learning-based logo detection enrichment function, and</claim-text>
+<claim-text>in response to invoking the machine learning-based logo detection enrichment function, the machine learning-based logo detection enrichment function:
+<claim-text>detects, using a machine learning-based object detection model, an occurrence of a subject logo within the file attachment,</claim-text>
+<claim-text>generates, using a Siamese neural network, a numerical vector representation of the subject logo,</claim-text>
+<claim-text>assesses the numerical vector representation of the subject logo against a plurality of reference numerical vector representations that correspond to a predetermined set of company logos, and</claim-text>
+<claim-text>determines the subject logo is equivalent to a subject company logo included in the predetermined set of company logos based on the assessment, wherein the subject threat detection instruction determines the electronic communication is suspicious based on the machine learning-based logo detection enrichment function determining the subject logo is equivalent to the subject company logo.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text>28. The computer-program product according to <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the structured message data object includes a file attachment with a macro,</claim-text>
+<claim-text>the computer-executable enrichment function corresponds to a machine learning-based macro classification enrichment function,</claim-text>
+<claim-text>the machine learning-based macro classification enrichment function is invoked in response to providing the file attachment with the macro as input to the machine learning-based macro classification enrichment function, and</claim-text>
+<claim-text>in response to invoking the machine learning-based macro classification enrichment function, the machine learning-based macro classification enrichment function:
+<claim-text>assesses the macro using a machine learning model, and</claim-text>
+<claim-text>outputs a classification label indicating the macro is malicious based on the assessment, wherein the subject threat detection instruction determines the electronic communication is suspicious based on the classification label outputted by the machine learning-based macro classification enrichment function satisfying one or more threat detection conditions of the subject threat detection instruction.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00029" num="00029">
+<claim-text>29. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the message query language is configured to reference at least one structured data list during evaluation of the threat detection instruction,</claim-text>
+<claim-text>the structured data list being selected from a group including a global list and an organization-specific list, and</claim-text>
+<claim-text>the structured data list comprises one or more attribute values associated with electronic communications.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00030" num="00030">
+<claim-text>30. The computer-implemented method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the message query language is configured to reference one or more historical data records during evaluation of the threat detection instruction, the historical data records comprising classification results or message attributes associated with one or more prior electronic communications processed by the threat detection and response service.</claim-text>
+</claim>
+</claims>

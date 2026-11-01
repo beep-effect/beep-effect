@@ -1,0 +1,56 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for predicting immunotherapeutic efficacy for colorectal cancer, the system comprising:
+<claim-text>a memory, configured to store executable program codes;</claim-text>
+<claim-text>a processor, connected to the memory;</claim-text>
+<claim-text>the processor, configured to invoke the executable program codes stored in the memory to perform a method of predicting the immunotherapeutic efficacy for the colorectal cancer, wherein the method comprises:</claim-text>
+<claim-text>obtaining a digital image of a biological tissue of a colorectal cancer patient;</claim-text>
+<claim-text>predicting, based on a classifier algorithm model, a tissue type parameter and a cell type parameter corresponding to the digital image of the biological tissue;</claim-text>
+<claim-text>determining, based on a calculating rule of a plurality of cell features corresponding to the tissue type parameter and the cell type parameter, a plurality of cell feature parameters corresponding to the digital image of the biological tissue, comprising:</claim-text>
+<claim-text>calculating a number of tissue regions each having a mucus constituent type as the tissue type;</claim-text>
+<claim-text>calculating a ratio of the number of tissue regions to a total number of all of a plurality of tissue regions, so as to obtain a mucus region ratio parameter;</claim-text>
+<claim-text>screening tissue regions, each having a tumor type as the tissue type, so as to obtain a plurality of tumor tissue regions;</claim-text>
+<claim-text>calculating a minimum outer polygon of the plurality of tumor tissue regions, so as to obtain a tumor combination region;</claim-text>
+<claim-text>dividing the tumor combination region into a plurality of sub-regions, and for each of the plurality of sub-regions, calculating a number of cell regions, each having a lymphocyte as the cell type, so as to obtain a number of lymphocytes;</claim-text>
+<claim-text>for each of the plurality of sub-regions, calculating a number of cell regions, each having a tumor cell as the cell type, so as to obtain a number of tumor cells;</claim-text>
+<claim-text>calculating a ratio of the number of lymphocytes to a first total number of cells, so as to obtain a lymphocyte percentage, wherein the first total number of cells is a sum of the number of lymphocytes and the number of tumor cells;</claim-text>
+<claim-text>calculating a ratio of the number of tumor cells to a total number of cells, so as to obtain a tumor cell percentage;</claim-text>
+<claim-text>for each of the plurality of sub-regions, calculating a product of the lymphocyte percentage and the tumor cell percentage, so as to obtain a first parameter;</claim-text>
+<claim-text>calculating a value of two times of a sum of first parameters of all of the plurality of sub-regions, so as to obtain a second parameter;</claim-text>
+<claim-text>calculating a sum of squared values of lymphocyte percentages of all of the plurality of sub-regions, so as to obtain a third parameter;</claim-text>
+<claim-text>calculating a sum of squared values of tumor cell percentages of all of the plurality of sub-regions, so as to obtain a fourth parameter;</claim-text>
+<claim-text>calculating a sum of the third parameter and the fourth parameter, so as to obtain a fifth parameter;</claim-text>
+<claim-text>calculating a ratio of the second parameter to the fifth parameter, so as to obtain a co-localization scoring parameter;</claim-text>
+<claim-text>calculating a ratio of the co-localization scoring parameter to 2, so as to obtain a sixth parameter;</claim-text>
+<claim-text>calculating a sum of the lymphocyte percentages of all of the plurality of sub-regions, so as to obtain a seventh parameter;</claim-text>
+<claim-text>calculating a sum of the tumor cell percentages of all of the plurality of sub-regions, so as to obtain an eighth parameter;</claim-text>
+<claim-text>calculating a ratio of the seventh parameter to the eighth parameter, so as to obtain a ninth parameter;</claim-text>
+<claim-text>calculating a product of the sixth parameter and the ninth parameter, so as to obtain a lymphocyte abundance parameter corresponding to the tumor combination region;</claim-text>
+<claim-text>for each of the plurality of sub-regions, calculating a number of cell regions, each having a plasma cell as the cell type, so as to obtain a number of plasma cells;</claim-text>
+<claim-text>for each of the plurality of sub-regions, calculating a ratio of the number of plasma cells to a second total number of cells, so as to obtain a plasma cell percentage in each of the plurality of sub-regions, wherein the second total number of cells is a sum of the number of plasma cells and the number of tumor cells;</claim-text>
+<claim-text>calculating a plasma cell co-localization parameter corresponding to the tumor combination region, based on plasma cell percentages and tumor cell percentages of all the plurality of sub-regions and based on the co-localization coefficient algorithm;</claim-text>
+<claim-text>for each of the plurality of sub-regions, calculating a number of cell regions, each having a neutrophil as the cell type, so as to obtain a number of neutrophils;</claim-text>
+<claim-text>for each of the plurality of sub-regions, calculating a ratio of the number of neutrophils to a third total number of cells, so as to obtain a neutrophil percentage in each of the plurality of</claim-text>
+<claim-text>sub-regions, wherein the third total number of cells is a sum of the number of neutrophils and the number of tumor cells;</claim-text>
+<claim-text>calculating a neutrophil co-localization parameter corresponding to the tumor combination region, based on neutrophil percentages and the tumor cell percentages in all the plurality of sub-regions and based on the co-localization coefficient algorithm;</claim-text>
+<claim-text>calculating a therapeutic efficacy score corresponding to the colorectal cancer patient according to the plurality of cell feature parameters and a predetermined parameter scoring rule, comprising:</claim-text>
+<claim-text>calculating a first effect score corresponding to the mucus region ratio parameter, wherein the first effect score is inversely proportional to the mucus region ratio parameter;</claim-text>
+<claim-text>calculating a second effect score corresponding to the lymphocyte abundance parameter, a second effect score corresponding to the plasma cell co-localization parameter, and a second effect score corresponding to the neutrophil co-localization parameter; wherein the second effect score corresponding to the lymphocyte abundance parameter is positively proportional to the lymphocyte abundance parameter; the second effect score corresponding to the plasma cell co-localization parameter is positively proportional to the plasma cell co-localization parameter; the second effect score corresponding to the neutrophil co-localization parameter is positively proportional to the neutrophil co-localization parameter; and</claim-text>
+<claim-text>calculating a sum of the first effect score, the second effect score corresponding to the lymphocyte abundance parameter, the second effect score corresponding to the plasma cell co-localization parameter, and the second effect score corresponding to the neutrophil co-localization parameter, so as to obtain the therapeutic efficacy score corresponding to the colorectal cancer patient.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, the predicting, based on the classifier algorithm model, the tissue type parameter and the cell type parameter corresponding to the digital image of the biological tissue, comprises:
+<claim-text>inputting the digital image of the biological tissue into a trained tissue region recognition algorithm model, so as to obtain a plurality of tissue regions corresponding to the digital image of the biological tissue and obtain the tissue type corresponding each of the plurality of tissue regions; and</claim-text>
+<claim-text>inputting the digital image of the biological tissue into a trained cell recognition algorithm model, so as to obtain a plurality of cell regions corresponding to the digital image of the biological tissue and obtain the cell type corresponding to each of the plurality of cell regions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein, the calculating the sum of the first effect score, the second effect score corresponding to the lymphocyte abundance parameter, the second effect score corresponding to the plasma cell co-localization parameter, and the second effect score corresponding to the neutrophil co-localization parameter, so as to obtain the therapeutic efficacy score corresponding to the colorectal cancer patient, comprises:
+<claim-text>calculating a weighted summed average of the first effect score, the second effect score corresponding to the lymphocyte abundance parameter, the second effect score corresponding to the plasma cell co-localization parameter, and the second effect score corresponding to the neutrophil co-localization parameter, so as to obtain the therapeutic efficacy score corresponding to the colorectal cancer patient; wherein a weight of the first effect score is positively proportional to a total area of all of the tissue regions each having the mucus constituent type as the tissue type; a weight of the second effect score corresponding to the lymphocyte abundance parameter is positively proportional to a total area of all of the cell regions each having the lymphocyte as the cell type; a weight of the second effect score corresponding to the plasma cell co-localization parameter is positively proportional to a total area of all of the cell regions each having the plasma cell as the cell type; a weight of the second effect score corresponding to the neutrophil co-localization parameter is positively proportional to a total area of all of the cell regions each having the neutrophil as the cell type.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the digital image of the biological tissue is a digital whole slide image.</claim-text>
+</claim>
+</claims>

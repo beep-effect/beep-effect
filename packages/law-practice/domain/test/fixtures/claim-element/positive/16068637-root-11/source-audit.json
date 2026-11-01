@@ -1,0 +1,89 @@
+{
+  "familyId": "16068637-root-11",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the rivet",
+      "nativeQuote": "the rivet",
+      "literalMatch": true,
+      "explanation": "Exact11."
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the bottom end",
+      "nativeQuote": "the bottom end",
+      "literalMatch": true,
+      "explanation": "Exact11."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the rotary driving system",
+      "nativeQuote": "the rotatory driving system",
+      "literalMatch": false,
+      "explanation": "Examiner wording rotary versus source rotatory; rest of12 and original corroboration identify same clause."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the flow",
+      "nativeQuote": "the flow",
+      "literalMatch": true,
+      "explanation": "Exact14."
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the axial translational motion",
+      "nativeQuote": "the axial translational motion",
+      "literalMatch": true,
+      "explanation": "Exact16."
+    }
+  ],
+  "concerns": [
+    "Original JJAKGNS1RXEAPX3 count15 versus native16 investigated: original Claim10 contains body of11 after Image/SVG header, with a driving spindle and subsequent rivet subclauses; native11 body and OA11 references match. Missing numbered11 is an original parser/bitmap header merge, not evidence of15-claim operative set.",
+    "Original12 circle numerals become low-confidence OCR (D/@2 and wedge-sahped typo;13-16 match. Original11 header itself is image-backed and not used as label text.",
+    "Publication identity/digest and51/51 inventory chronology verified; natural refs12-14->11,15->14,16->11 match."
+  ],
+  "rationale": "Eligible with explicit original structural count reconciliation and same-number examiner/body evidence. Source labels remain native publication text; original image/OCR not substituted.",
+  "sourceIdentity": {
+    "applicationNumber": "16068637",
+    "publicationNumber": "US20190039119A1",
+    "publicationDate": "2019-02-07",
+    "officeActionMailDate": "2019-11-14",
+    "officeActionDocumentIdentifiers": ["K2XMF4F4RXEAPX2"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20190039119 A1 20190207",
+      "application-reference": "US 16068637 20170623",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "JJAKGNS1RXEAPX3",
+        "officialDate": "2018-07-06T00:00:00.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "JJAKGNS1RXEAPX3",
+        "officialDate": "2018-07-06T00:00:00.000-0400",
+        "sha256": "27a64630b3702646da288fbf54febd5572c137383ebeed424a957955ac577151",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [
+          1, 2, 3, 4, 5, 6, 8, 9, 13, 14, 15, 16
+        ],
+        "sourceClaimCount": 15
+      }
+    ],
+    "documentInventoryCount": 51,
+    "documentInventoryRows": 51,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

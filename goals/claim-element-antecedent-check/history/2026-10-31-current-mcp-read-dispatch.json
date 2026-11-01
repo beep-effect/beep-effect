@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "claim-current-mcp-read-dispatch/v1",
+  "testedCommit": "dca7a95972",
+  "testName": "serves source-quoted advisory claim findings over MCP without storing candidates",
+  "passedCases": 1,
+  "explicitlySkippedOtherCases": 38,
+  "currentRuntimeFreeze": "research/implementation-repair-v19-freeze.json",
+  "readOnlyHints": {
+    "readOnly": true,
+    "destructive": false,
+    "idempotent": true,
+    "openWorld": false
+  },
+  "assertions": [
+    "Real McpServer.callTool dispatch returns source-quoted claim-finding items and CandidateClaim/Evidence.",
+    "The candidate remains candidate; no source references are invented for local input.",
+    "kg_candidate_claims response is identical before and after claim_self_check."
+  ],
+  "scope": "One selected native fixture dispatch integration case; not a claim that all39 projection-suite cases ran.",
+  "actualAttorneyAdjudicationRecorded": false,
+  "files": [
+    {
+      "path": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+      "sha256": "8d8542b6b59e3686d99ae4b470595275da5a742a5a97c96f13b676281bb2d64d"
+    },
+    {
+      "path": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
+      "sha256": "abb653956dfebb002aae6f4c7999bdcf491ce88db79177954b157eea408d0ef9"
+    },
+    {
+      "path": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "sha256": "f0df3f6b241b3810a49aebb57e9dfe7772a74047b70a5cc742e8dc4903ccea9b"
+    }
+  ]
+}

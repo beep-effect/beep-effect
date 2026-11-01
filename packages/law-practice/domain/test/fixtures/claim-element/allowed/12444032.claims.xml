@@ -1,0 +1,136 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A non-transitory computer-readable medium storing one or more instructions which, when executed by a processing device of a computing device, causes the computing device to perform a method for facilitating editing of images using image editing tools, the method comprising:
+<claim-text>displaying at least one image;</claim-text>
+<claim-text>obtaining at least one information of the at least one image;</claim-text>
+<claim-text>analyzing the at least one information;</claim-text>
+<claim-text>identifying a plurality of areas of the at least one image based on the analyzing of the at least one information;</claim-text>
+<claim-text>determining a tonal range from a plurality of tonal ranges for each of the plurality of areas based on the analyzing of the at least one information, and the identifying of the plurality of areas;</claim-text>
+<claim-text>determining a value for at least one attribute associated with each of a plurality of image elements of the at least one image based on the analyzing of the at least one information, wherein the at least one image is comprised of the plurality of image elements;</claim-text>
+<claim-text>generating at least one graphical representation of the at least one image based on the value for each of the at least one attribute associated with each of the plurality of image elements of the at least one image;</claim-text>
+<claim-text>displaying at least one adjustment tool, wherein at least one of the at least one adjustment tool comprises at least one display area, wherein the at least one graphical representation is displayed in the at least one display area;</claim-text>
+<claim-text>obtaining a selection of a setting from a plurality of settings associated with the at least one adjustment tool, wherein the obtaining of the selection of the setting is further based on either one of an image interaction with the at least one image and an adjustment tool interaction with the at least one adjustment tool;</claim-text>
+<claim-text>performing at least one operation on the at least one image based on the selection of the setting, wherein the at least one operation comprises an adjustment made in relation to at least one of the plurality of tonal ranges;</claim-text>
+<claim-text>generating at least one edited image based on the performing of the at least one operation; and</claim-text>
+<claim-text>displaying the at least one edited image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one graphical representation comprises a waveform representation, wherein the waveform representation represents a distribution of at least one of a luminance value and a chrominance value of one or more image elements present at each of a plurality of horizontal locations of the at least one image, wherein each of a plurality of horizontal positions within the waveform representation corresponds to a respective one of the plurality of horizontal locations of the at least one image, wherein each of a plurality of vertical positions within the waveform representation corresponds to a magnitude associated with at least one of the luminance value and the chrominance value, wherein the at least one adjustment tool comprises a waveform scope, wherein the at least one display area comprises a waveform display area, wherein the waveform representation is displayed in the waveform display area.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one graphical representation comprises a plurality of waveform representations, wherein each of the plurality of waveform representations represents a distribution of a color component value of one or more image elements present at each of a plurality of horizontal locations of the at least one image, wherein the color component value corresponds to a color channel of a plurality of color channels, wherein the plurality of waveform representations are spatially segregated, wherein each of a plurality of horizontal positions within each of the plurality of waveform representations corresponds to a respective one of the plurality of horizontal locations of the at least one image, wherein each of a plurality of vertical positions within each of the plurality of waveform representations corresponds to a respective magnitude associated with a corresponding one of the plurality of color component values, wherein the at least one adjustment tool comprises a parade waveform scope, wherein the at least one display area comprises a waveform display area, wherein the plurality of waveform representations are displayed in the waveform display area.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one graphical representation comprises a vectorscope representation, wherein the vectorscope representation represents a distribution of a chrominance value of the plurality of image elements in the at least one image, wherein each of a plurality of angular positions within the vectorscope representation corresponds to a respective hue value associated with one or more image elements of the at least one image, wherein each of a plurality of radial positions within the vectorscope representation corresponds to a respective saturation value associated with the one or more image elements, wherein the chrominance value comprises a hue value and a saturation value, wherein the at least one adjustment tool comprises a vector scope, wherein the at least one display area comprises a vectorscope display area, wherein the vectorscope representation is displayed in the vectorscope display area.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one graphical representation comprises a plurality of histogram representations, wherein each of the plurality of histogram representations represents a distribution of a color value for the plurality of image elements across the at least one image, wherein the color value corresponds to a color channel of a plurality of color channels, wherein the at least one adjustment tool comprises a histogram scope, wherein the at least one display area comprises a histogram display area, wherein the plurality of histogram representations is displayed in the histogram display area.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one graphical representation is associated with a plurality of regions of the at least one display area, wherein each one of the plurality of regions corresponds to a respective one of the plurality of tonal ranges, wherein the method further comprises:
+<claim-text>receiving a selection of a region of the plurality of regions, and a directional input from a first location to a second location of the at least one display area; and</claim-text>
+<claim-text>analyzing the selection of the region, and the directional input, wherein the obtaining of the setting of the plurality of settings is further based on the analyzing of the selection of the region, and the directional input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one graphical representation comprises a plurality of graphical representation portions, wherein each of the plurality of graphical representation portions corresponds to a respective one of the plurality of tonal ranges, wherein the method further comprises:
+<claim-text>receiving a selection of a graphical representation portion of the plurality of graphical representation portions of the at least one graphical representation comprised in the at least one adjustment tool, and a directional input from a first location to a second location of the at least one display area; and</claim-text>
+<claim-text>analyzing the selection of the graphical representation portion, and the directional input, wherein the obtaining of the setting of the plurality of settings is further based on the analyzing of the selection of the graphical representation portion, and the directional input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the method further comprises:
+<claim-text>modifying the at least one graphical representation based on the performing of the at least one operation; and</claim-text>
+<claim-text>generating at least one modified graphical representation based on the modifying of the at least one graphical representation, wherein the at least one modified graphical representation is displayed in the at least one display area.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The non-transitory machine-readable medium of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the analyzing of the at least one information comprises analyzing the at least one information using at least one machine learning model, wherein the method further comprises:
+<claim-text>generating a depth map for the at least one image based on the analyzing of the at least one information using the at least one machine learning model;</claim-text>
+<claim-text>displaying the depth map;</claim-text>
+<claim-text>receiving a selection of a location on the at least one image; and</claim-text>
+<claim-text>identifying an area associated with the location based on the selection and the depth map, wherein the displaying of the at least one adjustment tool comprises displaying the at least one adjustment tool on the at least one image based on the identifying of the area, wherein the at least one adjustment tool is proximal to the location, wherein the performing of the at least one operation on the at least one image comprises performing the at least one operation on the area of the at least one image, wherein the generating of the at least one edited image is further based on the performing of the at least one operation on the area of the at least one image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. A method for facilitating editing of images using image editing tools, the method comprising:
+<claim-text>displaying, using a display device of a computing device, at least one image;</claim-text>
+<claim-text>obtaining, using a processing device of the computing device, at least one information of the at least one image;</claim-text>
+<claim-text>analyzing, using the processing device of the computing device, the at least one information;</claim-text>
+<claim-text>identifying, using the processing device of the computing device, a plurality of areas of the at least one image based on the analyzing of the at least one information;</claim-text>
+<claim-text>determining, using the processing device of the computing device, a tonal range from a plurality of tonal ranges for each of the plurality of areas based on the analyzing of the at least one information, and the identifying of the plurality of areas;</claim-text>
+<claim-text>determining, using the processing device of the computing device, a value for at least one attribute associated with each of a plurality of image elements of the at least one image based on the analyzing of the at least one information, wherein the at least one image is comprised of the plurality of image elements;</claim-text>
+<claim-text>generating, using the processing device of the computing device, at least one graphical representation of the at least one image based on the value for each of the at least one attribute associated with each of the plurality of image elements of the at least one image;</claim-text>
+<claim-text>displaying, using the display device of the computing device, at least one adjustment tool, wherein at least one of the at least one adjustment tool comprises at least one display area, wherein the at least one graphical representation is displayed in the at least one display area;</claim-text>
+<claim-text>obtaining, using the processing device of the computing device, a selection of a setting from a plurality of settings associated with the at least one adjustment tool, wherein the obtaining of the selection of the setting is further based on either one of an image interaction with the at least one image and an adjustment tool interaction with the at least one adjustment tool;</claim-text>
+<claim-text>performing, using the processing device of the computing device, at least one operation on the at least one image based on the selection of the setting, wherein the at least one operation comprises an adjustment made in relation to at least one of the plurality of tonal ranges;</claim-text>
+<claim-text>generating, using the processing device of the computing device, at least one edited image based on the performing of the at least one operation; and</claim-text>
+<claim-text>displaying, using the display device of the computing device, the at least one edited image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one graphical representation comprises a waveform representation, wherein the waveform representation represents a distribution of at least one of a luminance value and a chrominance value of one or more image elements present at each of a plurality of horizontal locations of the at least one image, wherein each of a plurality of horizontal positions within the waveform representation corresponds to a respective one of the plurality of horizontal locations of the at least one image, wherein each of a plurality of vertical positions within the waveform representation corresponds to a magnitude associated with at least one of the luminance value and the chrominance value, wherein the at least one adjustment tool comprises a waveform scope, wherein the at least one display area comprises a waveform display area, wherein the waveform representation is displayed in the waveform display area.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one graphical representation comprises a plurality of waveform representations, wherein each of the plurality of waveform representations represents a distribution of a color component value of one or more image elements present at each of a plurality of horizontal locations of the at least one image, wherein the color component value corresponds to a color channel of a plurality of color channels, wherein the plurality of waveform representations are spatially segregated, wherein each of a plurality of horizontal positions within each of the plurality of waveform representations corresponds to a respective one of the plurality of horizontal locations of the at least one image, wherein each of a plurality of vertical positions within each of the plurality of waveform representations corresponds to a respective magnitude associated with a corresponding one of the plurality of color component values, wherein the at least one adjustment tool comprises a parade waveform scope, wherein the at least one display area comprises a waveform display area, wherein the plurality of waveform representations are displayed in the waveform display area.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one graphical representation comprises a vectorscope representation, wherein the vectorscope representation represents a distribution of a chrominance value of the plurality of image elements in the at least one image, wherein each of a plurality of angular positions within the vectorscope representation corresponds to a respective hue value associated with one or more image elements of the at least one image, wherein each of a plurality of radial positions within the vectorscope representation corresponds to a respective saturation value associated with the one or more image elements, wherein the chrominance value comprises a hue value and a saturation value, wherein the at least one adjustment tool comprises a vector scope, wherein the at least one display area comprises a vectorscope display area, wherein the vectorscope representation is displayed in the vectorscope display area.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one graphical representation comprises a plurality of histogram representations, wherein each of the plurality of histogram representations represents a distribution of a color value for the plurality of image elements across the at least one image, wherein the color value corresponds to a color channel of a plurality of color channels, wherein the at least one adjustment tool comprises a histogram scope, wherein the at least one display area comprises a histogram display area, wherein the plurality of histogram representations is displayed in the histogram display area.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one graphical representation is associated with a plurality of regions of the at least one display area, wherein each one of the plurality of regions corresponds to a respective one of the plurality of tonal ranges, wherein the method further comprises:
+<claim-text>receiving, using an input device of the computing device, a selection of a region of the plurality of regions, and a directional input from a first location to a second location of the at least one display area; and</claim-text>
+<claim-text>analyzing, using the processing device of the computing device, the selection of the region, and the directional input, wherein the obtaining of the setting of the plurality of settings is further based on the analyzing of the selection of the region, and the directional input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the at least one graphical representation comprises a plurality of graphical representation portions, wherein each of the plurality of graphical representation portions corresponds to a respective one of the plurality of tonal ranges, wherein the method further comprises:
+<claim-text>receiving, using an input device of the computing device, a selection of a graphical representation portion of the plurality of graphical representation portions of the at least one graphical representation comprised in the at least one adjustment tool, and a directional input from a first location to a second location of the at least one display area; and</claim-text>
+<claim-text>analyzing, using the processing device of the computing device, the selection of the graphical representation portion, and the directional input, wherein the obtaining of the setting of the plurality of settings is further based on the analyzing of the selection of the graphical representation portion, and the directional input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref> further comprising:
+<claim-text>modifying, using the processing device of the computing device, the at least one graphical representation based on the performing of the at least one operation; and</claim-text>
+<claim-text>generating, using the processing device of the computing device, at least one modified graphical representation based on the modifying of the at least one graphical representation, wherein the at least one modified graphical representation is displayed in the at least one display area.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the analyzing of the at least one information comprises analyzing the at least one information using at least one machine learning model, wherein the method further comprises:
+<claim-text>generating, using the processing device of the computing device, a depth map for the at least one image based on the analyzing of the at least one information using the at least one machine learning model;</claim-text>
+<claim-text>displaying, using the display device of the computing device, the depth map;</claim-text>
+<claim-text>receiving, using an input device of the computing device, a selection of a location on the at least one image; and</claim-text>
+<claim-text>identifying, using the processing device of the computing device, an area associated with the location based on the selection and the depth map, wherein the displaying of the at least one adjustment tool comprises displaying the at least one adjustment tool on the at least one image based on the identifying of the area, wherein the at least one adjustment tool is proximal to the location, wherein the performing of the at least one operation on the at least one image comprises performing the at least one operation on the area of the at least one image, wherein the generating of the at least one edited image is further based on the performing of the at least one operation on the area of the at least one image.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. A system for facilitating editing of images using image editing tools, the system comprising:
+<claim-text>a display device configured for:
+<claim-text>displaying at least one image;</claim-text>
+<claim-text>displaying at least one adjustment tool, wherein at least one of the at least one adjustment tool comprises at least one display area, wherein at least one graphical representation is displayed in the at least one display area; and</claim-text>
+<claim-text>displaying at least one edited image; and</claim-text>
+</claim-text>
+<claim-text>a processing device communicatively coupled with the display device, wherein the processing device is configured for:
+<claim-text>obtaining at least one information of the at least one image;</claim-text>
+<claim-text>analyzing the at least one information;</claim-text>
+<claim-text>identifying a plurality of areas of the at least one image based on the analyzing of the at least one information;</claim-text>
+<claim-text>determining a tonal range from a plurality of tonal ranges for each of the plurality of areas based on the analyzing of the at least one information, and the identifying of the plurality of areas;</claim-text>
+<claim-text>determining a value for at least one attribute associated with each of a plurality of image elements of the at least one image based on the analyzing of the at least one information, wherein the at least one image is comprised of the plurality of image elements;</claim-text>
+<claim-text>generating the at least one graphical representation of the at least one image based on the value for each of the at least one attribute associated with each of the plurality of image elements of the at least one image;</claim-text>
+<claim-text>obtaining a selection of a setting from a plurality of settings associated with the at least one adjustment tool, wherein the obtaining of the selection of the setting is further based on either one of an image interaction with the at least one image and an adjustment tool interaction with the at least one adjustment tool;</claim-text>
+<claim-text>performing at least one operation on the at least one image based on the selection of the setting, wherein the at least one operation comprises an adjustment made in relation to at least one of the plurality of tonal ranges; and</claim-text>
+<claim-text>generating the at least one edited image based on the performing of the at least one operation.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. The system of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the analyzing of the at least one information comprises analyzing the at least one information using at least one machine learning model, wherein the processing device is further configured for:
+<claim-text>generating a depth map for the at least one image based on the analyzing of the at least one information using the at least one machine learning model; and</claim-text>
+<claim-text>identifying an area associated with a location based on a selection and the depth map, wherein the displaying of the at least one adjustment tool comprises displaying the at least one adjustment tool on the at least one image based on the identifying of the area, wherein the at least one adjustment tool is proximal to the location, wherein the performing of the at least one operation on the at least one image comprises performing the at least one operation on the area of the at least one image, wherein the generating of the at least one edited image is further based on the performing of the at least one operation on the area of the at least one image, wherein the display device is further configured for displaying the depth map, wherein the system further comprises an input device communicatively coupled with the processing device, wherein the input device is configured for receiving the selection of the location on the at least one image.</claim-text>
+</claim-text>
+</claim>
+</claims>

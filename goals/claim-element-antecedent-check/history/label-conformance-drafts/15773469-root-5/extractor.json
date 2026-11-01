@@ -1,0 +1,25 @@
+{
+  "familyId": "15773469-root-5",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    "Natural language dependencies: independent5; 6/7/8/9→5; 10/11→9. Claims1–4 are context only and not scored. Rejection explicitly includes1–11 and individually discusses5 and7–11;6 is included in the blanket rejection.",
+    "Publication precedes office action; provenance reports complete document inventory without intervening CLM amendment. Only3/4/6/8 match OCR originals exactly ignoring whitespace, so in-force corroboration is partial.",
+    "The intended schema-supported boundary is wherein. Inner characterized phrases are preserved in body. Claim5 sequential steps colon creates seven sub-limitations; claims6–9 each have two limitations.",
+    "Quoted signal source a “end of needles course” retains the initial curly quote in the selected term a “end; punctuation-stop list does not include curly quotes, while of terminates its head. Requires critic attention."
+  ],
+  "rationale": "All selected phrases, structural boundaries, and absence of intra-claim exact-introduction edges manually adjudicated under P2-DESIGN; quote helper only. Lexical heads deliberately follow declared cap and participle restrictions. No implementation/prediction access."
+}

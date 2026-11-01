@@ -1,0 +1,39 @@
+{
+  "recordedAt": "2026-10-28T21:33:19.345267+00:00",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "goalComplete": false,
+  "focusedSchedulerTests": 6,
+  "workerCompositionTests": 6,
+  "senderProcessCrashTests": 3,
+  "schedulerActualProcessKillScenario": true,
+  "automaticSelectionAndActualBackendReconciliation": "ops/native-scheduled-collector-route-verification.json",
+  "controlledStopResourceBackupProof": "ops/worker-scheduled-resource-verification.json",
+  "verification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 237.7,
+    "docgenSeconds": 17.0,
+    "execution": "One agent-runs.slice job; CPUQuota 150%, zero additional swap, runtime 300s; MemoryHigh/Max initially 5/6 GiB then 7/8 GiB during lint; RAYON_NUM_THREADS=2 and BIOME_THREADS=2. No OOM; preceding run timed out during lint and is not a pass."
+  },
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/native-schedule.ts": "5d79f27570b030b1b5b51ae77fd621357f07785fb682a48175648d5e3da604f6",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "320798439d29357db606105ac00ae81a1a4d8ff7966a35dc618995b190598b59",
+    "packages/tooling/library/ai-metrics/src/internal/observation-journal-tables.ts": "e019349c548ee169a8491c3e90ed0f6425ef76517ec1ea8fb2aa7f074ffb84df",
+    "packages/tooling/library/ai-metrics/src/index.ts": "3d13f43c65ee8b88eab2efb8a750860503768a51681dfb3851e2937cacea7bd5",
+    "packages/tooling/library/ai-metrics/test/native-schedule.test.ts": "f74feac76b2e9dd6c6fa0f5aa1e6429f9c1f9aafc5b283713c7ff80421672918",
+    "packages/tooling/library/ai-metrics/test/observation-worker.test.ts": "eb9f189ccc812b3c3b97883302214d59928b5f4ee3dad3308b43723df1d0d9ae",
+    "packages/tooling/library/ai-metrics/test/native-delivery-crash.test.ts": "3113333f40798ae5999ae46223ec79822f0f840a31b862a6492b09c371c2798c",
+    "packages/tooling/library/ai-metrics/test/fixtures/native-delivery-process.ts": "9004daa361c1ea00465ef11bd7992fb53e5c65f98fcb4da796e2fc4e65be2236",
+    "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts": "dd87041334f982b6c7bd29ef4afcc6fc3899d13e937886e18bd6c2deb17d7e3e",
+    "goals/agent-observability-foundation/ops/verify-native-collector-route.py": "11f4c7e61dc097cde4588dffb94b4ce0de82336ca9a04da65a70e0a954522a27",
+    "goals/agent-observability-foundation/ops/verify-worker-resources.py": "ffcdd3b66593b5b6f44c2f151de154bd4f86023150ad198bf5917d0ae72cdf39"
+  },
+  "limitations": [
+    "No production poll loop or enrollment",
+    "Missing ambiguous sends are queried and retained unresolved; no blind resend",
+    "Single-event sends have no throughput qualification",
+    "Full SPEC, fleet identity, coverage denominators, CLI/desktop/canary and delivery gates remain open"
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "entityMentionConvention": "entity-mentions/v1",
+  "familyId": "15958729-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "at least one",
+      "reason": "Canonical native wording retained. Accepted source critic treats original duplicated at at as isolated source typing duplication rather than version conflict."
+    },
+    {
+      "quote": "any claim 1",
+      "reason": "Actual claim-9 dependency identifies claim 1 despite malformed any wording; no alternative dependency inferred."
+    }
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumbers": [
+        1,
+        8,
+        9,
+        10
+      ],
+      "quotes": [
+        "the piercing body",
+        "the sheet metal part",
+        "the piercing head"
+      ],
+      "reason": "Root 1 does not introduce the piercing body or sheet metal part with an independent introducing phrase. Claims 9/10 depend directly on 1 and cannot borrow piercing head from sibling 7. These definite terms remain without fabricated antecedents."
+    },
+    {
+      "claimNumber": 6,
+      "quote": "foam material cardboard, card or wood",
+      "reason": "Native wording lacks separator between material and cardboard; preserve the complete bare coordinated material phrase without inserting punctuation or deciding the intended alternatives."
+    },
+    {
+      "claimNumber": 1,
+      "quote": "the latter",
+      "reason": "Retained as explicit proform with antecedent to a first side: the sheet metal part is brought against that side and optionally pressed into it. No silent omission under the relative-pronoun convention."
+    },
+    {
+      "claimNumber": 6,
+      "quote": "first and second cover layers",
+      "reason": "Collective refinement retained without selecting a member or fabricating first/second introducing phrases from generic cover layers."
+    }
+  ],
+  "annotationRationale": "Fresh manual extraction from full canonical/native family. Method preambles and actual natural dependencies retained; coordinated piercing and sheet-metal operations represented separately. Claim 8 following-functions enumeration receives three ordered nested functional elements. Exact qualifiers, malformed phrasing and optionality stay literal. A method in dependent preambles remains an indefinite surface term rather than silently being rewritten The method. Missing introductions are not invented from context or examiner allegations.",
+  "counts": {
+    "trees": 10,
+    "elements": 25,
+    "terms": 95,
+    "edges": 76
+  },
+  "sourceValidation": {
+    "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+    "claimsXmlSha256": "742cec6506f580056ddf47b067b3d7e421747abef13394d22bb3aec611a3ef10",
+    "sourceEligibility": "Accepted retained source critic reviewed; source-audit historical gaps reconciled by its later source/PDF evidence where applicable. No new PDF or inventory authentication claimed."
+  },
+  "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "verification": {
+    "schema": "All resolved trees decoded successfully through the declared ClaimElementTree schema; schema contracts only, no decomposer.",
+    "spans": "All element/term/functional-part anchors are exact canonical UTF-16 spans; ordered nonoverlapping terms and complete functional partitions checked.",
+    "references": "All antecedent endpoints name actual labeled terms and targets stay on independently read natural dependency ancestry.",
+    "scope": "Every selected claim occurs exactly once as resolved; unselected context is not included."
+  },
+  "headConvention": "lexical-head/v1",
+  "headConventionReview": {
+    "schemaVersion": "head-review/v2",
+    "previousRound": 2,
+    "round": 3,
+    "review": "head-review.json",
+    "reviewedFlagCount": 2,
+    "changedHeadCount": 2,
+    "scope": "Only individually source-adjudicated outer each head words normalized. Exact anchors, determiners, elements, functional parts, typed edges, source/claim scope, semantic confidence and existing concerns unchanged. Prior raw expected/extractor/critic/head-review receipts preserved. Current correction awaits a separate independent critic."
+  },
+  "criticReview": "round3 head-only independent critic pending",
+  "headConsistencyIndependence": "Bounded source-based lexical-head/v1 extractor review. Each listed source phrase manually judged before serialization; no automatic regex head selection, decomposition implementation, P2-DESIGN, predictions or conformance rules used. No new source gold derivation or semantic acceptance claimed."
+}

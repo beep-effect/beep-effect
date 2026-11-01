@@ -1,0 +1,182 @@
+{
+  "familyId": "12536794-root-19",
+  "rootClaimNumber": 19,
+  "labelClaimNumbers": [19, 20, 21, 22, 23, 24],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method of performing a manufacturing operation on an elongated workpiece having an outer circumference and an inner circumference at a root end using a robotic assembly, said robotic assembly including a robotic arm, a first remote sensor capable of sensing twist and a second remote sensor, at least one sensor located on said robotic arm, and a controller, said method comprising the steps of: directing the sensor on the robotic arm to a first measurement position based upon an expected location of a first location of at least one of the outer circumference and an inner circumference of the workpiece; sensing the actual location of the first location on the workpiece using the sensor on the robotic arm; communicating the output of the sensor on the robotic arm to the controller to determine the actual location of the first location of the workpiece; determining with the controller an expected location of a second location on at least one of the outer circumference and inner circumference of the workpiece using the actual location of the first location on the workpiece; moving the sensor on the robotic arm to a second measurement position, said second measurement position being determined by the expected location of the second location of the workpiece; sensing the actual location of the second location on the workpiece using the sensor on the robotic arm; communicating the sensor output of the sensor on the robotic arm to the controller to determine the actual location of the second surface of the workpiece; calculating the actual root end center of the elongated workpiece; determining the twist of the workpiece; and determining the location of tip of the elongated workpiece.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, further including after said step of providing the sensor output to the controller to determine the actual location of the second location of the workpiece, the step of determining the expected location of a third location on the workpiece and moving the sensor on the robotic arm to a third measurement position, the third measurement position being determined by the expected location of the third location.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 1, wherein the sensor on the robotic arm takes at least three additional measurements of the surface of said workpiece before said step of determining the root end center of the workpiece.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 3 said method includes the step of determining an expected root center after each measurement of the surface of said at least additional measurements of the surface.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 4 wherein said step of determining the actual root center includes the step of comparing the last expected root center to the previous expected root center before the last expected root center and selecting the current expected root center as the actual root center when the difference between said last expected root center and the previous expected root center falls below a predetermined amount.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 1 wherein following said step of sensing the actual location of the first location on the workpiece using the sensor on the robotic arm, the controller determines the offset of the actual location of the first location from an expected location along a first axis.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 1 wherein following said step of sensing the actual location of the first surface of the workpiece using the sensor on the robotic arm, the controller determines the offset of the actual location of the first location from an expected location along the X and Y axes.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 1 wherein following said step of sensing the actual location of the second location of the workpiece using the sensor on the robotic arm, the controller determines the offset of the actual location of the first location of the second location along the X and Y axis.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 1 further including the step of determining a radial finished surface about said actual root center based upon said step of determining the twist of the workpiece and said step of determining an actual root center.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method of claim 9 further including the step of radially sawing said workpiece about said root center at a predetermined distance from said radial finished surface.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 10 further including the step of machining said radially sawn workpiece approximately to said radial finished surface.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 11 wherein said workpiece includes an axis approximately aligned with said actual root center and wherein said method further includes the step of drilling axial cavities substantially aligned with said axis.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method of claim 12 further including the step of drilling radial holes that intersect said axial cavities and wherein each of said radial holes includes an axis that substantially intersects the axis of the other radial holes at approximately said actual root center.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 11 wherein said workpiece includes an axis approximately aligned with said actual root center and wherein said method further includes the step of drilling radial holes that include an axis that substantially intersects the axis of the other radial holes at approximately said root center.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 14 further including the step of drilling axial cavities substantially aligned with said axis and wherein said cavities intersect said radial holes.",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claim 1 wherein said step of determining twist includes the step of determining the rotation offset of the workpiece from a predetermined zero pitch offset.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The method of claim 1 wherein said step of determining the location of the tip includes the step of providing a 3D visualization system and locating the tip within a specified range using said 3D visualization system.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The method of claim 17 wherein said sensor for determining twist is located between said 3D visualization sensor and said robotic arm.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A method of performing a manufacturing operation on a wind turbine blade having a longitudinal axis, a tip, an outer circumferential surface, an inner circumferential surface defining a cavity, and a root end, using a robotic assembly, said robotic assembly including a robotic arm, a first remote sensor capable of sensing twist and a second remote sensor, at least one sensor located on said robotic arm, and a controller, said method comprising the steps of: directing the sensor on the robotic arm proximate to a first measurement position proximate to the root end based upon an expected location of one of said outer circumferential surface and said inner circumferential surface; sensing the actual location of a first location on the at least one of the outer circumferential surface and the inner circumferential surface proximate to the root end using the sensor on the robotic arm; moving the sensor on the robotic arm proximate to a second measurement position; sensing the actual location of a second location; determining a first estimated root end center based upon the actual location of the first and second locations; continue measuring additional locations on at least one of the surface of the outer circumference and the surface of the inner circumference; determining based upon said additional locations additional estimated root end centers, until the last estimated root end center is within a specified tolerance level; determining the twist of the workpiece; and determining the location of tip of the elongated workpiece.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The method of claim 19 wherein said step of determining based upon said additional locations additional estimated root end centers, until the last estimated root end center is within a specified tolerance level further includes the step of determining the difference between the last estimated root end center and the estimated root end center previous to said last estimated root end center is less than a predetermined amount.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The method of claim 19 further including the step of determining a hub surface after determining the location of the tip of the elongated work surface.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The method of claim 21 further including the step of sawing said workpiece parallel to said hub surface.",
+      "sourceXmlParentClaimNumbers": [21]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The method of claim 22 further including the step of machining said workpiece.",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The method of claim 23 further including the step of determining an estimated root center following each determining actual location of the workpiece using the sensor on the robotic arm.",
+      "sourceXmlParentClaimNumbers": [23]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "A method of performing a manufacturing operation on a wind turbine blade having a longitudinal axis, a tip, an outer circumferential surface, an inner circumferential surface defining a cavity, and a root end using a robotic assembly, said robotic assembly including a robotic arm, a first remote sensor capable of sensing twist and a second remote sensor, at least one sensor located on said robotic arm, and a controller, said method comprising the steps of: determining the twist of the workpiece using said first sensor; determining the location of the tip of the workpiece using said second sensor; determining an estimated location of one of the outer and inner circumferential surfaces using said determined twist and determined location of the tip of the workpiece; directing the sensor on the robotic arm proximate to a first measurement position proximate to the root end based upon said the determined estimated location of one of the outer and inner circumferential surfaces; sensing the actual location of the a first location on the at least one of the outer circumferential surface and the inner circumferential surface proximate to the root end using the sensor on the robotic arm; determining with the controller an expected location of a second measurement position on one of the outer circumferential surface and the inner circumferential surface of the blade proximate the root end using the actual location of the first location; moving the sensor on the robotic arm proximate to the second measurement position; sensing the actual location of the second measurement position; determining a first estimated root end center based upon the actual location of the first and second measurement locations; continue measuring additional locations on at least one of the surface of the outer circumference and the surface of the inner circumference; and determining based upon each of said additional locations additional estimated root end centers, until the last estimated root end center is within a specified tolerance level.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The method of claim 25 further including the step of determining a radial finished surface about said actual root center based upon said step of determining the twist of the workpiece and said step of determining an actual root center.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The method of claim 26 further including the step of radially sawing said workpiece about said root center at a predetermined distance from said radial finished surface.",
+      "sourceXmlParentClaimNumbers": [26]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "The method of claim 27 further including the step of machining said radially sawn workpiece approximately to said radial finished surface.",
+      "sourceXmlParentClaimNumbers": [27]
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "The method of claim 28 wherein said workpiece includes an axis approximately aligned with said actual root center and wherein said method further includes the step of drilling axial cavities substantially aligned with said axis.",
+      "sourceXmlParentClaimNumbers": [28]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "The method of claim 29 further including the step of drilling radial holes that intersect said axial cavities and wherein each of said radial holes includes an axis that substantially intersects the axis of the other radial holes at approximately said actual root center.",
+      "sourceXmlParentClaimNumbers": [29]
+    },
+    {
+      "claimNumber": 31,
+      "claimText": "The method of claim 28 wherein said workpiece includes an axis approximately aligned with said actual root center and wherein said method further includes the step of drilling radial holes that include an axis that substantially intersects the axis of the other radial holes at approximately said root center.",
+      "sourceXmlParentClaimNumbers": [28]
+    },
+    {
+      "claimNumber": 32,
+      "claimText": "The method of claim 31 further including the step of drilling axial cavities substantially aligned with said axis and wherein said cavities intersect said radial holes.",
+      "sourceXmlParentClaimNumbers": [31]
+    },
+    {
+      "claimNumber": 33,
+      "claimText": "The method of claim 25 wherein said step of determining twist includes the step of determining the rotation offset of the workpiece from a predetermined zero pitch offset.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 34,
+      "claimText": "The method of claim 25 wherein said step of determining the location of the tip includes the step of providing a 3D visualization system and locating the tip within a specified range using said 3D visualization system.",
+      "sourceXmlParentClaimNumbers": [25]
+    },
+    {
+      "claimNumber": 35,
+      "claimText": "The method of claim 34 wherein said sensor for determining twist is located between said 3D visualization sensor and said robotic arm.",
+      "sourceXmlParentClaimNumbers": [34]
+    }
+  ]
+}

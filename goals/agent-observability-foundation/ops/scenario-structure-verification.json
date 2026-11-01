@@ -1,0 +1,24 @@
+{
+  "baseHead": "add3f357f4bb9078a4857bb1bb77a71f28534be1",
+  "archive": "~/.local/state/beep/observation-proof-archive/scenario-structure-_kfc5v3e",
+  "sourceHashes": {
+    "packages/tooling/library/ai-metrics/test/evidence-retention.test.ts": "4af5e165462e39e0f1a573471e47f762bcaa51f6b3122cddcadfcb109605b570",
+    "packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts": "9d6fe8852ef6376fe3af81f55ad0951f1344350a91156d8ca5135bf292750fcd",
+    "packages/tooling/library/ai-metrics/test/native-http-crash.test.ts": "12223f8c63679224b40a12beeb0942ab096253a96e31957f2d959ae447c48420",
+    "packages/tooling/library/ai-metrics/test/transcript-export.test.ts": "c6a6cc33ab9fc4334cf2026b5b3ec21315e12b6f6b01218209f52a57a02b040c"
+  },
+  "focusedTestCount": 50,
+  "focusedResult": "passed",
+  "packageResult": "incomplete: host reserve stop during docgen; not a source assertion failure",
+  "fallow": {
+    "introducedComplexityBefore": 21,
+    "introducedComplexityAfter": 16,
+    "introducedDuplication": 0,
+    "inheritedAdjacentDuplication": 4,
+    "deadCode": 0,
+    "status": "expected exit1; findings remain"
+  },
+  "focusedFallowTrial": "manually stopped before completion after checking prior measurement: analyzer needs broader graph budget; focused profile applies to small tests only",
+  "review": "Independent Astra accepted exact four-file hashes with unchanged assertions and scope",
+  "recoveryHold": "preserved"
+}

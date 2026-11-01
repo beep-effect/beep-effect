@@ -1,0 +1,91 @@
+{
+  "familyId": "16052309-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the backside section",
+      "nativeQuote": "the backside section",
+      "literalMatch": true,
+      "explanation": "Exact in native claim1."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the upper and lower ends",
+      "nativeQuote": "the lower and upper ends",
+      "literalMatch": false,
+      "explanation": "Examiner reverses coordinated end order; both designate upper/lower ends, other phrases and original corroborate version."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "its upper bend having an u-shaped bend (2d)",
+      "nativeQuote": "its upper bend having an U-shaped bend (2d)",
+      "literalMatch": false,
+      "explanation": "Case-only difference."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the cabinet box",
+      "nativeQuote": "the cabinet box",
+      "literalMatch": true,
+      "explanation": "Exact in6."
+    }
+  ],
+  "concerns": [
+    "Two original CLMs initially differ in dependencies: unamended original3->1and2,4->1to3,etc. Inspected JKBMWGYNRXEAPX0 explicitly marks Currently amended and Del/Ins changes these references to claim1, matching native3-6 after removing Del text. This reconciles the substantive difference instead of calling it OCR.",
+    "Remaining accepted-text differences are1/l reference-number substitutions and degree symbol recognized as0; OCRConfidenceData surrounds affected glyphs. Original counts6 agree. Native/OA dates and identities match;58/58 inventory asserts no intervening CLM."
+  ],
+  "rationale": "Eligible after explicit tracked-amendment reconciliation. Actual112(b) rejection and selected1-6 native phrases associate with same family; native dependencies2-6->1 reflect amended original.",
+  "sourceIdentity": {
+    "applicationNumber": "16052309",
+    "publicationNumber": "US20190038021A1",
+    "publicationDate": "2019-02-07",
+    "officeActionMailDate": "2019-05-03",
+    "officeActionDocumentIdentifiers": ["JV5BLJF5RXEAPX3"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20190038021 A1 20190207",
+      "application-reference": "US 16052309 20180801",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "JKBMWGYKRXEAPX0",
+        "officialDate": "2018-08-01T17:19:16.000-0400"
+      },
+      {
+        "documentIdentifier": "JKBMWGYNRXEAPX0",
+        "officialDate": "2018-08-01T17:19:16.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "JKBMWGYKRXEAPX0",
+        "officialDate": "2018-08-01T17:19:16.000-0400",
+        "sha256": "b54eed0fdcaca735f61d00d3b028debc3512012d6f142e2c763fc76141204a19",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [2],
+        "sourceClaimCount": 6
+      },
+      {
+        "documentIdentifier": "JKBMWGYNRXEAPX0",
+        "officialDate": "2018-08-01T17:19:16.000-0400",
+        "sha256": "d72706fde3d47ecfe8b0b4f2c20bfe8cdd12351426644ac87c31a6f7d1a5f56f",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 6
+      }
+    ],
+    "documentInventoryCount": 58,
+    "documentInventoryRows": 58,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

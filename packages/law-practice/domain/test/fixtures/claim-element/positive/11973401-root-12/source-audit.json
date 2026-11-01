@@ -1,0 +1,78 @@
+{
+  "familyId": "11973401-root-12",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said computer system",
+      "nativeQuote": "said computer system",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the contents or values",
+      "nativeQuote": "the contents or values",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "said first computers",
+      "nativeQuote": "said first computers",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "said plurality of first computers",
+      "nativeQuote": "said plurality of first computers",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the progress of execution",
+      "nativeQuote": "the progress of execution",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    }
+  ],
+  "concerns": [
+    "Actual second-paragraph rejection1–18 includes selected12/13/14/17, with specific source quotes. Natural12 independent,13→12,14→13,17→14. Examiner says15/16 are incorrectly dependent1; those are outside selected scope and were not silently added/repaired. No originals available; detailed numbered correspondence supports qualification."
+  ],
+  "rationale": "Retained ground, numbered examiner phrases, selected natural dependencies and original versions examined. Chronology alone not used to qualify. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "11973401",
+    "nativePublicationNumber": "US20080126506A1",
+    "nativePublicationDate": "20080529",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "8c44d2ee16e9422a5dfee6f36f60594fa90104ee54afdfc1424071f33298c4bd",
+    "sourceClaimsXmlSha256": "ee9d0020be3a26eb34fa37a96422bda7d8fce0180266ede3dfd7a809cef8bf5b"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 68,
+    "retainedInventoryCount": 68,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "F7TG5KYXPPOPPY5",
+        "officialDate": "2007-10-05T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2009-11-17",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 18,
+  "selectedClaimNumbers": [12, 13, 14, 17],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

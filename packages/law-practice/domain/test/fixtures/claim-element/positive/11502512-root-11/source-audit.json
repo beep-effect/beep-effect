@@ -1,0 +1,127 @@
+{
+  "familyId": "11502512-root-11",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the camera motion detection method",
+      "nativeQuote": "The camera motion detection method",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the system",
+      "nativeQuote": "The system",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the system",
+      "nativeQuote": "The system",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the uncompression domain",
+      "nativeQuote": "the uncompression domain",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the system",
+      "nativeQuote": "The system",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the compression domain",
+      "nativeQuote": "the compression domain",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the system",
+      "nativeQuote": "The system",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the primary",
+      "nativeQuote": "the primary",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the system",
+      "nativeQuote": "The system",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the accumulation circuit",
+      "nativeQuote": "the accumulation circuit",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the mux operation",
+      "nativeQuote": "the MUX operation",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the final pan, tilt, and zoom values",
+      "nativeQuote": "the final PAN, TILT, and ZOOM values",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    }
+  ],
+  "concerns": [
+    "Actual second-paragraph rejection explicitly includes11 and detailed dependent12–17 concerns despite abbreviated blanket scope1,8,11,18. All selected12–17 naturally reference11; source system/process mismatch preserved. No originals available. Formula rendering/native symbols do not change quoted numbered correspondence."
+  ],
+  "rationale": "Retained ground, numbered examiner phrases, selected natural dependencies and original versions examined. Chronology alone not used to qualify. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "11502512",
+    "nativePublicationNumber": "US20080036867A1",
+    "nativePublicationDate": "20080214",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "be667fd24977134b574ec2e669d44c7c61b92ffe9ac8354a940c9a227a188062",
+    "sourceClaimsXmlSha256": "9caf45b70f19cdf2d0809c67183878b1c008bc3ac668349d7cc001748cc84e91"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 42,
+    "retainedInventoryCount": 42,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "EQWI6XP2PP2GUI1",
+        "officialDate": "2006-08-11T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2011-08-04",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 20,
+  "selectedClaimNumbers": [11, 12, 13, 14, 15, 16, 17],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

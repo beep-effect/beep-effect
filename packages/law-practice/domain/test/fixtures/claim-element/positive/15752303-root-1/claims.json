@@ -1,0 +1,87 @@
+{
+  "familyId": "15752303-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "Capsule designed to accommodate a substance for the preparation of a beverage when the capsule is inserted into the housing in a machine of coffee or infusion machine type, to be held therein by a piston during the passage of the extracting liquid through the capsule and the substance that it contains, after the piercing of the bottom by the piston's studs: the capsule made of injected plastic having a bottom (1) and a side wall (3) essentially fitting within a cone frustum, and one edge (4) covered by a membrane seal (5) after loading of the substance into the capsule; the said capsule being characterized by the fact that: the side wall (2) is formed from a single cone frustum between the rim (3) and the bottom (1); the bottom (1) is flat, composed of an interior crown (11) connected to the side wall (2) and surrounding a central opening (12); the side wall (2) is covered with a sealed label (23), and the open bottom (1)—including its interior crown (11)—is covered with a sealed membrane (14).",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the sealed membrane (14) is an interior membrane seal.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the label (23) and the membrane seal (14) are rendered integral by the capsule's injection molding.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the central opening (12) of the bottom (1) is circular.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that it incorporates a cross brace (13) composed of a central hub (131) that is connected to the crown (11) by branches (132) entering the volume of the capsule so as not to be touched by the studs.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the crown (11) has a flattened frustoconical shape.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the label (23) and the membrane seal (14) are made of aluminum foil, and by the fact that the membrane seal is notably embossed.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the label (23) and the membrane seal (14) are made of a complex composed of an aluminum (AL) or (EVOH) foil of which the two faces are covered with a film in a plastic chosen from the group including PP, PLA.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the label (23) is of greater height than the height of the side wall (2), so that the upper edge of the label—which overhangs—is incorporated into the rim (3) of the capsule during the injection of the plastic to produce the capsule.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the branches (137) are radial.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the bottom (1) incorporates an inwardly-turned peripheral edge (22) constituting a bearing point for stacking empty capsules.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the interior crown (11) has a flat exterior surface (113) and a frustoconical interior surface (112).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "Capsule in accordance with claim 1, characterized by the fact that the interior surface of the conical wall (2) incorporates brackets (21) limiting the extent of insertion of a nested capsule.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "Capsule in accordance with claim 13, characterized by the fact that the brackets (21) have a bearing surface (211) above the cross brace (13) so that the membrane seal (14) covering the bottom of an inserted capsule does not press against the branches (132) of the cross brace (13) of the capsule in which this other capsule is nested.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "Production process for a capsule in accordance with claim 1, characterized by the fact that: one produces a mold (200) for a capsule (100) having a side wall (2) in cone frustum form, endowed with a rim (3) at the large base of the cone frustum, and of which the flat summit of the bottom (1) of the capsule is in the form of an interior ring (11) bounding a central opening (12); the mold (200) is composed of a part having a cavity (210) in the shape of the frustoconical side wall of the capsule, with the bottom of the cavity corresponding to the bottom (1) of the capsule, being endowed with a surface in relief (12A) to form the opening (12) of the bottom of the capsule; the other part of the mold is a core (250) defining the interior surface of the capsule; one places a label (23) within the mold cavity, having a shape matching the shape of the frustoconical side wall (2); in the core (250), one places the membrane seal (14), then one closes the mold, and then one injects the plastic.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "Process for the production of a capsule in accordance claim 15, characterized by the fact that one places the membrane filter (14) on the core (250), and then closes the mold and injects the plastic.",
+      "sourceXmlParentClaimNumbers": [15]
+    }
+  ]
+}

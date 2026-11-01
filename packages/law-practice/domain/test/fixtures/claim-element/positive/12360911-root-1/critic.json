@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12360911-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "confidenceScope": "Independent native-source semantic structure/corrections; separately accepted source qualification and pending attorney adjudication are not semantic/legal agreement.",
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "findings": [],
+  "sourceEligibility": "Separate independent source critic accepted. PDF-backed original corroboration for12360911/11670278 supersedes their earlier source-audit holds; native text remains canonical.",
+  "audit": {
+    "treesReviewed": 9,
+    "elementsReviewed": 22,
+    "termsReviewed": 101,
+    "typedEdgesReviewed": 79,
+    "edgeKinds": {
+      "antecedent": 45,
+      "part-of": 13,
+      "functional": 13,
+      "depends-on-element": 8
+    },
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "allLocalAndCrossClaimTermEndpointsVerified": true,
+    "schemaDecode": "passed every supplied tree",
+    "selectedScopeComplete": true
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Independent critic; not producer of these families. Reviewed canonical claims/context, source provenance/audit/critic, extractor/expected, v2 protocol and schema contracts. No production rules, predictions, synthetic fixtures, archived conformance, source repair, network, secrets, git or delegation. Helpers checked only supplied exact source/schema/span/reference geometry.",
+  "rationale": [
+    "Individually reviewed22 elements/101 terms/79 edges and13 functional relationships. Four root components and their operational text have complete owned lexical terms and exact ordered relation coverage. No structural correction found.",
+    "Actual2->1,3->2,4->1,5/6->4,7\u20139->1 dependencies are preserved. Multiple an image/an index value/a scan introductions remain distinct; no arbitrary exact-head collapse or sibling curve borrowing occurs.",
+    "Source-recorded competing scanning-condition/image/index/curve referents remain visible without forced single-target edges. Immediate local region/density and as-the-index-value references are supported by the same region-specific detection clause; this semantic observation does not decide legal sufficiency."
+  ],
+  "ambiguityResolution": [
+    {
+      "claimNumber": 1,
+      "quote": "the scanning conditions",
+      "resolution": "The final occurrence follows original scanning conditions plus first/second scanning-condition introductions. Its competing scope is recorded; no single-target edge is invented."
+    },
+    {
+      "claimNumber": 5,
+      "quote": "the image",
+      "resolution": "Two inherited indefinite image introductions exist. Withholding a unique image identity preserves the explicit source uncertainty."
+    },
+    {
+      "claimNumber": 5,
+      "quote": "as the index value",
+      "resolution": "The local detected region-specific index value directly precedes this designation in one clause, supporting the local edge. The separate inherited competing index-value recitations are not collapsed into that introduction."
+    },
+    {
+      "claimNumber": 5,
+      "quote": "as the curve",
+      "resolution": "Inherited4.a a curve and new5.b a curve compete; the terminal phrase remains unlinked. Claim6 instead inherits4 alone and correctly uses its curve."
+    },
+    {
+      "claimNumber": 9,
+      "quote": "index values",
+      "resolution": "Do not force the plural collection into either singular inherited introduction; the extractor explicitly records the competing inclusion question."
+    }
+  ]
+}

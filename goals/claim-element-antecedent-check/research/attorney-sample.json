@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "claim-antecedent-attorney-sample/v1",
+  "date": "2026-10-28",
+  "status": "pre-prediction sample selection only; no human agreement claimed",
+  "selection": "One family from each of six CPC sections, minimum SHA256(claim-antecedent-attorney-v1:familyId), without filtering annotation status, uncertainty or predictions. Six of sixty source-qualified families (10%).",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "selectedFamilyCount": 6,
+  "selectedClaimCount": 50,
+  "families": [
+    {
+      "familyId": "14432872-root-5",
+      "cpcSection": "A",
+      "claimNumbers": [5, 6, 7, 8],
+      "claimCount": 4,
+      "samplingProbability": {
+        "numerator": 1,
+        "denominator": 9
+      },
+      "status": "actual attorney review pending"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5],
+      "claimCount": 5,
+      "samplingProbability": {
+        "numerator": 1,
+        "denominator": 17
+      },
+      "status": "actual attorney review pending"
+    },
+    {
+      "familyId": "14970678-root-17",
+      "cpcSection": "E",
+      "claimNumbers": [17, 18, 19, 20],
+      "claimCount": 4,
+      "samplingProbability": {
+        "numerator": 1,
+        "denominator": 2
+      },
+      "status": "actual attorney review pending"
+    },
+    {
+      "familyId": "14659462-root-1",
+      "cpcSection": "F",
+      "claimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+      ],
+      "claimCount": 20,
+      "samplingProbability": {
+        "numerator": 1,
+        "denominator": 8
+      },
+      "status": "actual attorney review pending"
+    },
+    {
+      "familyId": "11299450-root-1",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimCount": 10,
+      "samplingProbability": {
+        "numerator": 1,
+        "denominator": 14
+      },
+      "status": "actual attorney review pending"
+    },
+    {
+      "familyId": "13484431-root-19",
+      "cpcSection": "H",
+      "claimNumbers": [19, 20, 21, 22, 23, 24, 25],
+      "claimCount": 7,
+      "samplingProbability": {
+        "numerator": 1,
+        "denominator": 10
+      },
+      "status": "actual attorney review pending"
+    }
+  ],
+  "additionalBoundedEscalations": [
+    {
+      "familyId": "16068637-root-11",
+      "purpose": "one post-round-limit connective representation; preserve prior approvals and obtain actual human decision",
+      "reviewReference": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/granularity-review.json"
+    }
+  ]
+}

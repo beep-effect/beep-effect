@@ -1,0 +1,77 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A flood warning apparatus comprising:
+<claim-text>a foundation configured to mount to a ground;</claim-text>
+<claim-text>an extendable body that extends above the foundation, wherein the extendable body is configured to move within a range bounded by a minimum body height and a maximum body height, and wherein the extendable body is configured to have a position within the range based on a level of water in a waterway that covers the foundation;</claim-text>
+<claim-text>a platform disposed atop the extendable body, wherein the platform comprises a retention feature, and wherein the platform is buoyant; and</claim-text>
+<claim-text>a floatation object comprising a notification mechanism, wherein the floatation object is configured to be retained by the retention feature of the platform when the position of the extendable body is less than the maximum body height, wherein the floatation object is further configured to be released from the platform by the retention feature when the level of water in the waterway exceeds a threshold value, wherein the floatation object is buoyant, and wherein the notification mechanism is configured to activate when the floatation object is released from the platform by the retention feature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the extendable body comprises a plurality of segments having a telescoping configuration.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the platform is configured to float on the water, and wherein the platform adjusts the position of the extendable body within the range when the level of the water is no greater than a platform height of the platform when the extendable body is at the maximum body height.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The flood warning apparatus of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the platform maintains the extendable body at the maximum body height when the level of the water exceeds the platform height of the platform.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the platform further comprises a sensor device that is configured to measure a parameter associated with the water in the waterway.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the range of the extendable body is adjustable upon installation.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the notification mechanism is configured to broadcast an alert notification when the floatation object is released from the platform by the retention feature.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The flood warning apparatus of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the notification mechanism is further configured to broadcast a medium alert notification when the position of the extendable body exceeds a threshold value after the floatation object is released from the platform by the retention feature.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The flood warning apparatus of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the alert notification comprises an audible alert.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the floatation object is spherical.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the floatation object further comprises a GPS and a transmitter, wherein the transmitter is configured to broadcast a location of the floatation object based on the GPS.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the platform further comprises a side wall having a wall height sufficient to retain the floatation object in an absence of water inside a cavity formed by the retaining wall.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the retention feature comprises a reed switch, and wherein the floatation object comprises a magnet.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the notification mechanism is configured to be remotely tested while the floatation object is retained by the retention feature of the platform.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ground is configured to be in the waterway or adjacent to the waterway when the extendable body is at the minimum body height.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The flood warning apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a second floatation object comprising a second notification mechanism, wherein the second floatation object is configured to be retained by a second retention feature of the platform when the position of the extendable body is less than a threshold height value, wherein the second floatation object is further configured to be released from the platform by the retention feature when the level of water in the waterway exceeds the threshold height value, wherein the threshold height value is less than the maximum body height, wherein the second floatation object is buoyant, and wherein the second notification mechanism is configured to activate when the second floatation object is released from the platform by the second retention feature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The flood warning apparatus of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the retention feature has a first configuration that differs from a second configuration of the second retention feature.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The flood warning apparatus of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the retention feature continues to retain the floatation object after the second retention feature releases the second floatation object.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A real time flood event coordination system comprising:
+<claim-text>a plurality of flood warning apparatuses, wherein each of the plurality of flood warning apparatuses is positioned in or proximate to a waterway, and wherein each of the plurality of flood warning apparatuses comprises:
+<claim-text>a foundation configured to mount to a ground;</claim-text>
+<claim-text>an extendable body that extends above the foundation, wherein the extendable body is configured to move within a range bounded by a minimum body height and a maximum body height, and wherein the extendable body is configured to have a position within the range based on a level of water in a waterway that covers the foundation;</claim-text>
+<claim-text>a platform disposed atop the extendable body, wherein the platform comprises a retention feature, and wherein the platform is buoyant; and</claim-text>
+<claim-text>a floatation object comprising a notification mechanism, wherein the floatation object is configured to be retained by the retention feature of the platform when the position of the extendable body is less than the maximum body height, wherein the floatation object is further configured to be released from the platform by the retention feature when the level of water in the waterway exceeds a threshold value, wherein the floatation object is buoyant, and wherein the notification mechanism is configured to activate when the floatation object is released from the platform by the retention feature; and</claim-text>
+</claim-text>
+<claim-text>a user system communicably coupled to the floatation object of each of the plurality of flood warning apparatuses, wherein the user system is configured to generate and send a notification about a flood event in the waterway based on the notification mechanism of at least one floatation object being activated.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The real time flood event coordination system of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the user system is further configured to generate and send a forecast of an imminent flood event in the waterway based on information received from at least one of a group comprising a platform and a floatation object before the notification mechanism of the floatation object is activated.</claim-text>
+</claim>
+</claims>

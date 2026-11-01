@@ -1130,19 +1130,19 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R4, refactor/yaml-out-of-repo-cli)",
-      "reason": "Record the R4 manifest edit that drops the npm yaml dependency from @beep/repo-ai-metrics and adds the @beep/yaml workspace dependency (compose.ts renders through the kit); the turbo coupling is measured in the review; no qualification is granted.",
+      "reviewer": "GPT-6-Astra independent foundation panel",
+      "reason": "Carry only previously reviewed AI-metrics dependency deltas onto accepted main e733; root seals already match incoming main; no qualification or exception growth.",
       "basis": {
-        "path": "goals/effected-promotion/research/cache-baseline-review-r4.md",
-        "sha256": "9b829d985b12bb1ef727af56985f5444981afcd01ef907bb6d7796a3c1a54f43"
+        "path": "goals/agent-observability-foundation/research/CACHE-E733-SYNC-20261031.md",
+        "sha256": "844d0b3a32550fa207520930ab9010696cf79e31723e4fce411a95fc2818547b"
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (W0 lane, refactor/beep-cli-w0-retirements)",
-      "reason": "Re-record the cache posture of the root, repo-cli and repo-docgen subjects after the W0 retirements: the quality policy seal loses the JSDocMigrate inputs, repo-cli drops the runpod and codex-sdk dependencies, and the repo-docgen docs:aggregate script points at docgen aggregate; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (hold-ledger, feat/hold-ledger)",
+      "reason": "Re-record the existing cache posture of @beep/repo-cli after its manifest gained the @beep/epistemics dependency and the ./commands/Holds export (goals/hold-ledger). Script words, tasks, inputs, outputs and cache flags are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/w0-cache-baseline-review.md",
-        "sha256": "a68dffb3991b610426c7ec34d0586a3bdd812abc98a1fbf2baa35f15375da706"
+        "path": "goals/hold-ledger/research/cache-baseline-review-2026-10-31.md",
+        "sha256": "fa762fda73a2245c60f19d7289ae7b704f4bc148c6748a2a866a061a1f774025"
       }
     },
     "@beep/repo-configs": {
@@ -1426,11 +1426,11 @@
       }
     },
     "@beep/uspto": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "Codex claim-element-antecedent-check owner (self-review)",
+      "reason": "Record only the USPTO manifest input drift caused by two canonical generated doctest scripts. Existing task scripts and qualification scope/profile/epoch are unchanged; the new doctest remains unassessed. No cache qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/claim-element-antecedent-check/research/cache-baseline-review-v23.md",
+        "sha256": "d75bad6f997274d19e3a2350cdf59ad9cab769412fe963ab4c4b7bc8e4523a23"
       }
     },
     "@beep/uspto-mcp": {
@@ -102317,11 +102317,13 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#audit",
           "@beep/cli-kit#audit",
           "@beep/duckdb#audit",
           "@beep/fc-runs#audit",
           "@beep/file-processing#audit",
           "@beep/identity#audit",
+          "@beep/jsonl#audit",
           "@beep/memfs#audit",
           "@beep/observability#audit",
           "@beep/phoenix#audit",
@@ -102329,8 +102331,7 @@
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
           "@beep/utils#audit",
-          "@beep/xdg#audit",
-          "@beep/yaml#audit"
+          "@beep/xdg#audit"
         ],
         "configuration": {
           "cache": false,
@@ -102392,11 +102393,13 @@
         "command": "bun run beep:build",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -102404,8 +102407,7 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build",
-          "@beep/yaml#build"
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -102456,11 +102458,13 @@
         "command": "bun run beep:check",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -102468,8 +102472,7 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build",
-          "@beep/yaml#build"
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": true,
@@ -102507,11 +102510,13 @@
         "command": "bunx vitest run --coverage",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -102519,8 +102524,7 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build",
-          "@beep/yaml#build"
+          "@beep/xdg#build"
         ],
         "configuration": {
           "cache": false,
@@ -102643,11 +102647,13 @@
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102655,8 +102661,7 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit",
-          "@beep/yaml#transit"
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -102857,11 +102862,13 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102869,8 +102876,7 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit",
-          "@beep/yaml#transit"
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": false,
@@ -102911,11 +102917,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102924,8 +102932,7 @@
           "@beep/test-utils#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit",
-          "@beep/yaml#transit"
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -102971,11 +102978,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102984,8 +102993,7 @@
           "@beep/test-utils#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit",
-          "@beep/yaml#transit"
+          "@beep/xdg#transit"
         ],
         "configuration": {
           "cache": true,
@@ -103033,6 +103041,7 @@
           "@beep/colors#audit",
           "@beep/config-file#audit",
           "@beep/duckdb#audit",
+          "@beep/epistemics#audit",
           "@beep/exiftool#audit",
           "@beep/fc-runs#audit",
           "@beep/ffmpeg#audit",
@@ -103153,6 +103162,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -103262,6 +103272,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -103358,6 +103369,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -103503,6 +103515,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103644,6 +103657,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103903,6 +103917,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -104002,6 +104017,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -104125,6 +104141,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -126336,7 +126353,7 @@
       {
         "computation": "@beep/uspto#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#audit",
           "@beep/schema#audit",
@@ -126402,7 +126419,7 @@
       {
         "computation": "@beep/uspto#build",
         "command": "bun run beep:build",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126457,7 +126474,7 @@
       {
         "computation": "@beep/uspto#check",
         "command": "bun run beep:check",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126499,7 +126516,7 @@
       {
         "computation": "@beep/uspto#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126551,7 +126568,7 @@
       {
         "computation": "@beep/uspto#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/uspto#transit"
@@ -126588,9 +126605,60 @@
         }
       },
       {
+        "computation": "@beep/uspto#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
+        "dependencies": [
+          "@beep/identity#transit",
+          "@beep/schema#transit",
+          "@beep/test-runner#transit",
+          "@beep/test-utils#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vite.shared.ts",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/uspto#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -126625,7 +126693,7 @@
       {
         "computation": "@beep/uspto#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/identity#transit",
@@ -126693,7 +126761,7 @@
       {
         "computation": "@beep/uspto#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -126722,7 +126790,7 @@
       {
         "computation": "@beep/uspto#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -126777,7 +126845,7 @@
       {
         "computation": "@beep/uspto#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-laws"
         ],
@@ -126831,7 +126899,7 @@
       {
         "computation": "@beep/uspto#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -126876,7 +126944,7 @@
       {
         "computation": "@beep/uspto#test",
         "command": "bun run beep:test",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -126927,7 +126995,7 @@
       {
         "computation": "@beep/uspto#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126970,7 +127038,7 @@
       {
         "computation": "@beep/uspto#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",

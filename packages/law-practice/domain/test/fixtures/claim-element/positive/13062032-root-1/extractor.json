@@ -1,0 +1,92 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13062032-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "said spaced transducers",
+      "reason": "First/second transducer groups are explicit but no one NP introduces their exact collective union. Complete travel-time relationship is preserved; no single donor member is selected. Outermost transducers11 likewise do not become identical to the entire transducer group by head shortening."
+    },
+    {
+      "quote": "the reflected ultrasound / the ultrasound / the associated signals",
+      "reason": "Ultrasonic pulse emission/reflection and resulting received-wave/signal quantities remain explicit functional actions. No noun introduction is invented from a verb or physical assumption. Later exact associated signals10 refers to explicit1.b mention, without equating wave to signal or pulse."
+    },
+    {
+      "quote": "the leading body's coupling surface",
+      "reason": "Full explicit lexical owner genitive retained in head. Surface is first recited definitely in7; no invented earlier surface or owner-to-surface antecedent."
+    },
+    {
+      "quote": "the received pulse echo",
+      "reason": "Claim12 depends directly on1, not2; back-face echo2 cannot donate to12. Exact received-pulse-echo term retained without borrowing sibling introduction."
+    },
+    {
+      "quote": "Device for carrying out the method according to claim 1",
+      "reason": "Natural reference13→1 is retained even with changed device subject. Device-local indefinite body/transmitter/receiver/array introductions remain distinct from method1 introductions; later definite device references use their unique local owners."
+    },
+    {
+      "quote": "the transmitter or receiver",
+      "reason": "Coordinated role phrase preserved as complete NP. It is not forced onto just transmitter or just receiver, and separate role introductions in transducer clauses do not collapse hardware instances."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [],
+  "sourceValidation": {
+    "claimsXmlSha256": "2b33a6aabcd2936ff0644c943981d6dc7f04b9a7062d5979ee16ed9c3d8efdcb",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 13,
+    "elements": 39,
+    "terms": 136,
+    "edges": 133
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decode through declared ClaimElementTree schema; production decomposer not invoked.",
+    "anchors": "Exact UTF-16 spans, source order, nonoverlapping ordered terms, source-contained ownership, all antecedent endpoints and complete ordered functional reconstruction checked.",
+    "native": "All canonical/context claims match native XML under permitted normalization; source claims XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor checks are not independent acceptance."
+  },
+  "previousRounds": [
+    {
+      "round": 1,
+      "expected": "expected.round1.json",
+      "extractor": "extractor.round1.json",
+      "criticRound": 1,
+      "criticVerdict": "changes-required"
+    }
+  ],
+  "round2Changes": [
+    {
+      "findingId": "bare-dependent-method-reference",
+      "disposition": "accepted",
+      "caseCount": 11,
+      "reason": "Exact source dependent bare Method subjects2–12 explicitly refer to the sole method in actual1 ancestry, including7→2→1. Bare surface does not erase that identity; device13 remains a separate subject."
+    }
+  ],
+  "criticReview": "Independent round2 critic pending.",
+  "round2Independence": "Original extractor independently adjudicated exact critic cases against canonical source and protocol. No production, decomposer, design, predictions or conformance inspected. Only listed source-supported references/head/order changed; full previous receipts preserved."
+}

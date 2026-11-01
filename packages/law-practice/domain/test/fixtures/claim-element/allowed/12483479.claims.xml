@@ -1,0 +1,80 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for minimizing and/or re-scaling communication latency and resources respectively in cloud, Open and/or virtual based radio access network RAN (C/O/v-RAN), comprising:
+<claim-text>a RAN Node including one or more antennas, one or more radio units, and one or more baseband, O-CU and O-DU,</claim-text>
+<claim-text>wherein the one or more antennas receive data transmissions from a plurality of user devices and send the data to a radio unit of the one or more radio units, the radio unit converts a signal from an antenna of the one or more antennas into a digital format that a baseband unit can understand, the baseband unit of the one or more baseband units sends data from the RAN Node to a cloud platform, and sends data received from the cloud platform to the radio unit for transmission;</claim-text>
+<claim-text>a near real time RAN intelligent controller (Near-RT-RIC) for near-RT control of logical/hardware resource allocation in the RAN Node; and</claim-text>
+<claim-text>a service management and orchestration (SMO) framework including:</claim-text>
+<claim-text>a Open Intelligent Cloud Controller (O-ICC) for controlling operations in the cloud platform,</claim-text>
+<claim-text>a non-real-time RIC (Non-RT-RIC) for non real-time control of the RAN logical/hardware resource allocation, and</claim-text>
+<claim-text>an open cloud interface (OC1 Interface) to enable direct communication of messages between the Open Intelligent Cloud Controller (O-ICC) and both the Non-RT-RIC and the Near-RT-RIC,</claim-text>
+<claim-text>wherein the cloud platform is configured with
+<claim-text>an infrastructure management service (IMS) and a deployment management service (DMS),</claim-text>
+<claim-text>wherein the Open Intelligent Cloud Controller (O-ICC) is configured to control the IMS and the DMS in order to reduce latency of a cloud platform control loop, and</claim-text>
+</claim-text>
+<claim-text>wherein during pre-deployment the Open Intelligent Cloud Controller (O-ICC) is configured to</claim-text>
+<claim-text>receive a request for controlling instantiation of the IMS and the DMS, and</claim-text>
+<claim-text>acknowledge the request to the Non-RT-RIC and/or the near RT-RIC, then instantiate the IMS and the DMS by a Federated O-Cloud Orchestration &amp; Management (FOCOM) component and network function orchestration (NFO), respectively,</claim-text>
+<claim-text>wherein the O-ICC uses the IMS and the DMS to operate the control loop to minimize the latency by communication through the open cloud interface (OC1 Interface).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the SMO includes one or more cloud Apps (o-cApps) which are configured for customer/application procedures and services.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the Open Intelligent Cloud Controller (O-ICC) is further configured to
+<claim-text>control the IMS and the DMS for allocating logical/hardware resources to different software entities of the cloud platform to avoid over or under allocation of the logical/hardware resources.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein during software updating for the IMS, when all resources are reported by the FOCOM component and the cloud platform, respectively, the O-ICC is configured to perform optimization procedures, using a cloud App to control matching of the logical/hardware resources, as well as time delay in the cloud platform control loop.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein during control by the Open Intelligent Cloud Controller (O-ICC), when the DMS allocates the resources according to a network function (NF) deployment request, once the O-ICC receives DMS and Managed Element (ME) reports, the Open Intelligent Cloud Controller (O-ICC) is further configured to control the logical/hardware resources to reduce the latency using minimum resources in the cloud platform.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein during control by the cloud intelligent controller (O-ICC), the O-ICC is further configured to request release of any extra logical/hardware resources if an initial allocation is over-resourced or request increase in the logical/hardware resources in a case that the allocated logical/hardware resources are below a level of required logical/hardware resources.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the Open Intelligent Cloud Controller (O-ICC) is configured to add and remove RAN nodes within a restricted loop time.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the Open Intelligent Cloud Controller (O-ICC) is configured to orchestrate control for virtualized base station functionalities within the cloud platform.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A method of minimizing communication latency in a cloud-based radio access network (RAN), comprising:
+<claim-text>communicating wirelessly between user devices and a baseband unit in a RAN Node;</claim-text>
+<claim-text>sending data from the baseband unit to a cloud platform;</claim-text>
+<claim-text>controlling, by a Open Intelligent Cloud Controller (O-ICC), operations in the cloud platform;</claim-text>
+<claim-text>controlling, by a non-real-time RAN intelligent controller (Non-RT-RIC), RAN logical/hardware resource allocation in non real-time;</claim-text>
+<claim-text>controlling, by a near real time RAN intelligent controller (Near-RT-RIC), the RAN logical/hardware resource allocation in near real-time;</claim-text>
+<claim-text>directly communicating, using an open cloud interface (OC1 Interface), messages between the Open Intelligent Cloud Controller (O-ICC) and both the Non-RT-RIC and the Near-RT-RIC; and</claim-text>
+<claim-text>controlling, by the Open Intelligent Cloud Controller (O-ICC), an infrastructure management service (IMS) and a deployment management service (DMS) in order to reduce latency of a control loop in controlling the cloud platform,</claim-text>
+<claim-text>wherein during pre-deployment the cloud intelligent controller (O-ICC)</claim-text>
+<claim-text>receives a request for controlling instantiation of the IMS and the DMS, and</claim-text>
+<claim-text>acknowledges the request to the Non-RT-RIC and/or the Near-RT-RIC, then instantiates the IMS and the DMS at a Federated O-Cloud Orchestration &amp; Management (FOCOM) component and network function orchestration, respectively,</claim-text>
+<claim-text>wherein the O-ICC uses the IMS and the DMS to operate the control loop to minimize the latency by communication through the open cloud interface (OC1 Interface).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising configuring one or more cloud Apps (o-cApps) for customer/application procedures and services.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising controlling, by the Open Intelligent Cloud Controller (O-ICC), the IMS and the DMS for allocating logical/hardware resources to different software entities of the cloud platform to avoid over or under allocation of the logical/hardware resources.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein during software updating for the IMS, when all resources are reported by the FOCOM component and the cloud platform, respectively, the O-ICC is configured to perform optimization procedures, using a cloud App to control matching of the logical/hardware resources, as well as time delay in the control loop.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein during control by the Open Intelligent Cloud Controller (O-ICC), when the DMS allocates the resources according to a network function (NF) deployment request, once the O-ICC receives DMS and Managed Element (ME) reports, the O-ICC controls the logical/hardware resources to reduce the latency using minimum resources in the cloud platform.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein during control by the Open Intelligent Cloud Controller (O-ICC), the O-ICC requests release of any extra logical/hardware resources if an initial allocation is over-resourced or requests increase in the logical/hardware resources in a case that the allocated logical/hardware resources are below a level of required logical/hardware resources.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising adding and removing, by the Open Intelligent Cloud Controller (O-ICC), the RAN nodes within a restricted loop time.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising orchestrating, by the Open Intelligent Cloud Controller (O-ICC), control for virtualized base station functionalities within the cloud platform.</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "agent-observation-root-declaration/v1",
+  "hostKey": "synthetic-fixture-host",
+  "populationWindowStart": "2026-10-27T11:00:00Z",
+  "populationWindowEnd": "2026-10-27T12:00:00Z",
+  "roots": [{ "path": "/synthetic-fixture/retired-root", "state": "retired" }]
+}

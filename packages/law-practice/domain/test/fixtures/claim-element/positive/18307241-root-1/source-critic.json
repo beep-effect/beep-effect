@@ -1,0 +1,229 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18307241-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+  ],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20230288444", "A1", "20230914"],
+    "applicationReference": ["US", "18307241", "20230426"],
+    "officeActionDocumentIdentifiers": ["LRP4L33UBLUEX11"],
+    "officeActionMailDate": "2024-01-24"
+  },
+  "digestEvidence": [
+    {
+      "file": "18307241.publication.xml",
+      "sha256": "e8344b0796c78e70a4e1980bb9872a8776c142d6d4f90db741877c6975b6cdf4",
+      "matchesProvenance": true
+    },
+    {
+      "file": "18307241.claims.xml",
+      "sha256": "e8319938f7fb7d4881925209229d8626162091ff54dc3b1e27faeee9aee14a37",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "e8319938f7fb7d4881925209229d8626162091ff54dc3b1e27faeee9aee14a37",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "LGXZCYZJXBLUEX0",
+      "xmlAvailable": true,
+      "sha256": "07011b039f6e4df8b8d4e480860a5b620cf88c7e8671411bf69cf8f5a3c10ff4",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 62,
+    "actualRows": 62,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2023-04-26T13:36:29.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "LGXZCYZJXBLUEX0"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-18 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the lateral faces",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the lateral faces"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the lateral faces",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the lateral faces"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the lateral faces",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the lateral faces"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the principal tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the principal tangential axis"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the secondary tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the secondary tangential axis"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the normal axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal axis"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the secondary tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the secondary tangential axis"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the normal axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal axis"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the first lateral face",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first lateral face"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the tangential axis"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the second continuous electrically conductive coating",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second continuous electrically conductive coating"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the secondary tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the secondary tangential axis"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the principal tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the principal tangential axis"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the secondary tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the secondary tangential axis"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the normal axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal axis"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the principal tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the principal tangential axis"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the secondary tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the secondary tangential axis"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the normal axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal axis"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the principal tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the principal tangential axis"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the principal tangential axis",
+      "exactNativePhrasePresent": false,
+      "caseInsensitiveNativeSubstringPresent": false,
+      "nativeQuote": "The acceleration transducer according to claim 15, wherein the fourth lateral surface is disposed normal to the secondary tangential axis of the first piezoelectric element and includes a fourth electrically conductive lateral surface coating; and wherein the second and fourth electrically conductive lateral surface coatings are part of the first continuous electrically conductive coating or part of the second continuous electrically conductive coating."
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the secondary tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the secondary tangential axis"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the principal tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the principal tangential axis"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the secondary tangential axis",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the secondary tangential axis"
+    }
+  ],
+  "assessment": "Original18 claims match exactly including all selected1-18. OA rejects1-18. Examiner also attributes principal tangential axis to16 where native16 has secondary tangential axis; isolated examiner numbering error is recorded, not a native correction.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

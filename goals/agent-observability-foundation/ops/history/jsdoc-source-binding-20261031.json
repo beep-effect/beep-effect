@@ -1,0 +1,855 @@
+{
+  "kind": "cumulative-documentation-only-source-binding",
+  "previousCommit": "11da49d99a77befddded395b3afd8441df7eacae",
+  "changedCommentBlocks": 195,
+  "realFencedExamples": 168,
+  "barrelOwningModuleReferences": 27,
+  "changedFiles": 40,
+  "documentationShapeViolations": [],
+  "exampleCodeBodiesUnchanged": true,
+  "titles": "Exact 168-entry independent review mapping applied; describe the actual snippet operation, including constructor/function inspection, empty-value rejection and building unexecuted Effects.",
+  "independentMappingSha256": "57275fe144714a6eba06965e74e444acd87b243fbdcedf4c4b4460a8795cd7ce",
+  "runtime": "Bun 1.4.4",
+  "sourceBindings": [
+    {
+      "file": "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts",
+      "beforeSha256": "b7729cc15249a5fb12ccd7a7263596afc8c193c40ebf265a19758020c032feec",
+      "currentSha256": "33e1f05abd269a6098e5e516cf6ab28e2771e2f0dfa83eb29779bb9ab0ffa51d",
+      "transpiledSha256": "92c1923b258c5aef3e06beed324fef718015f38b36bcfdc7b452dd28cb70e485",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/drivers/phoenix/src/Phoenix.span-readback.ts",
+      "beforeSha256": "cf08bcb4f68d00ac64bd3a7ba8e6d1d6cdf46251c700eed666b6387d7de8991a",
+      "currentSha256": "c47c49c0ca43545cab8268d6c8b449ff678fcce98f65d7861208363310d0fc41",
+      "transpiledSha256": "3a65b21b1a9521e9c3435efa53f60c6608193d65e9d4f3c4cefdfde42b4ce16b",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/delivery-ledger.ts",
+      "beforeSha256": "a5ee5965ca6eae8ab4bd6012c7a601547899f5c46e798ef638be56756ea030a1",
+      "currentSha256": "3c435767145d6833449f11b151f212173d4835de31d0dc66abf91d0025717396",
+      "transpiledSha256": "72efc7151d04ec3fd12500c6dc88251ec6803f87cb5038c9e97b969401a8a320",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/delivery-response.ts",
+      "beforeSha256": "98f6ee37cc8c6845d7efe4fc11acd7ff1aa5de198f4e517e056f67b999f079f2",
+      "currentSha256": "e6b7c2522805dbf91d71a8ebe4340801a336258ab5fbe77a7b7a8a9c2ba65556",
+      "transpiledSha256": "80514178983fd7c1b30fb14064480c54337a4d9945bc33fe9cea4fc9ddaa078d",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/evidence-retention.ts",
+      "beforeSha256": "f05d08e5ac949e2512c7bb4cca8078f8bb2bb7446668d93a8bc990f76ce18257",
+      "currentSha256": "98248b96ad0672dd84aebecc6461dd0c365c790d677be63d0201c8b3257c43c5",
+      "transpiledSha256": "4e77bbee17fce46449f7b7778968aceef31c2e68c08794ed58b0185f72ab0675",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/evidence-window.ts",
+      "beforeSha256": "475b9a6e406f52f46706cf70532723ceffad34d5172b0091562e1e4d78c7e99e",
+      "currentSha256": "68f11ab54779b7563afec9c5b386123a0ef426975bba3fcd6eacbe04e0afd5e8",
+      "transpiledSha256": "45d8fe18e7581de5fd6a3374d338be170f35ac03a531b1ec7d425b209954e295",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/git-root-evidence.ts",
+      "beforeSha256": "93bb52bb2108d1ac5b953856f8b5b98ed09c5176c90dd44e577046161f1e4cfb",
+      "currentSha256": "10bfcb0fdbdfc6e1d8a8f7c5646240aca55e2a18d53c719167326f1a24364a9b",
+      "transpiledSha256": "d6429257eb84687d3ecf431eddb221a2f22545e7063ca28b107ff25b8a813cac",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/index.ts",
+      "beforeSha256": "aa12b27d65221b9e16841ca3fa362641c02ce01889dec62c7da1c0bf7c809235",
+      "currentSha256": "3892429b3d1ae812ba4bc81d0ff067a812d8a8da6c36f88533507de0f6714617",
+      "transpiledSha256": "5a02df675021ac0596309918d40d6f1696b699da4f906525e0dbf4f7a011c581",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts",
+      "beforeSha256": "613d40bdca8ed3364323768718034e40a9b87d7cb4b252cb5fdb88c9481a7b94",
+      "currentSha256": "bf706ec6af0060a4df2fa8b602d9d23a83935026c9beb9c19ab8758c8cfae4ff",
+      "transpiledSha256": "cb9c97f5728eec5e64a3d5fde646ef6476832f56ecd52a5346987f16a620ab0c",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/internal/observation-metadata-codecs.ts",
+      "beforeSha256": "c49aac36d0c71204a95cbf3894f6bb761d8bc1c8792cd6f644956de664ae25f7",
+      "currentSha256": "41cca945507db430a188df0e675fc72854bdcc453fb415d164acd7f59ddb61c0",
+      "transpiledSha256": "f08469ee580143391a2fc0a66381678173fe70eff090e1985461a79456ad9636",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/internal/source-event-time.ts",
+      "beforeSha256": "105ceec638cc15f8ab54330ed9b6deea61d431e15c7eb0f3899750ab227b2a69",
+      "currentSha256": "6d7a03b98263e1e9a51632032ec762a8b16bfe029f637bf7a7233665132836aa",
+      "transpiledSha256": "efbd301fd6c8c5d787efcfe23410932df596e2d1dae0c05870e7463661ef94af",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/native-delivery.ts",
+      "beforeSha256": "486e6384d0af9caacb64097a8ee1b8976f49a0cf4179154457108725d2fa5e72",
+      "currentSha256": "98982807c81beebc2a863d4b203d092b5d91619e25b313f07b3d9f3e3f6399d0",
+      "transpiledSha256": "811953ce0ef3bcc9000535c5de08ff8aaaa0db33c7baa0bc83862af425fd52d4",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/native-export.ts",
+      "beforeSha256": "f53cf28bea47f9d3ab7a27744abde4c180446f901814df8fe1a277dd6c4e4e7d",
+      "currentSha256": "a106cb1efcee95e4144d96ebf08452e6d7c57e03e4087f3a5ca8eb4b7afe3cd1",
+      "transpiledSha256": "81781594249e6cb936e06444cd5d9da375fde9ae55b0d692c4f2ded846d264a2",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/native-http.ts",
+      "beforeSha256": "18ba00f4b1251f9cf70b7cdedbebe4cbbed75e93f5620511362056708ac4cdd5",
+      "currentSha256": "35d73e2c76453d617c207a687f9c0d71c3f1fd0df9354521749e56e485c206e1",
+      "transpiledSha256": "e98c305bae13e5837e794dd0f78f30ae827d466833f6ac867c2106c059cd690c",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/native-intake.ts",
+      "beforeSha256": "2d7c2de32ee81adfd6dd8393da941f7d47bdd22529a33af2d6896185f39f1acf",
+      "currentSha256": "21c9755f98183a6919d12d47b2eefd015090c40a7d8a172dc659b6f5581a9ced",
+      "transpiledSha256": "2b94b515ec19b3056304a3ed06d119ed846cc406d8d9155b61de3ea1d38e66e2",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/native-readback.ts",
+      "beforeSha256": "77568d0df20109582de195dfdab7ff8a5bfab461fa68dbb0c50f3a4a22a2d8af",
+      "currentSha256": "c7b0ff0a9ec8fa7010cc400ff4a278fe6c854ac3650986c4cf32f1f5a0351dad",
+      "transpiledSha256": "2cd9201f741efbe4d705f2943d4066329f25cf3fb5c1409b15f6e64c5f27d9aa",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
+      "beforeSha256": "26ce64f840f38de92389ec3282cc678dfb3aa98db7dc56765a230271eab4871c",
+      "currentSha256": "dbe92734908d317187ded2a7135f6ec44fab70a0c0fb0bf28061cf8e5490f670",
+      "transpiledSha256": "4f9d4155be8973fb71cd8c9861a3948a5612583f3a3bdde122ff99579e430334",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/native-trace.ts",
+      "beforeSha256": "f2d34e19d98be56681c2479d901a066da98c101c0cd282d121cbd144e4897a38",
+      "currentSha256": "6ae39459f28935ad06aa979f1afb22ecbe64a994df4f8b9f592eb2e8f3969c8a",
+      "transpiledSha256": "b9e1f1eba1ac928b9020f49f2420da11892f99e747cdcdebb1f4f380cf93bd61",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-backup.ts",
+      "beforeSha256": "aa08932451b9812a56110482627bbd83cd729decfc6154089d75ab1c99dd0b0d",
+      "currentSha256": "34356143c89aaecad2e4e4edad0c50abfc2fea305774a63ce932737d25ba17cc",
+      "transpiledSha256": "f32361e1b776626599224ab8e77d35bc128802ff1c0c60ef71e14c6ede76da99",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-control.ts",
+      "beforeSha256": "eda240d525ff68241be439b2c141d2c1a3f6d4d6006413569955518792c92500",
+      "currentSha256": "9f35eba3be9a05a2c3c3bffd25a9389e51a92abef4ecaa59f4f04b4e2db54777",
+      "transpiledSha256": "4a16e6f242ac43332b0039de93e97a07b45e3e04cc21722f66eae6683f95bf57",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-coverage.ts",
+      "beforeSha256": "d3c775110fe332d9acb18d32a6aeabb16b295bf1f30f759eda2c70dacc39eea7",
+      "currentSha256": "764706d5ecb5c0bd72f270d2cf33b5ee305b76e647f39916d847a061599f25a6",
+      "transpiledSha256": "334f36cb5d10721efd4f6b01ab4274780bac298afd9e7dc6d5d330d474b586ba",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-file.ts",
+      "beforeSha256": "4be1ba9a329806f13a9821e9febfdf87fd3e6b3ffe115a6da7e05896754c63dc",
+      "currentSha256": "d62fc0a0ccfce9d42940679ad4575f6247949d48ce0c436022c3ab4ecf371eca",
+      "transpiledSha256": "6f4bc2cf44d0b23c04a11cdf7f39a8d1601c404fba95e19f787a1102b68c2191",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-inventory.ts",
+      "beforeSha256": "f9071b0b8c7e2105fa9c17765eb9f8c4fa831fec566cd97f64d42e0e6e8812b9",
+      "currentSha256": "1f730d94b9f98a75f9fc5806a6d7cc81f2ef804e066251772a938a3fe8fd1e0e",
+      "transpiledSha256": "afd552efe678f936602d9247b4e504c892ca598a299df2e5a807cf7a03e64a73",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+      "beforeSha256": "67d0ef1a4d78df615b17841a0dcaf541794156c639bfd4b6302447a4bdbbf786",
+      "currentSha256": "558cfafabc781d7e4597e67151a67d4089820a6b9cd0437a92a128d2e1e87bfb",
+      "transpiledSha256": "c8a3714af1163c79603ab4f0b89eb370c78e42ffe90b036500116cb5fc0436f3",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts",
+      "beforeSha256": "95a792708cc5858115577f2e272227d7e68b420067b7abe4edfdfd5e5d6d7cac",
+      "currentSha256": "b2798da144ba0c9a0a4c6ab0d46454f29640ba7fcecfed015123afe5738e54cd",
+      "transpiledSha256": "14dac07ac14aa9653c01fe53c19901407c9f87a9a0a4737e37e1bdb7d377c75b",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-launch-http.ts",
+      "beforeSha256": "5a698aa03cc5c0464484a9b3071c92d0589678bd43ba78d9ea5b61ae43004996",
+      "currentSha256": "6c676dd4fdf85d111f973f00ccce2c390baf50167fef8ca96789483dc9d1c955",
+      "transpiledSha256": "3a5364a362d40e7b61d03706f0eea4a334b4ef9077df61c2ca35164366c185fc",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+      "beforeSha256": "6907b4eda7565d00527803a81b62b780c59747cd09161974512cd8310bfce9d0",
+      "currentSha256": "31e64daabdf52831064e2a440745226e23bc3fbc8ab8208689d519494edd7a33",
+      "transpiledSha256": "109bbac42d82c68a3d4a8cebde2fcb17e668819e399b7d1c3a9b52200a1eb042",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-maintenance-http.ts",
+      "beforeSha256": "a5613176a4f7f7e3e1749e7138ca0ac4be9de91a14179fa97abce5faa0b0418a",
+      "currentSha256": "47cf659945321736b8cc777e6a90fac3199acd3ac728706fc8e7080062a226b1",
+      "transpiledSha256": "2bf202a6feab44f2683328dd5c1cef68b0a84f91ba92c9a90053598f4398b492",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-root-probe.ts",
+      "beforeSha256": "ee00e7812c12d8b628ba828974d6fb2625a44e564d56874a9c490726bc34cd9e",
+      "currentSha256": "4a1157ce33fc7512d2aad3b173ae7f6ca756e0872dcabf688f67c443c77b7156",
+      "transpiledSha256": "741589eafa297e436d24a51c5a92b1f59a24dfbcc9135a3187b23148c8d61fb8",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+      "beforeSha256": "4ffcb20bb82fa7c7a0e11c4563130660beb5551944d897952f58e3eae0194d6b",
+      "currentSha256": "7ffe05a9a97249aca4251ebbd8ee7fca49b40c19ecd1e9740ef1f866a466c158",
+      "transpiledSha256": "d83b6264e666f73ae3a6518b423f42b90c219087f72d091a359a71fc1ca3b18e",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-source-health.ts",
+      "beforeSha256": "45f6289dc7f516fa79f5b39a9545e2ebe46f94e8eb3236872fc22dadbc598c88",
+      "currentSha256": "8d562d0743cbb17908ef1501b9c45aec79fb0ecdcc4fafb6db89fc5d47363314",
+      "transpiledSha256": "fb841bca9f1a8ee71acfd5c38b72a43e009f981bc41abf85f9034e6d3f0ee173",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+      "beforeSha256": "3e2c413329d426e9f56836615a6f393b5b8352634a2b2840aa7a1a422950aacc",
+      "currentSha256": "ac61556dc4a94e3ab0b4339d720fe96930f1ee4848db1ac77ec5a1ca918bb050",
+      "transpiledSha256": "66f991b9ea428bd02a953854f2a3ca93c15c2165df504ed01567ce31b8915de3",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/payload-reclamation.ts",
+      "beforeSha256": "a21097adc11e259e247d1bdb71c27815bba9aaa1e151d386616830caef1ba637",
+      "currentSha256": "1ef5b8fb4245a24e6d97b3571bf99b4c5d9ad077e238adb9613f0d3c4fc9ae14",
+      "transpiledSha256": "0780c3c945429db48efaccdf07d445a027b1c35184090d185e70655faa102530",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+      "beforeSha256": "d2a4ed7424b192aaef08bc1daaa6842cd1d0f2a36c96ecf897ba904d74b13198",
+      "currentSha256": "5e1141d796a26994174c9a5a64915c01e9c6529d01390119b977e6fb5065a200",
+      "transpiledSha256": "d653fc540f8ee329ae653449009952f8bba53a7d613117ff571d27e07f1ff190",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/transcript-export.ts",
+      "beforeSha256": "91cfd326e43c44ecf5402fe3edca7ccc873f8d7c5b5bbb2831673c78af4469df",
+      "currentSha256": "37e1bd2df5e1cb0070b59d04499250da04696be3f4f85f80be10a277b0c2fbef",
+      "transpiledSha256": "c27cc63c0a79960a81481552be1bc659625cc9dba713c8ffb22545b10c507e9d",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/transcript-intake.ts",
+      "beforeSha256": "4c2ce752462746fcefebb5886d3444b79d6e9a7bbbf1b1318e960220fc16030d",
+      "currentSha256": "22bd7f18735a073f05520aa6c9bfe103c33d4093b9fa0eac04a15e32c5519b43",
+      "transpiledSha256": "c2f9c9e907ea4d0001a096c21c3503ffe335ae431bf479a3af01582c36b2020b",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/transcript-page.ts",
+      "beforeSha256": "026c597e01956a9df243e7d84bb2de92f148614da165b111a637c72bd8fcb064",
+      "currentSha256": "21cbd2dd9b847699f0fc039acf5c57eebdb32b74909101cfa3e47f15160524e9",
+      "transpiledSha256": "e43258eaa00deb8cbaa9a34424556693da7e78943edff179f9387fa0c6e0d35b",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/transcript-sweep.ts",
+      "beforeSha256": "1ef36ff19ff669798f7d6632bf37b0dabcd67654d4a950e523255825fa284d54",
+      "currentSha256": "0867ca8fcdb9ec253dfc7a37486849831afcdbae5cef3c91b802cb16cc8ab65c",
+      "transpiledSha256": "d8cc347c07df5cbfe89055d08e4dbdbfc458b0f31987dc44532a8c1577e8a9e5",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts",
+      "beforeSha256": "bd7c5aaaf4e19da178de3ee35465c02d0f2cedb48974943caa295df5e240bc43",
+      "currentSha256": "8d0cf7eb6b64c048103b6ce900eb6979c1de355e9a1ef971f3e189d137f7562a",
+      "transpiledSha256": "6f507e2146f3f90f169e60810662e33858fcec4b43d386a424a41b6a4476be38",
+      "transpiledBytesEqual": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+      "beforeSha256": "e43451a17673196b1521b5677f83bb4e7fdc00359ac374ba84b4753ab47c43a3",
+      "currentSha256": "1061a54f2b85a5956ff8071e2b26ba9291a09670e8002d8724c9ac7c46b6b63c",
+      "transpiledSha256": "6aaff145a7e3cedecad61f3c9be3e20504e7ad82ba0d60c7c5e11f0f788e24a3",
+      "transpiledBytesEqual": true
+    }
+  ],
+  "stages": {
+    "current-disposable": {
+      "executionReceiptSha256": "0e8d9975ef4ab51ea7131d0ad9b56531a019a1a958a1e112230b6e9b8ff52559",
+      "recordedSourceCount": 88,
+      "byteIdenticalCurrentSources": 50,
+      "commentOnlyBridges": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "recordedExecutionSha256": "e43451a17673196b1521b5677f83bb4e7fdc00359ac374ba84b4753ab47c43a3",
+          "currentSha256": "1061a54f2b85a5956ff8071e2b26ba9291a09670e8002d8724c9ac7c46b6b63c",
+          "transpiledSha256": "6aaff145a7e3cedecad61f3c9be3e20504e7ad82ba0d60c7c5e11f0f788e24a3",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/delivery-ledger.ts",
+          "recordedExecutionSha256": "a5ee5965ca6eae8ab4bd6012c7a601547899f5c46e798ef638be56756ea030a1",
+          "currentSha256": "3c435767145d6833449f11b151f212173d4835de31d0dc66abf91d0025717396",
+          "transpiledSha256": "72efc7151d04ec3fd12500c6dc88251ec6803f87cb5038c9e97b969401a8a320",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/delivery-response.ts",
+          "recordedExecutionSha256": "98f6ee37cc8c6845d7efe4fc11acd7ff1aa5de198f4e517e056f67b999f079f2",
+          "currentSha256": "e6b7c2522805dbf91d71a8ebe4340801a336258ab5fbe77a7b7a8a9c2ba65556",
+          "transpiledSha256": "80514178983fd7c1b30fb14064480c54337a4d9945bc33fe9cea4fc9ddaa078d",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/evidence-retention.ts",
+          "recordedExecutionSha256": "f05d08e5ac949e2512c7bb4cca8078f8bb2bb7446668d93a8bc990f76ce18257",
+          "currentSha256": "98248b96ad0672dd84aebecc6461dd0c365c790d677be63d0201c8b3257c43c5",
+          "transpiledSha256": "4e77bbee17fce46449f7b7778968aceef31c2e68c08794ed58b0185f72ab0675",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/evidence-window.ts",
+          "recordedExecutionSha256": "475b9a6e406f52f46706cf70532723ceffad34d5172b0091562e1e4d78c7e99e",
+          "currentSha256": "68f11ab54779b7563afec9c5b386123a0ef426975bba3fcd6eacbe04e0afd5e8",
+          "transpiledSha256": "45d8fe18e7581de5fd6a3374d338be170f35ac03a531b1ec7d425b209954e295",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "recordedExecutionSha256": "842e6f4e0e4ea06fc6afdda14b29c30a0c1ab50ca8bae36ec104efdd9e41051c",
+          "currentSha256": "29262f4dc088cbbff393af1c4aed64128b067d37a5fd2b42f8d00abaf57186cf",
+          "transpiledSha256": "4a169f12b0604488a1c656948634f319a701ffd39eaf3cde180896554bef2aa8",
+          "binding": "doc-path-source-binding-20261031.json"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/git-root-evidence.ts",
+          "recordedExecutionSha256": "93bb52bb2108d1ac5b953856f8b5b98ed09c5176c90dd44e577046161f1e4cfb",
+          "currentSha256": "10bfcb0fdbdfc6e1d8a8f7c5646240aca55e2a18d53c719167326f1a24364a9b",
+          "transpiledSha256": "d6429257eb84687d3ecf431eddb221a2f22545e7063ca28b107ff25b8a813cac",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "recordedExecutionSha256": "aa12b27d65221b9e16841ca3fa362641c02ce01889dec62c7da1c0bf7c809235",
+          "currentSha256": "3892429b3d1ae812ba4bc81d0ff067a812d8a8da6c36f88533507de0f6714617",
+          "transpiledSha256": "5a02df675021ac0596309918d40d6f1696b699da4f906525e0dbf4f7a011c581",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts",
+          "recordedExecutionSha256": "613d40bdca8ed3364323768718034e40a9b87d7cb4b252cb5fdb88c9481a7b94",
+          "currentSha256": "bf706ec6af0060a4df2fa8b602d9d23a83935026c9beb9c19ab8758c8cfae4ff",
+          "transpiledSha256": "cb9c97f5728eec5e64a3d5fde646ef6476832f56ecd52a5346987f16a620ab0c",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/observation-metadata-codecs.ts",
+          "recordedExecutionSha256": "c49aac36d0c71204a95cbf3894f6bb761d8bc1c8792cd6f644956de664ae25f7",
+          "currentSha256": "41cca945507db430a188df0e675fc72854bdcc453fb415d164acd7f59ddb61c0",
+          "transpiledSha256": "f08469ee580143391a2fc0a66381678173fe70eff090e1985461a79456ad9636",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/source-event-time.ts",
+          "recordedExecutionSha256": "105ceec638cc15f8ab54330ed9b6deea61d431e15c7eb0f3899750ab227b2a69",
+          "currentSha256": "6d7a03b98263e1e9a51632032ec762a8b16bfe029f637bf7a7233665132836aa",
+          "transpiledSha256": "efbd301fd6c8c5d787efcfe23410932df596e2d1dae0c05870e7463661ef94af",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-delivery.ts",
+          "recordedExecutionSha256": "486e6384d0af9caacb64097a8ee1b8976f49a0cf4179154457108725d2fa5e72",
+          "currentSha256": "98982807c81beebc2a863d4b203d092b5d91619e25b313f07b3d9f3e3f6399d0",
+          "transpiledSha256": "811953ce0ef3bcc9000535c5de08ff8aaaa0db33c7baa0bc83862af425fd52d4",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-export.ts",
+          "recordedExecutionSha256": "f53cf28bea47f9d3ab7a27744abde4c180446f901814df8fe1a277dd6c4e4e7d",
+          "currentSha256": "a106cb1efcee95e4144d96ebf08452e6d7c57e03e4087f3a5ca8eb4b7afe3cd1",
+          "transpiledSha256": "81781594249e6cb936e06444cd5d9da375fde9ae55b0d692c4f2ded846d264a2",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-http.ts",
+          "recordedExecutionSha256": "18ba00f4b1251f9cf70b7cdedbebe4cbbed75e93f5620511362056708ac4cdd5",
+          "currentSha256": "35d73e2c76453d617c207a687f9c0d71c3f1fd0df9354521749e56e485c206e1",
+          "transpiledSha256": "e98c305bae13e5837e794dd0f78f30ae827d466833f6ac867c2106c059cd690c",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-intake.ts",
+          "recordedExecutionSha256": "2d7c2de32ee81adfd6dd8393da941f7d47bdd22529a33af2d6896185f39f1acf",
+          "currentSha256": "21c9755f98183a6919d12d47b2eefd015090c40a7d8a172dc659b6f5581a9ced",
+          "transpiledSha256": "2b94b515ec19b3056304a3ed06d119ed846cc406d8d9155b61de3ea1d38e66e2",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-readback.ts",
+          "recordedExecutionSha256": "77568d0df20109582de195dfdab7ff8a5bfab461fa68dbb0c50f3a4a22a2d8af",
+          "currentSha256": "c7b0ff0a9ec8fa7010cc400ff4a278fe6c854ac3650986c4cf32f1f5a0351dad",
+          "transpiledSha256": "2cd9201f741efbe4d705f2943d4066329f25cf3fb5c1409b15f6e64c5f27d9aa",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
+          "recordedExecutionSha256": "26ce64f840f38de92389ec3282cc678dfb3aa98db7dc56765a230271eab4871c",
+          "currentSha256": "dbe92734908d317187ded2a7135f6ec44fab70a0c0fb0bf28061cf8e5490f670",
+          "transpiledSha256": "4f9d4155be8973fb71cd8c9861a3948a5612583f3a3bdde122ff99579e430334",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-trace.ts",
+          "recordedExecutionSha256": "f2d34e19d98be56681c2479d901a066da98c101c0cd282d121cbd144e4897a38",
+          "currentSha256": "6ae39459f28935ad06aa979f1afb22ecbe64a994df4f8b9f592eb2e8f3969c8a",
+          "transpiledSha256": "b9e1f1eba1ac928b9020f49f2420da11892f99e747cdcdebb1f4f380cf93bd61",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-backup.ts",
+          "recordedExecutionSha256": "aa08932451b9812a56110482627bbd83cd729decfc6154089d75ab1c99dd0b0d",
+          "currentSha256": "34356143c89aaecad2e4e4edad0c50abfc2fea305774a63ce932737d25ba17cc",
+          "transpiledSha256": "f32361e1b776626599224ab8e77d35bc128802ff1c0c60ef71e14c6ede76da99",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-control.ts",
+          "recordedExecutionSha256": "eda240d525ff68241be439b2c141d2c1a3f6d4d6006413569955518792c92500",
+          "currentSha256": "9f35eba3be9a05a2c3c3bffd25a9389e51a92abef4ecaa59f4f04b4e2db54777",
+          "transpiledSha256": "4a16e6f242ac43332b0039de93e97a07b45e3e04cc21722f66eae6683f95bf57",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-coverage.ts",
+          "recordedExecutionSha256": "d3c775110fe332d9acb18d32a6aeabb16b295bf1f30f759eda2c70dacc39eea7",
+          "currentSha256": "764706d5ecb5c0bd72f270d2cf33b5ee305b76e647f39916d847a061599f25a6",
+          "transpiledSha256": "334f36cb5d10721efd4f6b01ab4274780bac298afd9e7dc6d5d330d474b586ba",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-file.ts",
+          "recordedExecutionSha256": "4be1ba9a329806f13a9821e9febfdf87fd3e6b3ffe115a6da7e05896754c63dc",
+          "currentSha256": "d62fc0a0ccfce9d42940679ad4575f6247949d48ce0c436022c3ab4ecf371eca",
+          "transpiledSha256": "6f4bc2cf44d0b23c04a11cdf7f39a8d1601c404fba95e19f787a1102b68c2191",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-inventory.ts",
+          "recordedExecutionSha256": "f9071b0b8c7e2105fa9c17765eb9f8c4fa831fec566cd97f64d42e0e6e8812b9",
+          "currentSha256": "1f730d94b9f98a75f9fc5806a6d7cc81f2ef804e066251772a938a3fe8fd1e0e",
+          "transpiledSha256": "afd552efe678f936602d9247b4e504c892ca598a299df2e5a807cf7a03e64a73",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "recordedExecutionSha256": "67d0ef1a4d78df615b17841a0dcaf541794156c639bfd4b6302447a4bdbbf786",
+          "currentSha256": "558cfafabc781d7e4597e67151a67d4089820a6b9cd0437a92a128d2e1e87bfb",
+          "transpiledSha256": "c8a3714af1163c79603ab4f0b89eb370c78e42ffe90b036500116cb5fc0436f3",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts",
+          "recordedExecutionSha256": "95a792708cc5858115577f2e272227d7e68b420067b7abe4edfdfd5e5d6d7cac",
+          "currentSha256": "b2798da144ba0c9a0a4c6ab0d46454f29640ba7fcecfed015123afe5738e54cd",
+          "transpiledSha256": "14dac07ac14aa9653c01fe53c19901407c9f87a9a0a4737e37e1bdb7d377c75b",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-http.ts",
+          "recordedExecutionSha256": "5a698aa03cc5c0464484a9b3071c92d0589678bd43ba78d9ea5b61ae43004996",
+          "currentSha256": "6c676dd4fdf85d111f973f00ccce2c390baf50167fef8ca96789483dc9d1c955",
+          "transpiledSha256": "3a5364a362d40e7b61d03706f0eea4a334b4ef9077df61c2ca35164366c185fc",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "recordedExecutionSha256": "6907b4eda7565d00527803a81b62b780c59747cd09161974512cd8310bfce9d0",
+          "currentSha256": "31e64daabdf52831064e2a440745226e23bc3fbc8ab8208689d519494edd7a33",
+          "transpiledSha256": "109bbac42d82c68a3d4a8cebde2fcb17e668819e399b7d1c3a9b52200a1eb042",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-maintenance-http.ts",
+          "recordedExecutionSha256": "a5613176a4f7f7e3e1749e7138ca0ac4be9de91a14179fa97abce5faa0b0418a",
+          "currentSha256": "47cf659945321736b8cc777e6a90fac3199acd3ac728706fc8e7080062a226b1",
+          "transpiledSha256": "2bf202a6feab44f2683328dd5c1cef68b0a84f91ba92c9a90053598f4398b492",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-root-probe.ts",
+          "recordedExecutionSha256": "ee00e7812c12d8b628ba828974d6fb2625a44e564d56874a9c490726bc34cd9e",
+          "currentSha256": "4a1157ce33fc7512d2aad3b173ae7f6ca756e0872dcabf688f67c443c77b7156",
+          "transpiledSha256": "741589eafa297e436d24a51c5a92b1f59a24dfbcc9135a3187b23148c8d61fb8",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "recordedExecutionSha256": "4ffcb20bb82fa7c7a0e11c4563130660beb5551944d897952f58e3eae0194d6b",
+          "currentSha256": "7ffe05a9a97249aca4251ebbd8ee7fca49b40c19ecd1e9740ef1f866a466c158",
+          "transpiledSha256": "d83b6264e666f73ae3a6518b423f42b90c219087f72d091a359a71fc1ca3b18e",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-source-health.ts",
+          "recordedExecutionSha256": "45f6289dc7f516fa79f5b39a9545e2ebe46f94e8eb3236872fc22dadbc598c88",
+          "currentSha256": "8d562d0743cbb17908ef1501b9c45aec79fb0ecdcc4fafb6db89fc5d47363314",
+          "transpiledSha256": "fb841bca9f1a8ee71acfd5c38b72a43e009f981bc41abf85f9034e6d3f0ee173",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "recordedExecutionSha256": "3e2c413329d426e9f56836615a6f393b5b8352634a2b2840aa7a1a422950aacc",
+          "currentSha256": "ac61556dc4a94e3ab0b4339d720fe96930f1ee4848db1ac77ec5a1ca918bb050",
+          "transpiledSha256": "66f991b9ea428bd02a953854f2a3ca93c15c2165df504ed01567ce31b8915de3",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/payload-reclamation.ts",
+          "recordedExecutionSha256": "a21097adc11e259e247d1bdb71c27815bba9aaa1e151d386616830caef1ba637",
+          "currentSha256": "1ef5b8fb4245a24e6d97b3571bf99b4c5d9ad077e238adb9613f0d3c4fc9ae14",
+          "transpiledSha256": "0780c3c945429db48efaccdf07d445a027b1c35184090d185e70655faa102530",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+          "recordedExecutionSha256": "d2a4ed7424b192aaef08bc1daaa6842cd1d0f2a36c96ecf897ba904d74b13198",
+          "currentSha256": "5e1141d796a26994174c9a5a64915c01e9c6529d01390119b977e6fb5065a200",
+          "transpiledSha256": "d653fc540f8ee329ae653449009952f8bba53a7d613117ff571d27e07f1ff190",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-export.ts",
+          "recordedExecutionSha256": "91cfd326e43c44ecf5402fe3edca7ccc873f8d7c5b5bbb2831673c78af4469df",
+          "currentSha256": "37e1bd2df5e1cb0070b59d04499250da04696be3f4f85f80be10a277b0c2fbef",
+          "transpiledSha256": "c27cc63c0a79960a81481552be1bc659625cc9dba713c8ffb22545b10c507e9d",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-intake.ts",
+          "recordedExecutionSha256": "4c2ce752462746fcefebb5886d3444b79d6e9a7bbbf1b1318e960220fc16030d",
+          "currentSha256": "22bd7f18735a073f05520aa6c9bfe103c33d4093b9fa0eac04a15e32c5519b43",
+          "transpiledSha256": "c2f9c9e907ea4d0001a096c21c3503ffe335ae431bf479a3af01582c36b2020b",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-page.ts",
+          "recordedExecutionSha256": "026c597e01956a9df243e7d84bb2de92f148614da165b111a637c72bd8fcb064",
+          "currentSha256": "21cbd2dd9b847699f0fc039acf5c57eebdb32b74909101cfa3e47f15160524e9",
+          "transpiledSha256": "e43258eaa00deb8cbaa9a34424556693da7e78943edff179f9387fa0c6e0d35b",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-sweep.ts",
+          "recordedExecutionSha256": "1ef36ff19ff669798f7d6632bf37b0dabcd67654d4a950e523255825fa284d54",
+          "currentSha256": "0867ca8fcdb9ec253dfc7a37486849831afcdbae5cef3c91b802cb16cc8ab65c",
+          "transpiledSha256": "d8cc347c07df5cbfe89055d08e4dbdbfc458b0f31987dc44532a8c1577e8a9e5",
+          "binding": "this-comment-structure-repair"
+        }
+      ],
+      "unexpectedMismatches": []
+    },
+    "current-live": {
+      "executionReceiptSha256": "beee4aafebaaf28392b5aeb6d326238e4b59b1ffd456489f3a7e4d5e7f1e73b9",
+      "recordedSourceCount": 87,
+      "byteIdenticalCurrentSources": 49,
+      "commentOnlyBridges": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts",
+          "recordedExecutionSha256": "e43451a17673196b1521b5677f83bb4e7fdc00359ac374ba84b4753ab47c43a3",
+          "currentSha256": "1061a54f2b85a5956ff8071e2b26ba9291a09670e8002d8724c9ac7c46b6b63c",
+          "transpiledSha256": "6aaff145a7e3cedecad61f3c9be3e20504e7ad82ba0d60c7c5e11f0f788e24a3",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/delivery-ledger.ts",
+          "recordedExecutionSha256": "a5ee5965ca6eae8ab4bd6012c7a601547899f5c46e798ef638be56756ea030a1",
+          "currentSha256": "3c435767145d6833449f11b151f212173d4835de31d0dc66abf91d0025717396",
+          "transpiledSha256": "72efc7151d04ec3fd12500c6dc88251ec6803f87cb5038c9e97b969401a8a320",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/delivery-response.ts",
+          "recordedExecutionSha256": "98f6ee37cc8c6845d7efe4fc11acd7ff1aa5de198f4e517e056f67b999f079f2",
+          "currentSha256": "e6b7c2522805dbf91d71a8ebe4340801a336258ab5fbe77a7b7a8a9c2ba65556",
+          "transpiledSha256": "80514178983fd7c1b30fb14064480c54337a4d9945bc33fe9cea4fc9ddaa078d",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/evidence-retention.ts",
+          "recordedExecutionSha256": "f05d08e5ac949e2512c7bb4cca8078f8bb2bb7446668d93a8bc990f76ce18257",
+          "currentSha256": "98248b96ad0672dd84aebecc6461dd0c365c790d677be63d0201c8b3257c43c5",
+          "transpiledSha256": "4e77bbee17fce46449f7b7778968aceef31c2e68c08794ed58b0185f72ab0675",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/evidence-window.ts",
+          "recordedExecutionSha256": "475b9a6e406f52f46706cf70532723ceffad34d5172b0091562e1e4d78c7e99e",
+          "currentSha256": "68f11ab54779b7563afec9c5b386123a0ef426975bba3fcd6eacbe04e0afd5e8",
+          "transpiledSha256": "45d8fe18e7581de5fd6a3374d338be170f35ac03a531b1ec7d425b209954e295",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+          "recordedExecutionSha256": "842e6f4e0e4ea06fc6afdda14b29c30a0c1ab50ca8bae36ec104efdd9e41051c",
+          "currentSha256": "29262f4dc088cbbff393af1c4aed64128b067d37a5fd2b42f8d00abaf57186cf",
+          "transpiledSha256": "4a169f12b0604488a1c656948634f319a701ffd39eaf3cde180896554bef2aa8",
+          "binding": "doc-path-source-binding-20261031.json"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/git-root-evidence.ts",
+          "recordedExecutionSha256": "93bb52bb2108d1ac5b953856f8b5b98ed09c5176c90dd44e577046161f1e4cfb",
+          "currentSha256": "10bfcb0fdbdfc6e1d8a8f7c5646240aca55e2a18d53c719167326f1a24364a9b",
+          "transpiledSha256": "d6429257eb84687d3ecf431eddb221a2f22545e7063ca28b107ff25b8a813cac",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/index.ts",
+          "recordedExecutionSha256": "aa12b27d65221b9e16841ca3fa362641c02ce01889dec62c7da1c0bf7c809235",
+          "currentSha256": "3892429b3d1ae812ba4bc81d0ff067a812d8a8da6c36f88533507de0f6714617",
+          "transpiledSha256": "5a02df675021ac0596309918d40d6f1696b699da4f906525e0dbf4f7a011c581",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts",
+          "recordedExecutionSha256": "613d40bdca8ed3364323768718034e40a9b87d7cb4b252cb5fdb88c9481a7b94",
+          "currentSha256": "bf706ec6af0060a4df2fa8b602d9d23a83935026c9beb9c19ab8758c8cfae4ff",
+          "transpiledSha256": "cb9c97f5728eec5e64a3d5fde646ef6476832f56ecd52a5346987f16a620ab0c",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/observation-metadata-codecs.ts",
+          "recordedExecutionSha256": "c49aac36d0c71204a95cbf3894f6bb761d8bc1c8792cd6f644956de664ae25f7",
+          "currentSha256": "41cca945507db430a188df0e675fc72854bdcc453fb415d164acd7f59ddb61c0",
+          "transpiledSha256": "f08469ee580143391a2fc0a66381678173fe70eff090e1985461a79456ad9636",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/internal/source-event-time.ts",
+          "recordedExecutionSha256": "105ceec638cc15f8ab54330ed9b6deea61d431e15c7eb0f3899750ab227b2a69",
+          "currentSha256": "6d7a03b98263e1e9a51632032ec762a8b16bfe029f637bf7a7233665132836aa",
+          "transpiledSha256": "efbd301fd6c8c5d787efcfe23410932df596e2d1dae0c05870e7463661ef94af",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-delivery.ts",
+          "recordedExecutionSha256": "486e6384d0af9caacb64097a8ee1b8976f49a0cf4179154457108725d2fa5e72",
+          "currentSha256": "98982807c81beebc2a863d4b203d092b5d91619e25b313f07b3d9f3e3f6399d0",
+          "transpiledSha256": "811953ce0ef3bcc9000535c5de08ff8aaaa0db33c7baa0bc83862af425fd52d4",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-export.ts",
+          "recordedExecutionSha256": "f53cf28bea47f9d3ab7a27744abde4c180446f901814df8fe1a277dd6c4e4e7d",
+          "currentSha256": "a106cb1efcee95e4144d96ebf08452e6d7c57e03e4087f3a5ca8eb4b7afe3cd1",
+          "transpiledSha256": "81781594249e6cb936e06444cd5d9da375fde9ae55b0d692c4f2ded846d264a2",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-http.ts",
+          "recordedExecutionSha256": "18ba00f4b1251f9cf70b7cdedbebe4cbbed75e93f5620511362056708ac4cdd5",
+          "currentSha256": "35d73e2c76453d617c207a687f9c0d71c3f1fd0df9354521749e56e485c206e1",
+          "transpiledSha256": "e98c305bae13e5837e794dd0f78f30ae827d466833f6ac867c2106c059cd690c",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-intake.ts",
+          "recordedExecutionSha256": "2d7c2de32ee81adfd6dd8393da941f7d47bdd22529a33af2d6896185f39f1acf",
+          "currentSha256": "21c9755f98183a6919d12d47b2eefd015090c40a7d8a172dc659b6f5581a9ced",
+          "transpiledSha256": "2b94b515ec19b3056304a3ed06d119ed846cc406d8d9155b61de3ea1d38e66e2",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-readback.ts",
+          "recordedExecutionSha256": "77568d0df20109582de195dfdab7ff8a5bfab461fa68dbb0c50f3a4a22a2d8af",
+          "currentSha256": "c7b0ff0a9ec8fa7010cc400ff4a278fe6c854ac3650986c4cf32f1f5a0351dad",
+          "transpiledSha256": "2cd9201f741efbe4d705f2943d4066329f25cf3fb5c1409b15f6e64c5f27d9aa",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
+          "recordedExecutionSha256": "26ce64f840f38de92389ec3282cc678dfb3aa98db7dc56765a230271eab4871c",
+          "currentSha256": "dbe92734908d317187ded2a7135f6ec44fab70a0c0fb0bf28061cf8e5490f670",
+          "transpiledSha256": "4f9d4155be8973fb71cd8c9861a3948a5612583f3a3bdde122ff99579e430334",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/native-trace.ts",
+          "recordedExecutionSha256": "f2d34e19d98be56681c2479d901a066da98c101c0cd282d121cbd144e4897a38",
+          "currentSha256": "6ae39459f28935ad06aa979f1afb22ecbe64a994df4f8b9f592eb2e8f3969c8a",
+          "transpiledSha256": "b9e1f1eba1ac928b9020f49f2420da11892f99e747cdcdebb1f4f380cf93bd61",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-backup.ts",
+          "recordedExecutionSha256": "aa08932451b9812a56110482627bbd83cd729decfc6154089d75ab1c99dd0b0d",
+          "currentSha256": "34356143c89aaecad2e4e4edad0c50abfc2fea305774a63ce932737d25ba17cc",
+          "transpiledSha256": "f32361e1b776626599224ab8e77d35bc128802ff1c0c60ef71e14c6ede76da99",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-control.ts",
+          "recordedExecutionSha256": "eda240d525ff68241be439b2c141d2c1a3f6d4d6006413569955518792c92500",
+          "currentSha256": "9f35eba3be9a05a2c3c3bffd25a9389e51a92abef4ecaa59f4f04b4e2db54777",
+          "transpiledSha256": "4a16e6f242ac43332b0039de93e97a07b45e3e04cc21722f66eae6683f95bf57",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-coverage.ts",
+          "recordedExecutionSha256": "d3c775110fe332d9acb18d32a6aeabb16b295bf1f30f759eda2c70dacc39eea7",
+          "currentSha256": "764706d5ecb5c0bd72f270d2cf33b5ee305b76e647f39916d847a061599f25a6",
+          "transpiledSha256": "334f36cb5d10721efd4f6b01ab4274780bac298afd9e7dc6d5d330d474b586ba",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-file.ts",
+          "recordedExecutionSha256": "4be1ba9a329806f13a9821e9febfdf87fd3e6b3ffe115a6da7e05896754c63dc",
+          "currentSha256": "d62fc0a0ccfce9d42940679ad4575f6247949d48ce0c436022c3ab4ecf371eca",
+          "transpiledSha256": "6f4bc2cf44d0b23c04a11cdf7f39a8d1601c404fba95e19f787a1102b68c2191",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-inventory.ts",
+          "recordedExecutionSha256": "f9071b0b8c7e2105fa9c17765eb9f8c4fa831fec566cd97f64d42e0e6e8812b9",
+          "currentSha256": "1f730d94b9f98a75f9fc5806a6d7cc81f2ef804e066251772a938a3fe8fd1e0e",
+          "transpiledSha256": "afd552efe678f936602d9247b4e504c892ca598a299df2e5a807cf7a03e64a73",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-client.ts",
+          "recordedExecutionSha256": "67d0ef1a4d78df615b17841a0dcaf541794156c639bfd4b6302447a4bdbbf786",
+          "currentSha256": "558cfafabc781d7e4597e67151a67d4089820a6b9cd0437a92a128d2e1e87bfb",
+          "transpiledSha256": "c8a3714af1163c79603ab4f0b89eb370c78e42ffe90b036500116cb5fc0436f3",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts",
+          "recordedExecutionSha256": "95a792708cc5858115577f2e272227d7e68b420067b7abe4edfdfd5e5d6d7cac",
+          "currentSha256": "b2798da144ba0c9a0a4c6ab0d46454f29640ba7fcecfed015123afe5738e54cd",
+          "transpiledSha256": "14dac07ac14aa9653c01fe53c19901407c9f87a9a0a4737e37e1bdb7d377c75b",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch-http.ts",
+          "recordedExecutionSha256": "5a698aa03cc5c0464484a9b3071c92d0589678bd43ba78d9ea5b61ae43004996",
+          "currentSha256": "6c676dd4fdf85d111f973f00ccce2c390baf50167fef8ca96789483dc9d1c955",
+          "transpiledSha256": "3a5364a362d40e7b61d03706f0eea4a334b4ef9077df61c2ca35164366c185fc",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-launch.ts",
+          "recordedExecutionSha256": "6907b4eda7565d00527803a81b62b780c59747cd09161974512cd8310bfce9d0",
+          "currentSha256": "31e64daabdf52831064e2a440745226e23bc3fbc8ab8208689d519494edd7a33",
+          "transpiledSha256": "109bbac42d82c68a3d4a8cebde2fcb17e668819e399b7d1c3a9b52200a1eb042",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-maintenance-http.ts",
+          "recordedExecutionSha256": "a5613176a4f7f7e3e1749e7138ca0ac4be9de91a14179fa97abce5faa0b0418a",
+          "currentSha256": "47cf659945321736b8cc777e6a90fac3199acd3ac728706fc8e7080062a226b1",
+          "transpiledSha256": "2bf202a6feab44f2683328dd5c1cef68b0a84f91ba92c9a90053598f4398b492",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-root-probe.ts",
+          "recordedExecutionSha256": "ee00e7812c12d8b628ba828974d6fb2625a44e564d56874a9c490726bc34cd9e",
+          "currentSha256": "4a1157ce33fc7512d2aad3b173ae7f6ca756e0872dcabf688f67c443c77b7156",
+          "transpiledSha256": "741589eafa297e436d24a51c5a92b1f59a24dfbcc9135a3187b23148c8d61fb8",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-runtime.ts",
+          "recordedExecutionSha256": "4ffcb20bb82fa7c7a0e11c4563130660beb5551944d897952f58e3eae0194d6b",
+          "currentSha256": "7ffe05a9a97249aca4251ebbd8ee7fca49b40c19ecd1e9740ef1f866a466c158",
+          "transpiledSha256": "d83b6264e666f73ae3a6518b423f42b90c219087f72d091a359a71fc1ca3b18e",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-source-health.ts",
+          "recordedExecutionSha256": "45f6289dc7f516fa79f5b39a9545e2ebe46f94e8eb3236872fc22dadbc598c88",
+          "currentSha256": "8d562d0743cbb17908ef1501b9c45aec79fb0ecdcc4fafb6db89fc5d47363314",
+          "transpiledSha256": "fb841bca9f1a8ee71acfd5c38b72a43e009f981bc41abf85f9034e6d3f0ee173",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/observation-worker.ts",
+          "recordedExecutionSha256": "3e2c413329d426e9f56836615a6f393b5b8352634a2b2840aa7a1a422950aacc",
+          "currentSha256": "ac61556dc4a94e3ab0b4339d720fe96930f1ee4848db1ac77ec5a1ca918bb050",
+          "transpiledSha256": "66f991b9ea428bd02a953854f2a3ca93c15c2165df504ed01567ce31b8915de3",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/payload-reclamation.ts",
+          "recordedExecutionSha256": "a21097adc11e259e247d1bdb71c27815bba9aaa1e151d386616830caef1ba637",
+          "currentSha256": "1ef5b8fb4245a24e6d97b3571bf99b4c5d9ad077e238adb9613f0d3c4fc9ae14",
+          "transpiledSha256": "0780c3c945429db48efaccdf07d445a027b1c35184090d185e70655faa102530",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-discovery.ts",
+          "recordedExecutionSha256": "d2a4ed7424b192aaef08bc1daaa6842cd1d0f2a36c96ecf897ba904d74b13198",
+          "currentSha256": "5e1141d796a26994174c9a5a64915c01e9c6529d01390119b977e6fb5065a200",
+          "transpiledSha256": "d653fc540f8ee329ae653449009952f8bba53a7d613117ff571d27e07f1ff190",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-export.ts",
+          "recordedExecutionSha256": "91cfd326e43c44ecf5402fe3edca7ccc873f8d7c5b5bbb2831673c78af4469df",
+          "currentSha256": "37e1bd2df5e1cb0070b59d04499250da04696be3f4f85f80be10a277b0c2fbef",
+          "transpiledSha256": "c27cc63c0a79960a81481552be1bc659625cc9dba713c8ffb22545b10c507e9d",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-intake.ts",
+          "recordedExecutionSha256": "4c2ce752462746fcefebb5886d3444b79d6e9a7bbbf1b1318e960220fc16030d",
+          "currentSha256": "22bd7f18735a073f05520aa6c9bfe103c33d4093b9fa0eac04a15e32c5519b43",
+          "transpiledSha256": "c2f9c9e907ea4d0001a096c21c3503ffe335ae431bf479a3af01582c36b2020b",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-page.ts",
+          "recordedExecutionSha256": "026c597e01956a9df243e7d84bb2de92f148614da165b111a637c72bd8fcb064",
+          "currentSha256": "21cbd2dd9b847699f0fc039acf5c57eebdb32b74909101cfa3e47f15160524e9",
+          "transpiledSha256": "e43258eaa00deb8cbaa9a34424556693da7e78943edff179f9387fa0c6e0d35b",
+          "binding": "this-comment-structure-repair"
+        },
+        {
+          "path": "packages/tooling/library/ai-metrics/src/transcript-sweep.ts",
+          "recordedExecutionSha256": "1ef36ff19ff669798f7d6632bf37b0dabcd67654d4a950e523255825fa284d54",
+          "currentSha256": "0867ca8fcdb9ec253dfc7a37486849831afcdbae5cef3c91b802cb16cc8ab65c",
+          "transpiledSha256": "d8cc347c07df5cbfe89055d08e4dbdbfc458b0f31987dc44532a8c1577e8a9e5",
+          "binding": "this-comment-structure-repair"
+        }
+      ],
+      "unexpectedMismatches": []
+    }
+  },
+  "filesOutsideBothCanaryMaps": [
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts",
+    "packages/drivers/phoenix/src/Phoenix.span-readback.ts",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts"
+  ],
+  "generatedArtifacts": "Pending canonical JSDoc refresh on the combined accepted-main tree before publication: recorded line/anchor locations changed. No schema-first records reference the 40 files; schema/instrumentation coded annotation/call inputs are unchanged.",
+  "scope": "Comment-only current full-file differences are explicit. Producer verifies minified transpilation byte equality for all 40 files; independent review verifies originals, actual comment-only changes and unchanged fenced bodies. Neither historical execution receipts nor original source maps are rewritten. This is executable-equivalence binding, not fresh canary execution, expanded harness enrollment, whole binary/dependency qualification or inherited canary coverage for the three unbound files.",
+  "recoveryHold": "Intact; no source archive reingestion, service change, real enrollment or deployment.",
+  "privateArtifacts": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup/jsdoc-structure-repair",
+  "acceptedMain": "adedee335a862464e3a4997e2842daf7efd1e9a9"
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "claim-reference-attorney-addendum/v1",
+  "bundleDigest": "bc6a2e4d058bb168f29a44e9bc0241450a4f3890a6d5e1d233b9939c00332297",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "annotationSha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+  "item": {
+    "familyId": "16068637-root-11",
+    "claimNumber": 13,
+    "path": "13.a",
+    "anchor": {
+      "startChar": 108,
+      "endChar": 117,
+      "quote": "each edge"
+    },
+    "head": "each edge",
+    "proposedHead": "edge"
+  },
+  "htmlSha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7",
+  "attorneyDecision": "not-yet-recorded"
+}

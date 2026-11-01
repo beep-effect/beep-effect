@@ -1,0 +1,157 @@
+{
+  "preservation": [
+    {
+      "manifest": "research/implementation-repair-v22-freeze.json",
+      "checked": 21,
+      "mismatches": []
+    },
+    {
+      "manifest": "history/autonomous-review-v1/preservation.json",
+      "checked": 631,
+      "mismatches": []
+    }
+  ],
+  "snapshotUnchanged": 1134,
+  "snapshotSourceRepairsArchived": [
+    {
+      "changedCode": "goals/claim-element-antecedent-check/research/summarize-automated-reference.py",
+      "originalCodeArchive": "goals/claim-element-antecedent-check/history/code-snapshots/v19/summarize-automated-reference.py.txt",
+      "originalSha256": "57ce2c4dad642fb87e80bb9418deb7113033f95f2708493e80dc0f97eed484dd"
+    },
+    {
+      "changedCode": "goals/claim-element-antecedent-check/research/test-automated-reference.py",
+      "originalCodeArchive": "goals/claim-element-antecedent-check/history/code-snapshots/v19/test-automated-reference.py.txt",
+      "originalSha256": "ed5a80a3b816d475a7dadf5b3e2c137f35c2f74e8e5564e1e13f34966c80e66c"
+    }
+  ],
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "strictMatches": 37,
+  "protectedRetained": 34,
+  "previous37Retained": 37,
+  "lost": [],
+  "allOriginal30SampleClaimsCovered": 30,
+  "samplePredictionReportsByteIdentical": [
+    {
+      "patentNumber": "12420230",
+      "predictionSha256": "5e96fb51f885be2fa61d104b0a7cffb4af148da18665d9668071ac2e4d87e327"
+    },
+    {
+      "patentNumber": "12444032",
+      "predictionSha256": "993e7524a6791aa74fe0f13bdc8e2a787cab3a2e79d3d11876de325824d71cc2"
+    },
+    {
+      "patentNumber": "12446668",
+      "predictionSha256": "a694b4ec7b6d75cc5c41393f94d7657caa9afc129c17d6f4264af2053fdbab54"
+    },
+    {
+      "patentNumber": "12447068",
+      "predictionSha256": "0469ae54b7699ecb7e84fe21f31c69b8982a67cbfd793ca4f423250f66f6cf6c"
+    },
+    {
+      "patentNumber": "12449773",
+      "predictionSha256": "c20f26456aadb4cf6cda4e862f59c92e9ca1fa9252ed712e85b777d1e84da1a9"
+    },
+    {
+      "patentNumber": "12452296",
+      "predictionSha256": "39bc20203378df826a29ae45a81a90bf998fa670d78fafa9260ff22895554eeb"
+    },
+    {
+      "patentNumber": "12456380",
+      "predictionSha256": "941df15944ff810c2d4cd838aaa350880e338cc331080d8dd74fe2fe210e0986"
+    },
+    {
+      "patentNumber": "12457782",
+      "predictionSha256": "3613584b6d62d7468624f071db89f78f0e0f8006dcc63789881b2961bb90bdf2"
+    },
+    {
+      "patentNumber": "12458116",
+      "predictionSha256": "45df1f4b34465c87613ff58915c8a815906ceb8bdae35ad493b413c08a01308f"
+    },
+    {
+      "patentNumber": "12459604",
+      "predictionSha256": "f4df96bc13855c757ae8614b03ee56bab011d7721276cf07f6b6780095987b7a"
+    },
+    {
+      "patentNumber": "12477359",
+      "predictionSha256": "592d63304507d537caed91abaa767ba0c2daef988ef78f932971dcef222d3386"
+    },
+    {
+      "patentNumber": "12479352",
+      "predictionSha256": "6cab1885144ec4015c1768feea24702e23394bbdbc206133044085d604498132"
+    },
+    {
+      "patentNumber": "12481627",
+      "predictionSha256": "37221af1fe231f3d527966f99595f07391a18d02a5feecea572283df5f594db0"
+    },
+    {
+      "patentNumber": "12482341",
+      "predictionSha256": "6e16cbefc4320f5293f29df857f3c451381d4d330bf0d8096a1b15d8ee3fbf3c"
+    },
+    {
+      "patentNumber": "12483343",
+      "predictionSha256": "e414c4c67e584553d0ce29cf5e14f0faffa678d33c93d956df2b5703c8b29f18"
+    },
+    {
+      "patentNumber": "12485924",
+      "predictionSha256": "f895f3fc2dbe9e87b73e6acfadd530e7462cbbf5cea78c124505a9bf6df21dfb"
+    },
+    {
+      "patentNumber": "12489521",
+      "predictionSha256": "ddcce502fd37e8c3e5427c8b7c0880a18958f662eb6a81cb8dc09b64ee718001"
+    },
+    {
+      "patentNumber": "12489902",
+      "predictionSha256": "2748b1a16e3db7ae260f1cabb615e187117f502e24536a86fa5bfa3ff46c9a57"
+    },
+    {
+      "patentNumber": "12491073",
+      "predictionSha256": "8f1b07dfccaf896788935c04784a4333e172f1edbaf129ef7994b2e78c4cdc1a"
+    },
+    {
+      "patentNumber": "12494662",
+      "predictionSha256": "51566d8ab686937eccd67ba4b609b6ac7fad1aa15708d079435ef5db9934c7d1"
+    },
+    {
+      "patentNumber": "12495342",
+      "predictionSha256": "8a8724d4153fc11ae40a0985976e7126375ec1484e23b3ddd0b6c2499231dd7f"
+    },
+    {
+      "patentNumber": "12498206",
+      "predictionSha256": "a68720967eb5d2b35fa33c48a697135c030e6b12ea2672e9814f7decb0529f46"
+    },
+    {
+      "patentNumber": "12499172",
+      "predictionSha256": "4fc369576803475eeded30286d5ef731782cba6851072cb14b3133b01f19cc5b"
+    },
+    {
+      "patentNumber": "12507313",
+      "predictionSha256": "cc047074c5565c69d50d420326ffd5fc11337ec3b26364468ff4e3e77daf4cd8"
+    },
+    {
+      "patentNumber": "12510001",
+      "predictionSha256": "4280ae745ba7cf64bc52c0875ca8216a19805273287b010a952054d76779bf93"
+    },
+    {
+      "patentNumber": "12511749",
+      "predictionSha256": "01c9ad162d629945495fc7461da7841c189d020dbe5101d1b18562235ccb273f"
+    },
+    {
+      "patentNumber": "12512209",
+      "predictionSha256": "1c4b39c26106294881d24ddf0c62f1928fa4001a55c4e05fc4f61b51bbbb88c1"
+    },
+    {
+      "patentNumber": "12512977",
+      "predictionSha256": "f65ea0667579fdbb36708d4708a83b6c084e6f0656c0d55c827b65a3fd138fb6"
+    }
+  ],
+  "automatedJudgmentsAreHistoricalCarryForward": true,
+  "freshIndependentReviewClaimed": false,
+  "schemaVersion": "claim-review-repair-preservation/v1",
+  "date": "2026-10-31",
+  "implementationDigest": "892aaadc3f2a854ac472d4e236059bf1814098c7cfa757834abc4a301481ab65",
+  "originalReferenceSummaryRevalidatedIdentically": true,
+  "referenceBoundaryTestsPassed": 6,
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false
+}

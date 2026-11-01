@@ -1,0 +1,109 @@
+{
+  "familyId": "11910514-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A panoramic recording device for a panoramic X-ray machine, with a cartridge unit which has a recording slit, and with an X-ray detection device which is arranged behind the recording slit, and with means to capture the position of the cartridge unit, wherein the detection device includes at least one detector row which is shaped according to the shape of the recording slit, and which is provided with a readout circuit, that the position acquisition means provides an electrical output signal which corresponds to the rotary position, and that the output signals of the detector row and position acquisition means are transmitted wirelessly to a processing unit.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The recording device of claim 1, wherein the processing unit includes a memory, the memory cells of which store the image signals which the detector row provides, being addressed by a signal which is derived from the output signal of the position acquisition means.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The recording device of claim 1, wherein the position acquisition means is provided on the cartridge unit, and the output signals of the detector row and position acquisition means are combined via a concatenation circuit into a data packet, which is transmitted via a single data transmission channel of the processing unit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The recording device of claim 3, wherein the cartridge unit movably carries a first cradle, on which in its turn a second cradle which carries the detector row, and which is movable parallel to the first cradle, and which can be blocked by the recording slit, is arranged.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The recording device of claim 4, wherein the position acquisition means includes a ruled grating which is supported by the cartridge unit, and a line reading head which is connected to the second cradle.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The recording device of claim 1, wherein the position acquisition means is spatially separated from the cartridge unit, and the output signals of the detector row and position acquisition means are fed via separate transmission channels to the processing unit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The recording device of claim 6, wherein the cartridge unit has a film holder, which can be connected to or disconnected from the shaft which carries the cartridge unit, according to choice.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The recording device of claim 1, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The recording device of claim 1, wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The recording device of claim 2 wherein the position acquisition means is provided on the cartridge unit, and the output signals of the detector row and position acquisition means are combined via a concatenation circuit into a data packet, which is transmitted via a single data transmission channel of the processing unit.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The recording device of claim 2, wherein the position acquisition means is spatially separated from the cartridge unit, and the output signals of the detector row and position acquisition means are fed via separate transmission channels to the processing unit.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The recording device of claim 2, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The recording device of claim 3, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The recording device of claim 4, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The recording device of claim 6, wherein the detector row is connected to a fibre optic, the axis of which is inclined at a small angle to the axis of the recording slit, and which has an end surface which is essentially perpendicular to its axis, on which end surface the detector row is arranged essentially transversely to the longitudinal axis of the slit.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The recording device of claim 2 wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The recording device of claim 3 wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The recording device of claim 4 wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The recording device of claim 6 wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The recording device of claim 8 wherein the detector row is in the form of a narrow array, and that the detector readout circuit shifts the pixels of the column which runs parallel to the recording slit in the row direction according to the output signal of the position acquisition means.",
+      "sourceXmlParentClaimNumbers": [8]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12268372-root-10",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    10,
+    11,
+    12,
+    13
+  ],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Source critic accepted0.98 after marked-original PDF resolved prior root/dependency amendment hold; native11 fined remains unchanged despite original fitted corroboration.",
+    "Actual11/12->10 and13->11 retained; no contextmethod/elevator-rope introductions are borrowed.",
+    "Material alternatives are syntax only; no chemical/Markush analysis."
+  ],
+  "annotationRationale": [
+    "Actual bare traction-appliance-arrangement subject retained. Relative appliance/frame/friction-wheel identities are explicit; nesting reflects contained device structure.",
+    "First/second wheel friction surfaces remain component-specific; collective surfaces/wheels and the other wheel do not receive a fabricated single-object antecedent.",
+    "Rubber/plastic/urethane/material and grooving/serration/surface alternatives retain explicit source list structure."
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumber": 11,
+      "quote": "the other wheel",
+      "reason": "One of two wheels is selected without specifying which; no forced single wheel target."
+    },
+    {
+      "claimNumber": 11,
+      "quote": "the elevator hoisting rope",
+      "reason": "Root10 elevator ropes is a definite first reference with no explicit introduction; no new rope introduction is fabricated."
+    }
+  ],
+  "criticReview": "round2 lexical-head-only independent critic pending",
+  "attorneyAdjudication": "pending",
+  "independence": "Fresh manual source annotation using claims/context, provenance/source audits/critic, protocol and schemas only. No implementation rules, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers locate manually selected quotes, serialize manually selected structure/edges and check geometry only.",
+  "headConvention": "lexical-head/v1",
+  "headConventionReview": {
+    "previousRound": 1,
+    "round": 2,
+    "review": "head-review.json",
+    "reviewedFlagCount": 1,
+    "changedHeadCount": 1,
+    "scope": "Only independently reviewed flagged lexical heads changed. Existing anchors, determiners, elements, edges, sources, semantic confidence and unresolved/reference concerns remain unchanged. Prior semantic acceptance is preserved as evidence; current lexical revision awaits independent critic. Attorney adjudication and admission bar unchanged."
+  }
+}

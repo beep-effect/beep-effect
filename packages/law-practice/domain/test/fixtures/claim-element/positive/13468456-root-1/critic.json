@@ -1,0 +1,52 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "13468456-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "referenceSha256": "495586040708f87b82f16a6da6fe6f53fd2540e76687770e648eeb886aad111f",
+  "extractorSha256": "23718c6a6b18261684deaae75fd9ffc967f6b35340d72a79185c4c1c32dcc971",
+  "verification": [
+    "Read all selected canonical source claims, native claims XML, extractor, expected trees, provenance and independent source critic. Read only the ClaimElement model/tree/edge schema files; no behavior, policy, decomposition implementation or predictions. Source qualification remains separately accepted in source-critic.json; no fresh original-PDF or full-inventory authentication claimed.",
+    "Independent mechanical checks passed every UTF-16 source anchor, ordered/nonoverlapping term ownership, normalized head shape, functional full-source reconstruction and exact participating-term ownership, edge endpoint membership, cross-claim ancestor membership, path uniqueness and absence of duplicate typed edges. Native XML digest matches provenance; all native/canonical claims agree after permitted printed-number removal and whitespace normalization. Geometry supplements manual semantic review; no decomposer was called."
+  ],
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json files written. No production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Source grammar and protocol determine semantic findings.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic references only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "claimCount": 12,
+    "elementCount": 28,
+    "termCount": 60,
+    "edgeCount": 76,
+    "functionalRelationCount": 15
+  },
+  "reviewNotes": [
+    "Claim 1 retains bird-feeder preamble and five explicit a–e limitations in order. The spinning-plates limitation preserves distance, surface, silo, plane and the full spinning/location relationship; each is functional connecting language governed by explicit plates, not a new independent entity. Surface is first definite and remains unlinked there; said surface resolves to that earlier exact mention.",
+    "All dependent preambles naturally refer directly to claim 1. References to silo, trough, perches, plates, fill hole and feeder have unique source antecedents on that chain. No sibling claim or independent claim 13 supplies an antecedent. The asserted perches relations are semantically supported despite examiner allegations, which do not dictate reference labels.",
+    "The post/post-like structure and hanger/post-support alternatives remain complete phrases. The optional may be attached wording is retained in its functional relation. A hanging loop flexible tension element is kept as the exact lexical phrase without inserting punctuation or shortening its compound name.",
+    "In claim 11, them is the standalone explicit plural participant after between and resolves to plates; retaining its term is supported by this actual relation. Relative that in claim 2 remains functional connecting text because the adjustable element is already explicit.",
+    "The surface, lower portion, weight, bottom, upper rim and edges have no earlier nominal introduction that could support an invented identity edge. Generic birds in claim 1 does not uniquely introduce an intended bird population in claim 4; those mentions remain unlinked. Claim 12 feed portals unambiguously refers to the only feeding-portal introduction despite lexical and grammatical-number variation. All source wording remains exact."
+  ],
+  "referenceConcernsDisposition": "Extractor concerns reviewed and retained. Missing definite introductions and generic birds remain explicit unlinked mentions; no actionable correction remains."
+}

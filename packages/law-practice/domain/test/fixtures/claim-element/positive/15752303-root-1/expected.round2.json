@@ -1,0 +1,5994 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 593,
+          "quote": "Capsule designed to accommodate a substance for the preparation of a beverage when the capsule is inserted into the housing in a machine of coffee or infusion machine type, to be held therein by a piston during the passage of the extracting liquid through the capsule and the substance that it contains, after the piercing of the bottom by the piston's studs: the capsule made of injected plastic having a bottom (1) and a side wall (3) essentially fitting within a cone frustum, and one edge (4) covered by a membrane seal (5) after loading of the substance into the capsule; the said capsule"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 43,
+              "quote": "a substance"
+            },
+            "determiner": "a",
+            "head": "substance"
+          },
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 63,
+              "quote": "the preparation"
+            },
+            "determiner": "the",
+            "head": "preparation"
+          },
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 77,
+              "quote": "a beverage"
+            },
+            "determiner": "a",
+            "head": "beverage"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 94,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 123,
+              "quote": "the housing"
+            },
+            "determiner": "the",
+            "head": "housing"
+          },
+          {
+            "anchor": {
+              "startChar": 127,
+              "endChar": 136,
+              "quote": "a machine"
+            },
+            "determiner": "a",
+            "head": "machine"
+          },
+          {
+            "anchor": {
+              "startChar": 140,
+              "endChar": 171,
+              "quote": "coffee or infusion machine type"
+            },
+            "determiner": "bare",
+            "head": "coffee or infusion machine type"
+          },
+          {
+            "anchor": {
+              "startChar": 195,
+              "endChar": 203,
+              "quote": "a piston"
+            },
+            "determiner": "a",
+            "head": "piston"
+          },
+          {
+            "anchor": {
+              "startChar": 211,
+              "endChar": 222,
+              "quote": "the passage"
+            },
+            "determiner": "the",
+            "head": "passage"
+          },
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 247,
+              "quote": "the extracting liquid"
+            },
+            "determiner": "the",
+            "head": "extracting liquid"
+          },
+          {
+            "anchor": {
+              "startChar": 256,
+              "endChar": 267,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 285,
+              "quote": "the substance"
+            },
+            "determiner": "the",
+            "head": "substance"
+          },
+          {
+            "anchor": {
+              "startChar": 291,
+              "endChar": 293,
+              "quote": "it"
+            },
+            "determiner": "bare",
+            "head": "it"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 322,
+              "quote": "the piercing"
+            },
+            "determiner": "the",
+            "head": "piercing"
+          },
+          {
+            "anchor": {
+              "startChar": 326,
+              "endChar": 336,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 340,
+              "endChar": 358,
+              "quote": "the piston's studs"
+            },
+            "determiner": "the",
+            "head": "piston's studs"
+          },
+          {
+            "anchor": {
+              "startChar": 577,
+              "endChar": 593,
+              "quote": "the said capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 360,
+          "endChar": 575,
+          "quote": "the capsule made of injected plastic having a bottom (1) and a side wall (3) essentially fitting within a cone frustum, and one edge (4) covered by a membrane seal (5) after loading of the substance into the capsule"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 360,
+              "endChar": 371,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 380,
+              "endChar": 396,
+              "quote": "injected plastic"
+            },
+            "determiner": "bare",
+            "head": "injected plastic"
+          }
+        ]
+      },
+      {
+        "path": "1.a.i",
+        "anchor": {
+          "startChar": 404,
+          "endChar": 416,
+          "quote": "a bottom (1)"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 404,
+              "endChar": 412,
+              "quote": "a bottom"
+            },
+            "determiner": "a",
+            "head": "bottom"
+          }
+        ]
+      },
+      {
+        "path": "1.a.ii",
+        "anchor": {
+          "startChar": 421,
+          "endChar": 478,
+          "quote": "a side wall (3) essentially fitting within a cone frustum"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 421,
+              "endChar": 432,
+              "quote": "a side wall"
+            },
+            "determiner": "a",
+            "head": "side wall"
+          },
+          {
+            "anchor": {
+              "startChar": 464,
+              "endChar": 478,
+              "quote": "a cone frustum"
+            },
+            "determiner": "a",
+            "head": "cone frustum"
+          }
+        ]
+      },
+      {
+        "path": "1.a.iii",
+        "anchor": {
+          "startChar": 484,
+          "endChar": 575,
+          "quote": "one edge (4) covered by a membrane seal (5) after loading of the substance into the capsule"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 484,
+              "endChar": 492,
+              "quote": "one edge"
+            },
+            "determiner": "bare",
+            "head": "edge"
+          },
+          {
+            "anchor": {
+              "startChar": 508,
+              "endChar": 523,
+              "quote": "a membrane seal"
+            },
+            "determiner": "a",
+            "head": "membrane seal"
+          },
+          {
+            "anchor": {
+              "startChar": 534,
+              "endChar": 541,
+              "quote": "loading"
+            },
+            "determiner": "bare",
+            "head": "loading"
+          },
+          {
+            "anchor": {
+              "startChar": 545,
+              "endChar": 558,
+              "quote": "the substance"
+            },
+            "determiner": "the",
+            "head": "substance"
+          },
+          {
+            "anchor": {
+              "startChar": 564,
+              "endChar": 575,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 632,
+          "endChar": 725,
+          "quote": "the side wall (2) is formed from a single cone frustum between the rim (3) and the bottom (1)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 632,
+              "endChar": 645,
+              "quote": "the side wall"
+            },
+            "determiner": "the",
+            "head": "side wall"
+          },
+          {
+            "anchor": {
+              "startChar": 665,
+              "endChar": 686,
+              "quote": "a single cone frustum"
+            },
+            "determiner": "a",
+            "head": "single cone frustum"
+          },
+          {
+            "anchor": {
+              "startChar": 695,
+              "endChar": 702,
+              "quote": "the rim"
+            },
+            "determiner": "the",
+            "head": "rim"
+          },
+          {
+            "anchor": {
+              "startChar": 711,
+              "endChar": 721,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 727,
+          "endChar": 855,
+          "quote": "the bottom (1) is flat, composed of an interior crown (11) connected to the side wall (2) and surrounding a central opening (12)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 727,
+              "endChar": 737,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 763,
+              "endChar": 780,
+              "quote": "an interior crown"
+            },
+            "determiner": "an",
+            "head": "interior crown"
+          },
+          {
+            "anchor": {
+              "startChar": 799,
+              "endChar": 812,
+              "quote": "the side wall"
+            },
+            "determiner": "the",
+            "head": "side wall"
+          },
+          {
+            "anchor": {
+              "startChar": 833,
+              "endChar": 850,
+              "quote": "a central opening"
+            },
+            "determiner": "a",
+            "head": "central opening"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 857,
+          "endChar": 910,
+          "quote": "the side wall (2) is covered with a sealed label (23)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 857,
+              "endChar": 870,
+              "quote": "the side wall"
+            },
+            "determiner": "the",
+            "head": "side wall"
+          },
+          {
+            "anchor": {
+              "startChar": 891,
+              "endChar": 905,
+              "quote": "a sealed label"
+            },
+            "determiner": "a",
+            "head": "sealed label"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 916,
+          "endChar": 1008,
+          "quote": "the open bottom (1)—including its interior crown (11)—is covered with a sealed membrane (14)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 916,
+              "endChar": 931,
+              "quote": "the open bottom"
+            },
+            "determiner": "the",
+            "head": "open bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 946,
+              "endChar": 964,
+              "quote": "its interior crown"
+            },
+            "determiner": "bare",
+            "head": "interior crown"
+          },
+          {
+            "anchor": {
+              "startChar": 986,
+              "endChar": 1003,
+              "quote": "a sealed membrane"
+            },
+            "determiner": "a",
+            "head": "sealed membrane"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.a.i",
+        "parent": "1.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.a.ii",
+        "parent": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.ii",
+              "anchor": {
+                "startChar": 421,
+                "endChar": 432,
+                "quote": "a side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 432,
+              "endChar": 464,
+              "quote": " (3) essentially fitting within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.ii",
+              "anchor": {
+                "startChar": 464,
+                "endChar": 478,
+                "quote": "a cone frustum"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.a.iii",
+        "parent": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a.iii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.iii",
+              "anchor": {
+                "startChar": 484,
+                "endChar": 492,
+                "quote": "one edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 492,
+              "endChar": 508,
+              "quote": " (4) covered by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.iii",
+              "anchor": {
+                "startChar": 508,
+                "endChar": 523,
+                "quote": "a membrane seal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 523,
+              "endChar": 534,
+              "quote": " (5) after "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.iii",
+              "anchor": {
+                "startChar": 534,
+                "endChar": 541,
+                "quote": "loading"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 541,
+              "endChar": 545,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.iii",
+              "anchor": {
+                "startChar": 545,
+                "endChar": 558,
+                "quote": "the substance"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 558,
+              "endChar": 564,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a.iii",
+              "anchor": {
+                "startChar": 564,
+                "endChar": 575,
+                "quote": "the capsule"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 632,
+                "endChar": 645,
+                "quote": "the side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 665,
+              "quote": " (2) is formed from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 665,
+                "endChar": 686,
+                "quote": "a single cone frustum"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 686,
+              "endChar": 695,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 695,
+                "endChar": 702,
+                "quote": "the rim"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 702,
+              "endChar": 711,
+              "quote": " (3) and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 711,
+                "endChar": 721,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 721,
+              "endChar": 725,
+              "quote": " (1)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 727,
+                "endChar": 737,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 737,
+              "endChar": 763,
+              "quote": " (1) is flat, composed of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 763,
+                "endChar": 780,
+                "quote": "an interior crown"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 780,
+              "endChar": 799,
+              "quote": " (11) connected to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 799,
+                "endChar": 812,
+                "quote": "the side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 812,
+              "endChar": 833,
+              "quote": " (2) and surrounding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 833,
+                "endChar": 850,
+                "quote": "a central opening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 850,
+              "endChar": 855,
+              "quote": " (12)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 857,
+                "endChar": 870,
+                "quote": "the side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 870,
+              "endChar": 891,
+              "quote": " (2) is covered with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 891,
+                "endChar": 905,
+                "quote": "a sealed label"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 905,
+              "endChar": 910,
+              "quote": " (23)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 916,
+                "endChar": 931,
+                "quote": "the open bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 931,
+              "endChar": 946,
+              "quote": " (1)—including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 946,
+                "endChar": 964,
+                "quote": "its interior crown"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 964,
+              "endChar": 986,
+              "quote": " (11)—is covered with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 986,
+                "endChar": 1003,
+                "quote": "a sealed membrane"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1003,
+              "endChar": 1008,
+              "quote": " (14)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 94,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 256,
+            "endChar": 267,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 285,
+            "quote": "the substance"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 43,
+            "quote": "a substance"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 291,
+            "endChar": 293,
+            "quote": "it"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 577,
+            "endChar": 593,
+            "quote": "the said capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 360,
+            "endChar": 371,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a.iii",
+          "anchor": {
+            "startChar": 545,
+            "endChar": 558,
+            "quote": "the substance"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 43,
+            "quote": "a substance"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a.iii",
+          "anchor": {
+            "startChar": 564,
+            "endChar": 575,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 632,
+            "endChar": 645,
+            "quote": "the side wall"
+          }
+        },
+        "introducing": {
+          "path": "1.a.ii",
+          "anchor": {
+            "startChar": 421,
+            "endChar": 432,
+            "quote": "a side wall"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 695,
+            "endChar": 702,
+            "quote": "the rim"
+          }
+        },
+        "introducing": {
+          "path": "1.a.iii",
+          "anchor": {
+            "startChar": 484,
+            "endChar": 492,
+            "quote": "one edge"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 711,
+            "endChar": 721,
+            "quote": "the bottom"
+          }
+        },
+        "introducing": {
+          "path": "1.a.i",
+          "anchor": {
+            "startChar": 404,
+            "endChar": 412,
+            "quote": "a bottom"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 727,
+            "endChar": 737,
+            "quote": "the bottom"
+          }
+        },
+        "introducing": {
+          "path": "1.a.i",
+          "anchor": {
+            "startChar": 404,
+            "endChar": 412,
+            "quote": "a bottom"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 799,
+            "endChar": 812,
+            "quote": "the side wall"
+          }
+        },
+        "introducing": {
+          "path": "1.a.ii",
+          "anchor": {
+            "startChar": 421,
+            "endChar": 432,
+            "quote": "a side wall"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 857,
+            "endChar": 870,
+            "quote": "the side wall"
+          }
+        },
+        "introducing": {
+          "path": "1.a.ii",
+          "anchor": {
+            "startChar": 421,
+            "endChar": 432,
+            "quote": "a side wall"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 916,
+            "endChar": 931,
+            "quote": "the open bottom"
+          }
+        },
+        "introducing": {
+          "path": "1.a.i",
+          "anchor": {
+            "startChar": 404,
+            "endChar": 412,
+            "quote": "a bottom"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 946,
+            "endChar": 964,
+            "quote": "its interior crown"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 763,
+            "endChar": 780,
+            "quote": "an interior crown"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 120,
+          "quote": "the sealed membrane (14) is an interior membrane seal"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 86,
+              "quote": "the sealed membrane"
+            },
+            "determiner": "the",
+            "head": "sealed membrane"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 120,
+              "quote": "an interior membrane seal"
+            },
+            "determiner": "an",
+            "head": "interior membrane seal"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 86,
+                "quote": "the sealed membrane"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 86,
+              "endChar": 95,
+              "quote": " (14) is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 120,
+                "quote": "an interior membrane seal"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 86,
+            "quote": "the sealed membrane"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 986,
+            "endChar": 1003,
+            "quote": "a sealed membrane"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 165,
+          "quote": "the label (23) and the membrane seal (14) are rendered integral by the capsule's injection molding"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 76,
+              "quote": "the label"
+            },
+            "determiner": "the",
+            "head": "label"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 103,
+              "quote": "the membrane seal"
+            },
+            "determiner": "the",
+            "head": "membrane seal"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 165,
+              "quote": "the capsule's injection molding"
+            },
+            "determiner": "the",
+            "head": "capsule's injection molding"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 76,
+                "quote": "the label"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 86,
+              "quote": " (23) and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 103,
+                "quote": "the membrane seal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 103,
+              "endChar": 134,
+              "quote": " (14) are rendered integral by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 165,
+                "quote": "the capsule's injection molding"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 76,
+            "quote": "the label"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 891,
+            "endChar": 905,
+            "quote": "a sealed label"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 103,
+            "quote": "the membrane seal"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 986,
+            "endChar": 1003,
+            "quote": "a sealed membrane"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 121,
+          "quote": "the central opening (12) of the bottom (1) is circular"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 86,
+              "quote": "the central opening"
+            },
+            "determiner": "the",
+            "head": "central opening"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 105,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 86,
+            "quote": "the central opening"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 833,
+            "endChar": 850,
+            "quote": "a central opening"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 95,
+            "endChar": 105,
+            "quote": "the bottom"
+          }
+        },
+        "introducing": {
+          "path": "1.a.i",
+          "anchor": {
+            "startChar": 404,
+            "endChar": 412,
+            "quote": "a bottom"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 259,
+          "quote": "it incorporates a cross brace (13) composed of a central hub (131) that is connected to the crown (11) by branches (132) entering the volume of the capsule so as not to be touched by the studs"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 69,
+              "quote": "it"
+            },
+            "determiner": "bare",
+            "head": "it"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 96,
+              "quote": "a cross brace"
+            },
+            "determiner": "a",
+            "head": "cross brace"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 127,
+              "quote": "a central hub"
+            },
+            "determiner": "a",
+            "head": "central hub"
+          },
+          {
+            "anchor": {
+              "startChar": 155,
+              "endChar": 164,
+              "quote": "the crown"
+            },
+            "determiner": "the",
+            "head": "crown"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 181,
+              "quote": "branches"
+            },
+            "determiner": "bare",
+            "head": "branches"
+          },
+          {
+            "anchor": {
+              "startChar": 197,
+              "endChar": 207,
+              "quote": "the volume"
+            },
+            "determiner": "the",
+            "head": "volume"
+          },
+          {
+            "anchor": {
+              "startChar": 211,
+              "endChar": 222,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 250,
+              "endChar": 259,
+              "quote": "the studs"
+            },
+            "determiner": "the",
+            "head": "studs"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 69,
+                "quote": "it"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 83,
+              "quote": " incorporates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 83,
+                "endChar": 96,
+                "quote": "a cross brace"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 114,
+              "quote": " (13) composed of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 127,
+                "quote": "a central hub"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 127,
+              "endChar": 155,
+              "quote": " (131) that is connected to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 155,
+                "endChar": 164,
+                "quote": "the crown"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 164,
+              "endChar": 173,
+              "quote": " (11) by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 173,
+                "endChar": 181,
+                "quote": "branches"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 181,
+              "endChar": 197,
+              "quote": " (132) entering "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 197,
+                "endChar": 207,
+                "quote": "the volume"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 207,
+              "endChar": 211,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 211,
+                "endChar": 222,
+                "quote": "the capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 222,
+              "endChar": 250,
+              "quote": " so as not to be touched by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 250,
+                "endChar": 259,
+                "quote": "the studs"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 69,
+            "quote": "it"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 155,
+            "endChar": 164,
+            "quote": "the crown"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 763,
+            "endChar": 780,
+            "quote": "an interior crown"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 211,
+            "endChar": 222,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 250,
+            "endChar": 259,
+            "quote": "the studs"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 340,
+            "endChar": 358,
+            "quote": "the piston's studs"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 117,
+          "quote": "the crown (11) has a flattened frustoconical shape"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 76,
+              "quote": "the crown"
+            },
+            "determiner": "the",
+            "head": "crown"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 117,
+              "quote": "a flattened frustoconical shape"
+            },
+            "determiner": "a",
+            "head": "flattened frustoconical shape"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 76,
+            "quote": "the crown"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 763,
+            "endChar": 780,
+            "quote": "an interior crown"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 134,
+          "quote": "the label (23) and the membrane seal (14) are made of aluminum foil"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 76,
+              "quote": "the label"
+            },
+            "determiner": "the",
+            "head": "label"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 103,
+              "quote": "the membrane seal"
+            },
+            "determiner": "the",
+            "head": "membrane seal"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 134,
+              "quote": "aluminum foil"
+            },
+            "determiner": "bare",
+            "head": "aluminum foil"
+          }
+        ]
+      },
+      {
+        "path": "7.b",
+        "anchor": {
+          "startChar": 157,
+          "endChar": 194,
+          "quote": "the membrane seal is notably embossed"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 174,
+              "quote": "the membrane seal"
+            },
+            "determiner": "the",
+            "head": "membrane seal"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.b",
+        "parent": "7"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 76,
+            "quote": "the label"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 891,
+            "endChar": 905,
+            "quote": "a sealed label"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 103,
+            "quote": "the membrane seal"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 986,
+            "endChar": 1003,
+            "quote": "a sealed membrane"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 174,
+            "quote": "the membrane seal"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 986,
+            "endChar": 1003,
+            "quote": "a sealed membrane"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 274,
+          "quote": "the label (23) and the membrane seal (14) are made of a complex composed of an aluminum (AL) or (EVOH) foil of which the two faces are covered with a film in a plastic chosen from the group including PP, PLA"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 76,
+              "quote": "the label"
+            },
+            "determiner": "the",
+            "head": "label"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 103,
+              "quote": "the membrane seal"
+            },
+            "determiner": "the",
+            "head": "membrane seal"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 130,
+              "quote": "a complex"
+            },
+            "determiner": "a",
+            "head": "complex"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 174,
+              "quote": "an aluminum (AL) or (EVOH) foil"
+            },
+            "determiner": "an",
+            "head": "aluminum (al) or (evoh) foil"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 197,
+              "quote": "the two faces"
+            },
+            "determiner": "the",
+            "head": "two faces"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 221,
+              "quote": "a film"
+            },
+            "determiner": "a",
+            "head": "film"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 234,
+              "quote": "a plastic"
+            },
+            "determiner": "a",
+            "head": "plastic"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 256,
+              "quote": "the group"
+            },
+            "determiner": "the",
+            "head": "group"
+          }
+        ]
+      },
+      {
+        "path": "8.a.i",
+        "anchor": {
+          "startChar": 267,
+          "endChar": 269,
+          "quote": "PP"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 267,
+              "endChar": 269,
+              "quote": "PP"
+            },
+            "determiner": "bare",
+            "head": "pp"
+          }
+        ]
+      },
+      {
+        "path": "8.a.ii",
+        "anchor": {
+          "startChar": 271,
+          "endChar": 274,
+          "quote": "PLA"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 271,
+              "endChar": 274,
+              "quote": "PLA"
+            },
+            "determiner": "bare",
+            "head": "pla"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a.i",
+        "parent": "8.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a.ii",
+        "parent": "8.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 76,
+            "quote": "the label"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 891,
+            "endChar": 905,
+            "quote": "a sealed label"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 103,
+            "quote": "the membrane seal"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 986,
+            "endChar": 1003,
+            "quote": "a sealed membrane"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 299,
+          "quote": "the label (23) is of greater height than the height of the side wall (2), so that the upper edge of the label—which overhangs—is incorporated into the rim (3) of the capsule during the injection of the plastic to produce the capsule"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 76,
+              "quote": "the label"
+            },
+            "determiner": "the",
+            "head": "label"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 102,
+              "quote": "greater height"
+            },
+            "determiner": "bare",
+            "head": "greater height"
+          },
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 118,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 122,
+              "endChar": 135,
+              "quote": "the side wall"
+            },
+            "determiner": "the",
+            "head": "side wall"
+          },
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 163,
+              "quote": "the upper edge"
+            },
+            "determiner": "the",
+            "head": "upper edge"
+          },
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 176,
+              "quote": "the label"
+            },
+            "determiner": "the",
+            "head": "label"
+          },
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 221,
+              "quote": "the rim"
+            },
+            "determiner": "the",
+            "head": "rim"
+          },
+          {
+            "anchor": {
+              "startChar": 229,
+              "endChar": 240,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 261,
+              "quote": "the injection"
+            },
+            "determiner": "the",
+            "head": "injection"
+          },
+          {
+            "anchor": {
+              "startChar": 265,
+              "endChar": 276,
+              "quote": "the plastic"
+            },
+            "determiner": "the",
+            "head": "plastic"
+          },
+          {
+            "anchor": {
+              "startChar": 288,
+              "endChar": 299,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 76,
+                "quote": "the label"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 88,
+              "quote": " (23) is of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 102,
+                "quote": "greater height"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 108,
+              "quote": " than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 108,
+                "endChar": 118,
+                "quote": "the height"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 122,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 122,
+                "endChar": 135,
+                "quote": "the side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 149,
+              "quote": " (2), so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 149,
+                "endChar": 163,
+                "quote": "the upper edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 163,
+              "endChar": 167,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 167,
+                "endChar": 176,
+                "quote": "the label"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 176,
+              "endChar": 214,
+              "quote": "—which overhangs—is incorporated into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 214,
+                "endChar": 221,
+                "quote": "the rim"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 221,
+              "endChar": 229,
+              "quote": " (3) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 229,
+                "endChar": 240,
+                "quote": "the capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 240,
+              "endChar": 248,
+              "quote": " during "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 261,
+                "quote": "the injection"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 261,
+              "endChar": 265,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 265,
+                "endChar": 276,
+                "quote": "the plastic"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 276,
+              "endChar": 288,
+              "quote": " to produce "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 288,
+                "endChar": 299,
+                "quote": "the capsule"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 76,
+            "quote": "the label"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 891,
+            "endChar": 905,
+            "quote": "a sealed label"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 122,
+            "endChar": 135,
+            "quote": "the side wall"
+          }
+        },
+        "introducing": {
+          "path": "1.a.ii",
+          "anchor": {
+            "startChar": 421,
+            "endChar": 432,
+            "quote": "a side wall"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 176,
+            "quote": "the label"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 891,
+            "endChar": 905,
+            "quote": "a sealed label"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 214,
+            "endChar": 221,
+            "quote": "the rim"
+          }
+        },
+        "introducing": {
+          "path": "1.a.iii",
+          "anchor": {
+            "startChar": 484,
+            "endChar": 492,
+            "quote": "one edge"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 229,
+            "endChar": 240,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 265,
+            "endChar": 276,
+            "quote": "the plastic"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 380,
+            "endChar": 396,
+            "quote": "injected plastic"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 288,
+            "endChar": 299,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 96,
+          "quote": "the branches (137) are radial"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 79,
+              "quote": "the branches"
+            },
+            "determiner": "the",
+            "head": "branches"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 191,
+          "quote": "the bottom (1) incorporates an inwardly-turned peripheral edge (22) constituting a bearing point for stacking empty capsules"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 77,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 129,
+              "quote": "an inwardly-turned peripheral edge"
+            },
+            "determiner": "an",
+            "head": "inwardly-turned peripheral edge"
+          },
+          {
+            "anchor": {
+              "startChar": 148,
+              "endChar": 163,
+              "quote": "a bearing point"
+            },
+            "determiner": "a",
+            "head": "bearing point"
+          },
+          {
+            "anchor": {
+              "startChar": 177,
+              "endChar": 191,
+              "quote": "empty capsules"
+            },
+            "determiner": "bare",
+            "head": "empty capsules"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 77,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 95,
+              "quote": " (1) incorporates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 129,
+                "quote": "an inwardly-turned peripheral edge"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 148,
+              "quote": " (22) constituting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 148,
+                "endChar": 163,
+                "quote": "a bearing point"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 163,
+              "endChar": 177,
+              "quote": " for stacking "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 177,
+                "endChar": 191,
+                "quote": "empty capsules"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 77,
+            "quote": "the bottom"
+          }
+        },
+        "introducing": {
+          "path": "1.a.i",
+          "anchor": {
+            "startChar": 404,
+            "endChar": 412,
+            "quote": "a bottom"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 167,
+          "quote": "the interior crown (11) has a flat exterior surface (113) and a frustoconical interior surface (112)"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 85,
+              "quote": "the interior crown"
+            },
+            "determiner": "the",
+            "head": "interior crown"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 118,
+              "quote": "a flat exterior surface"
+            },
+            "determiner": "a",
+            "head": "flat exterior surface"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 161,
+              "quote": "a frustoconical interior surface"
+            },
+            "determiner": "a",
+            "head": "frustoconical interior surface"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 85,
+            "quote": "the interior crown"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 763,
+            "endChar": 780,
+            "quote": "an interior crown"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 34,
+          "quote": "Capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 67,
+          "endChar": 191,
+          "quote": "the interior surface of the conical wall (2) incorporates brackets (21) limiting the extent of insertion of a nested capsule"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 87,
+              "quote": "the interior surface"
+            },
+            "determiner": "the",
+            "head": "interior surface"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 107,
+              "quote": "the conical wall"
+            },
+            "determiner": "the",
+            "head": "conical wall"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 133,
+              "quote": "brackets"
+            },
+            "determiner": "bare",
+            "head": "brackets"
+          },
+          {
+            "anchor": {
+              "startChar": 148,
+              "endChar": 158,
+              "quote": "the extent"
+            },
+            "determiner": "the",
+            "head": "extent"
+          },
+          {
+            "anchor": {
+              "startChar": 162,
+              "endChar": 171,
+              "quote": "insertion"
+            },
+            "determiner": "bare",
+            "head": "insertion"
+          },
+          {
+            "anchor": {
+              "startChar": 175,
+              "endChar": 191,
+              "quote": "a nested capsule"
+            },
+            "determiner": "a",
+            "head": "nested capsule"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 87,
+                "quote": "the interior surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 87,
+              "endChar": 91,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 107,
+                "quote": "the conical wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 107,
+              "endChar": 125,
+              "quote": " (2) incorporates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 133,
+                "quote": "brackets"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 148,
+              "quote": " (21) limiting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 148,
+                "endChar": 158,
+                "quote": "the extent"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 158,
+              "endChar": 162,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 162,
+                "endChar": 171,
+                "quote": "insertion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 171,
+              "endChar": 175,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 175,
+                "endChar": 191,
+                "quote": "a nested capsule"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 91,
+            "endChar": 107,
+            "quote": "the conical wall"
+          }
+        },
+        "introducing": {
+          "path": "1.a.ii",
+          "anchor": {
+            "startChar": 421,
+            "endChar": 432,
+            "quote": "a side wall"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "14",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "Capsule in accordance with claim 13"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Capsule"
+            },
+            "determiner": "bare",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "anchor": {
+          "startChar": 68,
+          "endChar": 334,
+          "quote": "the brackets (21) have a bearing surface (211) above the cross brace (13) so that the membrane seal (14) covering the bottom of an inserted capsule does not press against the branches (132) of the cross brace (13) of the capsule in which this other capsule is nested"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 80,
+              "quote": "the brackets"
+            },
+            "determiner": "the",
+            "head": "brackets"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 108,
+              "quote": "a bearing surface"
+            },
+            "determiner": "a",
+            "head": "bearing surface"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 136,
+              "quote": "the cross brace"
+            },
+            "determiner": "the",
+            "head": "cross brace"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 167,
+              "quote": "the membrane seal"
+            },
+            "determiner": "the",
+            "head": "membrane seal"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 192,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 215,
+              "quote": "an inserted capsule"
+            },
+            "determiner": "an",
+            "head": "inserted capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 239,
+              "endChar": 251,
+              "quote": "the branches"
+            },
+            "determiner": "the",
+            "head": "branches"
+          },
+          {
+            "anchor": {
+              "startChar": 261,
+              "endChar": 276,
+              "quote": "the cross brace"
+            },
+            "determiner": "the",
+            "head": "cross brace"
+          },
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 296,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 306,
+              "endChar": 324,
+              "quote": "this other capsule"
+            },
+            "determiner": "bare",
+            "head": "other capsule"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "14",
+        "ancestor": "13"
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 80,
+                "quote": "the brackets"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 80,
+              "endChar": 91,
+              "quote": " (21) have "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 108,
+                "quote": "a bearing surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 108,
+              "endChar": 121,
+              "quote": " (211) above "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 121,
+                "endChar": 136,
+                "quote": "the cross brace"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 136,
+              "endChar": 150,
+              "quote": " (13) so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 167,
+                "quote": "the membrane seal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 182,
+              "quote": " (14) covering "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 192,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 192,
+              "endChar": 196,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 196,
+                "endChar": 215,
+                "quote": "an inserted capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 215,
+              "endChar": 239,
+              "quote": " does not press against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 239,
+                "endChar": 251,
+                "quote": "the branches"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 251,
+              "endChar": 261,
+              "quote": " (132) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 261,
+                "endChar": 276,
+                "quote": "the cross brace"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 276,
+              "endChar": 285,
+              "quote": " (13) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 285,
+                "endChar": 296,
+                "quote": "the capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 296,
+              "endChar": 306,
+              "quote": " in which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 306,
+                "endChar": 324,
+                "quote": "this other capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 324,
+              "endChar": 334,
+              "quote": " is nested"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 80,
+            "quote": "the brackets"
+          }
+        },
+        "introducing": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 125,
+            "endChar": 133,
+            "quote": "brackets"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a",
+          "anchor": {
+            "startChar": 285,
+            "endChar": 296,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a",
+          "anchor": {
+            "startChar": 306,
+            "endChar": 324,
+            "quote": "this other capsule"
+          }
+        },
+        "introducing": {
+          "path": "14.a",
+          "anchor": {
+            "startChar": 196,
+            "endChar": 215,
+            "quote": "an inserted capsule"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 15,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "15",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 59,
+          "quote": "Production process for a capsule in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 18,
+              "quote": "Production process"
+            },
+            "determiner": "bare",
+            "head": "production process"
+          },
+          {
+            "anchor": {
+              "startChar": 23,
+              "endChar": 32,
+              "quote": "a capsule"
+            },
+            "determiner": "a",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 93,
+          "endChar": 379,
+          "quote": "one produces a mold (200) for a capsule (100) having a side wall (2) in cone frustum form, endowed with a rim (3) at the large base of the cone frustum, and of which the flat summit of the bottom (1) of the capsule is in the form of an interior ring (11) bounding a central opening (12)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 112,
+              "quote": "a mold"
+            },
+            "determiner": "a",
+            "head": "mold"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 132,
+              "quote": "a capsule"
+            },
+            "determiner": "a",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 157,
+              "quote": "a side wall"
+            },
+            "determiner": "a",
+            "head": "side wall"
+          },
+          {
+            "anchor": {
+              "startChar": 165,
+              "endChar": 182,
+              "quote": "cone frustum form"
+            },
+            "determiner": "bare",
+            "head": "cone frustum form"
+          },
+          {
+            "anchor": {
+              "startChar": 197,
+              "endChar": 202,
+              "quote": "a rim"
+            },
+            "determiner": "a",
+            "head": "rim"
+          },
+          {
+            "anchor": {
+              "startChar": 210,
+              "endChar": 224,
+              "quote": "the large base"
+            },
+            "determiner": "the",
+            "head": "large base"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 244,
+              "quote": "the cone frustum"
+            },
+            "determiner": "the",
+            "head": "cone frustum"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 274,
+              "quote": "the flat summit"
+            },
+            "determiner": "the",
+            "head": "flat summit"
+          },
+          {
+            "anchor": {
+              "startChar": 278,
+              "endChar": 288,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 296,
+              "endChar": 307,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 314,
+              "endChar": 322,
+              "quote": "the form"
+            },
+            "determiner": "the",
+            "head": "form"
+          },
+          {
+            "anchor": {
+              "startChar": 326,
+              "endChar": 342,
+              "quote": "an interior ring"
+            },
+            "determiner": "an",
+            "head": "interior ring"
+          },
+          {
+            "anchor": {
+              "startChar": 357,
+              "endChar": 374,
+              "quote": "a central opening"
+            },
+            "determiner": "a",
+            "head": "central opening"
+          }
+        ]
+      },
+      {
+        "path": "15.b",
+        "anchor": {
+          "startChar": 381,
+          "endChar": 676,
+          "quote": "the mold (200) is composed of a part having a cavity (210) in the shape of the frustoconical side wall of the capsule, with the bottom of the cavity corresponding to the bottom (1) of the capsule, being endowed with a surface in relief (12A) to form the opening (12) of the bottom of the capsule"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 381,
+              "endChar": 389,
+              "quote": "the mold"
+            },
+            "determiner": "the",
+            "head": "mold"
+          },
+          {
+            "anchor": {
+              "startChar": 411,
+              "endChar": 417,
+              "quote": "a part"
+            },
+            "determiner": "a",
+            "head": "part"
+          },
+          {
+            "anchor": {
+              "startChar": 425,
+              "endChar": 433,
+              "quote": "a cavity"
+            },
+            "determiner": "a",
+            "head": "cavity"
+          },
+          {
+            "anchor": {
+              "startChar": 443,
+              "endChar": 452,
+              "quote": "the shape"
+            },
+            "determiner": "the",
+            "head": "shape"
+          },
+          {
+            "anchor": {
+              "startChar": 456,
+              "endChar": 483,
+              "quote": "the frustoconical side wall"
+            },
+            "determiner": "the",
+            "head": "frustoconical side wall"
+          },
+          {
+            "anchor": {
+              "startChar": 487,
+              "endChar": 498,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 505,
+              "endChar": 515,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 519,
+              "endChar": 529,
+              "quote": "the cavity"
+            },
+            "determiner": "the",
+            "head": "cavity"
+          },
+          {
+            "anchor": {
+              "startChar": 547,
+              "endChar": 557,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 565,
+              "endChar": 576,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          },
+          {
+            "anchor": {
+              "startChar": 597,
+              "endChar": 616,
+              "quote": "a surface in relief"
+            },
+            "determiner": "a",
+            "head": "surface in relief"
+          },
+          {
+            "anchor": {
+              "startChar": 631,
+              "endChar": 642,
+              "quote": "the opening"
+            },
+            "determiner": "the",
+            "head": "opening"
+          },
+          {
+            "anchor": {
+              "startChar": 651,
+              "endChar": 661,
+              "quote": "the bottom"
+            },
+            "determiner": "the",
+            "head": "bottom"
+          },
+          {
+            "anchor": {
+              "startChar": 665,
+              "endChar": 676,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "15.c",
+        "anchor": {
+          "startChar": 678,
+          "endChar": 765,
+          "quote": "the other part of the mold is a core (250) defining the interior surface of the capsule"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 678,
+              "endChar": 692,
+              "quote": "the other part"
+            },
+            "determiner": "the",
+            "head": "other part"
+          },
+          {
+            "anchor": {
+              "startChar": 696,
+              "endChar": 704,
+              "quote": "the mold"
+            },
+            "determiner": "the",
+            "head": "mold"
+          },
+          {
+            "anchor": {
+              "startChar": 708,
+              "endChar": 714,
+              "quote": "a core"
+            },
+            "determiner": "a",
+            "head": "core"
+          },
+          {
+            "anchor": {
+              "startChar": 730,
+              "endChar": 750,
+              "quote": "the interior surface"
+            },
+            "determiner": "the",
+            "head": "interior surface"
+          },
+          {
+            "anchor": {
+              "startChar": 754,
+              "endChar": 765,
+              "quote": "the capsule"
+            },
+            "determiner": "the",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "15.d",
+        "anchor": {
+          "startChar": 767,
+          "endChar": 883,
+          "quote": "one places a label (23) within the mold cavity, having a shape matching the shape of the frustoconical side wall (2)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 778,
+              "endChar": 785,
+              "quote": "a label"
+            },
+            "determiner": "a",
+            "head": "label"
+          },
+          {
+            "anchor": {
+              "startChar": 798,
+              "endChar": 813,
+              "quote": "the mold cavity"
+            },
+            "determiner": "the",
+            "head": "mold cavity"
+          },
+          {
+            "anchor": {
+              "startChar": 822,
+              "endChar": 829,
+              "quote": "a shape"
+            },
+            "determiner": "a",
+            "head": "shape"
+          },
+          {
+            "anchor": {
+              "startChar": 839,
+              "endChar": 848,
+              "quote": "the shape"
+            },
+            "determiner": "the",
+            "head": "shape"
+          },
+          {
+            "anchor": {
+              "startChar": 852,
+              "endChar": 879,
+              "quote": "the frustoconical side wall"
+            },
+            "determiner": "the",
+            "head": "frustoconical side wall"
+          }
+        ]
+      },
+      {
+        "path": "15.e",
+        "anchor": {
+          "startChar": 885,
+          "endChar": 997,
+          "quote": "in the core (250), one places the membrane seal (14), then one closes the mold, and then one injects the plastic"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 888,
+              "endChar": 896,
+              "quote": "the core"
+            },
+            "determiner": "the",
+            "head": "core"
+          },
+          {
+            "anchor": {
+              "startChar": 915,
+              "endChar": 932,
+              "quote": "the membrane seal"
+            },
+            "determiner": "the",
+            "head": "membrane seal"
+          },
+          {
+            "anchor": {
+              "startChar": 955,
+              "endChar": 963,
+              "quote": "the mold"
+            },
+            "determiner": "the",
+            "head": "mold"
+          },
+          {
+            "anchor": {
+              "startChar": 986,
+              "endChar": 997,
+              "quote": "the plastic"
+            },
+            "determiner": "the",
+            "head": "plastic"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "15",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.a",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 93,
+              "endChar": 106,
+              "quote": "one produces "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 112,
+                "quote": "a mold"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 123,
+              "quote": " (200) for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 132,
+                "quote": "a capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 132,
+              "endChar": 146,
+              "quote": " (100) having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 146,
+                "endChar": 157,
+                "quote": "a side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 165,
+              "quote": " (2) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 165,
+                "endChar": 182,
+                "quote": "cone frustum form"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 197,
+              "quote": ", endowed with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 197,
+                "endChar": 202,
+                "quote": "a rim"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 202,
+              "endChar": 210,
+              "quote": " (3) at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 210,
+                "endChar": 224,
+                "quote": "the large base"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 224,
+              "endChar": 228,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 244,
+                "quote": "the cone frustum"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 259,
+              "quote": ", and of which "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 274,
+                "quote": "the flat summit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 274,
+              "endChar": 278,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 278,
+                "endChar": 288,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 288,
+              "endChar": 296,
+              "quote": " (1) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 296,
+                "endChar": 307,
+                "quote": "the capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 307,
+              "endChar": 314,
+              "quote": " is in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 314,
+                "endChar": 322,
+                "quote": "the form"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 322,
+              "endChar": 326,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 326,
+                "endChar": 342,
+                "quote": "an interior ring"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 342,
+              "endChar": 357,
+              "quote": " (11) bounding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 357,
+                "endChar": 374,
+                "quote": "a central opening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 374,
+              "endChar": 379,
+              "quote": " (12)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "15.b",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 381,
+                "endChar": 389,
+                "quote": "the mold"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 389,
+              "endChar": 411,
+              "quote": " (200) is composed of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 411,
+                "endChar": 417,
+                "quote": "a part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 417,
+              "endChar": 425,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 425,
+                "endChar": 433,
+                "quote": "a cavity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 433,
+              "endChar": 443,
+              "quote": " (210) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 443,
+                "endChar": 452,
+                "quote": "the shape"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 452,
+              "endChar": 456,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 456,
+                "endChar": 483,
+                "quote": "the frustoconical side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 483,
+              "endChar": 487,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 487,
+                "endChar": 498,
+                "quote": "the capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 498,
+              "endChar": 505,
+              "quote": ", with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 505,
+                "endChar": 515,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 515,
+              "endChar": 519,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 519,
+                "endChar": 529,
+                "quote": "the cavity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 529,
+              "endChar": 547,
+              "quote": " corresponding to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 547,
+                "endChar": 557,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 557,
+              "endChar": 565,
+              "quote": " (1) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 565,
+                "endChar": 576,
+                "quote": "the capsule"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 576,
+              "endChar": 597,
+              "quote": ", being endowed with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 597,
+                "endChar": 616,
+                "quote": "a surface in relief"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 616,
+              "endChar": 631,
+              "quote": " (12A) to form "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 631,
+                "endChar": 642,
+                "quote": "the opening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 642,
+              "endChar": 651,
+              "quote": " (12) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 651,
+                "endChar": 661,
+                "quote": "the bottom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 661,
+              "endChar": 665,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.b",
+              "anchor": {
+                "startChar": 665,
+                "endChar": 676,
+                "quote": "the capsule"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "15.c",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.c",
+              "anchor": {
+                "startChar": 678,
+                "endChar": 692,
+                "quote": "the other part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 692,
+              "endChar": 696,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.c",
+              "anchor": {
+                "startChar": 696,
+                "endChar": 704,
+                "quote": "the mold"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 704,
+              "endChar": 708,
+              "quote": " is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.c",
+              "anchor": {
+                "startChar": 708,
+                "endChar": 714,
+                "quote": "a core"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 714,
+              "endChar": 730,
+              "quote": " (250) defining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.c",
+              "anchor": {
+                "startChar": 730,
+                "endChar": 750,
+                "quote": "the interior surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 750,
+              "endChar": 754,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.c",
+              "anchor": {
+                "startChar": 754,
+                "endChar": 765,
+                "quote": "the capsule"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "15.d",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 767,
+              "endChar": 778,
+              "quote": "one places "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.d",
+              "anchor": {
+                "startChar": 778,
+                "endChar": 785,
+                "quote": "a label"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 785,
+              "endChar": 798,
+              "quote": " (23) within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.d",
+              "anchor": {
+                "startChar": 798,
+                "endChar": 813,
+                "quote": "the mold cavity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 813,
+              "endChar": 822,
+              "quote": ", having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.d",
+              "anchor": {
+                "startChar": 822,
+                "endChar": 829,
+                "quote": "a shape"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 829,
+              "endChar": 839,
+              "quote": " matching "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.d",
+              "anchor": {
+                "startChar": 839,
+                "endChar": 848,
+                "quote": "the shape"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 848,
+              "endChar": 852,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.d",
+              "anchor": {
+                "startChar": 852,
+                "endChar": 879,
+                "quote": "the frustoconical side wall"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 879,
+              "endChar": 883,
+              "quote": " (2)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "15.e",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 885,
+              "endChar": 888,
+              "quote": "in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.e",
+              "anchor": {
+                "startChar": 888,
+                "endChar": 896,
+                "quote": "the core"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 896,
+              "endChar": 915,
+              "quote": " (250), one places "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.e",
+              "anchor": {
+                "startChar": 915,
+                "endChar": 932,
+                "quote": "the membrane seal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 932,
+              "endChar": 955,
+              "quote": " (14), then one closes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.e",
+              "anchor": {
+                "startChar": 955,
+                "endChar": 963,
+                "quote": "the mold"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 963,
+              "endChar": 986,
+              "quote": ", and then one injects "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.e",
+              "anchor": {
+                "startChar": 986,
+                "endChar": 997,
+                "quote": "the plastic"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15",
+          "anchor": {
+            "startChar": 23,
+            "endChar": 32,
+            "quote": "a capsule"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 296,
+            "endChar": 307,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 132,
+            "quote": "a capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 381,
+            "endChar": 389,
+            "quote": "the mold"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 112,
+            "quote": "a mold"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 456,
+            "endChar": 483,
+            "quote": "the frustoconical side wall"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 157,
+            "quote": "a side wall"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 487,
+            "endChar": 498,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 132,
+            "quote": "a capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 519,
+            "endChar": 529,
+            "quote": "the cavity"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 425,
+            "endChar": 433,
+            "quote": "a cavity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 565,
+            "endChar": 576,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 132,
+            "quote": "a capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 631,
+            "endChar": 642,
+            "quote": "the opening"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 357,
+            "endChar": 374,
+            "quote": "a central opening"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 665,
+            "endChar": 676,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 132,
+            "quote": "a capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.c",
+          "anchor": {
+            "startChar": 696,
+            "endChar": 704,
+            "quote": "the mold"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 112,
+            "quote": "a mold"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.c",
+          "anchor": {
+            "startChar": 754,
+            "endChar": 765,
+            "quote": "the capsule"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 132,
+            "quote": "a capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.d",
+          "anchor": {
+            "startChar": 798,
+            "endChar": 813,
+            "quote": "the mold cavity"
+          }
+        },
+        "introducing": {
+          "path": "15.b",
+          "anchor": {
+            "startChar": 425,
+            "endChar": 433,
+            "quote": "a cavity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.d",
+          "anchor": {
+            "startChar": 852,
+            "endChar": 879,
+            "quote": "the frustoconical side wall"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 157,
+            "quote": "a side wall"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.e",
+          "anchor": {
+            "startChar": 888,
+            "endChar": 896,
+            "quote": "the core"
+          }
+        },
+        "introducing": {
+          "path": "15.c",
+          "anchor": {
+            "startChar": 708,
+            "endChar": 714,
+            "quote": "a core"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.e",
+          "anchor": {
+            "startChar": 955,
+            "endChar": 963,
+            "quote": "the mold"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 112,
+            "quote": "a mold"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15.e",
+          "anchor": {
+            "startChar": 986,
+            "endChar": 997,
+            "quote": "the plastic"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 380,
+            "endChar": 396,
+            "quote": "injected plastic"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 16,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "16",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 62,
+          "quote": "Process for the production of a capsule in accordance claim 15"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 7,
+              "quote": "Process"
+            },
+            "determiner": "bare",
+            "head": "process"
+          },
+          {
+            "anchor": {
+              "startChar": 12,
+              "endChar": 26,
+              "quote": "the production"
+            },
+            "determiner": "the",
+            "head": "production"
+          },
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 39,
+              "quote": "a capsule"
+            },
+            "determiner": "a",
+            "head": "capsule"
+          }
+        ]
+      },
+      {
+        "path": "16.a",
+        "anchor": {
+          "startChar": 95,
+          "endChar": 198,
+          "quote": "one places the membrane filter (14) on the core (250), and then closes the mold and injects the plastic"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 125,
+              "quote": "the membrane filter"
+            },
+            "determiner": "the",
+            "head": "membrane filter"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 142,
+              "quote": "the core"
+            },
+            "determiner": "the",
+            "head": "core"
+          },
+          {
+            "anchor": {
+              "startChar": 166,
+              "endChar": 174,
+              "quote": "the mold"
+            },
+            "determiner": "the",
+            "head": "mold"
+          },
+          {
+            "anchor": {
+              "startChar": 187,
+              "endChar": 198,
+              "quote": "the plastic"
+            },
+            "determiner": "the",
+            "head": "plastic"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "16",
+        "ancestor": "15"
+      },
+      {
+        "kind": "part-of",
+        "child": "16.a",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 95,
+              "endChar": 106,
+              "quote": "one places "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 125,
+                "quote": "the membrane filter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 134,
+              "quote": " (14) on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 142,
+                "quote": "the core"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 142,
+              "endChar": 166,
+              "quote": " (250), and then closes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 166,
+                "endChar": 174,
+                "quote": "the mold"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 174,
+              "endChar": 187,
+              "quote": " and injects "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 187,
+                "endChar": 198,
+                "quote": "the plastic"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 7,
+            "quote": "Process"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 18,
+            "quote": "Production process"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16",
+          "anchor": {
+            "startChar": 30,
+            "endChar": 39,
+            "quote": "a capsule"
+          }
+        },
+        "introducing": {
+          "path": "15",
+          "anchor": {
+            "startChar": 23,
+            "endChar": 32,
+            "quote": "a capsule"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 134,
+            "endChar": 142,
+            "quote": "the core"
+          }
+        },
+        "introducing": {
+          "path": "15.c",
+          "anchor": {
+            "startChar": 708,
+            "endChar": 714,
+            "quote": "a core"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 166,
+            "endChar": 174,
+            "quote": "the mold"
+          }
+        },
+        "introducing": {
+          "path": "15.a",
+          "anchor": {
+            "startChar": 106,
+            "endChar": 112,
+            "quote": "a mold"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 187,
+            "endChar": 198,
+            "quote": "the plastic"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 380,
+            "endChar": 396,
+            "quote": "injected plastic"
+          }
+        }
+      }
+    ]
+  }
+]

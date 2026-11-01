@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-28",
+  "convention": "lexical-head/v1",
+  "familyId": "16068637-root-11",
+  "status": "requires-attorney-after-agent-round-limit",
+  "annotationSha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+  "reason": "Three extractor/critic rounds already completed. This post-convention consistency question requires actual attorney adjudication; no fourth model round or annotation change.",
+  "items": [
+    {
+      "familyId": "16068637-root-11",
+      "claimNumber": 13,
+      "path": "13.a",
+      "anchor": {
+        "startChar": 108,
+        "endChar": 117,
+        "quote": "each edge"
+      },
+      "head": "each edge",
+      "proposedHead": "edge"
+    }
+  ]
+}

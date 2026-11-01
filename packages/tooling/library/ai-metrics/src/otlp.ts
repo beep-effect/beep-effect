@@ -30,6 +30,7 @@ import {
   ensureAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
 import { HarnessHash } from "./harness-ledger.ts";
+import { parseSourceEventTime } from "./internal/source-event-time.ts";
 import {
   AiMetricsDeployTarget,
   AiMetricsOtlpEndpointSpec,
@@ -67,6 +68,8 @@ export const AiMetricsOtlpAttributeKey = LiteralKit([
   "ai_metrics.session_stamp_completeness",
   "ai_metrics.session_stamp_qualification",
   "ai_metrics.event_name",
+  "ai_metrics.duration_known",
+  "ai_metrics.time_basis",
   "ai_metrics.forked_from_id_hash",
   "ai_metrics.ingest_run_id",
   "ai_metrics.line_number",
@@ -402,6 +405,7 @@ class AiMetricsOtlpTurnExportRow extends S.Opaque<AiMetricsOtlpTurnExportRow, { 
     parentThreadIdHash: S.OptionFromNullOr(S.String),
     rawEventHash: S.String,
     sessionIdHash: S.OptionFromNullOr(S.String),
+    sessionStartedAt: S.OptionFromNullOr(S.String),
     sourceKind: AiMetricsTranscriptSource,
     sourcePathHash: S.String,
     sourceRole: AiMetricsSourceRole,
@@ -491,6 +495,7 @@ const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* () {
          t.raw_event_hash AS "rawEventHash",
          t.timestamp AS "timestamp",
          s.session_id_hash AS "sessionIdHash",
+         s.started_at AS "sessionStartedAt",
          s.parent_session_id_hash AS "parentSessionIdHash",
          s.parent_thread_id_hash AS "parentThreadIdHash",
          s.forked_from_id_hash AS "forkedFromIdHash",
@@ -573,6 +578,7 @@ const sessionProjection = (
         "ai_metrics.parent_thread_id_hash": row.parentThreadIdHash,
         "ai_metrics.session_id_hash": row.sessionIdHash,
         "ai_metrics.thread_spawn": row.threadSpawn,
+        "ai_metrics.timestamp": row.sessionStartedAt,
       }),
       "ai_metrics.config_snapshot_id": row.configSnapshotId,
       ...O.getSomesStruct({ "ai_metrics.session_harness_hash": row.sessionHarnessHash }),
@@ -819,39 +825,57 @@ const hrTimeFrom = (epochMillis: number): HrTime => [
 ];
 
 const readableSpanFor =
-  (resource: Resource, timestamp: HrTime) =>
-  (projection: AiMetricsOtlpSpanProjection): ReadableSpan => ({
-    attributes: projection.attributes,
-    droppedAttributesCount: 0,
-    droppedEventsCount: 0,
-    droppedLinksCount: 0,
-    duration: [0, 0],
-    ended: true,
-    endTime: timestamp,
-    events: [],
-    instrumentationScope: { name: AI_METRICS_OTLP_SCOPE_NAME, version: AI_METRICS_OTLP_SERVICE_VERSION },
-    kind: SpanKind.INTERNAL,
-    links: [],
-    name: projection.spanName,
-    ...O.getSomesStruct({
-      parentSpanContext: pipe(
-        projection.parentSpanId,
-        O.map((parentSpanId) => ({
-          spanId: parentSpanId,
-          traceFlags: TraceFlags.SAMPLED,
-          traceId: projection.traceId,
-        }))
-      ),
-    }),
-    resource,
-    spanContext: () => ({
-      spanId: projection.spanId,
-      traceFlags: TraceFlags.SAMPLED,
-      traceId: projection.traceId,
-    }),
-    startTime: timestamp,
-    status: { code: SpanStatusCode.UNSET },
-  });
+  (resource: Resource, observedAt: HrTime) =>
+  (projection: AiMetricsOtlpSpanProjection): ReadableSpan => {
+    const sourceTimestamp = pipe(R.get(projection.attributes, "ai_metrics.timestamp"), O.filter(S.is(S.String)));
+    const eventTime = pipe(
+      sourceTimestamp,
+      O.flatMap(parseSourceEventTime),
+      O.map((value): HrTime => [value.seconds, value.nanoseconds])
+    );
+    const timestamp = O.getOrElse(eventTime, () => observedAt);
+    return {
+      attributes: {
+        ...R.remove(projection.attributes, "ai_metrics.timestamp"),
+        ...O.getSomesStruct({
+          "ai_metrics.timestamp": O.isSome(eventTime) ? sourceTimestamp : O.none(),
+        }),
+        // Transcript records are points, not measured operations. OTLP requires
+        // start/end times; equal endpoints encode the point without inventing latency.
+        "ai_metrics.duration_known": false,
+        "ai_metrics.time_basis": O.isSome(eventTime) ? "source_event" : "export_observation",
+      },
+      droppedAttributesCount: 0,
+      droppedEventsCount: 0,
+      droppedLinksCount: 0,
+      duration: [0, 0],
+      ended: true,
+      endTime: timestamp,
+      events: [],
+      instrumentationScope: { name: AI_METRICS_OTLP_SCOPE_NAME, version: AI_METRICS_OTLP_SERVICE_VERSION },
+      kind: SpanKind.INTERNAL,
+      links: [],
+      name: projection.spanName,
+      ...O.getSomesStruct({
+        parentSpanContext: pipe(
+          projection.parentSpanId,
+          O.map((parentSpanId) => ({
+            spanId: parentSpanId,
+            traceFlags: TraceFlags.SAMPLED,
+            traceId: projection.traceId,
+          }))
+        ),
+      }),
+      resource,
+      spanContext: () => ({
+        spanId: projection.spanId,
+        traceFlags: TraceFlags.SAMPLED,
+        traceId: projection.traceId,
+      }),
+      startTime: timestamp,
+      status: { code: SpanStatusCode.UNSET },
+    };
+  };
 
 // The exporter callback is the only real delivery confirmation available. Effect
 // tracing cannot supply one: span emission there is asynchronous and fire-and-forget,

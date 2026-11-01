@@ -1,0 +1,127 @@
+{
+  "familyId": "12749812-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for implementing variable length packets to embed extra control information in an interconnect system comprising: defining packets to include an End-to-End (ETE) Flow Unit within packet (Flit) count field in a packet header; receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method as recited in claim 1 includes sending an ETE cyclic redundancy check (CRC) flit with said embedded ETE flits, ETE CRC flit covers only said embedded ETE flits.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method as recited in claim 1 includes identifying an ETE cyclic redundancy check (CRC) flit, and validating said embedded ETE flits responsive to a correct ETE CRC flit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method as recited in claim 1 includes determining when to embed ETE flits based upon predetermined configuration settings and available ETE messages in an outgoing ETE buffer.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method as recited in claim 4 wherein said predetermined configuration settings include a maximum flits allowed to be embedded for each packet type.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method as recited in claim 4 wherein said predetermined configuration settings include whether embedded flits include a cyclic redundancy check (CRC).",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method as recited in claim 1 includes creating said packet header including a header cyclic redundancy check (CRC) for transmitting on an outgoing link.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method as recited in claim 7 includes removing a number of ETE messages from an ETE buffer corresponding to said nonzero value in said ETE flit count field, converting said ETE messages to ETE flits, and inserting said ETE flits into the packet after said packet header.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method as recited in claim 8 includes inserting an ETE cyclic redundancy check (CRC) flit with said embedded ETE flits, ETE CRC flit covers only said embedded ETE flits.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method as recited in claim 1 includes checking a packet header cyclic redundancy check (CRC), and discarding said embedded ETE flits responsive to an incorrect packet header CRC.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A circuit for implementing variable length packets to embed extra control information in an interconnect system comprising: an interconnect link send circuit transferring an outgoing packet onto an outgoing link, said interconnect link send circuit building a packet header; creating an End-to-End (ETE) Flow Unit within packet (Flit) count field in said packet header; converting ETE messages into ETE flits, and embedding ETE flits into the outgoing packet after the packet header; and an interconnect link receive circuit receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The circuit as recited in claim 11 wherein said interconnect link send circuit creating said packet header includes generating a header cyclic redundancy check (CRC) for said packet header.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The circuit as recited in claim 12 wherein said interconnect link receive circuit checks said packet header cyclic redundancy check (CRC), and discarding said embedded ETE flits responsive to an incorrect packet header CRC.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The circuit as recited in claim 11 wherein said interconnect link send circuit generates an ETE cyclic redundancy check (CRC) for said embedded ETE flits, and inserts said ETE CRC flit flits into the outgoing packet after said embedded ETE flits.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The circuit as recited in claim 11 wherein said interconnect link receive circuit identifies said ETE cyclic redundancy check (CRC) flit, and validating said embedded ETE flits responsive to a correct ETE CRC flit.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The circuit as recited in claim 11 wherein said interconnect link send circuit determines when to embed ETE flits based upon predetermined configuration settings and available ETE messages in an outgoing ETE buffer.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A multiple-path local rack interconnect system comprising: a plurality of interconnect chips; a plurality of serial links connected between each of said plurality of interconnect chips; each of said interconnect chips including a circuit for implementing variable length packets to embed extra control information, said circuit comprising: an interconnect link send circuit transferring an outgoing packet onto an outgoing link, said interconnect link send circuit building a packet header; creating an End-to-End (ETE) Flow Unit within packet (Flit) count field in said packet header; converting ETE messages into ETE flits, and embedding ETE flits into the outgoing packet after the packet header; and an interconnect link receive circuit receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The multiple-path local rack interconnect system as recited in claim 17 wherein said interconnect link send circuit generates an ETE cyclic redundancy check (CRC) for said embedded ETE flits, and inserts said ETE CRC flit flits into the outgoing packet after said embedded ETE flits.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The multiple-path local rack interconnect system as recited in claim 18 wherein said interconnect link receive circuit identifies said ETE cyclic redundancy check (CRC) flit, and validating said embedded ETE flits responsive to a correct ETE CRC flit.",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A design structure embodied in a machine readable medium used in a design process, the design structure comprising: a circuit tangibly embodied in the machine readable medium used in the design process, said circuit for implementing variable length packets to embed extra control information, said circuit comprising: an interconnect link send circuit transferring an outgoing packet onto an outgoing link, said interconnect link send circuit building a packet header; creating an End-to-End (ETE) Flow Unit within packet (Flit) count field in said packet header; converting ETE messages into ETE flits, and embedding ETE flits into the outgoing packet after the packet header; and an interconnect link receive circuit receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits, wherein the design structure, when read and used in the manufacture of a semiconductor chip produces a chip comprising said circuit.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The design structure of claim 20, wherein the design structure comprises a netlist, which describes said circuit.",
+      "sourceXmlParentClaimNumbers": [20]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The design structure of claim 20, wherein the design structure resides on storage medium as a data format used for the exchange of layout data of integrated circuits.",
+      "sourceXmlParentClaimNumbers": [20]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The design structure of claim 20, wherein the design structure includes at least one of test data files, characterization data, verification data, or design specifications.",
+      "sourceXmlParentClaimNumbers": [20]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The design structure of claim 20, wherein said interconnect link receive circuit checks an ETE cyclic redundancy check (CRC) flit for said embedded ETE flits, and validates said embedded ETE flits responsive to a correct ETE CRC flit.",
+      "sourceXmlParentClaimNumbers": [20]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16052309-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "confidenceScope": "Independent semantic structure only; source eligibility and attorney adjudication separate.",
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6],
+  "findings": [
+    {
+      "claimNumber": 4,
+      "evidence": {
+        "referring": {
+          "path": "4.b",
+          "anchor": {
+            "startChar": 359,
+            "endChar": 373,
+            "quote": "its side bends"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 171,
+            "quote": "L-shaped side bends"
+          }
+        },
+        "sourceContext": "the top and/or bottom part (3) ... presents L-shaped side bends ... the top/bottom part (3) ... through its side bends (3b)"
+      },
+      "requiredCorrection": "Add the antecedent edge from 4.b its side bends to 4.a L-shaped side bends. The possessive refers to the same top/bottom part and its previously listed side bends; the source grammar makes this relation clear without relying on a numeral-only identity or sibling claim. Preserve both term anchors and heads. The existing parallel its lower bend edge is already correct."
+    }
+  ],
+  "acceptanceBlockers": [],
+  "sourceEligibility": "provisional-pending-independent-source-critic",
+  "structuralStatus": "correction-required",
+  "rationale": [
+    "Reviewed source grammar, full lexical heads, all20 elements and76 terms, all41 existing edges and11 ordered functional relationships. The reference directly annotates characterized transitions rather than declaring implementation-based abstention. All96 element/term anchors and45 functional text anchors are exact UTF16 source slices; functional parts cover their own elements in source order and use locally owned terms.",
+    "The one concrete omission is the source-clear possessive side-bends antecedent in claim4. Existing lower-bend linking already uses the same direct introduction pattern. No lexical stop list, token cap, production prediction or archived conformance label was used.",
+    "Natural-language dependency membership:2-6 each reference1. Cross-claim System and cabinet references are source-grounded; no sibling term is imported. Missing introductions for backside sections, unintroduced bends/ends and later side/tab entities are not repaired using reference numerals. Duplicate the the in6 is preserved; the selected second determiner phrase is exact.",
+    "Native/source XML and digest checks pass. Source-audit eligibility is an extractor proposal with original dependency reconciliation; separate independent source review is pending. This structural verdict does not certify that reconciliation or the in-force claim text."
+  ],
+  "audit": {
+    "resolvedTreesReviewed": 6,
+    "elementsReviewed": 20,
+    "termsReviewed": 76,
+    "typedEdgesReviewed": 41,
+    "functionalEdgesReviewed": 11,
+    "allElementAndTermUtf16SlicesVerified": true,
+    "allFunctionalTextSlicesVerified": true,
+    "functionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+    "selectedNativeClaimTextAndClaimsXmlDigestVerified": true,
+    "rootSchemaCheck": "pending-root",
+    "attorneyAdjudication": "pending"
+  },
+  "independence": "Independent reviewer of fresh semantic-reference/v2 proposals, not their producer. Did not reread P2 rules, implementation, predictions, synthetic fixtures or archived conformance drafts. Read fresh expected/extractor, canonical native claims, source audit proposal, v2 protocol and schema contracts. Helpers checked supplied span/reference coherence only; no decomposer run/copied/reimplemented."
+}

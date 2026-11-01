@@ -1,0 +1,31 @@
+{
+  "applicationNumber": "11246782",
+  "publicationNumber": "US20070080569A1",
+  "publicationDate": "2007-04-12",
+  "nativeXmlSha256": "7012dfce65ee20e9d6115148f4e42ab9a962a01056b76c39309c06bfdfaeb44c",
+  "claimsXmlSha256": "164ba7cdb3667ac85de10f85eabec98fccac77c5cb3eca7c1e2d9a8ab0165144",
+  "officeActionDocumentIdentifiers": [
+    "FCKH00ECPPOPPY5"
+  ],
+  "officeActionMailDate": "2008-02-12",
+  "officeActionSection112Text": [
+    "claims 15-19, and 22-30 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention. in lines 3 and 5 of claim 15, it appears that applicant positively claims a juvenile. note the recitation a juvenile seated on the seating surface. it is suggested that when be inserted after juvenile. similarly note claim 22. claim 16 is indefinite since it depends from an indefinite claim. in line 7 of claim 17, “the crotch belt” lacks proper antecedent basis. claims 18 and 19 are indefinite since each depends from an indefinite claim. in line 1 of claim 22, “the lower shell” lacks proper antecedent basis. in the last line of claim 22, “the belt-receiver slot” lacks proper antecedent basis. in line 1 of claim 23, “the harness mount” lacks proper antecedent basis. in lines 3 to 4 of claim 23, “the top wall” lacks proper antecedent basis. in line 4 of claim 23, “the upper shell” lacks proper antecedent basis. in line 1 of claim 23, “the upper shell” lacks proper antecedent basis. in line 2 of claim 24, “the hollow interior region” lacks proper antecedent basis. in line 1 of claim 25, “the upper shell lacks proper antecedent basis. in line 2 of claim 25, the hollow interior region lacks proper antecedent basis. in line 6 of claim 25, “the top wall” lacks proper antecedent basis. in line 7 of claim 25, “the underlying lower shell” lacks proper antecedent basis. claim 26 is indefinite since it depends from an indefinite claim. in line 2 of claim 27, “the bottom wall of the lower shell” lacks proper antecedent basis. in line 3 of claim 27, “the top wall of the upper shell” lacks proper antecedent basis. in lines 4 to 5 of claim 28, “the upper shell” lacks proper antecedent basis. in lines 5 to 6 of claim 28, the hollow interior region lacks proper antecedent basis. in line 6 of claim 28m the left swing arm lacks proper antecedent basis. in line 7 of claim 28, the hollow interior region lacks proper antecedent basis. in line 8 of claim 28, the right swing arm lacks proper antecedent basis. in line 10 of claim 28, the top wall lacks proper antecedent basis. in line 10 of claim 28, the underlying lower shell lacks proper antecedent basis. claim 29 is indefinite since it depends from an indefinite claim. in line 7 of claim 30, the belt-receiver slot lacks proper antecedent basis. in line 8 of claim 30, the bottom wall lacks proper antecedent basis. in line 10 of claim 30, the top wall lacks proper antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "EEWNAG79PP2GUI1",
+      "officialDate": "2005-10-07T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 51,
+  "documentInventoryRows": 51,
+  "primaryCpc": "B60N   2/286",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11246782",
+    "https://api.uspto.gov/api/v1/patent/applications/11246782/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

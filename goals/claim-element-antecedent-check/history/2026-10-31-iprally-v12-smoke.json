@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-31",
+  "purpose": "Repeat the same selected non-US non-gold smoke under v12 without replacing the old result.",
+  "implementationDigest": "66e33e2be114f5472833c2e415a155f648e95e9ed2fb5473a3e8479d770fd5f0",
+  "inputSha256": "3c357e6ed518741291b5729805d9940d03a6b49eb4db6999d74daef445f1054e",
+  "result": {
+    "status": "checked",
+    "basis": "non-US-non-gold",
+    "sourceId": "KR-100380121-B1",
+    "country": "KR",
+    "ipcCodes": "F15",
+    "tokens": 523,
+    "sourceCommit": "51ba1e69b471021f225fe6787100b0f69d78da24",
+    "archiveSha256": "35307451747a8ae65d4d359aed23cff2f0d8ce02dfc8b8e3bfe6db7cbdadab0a",
+    "claims": 1,
+    "trees": 1,
+    "findings": 78,
+    "undecomposed": 0,
+    "manualReviewPatterns": 16
+  },
+  "structuralAccuracy": null,
+  "adjudicatedFalsePositiveRate": null
+}

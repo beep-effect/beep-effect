@@ -1,0 +1,224 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "17139442-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "referenceSha256": "75f2e7433a90998f2a3fb5cb5287b465f81c66a657e8d8750d642ee7247eff54",
+  "extractorSha256": "5d215943808f4c83b9bba3f14df66c15a9d593b030216016a41b22d722865efe",
+  "verification": [
+    "Read all selected canonical source claims, native claims XML, extractor, expected trees, provenance and independent source critic. Read only the ClaimElement model/tree/edge schema files; no behavior, policy, decomposition implementation or predictions. Source qualification remains separately accepted in source-critic.json; no fresh original-PDF or full-inventory authentication claimed.",
+    "Independent mechanical checks passed every UTF-16 source anchor, ordered/nonoverlapping term ownership, normalized head shape, functional full-source reconstruction and exact participating-term ownership, edge endpoint membership, cross-claim ancestor membership, path uniqueness and absence of duplicate typed edges. Native XML digest matches provenance; all native/canonical claims agree after permitted printed-number removal and whitespace normalization. Geometry supplements manual semantic review; no decomposer was called."
+  ],
+  "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json files written. No production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Source grammar and protocol determine semantic findings.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic references only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+  "confidence": 0.98,
+  "verdict": "changes-required",
+  "reviewScope": {
+    "claimCount": 7,
+    "elementCount": 23,
+    "termCount": 130,
+    "edgeCount": 98,
+    "functionalRelationCount": 16
+  },
+  "findings": [
+    {
+      "id": "component-identity-ambiguity",
+      "claimNumbers": [
+        1,
+        2,
+        7
+      ],
+      "kind": "unsupported-antecedent-choice",
+      "evidence": {
+        "firstIntroduction": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 140,
+            "endChar": 169,
+            "quote": "a medical treatment component"
+          }
+        },
+        "secondIntroduction": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 447,
+            "endChar": 476,
+            "quote": "a medical treatment component"
+          }
+        },
+        "affectedEdges": [
+          {
+            "claimNumber": 1,
+            "referring": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 885,
+                "endChar": 923,
+                "quote": "the medical treatment device component"
+              }
+            },
+            "chosenIntroduction": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 476,
+                "quote": "a medical treatment component"
+              }
+            }
+          },
+          {
+            "claimNumber": 1,
+            "referring": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 929,
+                "endChar": 960,
+                "quote": "the medical treatment component"
+              }
+            },
+            "chosenIntroduction": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 476,
+                "quote": "a medical treatment component"
+              }
+            }
+          },
+          {
+            "claimNumber": 1,
+            "referring": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 1122,
+                "endChar": 1153,
+                "quote": "the medical treatment component"
+              }
+            },
+            "chosenIntroduction": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 476,
+                "quote": "a medical treatment component"
+              }
+            }
+          },
+          {
+            "claimNumber": 2,
+            "referring": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 208,
+                "endChar": 239,
+                "quote": "the medical treatment component"
+              }
+            },
+            "chosenIntroduction": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 476,
+                "quote": "a medical treatment component"
+              }
+            }
+          },
+          {
+            "claimNumber": 2,
+            "referring": {
+              "path": "2.c",
+              "anchor": {
+                "startChar": 952,
+                "endChar": 984,
+                "quote": "said medical treatment component"
+              }
+            },
+            "chosenIntroduction": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 476,
+                "quote": "a medical treatment component"
+              }
+            }
+          },
+          {
+            "claimNumber": 2,
+            "referring": {
+              "path": "2.d",
+              "anchor": {
+                "startChar": 1239,
+                "endChar": 1270,
+                "quote": "the medical treatment component"
+              }
+            },
+            "chosenIntroduction": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 476,
+                "quote": "a medical treatment component"
+              }
+            }
+          },
+          {
+            "claimNumber": 7,
+            "referring": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 216,
+                "endChar": 247,
+                "quote": "the medical treatment component"
+              }
+            },
+            "chosenIntroduction": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 476,
+                "quote": "a medical treatment component"
+              }
+            }
+          }
+        ]
+      },
+      "reason": "The source repeats an indefinite medical-treatment-component introduction. The extractor explicitly acknowledges that these can be distinct but then uses nearest introduction to choose every subsequent definite component reference outside the local 1.c clause. Proximity does not establish unique identity under protocol rule 4. In particular the patient receiving treatment phrase in 2.a can point to the treatment-performing 1.a component; its current forced edge to 1.c is not unambiguous. The variant medical treatment device component in 1.d also does not resolve this two-introduction ambiguity.",
+      "correction": "Keep both exact introductions and all exact referring terms. Withhold the listed outside-clause antecedent edges and record the source-specific candidate ambiguity unless an explicit grammatical source argument establishes unique identity. Do not conflate the two indefinite introductions or fabricate an identity edge. The local 1.c controller-clause reference is not included in this finding."
+    },
+    {
+      "id": "embedded-said-not-lexical-head",
+      "claimNumbers": [
+        2
+      ],
+      "path": "2.c",
+      "anchor": {
+        "startChar": 864,
+        "endChar": 909,
+        "quote": "a plurality of said predefined time intervals"
+      },
+      "actualHead": "said predefined time intervals",
+      "reason": "In a plurality of said predefined time intervals, said grammatically refers back to the earlier predefined time intervals. It is not a lexical modifier of time intervals. Retaining said in the normalized noun-phrase head conflicts with the head-without-determiner convention, even though the plurality-of tag already accounts for the enclosing opening.",
+      "correction": "Normalize the head to predefined time intervals while preserving the complete exact anchor, plurality-of tag, functional parts and source-supported earlier-interval reference. If the nested determiner construction instead requires separate nonoverlapping terms under the protocol, adjudicate that source-specific representation explicitly; do not treat said as part of the lexical name."
+    }
+  ],
+  "reviewNotes": [
+    "Preamble subject, ordered dialysis/monitoring/controller/UI/storage/reporting relationships and all dependent-claim membership were independently reviewed. Claims 2–7 expressly depend on 1. Functional representations preserve source input of and during of irregularities; no wording repair is justified.",
+    "Authentication alternatives remain explicitly enumerated participants; mechanical lock is correctly bare, RFID normalizes to lowercase, and one or more under an outer the remains in that head because the the tag does not encode the quantity. Relative-clause that connectors are represented as functional text with explicit governing entities.",
+    "Alert/cancel, helper-presence, signal/pattern and Internet/server/terminal relationships were reviewed. Said verifying and identifying is anchored event nominalization with no fabricated noun introduction from verbs. The component-identity and embedded-determiner findings prevent acceptance of this round."
+  ],
+  "roundLimit": "Round 1 of at most 3 extractor/critic rounds; return findings to extractor rather than editing expected labels."
+}

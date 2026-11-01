@@ -7,6 +7,7 @@
   "instruments": [],
   "spans": [
     {"name":"Uspto.downloadDocument","owner":"@beep/uspto","family":"driver","conforms":true},
+    {"name":"Uspto.downloadResponse","owner":"@beep/uspto","family":"driver","conforms":true},
     {"name":"Uspto.executeForResponse","owner":"@beep/uspto","family":"driver","conforms":true},
     {"name":"Uspto.executeForText","owner":"@beep/uspto","family":"driver","conforms":true},
     {"name":"Uspto.getApplication","owner":"@beep/uspto","family":"driver","conforms":true},

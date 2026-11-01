@@ -1,0 +1,93 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An apparatus including:
+<claim-text>a base;</claim-text>
+<claim-text>a reserve basin and a dispensing basin formed in the base, wherein the reserve basin is in fluid communication with the dispensing basin;</claim-text>
+<claim-text>a tank seated on the base and configured to deliver a liquid into the reserve basin;</claim-text>
+<claim-text>a buoyant stopper positioned in the dispensing basin;</claim-text>
+<claim-text>a rim removably coupled to the dispensing basin, the rim having an annular ridge with an inner circumference smaller than an outer circumference of the stopper; and</claim-text>
+<claim-text>a filter disposed along a flow path of the fluid extending from the tank to the stopper, the flow path passing through the reserve basin and the dispensing basin,
+<claim-text>wherein the liquid delivered from the tank travels along the flow path through the filter, and wherein the stopper is configured to float upward to contact the rim and limit a height of the liquid in the dispensing basin and to be depressed by a pet to allow additional liquid to flow over the stopper.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the filter includes a multilayer passive cartridge.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The apparatus of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the multilayer passive cartridge of the filter includes a pre-screen, activated-carbon granules, and a micro-porous membrane.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the filter further includes a low-voltage pump configured to circulate the liquid through the filter.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The apparatus of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the filter further includes ultraviolet-C light emitters arranged to sterilize the liquid.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the stopper includes a top plate, a bottom plate, and a standoff that spaces the top plate and the bottom plate apart to define an internal air chamber providing buoyancy.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref> further including a removable bowl insert, wherein the removable bowl insert is placed in the base to form a barrier between the liquid and the walls of the base.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the stopper is biased upward toward the rim by a spring anchored to a floor of the dispensing basin.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further including a sensor configured to detect displacement of the stopper and a wireless transmitter configured to communicate fluid-level data to an external device.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A method of dispensing filtered water to a pet including:
+<claim-text>providing an apparatus including:
+<claim-text>a base;</claim-text>
+<claim-text>a reserve basin and a dispensing basin formed in the base;</claim-text>
+<claim-text>a tank seated on the base and fluidly coupled to the reserve basin;</claim-text>
+<claim-text>a buoyant stopper positioned in the dispensing basin; and</claim-text>
+<claim-text>a filter disposed a filter disposed along a flow path extending from the tank to the stopper;</claim-text>
+<claim-text>a rim coupled to the dispensing basin, the rim having an annular ridge with an inner circumference smaller than an outer circumference of the stopper;</claim-text>
+</claim-text>
+<claim-text>allowing water to gravity-feed from the tank into the reserve basin;</claim-text>
+<claim-text>allowing the water to flow through the filter from the reserve basin into the dispensing basin;</claim-text>
+<claim-text>floating the stopper upward until the stopper contacts the rim and limits a maximum water height in the dispensing basin;</claim-text>
+<claim-text>depressing the stopper with a muzzle or tongue of a pet to expose water above the stopper and permit additional water flow into the dispensing basin; and</claim-text>
+<claim-text>automatically replenishing the water by admitting air into the tank when the reserve-basin level drops, whereby a fresh volume of water is delivered through the filter into the dispensing basin.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the filter includes a multilayer passive cartridge having a pre-screen, activated-carbon granules, and a micro-porous membrane.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the filter further includes a low-voltage pump configured to circulate water through the filter and ultraviolet-C light emitters arranged to sterilize the water.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the stopper includes a rigid top plate, a bottom plate, and at least one standoff that spaces the plates apart to define an internal air chamber providing buoyancy.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the apparatus further includes a sensor configured to detect displacement of the stopper and a wireless transmitter configured to communicate fluid-level data to an external device.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. An apparatus including:
+<claim-text>a base;</claim-text>
+<claim-text>a removable bowl insert placed in the base, the removable bowl defining a reserve basin and a dispensing basin;</claim-text>
+<claim-text>a tank configured to supply water to the reserve basin;</claim-text>
+<claim-text>a buoyant stopper disposed within the dispensing basin;</claim-text>
+<claim-text>a flow path fluidly coupling the tank to the dispensing basin and the stopper;</claim-text>
+<claim-text>a filter disposed within the flow path; and</claim-text>
+<claim-text>a rim positioned at an upper portion of the dispensing basin, the rim including an annular ridge defining a central aperture, wherein the buoyant stopper is configured to float upward in response to a water level in the dispensing basin to engage the annular ridge, thereby capping the dispensing basin.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The apparatus of <claim-ref idref="CLM-00015">claim 15</claim-ref>, further including a spring disposed within the dispensing basin and configured to provide an upward biasing force on the buoyant stopper.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The apparatus of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the tank is configured to gravity-feed water to the reserve basin.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The apparatus of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the tank is removably seated on the base.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The apparatus of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the rim is removably coupled to the dispensing basin.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The apparatus of <claim-ref idref="CLM-00015">claim 15</claim-ref>, further including a sensor configured to detect the water level on the dispensing basin.</claim-text>
+</claim>
+</claims>

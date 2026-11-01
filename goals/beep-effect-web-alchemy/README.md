@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 done 2026-10-28: https://beep-effect.com is live from Alchemy stack `BeepEffectWeb` stage `prod`. Next: P3 CI deploy.
+P3 and P4 done 2026-10-31: PR #2435 merged as `441c6d94de`, and its merge push deployed prod from CI (run 41244684210). P5 Close is in progress.
 
 ## Latest Evidence
 
@@ -43,6 +43,8 @@ P2 done 2026-10-28: https://beep-effect.com is live from Alchemy stack `BeepEffe
   `http://beep-effect-web.beep.localhost:1355/` with no console errors.
 
 - P2 (2026-10-28): `history/2026-10-28-p2-first-deploy.md`: apex 200, www 301 with path and query kept, redeploy no-op, state in the Cloudflare store.
+- P3 (2026-10-31): `history/2026-10-31-p3-ci-deploy.md`: first CI deploy green; smoke check apex 200, www 301.
+- P5 (2026-10-31): `history/reflections/2026-10-31-claude.md`.
 
 ## Notes
 
