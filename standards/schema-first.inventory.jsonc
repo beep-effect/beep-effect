@@ -1585,7 +1585,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 62,
+      "line": 63,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Composed-worker regressions exercise native SQLite, actual listeners, pause/drain ownership, scheduler delivery and private maintenance/backup/retirement. Codecs support exact requests and receipts at controlled lifecycle boundaries. Exit: reusable schema laws move here or a meaningful independent worker reference model is designed; preserve refusal and resource-ordering cases. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
