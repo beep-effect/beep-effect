@@ -1,10 +1,12 @@
+import { DeliveryOutcome, DeliveryVisibility } from "@beep/repo-ai-metrics/delivery-ledger";
+import { NativeDeliveryResult } from "@beep/repo-ai-metrics/native-delivery";
 import { NativeReadbackResult } from "@beep/repo-ai-metrics/native-readback";
 import {
   NativeScheduleOutcome,
   NativeScheduleTick,
   ObservationLagSummary,
 } from "@beep/repo-ai-metrics/native-schedule";
-import { ObservationControlState } from "@beep/repo-ai-metrics/observation-control";
+import { ObservationControlError, ObservationControlState } from "@beep/repo-ai-metrics/observation-control";
 import {
   makeObservationRuntime,
   ObservationRuntimePolicy,
@@ -38,6 +40,7 @@ const fixture = Effect.fn("ObservationRuntimeTest.fixture")(function* (accepting
   const fail = yield* Ref.make(false);
   const hang = yield* Ref.make(false);
   const crash = yield* Ref.make(false);
+  const refusal = yield* Ref.make(O.none<ObservationControlError>());
   const nextTick = yield* Ref.make<typeof NativeScheduleTick.Type>(
     NativeScheduleTick.cases.Complete.make({ wrapped: false, outcomes: [] })
   );
@@ -63,6 +66,8 @@ const fixture = Effect.fn("ObservationRuntimeTest.fixture")(function* (accepting
       yield* Ref.update(calls, (n) => n + 1);
       yield* Deferred.succeed(entered, undefined);
       if (yield* Ref.get(crash)) return yield* Effect.die("synthetic-runtime-defect");
+      const refused = yield* Ref.get(refusal);
+      if (O.isSome(refused)) return yield* refused.value;
       if (yield* Ref.get(hang)) return yield* Effect.never;
       return yield* Ref.get(nextTick);
     }),
@@ -71,7 +76,7 @@ const fixture = Effect.fn("ObservationRuntimeTest.fixture")(function* (accepting
     ),
   };
   const runtime = yield* makeObservationRuntime(worker, policy);
-  return { runtime, worker, control, calls, fail, hang, crash, nextTick, entered, pauses };
+  return { runtime, worker, control, calls, fail, hang, crash, refusal, nextTick, entered, pauses };
 });
 const waitForCycle = Effect.fn("ObservationRuntimeTest.waitForCycle")(function* (
   runtime: Effect.Success<ReturnType<typeof makeObservationRuntime>>
@@ -418,6 +423,144 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       const future = yield* clockAt((yield* Clock.currentTimeMillis) + 10000);
       const stopped = yield* runtime.health.pipe(Effect.provideService(Clock.Clock, future));
       expect(stopped).toMatchObject({ phase: "stopped", sources: { phase: "stopped" } });
+    })
+  )
+);
+
+const outcomeEvent = Sha256Hex.make(Str.repeat(64)("f"));
+const attemptId = Sha256Hex.make(Str.repeat(64)("a"));
+const visible = NativeScheduleOutcome.cases.Reconciled.make({
+  eventId: outcomeEvent,
+  result: NativeReadbackResult.cases.Visible.make({
+    proof: DeliveryVisibility.make({ eventId: outcomeEvent, attemptId, payloadDigest: attemptId, observedAt: 1 }),
+  }),
+});
+const sent = (outcome: typeof DeliveryOutcome.Type) =>
+  NativeScheduleOutcome.cases.Sent.make({
+    eventId: outcomeEvent,
+    result: NativeDeliveryResult.cases.Recorded.make({ attemptId, outcome }),
+  });
+const completeTick = (outcomes: ReadonlyArray<typeof NativeScheduleOutcome.Type>) =>
+  NativeScheduleTick.cases.Complete.make({
+    wrapped: false,
+    outcomes: [...outcomes],
+    lag: O.some(
+      ObservationLagSummary.make({
+        sampledEvents: 1,
+        unknownSourceTimes: 0,
+        acceptedClockRegressions: 0,
+        sourceClockRegressions: 0,
+        maxAcceptedAgeMillis: O.none(),
+        maxSourceAgeMillis: O.none(),
+      })
+    ),
+  });
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
+  it.effect("classifies every outcome arm and reports a healthy examined pass as active", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const held = NativeScheduleOutcome.cases.Held.make({ eventId: outcomeEvent, reason: "query-delay" });
+      const failed = NativeScheduleOutcome.cases.Failed.make({ eventId: outcomeEvent, reason: "readback" });
+      yield* Ref.set(f.nextTick, completeTick([visible, sent(DeliveryOutcome.cases.Accepted.make({})), held, failed]));
+      const running = yield* f.runtime.run.pipe(Effect.forkChild);
+      const degraded = yield* waitForCycle(f.runtime);
+      expect(degraded).toMatchObject({
+        phase: "degraded",
+        lastCycle: {
+          value: { result: { summary: { examined: 4, visible: 1, sent: 1, held: 1, failed: 1, unhealthy: true } } },
+        },
+      });
+      const metrics = renderObservationRuntimeMetrics(degraded);
+      expect(metrics).toContain("beep_observation_delivery_pass_age_sampled_events 1");
+      expect(metrics).not.toContain("max_accepted_age_seconds");
+      expect(metrics).not.toContain("max_source_age_seconds");
+      yield* Ref.set(f.nextTick, completeTick([visible, sent(DeliveryOutcome.cases.Accepted.make({})), held]));
+      yield* TestClock.adjust(150);
+      expect(yield* f.runtime.health).toMatchObject({
+        phase: "active",
+        lastCycle: { value: { result: { summary: { examined: 3, held: 1, unhealthy: false } } } },
+      });
+      yield* Ref.set(f.nextTick, completeTick([sent(DeliveryOutcome.cases.Retryable.make({ status: 503 }))]));
+      yield* TestClock.adjust(150);
+      expect(yield* f.runtime.health).toMatchObject({
+        phase: "degraded",
+        lastCycle: { value: { result: { summary: { sent: 1, unhealthy: true } } } },
+      });
+      yield* Fiber.interrupt(running);
+    })
+  )
+);
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
+  it.effect("reports starting before the first cycle and a scheduler deadline without pass gauges", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      yield* Ref.set(f.hang, true);
+      const running = yield* f.runtime.run.pipe(Effect.forkChild);
+      yield* Deferred.await(f.entered);
+      expect(yield* f.runtime.health).toMatchObject({ phase: "starting", running: true, lastCycle: { _tag: "None" } });
+      yield* Fiber.interrupt(running);
+      const g = yield* fixture();
+      yield* Ref.set(g.nextTick, NativeScheduleTick.cases.Deadline.make({}));
+      const deadline = yield* g.runtime.run.pipe(Effect.forkChild);
+      const health = yield* waitForCycle(g.runtime);
+      expect(health).toMatchObject({ phase: "degraded", lastCycle: { value: { result: { _tag: "Deadline" } } } });
+      const metrics = renderObservationRuntimeMetrics(health);
+      expect(metrics).not.toContain("beep_observation_retained_pages");
+      expect(metrics).not.toContain("beep_observation_delivery_pass_");
+      yield* Fiber.interrupt(deadline);
+    })
+  )
+);
+
+it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
+  it.effect("maps closed control and paused refusals to failed and paused cycles for both loops", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const refuse = yield* Ref.make(false);
+      const idleRoot: TranscriptDiscoveryReport["roots"][number] = {
+        rootId: Sha256Hex.make(Str.repeat(64)("e")),
+        source: "codex",
+        state: "complete",
+        cycle: 1,
+        entries: 0,
+        candidates: 0,
+        excludedLinks: 0,
+        read: { assessed: 0, pending: 0, accepted: 0, idle: 0, partial: 0, backlogged: 0, failed: 0 },
+      };
+      const poll = Effect.gen(function* () {
+        if (yield* Ref.get(refuse)) return yield* ObservationControlError.make({ reason: "paused" });
+        return {
+          discovery: TranscriptDiscoveryReport.make({
+            operations: 1,
+            candidates: 0,
+            activeHelpers: 0,
+            roots: [idleRoot],
+          }),
+          sweep: TranscriptSweepReport.make({ declared: 0, retired: 0, eligible: 0, outcomes: [] }),
+        };
+      });
+      const runtime = yield* makeObservationRuntime(f.worker, policy, O.some({ poll, policy }));
+      const running = yield* runtime.run.pipe(Effect.forkChild);
+      yield* TestClock.adjust(0);
+      expect((yield* runtime.health).sources).toMatchObject({ phase: "idle" });
+      yield* Ref.set(refuse, true);
+      yield* Ref.set(f.refusal, O.some(ObservationControlError.make({ reason: "paused" })));
+      yield* TestClock.adjust(150);
+      expect(yield* runtime.health).toMatchObject({
+        phase: "paused",
+        lastCycle: { value: { result: { _tag: "Paused" } } },
+        sources: { phase: "paused", lastCycle: { value: { result: { _tag: "Paused" } } } },
+      });
+      yield* Ref.update(f.control, (s) => ObservationControlState.make({ ...s, accepting: false, closed: true }));
+      yield* TestClock.adjust(150);
+      expect(yield* runtime.health).toMatchObject({
+        phase: "degraded",
+        lastCycle: { value: { result: { _tag: "Failed" } } },
+        sources: { phase: "degraded", lastCycle: { value: { result: { _tag: "Failed" } } } },
+      });
+      yield* Fiber.interrupt(running);
     })
   )
 );
