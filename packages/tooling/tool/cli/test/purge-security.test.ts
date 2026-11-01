@@ -46,7 +46,11 @@ const outsideWorkspaceScenario = Effect.fnUntraced(function* () {
     })
   );
 
-  expect(succeeded).toBe(false);
+  // Since 4-A3 discovery skips a member whose real path leaves the root before
+  // reading it (`@beep/repo-workspaces` `containWithinRoot`), where the retired
+  // repo-utils reader failed the whole purge. Either way nothing outside the
+  // root is a purge target.
+  expect(succeeded).toBe(true);
   expect(yield* fs.exists(externalDistDir)).toBe(true);
   expect(yield* fs.readFileString(externalSentinelPath)).toBe("keep\n");
 });
@@ -85,7 +89,7 @@ const canonicalRootScenario = Effect.fnUntraced(function* () {
 
 it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
   it.effect(
-    "fails closed before deleting artifacts from a symlinked workspace outside the repo root",
+    "skips a symlinked workspace outside the repo root and never deletes its artifacts",
     outsideWorkspaceScenario
   );
 

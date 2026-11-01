@@ -8,38 +8,6 @@
 // biome-ignore-all assist/source/organizeImports: docgen requires individually documented re-export declarations. Owner: @beep/repo-utils. Exit: docgen accepts sorted re-export declarations.
 
 /**
- * @category utilities
- * @since 0.0.0
- */
-export {
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  extractWorkspaceDependencies,
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  sortWorkspacePackages,
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  workspaceDependencyNames,
-} from "./Dependencies.ts";
-/**
- * @category utilities
- * @since 0.0.0
- */
-export {
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  buildRepoDependencyIndex,
-} from "./DependencyIndex.ts";
-/**
  * @category errors
  * @since 0.0.0
  */
@@ -321,27 +289,6 @@ export {
   packageJsonJsonSchema,
 } from "./schemas/PackageJsonTools.ts";
 /**
- * @category models
- * @since 0.0.0
- */
-export {
-  /**
-   * @category models
-   * @since 0.0.0
-   */
-  DependencyMap,
-  /**
-   * @category models
-   * @since 0.0.0
-   */
-  emptyWorkspaceDeps,
-  /**
-   * @category models
-   * @since 0.0.0
-   */
-  WorkspaceDeps,
-} from "./schemas/WorkspaceDeps.ts";
-/**
  * @category utilities
  * @since 0.0.0
  */
@@ -362,37 +309,6 @@ export {
  * @since 0.0.0
  */
 export * from "./TypeScript/index.ts";
-/**
- * @category utilities
- * @since 0.0.0
- */
-export {
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  getWorkspaceDir,
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  resolveWorkspaceDirs,
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  resolveWorkspacePackages,
-  /**
-   * @category models
-   * @since 0.0.0
-   */
-  WorkspacePackage,
-  /**
-   * @category utilities
-   * @since 0.0.0
-   */
-  workspaceGlobsFrom,
-} from "./Workspaces.ts";
 
 /**
  * Scoped TypeScript 7 programmatic access.

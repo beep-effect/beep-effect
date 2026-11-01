@@ -6,13 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import {
-  buildRepoDependencyIndex,
-  findRepoRoot,
-  jsonStringifyPretty,
-  resolveWorkspaceDirs,
-  workspaceDependencyNames,
-} from "@beep/repo-utils";
+import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -27,7 +21,8 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { runCaptured } from "../../internal/process/StepExec.ts";
-import type { WorkspaceDeps } from "@beep/repo-utils";
+import { workspaceDependencyGraph, workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
+import type * as HashSet from "effect/HashSet";
 
 const $I = $RepoCliId.create("commands/Fallow/Fallow.command");
 
@@ -178,7 +173,7 @@ const resolveBoundaryWorkspaceEntries = Effect.fn("Fallow.resolveBoundaryWorkspa
   repoRoot: string
 ) {
   const path = yield* Path.Path;
-  const workspaceDirs = yield* resolveWorkspaceDirs(repoRoot);
+  const workspaceDirs = yield* workspaceDirectories(repoRoot);
   const workspaceEntries = pipe(A.fromIterable(workspaceDirs), A.sort(workspaceEntryOrder));
 
   return pipe(
@@ -195,8 +190,19 @@ const resolveBoundaryWorkspaceEntries = Effect.fn("Fallow.resolveBoundaryWorkspa
   );
 });
 
+// The workspace packages `name` depends on, sorted, or none when the graph does not know it.
+const dependencyNamesOf = (
+  adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
+  name: string
+): ReadonlyArray<string> =>
+  pipe(
+    HashMap.get(adjacency, name),
+    O.map((dependencies) => A.sort(A.fromIterable(dependencies), Order.String)),
+    O.getOrElse(A.empty<string>)
+  );
+
 const findDoctrineManifestViolations = (
-  dependencyIndex: HashMap.HashMap<string, WorkspaceDeps>,
+  adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
   workspaceEntries: ReadonlyArray<FallowBoundaryWorkspaceEntry>
 ): ReadonlyArray<FallowDoctrineManifestViolation> => {
   const entriesByName = workspaceEntryByName(workspaceEntries);
@@ -205,9 +211,7 @@ const findDoctrineManifestViolations = (
     workspaceEntries,
     A.flatMap((entry) =>
       pipe(
-        HashMap.get(dependencyIndex, entry.name),
-        O.map(workspaceDependencyNames),
-        O.getOrElse(A.empty<string>),
+        dependencyNamesOf(adjacency, entry.name),
         A.map((dependencyName) =>
           pipe(
             HashMap.get(entriesByName, dependencyName),
@@ -243,7 +247,7 @@ const makeBoundaryConfig = Effect.fn("Fallow.makeBoundaryConfig")(function* (
 ) {
   const workspaceEntries = yield* resolveBoundaryWorkspaceEntries(repoRoot);
   const entriesByName = workspaceEntryByName(workspaceEntries);
-  const dependencyIndex = yield* buildRepoDependencyIndex(repoRoot);
+  const { adjacency } = yield* workspaceDependencyGraph(repoRoot);
 
   const zones = pipe(
     workspaceEntries,
@@ -258,11 +262,7 @@ const makeBoundaryConfig = Effect.fn("Fallow.makeBoundaryConfig")(function* (
   const rules = pipe(
     workspaceEntries,
     A.map((entry): FallowBoundaryRule => {
-      const dependencyNames = pipe(
-        HashMap.get(dependencyIndex, entry.name),
-        O.map(workspaceDependencyNames),
-        O.getOrElse(A.empty<string>)
-      );
+      const dependencyNames = dependencyNamesOf(adjacency, entry.name);
       const allow = pipe(
         [entry.name, ...dependencyNames],
         A.dedupe,
@@ -436,9 +436,9 @@ const checkDoctrineBoundaries = Effect.fn("Fallow.checkDoctrineBoundaries")(func
   configPath: string
 ) {
   const workspaceEntries = yield* resolveBoundaryWorkspaceEntries(repoRoot);
-  const dependencyIndex = yield* buildRepoDependencyIndex(repoRoot);
+  const { adjacency } = yield* workspaceDependencyGraph(repoRoot);
   const entriesByName = workspaceEntryByName(workspaceEntries);
-  const manifestViolations = findDoctrineManifestViolations(dependencyIndex, workspaceEntries);
+  const manifestViolations = findDoctrineManifestViolations(adjacency, workspaceEntries);
   const report = yield* runFallowBoundaryReport(repoRoot, configPath).pipe(
     Effect.catch(
       Effect.fn(function* () {

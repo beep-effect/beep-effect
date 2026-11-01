@@ -1035,7 +1035,7 @@ export const getWorkspacePackagesSync: {
 
   // The same GlobSet the async enumerator compiles. An uncompilable set yields
   // no members rather than throwing — see the totality note above.
-  const compiled = Effect.runSyncExit(GlobSet.compile(readPatternsSync(options, root)));
+  const compiled = Effect.runSyncExit(GlobSet.compile(WorkspacePatterns.forMatching(readPatternsSync(options, root))));
   if (Exit.isFailure(compiled)) return [];
   const globs = compiled.value;
   const scope: SyncScope = {

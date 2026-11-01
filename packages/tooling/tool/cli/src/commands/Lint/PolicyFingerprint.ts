@@ -26,7 +26,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { FsUtils, findRepoRoot, GlobOptions, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -45,6 +45,7 @@ import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "../../internal/cli/LintRouting.ts";
+import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 import { QualityTaskName } from "../Quality/Quality.schemas.ts";
 import { OXLINT_CIRCULAR_CONFIG, OXLINT_DEPRECATED_APIS_CONFIG } from "./internal/LintPackage.ts";
 import { makePolicyGraph, renderClosureInputs } from "./internal/PolicyFingerprintGraph.ts";
@@ -220,7 +221,7 @@ const readSources = Effect.fnUntraced(function* (root: string) {
   const rootManifest = yield* decodeManifest(yield* parseJsonc("package.json", rootManifestText)).pipe(
     Effect.mapError(decodeFailure("package.json"))
   );
-  const directories = yield* resolveWorkspaceDirs(root).pipe(
+  const directories = yield* workspaceDirectories(root).pipe(
     Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot resolve workspaces", cause }))
   );
   const workspaces = yield* Effect.forEach(

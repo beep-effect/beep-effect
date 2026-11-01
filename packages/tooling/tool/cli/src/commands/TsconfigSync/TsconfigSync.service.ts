@@ -5,12 +5,13 @@
  * @since 0.0.0
  */
 
-import { buildRepoDependencyIndex, detectCycles } from "@beep/repo-utils";
+import { detectCycles } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import { workspaceDependencyGraph } from "../../internal/RepoWorkspaces.ts";
 import { TsconfigSyncCycleError, TsconfigSyncDriftError } from "./TsconfigSync.errors.ts";
 import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
 import { TsconfigSyncRender } from "./TsconfigSync.render.ts";
@@ -18,12 +19,13 @@ import { TsconfigSyncModeMatch, TsconfigSyncResult, tsconfigSyncModeEquivalence 
 import type { CyclicDependencyError, DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
+import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import type { RepoWorkspacesError } from "../../internal/RepoWorkspaces.ts";
 import type { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import type { PlannedFileChange, TsconfigSyncRunOptions } from "./TsconfigSync.schemas.ts";
 
 const {
-  buildAdjacency,
   buildWorkspaceDescriptors,
   planPackageCheckReferenceSync,
   planPackageDocgenSync,
@@ -56,6 +58,8 @@ const { renderChanges } = TsconfigSyncRender;
 export type TsconfigSyncError =
   | DomainError
   | NoSuchFileError
+  | RepoWorkspacesError
+  | PlatformError.PlatformError
   | CyclicDependencyError
   | TsconfigSyncCycleError
   | TsconfigSyncDriftError
@@ -104,9 +108,7 @@ export const syncTsconfigAtRoot: {
   2,
   Effect.fn(function* (rootDir: string, options: TsconfigSyncRunOptions) {
     const workspaces = yield* buildWorkspaceDescriptors(rootDir);
-    const depIndex = yield* buildRepoDependencyIndex(rootDir);
-
-    const adjacency = buildAdjacency(depIndex);
+    const { adjacency } = yield* workspaceDependencyGraph(rootDir);
     const cycles = yield* detectCycles(adjacency);
 
     if (!A.isReadonlyArrayEmpty(cycles)) {
@@ -142,7 +144,6 @@ export const syncTsconfigAtRoot: {
     const packageChanges = yield* planPackageReferenceSync(
       rootDir,
       workspaces,
-      depIndex,
       adjacency,
       options.filter,
       options.verbose

@@ -492,6 +492,50 @@ export class WorkspaceDiscoveryOptions extends S.Opaque<WorkspaceDiscoveryOption
         description: "Skip member directories whose real path leaves the workspace root, before reading them.",
       })
     ),
+    /**
+     * Let a wildcard pattern whose base directory is absent select nothing.
+     *
+     * **Details**
+     *
+     * Off by default: a pattern such as `apps/*` whose `apps` directory does
+     * not exist fails discovery with a `missingBaseDir`
+     * {@link WorkspacePatternError}, which is what catches a typo in
+     * `packages:`. On, that pattern selects no member and the others are
+     * enumerated as usual, as a filesystem glob behaves. Git keeps no empty
+     * directory, so a checkout whose last member under a base was deleted has
+     * no such base at all; a caller that must keep working there opts in. The
+     * depth and visit bounds still fail typed, and so does a base whose `stat`
+     * fails for any reason but `NotFound` (an `unreadableDirectory`
+     * {@link WorkspacePatternError}): an unreadable base is not an absent one.
+     *
+     * @defaultValue `false`.
+     */
+    skipMissingBaseDirs: S.optionalKey(S.Boolean).pipe(
+      $I.annoteKey("WorkspaceDiscoveryOptions.skipMissingBaseDirs", {
+        description: "Let a wildcard whose base directory is absent select nothing instead of failing.",
+      })
+    ),
+    /**
+     * Directory names that hold no member at any depth.
+     *
+     * **Details**
+     *
+     * A member directory, a wildcard base or a listed directory with a path
+     * segment in this list is skipped before its `package.json` is probed or
+     * read, and no traversal descends into one, so a generated directory
+     * (`dist`, `coverage`) selected by a pattern can neither be a member nor
+     * fail discovery with the manifest it holds. `node_modules` and `.git` are
+     * never descended into whatever this list says.
+     *
+     * @defaultValue no names — every directory a pattern selects is read.
+     */
+    skipDirectoryNames: S.String.pipe(
+      S.Array,
+      S.optionalKey,
+      $I.annoteKey("WorkspaceDiscoveryOptions.skipDirectoryNames", {
+        description: "Directory names whose subtrees hold no member, skipped before any manifest under them is read.",
+      })
+    ),
   }).pipe(
     $I.annoteSchema("WorkspaceDiscoveryOptions", {
       description: "Root resolution and pattern descent options, with defaults resolved lazily.",
@@ -788,7 +832,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
           )
         );
 
-        const globs = yield* GlobSet.compile(patterns).pipe(
+        const globs = yield* GlobSet.compile(WorkspacePatterns.forMatching(patterns)).pipe(
           Effect.mapError((error) =>
             WorkspacePatternError.make({
               root,
@@ -801,7 +845,11 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
         const directories = yield* enumerate(root, globs, {
           maxDepth: options?.maxDepth ?? 32,
-          ...O.getSomesStruct({ containWithinRoot: O.fromUndefinedOr(options?.containWithinRoot) }),
+          ...O.getSomesStruct({
+            containWithinRoot: O.fromUndefinedOr(options?.containWithinRoot),
+            skipMissingBaseDirs: O.fromUndefinedOr(options?.skipMissingBaseDirs),
+            skipDirectoryNames: O.fromUndefinedOr(options?.skipDirectoryNames),
+          }),
         }).pipe(
           Effect.mapError((failure) =>
             WorkspacePatternError.make({
