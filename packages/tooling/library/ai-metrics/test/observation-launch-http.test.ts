@@ -163,11 +163,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           HttpClientRequest.post(f.url).pipe(HttpClientRequest.bodyStream(partial, { contentType: "application/json" }))
         )
         .pipe(Effect.forkChild);
-      let busy = 0;
-      for (let attempt = 0; attempt < 20 && busy !== 503; attempt++) {
-        yield* Effect.sleep("5 millis");
-        busy = (yield* f.post("{}")).status;
-      }
+      const busy = yield* f.post("{}").pipe(
+        Effect.map((response) => response.status),
+        Effect.delay("5 millis"),
+        Effect.repeat({ until: (status) => status === 503, times: 19 })
+      );
       expect(busy).toBe(503);
       const timedOut = yield* Fiber.join(slow);
       expect(timedOut.status).toBe(503);

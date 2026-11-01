@@ -251,12 +251,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const { post, journal, url, client, health } = yield* fixture();
       const pending = yield* openChunked(url, client);
-      let busy = 0;
       // Empty probes cannot mutate the journal, even if they arrive before the held body.
-      for (let attempt = 0; attempt < 20 && busy !== 503; attempt++) {
-        yield* Effect.sleep("5 millis");
-        busy = (yield* post()).status;
-      }
+      const busy = yield* post().pipe(
+        Effect.map((response) => response.status),
+        Effect.delay("5 millis"),
+        Effect.repeat({ until: (status) => status === 503, times: 19 })
+      );
       expect(busy).toBe(503);
       expect((yield* health).counts.overloaded).toBeGreaterThanOrEqual(1);
       yield* pending.end(Str.repeat(262145)(" "));
