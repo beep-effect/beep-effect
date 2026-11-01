@@ -129,7 +129,11 @@ const listPackageDirs = (): ReadonlyMap<string, string> => {
 const readKeepClass = (): ReadonlyArray<KeepEntry> => {
   const file = path.join(repoRoot, KEEP_CLASS_FILE);
   if (!existsSync(file)) return [];
-  const parsed: unknown = Result.getOrUndefined(Jsonc.parseResult(readFileSync(file, "utf8")));
+  // A keep list that does not parse aborts the run: an empty list would strip every protection.
+  const parsed: unknown = Result.getOrThrowWith(
+    Jsonc.parseResult(readFileSync(file, "utf8")),
+    (error) => new Error(`${KEEP_CLASS_FILE} is not valid JSONC: ${String(error)}`)
+  );
   const entries: ReadonlyArray<unknown> = Array.isArray(parsed) ? parsed : [];
   return entries.filter(
     (entry): entry is KeepEntry =>

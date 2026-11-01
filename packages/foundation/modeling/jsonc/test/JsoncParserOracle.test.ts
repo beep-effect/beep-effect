@@ -166,7 +166,6 @@ describe("jsonc-parser oracle", () => {
       ["insert an element first", ["b", 0], "x", { isArrayInsertion: true }],
       ["replace an element", ["b", 1], { k: [] }, {}],
       ["delete the first element", ["b", 0], undefined, {}],
-      ["delete the last element", ["b", 1], undefined, {}],
       ["insert into an empty array", ["e", 0], 7, { isArrayInsertion: true }],
       ["delete the only element", ["f", 0], undefined, {}],
       ["insert into an empty object", ["o", "k"], "v", {}],
@@ -185,6 +184,24 @@ describe("jsonc-parser oracle", () => {
         });
         const throws = Result.mapError(() => "throws");
         assert.deepStrictEqual(throws(kitModify(document, path, value, options)), throws(oracle));
+      }
+    });
+
+    it("deletes the last element without the character jsonc-parser cuts from it", () => {
+      // jsonc-parser ends the removal two characters before the parent's end,
+      // so a compact array joins its last two elements; the kit ends it at the element.
+      for (const [text, upstream, kit] of [
+        ["[1,2]", "[12]", "[1]"],
+        ['["x","y"]', '["x""]', '["x"]'],
+        ["[1, 2 // c\n]", "[1\n]", "[1 // c\n]"],
+      ] as const) {
+        assert.deepStrictEqual(oracleModify(text, [1], undefined, {}), Result.succeed(upstream));
+        assert.deepStrictEqual(
+          Result.map(JsoncModifier.modifyWithFormattingResult(text, [1], undefined), (edits) =>
+            JsoncEdit.applyAll(text, edits)
+          ),
+          Result.succeed(kit)
+        );
       }
     });
 

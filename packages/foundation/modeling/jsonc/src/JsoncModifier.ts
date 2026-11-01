@@ -402,7 +402,9 @@ const objectEdit = (
 };
 
 // Remove an element: the only one, the last one with the comma before it, or
-// any other with the gap up to the next one.
+// any other with the gap up to the next one. The last one's removal ends at the
+// element itself: jsonc-parser ends it two characters before the parent's end,
+// which joins `[1,2]` into `[12]` and cuts a trailing comment.
 const deleteElement = (
   parent: JsoncNode,
   children: ReadonlyArray<JsoncNode>,
@@ -417,7 +419,7 @@ const deleteElement = (
   }
   if (index === children.length - 1) {
     const offset = end(children[index - 1] as JsoncNode);
-    return Result.succeed(O.some(rawEdit(offset, end(parent) - 2 - offset, "")));
+    return Result.succeed(O.some(rawEdit(offset, end(children[index] as JsoncNode) - offset, "")));
   }
   const removed = children[index] as JsoncNode;
   return Result.succeed(
@@ -723,6 +725,12 @@ export abstract class JsoncModifier {
    * given, the touched lines are formatted with them. Missing parents are
    * created by wrapping the value; deleting a missing property is a no-op.
    * Use {@link JsoncModifier.modify} for byte-minimal edits instead.
+   *
+   * **Gotchas**
+   *
+   * One deliberate divergence: deleting the last element of an array ends at
+   * the element. jsonc-parser ends that removal two characters before the
+   * closing bracket, so `[1,2]` becomes `[12]` and a trailing comment is cut.
    *
    * **Example** (Replace a nested value)
    *

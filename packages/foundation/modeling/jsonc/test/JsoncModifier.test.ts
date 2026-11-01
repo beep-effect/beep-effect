@@ -210,6 +210,21 @@ describe("JsoncModifier", () => {
       })
     );
 
+    it.effect("removes the last element of a compact array without joining the one before it", () =>
+      Effect.gen(function* () {
+        for (const [text, expected] of [
+          ["[1,2]", "[1]"],
+          ['["x","y"]', '["x"]'],
+          ['{"a":[1,2]}', '{"a":[1]}'],
+          ["[1, 2 // c\n]", "[1 // c\n]"],
+          ["[1,\n  2\n]", "[1\n]"],
+        ] as const) {
+          const path = Str.startsWith("{")(text) ? ["a", 1] : [1];
+          assert.strictEqual(apply(text, yield* JsoncModifier.modify(text, path, undefined)), expected);
+        }
+      })
+    );
+
     it.effect("deleting a missing key or index is a no-op", () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(yield* JsoncModifier.modify('{ "a": 1 }', ["missing"], undefined), []);

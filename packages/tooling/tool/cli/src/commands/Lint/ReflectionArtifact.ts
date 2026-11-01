@@ -295,7 +295,22 @@ const inspectCompletedReflection = Effect.fnUntraced(function* (
     return { advisories: [], blocking: [] };
   }
 
-  const manifestJson: unknown = Result.getOrUndefined(Jsonc.parseResult(manifestRead.value));
+  const manifestParse = Jsonc.parseResult(manifestRead.value);
+  if (Result.isFailure(manifestParse)) {
+    return {
+      advisories: [],
+      blocking: [
+        makeFinding(
+          slug,
+          "error",
+          `Goal manifest for "${slug}" is not valid JSONC, so its reflection gate cannot be read.`,
+          "Repair ops/manifest.json so its status and reflection fields parse.",
+          manifestPath
+        ),
+      ],
+    };
+  }
+  const manifestJson: unknown = manifestParse.success;
   const { status } = readManifestStatus(manifestJson);
   if (!COMPLETED_STATUS_TOKENS.includes(status)) {
     return { advisories: [], blocking: [] };

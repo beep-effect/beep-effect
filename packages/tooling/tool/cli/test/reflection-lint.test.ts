@@ -154,6 +154,21 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("blocks a goal whose manifest does not parse instead of skipping its reflection gate", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory("goals/example/ops", { recursive: true });
+          yield* fs.writeFileString(
+            "goals/example/ops/manifest.json",
+            `${encodeJson({ initiative: { id: "example", status: "completed-retained" } })} trailing\n`
+          );
+          expectReportedFailure(yield* Effect.exit(runLintCommand(["reflection-artifacts"])));
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("ignores the template and a goal directory without a readable manifest", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
