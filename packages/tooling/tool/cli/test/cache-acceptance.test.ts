@@ -481,130 +481,132 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeServices.layer, PublishedContentCl
   concurrent: false,
   timeout: "30 seconds",
 })("authenticated import preview", (it) => {
-  it.effect("accepts only a fully covered approved policy and preserves envelope expiry", () =>
-    Effect.gen(function* () {
-      const { fs, path, root, contract, trust, published } = yield* publishedSetup;
-      const { request } = published;
-      const legacy = CacheProducerImportRequest.make({ observations: request.observations });
-      expect((yield* previewCacheProducerImport(legacy, trust)).failures).toEqual([
-        "stable:missing-hosted-publication",
-        "canary:missing-hosted-publication",
-      ]);
-      expect(yield* validateCacheProducerImport(legacy, trust).pipe(Effect.isFailure)).toBe(true);
-      expect(yield* Ref.get(published.reads)).toBe(0);
-      expect((yield* validateCacheProducerImport(request, trust).pipe(Effect.flip)).message).toContain(
-        "not configured"
-      );
-      yield* Effect.gen(function* () {
-        const result = yield* validateCacheProducerImport(request, trust);
-        expect(result.failures).toEqual([]);
-        expect(result.contract).toEqual(contract);
-        expect(A.sort(yield* fs.readDirectory(root), Str.Order)).toEqual(["canary", "stable"]);
-        const directory = path.join(root, "accepted");
-        yield* fs.makeDirectory(directory, { mode: 0o700 });
-        const reference = yield* persistCacheProducerAcceptance(directory, request, trust);
-        expect(yield* persistCacheProducerAcceptance(directory, request, trust)).toEqual(reference);
-        expect((yield* readCacheProducerAcceptance(directory, reference, trust)).contract).toEqual(contract);
-        const publications = O.getOrThrow(request.publications);
-        const corrupted = new Uint8Array(publications.stable.archive);
-        corrupted[0] = 0;
-        for (const substituted of [
-          CacheProducerPublication.make({
-            ...publications.stable,
-            reference: CacheHostedProducerReference.make({ ...publications.stable.reference, artifactId: 999 }),
-          }),
-          CacheProducerPublication.make({ ...publications.stable, archive: corrupted }),
-          publications.canary,
-        ]) {
-          const changed = CacheProducerImportRequest.make({
+  it.layer(TestClock.layer())("own TestClock", (it) => {
+    it.effect("accepts only a fully covered approved policy and preserves envelope expiry", () =>
+      Effect.gen(function* () {
+        const { fs, path, root, contract, trust, published } = yield* publishedSetup;
+        const { request } = published;
+        const legacy = CacheProducerImportRequest.make({ observations: request.observations });
+        expect((yield* previewCacheProducerImport(legacy, trust)).failures).toEqual([
+          "stable:missing-hosted-publication",
+          "canary:missing-hosted-publication",
+        ]);
+        expect(yield* validateCacheProducerImport(legacy, trust).pipe(Effect.isFailure)).toBe(true);
+        expect(yield* Ref.get(published.reads)).toBe(0);
+        expect((yield* validateCacheProducerImport(request, trust).pipe(Effect.flip)).message).toContain(
+          "not configured"
+        );
+        yield* Effect.gen(function* () {
+          const result = yield* validateCacheProducerImport(request, trust);
+          expect(result.failures).toEqual([]);
+          expect(result.contract).toEqual(contract);
+          expect(A.sort(yield* fs.readDirectory(root), Str.Order)).toEqual(["canary", "stable"]);
+          const directory = path.join(root, "accepted");
+          yield* fs.makeDirectory(directory, { mode: 0o700 });
+          const reference = yield* persistCacheProducerAcceptance(directory, request, trust);
+          expect(yield* persistCacheProducerAcceptance(directory, request, trust)).toEqual(reference);
+          expect((yield* readCacheProducerAcceptance(directory, reference, trust)).contract).toEqual(contract);
+          const publications = O.getOrThrow(request.publications);
+          const corrupted = new Uint8Array(publications.stable.archive);
+          corrupted[0] = 0;
+          for (const substituted of [
+            CacheProducerPublication.make({
+              ...publications.stable,
+              reference: CacheHostedProducerReference.make({ ...publications.stable.reference, artifactId: 999 }),
+            }),
+            CacheProducerPublication.make({ ...publications.stable, archive: corrupted }),
+            publications.canary,
+          ]) {
+            const changed = CacheProducerImportRequest.make({
+              ...request,
+              publications: O.some({ ...publications, stable: substituted }),
+            });
+            expect(yield* validateCacheProducerImport(changed, trust).pipe(Effect.isFailure)).toBe(true);
+          }
+          const attempt = published.channels.stable.run.run_attempt;
+          published.channels.stable.run.run_attempt = attempt + 1;
+          expect(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.isFailure)).toBe(true);
+          published.channels.stable.run.run_attempt = attempt;
+          expect((yield* readCacheProducerAcceptance(directory, reference, trust)).contract).toEqual(contract);
+          const privateApproval = path.join(trust.stable, "publication.json");
+          const readsBeforeUnsafeApproval = yield* Ref.get(published.reads);
+          yield* fs.chmod(privateApproval, 0o644);
+          expect(yield* validateCacheProducerImport(request, trust).pipe(Effect.isFailure)).toBe(true);
+          expect(yield* Ref.get(published.reads)).toBe(readsBeforeUnsafeApproval);
+          yield* fs.chmod(privateApproval, 0o600);
+          yield* checkStoreBounds(directory, reference, request, trust);
+          const file = path.join(directory, `${reference.sha256}.json`);
+          const original = yield* fs.readFileString(file);
+          expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
+          yield* fs.chmod(file, 0o644);
+          (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          yield* fs.chmod(file, 0o600);
+          yield* fs.writeFileString(file, "{}");
+          (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          (yield* persistCacheProducerAcceptance(directory, request, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          expect(yield* fs.readFileString(file)).toBe("{}");
+          yield* fs.writeFileString(file, original);
+          const moved = path.join(root, "moved-record.json");
+          yield* fs.rename(file, moved);
+          yield* fs.symlink(moved, file);
+          (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          yield* fs.remove(file);
+          yield* fs.rename(moved, file);
+          const alias = path.join(root, "alias");
+          yield* fs.symlink(directory, alias);
+          (yield* readCacheProducerAcceptance(alias, reference, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          const hardlink = path.join(root, "hardlink.json");
+          yield* fs.link(file, hardlink);
+          (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          yield* fs.remove(hardlink);
+          const forged = CacheProducerImportRequest.make({
             ...request,
-            publications: O.some({ ...publications, stable: substituted }),
+            observations: {
+              stable: request.observations.canary,
+              canary: request.observations.stable,
+            },
           });
-          expect(yield* validateCacheProducerImport(changed, trust).pipe(Effect.isFailure)).toBe(true);
-        }
-        const attempt = published.channels.stable.run.run_attempt;
-        published.channels.stable.run.run_attempt = attempt + 1;
-        expect(yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.isFailure)).toBe(true);
-        published.channels.stable.run.run_attempt = attempt;
-        expect((yield* readCacheProducerAcceptance(directory, reference, trust)).contract).toEqual(contract);
-        const privateApproval = path.join(trust.stable, "publication.json");
-        const readsBeforeUnsafeApproval = yield* Ref.get(published.reads);
-        yield* fs.chmod(privateApproval, 0o644);
-        expect(yield* validateCacheProducerImport(request, trust).pipe(Effect.isFailure)).toBe(true);
-        expect(yield* Ref.get(published.reads)).toBe(readsBeforeUnsafeApproval);
-        yield* fs.chmod(privateApproval, 0o600);
-        yield* checkStoreBounds(directory, reference, request, trust);
-        const file = path.join(directory, `${reference.sha256}.json`);
-        const original = yield* fs.readFileString(file);
-        expect(yield* fs.readDirectory(directory)).toEqual([`${reference.sha256}.json`]);
-        yield* fs.chmod(file, 0o644);
-        (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        yield* fs.chmod(file, 0o600);
-        yield* fs.writeFileString(file, "{}");
-        (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        (yield* persistCacheProducerAcceptance(directory, request, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        expect(yield* fs.readFileString(file)).toBe("{}");
-        yield* fs.writeFileString(file, original);
-        const moved = path.join(root, "moved-record.json");
-        yield* fs.rename(file, moved);
-        yield* fs.symlink(moved, file);
-        (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        yield* fs.remove(file);
-        yield* fs.rename(moved, file);
-        const alias = path.join(root, "alias");
-        yield* fs.symlink(directory, alias);
-        (yield* readCacheProducerAcceptance(alias, reference, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        const hardlink = path.join(root, "hardlink.json");
-        yield* fs.link(file, hardlink);
-        (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        yield* fs.remove(hardlink);
-        const forged = CacheProducerImportRequest.make({
-          ...request,
-          observations: {
-            stable: request.observations.canary,
-            canary: request.observations.stable,
-          },
-        });
-        const forgedText = yield* S.encodeEffect(ProducerImportRequestJson)(forged);
-        const forgedReference = CacheProducerAcceptanceReference.make({
-          sha256: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(forgedText)),
-        });
-        yield* fs.writeFileString(path.join(directory, `${forgedReference.sha256}.json`), forgedText, {
-          mode: 0o600,
-          flag: "wx",
-        });
-        (yield* readCacheProducerAcceptance(directory, forgedReference, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        yield* TestClock.adjust("25 hours");
-        (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
-          Result.isFailure,
-          assertTrue
-        );
-        expect(yield* fs.exists(file)).toBe(true);
-        (yield* validateCacheProducerImport(request, trust).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
-      }).pipe(Effect.provideService(CacheHostedProducerVerifier, published.verifier));
-    })
-  );
+          const forgedText = yield* S.encodeEffect(ProducerImportRequestJson)(forged);
+          const forgedReference = CacheProducerAcceptanceReference.make({
+            sha256: yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(forgedText)),
+          });
+          yield* fs.writeFileString(path.join(directory, `${forgedReference.sha256}.json`), forgedText, {
+            mode: 0o600,
+            flag: "wx",
+          });
+          (yield* readCacheProducerAcceptance(directory, forgedReference, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          yield* TestClock.adjust("25 hours");
+          (yield* readCacheProducerAcceptance(directory, reference, trust).pipe(Effect.result)).pipe(
+            Result.isFailure,
+            assertTrue
+          );
+          expect(yield* fs.exists(file)).toBe(true);
+          (yield* validateCacheProducerImport(request, trust).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+        }).pipe(Effect.provideService(CacheHostedProducerVerifier, published.verifier));
+      })
+    );
+  });
 
   it.effect("rejects replaced independent approvals before and during publication verification", () =>
     Effect.gen(function* () {

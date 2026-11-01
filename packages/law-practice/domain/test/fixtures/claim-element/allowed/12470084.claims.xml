@@ -1,0 +1,91 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A surveillance unit, comprising:
+<claim-text>a first battery and a second battery;</claim-text>
+<claim-text>a number of electronic devices; and</claim-text>
+<claim-text>circuitry including:
+<claim-text>power reset logic configured to, in response to a first event, reset at least one electronic device of the number of electronic devices;</claim-text>
+<claim-text>a power path controller coupled to the power reset logic and configured to, in response to a second event, switch power to one or more of the number of electronic devices from the first battery to the second battery; and</claim-text>
+<claim-text>a charge controller coupled to the power path controller and configured to supply a current to the second battery at one of a number of selectable levels.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The surveillance unit of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising at least one renewable energy source coupled to the at least one of the first battery or the second battery.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The surveillance unit of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the circuitry further comprising a number of measurement devices, at least some of the number of electronic devices coupled to a measurement device of the number of measurement devices.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The surveillance unit of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein each measurement device is configured to report at least one measurement associated with a corresponding electronic device.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The surveillance unit of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the at least one measurement comprises a voltage measurement, a current measurement, or both.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The surveillance unit of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a head unit including or coupled to at least some of the electronic devices and housing the circuitry;</claim-text>
+<claim-text>a mast having one end attached to the head unit; and</claim-text>
+<claim-text>a trailer attached to a second, opposite end of the mast.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The surveillance unit of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the power reset logic resets the at least one electronic device responsive to receipt of a control signal from either a modem or a processor.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The surveillance unit of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a solar power system coupled to at least one of the first battery or the second battery.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A surveillance unit, comprising:
+<claim-text>a number of loads;</claim-text>
+<claim-text>circuitry coupled to the number of loads, the circuitry including:</claim-text>
+<claim-text>logic configured to reset at least one load of the number of loads;</claim-text>
+<claim-text>a circuit configured to select one of a first power source or a second power source for providing power to one or more loads of the number of loads; and</claim-text>
+<claim-text>a number of measurement devices for coupling to at least some loads of the number of loads.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The surveillance unit of <claim-ref idref="CLM-00009">claim 9</claim-ref>, the circuitry further comprising a charge controller to enable at least one of the first power source or the second power source to be charged via one of two selectable current levels.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The surveillance unit of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the charge controller is configured to receive a current at a first level and convey current at a second, different level to one of the first power source or the second power source.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The surveillance unit of <claim-ref idref="CLM-00009">claim 9</claim-ref>, the number of loads including at least one sensor.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The surveillance unit of <claim-ref idref="CLM-00009">claim 9</claim-ref>, the circuitry further comprising:
+<claim-text>a power input connector; and</claim-text>
+<claim-text>a reverse polarity protection circuit coupled between the power input connector and the circuit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The surveillance unit of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising the first power source and the second power source, one of the first power source or the second power source comprising a backup battery.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The surveillance unit of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein each measurement device of the number of measurement devices is configured to sense at least one of a voltage or a current associated with a corresponding load of the number of loads.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The surveillance unit of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising at least one of a modem or a processor configured to convey a signal to the power reset logic to reset the at least one load.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A surveillance unit, comprising:
+<claim-text>a number of loads;</claim-text>
+<claim-text>a first battery and a second battery; and</claim-text>
+<claim-text>a control circuit including:
+<claim-text>an input connector for coupling to the first battery;</claim-text>
+<claim-text>a power path controller coupled to the input connector and configured to switch power to at least some of the number of loads from a first battery to the second battery or vice versa; and</claim-text>
+<claim-text>power reset logic coupled to the power path controller and configured to reset at least one load of the number of loads responsive to an event.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The surveillance unit of <claim-ref idref="CLM-00017">claim 17</claim-ref>, the control circuit further including a charge controller configured to limit an amount of current conveyed to the second battery.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The surveillance unit of <claim-ref idref="CLM-00017">claim 17</claim-ref>, the control circuit further comprising a measurement device configured for measuring at least one parameter associated with a corresponding load of the number of loads.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The surveillance unit of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the at least one parameter comprises at least one of a voltage measurement or a current measurement.</claim-text>
+</claim>
+</claims>

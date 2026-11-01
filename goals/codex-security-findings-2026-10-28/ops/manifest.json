@@ -17,7 +17,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until PR #2389 is merged through repository gates, all seven Cloud findings remain resolved, and all 20 dependency, four code-scanning and five secret-scanning alerts are resolved with evidence.",
+    "statement": "Not achieved until final reconciliation PR #2416 is merged through repository gates with genuine final-head canonical readiness, all seven Cloud findings remain resolved, and all 20 dependency, four code-scanning and five secret-scanning alerts are resolved with evidence; implementation PR #2389 remains supporting.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -30,6 +30,10 @@
       },
       {
         "number": 2389,
+        "role": "supporting"
+      },
+      {
+        "number": 2416,
         "role": "final"
       }
     ],
@@ -41,12 +45,12 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/codex_security-closeout-20261031-51a5fd9b0fd8/verdict.json",
+        "ref": ".beep/yeet/runs/codex_security-closeout-receipts-20261031-51040364d53a/verdict.json",
         "gating": true
       }
     ]
   },
-  "branch": "codex/security-closeout-20261031",
+  "branch": "codex/security-closeout-receipts-20261031",
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
@@ -62,7 +66,8 @@
     "research/2026-10-31-closeout.md",
     "research/2026-10-31-dependencies.md",
     "research/2026-10-31-review.md",
-    "research/2026-10-31-scanning.md"
+    "research/2026-10-31-scanning.md",
+    "research/2026-10-31-accepted-closeout.md"
   ],
   "agentLaunchers": [
     {
@@ -188,9 +193,9 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2389
+    "finalPullRequest": 2416
   },
-  "statusNote": "Fixes for all seven Cloud findings merged and the findings are verified Fixed; 20 supplemental dependency alerts and nine scanning alerts are tracked in separate catalogs.",
+  "statusNote": "Implementation PR #2389 is merged and its 35 hosted checks pass. Final closeout PR #2416 must preserve genuine pre-merge canonical readiness; external dependency-alert closure and verified completion receipts remain required. Original Cloud findings and scanning dispositions are retained.",
   "supplementalDependencies": {
     "catalog": "ops/dependabot.json",
     "expectedCount": 20,

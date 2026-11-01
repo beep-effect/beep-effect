@@ -1,12 +1,12 @@
 # Implementation map
 
-2026-10-27. Operator adopted the design and requested implementation packets. All three are **authored but not started**; preparation does not launch any goal or production changes.
+2026-10-27. Operator adopted the design and requested implementation packets. The foundation packet is active. The two downstream packet names below describe planned follow-up work; they are not tracked packet directories in this delivery. Foundation qualification does not launch production enrollment.
 
 | Order / packet | Mission | Dependencies | First deliverable |
 | --- | --- | --- | --- |
 | 1. `goals/agent-observability-foundation` | Establish trustworthy identity, source coverage, event-time semantics and bounded durable delivery; repair owned deployment drift | This audit, preserved recovery hold and privacy decision | Synthetic two-root, two-surface flow with complete expected-ID reconciliation through a disposable backend |
-| 2. `goals/harness-telemetry-enrollment` | Qualify every requested harness/surface and all declared hosts/clones/worktrees against the same contract | Foundation event/receipt schema and qualified intake | Seven-harness capability matrix with explicit supported/unsupported routes and per-route receipts |
-| 3. `goals/agent-outcome-experiments` | Make telemetry understandable through outcomes, annotations, curated datasets and controlled experiments | Foundation identity/coverage; enrollment proof for routes included in each comparison | Five curated task examples, versioned deterministic rubrics and a usable task-outcome view |
+| 2. `harness-telemetry-enrollment` (planned) | Qualify every requested harness/surface and all declared hosts/clones/worktrees against the same contract | Foundation event/receipt schema and qualified intake | Seven-harness capability matrix with explicit supported/unsupported routes and per-route receipts |
+| 3. `agent-outcome-experiments` (planned) | Make telemetry understandable through outcomes, annotations, curated datasets and controlled experiments | Foundation identity/coverage; enrollment proof for routes included in each comparison | Five curated task examples, versioned deterministic rubrics and a usable task-outcome view |
 
 Preparation can proceed in parallel. Production enrollment waits for foundation qualification. Comparative experiments wait for coverage/semantic qualification of their participant routes. No other goal packet is promised by this exploration; later expansion is work inside these packets, not a silent unbounded rollout.
 

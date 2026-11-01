@@ -1,0 +1,90 @@
+{
+  "scope": "Actual managed subprocess lifecycle ports, failed-acquisition cleanup, and private-worker synthetic integration",
+  "recordedAt": "2026-10-28T20:19:08.371913-05:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "actualProviderSessions": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "bun.lock": "33f432ee8d679f80231e2e56c715297a52d99295da826be9f53e4ea2651dcf4b",
+    "packages/drivers/ai-provider-cli/package.json": "e1df2ab464009f332c467795019fa4cd1c37edb5e061d69eee85ab2253ce9b73",
+    "packages/drivers/ai-provider-cli/src/index.ts": "40ec4319f00be81943d330e809841b93e7d5b9ff4d75c3cb4b8106fcf275131f",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts": "6e67e6a4bb1f5740a8d6ade5327254bc71b9d788682f8e5c1bd62fe147b455af",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts": "5089bd893151d7acb1e1770dc7899fb283a13a85a89bca825c145913ec2566d7",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts": "2bf2154d56b9a1b9092e5e22f966be7ff3ea8d09b18b88d6bb1c2a9634c50fa8",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts": "ed1e0fa4233ce08f5499282276a1d8423c775b7855f05a33b19adff4da8ef25d",
+    "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts": "7f482fe8ea18200fc7bcca38444e93bced0d4521fa82358e5e2fdf565c2d27d7",
+    "packages/tooling/library/ai-metrics/package.json": "2771e64c027fee88d87effbd6a1dcfebbaa8bf890a661b7232c46d3cc9b82e99",
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts": "b74c8bbcc66926c23f46d6285002bd6f5cd1dffbf0d5395103b6ab6dbd322651",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-client-process.ts": "834b53cdccf529cf52dd996a42c2dae497b62abb84f951c46488d1a362514407",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "2f5f0247da61ef6b391ab63684a1ad998f2bd149892556597a3cb7bdd797d18a"
+  },
+  "focusedVerification": {
+    "files": 1,
+    "tests": 55,
+    "newScenarios": 6,
+    "result": "passed",
+    "memoryPeakGiB": 1.2,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-managed-observer-check-v2.log"
+  },
+  "driverPackageVerification": {
+    "command": "bun run beep quality package-verify @beep/ai-provider-cli",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 26.3,
+    "docgenSeconds": 5.6,
+    "runtimeSeconds": 33.303,
+    "memoryPeakGiB": 5.4,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-managed-observer-quality.log",
+    "execution": "Serialized agent-runs.slice jobs; MemoryHigh 7 GiB, MemoryMax 8 GiB, zero swap, CPUQuota 200%, TasksMax 256, RuntimeMaxSec 360; BIOME_THREADS=2 and RAYON_NUM_THREADS=2."
+  },
+  "metricsPackageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "exitCode": 0,
+    "auditSeconds": 115.7,
+    "docgenSeconds": 10.3,
+    "runtimeSeconds": 127.526,
+    "memoryPeakGiB": 5.7,
+    "swapBytes": 0,
+    "log": "/tmp/foundation-managed-bridge-quality.log",
+    "execution": "Serialized agent-runs.slice jobs; MemoryHigh 7 GiB, MemoryMax 8 GiB, zero swap, CPUQuota 200%, TasksMax 256, RuntimeMaxSec 360; BIOME_THREADS=2 and RAYON_NUM_THREADS=2."
+  },
+  "actualEntrypoint": {
+    "receipt": "goals/agent-observability-foundation/ops/managed-observer-entrypoint-verification.json",
+    "launchFacts": {
+      "cliMarkedFixtures": 1,
+      "desktopMarkedFixtures": 1,
+      "actualHarnessLaunches": 0,
+      "committedFacts": 12,
+      "exactReplayAfterRestart": true,
+      "privateFieldRefused": true,
+      "startsPaused": true,
+      "typedClientVerifiedReceipts": true,
+      "privateContextWhilePaused": true,
+      "newClientAfterRestart": true
+    },
+    "managedPeer": {
+      "providerProtocol": "codex",
+      "syntheticOnly": true,
+      "actualProviderSessions": 0,
+      "actualChildLaunches": 1,
+      "childStoppedBeforeFinished": true,
+      "facts": 4,
+      "sourceSessionHash": "d68e4276439465dd100b078507b6c43ed0a253a55b97d928a79e37bf4c228982",
+      "nativeSourceSessionJoin": true
+    },
+    "allSevenOwnedProcessesStopped": true
+  },
+  "remaining": [
+    "Durable one-attempt launch claim before process start, including lost-ack and restore semantics",
+    "Immutable producer reconciliation and conservative process outcome closure",
+    "Production controller wiring and independent coverage populations",
+    "Production enrollment, canary and rollback",
+    "Final review panel, repository delivery and full acceptance"
+  ]
+}

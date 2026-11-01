@@ -1,0 +1,2159 @@
+[
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 102,
+          "quote": "A physio-chemical method for use with the device for treating truncal and/or collateral varicose veins"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 24,
+              "quote": "A physio-chemical method"
+            },
+            "determiner": "a",
+            "head": "physio-chemical method"
+          },
+          {
+            "anchor": {
+              "startChar": 38,
+              "endChar": 48,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          },
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 102,
+              "quote": "truncal and/or collateral varicose veins"
+            },
+            "determiner": "bare",
+            "head": "truncal and/or collateral varicose veins"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 160,
+          "endChar": 364,
+          "quote": "a) Introducing the conduct (2) housing the optical fiber (3) into the inside of the vein or varicose vein (1) until reaching the area to be acted upon, this process being controlled by means of echography"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 175,
+              "endChar": 186,
+              "quote": "the conduct"
+            },
+            "determiner": "the",
+            "head": "conduct"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 216,
+              "quote": "the optical fiber"
+            },
+            "determiner": "the",
+            "head": "optical fiber"
+          },
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 236,
+              "quote": "the inside"
+            },
+            "determiner": "the",
+            "head": "inside"
+          },
+          {
+            "anchor": {
+              "startChar": 240,
+              "endChar": 265,
+              "quote": "the vein or varicose vein"
+            },
+            "determiner": "the",
+            "head": "vein or varicose vein"
+          },
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 293,
+              "quote": "the area"
+            },
+            "determiner": "the",
+            "head": "area"
+          },
+          {
+            "anchor": {
+              "startChar": 312,
+              "endChar": 324,
+              "quote": "this process"
+            },
+            "determiner": "bare",
+            "head": "process"
+          },
+          {
+            "anchor": {
+              "startChar": 354,
+              "endChar": 364,
+              "quote": "echography"
+            },
+            "determiner": "bare",
+            "head": "echography"
+          }
+        ]
+      },
+      {
+        "path": "5.b",
+        "anchor": {
+          "startChar": 366,
+          "endChar": 601,
+          "quote": "b) Introducing components and medication into the three-way key (52), mixing said components and introducing them via the “T” shaped connection (5) for said medication (51) in the form of foam, inside the channel (4) of the conduct (2)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 381,
+              "endChar": 391,
+              "quote": "components"
+            },
+            "determiner": "bare",
+            "head": "components"
+          },
+          {
+            "anchor": {
+              "startChar": 396,
+              "endChar": 406,
+              "quote": "medication"
+            },
+            "determiner": "bare",
+            "head": "medication"
+          },
+          {
+            "anchor": {
+              "startChar": 412,
+              "endChar": 429,
+              "quote": "the three-way key"
+            },
+            "determiner": "the",
+            "head": "three-way key"
+          },
+          {
+            "anchor": {
+              "startChar": 443,
+              "endChar": 458,
+              "quote": "said components"
+            },
+            "determiner": "said",
+            "head": "components"
+          },
+          {
+            "anchor": {
+              "startChar": 484,
+              "endChar": 509,
+              "quote": "the “T” shaped connection"
+            },
+            "determiner": "the",
+            "head": "“t” shaped connection"
+          },
+          {
+            "anchor": {
+              "startChar": 518,
+              "endChar": 533,
+              "quote": "said medication"
+            },
+            "determiner": "said",
+            "head": "medication"
+          },
+          {
+            "anchor": {
+              "startChar": 542,
+              "endChar": 550,
+              "quote": "the form"
+            },
+            "determiner": "the",
+            "head": "form"
+          },
+          {
+            "anchor": {
+              "startChar": 554,
+              "endChar": 558,
+              "quote": "foam"
+            },
+            "determiner": "bare",
+            "head": "foam"
+          },
+          {
+            "anchor": {
+              "startChar": 567,
+              "endChar": 578,
+              "quote": "the channel"
+            },
+            "determiner": "the",
+            "head": "channel"
+          },
+          {
+            "anchor": {
+              "startChar": 586,
+              "endChar": 597,
+              "quote": "the conduct"
+            },
+            "determiner": "the",
+            "head": "conduct"
+          }
+        ]
+      },
+      {
+        "path": "5.c",
+        "anchor": {
+          "startChar": 603,
+          "endChar": 1011,
+          "quote": "c) Injecting the medication (51) in the form of foam by means of pressure, it thus passing through the small holes (6) and the front opening (21) in the conduct (2), thereby giving rise to a venous spasm and irritating the venous endothelium, before immediately and/or synergistically firing the laser (31) through the front opening (21) so as to remove the vein (1) by means of heat and subsequently seal it"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 616,
+              "endChar": 630,
+              "quote": "the medication"
+            },
+            "determiner": "the",
+            "head": "medication"
+          },
+          {
+            "anchor": {
+              "startChar": 639,
+              "endChar": 647,
+              "quote": "the form"
+            },
+            "determiner": "the",
+            "head": "form"
+          },
+          {
+            "anchor": {
+              "startChar": 651,
+              "endChar": 655,
+              "quote": "foam"
+            },
+            "determiner": "bare",
+            "head": "foam"
+          },
+          {
+            "anchor": {
+              "startChar": 668,
+              "endChar": 676,
+              "quote": "pressure"
+            },
+            "determiner": "bare",
+            "head": "pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 702,
+              "endChar": 717,
+              "quote": "the small holes"
+            },
+            "determiner": "the",
+            "head": "small holes"
+          },
+          {
+            "anchor": {
+              "startChar": 726,
+              "endChar": 743,
+              "quote": "the front opening"
+            },
+            "determiner": "the",
+            "head": "front opening"
+          },
+          {
+            "anchor": {
+              "startChar": 752,
+              "endChar": 763,
+              "quote": "the conduct"
+            },
+            "determiner": "the",
+            "head": "conduct"
+          },
+          {
+            "anchor": {
+              "startChar": 792,
+              "endChar": 806,
+              "quote": "a venous spasm"
+            },
+            "determiner": "a",
+            "head": "venous spasm"
+          },
+          {
+            "anchor": {
+              "startChar": 822,
+              "endChar": 844,
+              "quote": "the venous endothelium"
+            },
+            "determiner": "the",
+            "head": "venous endothelium"
+          },
+          {
+            "anchor": {
+              "startChar": 895,
+              "endChar": 904,
+              "quote": "the laser"
+            },
+            "determiner": "the",
+            "head": "laser"
+          },
+          {
+            "anchor": {
+              "startChar": 918,
+              "endChar": 935,
+              "quote": "the front opening"
+            },
+            "determiner": "the",
+            "head": "front opening"
+          },
+          {
+            "anchor": {
+              "startChar": 957,
+              "endChar": 965,
+              "quote": "the vein"
+            },
+            "determiner": "the",
+            "head": "vein"
+          },
+          {
+            "anchor": {
+              "startChar": 982,
+              "endChar": 986,
+              "quote": "heat"
+            },
+            "determiner": "bare",
+            "head": "heat"
+          }
+        ]
+      },
+      {
+        "path": "5.d",
+        "anchor": {
+          "startChar": 1013,
+          "endChar": 1283,
+          "quote": "d) Removing between 1 and 2 mm of the conduct (2), once again repeating the above step c), i.e. injecting medication (51) and immediately firing the laser (31), continuing to do so until treatment of the vein or varicose vein (1) area to be acted upon has been completed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1047,
+              "endChar": 1058,
+              "quote": "the conduct"
+            },
+            "determiner": "the",
+            "head": "conduct"
+          },
+          {
+            "anchor": {
+              "startChar": 1085,
+              "endChar": 1102,
+              "quote": "the above step c)"
+            },
+            "determiner": "the",
+            "head": "above step c)"
+          },
+          {
+            "anchor": {
+              "startChar": 1119,
+              "endChar": 1129,
+              "quote": "medication"
+            },
+            "determiner": "bare",
+            "head": "medication"
+          },
+          {
+            "anchor": {
+              "startChar": 1158,
+              "endChar": 1167,
+              "quote": "the laser"
+            },
+            "determiner": "the",
+            "head": "laser"
+          },
+          {
+            "anchor": {
+              "startChar": 1200,
+              "endChar": 1209,
+              "quote": "treatment"
+            },
+            "determiner": "bare",
+            "head": "treatment"
+          },
+          {
+            "anchor": {
+              "startChar": 1213,
+              "endChar": 1238,
+              "quote": "the vein or varicose vein"
+            },
+            "determiner": "the",
+            "head": "vein or varicose vein"
+          },
+          {
+            "anchor": {
+              "startChar": 1243,
+              "endChar": 1247,
+              "quote": "area"
+            },
+            "determiner": "bare",
+            "head": "area"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 175,
+              "quote": "a) Introducing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 175,
+                "endChar": 186,
+                "quote": "the conduct"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 186,
+              "endChar": 199,
+              "quote": " (2) housing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 199,
+                "endChar": 216,
+                "quote": "the optical fiber"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 216,
+              "endChar": 226,
+              "quote": " (3) into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 226,
+                "endChar": 236,
+                "quote": "the inside"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 236,
+              "endChar": 240,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 240,
+                "endChar": 265,
+                "quote": "the vein or varicose vein"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 265,
+              "endChar": 285,
+              "quote": " (1) until reaching "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 285,
+                "endChar": 293,
+                "quote": "the area"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 293,
+              "endChar": 312,
+              "quote": " to be acted upon, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 312,
+                "endChar": 324,
+                "quote": "this process"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 324,
+              "endChar": 354,
+              "quote": " being controlled by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 354,
+                "endChar": 364,
+                "quote": "echography"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 443,
+            "endChar": 458,
+            "quote": "said components"
+          }
+        },
+        "introducing": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 381,
+            "endChar": 391,
+            "quote": "components"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 518,
+            "endChar": 533,
+            "quote": "said medication"
+          }
+        },
+        "introducing": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 406,
+            "quote": "medication"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.b",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 366,
+              "endChar": 381,
+              "quote": "b) Introducing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 381,
+                "endChar": 391,
+                "quote": "components"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 391,
+              "endChar": 396,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 396,
+                "endChar": 406,
+                "quote": "medication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 406,
+              "endChar": 412,
+              "quote": " into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 412,
+                "endChar": 429,
+                "quote": "the three-way key"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 429,
+              "endChar": 443,
+              "quote": " (52), mixing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 443,
+                "endChar": 458,
+                "quote": "said components"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 458,
+              "endChar": 484,
+              "quote": " and introducing them via "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 484,
+                "endChar": 509,
+                "quote": "the “T” shaped connection"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 509,
+              "endChar": 518,
+              "quote": " (5) for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 518,
+                "endChar": 533,
+                "quote": "said medication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 533,
+              "endChar": 542,
+              "quote": " (51) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 542,
+                "endChar": 550,
+                "quote": "the form"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 550,
+              "endChar": 554,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 554,
+                "endChar": 558,
+                "quote": "foam"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 558,
+              "endChar": 567,
+              "quote": ", inside "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 567,
+                "endChar": 578,
+                "quote": "the channel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 578,
+              "endChar": 586,
+              "quote": " (4) of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 586,
+                "endChar": 597,
+                "quote": "the conduct"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 597,
+              "endChar": 601,
+              "quote": " (2)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.c",
+          "anchor": {
+            "startChar": 616,
+            "endChar": 630,
+            "quote": "the medication"
+          }
+        },
+        "introducing": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 406,
+            "quote": "medication"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.c",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 603,
+              "endChar": 616,
+              "quote": "c) Injecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 616,
+                "endChar": 630,
+                "quote": "the medication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 630,
+              "endChar": 639,
+              "quote": " (51) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 639,
+                "endChar": 647,
+                "quote": "the form"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 647,
+              "endChar": 651,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 651,
+                "endChar": 655,
+                "quote": "foam"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 655,
+              "endChar": 668,
+              "quote": " by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 668,
+                "endChar": 676,
+                "quote": "pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 676,
+              "endChar": 702,
+              "quote": ", it thus passing through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 702,
+                "endChar": 717,
+                "quote": "the small holes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 717,
+              "endChar": 726,
+              "quote": " (6) and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 726,
+                "endChar": 743,
+                "quote": "the front opening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 743,
+              "endChar": 752,
+              "quote": " (21) in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 752,
+                "endChar": 763,
+                "quote": "the conduct"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 763,
+              "endChar": 792,
+              "quote": " (2), thereby giving rise to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 792,
+                "endChar": 806,
+                "quote": "a venous spasm"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 806,
+              "endChar": 822,
+              "quote": " and irritating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 822,
+                "endChar": 844,
+                "quote": "the venous endothelium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 844,
+              "endChar": 895,
+              "quote": ", before immediately and/or synergistically firing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 895,
+                "endChar": 904,
+                "quote": "the laser"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 904,
+              "endChar": 918,
+              "quote": " (31) through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 918,
+                "endChar": 935,
+                "quote": "the front opening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 935,
+              "endChar": 957,
+              "quote": " (21) so as to remove "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 957,
+                "endChar": 965,
+                "quote": "the vein"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 965,
+              "endChar": 982,
+              "quote": " (1) by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.c",
+              "anchor": {
+                "startChar": 982,
+                "endChar": 986,
+                "quote": "heat"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 986,
+              "endChar": 1011,
+              "quote": " and subsequently seal it"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.d",
+          "anchor": {
+            "startChar": 1119,
+            "endChar": 1129,
+            "quote": "medication"
+          }
+        },
+        "introducing": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 406,
+            "quote": "medication"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.d",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1013,
+              "endChar": 1047,
+              "quote": "d) Removing between 1 and 2 mm of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 1047,
+                "endChar": 1058,
+                "quote": "the conduct"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1058,
+              "endChar": 1085,
+              "quote": " (2), once again repeating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 1085,
+                "endChar": 1102,
+                "quote": "the above step c)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1102,
+              "endChar": 1119,
+              "quote": ", i.e. injecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 1119,
+                "endChar": 1129,
+                "quote": "medication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1129,
+              "endChar": 1158,
+              "quote": " (51) and immediately firing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 1158,
+                "endChar": 1167,
+                "quote": "the laser"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1167,
+              "endChar": 1200,
+              "quote": " (31), continuing to do so until "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 1200,
+                "endChar": 1209,
+                "quote": "treatment"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1209,
+              "endChar": 1213,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 1213,
+                "endChar": 1238,
+                "quote": "the vein or varicose vein"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1238,
+              "endChar": 1243,
+              "quote": " (1) "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.d",
+              "anchor": {
+                "startChar": 1243,
+                "endChar": 1247,
+                "quote": "area"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1247,
+              "endChar": 1283,
+              "quote": " to be acted upon has been completed"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 99,
+          "quote": "The physio-chemical method for use with the device for treating varicose veins according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 26,
+              "quote": "The physio-chemical method"
+            },
+            "determiner": "the",
+            "head": "physio-chemical method"
+          },
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 78,
+              "quote": "varicose veins"
+            },
+            "determiner": "bare",
+            "head": "varicose veins"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 284,
+          "quote": "wherein step b) is characterized in that a mixture of 3 cc to 5 cc of sclerosant substance is prepared with 1.5 cc to 3 cc of air, in order to produce 8 cc to 10 cc of medication (51)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 116,
+              "quote": "step b)"
+            },
+            "determiner": "bare",
+            "head": "step b)"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 151,
+              "quote": "a mixture"
+            },
+            "determiner": "a",
+            "head": "mixture"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 191,
+              "quote": "sclerosant substance"
+            },
+            "determiner": "bare",
+            "head": "sclerosant substance"
+          },
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 230,
+              "quote": "air"
+            },
+            "determiner": "bare",
+            "head": "air"
+          },
+          {
+            "anchor": {
+              "startChar": 269,
+              "endChar": 279,
+              "quote": "medication"
+            },
+            "determiner": "bare",
+            "head": "medication"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "The physio-chemical method"
+          }
+        },
+        "introducing": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 24,
+            "quote": "A physio-chemical method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 269,
+            "endChar": 279,
+            "quote": "medication"
+          }
+        },
+        "introducing": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 406,
+            "quote": "medication"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 109,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 116,
+                "quote": "step b)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 142,
+              "quote": " is characterized in that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 142,
+                "endChar": 151,
+                "quote": "a mixture"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 151,
+              "endChar": 171,
+              "quote": " of 3 cc to 5 cc of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 191,
+                "quote": "sclerosant substance"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 191,
+              "endChar": 227,
+              "quote": " is prepared with 1.5 cc to 3 cc of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 230,
+                "quote": "air"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 230,
+              "endChar": 269,
+              "quote": ", in order to produce 8 cc to 10 cc of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 269,
+                "endChar": 279,
+                "quote": "medication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 279,
+              "endChar": 284,
+              "quote": " (51)"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "5.b"
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 99,
+          "quote": "The physio-chemical method for use with the device for treating varicose veins according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 26,
+              "quote": "The physio-chemical method"
+            },
+            "determiner": "the",
+            "head": "physio-chemical method"
+          },
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 78,
+              "quote": "varicose veins"
+            },
+            "determiner": "bare",
+            "head": "varicose veins"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 310,
+          "quote": "wherein step c) is characterized in that between 0.2 and 0.5 cc of medication (51) are injected and the laser (31) is fired continuously at between 1.5 and 5 Watts, for a time period of between 3 and 4 seconds"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 116,
+              "quote": "step c)"
+            },
+            "determiner": "bare",
+            "head": "step c)"
+          },
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 178,
+              "quote": "medication"
+            },
+            "determiner": "bare",
+            "head": "medication"
+          },
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 210,
+              "quote": "the laser"
+            },
+            "determiner": "the",
+            "head": "laser"
+          },
+          {
+            "anchor": {
+              "startChar": 270,
+              "endChar": 283,
+              "quote": "a time period"
+            },
+            "determiner": "a",
+            "head": "time period"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "The physio-chemical method"
+          }
+        },
+        "introducing": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 24,
+            "quote": "A physio-chemical method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 168,
+            "endChar": 178,
+            "quote": "medication"
+          }
+        },
+        "introducing": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 406,
+            "quote": "medication"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 109,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 116,
+                "quote": "step c)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 168,
+              "quote": " is characterized in that between 0.2 and 0.5 cc of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 168,
+                "endChar": 178,
+                "quote": "medication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 201,
+              "quote": " (51) are injected and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 201,
+                "endChar": 210,
+                "quote": "the laser"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 210,
+              "endChar": 270,
+              "quote": " (31) is fired continuously at between 1.5 and 5 Watts, for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 270,
+                "endChar": 283,
+                "quote": "a time period"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 283,
+              "endChar": 310,
+              "quote": " of between 3 and 4 seconds"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "5.c"
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 99,
+          "quote": "The physio-chemical method for use with the device for treating varicose veins according to claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 26,
+              "quote": "The physio-chemical method"
+            },
+            "determiner": "the",
+            "head": "physio-chemical method"
+          },
+          {
+            "anchor": {
+              "startChar": 40,
+              "endChar": 50,
+              "quote": "the device"
+            },
+            "determiner": "the",
+            "head": "device"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 78,
+              "quote": "varicose veins"
+            },
+            "determiner": "bare",
+            "head": "varicose veins"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 373,
+          "quote": "wherein step c) is characterized in that between 0.2 and 0.5 cc of medication (51) are injected and the laser (31) is fired in pulses at 60 ms to 100 ms for a time period of between 3 to 4 seconds at 4 Watts, the administration of the pulses depending on the type of laser"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 116,
+              "quote": "step c)"
+            },
+            "determiner": "bare",
+            "head": "step c)"
+          },
+          {
+            "anchor": {
+              "startChar": 168,
+              "endChar": 178,
+              "quote": "medication"
+            },
+            "determiner": "bare",
+            "head": "medication"
+          },
+          {
+            "anchor": {
+              "startChar": 201,
+              "endChar": 210,
+              "quote": "the laser"
+            },
+            "determiner": "the",
+            "head": "laser"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 234,
+              "quote": "pulses"
+            },
+            "determiner": "bare",
+            "head": "pulses"
+          },
+          {
+            "anchor": {
+              "startChar": 258,
+              "endChar": 271,
+              "quote": "a time period"
+            },
+            "determiner": "a",
+            "head": "time period"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 328,
+              "quote": "the administration"
+            },
+            "determiner": "the",
+            "head": "administration"
+          },
+          {
+            "anchor": {
+              "startChar": 332,
+              "endChar": 342,
+              "quote": "the pulses"
+            },
+            "determiner": "the",
+            "head": "pulses"
+          },
+          {
+            "anchor": {
+              "startChar": 356,
+              "endChar": 364,
+              "quote": "the type"
+            },
+            "determiner": "the",
+            "head": "type"
+          },
+          {
+            "anchor": {
+              "startChar": 368,
+              "endChar": 373,
+              "quote": "laser"
+            },
+            "determiner": "bare",
+            "head": "laser"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 26,
+            "quote": "The physio-chemical method"
+          }
+        },
+        "introducing": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 24,
+            "quote": "A physio-chemical method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 168,
+            "endChar": 178,
+            "quote": "medication"
+          }
+        },
+        "introducing": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 396,
+            "endChar": 406,
+            "quote": "medication"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 332,
+            "endChar": 342,
+            "quote": "the pulses"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 228,
+            "endChar": 234,
+            "quote": "pulses"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 109,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 116,
+                "quote": "step c)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 168,
+              "quote": " is characterized in that between 0.2 and 0.5 cc of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 168,
+                "endChar": 178,
+                "quote": "medication"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 201,
+              "quote": " (51) are injected and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 201,
+                "endChar": 210,
+                "quote": "the laser"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 210,
+              "endChar": 228,
+              "quote": " (31) is fired in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 234,
+                "quote": "pulses"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 234,
+              "endChar": 258,
+              "quote": " at 60 ms to 100 ms for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 258,
+                "endChar": 271,
+                "quote": "a time period"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 271,
+              "endChar": 310,
+              "quote": " of between 3 to 4 seconds at 4 Watts, "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 328,
+                "quote": "the administration"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 328,
+              "endChar": 332,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 332,
+                "endChar": 342,
+                "quote": "the pulses"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 342,
+              "endChar": 356,
+              "quote": " depending on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 356,
+                "endChar": 364,
+                "quote": "the type"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 364,
+              "endChar": 368,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 368,
+                "endChar": 373,
+                "quote": "laser"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8.a",
+        "ancestor": "5.c"
+      }
+    ]
+  }
+]

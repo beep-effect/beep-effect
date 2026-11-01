@@ -142,7 +142,6 @@ const shouldCollectAffectedFeedbackTasks = (mode: YeetRunMode): boolean =>
     verify: () => false,
     monitor: () => false,
     status: () => false,
-    "pre-push-hook": () => false,
   });
 
 /**

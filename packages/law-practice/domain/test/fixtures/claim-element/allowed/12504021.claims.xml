@@ -1,0 +1,129 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A compressor comprising:
+<claim-text>a first impeller configured to compress a gas;</claim-text>
+<claim-text>a second impeller configured to further compress the gas compressed by the first impeller and to direct the gas to a downstream region that is located downstream of the second impeller in a flow direction of the gas;</claim-text>
+<claim-text>an interstage passage configured to direct the gas from the first impeller to the second impeller, wherein the gas is caused to swirl in a swirling direction that substantially corresponds to a circumferential direction of the interstage passage, when viewed from a transverse cross-section of the interstage passage; and</claim-text>
+<claim-text>a bypass passage configured to recirculate the gas from the downstream region of the second impeller to the interstage passage,</claim-text>
+<claim-text>wherein the bypass passage has a downstream end that opens to the interstage passage, and</claim-text>
+<claim-text>wherein the downstream end is oriented to direct the recirculated gas against the swirling direction of the gas in the transverse cross-section of the interstage passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The compressor according to <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein the interstage passage includes a curved passage located adjacent to an inlet portion of the second impeller, and</claim-text>
+<claim-text>wherein the downstream end of the bypass passage forms an opening in the interstage passage that is located at a downstream portion of the curved passage, in a flow direction of the gas supplied from the first impeller toward the second impeller.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The compressor according to <claim-ref idref="CLM-00002">claim 2</claim-ref>,
+<claim-text>wherein the second impeller is configured to rotate about a shaft, and</claim-text>
+<claim-text>wherein the downstream end of the bypass passage extends to the opening along a tangent of a concentric circle that is concentric with the shaft of the second impeller, in the transverse cross-section of the interstage passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The compressor according to <claim-ref idref="CLM-00002">claim 2</claim-ref>,
+<claim-text>wherein the downstream end of the bypass passage extends into the interstage passage in an extending direction, and</claim-text>
+<claim-text>wherein the opening of the downstream end of the bypass passage is formed along a radial direction of a shaft, that is perpendicular to the extending direction of the downstream end.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The compressor according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a first housing that accommodates the first impeller, wherein the first housing includes a first inlet configured to direct the gas to the first impeller, a first scroll passage that surrounds the first impeller and that is configured to supply the gas to the interstage passage, and a first diffuser passage configured to direct the gas from the first impeller to the first scroll passage; and</claim-text>
+<claim-text>a second housing that accommodates the second impeller, wherein the second housing includes a second inlet configured to direct the gas from the interstage passage to the second impeller, a second scroll passage that surrounds the second impeller, a second diffuser passage configured to direct the gas from the second impeller to the second scroll passage, and a scroll passage exit configured to discharge the gas from the second scroll passage, and</claim-text>
+<claim-text>wherein the bypass passage has an upstream end located opposite to the downstream end, that is connected to the scroll passage exit of the second housing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The compressor according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, further comprising an interstage housing that accommodates the interstage passage, wherein the second housing is interposed between the interstage housing and the first housing in an axial direction in which a shaft extends, and
+<claim-text>wherein the downstream end of the bypass passage is connected to the interstage housing so as to be fluidly coupled with the interstage passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The compressor according to <claim-ref idref="CLM-00006">claim 6</claim-ref>,
+<claim-text>wherein the interstage passage includes a linear passage, and a curved passage extending from the linear passage to an inlet of the second housing, that forms an inlet portion of the second impeller, and</claim-text>
+<claim-text>wherein the downstream end of the bypass passage is open to the interstage passage, at a location between a midpoint of the curved passage and the second impeller.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The compressor according to <claim-ref idref="CLM-00006">claim 6</claim-ref>,
+<claim-text>wherein the interstage passage includes a linear passage, and a curved passage extending from the linear passage to an inlet of the second housing, that forms an inlet portion of the second impeller, and</claim-text>
+<claim-text>wherein the downstream end of the bypass passage is open to the interstage passage at a location that is along the linear passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The compressor according to <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein the interstage passage has an inlet end located adjacent to the first impeller, an outlet end located adjacent to the second impeller, and a center line extending from the inlet end to the outlet end, and</claim-text>
+<claim-text>wherein the gas spirals around the center line in the swirling direction, along the interstage passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The compressor according to <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein the bypass passage tapers toward the downstream end.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The compressor according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a housing having an inner wall that forms the interstage passage, wherein the downstream end of the bypass passage protrudes from the inner wall of the housing into the interstage passage.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A compressor comprising:
+<claim-text>a first impeller configured to compress a gas;</claim-text>
+<claim-text>a second impeller configured to further compress the gas compressed by the first impeller and to direct the gas to a downstream region that is located downstream of the second impeller in a flow direction of the gas;</claim-text>
+<claim-text>an interstage passage configured to direct the gas from the first impeller to the second impeller; and</claim-text>
+<claim-text>a bypass passage configured to recirculate the gas from the downstream region of the second impeller, to the interstage passage,</claim-text>
+<claim-text>wherein the bypass passage has a downstream end that protrudes into the interstage passage, to fluidly couple the bypass passage with the interstage passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The compressor according to <claim-ref idref="CLM-00012">claim 12</claim-ref>,
+<claim-text>wherein the interstage passage has a first end located adjacent to the first impeller and a second end located adjacent to the second impeller, and a center line extending from the first end to the second end,</claim-text>
+<claim-text>wherein the first impeller is configured to rotate in a direction that causes the gas flowing in the interstage passage, to swirl in a swirling direction that spirals around the center line along the interstage passage,</claim-text>
+<claim-text>wherein the swirling direction corresponds substantially to a circumferential direction of the interstage passage, when viewed from a transverse cross-section of the interstage passage, taken substantially orthogonally to the center line, and</claim-text>
+<claim-text>wherein the downstream end is configured to direct the recirculated gas against the swirling direction of the gas, in the transverse cross-section of the interstage passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The compressor according to <claim-ref idref="CLM-00013">claim 13</claim-ref>,
+<claim-text>wherein the transverse cross-section of the interstage passage is taken adjacent to an inlet of the second impeller, and</claim-text>
+<claim-text>wherein the second impeller is configured to rotate in a direction that is opposite to the swirling direction of the gas, when viewed from the transverse cross-section.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The compressor according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the downstream end of the bypass passage extends along a tangent of a concentric circle that is concentric with the center line of the interstage passage, in the transverse cross-section.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The compressor according to <claim-ref idref="CLM-00013">claim 13</claim-ref>,
+<claim-text>wherein the downstream end has an end surface forming an opening to fluidly couple the bypass passage with the interstage passage, and</claim-text>
+<claim-text>wherein the end surface extends along a radial axis of the center line, in the transverse cross-section.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The compressor according to <claim-ref idref="CLM-00012">claim 12</claim-ref>,
+<claim-text>wherein the interstage passage has an inlet end located adjacent to the first impeller, an outlet end located adjacent to the second impeller, and a center line extending from the inlet end to the outlet end,</claim-text>
+<claim-text>wherein a longitudinal cross-section of the compressor, is taken along the center line of the interstage passage,</claim-text>
+<claim-text>wherein the interstage passage includes a curved passage located adjacent to the outlet end, along which the center line is curved in the longitudinal cross-section, and</claim-text>
+<claim-text>wherein the downstream end of the bypass passage forms an opening that is located between a midpoint of the curved passage and the second impeller, in the longitudinal cross-section.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The compressor according to <claim-ref idref="CLM-00017">claim 17</claim-ref>,
+<claim-text>wherein the curved passage forms the outlet end of the interstage passage,</claim-text>
+<claim-text>wherein an inlet portion of the second impeller extends linearly from the outlet end formed by the curved passage, and</claim-text>
+<claim-text>wherein the opening of the downstream end of the bypass passage is located adjacent to the outlet end of the curved passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The compressor according to <claim-ref idref="CLM-00012">claim 12</claim-ref>,
+<claim-text>wherein the interstage passage includes a linear passage, and a curved passage extending from the linear passage toward an inlet portion of the second impeller, and</claim-text>
+<claim-text>wherein the downstream end of the bypass passage is open to the interstage passage at a location that is along the linear passage.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The compressor according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising:
+<claim-text>a housing that accommodates the second impeller, wherein the housing forms a scroll passage in the downstream region of the second impeller,</claim-text>
+<claim-text>wherein the scroll passage surrounds the second impeller and is configured to discharge compressed gas from the second impeller,</claim-text>
+<claim-text>wherein the bypass passage has an upstream end located opposite the downstream end, to direct a recirculated gas from the upstream end to the downstream end, and</claim-text>
+<claim-text>wherein the upstream end of the bypass passage is fluidly coupled with the scroll passage, to receive the compressed gas discharged from the scroll passage.</claim-text>
+</claim-text>
+</claim>
+</claims>

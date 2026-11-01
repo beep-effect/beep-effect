@@ -1,0 +1,51 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "11910514-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 20,
+    "resolvedTreesReviewed": 20,
+    "elementCount": 55,
+    "termCount": 217,
+    "functionalRelationCount": 35
+  },
+  "reviewNotes": [
+    "Full initial semantic review of all20 selected claims. Root device/with-component grammar, position-acquisition and output relationships, cradle/grating/film-holder limitations, fibre-axis geometry, and readout-array limitations are represented. Natural dependencies are independently read, including added10\u201320 and20\u21928; repeated clauses remain branch-local.",
+    "Complete heads and all antecedent identities reviewed. Capture means/position acquisition means, shortened recording device, detector readout circuit and slit names have unique source roles. Fibre and slit axes remain distinct by ownership: its axis links fibre axis, longitudinal axis links slit axis. End-surface and adverbial its turn phrases are retained correctly under lexical-head/v1. Unintroduced shaft, pixel, column and direction properties are not invented.",
+    "All trees decode through ClaimElementTree. Exact UTF-16 element/term spans, ordering/nonoverlap/ownership, antecedent endpoints and complete contiguous functional reconstruction checked. All canonical/context claims match native XML under permitted normalization; source XML digest matches provenance.",
+    "Read retained source critic, application/publication identity and numbered rejection evidence. Source eligibility remains separately accepted; no fresh original-PDF/inventory authentication or attorney agreement claimed."
+  ],
+  "independence": "Independent full semantic critic; did not author these references. Read exact canonical/native source/context, extractor, provenance, retained source critic, schema contracts and protocol. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only check manually reviewed source annotations. Only assigned critic receipts written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+}

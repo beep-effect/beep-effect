@@ -1,0 +1,16 @@
+{
+  "initialHostAvailableBytes": 56091578368,
+  "stopReason": null,
+  "peakObservedBytes": 2530803712,
+  "minimumHostAvailableBytes": 55761014784,
+  "exitCode": 0,
+  "finalState": {
+    "ActiveState": "inactive",
+    "MainPID": "0",
+    "Result": "success",
+    "MemoryCurrent": "[not set]",
+    "MemoryPeak": "[not set]"
+  },
+  "result": "passed",
+  "scope": "Scoped tsgo and tsrs checks plus 28 CLI tests; not the whole CLI package gate"
+}

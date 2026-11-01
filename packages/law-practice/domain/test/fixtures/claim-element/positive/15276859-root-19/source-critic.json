@@ -1,0 +1,51 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15276859-root-19",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [19, 20],
+  "findings": [],
+  "evidence": [
+    "Actual112(b)1–20 includes selected19 and dependent20. Direct source wording19 said engine/the surface matches examiner; original19 exact and20 page16 trailing artifact is formatting. Extra parsed heading node is not an extra numbered claim."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "b0a475ea95caa394ab52a26489dfaced4f5b4179e55bf7dff7fdae921bead6db",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "4b5e64336038051be088ecd401fa19fa6c62d565afbfa19c1985c81840640e4a",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "1b57426b39b8473c4b7e49a1d8937d893e9a4c6e3482e7c7a04515a679dba916",
+    "inventoryReportedCount": 67,
+    "inventoryActualRows": 67,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "ITLKKJUERXEAPX3",
+        "documentCode": "CLM",
+        "officialDate": "2016-09-27T00:00:00.000-0400",
+        "description": "Claims"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "JMQIZ4MERXEAPX3",
+        "documentCode": "CTNF",
+        "officialDate": "2018-10-01T12:45:17.000-0400"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "ITLKKJUERXEAPX3",
+        "exists": true,
+        "sha256": "862918fbfa0b2c68177a17f83c44796c5ef3e23553cf577d5a673fa643921ac1",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "eligible",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+}

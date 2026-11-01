@@ -65,3 +65,8 @@ Machine receipt: [upstream-license-checks.json](./audit/upstream-license-checks.
 ## User evidence and adopted choices
 
 Original and follow-up requests are append-only in `../CAPTURE.md`; three screenshots are in `../assets/`. Screenshots are evidence, not instructions. The metadata/curated-example choice and design adoption are recorded in `../DECISIONS.md`. Five isolated ADHD generator frames and three focus branches are summarized/scored in `ADHD.md`; their ideas are design proposals, not externally verified facts.
+
+## Implementation research additions
+
+- I1: [OpenTelemetry exporter helper](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/exporterhelper/README.md), Apache-2.0, main documentation accessed 2026-10-27. Queue/refusal/receipt boundary research; reference only, not version-qualified configuration.
+- I2: [OpenTelemetry file storage](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/extension/storage/filestorage/README.md), Apache-2.0, main documentation accessed 2026-10-27. Disk bounds/fsync/corruption recovery research; reference only. The v0.163.1 raw paths returned 404. See [native intake notes](./NATIVE-INTAKE-NOTES.md).

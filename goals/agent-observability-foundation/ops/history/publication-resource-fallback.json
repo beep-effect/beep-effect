@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-10-29T21:40:08.388859+00:00",
+  "attemptedHead": "40f89e303828",
+  "result": "stopped-before-push",
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-publication-v4.service",
+    "profile": "catalog",
+    "memoryStopBytes": 17179869184,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 48561299456,
+    "peakObservedBytes": 1468624896,
+    "minimumAvailableBytes": 17179365376,
+    "stoppedFor": "host pressure",
+    "tasksMax": 1024,
+    "peakObservedTasks": 119,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 130,
+    "orphanCleanup": []
+  },
+  "archive": "~/.local/state/beep/observation-proof-archive/foundation-publication-guard-fab0_1py",
+  "hostedFallback": "AGENTS.md Quality Operator constrained-compute route. Earlier collected gate exceeded 15-minute local deadline; repeated bounded local runs and current admission pressure prevent whole local proof. Keep passing package/targeted evidence and explicitly disclose local gaps in draft PR. Hosted checks remain required.",
+  "latestAttemptRanNoChecks": true,
+  "noKernelOomDuringAttempt": true,
+  "recoveryHold": "preserved"
+}

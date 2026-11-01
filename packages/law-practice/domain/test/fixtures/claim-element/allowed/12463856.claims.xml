@@ -1,0 +1,147 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A method for compensating for nonlinear distortion of a signal, comprising:
+<claim-text>inputting an initial orthogonal frequency division multiplexing (OFDM) signal into a preset nonlinear compensation fusion model, wherein the nonlinear compensation fusion model comprises a band limited-digital pre-distortion (BL-DPD) module, a band limited-crest factor reduction (BL-CFR) module and an error compensation module, and the error compensation module is configured to perform error compensation on OFDM signals that are output by the BL-DPD module and the BL-CFR module;</claim-text>
+<claim-text>obtaining a first OFDM signal, a second OFDM signal and a third OFDM signal after the initial OFDM signal is processed by the BL-DPD module, the BL-CFR module and the error compensation module respectively; and</claim-text>
+<claim-text>obtaining, based on the first OFDM signal, the second OFDM signal and the third OFDM signal, an initial OFDM signal after nonlinear distortion compensation.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a basis function adopted by the BL-DPD module and a basis function adopted by the BL-CFR module are the same.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the obtaining the first OFDM signal, the second OFDM signal and the third OFDM signal after the initial OFDM signal is processed by the BL-DPD module, the BL-CFR module and the error compensation module, respectively, comprises:
+<claim-text>obtaining the first OFDM signal, the second OFDM signal and the third OFDM signal by modulating the initial OFDM signal based on model parameter sets, that are converged in an offline mode, of the BL-DPD module, the BL-CFR module and the error compensation module respectively.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The method according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the model parameter set comprises any one of following parameter combinations:
+<claim-text>a kernel coefficient, a nonlinear order, a memory depth, and an order of a low-order low-pass filter (LPF) of the BL-DPD module;</claim-text>
+<claim-text>a kernel coefficient, a nonlinear order, a memory depth, and an order of a low-order LPF of the BL-CFR module; or</claim-text>
+<claim-text>a kernel coefficient, a nonlinear order and a memory depth of the error compensation module.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein under a condition that the parameter combination of the model parameter set comprises the kernel coefficient, the nonlinear order, the memory depth, and the order of the low-order LPF of the BL-DPD module, the model parameter set is obtained by a following method:
+<claim-text>inputting a sample OFDM signal that is in an offline mode into the BL-DPD module and obtaining a sample OFDM signal after DPD;</claim-text>
+<claim-text>obtaining, based on the sample OFDM signal after the DPD and a conjugate parameter set corresponding to an initial parameter set of the BL-DPD module, a sample OFDM signal after inverse DPD;</claim-text>
+<claim-text>obtaining a target DPD error signal based on the sample OFDM signal that is in the offline mode and the sample OFDM signal after the inverse DPD;</claim-text>
+<claim-text>iteratively modifying the initial parameter set based on the target DPD error signal and a preset low noise variable step size-least mean square algorithm until an absolute value of the target DPD error signal is less than a DPD error signal threshold that is set; and</claim-text>
+<claim-text>taking, as the model parameter set of the BL-DPD module, an initial parameter set after the iteratively modifying;</claim-text>
+<claim-text>wherein before the iteratively modifying the initial parameter set based on the target DPD error signal and the preset low noise variable step size-least mean square algorithm, the method further comprises:</claim-text>
+<claim-text>directly taking the initial parameter set as the model parameter set of the BL-DPD module under a condition that the absolute value of the target DPD error signal is not less than the DPD error signal threshold.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The method according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the obtaining, based on the sample OFDM signal after the DPD and the conjugate parameter set corresponding to the initial parameter set of the BL-DPD module, the sample OFDM signal after inverse DPD comprises:
+<claim-text>sequentially performing digital-to-analog conversion, up conversion and power amplification on the sample OFDM signal after the DPD and obtaining a sample OFDM signal after the power amplification;</claim-text>
+<claim-text>sequentially performing power attenuation, down conversion and analog-to-digital conversion on the sample OFDM signal after the power amplification and obtaining a sample OFDM signal after the analog-to-digital conversion; and</claim-text>
+<claim-text>obtaining, based on the sample OFDM signal after the analog-to-digital conversion and the conjugate parameter set corresponding to the initial parameter set, the sample OFDM signal after the inverse DPD.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The method according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the iteratively modifying the initial parameter set based on the target DPD error signal and the preset low noise variable step size-least mean square algorithm comprises:
+<claim-text>executing operations during each modification of the initial parameter set as follows:</claim-text>
+<claim-text>obtaining a plurality of sample OFDM signals that correspond to a plurality of historical moments respectively and are currently adjacent to the sample OFDM signal that is in the offline mode;</claim-text>
+<claim-text>obtaining a DPD error signal average of the sample OFDM signal that is in the offline mode at a current moment based on historical DPD error signals corresponding to the plurality of sample OFDM signals;</claim-text>
+<claim-text>obtaining a first target step size factor based on the DPD error signal average, a step size factor at a last historical moment that is adjacent to the current moment, a target DPD error signal that is at the current moment and a historical DPD error signal that is at the last historical moment; and</claim-text>
+<claim-text>modifying an initial parameter set that is at the current moment based on the first target step size factor, a conjugate DPD error signal corresponding to the target DPD error signal that is at the current moment, and the sample OFDM signal after the analog-to-digital conversion, and obtaining an initial parameter set after modification.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein under a condition that the parameter combination of the model parameter set comprises the kernel coefficient, the nonlinear order, the memory depth, and the order of the low-order LPF of the BL-CFR module, the model parameter set is obtained by a following method:
+<claim-text>inputting a sample OFDM signal that is in an offline mode sequentially into the BL-DPD module and a preset CFR module, and obtaining a sample OFDM signal after DPD-CFR;</claim-text>
+<claim-text>obtaining, based on the sample OFDM signal that is in the offline mode and a conjugate parameter set corresponding to an initial parameter set of the BL-CFR module, a sample OFDM signal after CFR;</claim-text>
+<claim-text>obtaining a target CFR error signal based on the sample OFDM signal after the DPD-CFR and the sample OFDM signal after the CFR;</claim-text>
+<claim-text>iteratively modifying the initial parameter set based on the target CFR error signal and a preset low noise variable step size-least mean square algorithm until an absolute value of the target CFR error signal is less than a CFR error signal threshold that is set; and</claim-text>
+<claim-text>taking, as the model parameter set of the BL-CFR module, an initial parameter set after the iteratively modifying;</claim-text>
+<claim-text>wherein before the iteratively modifying the initial parameter set based on the target CFR error signal and the preset low noise variable step size-least mean square algorithm, the method further comprises:</claim-text>
+<claim-text>directly taking the initial parameter set as the model parameter set of the BL-CFR module under a condition that the absolute value of the target CFR error signal is not less than the CFR error signal threshold.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein under a condition that the parameter combination of the model parameter set comprises the kernel coefficient, the nonlinear order and the memory depth of the error compensation module, the model parameter set is obtained by a following method:
+<claim-text>obtaining a sample OFDM signal after nonlinear distortion compensation and a sample OFDM signal after filtering by inputting a sample OFDM signal that is in an offline mode into the nonlinear compensation fusion model and a preset high-order LPF, respectively;</claim-text>
+<claim-text>obtaining a target compensation error signal based on the sample OFDM signal after the nonlinear distortion compensation and the sample OFDM signal after the filtering;</claim-text>
+<claim-text>iteratively modifying an initial parameter set of the error compensation module based on the target compensation error signal and a preset low noise variable step size-least mean square algorithm until an absolute value of the target compensation error signal is less than a compensation error signal threshold that is set; and</claim-text>
+<claim-text>taking, as the model parameter set of the error compensation module, an initial parameter set after the iteratively modifying;</claim-text>
+<claim-text>wherein before the iteratively modifying an initial parameter set of the error compensation module based on the target compensation error signal and the preset low noise variable step size-least mean square algorithm, the method further comprises:</claim-text>
+<claim-text>directly taking the initial parameter set as the model parameter set of the error compensation module under a condition that the absolute value of the target compensation error signal is not less than the compensation error signal threshold.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein after the obtaining, based on the first OFDM signal, the second OFDM signal and the third OFDM signal, the initial OFDM signal after nonlinear distortion compensation, the method further comprises:
+<claim-text>obtaining, based on the initial OFDM signal after the nonlinear distortion compensation and a conjugate parameter set corresponding to a model parameter set of the BL-DPD module, an initial OFDM signal after inverse DPD;</claim-text>
+<claim-text>obtaining a target distortion compensation error signal based on the initial OFDM signal after the nonlinear distortion compensation and the initial OFDM signal after the inverse DPD; and</claim-text>
+<claim-text>iteratively modifying the model parameter set based on the target distortion compensation error signal and a preset sine and error variable step size-least mean square algorithm until an absolute value of the target distortion compensation error signal is less than a distortion compensation error threshold that is set.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the obtaining, based on the initial OFDM signal after the nonlinear distortion compensation and the conjugate parameter set corresponding to the model parameter set of the BL-DPD module, the initial OFDM signal after inverse DPD comprises:
+<claim-text>sequentially performing digital-to-analog conversion, up conversion and power amplification on the initial OFDM signal after the nonlinear distortion compensation and obtaining an initial OFDM signal after the power amplification;</claim-text>
+<claim-text>sequentially performing power attenuation, down conversion and analog-to-digital conversion on the initial OFDM signal after the power amplification and obtaining an initial OFDM signal after the analog-to-digital conversion; and</claim-text>
+<claim-text>obtaining, based on the initial OFDM signal after the analog-to-digital conversion and the conjugate parameter set corresponding to the model parameter set, the initial OFDM signal after the inverse DPD.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the iteratively modifying the model parameter set based on the target distortion compensation error signal and the preset sine and error variable step size-least mean square algorithm comprises:
+<claim-text>performing operations during each modification of the model parameter set as follows:</claim-text>
+<claim-text>obtaining a plurality of sample OFDM signals that are obtained after the nonlinear distortion compensation, correspond to a plurality of historical moments respectively and are currently adjacent to the initial OFDM signal after the nonlinear distortion compensation;</claim-text>
+<claim-text>obtaining a distortion compensation error signal average of the initial OFDM signal after the nonlinear distortion compensation at a current moment based on historical distortion compensation error signals corresponding to the plurality of sample OFDM signals after the nonlinear distortion compensation;</claim-text>
+<claim-text>obtaining a second target step size factor based on an error term corresponding to the distortion compensation error signal average, a target distortion compensation error signal that is at the current moment, and a historical distortion compensation error signal at a last historical moment that is adjacent to the current moment; and</claim-text>
+<claim-text>modifying a model parameter set that is at the current moment based on the second target step size factor, a conjugate distortion compensation error signal corresponding to the target distortion compensation error signal that is at the current moment, and an initial OFDM signal after analog-to-digital conversion, and obtaining a model parameter set after modification.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The method according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>iteratively modifying the model parameter set of the BL-DPD module according to set cycle time.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. An electronic device, comprising: a memory, a processor, and a computer program that is stored on the memory and executable by the processor, wherein the processor implements the method according to <claim-ref idref="CLM-00001">claim 1</claim-ref> when executing the computer program.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. A non-transitory computer readable storage medium, storing a computer program, wherein a processor implements steps of the method of <claim-ref idref="CLM-00001">claim 1</claim-ref> when the computer program is executed by the processor.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. A nonlinear compensation fusion model, comprising: a band limited-digital pre-distortion (BL-DPD) module, a band limited-crest factor reduction (BL-CFR) module and an error compensation module; wherein
+<claim-text>the BL-DPD module, the BL-CFR module and the error compensation module are connected in parallel, and the error compensation module is configured to perform error compensation on orthogonal frequency division multiplexing (OFDM) signals that are output by the BL-DPD module and the BL-CFR module.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The nonlinear compensation fusion model according to <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein a basis function adopted by the BL-DPD module and a basis function adopted by the BL-CFR module are the same.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The nonlinear compensation fusion model according to <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the nonlinear compensation fusion model is configured to:
+<claim-text>obtain a first OFDM signal, a second OFDM signal and a third OFDM signal after an initial OFDM signal is processed by the BL-DPD module, the BL-CFR module and the error compensation module respectively; and</claim-text>
+<claim-text>obtain, based on the first OFDM signal, the second OFDM signal and the third OFDM signal, an initial OFDM signal after nonlinear distortion compensation;</claim-text>
+<claim-text>or</claim-text>
+<claim-text>wherein the nonlinear compensation fusion model is further configured to:</claim-text>
+<claim-text>extract, in an offline mode, model parameter sets for the BL-DPD module, the BL-CFR module and the error compensation module by using a preset low noise variable step size-least mean square algorithm;</claim-text>
+<claim-text>or</claim-text>
+<claim-text>wherein the nonlinear compensation fusion model is further configured to:</claim-text>
+<claim-text>refresh, in an online mode, a model parameter set of the nonlinear compensation fusion model by using a preset sine and error variable step size-least mean square algorithm and based on preset cycle time;</claim-text>
+<claim-text>or</claim-text>
+<claim-text>wherein the nonlinear compensation fusion model is specifically configured to:</claim-text>
+<claim-text>refresh, in an online mode, a model parameter set of the BL-DPD module in the nonlinear compensation fusion model merely by using the preset sine and error variable step size-least mean square algorithm and based on the preset cycle time.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. An orthogonal frequency division multiplexing (OFDM) communication system, comprising: the nonlinear compensation fusion model according to <claim-ref idref="CLM-00016">claim 16</claim-ref>, a first branch, a second branch, a third branch and a fourth branch, wherein
+<claim-text>the BL-DPD module in the nonlinear compensation fusion model and the first branch are configured to iteratively modify an initial parameter set of the BL-DPD module in an offline mode and obtain a model parameter set of the BL-DPD module;</claim-text>
+<claim-text>the BL-CFR module in the nonlinear compensation fusion model and the second branch are configured to iteratively modify an initial parameter set of the BL-CFR module in an offline mode and obtain a model parameter set of the BL-CFR module;</claim-text>
+<claim-text>the error compensation module in the nonlinear compensation fusion model and the third branch are configured to iteratively modify an initial parameter set of the error compensation module in an offline mode and obtain a model parameter set of the error compensation module; and</claim-text>
+<claim-text>the nonlinear compensation fusion model and the fourth branch are configured to iteratively modify the model parameter set of the BL-DPD module in an online mode.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. The OFDM communication system according to <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the first branch comprises a digital to analog converter (DAC), an up-converter, a power amplifier (PA), an attenuator, a band pass filter (BPF), a down-converter, an analog to digital converter (ADC), a training network POST-BL-DPD module and a preset low noise variable step size-least mean square algorithm module that are sequentially arranged;
+<claim-text>or</claim-text>
+<claim-text>wherein the second branch comprises a CFR module, a training network POST-BL-DPD module and a preset low noise variable step size-least mean square algorithm module that are sequentially arranged;</claim-text>
+<claim-text>or</claim-text>
+<claim-text>wherein the third branch comprises a low pass filter (LPF) and a preset low noise variable step size-least mean square algorithm module that are sequentially arranged;</claim-text>
+<claim-text>or</claim-text>
+<claim-text>wherein the fourth branch comprises the DAC, the up-converter, the PA, the attenuator, the BPF, the down-converter, the ADC, the training network POST-BL-DPD module and a preset sine and error variable step size-least mean square algorithm module that are sequentially arranged.</claim-text>
+</claim-text>
+</claim>
+</claims>

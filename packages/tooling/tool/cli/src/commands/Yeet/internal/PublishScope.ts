@@ -46,7 +46,6 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPublishIntent, YeetRunOptions } from "../Yeet.schemas.ts";
 
-const zeroGitSha = "0000000000000000000000000000000000000000" as const;
 const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
 
 /**
@@ -103,68 +102,6 @@ export const validatePublishBranch: {
  * @since 0.0.0
  */
 export const validatePublishBranchForTesting = validatePublishBranch;
-
-/**
- * Parse non-delete local commit SHAs from Git pre-push hook stdin.
- *
- * **Example** (Extract local SHAs from pre-push stdin)
- *
- * ```ts
- * import { deepStrictEqual } from "node:assert"
- * import { prePushLocalShasFromStdin } from "@beep/repo-cli/test/Yeet"
- *
- * const input = "refs/heads/feature abc123 refs/heads/feature def456\nrefs/heads/delete 0000000000000000000000000000000000000000 refs/heads/delete abc\n"
- *
- * deepStrictEqual(prePushLocalShasFromStdin(input), ["abc123"])
- * ```
- *
- * @param input - Raw pre-push stdin lines in Git's
- * `<local-ref> <local-sha> <remote-ref> <remote-sha>` format.
- * @returns Sorted unique local SHAs, excluding delete pushes.
- * @category parsing
- * @since 0.0.0
- */
-export const prePushLocalShasFromStdin = (input: string): ReadonlyArray<string> =>
-  pipe(
-    Str.split(/\r?\n/u)(input),
-    A.map(Str.trim),
-    A.filter(Str.isNonEmpty),
-    A.map((line) => Str.split(/\s+/u)(line)[1] ?? ""),
-    A.filter((sha) => Str.isNonEmpty(sha) && sha !== zeroGitSha),
-    sortedUniquePaths
-  );
-
-/**
- * Return pre-push SHAs that differ from the verified commit SHA.
- *
- * **Example** (Find SHAs that differ from the pushed head)
- *
- * ```ts
- * import { deepStrictEqual } from "node:assert"
- * import { prePushShaMismatches } from "@beep/repo-cli/test/Yeet"
- *
- * deepStrictEqual(prePushShaMismatches(["abc123", "def456"], "abc123"), ["def456"])
- * deepStrictEqual(prePushShaMismatches("abc123")(["abc123"]), [])
- * ```
- *
- * @param localShas - Commit SHAs parsed from pre-push stdin.
- * @param expectedCommitSha - Commit SHA recorded in the reusable Yeet proof.
- * @returns Sorted unique SHAs that would push a commit different from the proof.
- * @category validation
- * @since 0.0.0
- */
-export const prePushShaMismatches: {
-  (localShas: ReadonlyArray<string>, expectedCommitSha: string): ReadonlyArray<string>;
-  (expectedCommitSha: string): (localShas: ReadonlyArray<string>) => ReadonlyArray<string>;
-} = dual(
-  2,
-  (localShas: ReadonlyArray<string>, expectedCommitSha: string): ReadonlyArray<string> =>
-    pipe(
-      localShas,
-      A.filter((sha) => sha !== expectedCommitSha),
-      sortedUniquePaths
-    )
-);
 
 const publishPathsOutsideIntent = (
   intendedPaths: ReadonlyArray<string>,
@@ -344,40 +281,6 @@ export const failPublishScopeWithPacket = Effect.fn("Yeet.failPublishScopeWithPa
  * @since 0.0.0
  */
 export const gitPathListFromNulOutputForTesting = gitPathListFromNulOutput;
-
-/**
- * Parse Git pre-push stdin and return non-delete local commit SHAs.
- *
- * **Example** (Extract local SHAs through the test seam)
- *
- * ```ts
- * import { deepStrictEqual } from "node:assert"
- * import { prePushLocalShasFromStdinForTesting } from "@beep/repo-cli/test/Yeet"
- *
- * deepStrictEqual(prePushLocalShasFromStdinForTesting("refs/heads/main abc refs/heads/main def\n"), ["abc"])
- * ```
- *
- * @category testing
- * @since 0.0.0
- */
-export const prePushLocalShasFromStdinForTesting = prePushLocalShasFromStdin;
-
-/**
- * Return pushed SHAs that do not match the reusable Yeet proof commit.
- *
- * **Example** (Find mismatched SHAs through the test seam)
- *
- * ```ts
- * import { deepStrictEqual } from "node:assert"
- * import { prePushShaMismatchesForTesting } from "@beep/repo-cli/test/Yeet"
- *
- * deepStrictEqual(prePushShaMismatchesForTesting(["abc", "def"], "abc"), ["def"])
- * ```
- *
- * @category testing
- * @since 0.0.0
- */
-export const prePushShaMismatchesForTesting = prePushShaMismatches;
 
 /**
  * Return observed paths that are not part of the reviewed Yeet publish intent.

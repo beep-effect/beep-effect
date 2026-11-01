@@ -1,8 +1,10 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { ContentDigest } from "@beep/file-processing/Artifact";
+import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import {
   normalizePatentApplicationDocument,
+  normalizePatentClaims,
   PatentApplicationDocument,
+  PatentApplicationSection,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import {
   attributeDocuments,
@@ -41,8 +43,11 @@ import {
 } from "@beep/law-practice-server";
 import { runPracticeKgSelfCheck } from "@beep/law-practice-server/PracticeKgHost";
 import { DbSchema } from "@beep/law-practice-tables";
+import { ClaimSelfCheckInput } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import {
+  ClaimSelfCheckReviewRequest,
+  ClaimSelfCheckReviewResult,
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgCandidateClaimsResult,
   PracticeKgCandidateClaimToolRow,
@@ -865,6 +870,8 @@ const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
   return A.headNonEmpty(decoded.content).text;
 });
 
+const claimSelfCheckReviewResultJson = S.fromJsonString(ClaimSelfCheckReviewResult);
+
 describe("practice KG projections", () => {
   describe("generates schema-valid fixture source rows", () => {
     it.prop(
@@ -1152,6 +1159,63 @@ describe("practice KG projections", () => {
       ),
       { timeout: "2 minutes" }
     )((it) => {
+      it.effect(
+        "serves source-quoted advisory claim findings over MCP without storing candidates",
+        Effect.fnUntraced(function* () {
+          const claimText = "A camera comprising a sensor and the shutter.";
+          const heading = "CLAIMS\n";
+          const content = `1. ${claimText}`;
+          const text = heading + content;
+          const claims = yield* normalizePatentClaims([["1", claimText]]);
+          const document = PatentApplicationDocument.make({
+            claims,
+            sourceText: text,
+            sections: [
+              PatentApplicationSection.make({
+                role: "claims",
+                heading: "CLAIMS",
+                content,
+                sourceStart: Str.length(heading),
+                sourceEnd: Str.length(text),
+              }),
+            ],
+          });
+          const request = ClaimSelfCheckReviewRequest.make({
+            input: ClaimSelfCheckInput.make({
+              document,
+              docket: "90001US01",
+              entitySeed: 7,
+              digest: ContentDigest.make("sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"),
+              identityDigest: ContentDigest.make(
+                "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              ),
+              operationId: OperationId.make(
+                "operation:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+              ),
+              sourceFile: "90001US01-claims.md",
+            }),
+          });
+          const before = yield* callToolText("kg_candidate_claims", {});
+          const wire = yield* S.encodeEffect(ClaimSelfCheckReviewRequest)(request);
+          const result = yield* callToolText("claim_self_check", wire).pipe(
+            Effect.flatMap(S.decodeEffect(claimSelfCheckReviewResultJson))
+          );
+          expect(result.items).toHaveLength(1);
+          expect(result.candidates).toHaveLength(1);
+          expect(result.undecomposed).toHaveLength(0);
+          const item = yield* Effect.fromOption(A.head(result.items));
+          const mapped = yield* Effect.fromOption(A.head(result.candidates));
+          expect(item.kind).toBe("claim-finding");
+          expect(item.claimId).toBe(mapped.candidate.id);
+          expect(item.text).toContain(claimText);
+          expect(item.text).toContain("the shutter");
+          expect(item.sourceRefs).toHaveLength(0);
+          expect(mapped.evidence.span.quote).toBe("the shutter");
+          expect(mapped.candidate.lifecycle).toBe("candidate");
+          expect(yield* callToolText("kg_candidate_claims", {})).toBe(before);
+        })
+      );
+
       it.effect(
         "serves the ten graph and document tools from the synthetic fixture bundle and degrades oversized results",
         Effect.fnUntraced(function* () {

@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "13484431",
+  "publicationNumber": "US20130025114A1",
+  "publicationDate": "2013-01-31",
+  "nativeXmlSha256": "32559a1d5e0471b2ba316f9ab0615d1e8a871e21aa65564825d876cb4598ce8e",
+  "claimsXmlSha256": "399d18d79cc889291a1a77caeeac14d34aac07438b7973fabe1026298fd942fd",
+  "officeActionDocumentIdentifiers": [
+    "HS1U3WJ9PXXIFW4"
+  ],
+  "officeActionMailDate": "2014-02-24",
+  "officeActionSection112Text": [
+    "claims 2,3,6-9,11,12,15-18,20,21,24 and 25 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 9, “the center” lacks antecedent basis.\r\nclaim 2, line 2, “the outer edge’ lacks antecedent basis.\r\nclaim 2, line 5, “ the tops’ lacks antecedent basis.\r\nclaim 2, line 5, “the top” lacks antecedent basis.\r\nclaim 6, line 2, the pressure” lacks antecedent basis.\r\nclaim 6, line 6, “the suction pressure’ lacks antecedent basis.\r\nclaim 8, line 3, “the bottom surface’ lacks antecedent basis.\r\nclaim 8, line 3, “the depth direction” lacks antecedent basis.\r\nclaim 8, line 9, “the bottom and wall surfaces” lacks antecedent basis.\r\nclaim 10, line 8, “the center” lacks antecedent basis.\r\nclaim 11, line 2, “the outer edge” lacks antecedent basis.\r\nclaim 11, line 5, “the tops” lacks antecedent basis.\r\nclaim 11, line 5, “the top” lacks antecedent basis.\r\nclaim 15, line 2, “the pressure” lacks antecedent basis.\r\nclaim 15, line 6, “the suction pressure’ lacks antecedent basis.\r\nclaim 17, line 3, “the bottom surface” lacks antecedent basis.\r\nclaim 17, lm 3, “the depth direction” lacks antecedent basis.\r\nclaim 17, line 9, “the bottom and wall surfaces” lacks antecedent basis.\r\nclaim 19, line 8, “ the center” lacks antecedent basis.\r\nclaim 20, line 2, “the outer edge’ lacks antecedent basis.\r\nclaim 20, line 6, “the tops’ lacks antecedent basis.\r\nclaim 20, line 6, “the top” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "H2VZ15PXPXXIFW3",
+      "officialDate": "2012-05-31T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "H2VZ15PXPXXIFW3",
+      "officialDate": "2012-05-31T00:00:00.000-0400",
+      "sha256": "f4343febd30b58d90b71a83cb6aed5a9a99f9875810eaa8adecc8c7a6a73d7af",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 69,
+  "documentInventoryRows": 69,
+  "primaryCpc": "H10P  72/78",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13484431",
+    "https://api.uspto.gov/api/v1/patent/applications/13484431/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "12838228",
+  "publicationNumber": "US20110074901A1",
+  "publicationDate": "2011-03-31",
+  "nativeXmlSha256": "109de80bb6cc5355271b30445a39eba19710ffc4bfde6ba08740a8326e3b9d2b",
+  "claimsXmlSha256": "343afe495d288121b42bd5048e6c25b0505663e9ea51653731354145e1c4d0ba",
+  "officeActionDocumentIdentifiers": [
+    "H2KCNOYDPXXIFW4"
+  ],
+  "officeActionMailDate": "2012-05-25",
+  "officeActionSection112Text": [
+    "claims 6, 7, 8, 9, 10, 11-20 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nclaims 11-20, drawn to a recording medium conveying method are indefinite for failure to set forth the steps of the method. each of the steps in a method or process claims should be verbal phrases, introduced by a gerund.\r\nclaim 11, “the collecting device, “the heating device” lack antecedent basis.\r\nclaim 12, line 2, “the collecting device” , “the heating device” lack antecedent basis.\r\nclaim 13, “the collecting device” lacks antecedent basis.\r\nclaim 14, “the collecting device” lacks antecedent basis.\r\n`claim 15, “the collecting device” lacks antecedent basis.\r\nclaim 16, “the collecting device”, “the movable plate” lack antecedent basis.\r\nclaim 17, “the first brush roller” lacks antecedent basis.\r\nclaim 18, “the brush roller lacks antecedent basis.\r\nclaim 19, “the brush roller” lacks antecedent basis.\r\nclaim 20, “the brush roller” lacks antecedent basis.\r\nclaim 6, “the movable plate” lacks antecedent basis.\r\nclaim 7, “the first brush roller” lacks antecedent basis.\r\nclaim 8, “the brush roller” lacks antecedent basis.\r\nclaim 9, “the brush roller” lacks antecedent basis.\r\nclaim 10, “the brush roller” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "GBPK8VT0PPOPPY2",
+      "officialDate": "2010-07-16T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "GBPK8VT0PPOPPY2",
+      "officialDate": "2010-07-16T00:00:00.000-0400",
+      "sha256": "19f864e98443d3f3ae959614b83f81cf46efe7d4fb65a48037055e272759b3f3",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 27,
+  "documentInventoryRows": 27,
+  "primaryCpc": "B41J   2/32",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12838228",
+    "https://api.uspto.gov/api/v1/patent/applications/12838228/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

@@ -1,0 +1,50 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. The sound attenuator, comprising:
+<claim-text>a generally triangular body with curved walls and rounded points having a base section and a top section, the body having a central axis, the base section and top section forming a hollow cavity, the top section having an upper surface and an aperture therein;</claim-text>
+<claim-text>a hollow sound tube having an oval cross-section extending from the base section at an angle relative to the central axis, the hollow sound tube having a resilient eartip with an open end at a distal end thereof,</claim-text>
+<claim-text>an axially movable push button actuator provided in the aperture of the top section, the push button actuator having an outer button surface and a sidewall having one or more openings therein, the sidewall extending from the outer button surface into the aperture into the top section;</claim-text>
+<claim-text>a reciprocating mechanism provided in the hollow cavity operably connected to the push button actuator for releasably retaining the push button actuator in a down closed position with one or more openings in the sidewall located in the aperture below the upper surface of the top section, and in an up open position with the one or more openings in the sidewall located above the upper surface of the top section;</claim-text>
+<claim-text>a spring biasing the push button actuator outwardly away from the body;</claim-text>
+<claim-text>the sound attenuator having a sound attenuation of at least 15 decibels in the frequency range between 1.5 kHz and 4 kHz obtained when the push button actuator in a closed position.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The sound attenuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the hollow cavity is a Helmholz resonator tuned to 2 kHz.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The sound attenuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the push button actuator outer button surface is generally triangular with curved sides and rounded points.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The sound attenuator of <claim-ref idref="CLM-00003">claim 3</claim-ref>, further comprising one or more seal inserts having an outline shape which matches the outline shape of the push button actuator.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The sound attenuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more openings in the sidewall have a total opening area, and open sound tube end has a sound tube end cross-sectional area, and wherein the total opening area is equal to or greater than the sound tube end cross-sectional area.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The sound attenuator of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more openings in the sidewall are located on a portion of the sidewall which faces forward.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The sound attenuator, comprising:
+<claim-text>a body having a base section and a top section, the body having a central axis, the base section and top section forming a hollow cavity, the top section having an upper surface and an aperture therein;</claim-text>
+<claim-text>a hollow sound tube extending from the base section at an angle relative to the central axis, the hollow sound tube having an open sound tube end;</claim-text>
+<claim-text>an axially movable push button actuator provided in the aperture of the top section, the push button actuator having an outer button surface and a circumferential flange;</claim-text>
+<claim-text>the sound attenuator having a sound attenuation of at least 15 decibels in the frequency range between 1.5 kHz and 4 kHz obtained when the push button actuator in a up closed position;</claim-text>
+<claim-text>a reciprocating mechanism operably connected to the push button actuator for releasably retaining the push button actuator in an up closed position with the circumferential flange in sealing engagement with an inner surface of the top section, and in a down open position with the circumferential flange separated from the inner surface of the top section.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The sound attenuator of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the body is generally triangular with curved walls and rounded points and the push button actuator has an outline shape which is generally triangular with curved sides and rounded points.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. An amplified hearing device, comprising:
+<claim-text>a generally triangular body with curved walls and rounded points having a base section and a top section, the body having a central axis, the base section and top section forming a hollow cavity, the top section having an upper surface and an aperture therein;</claim-text>
+<claim-text>a hollow sound tube having an oval cross-section extending from the base section at an angle relative to the central axis, the hollow sound tube having a resilient eartip with an open end at a distal end thereof,</claim-text>
+<claim-text>a speaker located in the body or sound tube to provide an amplified sound;</claim-text>
+<claim-text>an axially movable push button actuator provided in the aperture of the top section, the push button actuator having an outer button surface and a sidewall having one or more openings therein, the sidewall extending from the outer button surface into the aperture into the top section;</claim-text>
+<claim-text>a reciprocating mechanism provided in the hollow cavity operably connected to the push button actuator for releasably retaining the push button actuator in a closed position with the one or more openings in the sidewall located in the aperture below the upper surface of the top section, and in an open position with the one or more openings in the sidewall located above the upper surface of the top section;</claim-text>
+<claim-text>a spring biasing the push button actuator outwardly away from the body whereby when the push button actuator is pushed, the reciprocating mechanism positions the push button actuator in the open position;</claim-text>
+<claim-text>the amplified hearing device having a sound attenuation of at least 15 decibels in the frequency range between 1.5 kHz and 4 kHz obtained when the push button actuator in a closed position.</claim-text>
+</claim-text>
+</claim>
+</claims>

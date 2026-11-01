@@ -1,0 +1,129 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13062032-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "extractorVerdictReviewed": "eligible",
+  "extractorConclusionStands": true,
+  "sourceEligibilityConclusion": "eligible",
+  "findings": [],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "applicationNumber": "13062032",
+    "publicationNumber": "US20110247417A1",
+    "publicationDate": "2011-10-13",
+    "nativePublicationSha256": "0bc4374ebc4d3f4036fc2291f5bae715afd8cabcc0a9f87257ce57c38d75c913",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "2b33a6aabcd2936ff0644c943981d6dc7f04b9a7062d5979ee16ed9c3d8efdcb",
+    "sourceClaimsHashMatches": true,
+    "canonicalTextMatchesNativeXml": true,
+    "fullInventorySha256": "cd8e6f0dabf86530d51dfdd28237d0c537ac9cec95af9ea988fd118f15737c16",
+    "inventoryReportedCount": 81,
+    "inventoryActualRows": 81,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "GPFBVMRRPPOPPY1",
+        "documentCode": "CLM",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "GP8H0I9RPPOPPY2",
+        "documentCode": "A.PE",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "GPFAIYRMPPOPPY1",
+        "documentCode": "CLM",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "GPFAIYX3PPOPPY1",
+        "documentCode": "REM",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "GPFBVMRRPPOPPY1",
+        "sha256": "80e47452f351fb6867ae65b41e485fa3d6047488061e92faa4bc3dd580939614",
+        "sha256Matches": true
+      },
+      {
+        "documentIdentifier": "GPFAIYRMPPOPPY1",
+        "sha256": "eb24862ad7c04b64ebb16cc438534812945b9ebd4c371e9b5b44157a4549b15a",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "fullOfficeActionEvidence": {
+    "documentIdentifier": "HGF9NI6ZPXXIFW4",
+    "submissionDate": "2013-05-09",
+    "matchingRecords": 1,
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "minimalGroundQuote": "Claims 1-13 are rejected under 35 U.S.C. 112(b) or 35 U.S.C. 112 (pre-AIA ), second paragraph",
+    "individuallyDiscussedSelectedClaims": [
+      1,
+      6,
+      7,
+      10,
+      11,
+      12,
+      13
+    ],
+    "blanketScopeOrFamilyContextSelectedClaims": [
+      2,
+      3,
+      4,
+      5,
+      8,
+      9
+    ]
+  },
+  "originalPdfEvidence": [
+    {
+      "documentIdentifier": "GPFAIYRMPPOPPY1",
+      "sha256": "6cecb7b6e1026b32a511ba715b4d32ee14c84539d0d3b09a73f1347adf377128",
+      "matchesPdfInventory": true,
+      "pdfPages": [
+        1,
+        2,
+        3
+      ],
+      "printedPages": [
+        3,
+        4,
+        5
+      ],
+      "corroborationOnly": true
+    }
+  ],
+  "evidence": [
+    "Publication identity US20110247417A1, application 13062032 and date 20111013 directly verified in native bibliography. All 13 canonical claims match native after allowed number removal, claim-text boundary spacing and whitespace normalization. Native, selected-source and both original XML digests independently match provenance.",
+    "GPFBVMRRPPOPPY1 is the clean earlier wording: alternatives “any one of the preceding claims”, reference numerals and claim 5 “consists of ... preferably a cross-linked polystyrene copolymer”. These materially differ from native and were not ignored. GPFAIYRMPPOPPY1 is explicitly headed “AMENDMENT TO THE CLAIMS” / “Replace the claims with the following rewritten listing.” Visually reviewed all three marked PDF pages (printed 3–5), independently distinguishing strikeout from insertion; garbled marked XML/OCR is corroboration only and was not repaired into source text.",
+    "Marked PDF page 1 explicitly strikes claim 3/4 alternatives and inserts claim 1; page 2 does so for 5/6/8/9/10 and inserts claim 2 for 7; page 3 inserts claim 1 for 11/12/13. Claim 2 already names claim 1. Selected natural family therefore has independent method 1; 2–6 and 8–12 refer to 1; 7 refers to 2; device 13 expressly carries out method 1. This is source-reference family membership, without a legal determination of formal dependent-claim status.",
+    "PDF page 2 changes claim 5 “consists of” to “comprises” and deletes “preferably a cross-linked polystyrene copolymer”. Across pages 1–3 reference numerals and “characterized in that” are struck, “wherein” inserted; page 1 deletes “the” before sound velocity in claim 1 and page 2 deletes “the” before travel time in claim 7. Surviving substantive wording of all selected 1–13 agrees with native. Dependency changes and deleted polymer language thus have direct version evidence.",
+    "Full matching office action separately lists informal claim objections, then actual 112(b)/pre-AIA second-paragraph rejection of 1–13. Individual selected associations are 1/13 reflected ultrasound, associated signals, ultrasound and spaced transducers; 6 “the latter is uncoupled”; 7 “the leading body’s coupling surface”; 10 “the signals”; 11 “the outermost transducers”; 12 “the received pulse echo”. Native contains each phrase in the same numbered claim, allowing only curly/straight apostrophe presentation in claim 7. Claims 2/3/4/5/8/9 are blanket-scope/family context; no individual antecedent grounds are invented.",
+    "Reviewed all 81 inventory rows, distinguishing post-action amendments from the June 22, 2011 original CLM GPFBVMRRPPOPPY1, preliminary amendment A.PE GP8H0I9RPPOPPY2, replacement CLM GPFAIYRMPPOPPY1 and remarks GPFAIYX3PPOPPY1. No intervening claim amendment or non-entry before the May 9, 2013 action appears. Adoption is supported by rendered replacement wording agreeing with publication and actual examiner numbered phrases, together with the complete inventory."
+  ],
+  "remainingSourceGaps": [],
+  "independence": "Independent bounded source critic in a separate session from the source extractor. Directly inspected native/original claim text, complete document inventories, full matching office-action body and original PDF renderings. No expected labels, implementation rules, predictions, network, secrets, git or delegation. Only assigned source-critic receipts written. Acceptance covers source qualification only; semantic reference review and attorney adjudication remain separate."
+}

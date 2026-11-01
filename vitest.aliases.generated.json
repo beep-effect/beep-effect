@@ -688,7 +688,6 @@
     "./packages/foundation/modeling/schema/src/Float64Array.ts"
   ],
   "@beep/schema/Html": ["./packages/foundation/modeling/schema/src/Html.ts"],
-  "@beep/schema/Jsonc": ["./packages/foundation/modeling/schema/src/Jsonc.ts"],
   "@beep/schema/LocalDate": [
     "./packages/foundation/modeling/schema/src/LocalDate/index.ts"
   ],
@@ -2228,6 +2227,15 @@
   "@beep/schema/CredentialPatternBank": [
     "./packages/foundation/modeling/schema/src/CredentialPatternBank/index.ts"
   ],
+  "@beep/epistemic-domain/values/Retention": [
+    "./packages/epistemic/domain/src/values/Retention/index.ts"
+  ],
+  "@beep/epistemic-server/Retention": [
+    "./packages/epistemic/server/src/Retention/index.ts"
+  ],
+  "@beep/epistemic-use-cases/Retention": [
+    "./packages/epistemic/use-cases/src/Retention/index.ts"
+  ],
   "@beep/duckdb/DuckDbEventJournal": [
     "./packages/drivers/duckdb/src/DuckDbEventJournal.service.ts"
   ],
@@ -2246,16 +2254,7 @@
   "@beep/duckdb/DuckDbRunnerStorage": [
     "./packages/drivers/duckdb/src/DuckDbRunnerStorage.service.ts"
   ],
-  "@beep/epistemic-domain/values/Retention": [
-    "./packages/epistemic/domain/src/values/Retention/index.ts"
-  ],
-  "@beep/epistemic-server/Retention": [
-    "./packages/epistemic/server/src/Retention/index.ts"
-  ],
-  "@beep/epistemic-use-cases/Retention": [
-    "./packages/epistemic/use-cases/src/Retention/index.ts"
-  ],
-  "@beep/law-practice-domain/test": [
-    "./packages/law-practice/domain/src/test.ts"
+  "@beep/repo-cli/commands/Holds": [
+    "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
   ]
 }

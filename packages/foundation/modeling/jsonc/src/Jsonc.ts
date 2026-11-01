@@ -383,11 +383,10 @@ const lineGrammar = { unicodeSeparators: true } as const;
 const toDetails: {
   (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail>;
   (errors: ReadonlyArray<RawParseError>): (text: string) => ReadonlyArray<JsoncParseErrorDetail>;
-} = dual(
-  2,
-  (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail> =>
-    A.map(errors, (e) => JsoncParseErrorDetail.make({ ...e, ...Text.lineCharacterAt(text, e.offset, lineGrammar) }))
-);
+} = dual(2, (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail> => {
+  const position = Text.lineCharacterIndex(text, lineGrammar);
+  return A.map(errors, (e) => JsoncParseErrorDetail.make({ ...e, ...position(e.offset) }));
+});
 
 const aggregate: {
   (text: string, errors: ReadonlyArray<RawParseError>): O.Option<JsoncParseError>;
@@ -986,7 +985,9 @@ export abstract class Jsonc {
    *
    * Binds the plain form only: default {@link JsoncParseOptions} on decode and
    * default stringify options on encode. Both directions fail with
-   * `S.SchemaError`, and the target's service requirements flow through.
+   * `S.SchemaError`, and the target's service requirements flow through. The
+   * binding is generic over the target schema, so an `S.Opaque` class decodes
+   * to its branded type rather than the underlying struct.
    *
    * **Example** (Round-trip a config)
    *
@@ -1008,7 +1009,9 @@ export abstract class Jsonc {
    * @param target - The domain schema decoded values must satisfy.
    * @returns The composed schema and its two pre-bound directions.
    */
-  static bind<T, E, RD = never, RE = never>(target: S.Codec<T, E, RD, RE>): JsoncBoundCodec<T, RD, RE> {
+  static bind<Target extends S.Top>(
+    target: Target
+  ): JsoncBoundCodec<Target["Type"], Target["DecodingServices"], Target["EncodingServices"]> {
     const schema = Jsonc.schema(target);
     return {
       schema,

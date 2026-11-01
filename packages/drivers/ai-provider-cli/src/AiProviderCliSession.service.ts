@@ -6,8 +6,11 @@
 import { $AiProviderCliId } from "@beep/identity";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as Scope from "effect/Scope";
 import { openClaude } from "./AiProviderCliSession.claude.service.ts";
+import { observeManagedSession } from "./AiProviderCliSession.lifecycle.ts";
 import {
   prepareCodex,
   prepareGrok,
@@ -20,9 +23,9 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type * as Scope from "effect/Scope";
 import type * as Stream from "effect/Stream";
 import type { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
+import type { ManagedSessionObserver, ManagedSessionProcess } from "./AiProviderCliSession.lifecycle.ts";
 import type {
   ManagedLaunchProfile,
   ManagedSessionEvent,
@@ -59,11 +62,13 @@ export type ManagedSession = SessionOperations &
   Readonly<{
     events: Stream.Stream<ManagedSessionEvent>;
     identity: ManagedSessionIdentity;
+    process: ManagedSessionProcess;
   }>;
 
 interface SessionShape {
   readonly open: (
-    profile: ManagedLaunchProfile
+    profile: ManagedLaunchProfile,
+    observer?: ManagedSessionObserver
   ) => Effect.Effect<
     ManagedSession,
     ManagedSessionError,
@@ -76,16 +81,45 @@ interface SessionShape {
   >;
 }
 
-const open = Effect.fn("AiProviderCliSession.open")(function* (profile: ManagedLaunchProfile) {
+const openNative = Effect.fn("AiProviderCliSession.openNative")(function* (
+  profile: ManagedLaunchProfile,
+  observer?: ManagedSessionObserver
+) {
   yield* validateProfile(profile);
-  if (profile.provider === "claude") return yield* openClaude(profile);
+  if (profile.provider === "claude") return yield* openClaude(profile, observer);
   if (profile.provider === "codex") yield* prepareCodex(profile).pipe(transportFailure("prepare-profile"));
   const sandboxHash = profile.provider === "grok" ? yield* prepareGrok(profile) : "none";
-  return yield* openStdio(profile, sandboxHash);
+  return yield* openStdio(profile, sandboxHash, observer);
 });
+
+const open = Effect.fn("AiProviderCliSession.open")(
+  (profile: ManagedLaunchProfile, observer?: ManagedSessionObserver) =>
+    Effect.uninterruptibleMask(
+      Effect.fnUntraced(function* (restore) {
+        const scope = yield* Scope.fork(yield* Scope.Scope);
+        const acquire = Effect.gen(function* () {
+          const session = yield* openNative(profile, observer);
+          if (observer !== undefined)
+            yield* observeManagedSession(
+              "observe-bound",
+              Effect.suspend(() => observer.bound(session.identity))
+            );
+          return { ...session, close: session.close.pipe(Effect.onExit((exit) => Scope.close(scope, exit))) };
+        });
+        return yield* restore(acquire.pipe(Effect.provideService(Scope.Scope, scope))).pipe(
+          Effect.onError((cause) => Scope.close(scope, Exit.failCause(cause)))
+        );
+      })
+    )
+);
 
 /**
  * Opens one owned native runtime within the caller's scope.
+ * **Details** An optional observer receives actual spawn and validated-session
+ * evidence. Failed or interrupted initialization closes its child scope before
+ * returning; explicit close also releases that scope. Observation failure may
+ * follow a committed write, so reconcile the owning attempt instead of retrying
+ * open. The driver does not provide a durable launch-attempt fence.
  * **Example** (Inspect the service layer)
  * ```ts
  * import { AiProviderCliSession } from "@beep/ai-provider-cli"

@@ -51,9 +51,6 @@
       "path": "../../../drivers/poppler/tsconfig.json"
     },
     {
-      "path": "../../../drivers/runpod/tsconfig.json"
-    },
-    {
       "path": "../../../drivers/t3-code/tsconfig.json"
     },
     {
@@ -99,6 +96,9 @@
       "path": "../../../foundation/capability/xdg/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/github-commands/tsconfig.json"
     },
     {
@@ -109,6 +109,9 @@
     },
     {
       "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/jsonc/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/lockfiles/tsconfig.json"

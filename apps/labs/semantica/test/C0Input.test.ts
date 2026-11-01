@@ -7,7 +7,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -170,7 +170,7 @@ describe("C0 F1 input services", () => {
           .pipe(Effect.flatMap((bytes) => retryParser.parse(truncatedDocument, bytes)));
         expect(truncatedOutcome.outcome).toBe("Degraded");
         if (truncatedOutcome.outcome === "Degraded") {
-          expect(O.some(truncatedOutcome.kind)).toEqual(truncated.degradedKind);
+          deepStrictEqual(O.some(truncatedOutcome.kind), truncated.degradedKind);
         }
       })
     );
@@ -195,7 +195,7 @@ describe("C0 F1 input services", () => {
             if (fixture.expectation === "degraded") {
               expect(outcome.outcome).toBe("Degraded");
               if (outcome.outcome === "Degraded") {
-                expect(O.some(outcome.kind)).toEqual(fixture.degradedKind);
+                deepStrictEqual(O.some(outcome.kind), fixture.degradedKind);
               }
               return { fixture: fixture.id, outcome: outcome.outcome };
             }

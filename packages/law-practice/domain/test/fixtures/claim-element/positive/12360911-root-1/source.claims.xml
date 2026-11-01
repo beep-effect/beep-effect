@@ -1,0 +1,122 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An X-ray CT apparatus comprising:
+<claim-text>an imaging unit that irradiates a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructs an image by detecting X-rays passed through the subject;</claim-text>
+<claim-text>an index-value detecting unit that detects an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan;</claim-text>
+<claim-text>a switch-timing detecting unit that detects switch timing of the scanning conditions based on an index value detected by the index-value detecting unit; and</claim-text>
+<claim-text>an imaging control unit that controls the imaging unit so as to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition upon detecting switch timing of the scanning conditions by the switch-timing detecting unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the imaging unit performs a dynamic scan through which a dynamic image of a scan subject portion of the subject is reconstructed by repeatedly irradiating a region including the scan subject portion with X-rays.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The apparatus according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the imaging unit detects X-rays with a Flat Panel Detector of multiple arrays that can simultaneously detect X-rays passed through a region including the scan subject portion.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density based on the index value, and detects switch timing of the scanning conditions based on a gradient of the created curve.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The apparatus according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein
+<claim-text>the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and</claim-text>
+<claim-text>the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The apparatus according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the switch-timing detecting unit detects the switch timing by detecting an inflection point that appears on the curve based on a gradient of the curve.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when an index value detected by the index-value detecting unit becomes below a termination threshold value.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when a total scan time from a start of the scan reaches a predetermined maximum scan time.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The apparatus according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a display control unit that displays during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. An X-ray CT apparatus comprising:
+<claim-text>an imaging unit that irradiates a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructs an image by detecting X-rays passed through the subject;</claim-text>
+<claim-text>an index-value detecting unit that detects an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan; and</claim-text>
+<claim-text>a display control unit that displays during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>an instruction receiving unit that receives from an operator an instruction to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition; and</claim-text>
+<claim-text>an imaging control unit that controls the imaging unit so as to skip the rest of a scan with the first scanning condition and to start a scan with the second scanning condition upon receiving by the instruction receiving unit an instruction about switching of scanning conditions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein
+<claim-text>the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and</claim-text>
+<claim-text>the display control unit displays during a scan a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The apparatus according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the display control unit displays a plurality of curves that indicates temporal variations in contrast medium densities in respective regions of interest, when a plurality of regions of interest is set on the image as the region of interest.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The apparatus according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the display control unit further displays information about executed scans during a scan.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A tomography method comprising:
+<claim-text>irradiating a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructing an image by detecting X-rays passed through the subject, by an imaging unit;</claim-text>
+<claim-text>detecting by an index-value detecting unit an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan;</claim-text>
+<claim-text>detecting by a switch-timing detecting unit switch timing of the scanning conditions based on an index value detected by the index-value detecting unit; and</claim-text>
+<claim-text>controlling the imaging unit by an imaging control unit so as to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition upon detecting switch timing of the scanning conditions by the switch-timing detecting unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the imaging unit performs a dynamic scan through which a dynamic image of a scan subject portion of the subject is reconstructed by repeatedly irradiating a region including the scan subject portion with X-rays.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method according to <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the imaging unit detects X-rays with a Flat Panel detector of multiple arrays that can simultaneously detect X-rays passed through a region including the scan subject portion.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density based on the index value, and detects switch timing of the scanning conditions based on a gradient of the created curve.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method according to <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein
+<claim-text>the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and</claim-text>
+<claim-text>the switch-timing detecting unit creates a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method according to <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the switch-timing detecting unit detects the switch timing by detecting an inflection point that appears on the curve based on a gradient of the curve.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when an index value detected by the index-value detecting unit becomes below a termination threshold value.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the imaging control unit controls the imaging unit so as to skip the rest of a scan currently in execution and to terminate scanning, when a total scan time from a start of the scan reaches a predetermined maximum scan time.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The method according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising displaying by a display control unit during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. A tomography method comprising:
+<claim-text>irradiating a subject, switching scanning conditions, with X-rays continuously or intermittently, and reconstructing an image by detecting X-rays passed through the subject, by an imaging unit;</claim-text>
+<claim-text>detecting by an index-value detecting unit an index value that indicates a contrast medium density in an image reconstructed by the imaging unit during a scan; and</claim-text>
+<claim-text>displaying by a display control unit during a scan a curve that indicates temporal variations in the contrast medium density based on index values detected by the index-value detecting unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The method according to <claim-ref idref="CLM-00024">claim 24</claim-ref>, further comprising:
+<claim-text>receiving by an instruction receiving unit from an operator an instruction to skip the rest of a scan with a first scanning condition in execution and to start a scan with a second scanning condition; and</claim-text>
+<claim-text>controlling the imaging unit by an imaging control unit so as to skip the rest of a scan with the first scanning condition and to start a scan with the second scanning condition upon receiving by the instruction receiving unit an instruction about switching of scanning conditions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. The method according to <claim-ref idref="CLM-00025">claim 25</claim-ref>, wherein
+<claim-text>the index-value detecting unit detects an index value that indicates a contrast medium density in an region of interest set on the image as the index value, and</claim-text>
+<claim-text>the display control unit displays during a scan a curve that indicates temporal variations in the contrast medium density in the region of interest as the curve.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. The method according to <claim-ref idref="CLM-00024">claim 24</claim-ref>, wherein the display control unit displays a plurality of curves that indicates temporal variations in contrast medium densities in respective regions of interest, when a plurality of regions of interest is set on the image as the region of interest.</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text><b>28</b>. The method according to <claim-ref idref="CLM-00024">claim 24</claim-ref>, wherein the display control unit further displays information about executed scans during a scan. </claim-text>
+</claim>
+</claims>

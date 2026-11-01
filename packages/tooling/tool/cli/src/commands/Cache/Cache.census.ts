@@ -6,10 +6,10 @@
  */
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtils, GlobOptions, readPackageJsonFile, resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
 import { Sha256HexFromBytes } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -41,6 +41,8 @@ const TurboWorkspaceList = S.Struct({
   packages: S.Struct({ items: S.Array(S.Struct({ name: S.String, path: S.String })) }),
 });
 const TurboConfiguration = S.Struct({ tasks: S.Record(S.String, S.Unknown) });
+const decodeJsonObjectText = Jsonc.bind(S.JsonObject).decode;
+const decodeTurboConfigurationText = Jsonc.bind(TurboConfiguration).decode;
 const TurboDefinition = S.Struct({
   ...CacheTaskConfiguration.fields,
   passThroughEnv: S.String.pipe(S.Array, S.OptionFromNullOr),
@@ -579,10 +581,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   );
   const rootJson = yield* fs
     .readFileString(paths.join(root, "turbo.json"))
-    .pipe(
-      Effect.flatMap(decodeJsoncTextAs(S.JsonObject)),
-      CacheCommandError.mapError("Invalid root Turbo configuration.")
-    );
+    .pipe(Effect.flatMap(decodeJsonObjectText), CacheCommandError.mapError("Invalid root Turbo configuration."));
   const rootConfig = yield* decodeTurboConfiguration(rootJson).pipe(
     CacheCommandError.mapError("Root Turbo tasks are invalid.")
   );
@@ -601,7 +600,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
         const child = yield* fs
           .readFileString(paths.join(root, childPath))
           .pipe(
-            Effect.flatMap(decodeJsoncTextAs(TurboConfiguration)),
+            Effect.flatMap(decodeTurboConfigurationText),
             CacheCommandError.mapError("Invalid child Turbo configuration.")
           );
         tasks = A.appendAll(

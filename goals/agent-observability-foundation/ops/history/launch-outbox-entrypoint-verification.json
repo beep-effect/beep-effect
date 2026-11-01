@@ -1,0 +1,178 @@
+{
+  "recordedAt": "2026-10-29T01:59:00.279694+00:00",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "deliberateMemoryExhaustion": false,
+  "goalComplete": false,
+  "runs": [
+    {
+      "unit": "beep-observation-entry-proof-a30a24bc9199.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-cf7ee9a3f1b6.service",
+      "startsPaused": true,
+      "limits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "secondOwnerExit": 73,
+      "socketMode": "0600",
+      "stopped": true
+    },
+    {
+      "unit": "beep-observation-entry-proof-ff6249116413.service",
+      "refused": "ownership",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 38
+    },
+    {
+      "unit": "beep-observation-entry-proof-b85c421fe990.service",
+      "refused": "resources",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 38
+    },
+    {
+      "unit": "beep-observation-entry-proof-43b7392b7a80.service",
+      "refused": "ownership",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 38
+    },
+    {
+      "unit": "beep-observation-entry-proof-bef77cad3a94.service",
+      "refused": "socket",
+      "mainPid": 0,
+      "diagnosticSource": "owned-private-file",
+      "diagnosticBytes": 35
+    }
+  ],
+  "result": "passed",
+  "independentClaimFixture": "/tmp/obs-claims-42th5s4f",
+  "managedPeer": {
+    "providerProtocol": "codex",
+    "syntheticOnly": true,
+    "actualProviderSessions": 0,
+    "actualChildLaunches": 1,
+    "childStoppedBeforeFinished": true,
+    "facts": 4,
+    "sourceSessionHash": "d68e4276439465dd100b078507b6c43ed0a253a55b97d928a79e37bf4c228982",
+    "nativeSourceSessionJoin": true,
+    "producerOutboxRecoveredLostAckAfterRestart": true,
+    "independentClaimRefusedRelaunchAfterRestart": true
+  },
+  "launchFacts": {
+    "cliMarkedFixtures": 1,
+    "desktopMarkedFixtures": 1,
+    "actualHarnessLaunches": 0,
+    "committedFacts": 12,
+    "exactReplayAfterRestart": true,
+    "privateFieldRefused": true,
+    "startsPaused": true,
+    "typedClientVerifiedReceipts": true,
+    "privateContextWhilePaused": true,
+    "newClientAfterRestart": true
+  },
+  "sourceStartsPaused": true,
+  "sourceAutonomousRead": true,
+  "sourcePartialTailPersists": true,
+  "sourceCursorSurvivesRestart": true,
+  "sourceCoverageRemainsUnknown": true,
+  "startsPaused": true,
+  "autonomousSend": true,
+  "acceptedMissingReadbackDegraded": true,
+  "exactReceiptReplayAfterRestart": true,
+  "noBlindResend": true,
+  "privateCanaryAbsent": true,
+  "scopedSocketCleanup": true,
+  "noFixtureRoutes": true,
+  "databaseIntegrity": true,
+  "backendPostCount": 2,
+  "nativeBackendPostCount": 1,
+  "reconstructedBackendPostCount": 1,
+  "unsafeCreationModeRefused": true,
+  "symlinkFixture": "/tmp/obs-link-dqkde0_0",
+  "socketFixture": "/tmp/obs-socket-2_1_5i6d",
+  "missingLockRefused": true,
+  "symlinkDatabasePreserved": true,
+  "activeSocketPreserved": true,
+  "cleanup": [
+    {
+      "unit": "beep-observation-entry-proof-a30a24bc9199.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-managed-proof-08b6331b4ea9.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-cf7ee9a3f1b6.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-managed-proof-c90f3880e53c.service",
+      "mainPid": 0,
+      "activeState": "inactive"
+    },
+    {
+      "unit": "beep-observation-entry-proof-ff6249116413.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-b85c421fe990.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-43b7392b7a80.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    },
+    {
+      "unit": "beep-observation-entry-proof-bef77cad3a94.service",
+      "mainPid": 0,
+      "activeState": "failed"
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "c91549ab1020bea7eab50f2751a9470bef43b43a32bd4b205fbfbd8b2263ee5e",
+    "packages/tooling/library/ai-metrics/test/fixtures/write-observation-launch.ts": "f0f951c0e8f5c1814f6f31b6eb1b5660d1481b2ce70844baf5bb1f72ee6f8cf9",
+    "packages/tooling/library/ai-metrics/test/fixtures/observation-launch-client-process.ts": "834b53cdccf529cf52dd996a42c2dae497b62abb84f951c46488d1a362514407",
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts": "75e77626146501a836607d268fb8dd48409d2622e498281ec1f0f8a3bc9fbebc",
+    "packages/drivers/ai-provider-cli/test/fixtures/managed-codex-peer.ts": "162b5ede901fd11192f48ef194bc5170ea8f15cacd36dda1d5a22153df87b992",
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "0282ab0c91c7e76b83dbfaa76ae5a24c35f1e8faaa27d5b16cf2d4465efcc7b4",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts": "6e67e6a4bb1f5740a8d6ade5327254bc71b9d788682f8e5c1bd62fe147b455af",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts": "5089bd893151d7acb1e1770dc7899fb283a13a85a89bca825c145913ec2566d7",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts": "2bf2154d56b9a1b9092e5e22f966be7ff3ea8d09b18b88d6bb1c2a9634c50fa8",
+    "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts": "ed1e0fa4233ce08f5499282276a1d8423c775b7855f05a33b19adff4da8ef25d",
+    "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": "91ff4b5c1150353f4ccb8d698f39baaf70100dc1b580369544b10a53ec27ed8f",
+    "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": "582fc7fc6c9fb25abfe24a8cae0f9eac3f2daabc109d025dce7e74ee68220d6f",
+    "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": "036a61937bde243edc101c478df000b60b7fb434679c12fcbf874a8963b0ab0f",
+    "packages/tooling/library/ai-metrics/src/observation-worker.ts": "4c3dc64c34648bed6df723ccf16f1427d352a46e6368a066bbd0e84925a779be",
+    "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts": "ab77912fe98eacf0a7a992d9e2044f0a2a7f352cbc23530b3beef4a4999ae4c4",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": "64cf9ede956e6fb72037928291bbfd1096ef6a57fdba8d2626e02e08979324f7",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "0ee97d21e201eed5b19a99f8c61a3d89063a5d1988bbcbfbde7a8f30dd1d59b6",
+    "packages/tooling/library/ai-metrics/src/observation-runtime.ts": "1a7803b08aa18acfb88b103787ca664dd0d74eabef19cd56056b7bd1095dc199",
+    "packages/tooling/library/ai-metrics/src/observation-source-health.ts": "9bb5e28dcdf25d6abe2bebefbd18edbadbe3226a87f44b2b2b9eb50d31f73db5",
+    "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": "e30501db65e67cc8fe4fb64454425a0f67dd3e8ec6ef2803858b6476f66c8a30",
+    "packages/tooling/library/ai-metrics/src/transcript-sweep.ts": "8fe5fb339a37ebe5bbc68bc1decc3f8e75366efb4c2d91bc1c84fe5413470056",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "2880936115a4bec896608ba90f0b33a6a0b3209948948e8fcdd24c01de492f29"
+  }
+}

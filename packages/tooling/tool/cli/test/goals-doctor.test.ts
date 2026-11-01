@@ -1,4 +1,3 @@
-import { lintCommand } from "@beep/repo-cli";
 import {
   CapabilityProjection,
   capabilityDoctorFindings,
@@ -53,7 +52,6 @@ const encodeGoalCompletionReceiptJson = S.encodeEffect(S.fromJsonString(GoalComp
 const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
-const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const testLayer = Layer.mergeAll(
@@ -654,19 +652,6 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         expect(output).not.toContain("noted [stale-active]");
         expect(output).not.toContain("fresh [active-after-merge]");
         expect(output).not.toContain("fresh [stale-active]");
-      }),
-    20_000
-  );
-
-  it.effect(
-    "exposes the same ratchet through the beep lint goal-packets alias",
-    () =>
-      Effect.gen(function* () {
-        yield* temporaryWorkingDirectory;
-        yield* writeDriftedPacket("demo");
-        yield* writeBaseline([]);
-        const exit = yield* Effect.exit(runLintCommand(["goal-packets"]));
-        expectReportedFailure(exit);
       }),
     20_000
   );

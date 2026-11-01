@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "head-review/v2",
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "15958729-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "previousRound": 2,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 7,
+      "path": "7.a",
+      "anchor": {
+        "startChar": 156,
+        "endChar": 167,
+        "quote": "each stroke"
+      },
+      "determiner": "bare",
+      "beforeHead": "each stroke",
+      "afterHead": "stroke",
+      "action": "changed",
+      "reason": "For each stroke distributes a pressing action over the head operating strokes. Each is grammatical temporal/distributive determination, not part of the lexical name stroke.",
+      "sourceContext": "rdance with claim 1, wherein a plurality of hole punches is supplied in a strip assembly to a piercing head operating in strokes which, for each stroke, presses a hole punch out of the strip assembly and thus pierces the workpiece.",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 9,
+      "path": "9.a",
+      "anchor": {
+        "startChar": 222,
+        "endChar": 233,
+        "quote": "each stroke"
+      },
+      "determiner": "bare",
+      "beforeHead": "each stroke",
+      "afterHead": "stroke",
+      "action": "changed",
+      "reason": "For each stroke of the press distributes the station operations over press strokes. Removing each only from head preserves the exact per-stroke source scope and press relationship.",
+      "sourceContext": "ess which is equipped with a progressive tool which carries out a plurality of operations in different stations of the progressive tool for each stroke of the press, with the piercing head being used in one station of the progressive tool.",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round2.json",
+      "sha256": "bfe32abe2b9b6e3267a3e6d627d9aa6435be8b46e058cec4f5bde3f4cb2ba627"
+    },
+    {
+      "file": "extractor.round2.json",
+      "sha256": "023f12ba599c4d3c76efef1ae31cf30fc3dc9a8f9cf1d87a10680e0eb7d0f0c0"
+    },
+    {
+      "file": "critic.round2.json",
+      "sha256": "de162112288d0c2ebcf720bf5a937b7e4c50cc9a4c7bfbb831c6cc52982d4358"
+    },
+    {
+      "file": "head-review.round2.json",
+      "sha256": "8b26201047fb948a46496b69a1cbdce7289f462d52a9a6870b193e39efb122ac"
+    }
+  ],
+  "structureInvariant": "Reversing exactly these manually adjudicated head fields restores the complete prior expected JSON tree. Raw expected text differs only at the declared head string values; all source anchors, determiners, functional parts, typed edges, element structure and source/claim scope remain unchanged.",
+  "sourceValidation": {
+    "claimsXmlSha256": "742cec6506f580056ddf47b067b3d7e421747abef13394d22bb3aec611a3ef10",
+    "nativeCanonical": "All canonical/context claims match native XML under permitted printed-number/whitespace normalization; digest matches provenance. Every action anchor checked as exact half-open UTF-16 source span."
+  },
+  "independence": "Bounded source-based lexical-head/v1 extractor review. Each listed source phrase manually judged before serialization; no automatic regex head selection, decomposition implementation, P2-DESIGN, predictions or conformance rules used. No new source gold derivation or semantic acceptance claimed.",
+  "attorneyAdjudication": "unchanged; agent confidence is not attorney agreement",
+  "humanHolds": "Known six count/selector head holds and16068637 each edge/each other preserved; no round4 or out-of-scope modification."
+}

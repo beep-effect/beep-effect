@@ -81,8 +81,6 @@ import {
   PrCloseoutOptions,
   PrCloseoutReport,
   partiallyStagedPathsForTesting,
-  prePushLocalShasFromStdinForTesting,
-  prePushShaMismatchesForTesting,
   proofCoordinatorLockPath,
   proofLockDispositionForTesting,
   proofLockPathForContext,
@@ -967,12 +965,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       ]);
     });
 
-    it("builds pre-push-hook as a lightweight proof-state check", () => {
-      const plan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "pre-push-hook" });
-
-      expect(plan.steps).toEqual([]);
-    });
-
     it("uses a Greptile retrigger body that requests review explicitly", () => {
       expect(greptileRetriggerCommentForTesting).toBe("@greptileai review");
     });
@@ -1748,20 +1740,6 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
       expect(commit.args).toEqual(["commit", "-m", "feat(repo-cli): add yeet"]);
       expect(commandTextForStep(commit)).toBe("git commit -m 'feat(repo-cli): add yeet'");
-    });
-
-    it("parses pre-push stdin SHAs for proof reuse", () => {
-      const currentSha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-      const otherSha = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-      const deleteSha = "0000000000000000000000000000000000000000";
-      const shas = prePushLocalShasFromStdinForTesting(
-        `refs/heads/feature ${currentSha} refs/heads/feature 1111111111111111111111111111111111111111\n` +
-          `refs/heads/old ${deleteSha} refs/heads/old 2222222222222222222222222222222222222222\n` +
-          `refs/heads/other ${otherSha} refs/heads/other 3333333333333333333333333333333333333333\n`
-      );
-
-      expect(shas).toEqual([currentSha, otherSha]);
-      expect(prePushShaMismatchesForTesting(shas, currentSha)).toEqual([otherSha]);
     });
 
     it("warns when publish push target differs from upstream tracking", () => {

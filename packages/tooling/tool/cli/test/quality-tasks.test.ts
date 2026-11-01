@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -158,7 +159,6 @@ import {
 } from "@beep/repo-cli/test/SharedInternals";
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { Percentage } from "@beep/schema/Percentage";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -226,8 +226,8 @@ const PlatformLayer = Layer.mergeAll(
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
-const decodeCoverageRegressionBaselineJsoncForTesting = decodeJsoncTextAs(CoverageRegressionBaseline);
+const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = Jsonc.bind(GithubChecksFallowFeatureMatrix).decode;
+const decodeCoverageRegressionBaselineJsoncForTesting = Jsonc.bind(CoverageRegressionBaseline).decode;
 const isDomainError = S.is(DomainError);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
@@ -322,6 +322,37 @@ const temporaryRepository = Effect.gen(function* () {
   );
   yield* fs.makeDirectory(path.join(repositoryPath, ".git"), { recursive: true });
   return repositoryPath;
+});
+
+// A root declaring `workspaces`, plus one `test:integration`-owning package per
+// directory, named `@beep/<dir with "/" as "-">`.
+const writeIntegrationWorkspace = Effect.fnUntraced(function* (
+  repositoryPath: string,
+  workspaces: ReadonlyArray<string>,
+  packageDirs: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.writeFileString(
+    path.join(repositoryPath, "package.json"),
+    yield* encodeJson({ name: "@beep/test-root", private: true, workspaces })
+  );
+  yield* Effect.forEach(
+    packageDirs,
+    Effect.fnUntraced(function* (packageDir) {
+      const absoluteDir = path.join(repositoryPath, packageDir);
+      yield* fs.makeDirectory(absoluteDir, { recursive: true });
+      yield* fs.writeFileString(
+        path.join(absoluteDir, "package.json"),
+        yield* encodeJson({
+          name: `@beep/${Str.replaceAll("/", "-")(packageDir)}`,
+          private: true,
+          scripts: { "test:integration": "vitest run test/integration" },
+        })
+      );
+    }),
+    { discard: true }
+  );
 });
 
 // The single coverage invocation for a `bun run coverage <argv>` shape; root
@@ -8735,6 +8766,74 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
 
           deepStrictEqual(filters, []);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    // pnpm `packages:` lists reach the owner scan through `WorkspacePatterns`, so
+    // a pattern other than a trailing `/*` must expand as a glob, not a literal.
+    it.effect("expands a recursive workspace pattern below its base", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(tmpDir, ["packages/**"], ["packages/top", "packages/group/nested"]);
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/packages-group-nested", "--filter=@beep/packages-top"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("expands a mid-path workspace wildcard to the matching directories only", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(tmpDir, ["apps/*/web"], ["apps/one/web", "apps/two/web", "apps/two/api"]);
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/apps-one-web", "--filter=@beep/apps-two-web"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    // A brace list without wildcards has no glob magic yet names several paths,
+    // so it walks through the enumerator rather than a literal `{api,web}` join.
+    it.effect("expands a brace workspace pattern without wildcards to each alternative", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(
+            tmpDir,
+            ["packages/{api,web}"],
+            ["packages/api", "packages/web", "packages/other"]
+          );
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/packages-api", "--filter=@beep/packages-web"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("drops workspace candidates a negated pattern excludes", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const tmpDir = process.cwd();
+          yield* writeIntegrationWorkspace(
+            tmpDir,
+            ["packages/*", "libs/**", "!packages/private-*", "!libs/**/internal"],
+            ["packages/public", "packages/private-a", "libs/core", "libs/core/internal"]
+          );
+
+          const filters = yield* workspaceTaskFiltersForTesting(tmpDir, "test:integration");
+
+          deepStrictEqual(filters, ["--filter=@beep/libs-core", "--filter=@beep/packages-public"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );

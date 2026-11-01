@@ -1,0 +1,77 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method of photocatalytic degradation of a pollutant, comprising:
+<claim-text>contacting a solution comprising one or more pollutants with a graphite-phase carbon nitride, calcium metavanadate, and calcium silicate (CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4</sub>) nanocomposite, and</claim-text>
+<claim-text>irradiating the nanocomposite with light to degrade the one or more pollutants in the solution.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite comprises 20 to 40 wt % of graphite-phase carbon nitride (g-C<sub>3</sub>N<sub>4</sub>), 20 to 40 wt % of calcium metavanadate (CaV<sub>2</sub>O<sub>6</sub>), and 20 to 40 w % of calcium silicate (CaSiO<sub>3</sub>).</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite is porous, and
+<claim-text>wherein the g-C<sub>3</sub>N<sub>4 </sub>is in the form of nanosheets;</claim-text>
+<claim-text>the CaV<sub>2</sub>O<sub>6 </sub>and the CaSiO<sub>3 </sub>are a homogeneous mixture in the form of nanowires; and</claim-text>
+<claim-text>the nanowires are distributed between the nanosheets.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has an interplanar spacing of 0.12 to 0.25 nm between the g-C<sub>3</sub>N<sub>4 </sub>sheets.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite is porous and has an average pore diameter of 2 to 20 nm.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has a Brunauer-Emmett-Teller (BET) surface area of 55 to 60 cm<sup>2</sup>g<sup>−1</sup>.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has a pore volume of 0.1 to 0.3 cm<sup>3</sup>g<sup>−1</sup>.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has a bandgap energy of 2.9 to 3 eV.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has a bandgap energy of 2.92 eV.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has an absorption at a wavelength of 200 to 500 nm.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite is crystalline.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite comprises:
+<claim-text>a major phase comprises a CaV<sub>2</sub>O<sub>6 </sub>phase and a CaSiO<sub>3 </sub>phase; and</claim-text>
+<claim-text>a minor phase comprises a g-C<sub>3</sub>N<sub>4 </sub>phase.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has a CaV<sub>2</sub>O<sub>6 </sub>phase with 20 values of 25° to 50°.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has a CaSiO<sub>3 </sub>phase with 20 values of 25° to 45°.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has a g-C<sub>3</sub>N<sub>4 </sub>phase with 20 values of 45° to 80°.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the irradiating occurs at a wavelength of 50 to 1000 nm.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite has an absorption at a wavelength of 600 to 800 nm.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite is produced in a process, comprising:
+<claim-text>mixing calcium nitrate and sodium metasilicate in a solvent to form silicate product;</claim-text>
+<claim-text>heating urea at 500 to 700° C. for 30 to 60 minutes to form g-C<sub>3</sub>N<sub>4 </sub>product;</claim-text>
+<claim-text>carbonizing ammonium metavanadate with xylose in an aqueous acid solution to form vanadate product;</claim-text>
+<claim-text>microwaving the silicate product, the g-C<sub>3</sub>N<sub>4 </sub>product, and the vanadate product in an organic solvent to form the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the CaV<sub>2</sub>O<sub>6</sub>/CaSiO<sub>3</sub>/g-C<sub>3</sub>N<sub>4 </sub>nanocomposite is porous and has slit-shaped pores.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the irradiating occurs at a wavelength of 200 to 800 nm.</claim-text>
+</claim>
+</claims>

@@ -28,7 +28,6 @@ const $I = $RepoCliId.create("commands/Lint/ToolingSchemaFirst.command");
 const TOOLING_ROOT = "packages/tooling/tool/cli/src";
 const RUNTIME_SCHEMA_FIRST_ROOTS = [TOOLING_ROOT] as const;
 const FOCUS_RUNTIME_FILES = HashSet.fromIterable([
-  "packages/tooling/tool/cli/src/commands/Docs/Docs.aggregate.ts",
   "packages/tooling/tool/cli/src/commands/Lint/index.ts",
   "packages/tooling/tool/cli/src/commands/Laws/index.ts",
   "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",

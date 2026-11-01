@@ -1,0 +1,178 @@
+{
+  "date": "2026-10-28",
+  "status": "source-only candidate audit queue; no accepted replacements or predictions",
+  "selection": "Expanded100 OA applications, pre-action native publication and complete original-date inventory; exclude active applications and declared chemical/Markush scope. Stable SHA256(claim-antecedent-positive-v2:app) within held CPC stratum; XML root nearest8 members, source critics verify natural membership. No parser success or prediction used.",
+  "heldFamilyIds": [
+    "15773469-root-5",
+    "17755831-root-1",
+    "12451999-root-15",
+    "18107161-root-18",
+    "12267381-root-1",
+    "14438042-root-4",
+    "14172895-root-10",
+    "15572618-root-22",
+    "17045367-root-1",
+    "11479265-root-1"
+  ],
+  "neededByCpc": {
+    "A": 2,
+    "B": 4,
+    "E": 1,
+    "G": 2,
+    "H": 1
+  },
+  "eligibleProposalCount": 51,
+  "excluded": [
+    {
+      "applicationNumber": "14475428",
+      "reason": "no multi-claim root proposal"
+    },
+    {
+      "applicationNumber": "11818506",
+      "reason": "pre-label chemical/Markush scope screen"
+    },
+    {
+      "applicationNumber": "11874484",
+      "reason": "no multi-claim root proposal"
+    }
+  ],
+  "candidates": [
+    {
+      "familyId": "18409554-root-16",
+      "applicationNumber": "18409554",
+      "cpcSection": "A",
+      "claimNumbers": [16, 17, 18, 19, 20, 21, 22],
+      "claimCount": 7,
+      "sourceRank": "1c4aa45bcef2d2c4cac6e639c7297be89b76405fbc6e5f2be50cf780a0272eaa",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "15773469-root-5"
+    },
+    {
+      "familyId": "15376670-root-1",
+      "applicationNumber": "15376670",
+      "cpcSection": "A",
+      "claimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19
+      ],
+      "claimCount": 19,
+      "sourceRank": "337dcd871072ff1950d3c82598bf99ac6be4f5512ecf34c9eb8d77275d5695ff",
+      "status": "candidate only; no active slot replaced"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "applicationNumber": "13575735",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5],
+      "claimCount": 5,
+      "sourceRank": "1c67d4f3eaabf6a0b8271b07e340d2afae8b2f0bf64d4e40526ddecad3c0747a",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "18107161-root-18"
+    },
+    {
+      "familyId": "11246782-root-28",
+      "applicationNumber": "11246782",
+      "cpcSection": "B",
+      "claimNumbers": [28, 29, 30],
+      "claimCount": 3,
+      "sourceRank": "391fefd5ddcca1dd5ed0c56a2c0dd86bdb320f4dd253f7c9b8c486d1f1481e36",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "14438042-root-4"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "applicationNumber": "17617663",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimCount": 10,
+      "sourceRank": "43885abfa2e6154cde917601e8c572ac296b6ad6767a27215a2ed659c1379fd2",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "12267381-root-1"
+    },
+    {
+      "familyId": "14414970-root-20",
+      "applicationNumber": "14414970",
+      "cpcSection": "B",
+      "claimNumbers": [20, 21, 22],
+      "claimCount": 3,
+      "sourceRank": "6b6a3463c8d4f3a38ad6760928bfcf23a05d88d10a34cbd9e6b700244b1cd556",
+      "status": "candidate only; no active slot replaced"
+    },
+    {
+      "familyId": "13032032-root-50",
+      "applicationNumber": "13032032",
+      "cpcSection": "E",
+      "claimNumbers": [
+        50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67,
+        68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85,
+        86, 87, 88, 89, 90, 91, 92
+      ],
+      "claimCount": 43,
+      "sourceRank": "31f5a84c1fea3a051f0df1f5ab2781d1614ce40c1792db02189deebfbc52d326",
+      "status": "candidate only; no active slot replaced"
+    },
+    {
+      "familyId": "15803808-root-15",
+      "applicationNumber": "15803808",
+      "cpcSection": "G",
+      "claimNumbers": [15, 16, 17, 18, 19],
+      "claimCount": 5,
+      "sourceRank": "2540b1ecd10a9b39f33d6dc66c26ccd15904daed6220b6c4fb36fe278b856a66",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "15572618-root-22"
+    },
+    {
+      "familyId": "12610700-root-5",
+      "applicationNumber": "12610700",
+      "cpcSection": "G",
+      "claimNumbers": [5, 6, 7, 8, 9, 10, 11, 12],
+      "claimCount": 8,
+      "sourceRank": "413468ab802205bcf7fb68bda5e0446d4de535cb0bfa9056dd939c07d98f8733",
+      "status": "candidate only; no active slot replaced"
+    },
+    {
+      "familyId": "12748625-root-1",
+      "applicationNumber": "12748625",
+      "cpcSection": "H",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "claimCount": 9,
+      "sourceRank": "16c2a4a26e4e8ba4e6e2bf7b635d5b825fe5e08c85fbf345319ac1f73aac1ca1",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "11479265-root-1"
+    },
+    {
+      "familyId": "14970678-root-17",
+      "applicationNumber": "14970678",
+      "cpcSection": "E",
+      "claimNumbers": [17, 18, 19, 20],
+      "claimCount": 4,
+      "sourceRank": "32fdf635110db0ae2d8e3b646c6d9c4d57de7e526f10ee1b592bc01ca1ad43fc",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "14172895-root-10"
+    },
+    {
+      "familyId": "13468456-root-1",
+      "applicationNumber": "13468456",
+      "cpcSection": "A",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "claimCount": 12,
+      "sourceRank": "622303e501f2ca1492f662b5f569d71b4b385ce1455d690a55fdc781f00ede61",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "17755831-root-1"
+    },
+    {
+      "familyId": "13062032-root-1",
+      "applicationNumber": "13062032",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+      "claimCount": 13,
+      "sourceRank": "80608569f2cf662a8a2eed985cd3deff8c17d3b46c163c5935dc8ef4f8a6cca4",
+      "status": "source accepted; moved into active sample",
+      "replacesFamilyId": "17045367-root-1"
+    }
+  ],
+  "continuationNotes": [
+    "Next E candidate proposed after13032032-root-50 source extractor identified out-of-scope chemical/material Markush. Active slots unchanged; independent sourcecritic required.",
+    "Next A candidate proposed after15376670-root-1 original PDF confirmed material entity-name changes against native publication. Active slots unchanged; independent sourcecritic required.",
+    "Next G candidate proposed after12610700-root-5 raw native XML moved a fault-count variable relative to the original PDF. Active slots unchanged; independent sourcecritic required."
+  ]
+}

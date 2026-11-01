@@ -6,9 +6,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { DomainError } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { HUNDRED as HUNDRED_PERCENTAGE, Percentage, ZERO as ZERO_PERCENTAGE } from "@beep/schema/Percentage";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as Bool from "effect/Boolean";
@@ -1921,7 +1921,7 @@ export const coverageBaselineRowDeltaFromBase = Effect.fn("CoverageRegression.co
           coverageBaselineGitAdapter
         )
       ),
-      Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)),
+      Effect.flatMap(Jsonc.bind(CoverageRegressionBaseline).decode),
       Effect.option
     );
     const current = yield* Effect.option(readBaseline(repoRoot));
@@ -2169,7 +2169,7 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
         ["show", `${base}:${coverageRegressionBaselinePath}`],
         coverageBaselineGitAdapter
       ).pipe(
-        Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)),
+        Effect.flatMap(Jsonc.bind(CoverageRegressionBaseline).decode),
         Effect.mapError((cause) =>
           coverageConfigurationError(`Failed to read the coverage comparison baseline from ${base}`, cause)
         )
@@ -2214,7 +2214,7 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
             coverageBaselineGitAdapter
           )
         ),
-        Effect.flatMap(decodeJsoncTextAs(CoverageRegressionBaseline)),
+        Effect.flatMap(Jsonc.bind(CoverageRegressionBaseline).decode),
         Effect.option
       );
       const selfJudge = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(

@@ -1,0 +1,1805 @@
+[
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 56,
+          "quote": "An operation process to retrieve camera motion parameter"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "An operation process"
+            },
+            "determiner": "an",
+            "head": "operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 33,
+              "endChar": 56,
+              "quote": "camera motion parameter"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameter"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 102,
+          "endChar": 150,
+          "quote": "Motion vectors (MVs) are retrieved from a domain"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 122,
+              "quote": "Motion vectors (MVs)"
+            },
+            "determiner": "bare",
+            "head": "motion vectors (mvs)"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 150,
+              "quote": "a domain"
+            },
+            "determiner": "a",
+            "head": "domain"
+          }
+        ]
+      },
+      {
+        "path": "11.b",
+        "anchor": {
+          "startChar": 155,
+          "endChar": 939,
+          "quote": "The camera motion detection method is applied to those motion vectors to solve camera motion parameters; the camera motion detection method includes the following equations to respectively solve camera motion parameters of pan, tilt, and zoom: pan 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i + 1 )   tilt 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j + 1 , i ) pan 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i )   tilt 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j , i ) pan = pan 1 + pan 2   tilt = tilt 1 + tilt 2 zoom =  ∫ ∇ · MV   v =  ∑ j = 1 M / 2  ∑ i = 1 N / 2  ( ( MVx  ( 2  j , 2  i + 1 ) - MVx  ( 2  j , 2  i ) ) +  ( MVy  ( 2  j + 1 , 2  i ) - MVy  ( 2  j , 2  i ) ) ) =  ( pan 1 - pan 2 ) + ( tilt 1 - tilt 2 )"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 155,
+              "endChar": 189,
+              "quote": "The camera motion detection method"
+            },
+            "determiner": "the",
+            "head": "camera motion detection method"
+          },
+          {
+            "anchor": {
+              "startChar": 204,
+              "endChar": 224,
+              "quote": "those motion vectors"
+            },
+            "determiner": "bare",
+            "head": "motion vectors"
+          },
+          {
+            "anchor": {
+              "startChar": 234,
+              "endChar": 258,
+              "quote": "camera motion parameters"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameters"
+          },
+          {
+            "anchor": {
+              "startChar": 260,
+              "endChar": 294,
+              "quote": "the camera motion detection method"
+            },
+            "determiner": "the",
+            "head": "camera motion detection method"
+          },
+          {
+            "anchor": {
+              "startChar": 304,
+              "endChar": 327,
+              "quote": "the following equations"
+            },
+            "determiner": "the",
+            "head": "following equations"
+          },
+          {
+            "anchor": {
+              "startChar": 350,
+              "endChar": 397,
+              "quote": "camera motion parameters of pan, tilt, and zoom"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameters of pan, tilt, and zoom"
+          }
+        ]
+      },
+      {
+        "path": "11.c",
+        "anchor": {
+          "startChar": 943,
+          "endChar": 1012,
+          "quote": "Camera motions are judged according to those camera motion parameters"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 943,
+              "endChar": 957,
+              "quote": "Camera motions"
+            },
+            "determiner": "bare",
+            "head": "camera motions"
+          },
+          {
+            "anchor": {
+              "startChar": 982,
+              "endChar": 1012,
+              "quote": "those camera motion parameters"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameters"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 102,
+                "endChar": 122,
+                "quote": "Motion vectors (MVs)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 142,
+              "quote": " are retrieved from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 142,
+                "endChar": 150,
+                "quote": "a domain"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "11.b",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 155,
+                "endChar": 189,
+                "quote": "The camera motion detection method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 189,
+              "endChar": 204,
+              "quote": " is applied to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 204,
+                "endChar": 224,
+                "quote": "those motion vectors"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 224,
+              "endChar": 234,
+              "quote": " to solve "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 234,
+                "endChar": 258,
+                "quote": "camera motion parameters"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 258,
+              "endChar": 260,
+              "quote": "; "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 260,
+                "endChar": 294,
+                "quote": "the camera motion detection method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 294,
+              "endChar": 304,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 304,
+                "endChar": 327,
+                "quote": "the following equations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 327,
+              "endChar": 350,
+              "quote": " to respectively solve "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.b",
+              "anchor": {
+                "startChar": 350,
+                "endChar": 397,
+                "quote": "camera motion parameters of pan, tilt, and zoom"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 397,
+              "endChar": 939,
+              "quote": ": pan 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i + 1 )   tilt 1 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j + 1 , i ) pan 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVx  ( 2  j , 2  i )   tilt 2 = ∑ j = 1 M / 2  ∑ i = 1 N / 2  MVy  ( 2  j , i ) pan = pan 1 + pan 2   tilt = tilt 1 + tilt 2 zoom =  ∫ ∇ · MV   v =  ∑ j = 1 M / 2  ∑ i = 1 N / 2  ( ( MVx  ( 2  j , 2  i + 1 ) - MVx  ( 2  j , 2  i ) ) +  ( MVy  ( 2  j + 1 , 2  i ) - MVy  ( 2  j , 2  i ) ) ) =  ( pan 1 - pan 2 ) + ( tilt 1 - tilt 2 )"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "11.c",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 943,
+                "endChar": 957,
+                "quote": "Camera motions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 957,
+              "endChar": 982,
+              "quote": " are judged according to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.c",
+              "anchor": {
+                "startChar": 982,
+                "endChar": 1012,
+                "quote": "those camera motion parameters"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b",
+          "anchor": {
+            "startChar": 204,
+            "endChar": 224,
+            "quote": "those motion vectors"
+          }
+        },
+        "introducing": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 122,
+            "quote": "Motion vectors (MVs)"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.b",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 294,
+            "quote": "the camera motion detection method"
+          }
+        },
+        "introducing": {
+          "path": "11.b",
+          "anchor": {
+            "startChar": 155,
+            "endChar": 189,
+            "quote": "The camera motion detection method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.c",
+          "anchor": {
+            "startChar": 982,
+            "endChar": 1012,
+            "quote": "those camera motion parameters"
+          }
+        },
+        "introducing": {
+          "path": "11.b",
+          "anchor": {
+            "startChar": 234,
+            "endChar": 258,
+            "quote": "camera motion parameters"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 91,
+          "quote": "The system and operation process to retrieve camera motion parameter as claimed in claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 32,
+              "quote": "The system and operation process"
+            },
+            "determiner": "the",
+            "head": "system and operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "camera motion parameter"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameter"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 227,
+          "quote": "an operation process of the motion estimation method is applied to solve those motion vectors (MVs) in an uncompression domain"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 121,
+              "quote": "an operation process"
+            },
+            "determiner": "an",
+            "head": "operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 153,
+              "quote": "the motion estimation method"
+            },
+            "determiner": "the",
+            "head": "motion estimation method"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 200,
+              "quote": "those motion vectors (MVs)"
+            },
+            "determiner": "bare",
+            "head": "motion vectors (mvs)"
+          },
+          {
+            "anchor": {
+              "startChar": 204,
+              "endChar": 227,
+              "quote": "an uncompression domain"
+            },
+            "determiner": "an",
+            "head": "uncompression domain"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 121,
+                "quote": "an operation process"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 125,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 153,
+                "quote": "the motion estimation method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 153,
+              "endChar": 174,
+              "quote": " is applied to solve "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 174,
+                "endChar": 200,
+                "quote": "those motion vectors (MVs)"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 200,
+              "endChar": 204,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 204,
+                "endChar": 227,
+                "quote": "an uncompression domain"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 68,
+            "quote": "camera motion parameter"
+          }
+        },
+        "introducing": {
+          "path": "11",
+          "anchor": {
+            "startChar": 33,
+            "endChar": 56,
+            "quote": "camera motion parameter"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 174,
+            "endChar": 200,
+            "quote": "those motion vectors (MVs)"
+          }
+        },
+        "introducing": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 122,
+            "quote": "Motion vectors (MVs)"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 91,
+          "quote": "The system and operation process to retrieve camera motion parameter as claimed in claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 32,
+              "quote": "The system and operation process"
+            },
+            "determiner": "the",
+            "head": "system and operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "camera motion parameter"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameter"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 153,
+          "quote": "the uncompression domain relates to a video sequence"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 125,
+              "quote": "the uncompression domain"
+            },
+            "determiner": "the",
+            "head": "uncompression domain"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 153,
+              "quote": "a video sequence"
+            },
+            "determiner": "a",
+            "head": "video sequence"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 125,
+                "quote": "the uncompression domain"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 137,
+              "quote": " relates to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 153,
+                "quote": "a video sequence"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 68,
+            "quote": "camera motion parameter"
+          }
+        },
+        "introducing": {
+          "path": "11",
+          "anchor": {
+            "startChar": 33,
+            "endChar": 56,
+            "quote": "camera motion parameter"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "14",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 91,
+          "quote": "The system and operation process to retrieve camera motion parameter as claimed in claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 32,
+              "quote": "The system and operation process"
+            },
+            "determiner": "the",
+            "head": "system and operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "camera motion parameter"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameter"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 207,
+          "quote": "an operation process of the motion vector extraction method is applied to solve those motion vectors (MVs)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 121,
+              "quote": "an operation process"
+            },
+            "determiner": "an",
+            "head": "operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 160,
+              "quote": "the motion vector extraction method"
+            },
+            "determiner": "the",
+            "head": "motion vector extraction method"
+          },
+          {
+            "anchor": {
+              "startChar": 181,
+              "endChar": 207,
+              "quote": "those motion vectors (MVs)"
+            },
+            "determiner": "bare",
+            "head": "motion vectors (mvs)"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "14",
+        "ancestor": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 121,
+                "quote": "an operation process"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 125,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 160,
+                "quote": "the motion vector extraction method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 181,
+              "quote": " is applied to solve "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 181,
+                "endChar": 207,
+                "quote": "those motion vectors (MVs)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 68,
+            "quote": "camera motion parameter"
+          }
+        },
+        "introducing": {
+          "path": "11",
+          "anchor": {
+            "startChar": 33,
+            "endChar": 56,
+            "quote": "camera motion parameter"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a",
+          "anchor": {
+            "startChar": 181,
+            "endChar": 207,
+            "quote": "those motion vectors (MVs)"
+          }
+        },
+        "introducing": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 122,
+            "quote": "Motion vectors (MVs)"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 15,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "15",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 91,
+          "quote": "The system and operation process to retrieve camera motion parameter as claimed in claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 32,
+              "quote": "The system and operation process"
+            },
+            "determiner": "the",
+            "head": "system and operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "camera motion parameter"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameter"
+          }
+        ]
+      },
+      {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 146,
+          "quote": "the compression domain relates to a bitstream"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 123,
+              "quote": "the compression domain"
+            },
+            "determiner": "the",
+            "head": "compression domain"
+          },
+          {
+            "anchor": {
+              "startChar": 135,
+              "endChar": 146,
+              "quote": "a bitstream"
+            },
+            "determiner": "a",
+            "head": "bitstream"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "15",
+        "ancestor": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "15.a",
+        "parent": "15"
+      },
+      {
+        "kind": "functional",
+        "element": "15.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 123,
+                "quote": "the compression domain"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 135,
+              "quote": " relates to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "15.a",
+              "anchor": {
+                "startChar": 135,
+                "endChar": 146,
+                "quote": "a bitstream"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "15",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 68,
+            "quote": "camera motion parameter"
+          }
+        },
+        "introducing": {
+          "path": "11",
+          "anchor": {
+            "startChar": 33,
+            "endChar": 56,
+            "quote": "camera motion parameter"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 16,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "16",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 91,
+          "quote": "The system and operation process to retrieve camera motion parameter as claimed in claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 32,
+              "quote": "The system and operation process"
+            },
+            "determiner": "the",
+            "head": "system and operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "camera motion parameter"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameter"
+          }
+        ]
+      },
+      {
+        "path": "16.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 216,
+          "quote": "data are stored in an address for solving the primary PAN1, PAN2, TILT1, and TILT2 by means of an MUX (Multiplexer)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 105,
+              "quote": "data"
+            },
+            "determiner": "bare",
+            "head": "data"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 130,
+              "quote": "an address"
+            },
+            "determiner": "an",
+            "head": "address"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 183,
+              "quote": "the primary PAN1, PAN2, TILT1, and TILT2"
+            },
+            "determiner": "the",
+            "head": "primary pan1, pan2, tilt1, and tilt2"
+          },
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 216,
+              "quote": "an MUX (Multiplexer)"
+            },
+            "determiner": "an",
+            "head": "mux (multiplexer)"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "16",
+        "ancestor": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "16.a",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 105,
+                "quote": "data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 105,
+              "endChar": 120,
+              "quote": " are stored in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 130,
+                "quote": "an address"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 143,
+              "quote": " for solving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 183,
+                "quote": "the primary PAN1, PAN2, TILT1, and TILT2"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 183,
+              "endChar": 196,
+              "quote": " by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.a",
+              "anchor": {
+                "startChar": 196,
+                "endChar": 216,
+                "quote": "an MUX (Multiplexer)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 68,
+            "quote": "camera motion parameter"
+          }
+        },
+        "introducing": {
+          "path": "11",
+          "anchor": {
+            "startChar": 33,
+            "endChar": 56,
+            "quote": "camera motion parameter"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 17,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "17",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 91,
+          "quote": "The system and operation process to retrieve camera motion parameter as claimed in claim 11"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 32,
+              "quote": "The system and operation process"
+            },
+            "determiner": "the",
+            "head": "system and operation process"
+          },
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "camera motion parameter"
+            },
+            "determiner": "bare",
+            "head": "camera motion parameter"
+          }
+        ]
+      },
+      {
+        "path": "17.a",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 259,
+          "quote": "the accumulation circuit MUX solves the primary PAN1, PAN2, TILT1, and TILT2 before being further processed with an accumulation circuit DEMUX (Demultiplexer)"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 129,
+              "quote": "the accumulation circuit MUX"
+            },
+            "determiner": "the",
+            "head": "accumulation circuit mux"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 177,
+              "quote": "the primary PAN1, PAN2, TILT1, and TILT2"
+            },
+            "determiner": "the",
+            "head": "primary pan1, pan2, tilt1, and tilt2"
+          },
+          {
+            "anchor": {
+              "startChar": 214,
+              "endChar": 259,
+              "quote": "an accumulation circuit DEMUX (Demultiplexer)"
+            },
+            "determiner": "an",
+            "head": "accumulation circuit demux (demultiplexer)"
+          }
+        ]
+      },
+      {
+        "path": "17.b",
+        "anchor": {
+          "startChar": 261,
+          "endChar": 308,
+          "quote": "the result is saved to the original memory unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 261,
+              "endChar": 271,
+              "quote": "the result"
+            },
+            "determiner": "the",
+            "head": "result"
+          },
+          {
+            "anchor": {
+              "startChar": 284,
+              "endChar": 308,
+              "quote": "the original memory unit"
+            },
+            "determiner": "the",
+            "head": "original memory unit"
+          }
+        ]
+      },
+      {
+        "path": "17.c",
+        "anchor": {
+          "startChar": 310,
+          "endChar": 396,
+          "quote": "data are retrieved from the storage address to go through the MUX operation once again"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 314,
+              "quote": "data"
+            },
+            "determiner": "bare",
+            "head": "data"
+          },
+          {
+            "anchor": {
+              "startChar": 334,
+              "endChar": 353,
+              "quote": "the storage address"
+            },
+            "determiner": "the",
+            "head": "storage address"
+          },
+          {
+            "anchor": {
+              "startChar": 368,
+              "endChar": 385,
+              "quote": "the MUX operation"
+            },
+            "determiner": "the",
+            "head": "mux operation"
+          }
+        ]
+      },
+      {
+        "path": "17.d",
+        "anchor": {
+          "startChar": 398,
+          "endChar": 496,
+          "quote": "MUX and DEMUX are employed to select the parameters PAN1, PAN2, TILT1, and TILT2 to be accumulated"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 398,
+              "endChar": 411,
+              "quote": "MUX and DEMUX"
+            },
+            "determiner": "bare",
+            "head": "mux and demux"
+          },
+          {
+            "anchor": {
+              "startChar": 435,
+              "endChar": 478,
+              "quote": "the parameters PAN1, PAN2, TILT1, and TILT2"
+            },
+            "determiner": "the",
+            "head": "parameters pan1, pan2, tilt1, and tilt2"
+          }
+        ]
+      },
+      {
+        "path": "17.e",
+        "anchor": {
+          "startChar": 502,
+          "endChar": 597,
+          "quote": "after repeating the cycle at a preset frequency the final PAN, TILT, and ZOOM values are solved"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 518,
+              "endChar": 527,
+              "quote": "the cycle"
+            },
+            "determiner": "the",
+            "head": "cycle"
+          },
+          {
+            "anchor": {
+              "startChar": 531,
+              "endChar": 549,
+              "quote": "a preset frequency"
+            },
+            "determiner": "a",
+            "head": "preset frequency"
+          },
+          {
+            "anchor": {
+              "startChar": 550,
+              "endChar": 586,
+              "quote": "the final PAN, TILT, and ZOOM values"
+            },
+            "determiner": "the",
+            "head": "final pan, tilt, and zoom values"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "17",
+        "ancestor": "11"
+      },
+      {
+        "kind": "part-of",
+        "child": "17.a",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 129,
+                "quote": "the accumulation circuit MUX"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 137,
+              "quote": " solves "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 177,
+                "quote": "the primary PAN1, PAN2, TILT1, and TILT2"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 177,
+              "endChar": 214,
+              "quote": " before being further processed with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 214,
+                "endChar": 259,
+                "quote": "an accumulation circuit DEMUX (Demultiplexer)"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.b",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b",
+              "anchor": {
+                "startChar": 261,
+                "endChar": 271,
+                "quote": "the result"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 271,
+              "endChar": 284,
+              "quote": " is saved to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.b",
+              "anchor": {
+                "startChar": 284,
+                "endChar": 308,
+                "quote": "the original memory unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.c",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.c",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 314,
+                "quote": "data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 314,
+              "endChar": 334,
+              "quote": " are retrieved from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.c",
+              "anchor": {
+                "startChar": 334,
+                "endChar": 353,
+                "quote": "the storage address"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 353,
+              "endChar": 368,
+              "quote": " to go through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.c",
+              "anchor": {
+                "startChar": 368,
+                "endChar": 385,
+                "quote": "the MUX operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 385,
+              "endChar": 396,
+              "quote": " once again"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.d",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.d",
+              "anchor": {
+                "startChar": 398,
+                "endChar": 411,
+                "quote": "MUX and DEMUX"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 411,
+              "endChar": 435,
+              "quote": " are employed to select "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.d",
+              "anchor": {
+                "startChar": 435,
+                "endChar": 478,
+                "quote": "the parameters PAN1, PAN2, TILT1, and TILT2"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 478,
+              "endChar": 496,
+              "quote": " to be accumulated"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "17.e",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 502,
+              "endChar": 518,
+              "quote": "after repeating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.e",
+              "anchor": {
+                "startChar": 518,
+                "endChar": 527,
+                "quote": "the cycle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 527,
+              "endChar": 531,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.e",
+              "anchor": {
+                "startChar": 531,
+                "endChar": 549,
+                "quote": "a preset frequency"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 549,
+              "endChar": 550,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.e",
+              "anchor": {
+                "startChar": 550,
+                "endChar": 586,
+                "quote": "the final PAN, TILT, and ZOOM values"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 586,
+              "endChar": 597,
+              "quote": " are solved"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 68,
+            "quote": "camera motion parameter"
+          }
+        },
+        "introducing": {
+          "path": "11",
+          "anchor": {
+            "startChar": 33,
+            "endChar": 56,
+            "quote": "camera motion parameter"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.d",
+          "anchor": {
+            "startChar": 435,
+            "endChar": 478,
+            "quote": "the parameters PAN1, PAN2, TILT1, and TILT2"
+          }
+        },
+        "introducing": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 137,
+            "endChar": 177,
+            "quote": "the primary PAN1, PAN2, TILT1, and TILT2"
+          }
+        }
+      }
+    ]
+  }
+]

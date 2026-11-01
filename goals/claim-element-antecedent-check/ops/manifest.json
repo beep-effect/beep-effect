@@ -6,12 +6,12 @@
     "title": "Claim Element Antecedent Check",
     "status": "active",
     "created": "2026-10-14",
-    "updated": "2026-10-14",
+    "updated": "2026-10-31",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-element-antecedent-check",
   "lifecycle": "active",
-  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic §112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
+  "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic \u00a7112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -60,17 +60,17 @@
     {
       "id": "P2",
       "name": "Deterministic implementation + USPTO adapter + labelled set",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Review items + evaluation",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",
@@ -94,5 +94,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0-P1 merged (#1764). P2a rules and P2b Layer plus fixture-backed USPTO adapter ship in the P2 PR; P2c labelled set and live acceptance wait on the operator regenerating the USPTO ODP key (403)."
+  "statusNote": "Draft PR #2411: accepted main through #2423 is merged; v23 retains 37/538, all 34 protected and all 37 previous passes. Full fixed-result dependency replay and 251 reports match; equivalent callback changes only the implementation digest. All original labels/results and source-bound automated judgments remain intact. Six integrated-base audit/docgen proofs plus callback laws/lint/check/10 tests and three doctests pass. Canonical catalogs/tasks and scoped USPTO cache baseline are repaired with no qualification change. Direct hosted-first publication and P4 readiness remain active; P5 pending."
 }

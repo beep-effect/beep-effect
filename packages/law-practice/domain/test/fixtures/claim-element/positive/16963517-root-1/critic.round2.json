@@ -1,0 +1,105 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "16963517-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "findings": [
+    {
+      "id": "C1",
+      "category": "swallowed-nested-determiner-phrase",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 3,
+          "path": "3.a",
+          "anchor": {
+            "startChar": 82,
+            "endChar": 107,
+            "quote": "at least one of the sides"
+          },
+          "head": "sides"
+        }
+      ],
+      "reason": "The outer selected-member term absorbs the nested explicit the sides. Protocol2 requires nested determiner phrases as nonoverlapping terms; this is the same grammatical structure corrected in13272881 claim1.",
+      "correction": "Preserve at least one of as anchored functional selection text and label nested the sides [98,107) with head sides, using nonoverlapping terms. Review its side-group antecedent against actual ancestors1/2 and record any genuine group ambiguity; do not select a particular physical side or invent an introduction."
+    },
+    {
+      "id": "C2",
+      "category": "withheld-clear-local-protrusion-references",
+      "actionable": true,
+      "evidence": [
+        {
+          "claimNumber": 1,
+          "path": "1.b",
+          "anchor": {
+            "startChar": 1482,
+            "endChar": 1496,
+            "quote": "the protrusion"
+          },
+          "suggestedIntroducing": {
+            "path": "1.b",
+            "anchor": {
+              "startChar": 1303,
+              "endChar": 1315,
+              "quote": "a protrusion"
+            }
+          }
+        },
+        {
+          "claimNumber": 8,
+          "path": "8.a.iv.ii",
+          "anchor": {
+            "startChar": 935,
+            "endChar": 949,
+            "quote": "the protrusion"
+          },
+          "suggestedIntroducing": {
+            "path": "8.a.iv.i",
+            "anchor": {
+              "startChar": 833,
+              "endChar": 845,
+              "quote": "a protrusion"
+            }
+          }
+        }
+      ],
+      "reason": "Claim1 blank-forming step introduces a protrusion with a beak and describes the ensuing tab protruding from its base. Claim8 introduces the second-side inverted hook forming a protrusion and immediately describes the side of that protrusion having a beak. These immediate local construction relationships identify their respective newly introduced protrusions; unrelated inherited/cross-panel protrusions do not make those local relationships ambiguous.",
+      "correction": "Add claim1 1.b [1482,1496)\u21921.b [1303,1315) and claim8 8.a.iv.ii [935,949)\u21928.a.iv.i [833,845) antecedent edges. Keep adjacent-panel hook/cavity identities unresolved as already corrected; no cross-panel physical identity or source repair is involved."
+    }
+  ],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "selectedClaimCount": 11,
+    "resolvedTreesReviewed": 11,
+    "elementCount": 45,
+    "termCount": 245,
+    "functionalRelationCount": 30
+  },
+  "reviewNotes": [
+    "Independent round2 review of all selected1\u20135/7\u201312. Prior cross-panel identity edges are removed and claim1 formed-recess reference is added. Prior C2 possessive objections are superseded by lexical-head/v1; cardinal one is retained in the six reviewed top/bottom/pair phrases.",
+    "Independent6 remains context, never an ancestor donor. Actual7\u21921,8\u21927,9\u201312\u21928 references and source grouping were reviewed. Strip alternatives retain branch-local ownership. Remaining actionable nested-term and local protrusion references are detailed below.",
+    "Every submitted tree decoded through ClaimElementTree. Independently checked exact UTF-16 element/term spans, nonoverlap, term ownership, antecedent endpoints and complete contiguous ordered functional-part reconstruction. Native XML agrees with canonical claims after permitted printed-number/whitespace normalization, and claims XML SHA256 matches provenance.",
+    "Read source-critic and source/rejection provenance; retained source eligibility is accepted separately. No fresh original-PDF/inventory authentication or attorney agreement is claimed. Genuine reference ambiguity remains explicit in extractor concerns."
+  ],
+  "independence": "Independent semantic critic; did not author these references. Reviewed exact canonical/native source, source critic, provenance, extractor and schemas against semantic-reference/v2, entity-mentions/v1 and lexical-head/v1. No production implementation, decomposer, P2-DESIGN, predictions or synthetic/conformance fixtures inspected. Helpers only validate manually reviewed source annotations. Only assigned critic receipts written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement"
+}

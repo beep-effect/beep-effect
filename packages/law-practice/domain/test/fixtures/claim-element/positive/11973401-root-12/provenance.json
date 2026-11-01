@@ -1,0 +1,31 @@
+{
+  "applicationNumber": "11973401",
+  "publicationNumber": "US20080126506A1",
+  "publicationDate": "2008-05-29",
+  "nativeXmlSha256": "8c44d2ee16e9422a5dfee6f36f60594fa90104ee54afdfc1424071f33298c4bd",
+  "claimsXmlSha256": "ee9d0020be3a26eb34fa37a96422bda7d8fce0180266ede3dfd7a809cef8bf5b",
+  "officeActionDocumentIdentifiers": [
+    "G202YQG3PPOPPY5"
+  ],
+  "officeActionMailDate": "2009-11-17",
+  "officeActionSection112Text": [
+    "claims 1-18 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention. the scope of the following claim language is unclear.\r\nfor claim 1, line 4, “each said second computer” has no antecedent basis. on line 5, “the corresponding first computer” has no antecedent basis. on line 6, “the contents or values” has no antecedent basis. also on line 6, “said memory locations” has no antecedent basis. on line 7, “said first computers” has no antecedent basis, but appears to refer back to the first plurality of computers previously recited. also on line 7, “the corresponding memory location is recited as belonging to the second computers; however, on line 5, the corresponding memory location was recited as being in a first computer. on line 8, said second computers has no antecedent basis, but appears to refer back to the second like plurality of computers previously recited.\r\nfor claim 2, lines 1 and 2, “said first computers” has no antecedent basis.\r\nfor claim 3, line 1, “said second computers” has no antecedent basis. on line 2, the corresponding first computer has no antecedent basis.\r\nfor claim 4, line 2, “said first computer memory locations” has no antecedent basis. also on line 4, the corresponding second computer memory location also has no antecedent basis.\r\nfor claim 5, line 2, “said first computer memory locations has no antecedent basis. also on line 2, “the corresponding second computer memory locations” has no antecedent basis. on line 3, “said first computer” has no antecedent basis. on line 4, “the corresponding second computer” also has no antecedent basis.\r\nfor claim 6, line 2, “said first computers” has no antecedent basis, but appears to refer back to the first plurality of computers previously recited. also on line 2, “the corresponding second computer” has no antecedent basis.\r\nfor claim 7, line 1, “said second computer” has no antecedent basis. on line 2, the tasks has no antecedent basis.\r\nfor claim 8, lines 2 and 7, “said first computers” has no antecedent basis, but appears to refer back to the first plurality of computers previously recited. on line 3, “a simple computer” is vague and unclear; additionally, pg. 11, lines 6-19 of the specification seem to indicate that this should read “a single computer”. on line 4, “said second computer” has no antecedent basis. on line 7, “the independent memory” has no antecedent basis, but appears to refer back to the local independent memory previously recited.\r\nfor claim 9, line 2, “said first computer memory locations” has no antecedent basis. also on line 2, “the corresponding second computer memory location” has no antecedent basis.\r\nfor claim 10, line 2, “said first computer memory locations” has no antecedent basis. also on line 2, the corresponding second computer memory locations also has no antecedent basis. on line 3, “said first computer” has no antecedent basis. on line 4, “the corresponding second computer” has no antecedent basis.\r\nfor claim 11, line 2, “the first computers” has no antecedent basis, but appears to refer back to the first plurality of computers previously recited. also on line 2, the second computer has no antecedent basis. on line 3, “the tasks” has no antecedent basis.\r\nfor claim 12, line 7, “said computer system” has no antecedent basis, but appears to refer back to the dual computer system previously recited. on line 8, “the contents or values” has no antecedent basis.\r\nfor claim 13, line 2, “said first computers” has no antecedent basis.\r\nfor claim 14, line 1, “said plurality of first computers” has no antecedent basis, but appears to refer back to the plurality of interconnected first computers previously recited.\r\nclaim 15 is recited as depending from claim 1, though it appears to correctly depend from claim 13. however, for purposes of examination it has been treated as though it depends from claim 1. on line 2, “the progress of execution has no antecedent basis.\r\nclaim 16 is recited as depending from claim 1, though it appears to correctly depend from claim 13. however, for purposes of examination it has been treated as though it depends from claim 1.\r\nfor claim 17, line 2, “the progress of execution has no antecedent basis.\r\nfor claim 18, line 1, “said first computers” has no antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "F7TG5KYXPPOPPY5",
+      "officialDate": "2007-10-05T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 68,
+  "documentInventoryRows": 68,
+  "primaryCpc": "H04L  67/1095",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11973401",
+    "https://api.uspto.gov/api/v1/patent/applications/11973401/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

@@ -1,6 +1,6 @@
 # GOAL: Trustworthy agent observability foundation
 
-This packet was authored paused on2026-10-27. Reading or preparing it does not start execution. On an explicit user launch, operate in the current beep-effect checkout and follow AGENTS.md.
+This packet was authored paused and explicitly launched by the operator on 2026-10-27. Execution is active in the isolated agent-observability-foundation worktree. Follow AGENTS.md and preserve the recovery hold.
 
 Outcome: Prove metadata identity, coverage and bounded durable delivery across roots and surfaces before live enrollment.
 
@@ -12,6 +12,6 @@ Start with synthetic reproductions and bounded proof. Preserve unrelated user wo
 
 Use the existing ai-metrics tooling, Phoenix driver, hook/managed-launch surfaces and owned dankserver roles before creating new packages. Follow architecture and required skills. Keep native and reconstructed streams distinct and preserve existing identities during migration.
 
-Advance P0 through P4 under SPEC: implement, verify, publish through current Yeet policy, obtain current hosted/review/merge evidence, then write the closeout reflection and update lifecycle through the canonical writer. Do not mark complete merely because fixtures pass or packets exist. New spend requires the operator; ordinary implementation choices use documented reasons and rollback within the authorized launch scope.
+Advance P0 through P4 under SPEC: implement, verify, publish through current Yeet policy, ship the closeout reflection and prospective lifecycle declaration while active, obtain current hosted/review/merge evidence, then verify derived completion through the canonical goals completion refresh writer. Do not mark complete merely because fixtures pass or packets exist. New spend requires the operator; ordinary implementation choices use documented reasons and rollback within the authorized launch scope.
 
 Acceptance is the full SPEC checklist. Capture package, deployment, privacy, resource and user-interpretation evidence as applicable. Keep outcomes and limitations legible to the operator.

@@ -1,0 +1,82 @@
+{
+  "familyId": "14172895-root-10",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "un-delayed inclination and azimuth values",
+      "nativeQuote": "un-delayed inclination and azimuth values",
+      "literalMatch": true,
+      "explanation": "Exact native10 textual phrase."
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the model predictive control scheme",
+      "nativeQuote": "the model predictive control scheme",
+      "literalMatch": true,
+      "explanation": "Exact12."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "feedback delay compensation",
+      "nativeQuote": "feedback delay compensation",
+      "literalMatch": true,
+      "explanation": "Exact13."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "linear delay approximations",
+      "nativeQuote": "linear delay approximations",
+      "literalMatch": true,
+      "explanation": "Exact14."
+    }
+  ],
+  "concerns": [
+    "Retained OA text contains antecedent-basis discussion with embedded number= page artifacts but no explicit112(b)/secondparagraph rejection heading. Statutory ground requires fuller source text.",
+    "Original HRA3SSZAPXXIFW3 count21 matches complete native21 and selected10/11/13/14/16 textual wording matches. Selected12/15 mathematical formulas are severely mangled in original OCR (dot-x, subscripts, signs), so equality/operative formula content is unresolved. Do not label mathematical differences typography without verification.",
+    "Publication identity/digest verified. Native selected10 root,11-14/16->10,15->14 valid; chronology before OA is not enough to fill ground/formula gaps."
+  ],
+  "rationale": "Unresolved actual-ground and formula-version evidence despite matching selected textual phrases.",
+  "sourceIdentity": {
+    "applicationNumber": "14172895",
+    "publicationNumber": "US20150218887A1",
+    "publicationDate": "2015-08-06",
+    "officeActionMailDate": "2015-12-04",
+    "officeActionDocumentIdentifiers": ["IHP4IYYTPXXIFW4"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20150218887 A1 20150806",
+      "application-reference": "US 14172895 20140204",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "HRA3SSZAPXXIFW3",
+        "officialDate": "2014-02-04T00:00:00.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "HRA3SSZAPXXIFW3",
+        "officialDate": "2014-02-04T00:00:00.000-0500",
+        "sha256": "d5c4edbd97ea5a7c9e90bdca7c73fec1f6214ea67e811304d18fd0a2a578f954",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [
+          1, 2, 3, 5, 6, 8, 9, 10, 11, 13, 14, 16, 17, 18, 20
+        ],
+        "sourceClaimCount": 21
+      }
+    ],
+    "documentInventoryCount": 92,
+    "documentInventoryRows": 92,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

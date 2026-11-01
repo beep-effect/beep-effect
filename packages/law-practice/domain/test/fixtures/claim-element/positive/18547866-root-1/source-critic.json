@@ -1,0 +1,346 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18547866-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "reviewedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20240128486", "A1", "20240418"],
+    "applicationReference": ["US", "18547866", "20220225"],
+    "officeActionDocumentIdentifiers": ["MMNSZCKMX22X197"],
+    "officeActionMailDate": "2026-03-13"
+  },
+  "digestEvidence": [
+    {
+      "file": "18547866.publication.xml",
+      "sha256": "276e01c72039cd5479b0529628f527c7572ba10dabc390fe1ef995a75295ac8e",
+      "matchesProvenance": true
+    },
+    {
+      "file": "18547866.claims.xml",
+      "sha256": "125c14263b497f0fa383d0583a99418b03c9735f0292a6f181b4f57f3a772567",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "125c14263b497f0fa383d0583a99418b03c9735f0292a6f181b4f57f3a772567",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "LLPVY9I9XBLUEX4",
+      "xmlAvailable": true,
+      "sha256": "ef6030bb3b3a2c98ae34a5bc3248f4d3451c8c5221067af94646dd39d283c947",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "LLPVY9JEXBLUEX4",
+      "xmlAvailable": true,
+      "sha256": "c0b5db75e49c7d004cf281db7313d522958e5764ad216c29593bec86689c281f",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 49,
+    "actualRows": 49,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2023-08-24T20:58:33.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "d44629d6-aaf4-4276-b8de-083c5b4cd462"
+      },
+      {
+        "officialDate": "2023-08-24T20:58:33.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "LLPVY9I9XBLUEX4"
+      },
+      {
+        "officialDate": "2023-08-24T20:58:33.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "LLPVY9ITXBLUEX4"
+      },
+      {
+        "officialDate": "2023-08-24T20:58:33.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "LLPVY9JEXBLUEX4"
+      },
+      {
+        "officialDate": "2023-08-24T20:58:33.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "LLPVY9JLXBLUEX4"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-20 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the fuel cell stack side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the fuel cell stack side"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the opposite side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the opposite side"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the distal end",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the distal end"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the first direction side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first direction side"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the first direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first direction"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the opposite side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the opposite side"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the first direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first direction"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the distal end",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the distal end"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the vicinity",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the vicinity"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the center",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the center"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the oxidant gas",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the oxidant gas"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the normal direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal direction"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the normal direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal direction"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the main surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the main surface"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the supply plate inlet side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the supply plate inlet side"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the supply plate outlet side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the supply plate outlet side"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the normal direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal direction"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the main surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the main surface"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the side"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the first direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first direction"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the flow",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the flow"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the reformer side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the reformer side"
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the center",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the center"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the first direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first direction"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the flow",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the flow"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the reformer side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the reformer side"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the opposite side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the opposite side"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the opposite side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the opposite side"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the vicinity",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the vicinity"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the location",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the location"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the fuel cell stack side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the fuel cell stack side"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the first direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first direction"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the normal direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the normal direction"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the main surface",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the main surface"
+    },
+    {
+      "claimNumber": 18,
+      "examinerPhrase": "the opposite side",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the opposite side"
+    }
+  ],
+  "assessment": "Marked LLPVY9JEXBLUEX4 explicitly replaces all prior listings. Claim1 is fully present as numbered Original paragraph outside Claims and exactly matches native after whitespace;19 Claim nodes do not mean missing1. Accepted Del/Ins2-19 matches native,20 only l/1 glyph. Changed clean-original dependencies are therefore resolved by explicit amendment evidence.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used."
+}

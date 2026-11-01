@@ -22,18 +22,20 @@ export type ScriptResult =
   | PlatformError.PlatformError;
 
 /**
- * A scripted mock `ChildProcessSpawner`. `byArgs` receives the argv of the
- * spawned command and returns either a completed-run script (stdout/stderr/
- * exit, optionally hanging) or a `PlatformError` to fail the spawn with.
+ * A scripted mock `ChildProcessSpawner`. `byArgs` receives the argv and
+ * options of the spawned command and returns either a completed-run script
+ * (stdout/stderr/exit, optionally hanging) or a `PlatformError` to fail the spawn with.
  */
-export const scripted = (byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
+export const scripted = (
+  byArgs: (args: ReadonlyArray<string>, options: ChildProcess.StandardCommand["options"]) => ScriptResult
+) =>
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("piped commands not scripted");
       }
-      const result = byArgs(commandArgs(command));
+      const result = byArgs(commandArgs(command), command.options);
       if (result instanceof PlatformError.PlatformError) {
         return Effect.fail(result);
       }

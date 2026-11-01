@@ -1,0 +1,57 @@
+{
+  "familyId": "16628033-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A semi-condylar artificial knee joint, characterized in that, the knee joint includes a femoral prosthesis (1) and a tibial prosthesis (2), said tibial prosthesis (2) is disposed at one side of the tibial plateau intercondylar eminence (31) and is located below the femoral prosthesis (1).",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The semi-condylar artificial knee joint according to claim 1, characterized in that, said tibial prosthesis (2) includes an upper gasket (21) and a lower gasket (22), wherein, an elastic subassembly (6) is provided on the lower gasket (22), and through which the impact force transmitted from the femoral prosthesis (1) to the upper gasket of the tibial prosthesis (2) is cushioned, so that the upper gasket (21) has a meniscus-like function.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The semi-condylar artificial knee joint according to claim 2, characterized in that, said elastic subassembly (6) penetrates the lower gasket (22), and is fixed and installed on the lower gasket (22), the upper end protrudes above the lower gasket (22) and abuts on the lower surface of the upper gasket.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The semi-condylar artificial knee joint according to claim 3, characterized in that, said elastic subassembly (6) includes a sleeve (61) and a spring (62), the lower end of the spring (62) is buried in the sleeve (61), and the upper end of the spring is abutted on the lower surface of the upper gasket, the sleeve (61) passes through the lower gasket (22), and the bottom end of the sleeve is installed in the cavity (7) of the tibia.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The semi-condylar artificial knee joint according to claim 4, characterized in that, a bolt (63) for adjusting the elasticity of the spring (62) is provided at the bottom of the sleeve (61).",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The semi-condylar artificial knee joint according to claim 1, characterized in that, said tibial prosthesis (2) is placed at the lower back of the patella.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The semi-condylar artificial knee joint according to claim 1, characterized in that, the artificial knee joint further includes a locating pin (5), through which the tibial prosthesis (2) is fixed to the tibia.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The semi-condylar artificial knee joint according to claim 7, characterized in that, the upper portion of one end of said locating pin (5) is installed in the tibial prosthesis (2), and the other end thereof is installed in the tibial plateau intercondylar eminence (31).",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The semi-condylar artificial knee joint according to claim 1, characterized in that, a prosthetic notch (23) is provided on the bottom of said tibial prosthesis (2), a tibial notch (32) is provided on the top of the tibia below the tibial prosthesis (2), and said prosthetic notch (23) corresponds to said tibial notch (32), and together constitute a limiting hole (4) for accommodating the locating pin (5), and the limiting hole penetrates the tibial plateau intercondylar eminence (31).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A method of using the semi-condylar artificial knee joint according to claim 1, characterized in that, the method includes the following steps: Step 1, install the femoral prosthesis (1) on the femoral condyle; Step 2, open a space for the placement of the tibial prosthesis (2) on the tibial plateau; Step 3, excavate a tibial notch (32) in the tibia and extend the tibial notch (32) to the tibial plateau intercondylar eminence (31), and form an intercondylar eminence hole (33) in the tibial plateau intercondylar eminence (31); Step 4, excavate a cavity (7) in the tibia; Step 5, insert the sleeve on the tibial prosthesis (2) into the cavity (7), and simultaneously adjust the relative positions of the prosthetic notch (23), the tibial notch (32) and the intercondylar eminence hole (33), so that the prosthetic notch (23), the tibial notch (32) and the intercondylar eminence hole (33) together constitute a limiting hole (4); Step 6, install the locating pin (5) in the limiting hole (4), after the locating pin (5) is fixed, the tibial prosthesis (2) is fixed by bone cement; wherein, preferably, before performing Step 5, adjust the elasticity of the spring (62) by rotating the bolt (63).",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

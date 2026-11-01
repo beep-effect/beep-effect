@@ -21,7 +21,6 @@
     {"name":"ExpectCT.formatExpectCTValue","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"FrameGuard.decode","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"FrameGuard.formatFrameGuardValue","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"Jsonc.decodeJsoncUnknown","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"LocalDateFromString.decode","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"Markdown.decodeMarkdownText","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"Markdown.renderMarkdownHtml","owner":"@beep/schema","family":"foundation","conforms":true},

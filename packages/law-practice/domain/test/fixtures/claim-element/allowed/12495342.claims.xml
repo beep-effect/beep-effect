@@ -1,0 +1,103 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method comprising:
+<claim-text>receiving, by a second base station (BS) and in response to sending a path switch request message, a path switch acknowledge message comprising one or more identifiers of one or more partially allowed network slices for a wireless device, wherein the one or more partially allowed network slices are not supported in one or more tracking area (TAs) of a registration area (RA) of the wireless device;</claim-text>
+<claim-text>determining, by the second BS and based on a third BS supporting the one or more partially allowed network slices, a handover of the wireless device to the third BS; and</claim-text>
+<claim-text>sending, by the second BS to the third BS, and based on the determining, a handover request message comprising the one or more identifiers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second BS receives the path switch acknowledge message from a core network node.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the RA of the wireless device further comprises one or more second TAs where the one or more partially allowed network slices are supported.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising sending by the second BS to a core network node, a capability indication indicating support for the one or more partially allowed network slices.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising receiving by the second BS from the third BS, an indication indicating support for the one or more partially allowed network slices.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the path switch acknowledge message further comprises at least one of:
+<claim-text>the one or more TAs of the RA;</claim-text>
+<claim-text>one or more allowed network slices of the wireless device, wherein the one or more allowed network slices are supported in the RA;</claim-text>
+<claim-text>a protocol data unit (PDU) session associated with the one or more partially allowed network slices; or</claim-text>
+<claim-text>an indication of an activation or deactivation of the PDU session.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the path switch request message comprises at least one of:
+<claim-text>a first indication indicating activation of the PDU session; or</claim-text>
+<claim-text>a second indication indicating suspension of the PDU session.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the handover request message comprises a capability indicator indicating support for the one or more partially allowed network slices.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A second base station (BS), comprising one or more processors and memory storing instructions that, when executed by the one or more processors, cause the second base station to:
+<claim-text>receive, in response to sending a path switch request message, a path switch acknowledge message comprising one or more identifiers of one or more partially allowed network slices for a wireless device, wherein the one or more partially allowed network slices are not supported in one or more tracking area (TAs) of a registration area (RA) of the wireless device;</claim-text>
+<claim-text>determine, based on a third BS supporting the one or more partially allowed network slices, a handover of the wireless device to the third BS; and</claim-text>
+<claim-text>send, to the third BS, and based on the determining, a handover request message comprising the one or more identifiers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The second BS of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the second BS receives the path switch acknowledge message from a core network node.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The second BS of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the RA of the wireless device further comprises one or more second TAs where the one or more partially allowed network slices are supported.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The second BS of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the operations further cause the second BS to send, to a core network node, a capability indication indicating support for the one or more partially allowed network slices.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The second BS of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the operations further cause the second BS to receive, from the third BS, an indication indicating support for the one or more partially allowed network slices.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The second BS of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the path switch acknowledge message further comprises at least one of:
+<claim-text>the one or more TAs of the RA;</claim-text>
+<claim-text>one or more allowed network slices of the wireless device, wherein the one or more allowed network slices are supported in the RA;</claim-text>
+<claim-text>a protocol data unit (PDU) session associated with the one or more partially allowed network slices; or</claim-text>
+<claim-text>an indication of an activation or deactivation of the PDU session.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The second BS of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the path switch request message comprises at least one of:
+<claim-text>a first indication indicating activation of the PDU session; or</claim-text>
+<claim-text>a second indication indicating suspension of the PDU session.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The second BS of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the handover request message comprises a capability indicator indicating support for the one or more partially allowed network slices.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A wireless device comprising one or more processors and memory storing instructions that, when executed by the one or more processors, cause the wireless device to:
+<claim-text>receive:
+<claim-text>one or more system information blocks comprising one or more identifiers of one or more tracking area (TAs) of a registration area (RA) of the wireless device; and</claim-text>
+<claim-text>one or more non-access stratum (NAS) messages comprising one or more slice identifiers of one or more partially allowed network slices for the wireless device;</claim-text>
+</claim-text>
+<claim-text>receive, from a first base station (BS), a first radio resource control (RRC) message indicating handover to a second cell of a second BS;</claim-text>
+<claim-text>send, to the second BS, a second RRC message indicating completion of the handover;</claim-text>
+<claim-text>receive, from the second BS, a third RRC message indicating a second handover to a third cell of a third BS supporting the one or more partially allowed network slices, wherein:
+<claim-text>the one or more slice identifiers of the one or more partially allowed network slices are indicated by a path switch acknowledge message; and</claim-text>
+<claim-text>the one or more partially allowed network slices are unsupported in the one or more TAs of the RA; and</claim-text>
+</claim-text>
+<claim-text>send, to the third BS, a fourth RRC message indicating completion of the second handover.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The wireless device of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the second BS receives the path switch acknowledge message from a core network node.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The wireless device of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the RA of the wireless device further comprises one or more second TAs where the one or more partially allowed network slices are supported.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The wireless device of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the path switch acknowledge message further comprises at least one of:
+<claim-text>the one or more TAs of the RA;</claim-text>
+<claim-text>one or more allowed network slices of the wireless device, wherein the one or more allowed network slices are supported in the RA;</claim-text>
+<claim-text>a protocol data unit (PDU) session associated with the one or more partially allowed network slices; or</claim-text>
+<claim-text>an indication of an activation or deactivation of the PDU session.</claim-text>
+</claim-text>
+</claim>
+</claims>

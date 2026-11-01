@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "12536794",
+  "publicationNumber": "US20110033254A1",
+  "publicationDate": "2011-02-10",
+  "nativeXmlSha256": "4bbb6f7a055593b87011ad5c25e95d8eb99b554460d1569a941784c694eb104a",
+  "claimsXmlSha256": "0f303d9da433431d6561abf7bb2b87624c7dceca10e7e11fe3d949049fae3d05",
+  "officeActionDocumentIdentifiers": [
+    "GXNAVEPVPXXIFW4"
+  ],
+  "officeActionMailDate": "2012-01-20",
+  "officeActionSection112Text": [
+    "claims 1-35 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nclaim 1, line 9, “the actual location” lacks antecedent basis.\r\nclaim 1, line 11, “the output of the sensor” lacks antecedent basis.\r\nclaim 1, line 19, “the actual location” lacks antecedent basis.\r\nclaim 5, line 1, “the actual root center lacks antecedent basis.\r\nclaim 5, line 2, “the last expected root center” lacks antecedent basis.\r\nclaim 5, line 3, “the current expected root center” lacks antecedent basis.\r\nclaim 6, line 3, ‘ the offset” lacks antecedent basis.\r\nclaim 7, line 3, “ the offset” lacks antecedent basis.\r\nclaim 9, line 2, “said actual root center” lacks antecedent basis.\r\nclaim 16, line 2, “the rotation offset” lacks antecedent basis.\r\nclaim 17, line 1, “the tip” lacks antecedent basis.\r\nclaim 18, line 2, “said 3d visualization sensor” lacks antecedent basis.\r\nclaim 19, line 11, “the actual location” lacks antecedent basis.\r\nclaim 19, line 15, “the actual location” lacks antecedent basis.\r\nclaim 25, line 10, “said determined twist’ lacks antecedent basis.\r\nclaim 25, line 14, “the actual location” lacks antecedent basis.\r\nclaim 25, line 14, “the a first location” is not clear.\r\nclaim 25, line 21, “ the actual location” lacks antecedent basis.\r\nclaim 26, line 2, “said actual root center” lacks antecedent basis.\r\nclaim 30, line 2, “said actual cavities” lacks antecedent basis.\r\nclaim 33, line 2, “the rotational offset’ lacks antecedent basis.\r\nclaim 35, “said 3d visualization sensor’ lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "FY1UQVB2PPOPPY4",
+      "officialDate": "2009-08-06T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "FY1UQVB2PPOPPY4",
+      "officialDate": "2009-08-06T00:00:00.000-0400",
+      "sha256": "c14b20cc78bf71edc0822683906671ea638838f81c78d44a076d3fee0a428784",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 17,
+  "documentInventoryRows": 17,
+  "primaryCpc": "B23Q  17/22",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12536794",
+    "https://api.uspto.gov/api/v1/patent/applications/12536794/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

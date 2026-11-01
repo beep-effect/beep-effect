@@ -30,18 +30,23 @@
  * @since 0.0.0
  */
 
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
+import { Jsonc } from "@beep/jsonc/Jsonc";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constFalse, constTrue } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { EffectVitestInventoryPath } from "../../Lint/Lint.schemas.ts";
 import {
@@ -57,7 +62,7 @@ import {
   FinalCheckRefreshRefused,
   FinalCheckStatusDrift,
 } from "./FinalCheckRefresh.schemas.ts";
-import { runGitOutput, runGitPathList } from "./GitExec.ts";
+import { runGitFoldedStdout, runGitOutput, runGitPathList } from "./GitExec.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -215,40 +220,175 @@ const changedPaths = (repoRoot: string, from: string, to: string) =>
 // The lane's patch for one file, verbatim: the per-file header block (blob
 // ids, `---`/`+++` names) is dropped and hunk headers lose their line numbers,
 // so the same edit on a moved base still matches. Content lines keep every
-// byte, whitespace included, and `--binary --full-index` renders binary edits
-// as their bytes rather than "Binary files differ"; a binary delta on a
-// different base therefore never matches, which fails closed.
-const patchIdentity = (diff: string): string => {
-  const lines = Str.split("\n")(diff);
-  const body = A.dropWhile(lines, (line) => !Str.startsWith("@@")(line) && line !== "GIT binary patch");
-  const header = A.filter(
-    A.take(lines, A.length(lines) - A.length(body)),
-    (line) =>
-      !Str.startsWith("diff --git ")(line) &&
-      !Str.startsWith("index ")(line) &&
-      !Str.startsWith("--- ")(line) &&
-      !Str.startsWith("+++ ")(line)
-  );
-  return A.join([...header, ...A.map(body, (line) => (Str.startsWith("@@")(line) ? "@@" : line))], "\n");
+// byte, whitespace and invalid UTF-8 included, and `--binary --full-index`
+// renders binary edits as their bytes rather than "Binary files differ"; a
+// binary delta on a different base therefore never matches, which fails closed.
+const MarkerEncoder = new TextEncoder();
+const asciiBytes = (text: string): Uint8Array => MarkerEncoder.encode(text);
+
+const NewlineByte = 0x0a;
+const NewlineBytes = asciiBytes("\n");
+const HunkMarker = asciiBytes("@@");
+const BinaryPatchMarker = asciiBytes("GIT binary patch");
+const PatchHeaderPrefixes = A.map(["diff --git ", "index ", "--- ", "+++ "], asciiBytes);
+
+// A line is classified on its first bytes alone: one byte past the longest
+// marker tells an exact `GIT binary patch` line from a longer one.
+const ClassifyPrefixLength = BinaryPatchMarker.length + 1;
+
+const bytesStartWith =
+  (marker: Uint8Array) =>
+  (bytes: Uint8Array): boolean =>
+    bytes.length >= marker.length && A.every(A.range(0, marker.length - 1), (at) => bytes[at] === marker[at]);
+
+// The first bytes of one diff line: all of it when `complete`, otherwise
+// `ClassifyPrefixLength` bytes of a longer line.
+type LinePrefix = {
+  readonly bytes: Uint8Array;
+  readonly complete: boolean;
+  readonly inBody: boolean;
 };
 
+// One line's contribution to the identity: `emit` is what enters the digest
+// (none drops the line), and `streamRest` passes the line's remaining bytes
+// through verbatim.
+type LineVerdict = {
+  readonly inBody: boolean;
+  readonly emit: O.Option<Uint8Array>;
+  readonly streamRest: boolean;
+};
+
+// The header block ends at the first hunk header or binary patch marker; from
+// there every line is kept, hunk headers reduced to `@@`.
+const classifyLine: (line: LinePrefix) => LineVerdict = Match.type<LinePrefix>().pipe(
+  Match.when(
+    ({ bytes }) => bytesStartWith(HunkMarker)(bytes),
+    (): LineVerdict => ({ inBody: true, emit: O.some(HunkMarker), streamRest: false })
+  ),
+  Match.when(
+    ({ inBody }) => inBody,
+    ({ bytes }): LineVerdict => ({ inBody: true, emit: O.some(bytes), streamRest: true })
+  ),
+  Match.when(
+    ({ bytes, complete }) =>
+      complete && bytes.length === BinaryPatchMarker.length && bytesStartWith(BinaryPatchMarker)(bytes),
+    ({ bytes }): LineVerdict => ({ inBody: true, emit: O.some(bytes), streamRest: true })
+  ),
+  Match.when(
+    ({ bytes }) => A.some(PatchHeaderPrefixes, (prefix) => bytesStartWith(prefix)(bytes)),
+    (): LineVerdict => ({ inBody: false, emit: O.none(), streamRest: false })
+  ),
+  Match.orElse(({ bytes }): LineVerdict => ({ inBody: false, emit: O.some(bytes), streamRest: true }))
+);
+
+/**
+ * Digest the patch identity of one file's diff while it streams.
+ *
+ * **Details**
+ *
+ * The identity drops the per-file header block (`diff --git`, `index`, `---`,
+ * `+++`), erases hunk-header line numbers so the same edit on a moved base
+ * matches, and keeps every content byte as git wrote it: whitespace, `\r` and
+ * bytes that are not valid UTF-8 all count. Lines split on the `\n` byte
+ * alone and are classified on their first bytes, so only that short prefix and
+ * a SHA-256 state are held; a diff of any size, or a single line of any
+ * length, compares in linear time without a capture bound. Equal digests mean
+ * equal identities.
+ *
+ * **Example** (Digest a streamed diff)
+ *
+ * ```ts
+ * import { finalCheckPatchIdentityDigest } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ *
+ * const digest = finalCheckPatchIdentityDigest(
+ *   Stream.make(new TextEncoder().encode("diff --git a/x b/x\n@@ -1 +1 @@\n-a\n+b\n"))
+ * )
+ * console.log(Effect.isEffect(digest)) // true
+ * ```
+ *
+ * @param diff - Raw `git diff` stdout bytes for one path.
+ * @returns The hex SHA-256 of the patch identity.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const finalCheckPatchIdentityDigest = <E, R>(
+  diff: Stream.Stream<Uint8Array, E, R>
+): Effect.Effect<string, E, R> =>
+  Effect.suspend(() => {
+    const hash = sha256.create();
+    const prefix = new Uint8Array(ClassifyPrefixLength);
+    let prefixLength = 0;
+    let inBody = false;
+    let anyKept = false;
+    // None while the current line is still being classified.
+    let verdict = O.none<LineVerdict>();
+
+    const decide = (complete: boolean): LineVerdict => {
+      const next = classifyLine({ bytes: prefix.slice(0, prefixLength), complete, inBody });
+      inBody = next.inBody;
+      if (O.isSome(next.emit)) {
+        if (anyKept) hash.update(NewlineBytes);
+        hash.update(next.emit.value);
+        anyKept = true;
+      }
+      verdict = O.some(next);
+      return next;
+    };
+
+    // Bytes of the current line, never containing `\n`.
+    const feed = (bytes: Uint8Array): void => {
+      const rest = O.match(verdict, {
+        onSome: () => bytes,
+        onNone: () => {
+          const taken = Num.min(bytes.length, ClassifyPrefixLength - prefixLength);
+          prefix.set(bytes.subarray(0, taken), prefixLength);
+          prefixLength += taken;
+          if (prefixLength === ClassifyPrefixLength) decide(false);
+          return bytes.subarray(taken);
+        },
+      });
+      if (rest.length > 0 && O.exists(verdict, ({ streamRest }) => streamRest)) hash.update(rest);
+    };
+
+    const endLine = (): void => {
+      if (O.isNone(verdict)) decide(true);
+      verdict = O.none();
+      prefixLength = 0;
+    };
+
+    const scan = (chunk: Uint8Array): void => {
+      let start = 0;
+      let newline = chunk.indexOf(NewlineByte, start);
+      while (newline !== -1) {
+        feed(chunk.subarray(start, newline));
+        endLine();
+        start = newline + 1;
+        newline = chunk.indexOf(NewlineByte, start);
+      }
+      feed(chunk.subarray(start));
+    };
+
+    return diff.pipe(
+      Stream.runForEach((chunk) => Effect.sync(() => scan(chunk))),
+      Effect.map(() => {
+        endLine();
+        return bytesToHex(hash.digest());
+      })
+    );
+  });
+
 const filePatch = (repoRoot: string, from: string, to: string, path: string) =>
-  runGitOutput(repoRoot, [
-    "diff",
-    "--no-color",
-    "--no-renames",
-    "--no-ext-diff",
-    "--binary",
-    "--full-index",
-    from,
-    to,
-    "--",
-    path,
-  ]).pipe(Effect.map(patchIdentity));
+  runGitFoldedStdout(
+    repoRoot,
+    ["diff", "--no-color", "--no-renames", "--no-ext-diff", "--binary", "--full-index", from, to, "--", path],
+    finalCheckPatchIdentityDigest
+  );
 
 const StatusCountDocument = S.Struct({ findings: S.Array(S.Struct({ status: S.String })) });
 
-const decodeStatusCountDocument = decodeJsoncTextAs(StatusCountDocument);
+const decodeStatusCountDocument = Jsonc.bind(StatusCountDocument).decode;
 
 // Finding count per status at one revision; an absent file has no findings,
 // and an undecodable one is none so the caller fails closed.

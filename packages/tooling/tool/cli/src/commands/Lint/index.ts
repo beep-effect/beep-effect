@@ -174,13 +174,6 @@ export * from "./LintCircular.command.ts";
  */
 export * from "./LintDeprecatedApis.command.ts";
 /**
- * Goal packet lint command export.
- *
- * @category cli-commands
- * @since 0.0.0
- */
-export * from "./LintGoalPackets.command.ts";
-/**
  * Documentation lint command export.
  *
  * @category cli-commands

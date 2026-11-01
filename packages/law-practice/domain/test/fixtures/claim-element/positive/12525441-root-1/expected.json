@@ -1,0 +1,2362 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 60,
+          "quote": "A method for joining components by means of tensioning bolts"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 21,
+              "endChar": 31,
+              "quote": "components"
+            },
+            "determiner": "bare",
+            "head": "components"
+          },
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 60,
+              "quote": "tensioning bolts"
+            },
+            "determiner": "bare",
+            "head": "tensioning bolts"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 94,
+          "endChar": 150,
+          "quote": "placing a tensioning bolt at the components to be joined"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 119,
+              "quote": "a tensioning bolt"
+            },
+            "determiner": "a",
+            "head": "tensioning bolt"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 137,
+              "quote": "the components"
+            },
+            "determiner": "the",
+            "head": "components"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 152,
+          "endChar": 192,
+          "quote": "threading a nut onto the tensioning bolt"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 162,
+              "endChar": 167,
+              "quote": "a nut"
+            },
+            "determiner": "a",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 173,
+              "endChar": 192,
+              "quote": "the tensioning bolt"
+            },
+            "determiner": "the",
+            "head": "tensioning bolt"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 194,
+          "endChar": 415,
+          "quote": "stretching the tensioning bolt by means of a hydraulic tensioning device, supported at the components, said tensioning device being in engagement with the protruding end of the tensioning bolt which extends beyond the nut"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 224,
+              "quote": "the tensioning bolt"
+            },
+            "determiner": "the",
+            "head": "tensioning bolt"
+          },
+          {
+            "anchor": {
+              "startChar": 237,
+              "endChar": 266,
+              "quote": "a hydraulic tensioning device"
+            },
+            "determiner": "a",
+            "head": "hydraulic tensioning device"
+          },
+          {
+            "anchor": {
+              "startChar": 281,
+              "endChar": 295,
+              "quote": "the components"
+            },
+            "determiner": "the",
+            "head": "components"
+          },
+          {
+            "anchor": {
+              "startChar": 297,
+              "endChar": 319,
+              "quote": "said tensioning device"
+            },
+            "determiner": "said",
+            "head": "tensioning device"
+          },
+          {
+            "anchor": {
+              "startChar": 345,
+              "endChar": 363,
+              "quote": "the protruding end"
+            },
+            "determiner": "the",
+            "head": "protruding end"
+          },
+          {
+            "anchor": {
+              "startChar": 367,
+              "endChar": 386,
+              "quote": "the tensioning bolt"
+            },
+            "determiner": "the",
+            "head": "tensioning bolt"
+          },
+          {
+            "anchor": {
+              "startChar": 408,
+              "endChar": 415,
+              "quote": "the nut"
+            },
+            "determiner": "the",
+            "head": "nut"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 421,
+          "endChar": 484,
+          "quote": "turning the nut further until it contacts one of the components"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 429,
+              "endChar": 436,
+              "quote": "the nut"
+            },
+            "determiner": "the",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 470,
+              "endChar": 484,
+              "quote": "the components"
+            },
+            "determiner": "the",
+            "head": "components"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 494,
+          "endChar": 554,
+          "quote": "the hydraulic pressure of the tensioning device is monitored"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 494,
+              "endChar": 516,
+              "quote": "the hydraulic pressure"
+            },
+            "determiner": "the",
+            "head": "hydraulic pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 520,
+              "endChar": 541,
+              "quote": "the tensioning device"
+            },
+            "determiner": "the",
+            "head": "tensioning device"
+          }
+        ]
+      },
+      {
+        "path": "1.f",
+        "anchor": {
+          "startChar": 556,
+          "endChar": 670,
+          "quote": "the tensioning device is blocked hydraulically when a hydraulic pressure target value is reached during stretching"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 556,
+              "endChar": 577,
+              "quote": "the tensioning device"
+            },
+            "determiner": "the",
+            "head": "tensioning device"
+          },
+          {
+            "anchor": {
+              "startChar": 608,
+              "endChar": 641,
+              "quote": "a hydraulic pressure target value"
+            },
+            "determiner": "a",
+            "head": "hydraulic pressure target value"
+          }
+        ]
+      },
+      {
+        "path": "1.g",
+        "anchor": {
+          "startChar": 677,
+          "endChar": 778,
+          "quote": "in the event of a pressure drop during the blocking, pressure is built up again by additional pumping"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 680,
+              "endChar": 689,
+              "quote": "the event"
+            },
+            "determiner": "the",
+            "head": "event"
+          },
+          {
+            "anchor": {
+              "startChar": 693,
+              "endChar": 708,
+              "quote": "a pressure drop"
+            },
+            "determiner": "a",
+            "head": "pressure drop"
+          },
+          {
+            "anchor": {
+              "startChar": 716,
+              "endChar": 728,
+              "quote": "the blocking"
+            },
+            "determiner": "the",
+            "head": "blocking"
+          },
+          {
+            "anchor": {
+              "startChar": 730,
+              "endChar": 738,
+              "quote": "pressure"
+            },
+            "determiner": "bare",
+            "head": "pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 760,
+              "endChar": 778,
+              "quote": "additional pumping"
+            },
+            "determiner": "bare",
+            "head": "additional pumping"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 94,
+              "endChar": 102,
+              "quote": "placing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 102,
+                "endChar": 119,
+                "quote": "a tensioning bolt"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 119,
+              "endChar": 123,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 137,
+                "quote": "the components"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 137,
+              "endChar": 150,
+              "quote": " to be joined"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 162,
+              "quote": "threading "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 162,
+                "endChar": 167,
+                "quote": "a nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 173,
+              "quote": " onto "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 173,
+                "endChar": 192,
+                "quote": "the tensioning bolt"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 194,
+              "endChar": 205,
+              "quote": "stretching "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 205,
+                "endChar": 224,
+                "quote": "the tensioning bolt"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 224,
+              "endChar": 237,
+              "quote": " by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 237,
+                "endChar": 266,
+                "quote": "a hydraulic tensioning device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 266,
+              "endChar": 281,
+              "quote": ", supported at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 281,
+                "endChar": 295,
+                "quote": "the components"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 295,
+              "endChar": 297,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 297,
+                "endChar": 319,
+                "quote": "said tensioning device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 319,
+              "endChar": 345,
+              "quote": " being in engagement with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 345,
+                "endChar": 363,
+                "quote": "the protruding end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 363,
+              "endChar": 367,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 367,
+                "endChar": 386,
+                "quote": "the tensioning bolt"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 386,
+              "endChar": 408,
+              "quote": " which extends beyond "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 408,
+                "endChar": 415,
+                "quote": "the nut"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 421,
+              "endChar": 429,
+              "quote": "turning "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 429,
+                "endChar": 436,
+                "quote": "the nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 436,
+              "endChar": 470,
+              "quote": " further until it contacts one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 470,
+                "endChar": 484,
+                "quote": "the components"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 494,
+                "endChar": 516,
+                "quote": "the hydraulic pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 516,
+              "endChar": 520,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 520,
+                "endChar": 541,
+                "quote": "the tensioning device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 541,
+              "endChar": 554,
+              "quote": " is monitored"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.f",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 556,
+                "endChar": 577,
+                "quote": "the tensioning device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 577,
+              "endChar": 608,
+              "quote": " is blocked hydraulically when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 608,
+                "endChar": 641,
+                "quote": "a hydraulic pressure target value"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 641,
+              "endChar": 670,
+              "quote": " is reached during stretching"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.g",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.g",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 677,
+              "endChar": 680,
+              "quote": "in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 680,
+                "endChar": 689,
+                "quote": "the event"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 689,
+              "endChar": 693,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 693,
+                "endChar": 708,
+                "quote": "a pressure drop"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 708,
+              "endChar": 716,
+              "quote": " during "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 716,
+                "endChar": 728,
+                "quote": "the blocking"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 728,
+              "endChar": 730,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 730,
+                "endChar": 738,
+                "quote": "pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 738,
+              "endChar": 760,
+              "quote": " is built up again by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 760,
+                "endChar": 778,
+                "quote": "additional pumping"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 137,
+            "quote": "the components"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 21,
+            "endChar": 31,
+            "quote": "components"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 281,
+            "endChar": 295,
+            "quote": "the components"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 21,
+            "endChar": 31,
+            "quote": "components"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 470,
+            "endChar": 484,
+            "quote": "the components"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 21,
+            "endChar": 31,
+            "quote": "components"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 173,
+            "endChar": 192,
+            "quote": "the tensioning bolt"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 119,
+            "quote": "a tensioning bolt"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 205,
+            "endChar": 224,
+            "quote": "the tensioning bolt"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 119,
+            "quote": "a tensioning bolt"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 367,
+            "endChar": 386,
+            "quote": "the tensioning bolt"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 119,
+            "quote": "a tensioning bolt"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 297,
+            "endChar": 319,
+            "quote": "said tensioning device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 266,
+            "quote": "a hydraulic tensioning device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 408,
+            "endChar": 415,
+            "quote": "the nut"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 162,
+            "endChar": 167,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 429,
+            "endChar": 436,
+            "quote": "the nut"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 162,
+            "endChar": 167,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 520,
+            "endChar": 541,
+            "quote": "the tensioning device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 266,
+            "quote": "a hydraulic tensioning device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 556,
+            "endChar": 577,
+            "quote": "the tensioning device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 266,
+            "quote": "a hydraulic tensioning device"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 107,
+          "quote": "at the beginning of the blocking a time measurement is started"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 61,
+              "quote": "the beginning"
+            },
+            "determiner": "the",
+            "head": "beginning"
+          },
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 77,
+              "quote": "the blocking"
+            },
+            "determiner": "the",
+            "head": "blocking"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 96,
+              "quote": "a time measurement"
+            },
+            "determiner": "a",
+            "head": "time measurement"
+          }
+        ]
+      },
+      {
+        "path": "2.b",
+        "anchor": {
+          "startChar": 118,
+          "endChar": 295,
+          "quote": "a signal for turning the nut is generated if no pressure drop to below a lower threshold value occurs within a predetermined holding time after the start of the time measurement"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 118,
+              "endChar": 126,
+              "quote": "a signal"
+            },
+            "determiner": "a",
+            "head": "signal"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 146,
+              "quote": "the nut"
+            },
+            "determiner": "the",
+            "head": "nut"
+          },
+          {
+            "anchor": {
+              "startChar": 166,
+              "endChar": 179,
+              "quote": "pressure drop"
+            },
+            "determiner": "bare",
+            "head": "pressure drop"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 212,
+              "quote": "a lower threshold value"
+            },
+            "determiner": "a",
+            "head": "lower threshold value"
+          },
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 255,
+              "quote": "a predetermined holding time"
+            },
+            "determiner": "a",
+            "head": "predetermined holding time"
+          },
+          {
+            "anchor": {
+              "startChar": 262,
+              "endChar": 271,
+              "quote": "the start"
+            },
+            "determiner": "the",
+            "head": "start"
+          },
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 295,
+              "quote": "the time measurement"
+            },
+            "determiner": "the",
+            "head": "time measurement"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 45,
+              "endChar": 48,
+              "quote": "at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 48,
+                "endChar": 61,
+                "quote": "the beginning"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 65,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 77,
+                "quote": "the blocking"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 78,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 96,
+                "quote": "a time measurement"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 107,
+              "quote": " is started"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "2.b",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 118,
+                "endChar": 126,
+                "quote": "a signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 126,
+              "endChar": 139,
+              "quote": " for turning "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 146,
+                "quote": "the nut"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 166,
+              "quote": " is generated if no "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 166,
+                "endChar": 179,
+                "quote": "pressure drop"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 179,
+              "endChar": 189,
+              "quote": " to below "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 189,
+                "endChar": 212,
+                "quote": "a lower threshold value"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 212,
+              "endChar": 227,
+              "quote": " occurs within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 255,
+                "quote": "a predetermined holding time"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 262,
+              "quote": " after "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 262,
+                "endChar": 271,
+                "quote": "the start"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 271,
+              "endChar": 275,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 295,
+                "quote": "the time measurement"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1.f"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.b",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 139,
+            "endChar": 146,
+            "quote": "the nut"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 162,
+            "endChar": 167,
+            "quote": "a nut"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.b",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 295,
+            "quote": "the time measurement"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 96,
+            "quote": "a time measurement"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 316,
+          "quote": "an electronic recording of the following parameters is performed: a) the duration of the pressure build-up until the target value is reached, b) the magnitude of the pressure and/or the chronological development of the pressure, c) whether additional pumping has occurred"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 68,
+              "quote": "an electronic recording"
+            },
+            "determiner": "an",
+            "head": "electronic recording"
+          },
+          {
+            "anchor": {
+              "startChar": 72,
+              "endChar": 96,
+              "quote": "the following parameters"
+            },
+            "determiner": "the",
+            "head": "following parameters"
+          }
+        ]
+      },
+      {
+        "path": "3.a.i",
+        "anchor": {
+          "startChar": 114,
+          "endChar": 185,
+          "quote": "the duration of the pressure build-up until the target value is reached"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 126,
+              "quote": "the duration"
+            },
+            "determiner": "the",
+            "head": "duration"
+          },
+          {
+            "anchor": {
+              "startChar": 130,
+              "endChar": 151,
+              "quote": "the pressure build-up"
+            },
+            "determiner": "the",
+            "head": "pressure build-up"
+          },
+          {
+            "anchor": {
+              "startChar": 158,
+              "endChar": 174,
+              "quote": "the target value"
+            },
+            "determiner": "the",
+            "head": "target value"
+          }
+        ]
+      },
+      {
+        "path": "3.a.ii",
+        "anchor": {
+          "startChar": 190,
+          "endChar": 272,
+          "quote": "the magnitude of the pressure and/or the chronological development of the pressure"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 203,
+              "quote": "the magnitude"
+            },
+            "determiner": "the",
+            "head": "magnitude"
+          },
+          {
+            "anchor": {
+              "startChar": 207,
+              "endChar": 219,
+              "quote": "the pressure"
+            },
+            "determiner": "the",
+            "head": "pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 256,
+              "quote": "the chronological development"
+            },
+            "determiner": "the",
+            "head": "chronological development"
+          },
+          {
+            "anchor": {
+              "startChar": 260,
+              "endChar": 272,
+              "quote": "the pressure"
+            },
+            "determiner": "the",
+            "head": "pressure"
+          }
+        ]
+      },
+      {
+        "path": "3.a.iii",
+        "anchor": {
+          "startChar": 277,
+          "endChar": 316,
+          "quote": "whether additional pumping has occurred"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 303,
+              "quote": "additional pumping"
+            },
+            "determiner": "bare",
+            "head": "additional pumping"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 68,
+                "quote": "an electronic recording"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 68,
+              "endChar": 72,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 72,
+                "endChar": 96,
+                "quote": "the following parameters"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 316,
+              "quote": " is performed: a) the duration of the pressure build-up until the target value is reached, b) the magnitude of the pressure and/or the chronological development of the pressure, c) whether additional pumping has occurred"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a.i",
+        "parent": "3.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a.ii",
+        "parent": "3.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a.iii",
+        "parent": "3.a"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.i",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 174,
+            "quote": "the target value"
+          }
+        },
+        "introducing": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 608,
+            "endChar": 641,
+            "quote": "a hydraulic pressure target value"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a.iii",
+          "anchor": {
+            "startChar": 285,
+            "endChar": 303,
+            "quote": "additional pumping"
+          }
+        },
+        "introducing": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 760,
+            "endChar": 778,
+            "quote": "additional pumping"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 176,
+          "quote": "the lengthening of the threaded bolt is determined by determining the volume of the hydraulic oil pumped into the tensioning device"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 60,
+              "quote": "the lengthening"
+            },
+            "determiner": "the",
+            "head": "lengthening"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 81,
+              "quote": "the threaded bolt"
+            },
+            "determiner": "the",
+            "head": "threaded bolt"
+          },
+          {
+            "anchor": {
+              "startChar": 111,
+              "endChar": 121,
+              "quote": "the volume"
+            },
+            "determiner": "the",
+            "head": "volume"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 142,
+              "quote": "the hydraulic oil"
+            },
+            "determiner": "the",
+            "head": "hydraulic oil"
+          },
+          {
+            "anchor": {
+              "startChar": 155,
+              "endChar": 176,
+              "quote": "the tensioning device"
+            },
+            "determiner": "the",
+            "head": "tensioning device"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 60,
+                "quote": "the lengthening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 64,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 81,
+                "quote": "the threaded bolt"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 81,
+              "endChar": 111,
+              "quote": " is determined by determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 111,
+                "endChar": 121,
+                "quote": "the volume"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 125,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 142,
+                "quote": "the hydraulic oil"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 142,
+              "endChar": 155,
+              "quote": " pumped into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 155,
+                "endChar": 176,
+                "quote": "the tensioning device"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "1.c"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 155,
+            "endChar": 176,
+            "quote": "the tensioning device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 266,
+            "quote": "a hydraulic tensioning device"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 138,
+          "quote": "the hydraulic tensioning device includes at least one piston movable in a tensioning cylinder"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 76,
+              "quote": "the hydraulic tensioning device"
+            },
+            "determiner": "the",
+            "head": "hydraulic tensioning device"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 105,
+              "quote": "at least one piston"
+            },
+            "determiner": "at-least-one",
+            "head": "piston"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 138,
+              "quote": "a tensioning cylinder"
+            },
+            "determiner": "a",
+            "head": "tensioning cylinder"
+          }
+        ]
+      },
+      {
+        "path": "5.b",
+        "anchor": {
+          "startChar": 149,
+          "endChar": 261,
+          "quote": "the course of the piston is calculated from the volume of delivered oil by means of a microprocessor and sensors"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 159,
+              "quote": "the course"
+            },
+            "determiner": "the",
+            "head": "course"
+          },
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 173,
+              "quote": "the piston"
+            },
+            "determiner": "the",
+            "head": "piston"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 203,
+              "quote": "the volume"
+            },
+            "determiner": "the",
+            "head": "volume"
+          },
+          {
+            "anchor": {
+              "startChar": 207,
+              "endChar": 220,
+              "quote": "delivered oil"
+            },
+            "determiner": "bare",
+            "head": "delivered oil"
+          },
+          {
+            "anchor": {
+              "startChar": 233,
+              "endChar": 249,
+              "quote": "a microprocessor"
+            },
+            "determiner": "a",
+            "head": "microprocessor"
+          },
+          {
+            "anchor": {
+              "startChar": 254,
+              "endChar": 261,
+              "quote": "sensors"
+            },
+            "determiner": "bare",
+            "head": "sensors"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 76,
+                "quote": "the hydraulic tensioning device"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 86,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 105,
+                "quote": "at least one piston"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 105,
+              "endChar": 117,
+              "quote": " movable in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 138,
+                "quote": "a tensioning cylinder"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "5.b",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 149,
+                "endChar": 159,
+                "quote": "the course"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 159,
+              "endChar": 163,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 163,
+                "endChar": 173,
+                "quote": "the piston"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 173,
+              "endChar": 193,
+              "quote": " is calculated from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 193,
+                "endChar": 203,
+                "quote": "the volume"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 203,
+              "endChar": 207,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 207,
+                "endChar": 220,
+                "quote": "delivered oil"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 220,
+              "endChar": 233,
+              "quote": " by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 233,
+                "endChar": 249,
+                "quote": "a microprocessor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 249,
+              "endChar": 254,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.b",
+              "anchor": {
+                "startChar": 254,
+                "endChar": 261,
+                "quote": "sensors"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "1.c"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.b",
+        "ancestor": "1.c"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 76,
+            "quote": "the hydraulic tensioning device"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 266,
+            "quote": "a hydraulic tensioning device"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.b",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 173,
+            "quote": "the piston"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 105,
+            "quote": "at least one piston"
+          }
+        }
+      }
+    ]
+  }
+]

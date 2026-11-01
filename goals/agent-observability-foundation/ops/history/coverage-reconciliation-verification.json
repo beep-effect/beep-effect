@@ -1,0 +1,77 @@
+{
+  "scope": "Independent population reconciliation with historical synthetic backend observations; no real launch denominator or enrollment.",
+  "result": "passed",
+  "syntheticOnly": true,
+  "productionEnrolled": false,
+  "goalComplete": false,
+  "recoveryHold": "Forwarder service and timer remain masked/inactive.",
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-coverage.ts": "e8bdc2ffbb2c2fc32b5ed5b2a67aa4d0e39fcd1092c94e98fe4f01cce6cd9164",
+    "packages/tooling/library/ai-metrics/test/observation-coverage.test.ts": "c2c65f81f5f85e0367e1feaa2ef107491933f0666be39c254c5d6ea657389b34",
+    "packages/tooling/library/ai-metrics/src/index.ts": "fe70736b63dae4842ab9a63b049354188934dd9736e66654799fcd1b757266d5",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts": "ca38a64d78c95bfb4d57341eba96282ef02f4f4418bf3431d111ee3e2634f361",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts": "10a9c747fd3045b0a7e64813b0e5b677cff100adc4895bd05f6cf7eca83d35b7",
+    "packages/tooling/tool/cli/test/ai-metrics-inventory.test.ts": "0d4c65a66b9c6bbe551de57e134c07fc3c98dc1753716594023da5e76a2f4356",
+    "goals/agent-observability-foundation/ops/prepare-native-coverage-proof.py": "be56fee52b900c2d9a8b403f73c5a4827df492864da6a802074922e794d8f823"
+  },
+  "verification": {
+    "focusedTests": {
+      "passed": 6
+    },
+    "libraryTests": {
+      "passed": 741,
+      "files": 65,
+      "log": "/tmp/foundation-coverage-qualified.log",
+      "packageGateResult": "failed-export-order-only-after-tests",
+      "exportOrderingRepaired": true
+    },
+    "finalLint": {
+      "passed": true,
+      "files": 157,
+      "seconds": 13.276,
+      "peakGiB": 5.1,
+      "swapBytes": 0
+    },
+    "cliFinal": {
+      "sourceTypecheck": "passed",
+      "testsPassed": 7,
+      "seconds": 15.77,
+      "peakGiB": 6.5,
+      "swapBytes": 0
+    },
+    "packageGate": {
+      "result": "passed",
+      "unit": "foundation-coverage-package-final-20261028.service",
+      "exitCode": 0,
+      "auditSeconds": 107.5,
+      "docgenSeconds": 11.4,
+      "runtimeSeconds": 120.472,
+      "peakGiB": 5.4,
+      "swapBytes": 0,
+      "log": "/tmp/foundation-coverage-package-final.log"
+    }
+  },
+  "actualCommandEvidence": {
+    "input": "ops/native-coverage-input.json",
+    "jsonReport": "ops/native-coverage-report.json",
+    "humanReport": "ops/native-coverage-report.txt",
+    "expectedIdsDerivedIndependently": true,
+    "matchedAcceptedEvents": 3,
+    "matchedBackendVisibleEvents": 3,
+    "launchPopulationKnown": false,
+    "observationQueriesExhaustive": false,
+    "historicalBackendReceipt": "ops/reconstructed-collector-route-verification.json"
+  },
+  "remaining": [
+    "Managed launch and result receipts",
+    "Root/task/attempt identity joins",
+    "Real query adapters and periodic freshness",
+    "Full SPEC acceptance and delivery"
+  ],
+  "recordedAt": "2026-10-28T18:46:42.292103-05:00",
+  "artifactSha256": {
+    "goals/agent-observability-foundation/ops/native-coverage-input.json": "523ccc904dd58239e677da66409fbc7f717d3cd99d078b1eb3282526b59c3241",
+    "goals/agent-observability-foundation/ops/native-coverage-report.json": "cd3b7a33c425fd40ed4f3e389427d9501c0bb5de08890f1c7e2adf3a29c7a4ec",
+    "goals/agent-observability-foundation/ops/native-coverage-report.txt": "eb2018dec19823d18464a860bf7871b822e37933330188fa5ad4d83dae5ccff5"
+  }
+}

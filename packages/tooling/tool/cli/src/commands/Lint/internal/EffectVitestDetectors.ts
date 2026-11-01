@@ -1945,6 +1945,12 @@ const liveClockFor = (wait: CallExpression, imports: EffectVitestImports): boole
 
 const FORK_MEMBERS = ["forkChild", "forkScoped", "forkDetach"];
 
+// A pipe stage that forks: `Effect.forkChild` or `Effect.forkChild({ ... })`.
+const isForkStage = (argument: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isCallExpression(argument)
+    ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
+    : Node.isExpression(argument) && isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS);
+
 // `Effect.forkChild(x)`, or a `.pipe` stage `Effect.forkChild` / `Effect.forkChild({ ... })`.
 const forkCall = (call: CallExpression, imports: EffectVitestImports): boolean => {
   if (isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)) return true;
@@ -1952,12 +1958,7 @@ const forkCall = (call: CallExpression, imports: EffectVitestImports): boolean =
   return (
     Node.isPropertyAccessExpression(callee) &&
     callee.getName() === "pipe" &&
-    A.some(call.getArguments(), (argument) =>
-      Node.isCallExpression(argument)
-        ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
-        : Node.isExpression(argument) &&
-          isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
-    )
+    A.some(call.getArguments(), (argument) => isForkStage(argument, imports))
   );
 };
 
@@ -3536,6 +3537,190 @@ const detectResourceWrapper = (context: ReturnType<typeof inspectContext>, state
   }
 };
 
+// Value assertions that also observe state, beside `isAssertion`'s expect and Boolean forms.
+const VALUE_ASSERTIONS = [
+  "deepStrictEqual",
+  "notDeepStrictEqual",
+  "strictEqual",
+  "assertEquals",
+  "assertSome",
+  "assertNone",
+  "assertSuccess",
+  "assertFailure",
+  "assertExitSuccess",
+  "assertExitFailure",
+  "assertInclude",
+  "assertMatch",
+  "assertInstanceOf",
+  "assertDefined",
+  "assertUndefined",
+];
+
+// `expect(x).toBe(y)`, `expect(x).not.toBe(y)` or `expect(p).resolves.toBe(y)`: a matcher call on an
+// `expect(...)` receiver. A bare `expect(x)` checks nothing.
+const isExpectMatcher = (call: CallExpression, imports: EffectVitestImports): boolean => {
+  let receiver: MorphNode = call.getExpression();
+  if (!Node.isPropertyAccessExpression(receiver)) return false;
+  while (Node.isPropertyAccessExpression(receiver)) receiver = receiver.getExpression();
+  return Node.isCallExpression(receiver) && isExpectCall(receiver, imports);
+};
+
+const isObservation = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isExpectMatcher(call, imports) ||
+  (!isExpectCall(call, imports) && isAssertion(call, imports)) ||
+  isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", VALUE_ASSERTIONS) ||
+  isProvenanceCall(call, imports, VITEST_MODULES, "assert", VALUE_ASSERTIONS);
+
+// Constructs whose body may run zero times, or only on one branch.
+const CONDITIONAL_KINDS = HashSet.fromIterable([
+  SyntaxKind.IfStatement,
+  SyntaxKind.SwitchStatement,
+  SyntaxKind.ForStatement,
+  SyntaxKind.ForInStatement,
+  SyntaxKind.ForOfStatement,
+  SyntaxKind.WhileStatement,
+  SyntaxKind.DoStatement,
+  SyntaxKind.TryStatement,
+  SyntaxKind.ConditionalExpression,
+]);
+const SHORT_CIRCUIT_OPERATORS = HashSet.fromIterable([
+  SyntaxKind.AmpersandAmpersandToken,
+  SyntaxKind.BarBarToken,
+  SyntaxKind.QuestionQuestionToken,
+  SyntaxKind.AmpersandAmpersandEqualsToken,
+  SyntaxKind.BarBarEqualsToken,
+  SyntaxKind.QuestionQuestionEqualsToken,
+]);
+
+const isConditional = (node: MorphNode): boolean =>
+  HashSet.has(CONDITIONAL_KINDS, node.getKind()) ||
+  (Node.isBinaryExpression(node) && HashSet.has(SHORT_CIRCUIT_OPERATORS, node.getOperatorToken().getKind()));
+
+// Code that may run later, never, or only on some paths: function, method, accessor and class bodies,
+// conditional statements and expressions, and nested blocks.
+const mayNotRun = (node: MorphNode): boolean =>
+  Node.isFunctionLikeDeclaration(node) ||
+  Node.isClassDeclaration(node) ||
+  Node.isClassExpression(node) ||
+  Node.isBlock(node) ||
+  isConditional(node);
+
+// Whether the statement `node` always runs an assertion: only its unconditional parts count.
+const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean => {
+  if (mayNotRun(node)) return false;
+  let asserts = false;
+  node.forEachDescendant((child, traversal) => {
+    if (mayNotRun(child)) {
+      traversal.skip();
+    } else if (Node.isCallExpression(child) && isObservation(child, imports)) {
+      asserts = true;
+      traversal.stop();
+    }
+  });
+  return asserts;
+};
+
+// The operand an `Effect.scoped(operand)` call closes, or the pipe input when `Effect.scoped` is the
+// first stage. A later stage closes the earlier stages' output, so no operand is claimed for it.
+const scopedOperand = (call: CallExpression, stage: O.Option<MorphNode>): O.Option<MorphNode> => {
+  const arguments_ = call.getArguments();
+  if (O.isNone(stage)) return O.fromUndefinedOr(arguments_[0]);
+  const callee = call.getExpression();
+  if (Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe")
+    return arguments_[0] === stage.value ? O.some(callee.getExpression()) : O.none();
+  return arguments_[1] === stage.value ? O.fromUndefinedOr(arguments_[0]) : O.none();
+};
+
+// `Effect.succeed(...)` and `Effect.sync(...)` acquire nothing a scope could release.
+const closesPureOperand = (call: CallExpression, stage: O.Option<MorphNode>, imports: EffectVitestImports) =>
+  O.exists(
+    scopedOperand(call, stage),
+    (operand) =>
+      Node.isCallExpression(operand) &&
+      isProvenanceCall(operand, imports, EFFECT_MODULES, "Effect", ["succeed", "sync"])
+  );
+
+// `pipe(effect, ..., Effect.forkChild)` from `effect/Function`, the free-function form `forkCall` leaves out.
+const functionPipeFork = (call: CallExpression, imports: EffectVitestImports): boolean =>
+  isProvenanceCall(call, imports, ["effect", "effect/Function"], "Function", ["pipe"]) &&
+  A.some(call.getArguments().slice(1), (argument) => isForkStage(argument, imports));
+
+// `Effect.gen(function* () { ... })` runs its generator in place; any other function value may run later
+// or never, even when it is a call argument.
+const runsInPlace = (current: MorphNode, parent: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isCallExpression(parent) &&
+  isProvenanceCall(parent, imports, EFFECT_MODULES, "Effect", ["gen"]) &&
+  A.some(parent.getArguments(), (argument) => argument === current);
+
+// A path step that may skip the scope or let it outlive the following statements: a nested
+// declaration, a fork, a conditional, or a function value that does not run in place.
+const leavesExecution = (current: MorphNode, parent: MorphNode, imports: EffectVitestImports): boolean =>
+  Node.isFunctionDeclaration(current) ||
+  isConditional(current) ||
+  (Node.isCallExpression(current) && (forkCall(current, imports) || functionPipeFork(current, imports))) ||
+  (isFunctionValue(current) && !runsInPlace(current, parent, imports));
+
+const isBodyStatement = (current: MorphNode, parent: MorphNode): boolean =>
+  Node.isBlock(parent) && Node.isStatement(current);
+
+// A body statement runs the scope only when it yields it; the test callback's own `return` hands the
+// effect to the harness, which runs it.
+const statementRuns = (current: MorphNode, parent: MorphNode, ran: boolean, root: EffectVitestFunctionNode) =>
+  !isBodyStatement(current, parent) || ran || (Node.isReturnStatement(current) && parent === root.getBody());
+
+// Whether every step from the scope up to the test or helper callback runs it: each enclosing statement
+// yields the scoped effect (`const work = Effect.scoped(acquire)` only builds it), no step is conditional,
+// forked or deferred, and only `Effect.gen` generator bodies are crossed.
+const scopeRuns = (
+  current: MorphNode,
+  executed: boolean,
+  root: EffectVitestFunctionNode,
+  imports: EffectVitestImports
+): boolean => {
+  const parent = current.getParent();
+  if (current === root) return true;
+  if (parent === undefined || leavesExecution(current, parent, imports)) return false;
+  const ran = Node.isYieldExpression(current) || (executed && !isFunctionValue(current));
+  return statementRuns(current, parent, ran, root) && scopeRuns(parent, ran, root, imports);
+};
+
+// Whether a statement after one of the scope's enclosing statements always asserts.
+const observedAfterScope = (
+  current: MorphNode,
+  root: EffectVitestFunctionNode,
+  imports: EffectVitestImports
+): boolean => {
+  const parent = current.getParent();
+  if (current === root || parent === undefined) return false;
+  return (
+    (isBodyStatement(current, parent) &&
+      A.some(current.getNextSiblings(), (sibling) => assertsDirectly(sibling, imports))) ||
+    observedAfterScope(parent, root, imports)
+  );
+};
+
+type ScopeOwner = O.Option<{ readonly callback: EffectVitestFunctionNode }>;
+
+// A shorter scope the test observes closing: every step up to the test or helper runs it, and a later
+// unconditional statement asserts after it has completed. Such a scope needs no review.
+const observedShorterScope = (
+  call: CallExpression,
+  stage: O.Option<MorphNode>,
+  test: ScopeOwner,
+  helper: ScopeOwner,
+  imports: EffectVitestImports
+): boolean =>
+  O.exists(
+    O.orElse(
+      O.map(test, ({ callback }) => callback),
+      () => O.map(helper, ({ callback }) => callback)
+    ),
+    (root) =>
+      !closesPureOperand(call, stage, imports) &&
+      scopeRuns(call, false, root, imports) &&
+      observedAfterScope(call, root, imports)
+  );
+
 const scopeLifetimeClass = (
   call: CallExpression,
   helper: ReturnType<EffectVitestHarnessIndex["reachableHelper"]>
@@ -3562,6 +3747,7 @@ const detectScopeLifetime = (
     isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["scoped"])
   ) {
     const wholeBody = O.exists(test, ({ callback }) => isWholeBodyCall(call, callback));
+    if (!wholeBody && observedShorterScope(call, O.none(), test, helper, imports)) return;
     const scopeClass = scopeLifetimeClass(call, helper);
     findings.push(
       makeFinding({
@@ -4271,6 +4457,17 @@ const scopeReferenceWholeBody = (call: CallExpression, state: DetectorState): bo
   );
 };
 
+// An applied scope runs in an Effect test, a directly registered effect, or an effect helper.
+const appliedScopeRuns = (
+  call: CallExpression,
+  test: ReturnType<EffectVitestHarnessIndex["enclosingTest"]>,
+  helper: ReturnType<EffectVitestHarnessIndex["reachableHelper"]>,
+  imports: EffectVitestImports
+): boolean =>
+  O.exists(test, ({ mode }) => mode === "effect" || mode === "live") ||
+  directlyRegisteredEffect(call, imports) ||
+  O.exists(helper, ({ effect }) => effect);
+
 const detectAppliedScope = (
   call: CallExpression,
   stage: MorphNode,
@@ -4282,10 +4479,9 @@ const detectAppliedScope = (
     return;
   const test = harness.enclosingTest(call);
   const helper = harness.reachableHelper(call);
-  const inEffect =
-    O.exists(test, ({ mode }) => mode === "effect" || mode === "live") || directlyRegisteredEffect(call, imports);
-  if (!inEffect && !O.exists(helper, ({ effect }) => effect)) return;
+  if (!appliedScopeRuns(call, test, helper, imports)) return;
   const wholeBody = finalStage && scopeReferenceWholeBody(call, state);
+  if (!wholeBody && observedShorterScope(call, O.some(stage), test, helper, imports)) return;
   const scopeClass = scopeLifetimeClass(call, helper);
   findings.push(
     makeFinding({

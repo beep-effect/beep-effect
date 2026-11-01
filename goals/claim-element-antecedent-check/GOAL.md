@@ -39,7 +39,7 @@ Phases (PLAN.md has entry/exit criteria):
 2. P1 Contract: `ClaimSelfCheck` `Context.Service`, decomposer and policy
    signatures, USPTO claims port. No bodies.
 3. P2 Implementation, USPTO adapter, first vertical slice, labelled set (~60
-   families via an extractor/critic loop with ~10% attorney spot-check; ~200
+   families via an extractor/critic loop with ~10% independent automated spot-check; ~200
    allowed claim sets).
 4. P3 Review items and evaluation. Needs `review-verdict-envelope` P1.
 5. Yeet: PR to mergeable. Then Close with a reflection.
@@ -54,8 +54,9 @@ PLAN and manifest status as phases move. At Close, write
 `history/reflections/<YYYY-MM-DD>-<agent>.md` via `/reflect`;
 `bun run beep lint reflection-artifacts` must pass.
 
-If the deterministic floor measures badly, stop at the measurement and report
-it. Do not expand scope.
+Apply research/AUTONOMOUS-ACCEPTANCE-v1.md: attorney review is optional.
+Retain poor measurements, unresolved items and scope exclusions; user-directed
+repairs must preserve the fixed references, previous results and passing set.
 
 Acceptance:
 

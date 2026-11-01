@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 
+import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
-import { StringListField, WorkspacesField } from "@beep/package-json/ManifestFields";
+import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -40,7 +41,7 @@ export { ChangesetGraphError } from "./Quality.errors.ts";
 const $I = $RepoCliId.create("commands/Quality/ChangesetGraph");
 
 const nulSeparator = "\u0000";
-const gitWorkspacePackageJsonPathspecs = ["package.json"] as const;
+const gitTrackedPackageJsonPathspecs = [":(glob)**/package.json"] as const;
 const retiredChangesetPackagesPath = "standards/changesets.retired-packages.json";
 
 class RetiredChangesetPackageRecord extends S.Opaque<
@@ -134,10 +135,7 @@ export class ChangesetGraphSummary extends S.Opaque<ChangesetGraphSummary, { rea
 
 const ChangesetBumpKind = LiteralKit(["major", "minor", "patch"]);
 
-const parseRootPackageJson = manifestParser(["workspaces"]);
 const parseWorkspacePackageJson = manifestParser(["name", "private"]);
-const decodeWorkspaces = S.decodeUnknownEffect(WorkspacesField);
-const isWorkspacePatternList = S.is(StringListField);
 const decodeChangesetFrontmatter = S.decodeUnknownEffect(S.Record(S.String, ChangesetBumpKind));
 const decodeRetiredChangesetPackages = S.decodeUnknownEffect(S.fromJsonString(RetiredChangesetPackages));
 
@@ -158,21 +156,31 @@ const toNulSeparatedLines: (output: string) => ReadonlyArray<string> = flow(
   A.sort(Order.String)
 );
 
-const workspacePatternsFrom = Effect.fn("ChangesetGraph.workspacePatternsFrom")(function* (
-  document: LenientManifest,
-  filePath: string
-): Effect.fn.Return<ReadonlyArray<string>, ChangesetGraphError> {
-  if (P.isUndefined(document.workspaces)) {
-    return A.empty<string>();
-  }
-  const workspaces = yield* decodeWorkspaces(document.workspaces).pipe(
-    ChangesetGraphError.mapError(`Failed to parse package manifest ${filePath}.`, filePath)
+/**
+ * The root's workspace patterns through `@beep/repo-workspaces` (4-A2): a
+ * non-empty `pnpm-workspace.yaml` `packages:` list first, else the root
+ * `package.json` `workspaces` field in either shape.
+ */
+const readWorkspacePatterns = Effect.fn("ChangesetGraph.readWorkspacePatterns")(function* (
+  repoRoot: string
+): Effect.fn.Return<ReadonlyArray<string>, ChangesetGraphError, FileSystem.FileSystem | Path.Path> {
+  return yield* WorkspacePatterns.read(repoRoot).pipe(
+    Effect.mapError((error) => ChangesetGraphError.new(error, error.message, error.path))
   );
-  return isWorkspacePatternList(workspaces) ? workspaces : (workspaces.packages ?? A.empty());
 });
 
-const packageJsonPathspecForWorkspacePattern = (pattern: string): string =>
-  `:(glob)${pipe(pattern, normalizePath, stripTrailingSlashes)}/package.json`;
+// `git ls-files` prints repo-relative paths without a `./` prefix, so a `./packages/*` entry
+// (which git pathspecs used to accept) drops its leading dot segments before compiling.
+const stripLeadingDotSegments = Str.replace(/^(?:\.\/)+/, "");
+
+const packageJsonGlob = (pattern: string): string =>
+  `${pipe(pattern, normalizePath, stripLeadingDotSegments, stripTrailingSlashes)}/package.json`;
+
+// `<pattern>/package.json` for one workspace entry; a `!pattern` keeps its bang,
+// so the set reads it as an exclusion. Git pathspecs expand neither braces nor
+// a leading `!`, so the tracked manifests are matched here, not by git.
+const packageJsonGlobForWorkspacePattern = (pattern: string): string =>
+  Str.startsWith("!")(pattern) ? `!${packageJsonGlob(Str.slice(1)(pattern))}` : packageJsonGlob(pattern);
 
 /**
  * Find the closing fence accepted by `@changesets/parse` in one forward line scan.
@@ -231,43 +239,6 @@ const readPackageJsonText = Effect.fn("ChangesetGraph.readPackageJsonText")(func
   return yield* fs
     .readFileString(filePath)
     .pipe(ChangesetGraphError.mapError(`Failed to read package manifest ${filePath}.`, filePath));
-});
-
-/**
- * Read the workspace glob patterns from the text of the root `package.json`.
- *
- * **Details**
- *
- * The manifest reads through `LenientManifest`; a present `workspaces` must be
- * a string array or an object whose optional `packages` is one. Strict JSON
- * only: JSONC text fails.
- *
- * **Example** (Read array and object workspace forms)
- *
- * ```ts
- * import { readChangesetGraphRootPatterns } from "@beep/repo-cli/test/Quality"
- * import * as Effect from "effect/Effect"
- *
- * const patterns = Effect.runSync(
- *   readChangesetGraphRootPatterns('{"workspaces":{"packages":["packages/*"]}}', "package.json")
- * )
- * console.log(patterns) // ["packages/*"]
- * ```
- *
- * @param content - Root `package.json` text.
- * @param filePath - Path named in a failure.
- * @returns The declared workspace patterns, empty when `workspaces` is absent.
- * @category parsing
- * @since 0.0.0
- */
-export const readChangesetGraphRootPatterns = Effect.fn("ChangesetGraph.readChangesetGraphRootPatterns")(function* (
-  content: string,
-  filePath: string
-): Effect.fn.Return<ReadonlyArray<string>, ChangesetGraphError> {
-  const manifest = yield* parseRootPackageJson(content).pipe(
-    ChangesetGraphError.mapError(`Failed to parse package manifest ${filePath}.`, filePath)
-  );
-  return yield* workspacePatternsFrom(manifest, filePath);
 });
 
 /**
@@ -344,11 +315,13 @@ const readRetiredChangesetPackageNames = Effect.fn("ChangesetGraph.readRetiredCh
  *
  * **Details**
  *
- * The catalog is derived from the root `package.json` workspaces patterns via
- * `git ls-files` glob pathspecs, so it names exactly the tracked workspace
- * manifests — the same derivation the changeset graph guard uses. The
- * path-aware changeset status wrapper reuses it so both lanes agree on
- * workspace membership.
+ * The catalog is the tracked `package.json` files (`git ls-files`) that the
+ * root workspace patterns select, matched as `<pattern>/package.json` by a
+ * `@beep/glob` `GlobSet` with the defaults `WorkspaceDiscovery` compiles, so
+ * braces, globstars and `!` exclusions read as the package managers read them.
+ * It names exactly the tracked workspace manifests — the same derivation the
+ * changeset graph guard uses. The path-aware changeset status wrapper reuses
+ * it so both lanes agree on workspace membership.
  *
  * **Example** (Collect workspace manifests)
  *
@@ -371,23 +344,14 @@ export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collec
   ChangesetGraphError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const path = yield* Path.Path;
-  const rootPackageJsonPath = path.join(repoRoot, "package.json");
-  const workspacePathspecs = A.map(
-    yield* readChangesetGraphRootPatterns(yield* readPackageJsonText(rootPackageJsonPath), rootPackageJsonPath),
-    packageJsonPathspecForWorkspacePattern
-  );
-  const output = yield* collectGitOutput(repoRoot, [
-    "ls-files",
-    "-z",
-    "--",
-    ...gitWorkspacePackageJsonPathspecs,
-    ...workspacePathspecs,
-  ]);
+  const workspaceManifests = yield* GlobSet.compile(
+    A.map(yield* readWorkspacePatterns(repoRoot), packageJsonGlobForWorkspacePattern)
+  ).pipe(Effect.mapError((error) => ChangesetGraphError.new(error, error.message)));
+  const output = yield* collectGitOutput(repoRoot, ["ls-files", "-z", "--", ...gitTrackedPackageJsonPathspecs]);
 
   return pipe(
     toNulSeparatedLines(output),
-    A.filter((file) => file !== "package.json")
+    A.filter((file) => file !== "package.json" && workspaceManifests.matches(file))
   );
 });
 

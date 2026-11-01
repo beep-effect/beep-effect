@@ -1,0 +1,64 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13468456-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "unresolved": [],
+  "referenceConcerns": [
+    {
+      "claimNumber": 1,
+      "quote": "the surface",
+      "reason": "Surface is introduced by a definite phrase without a previous surface term; no invented introduction. Later said surface points to this explicit surface mention."
+    },
+    {
+      "claimNumber": 3,
+      "quote": "the lower portion",
+      "reason": "No earlier lower portion introduction; no antecedent edge."
+    },
+    {
+      "claimNumber": 4,
+      "quote": "the birds",
+      "reason": "Generic intended birds; root birds is bare functional object and does not uniquely introduce a population. No antecedent edge."
+    },
+    {
+      "claimNumber": 7,
+      "quote": "the bottom",
+      "reason": "Bottom is first recited definitely; no invented introduction."
+    },
+    {
+      "claimNumber": 9,
+      "quote": "the upper rim",
+      "reason": "Upper rim first recited definitely; no invented introduction."
+    },
+    {
+      "claimNumber": 10,
+      "quote": "the edges",
+      "reason": "Edges first recited definitely; no invented introduction."
+    },
+    {
+      "claimNumber": 12,
+      "quote": "said feed portals",
+      "reason": "Reference to root feeding portal is semantically unambiguous despite source naming variation; preserved exact spelling and number."
+    }
+  ],
+  "sourceFamilyConcerns": [],
+  "annotationRationale": "Root explicit a\u2013e list retained in source order; dependent claims all naturally depend on claim1. Full functional relationships have ordered anchored parts, including bare entity mentions. Missing definite introductions remain concerns without invented edges. Referring feeder, silo, trough, plates, perches and portals linked semantically across claims; optional attachment language preserved.",
+  "independence": "Fresh source-semantic annotations from canonical claims, protocol and schemas only; no production/decomposer, implementation design, predictions, synthetic or conformance labels inspected. Mechanical helper locates manually chosen quotes and validates spans; semantic grouping, terms and antecedents are manually declared. Independent critic pending."
+}

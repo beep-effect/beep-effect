@@ -1,0 +1,77 @@
+{
+  "applicationNumber": "15752303",
+  "publicationNumber": "US20190047783A1",
+  "publicationDate": "2019-02-14",
+  "nativeXmlSha256": "2a2f1f4d403354098d494d0863c90301a029dce4764ef98721d926decb180edd",
+  "claimsXmlSha256": "cc7de7a785421b3f8a313731bc996d26256d6117cfee4eed38676b7d9bc272fb",
+  "officeActionDocumentIdentifiers": [
+    "K6ASPVFPRXEAPX2"
+  ],
+  "officeActionMailDate": "2020-02-06",
+  "officeActionSection112Text": [
+    "claims 1-16 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 1, “the preparation” lacks antecedent basis.\r\nclaim 1, line 2, “the housing” lacks antecedent basis.\r\nclaim 1, line 3, “”machine type’ is not definite.\r\nclaim 1, line 4, “the passage” lacks antecedent basis.\r\n` claim 1, line 4, “the extracting” lacks antecedent basis.\r\nclaim 1, line 4, “the substance’ lacks antecedent basis.\r\nclaim 1, line 5, “the piercing” lacks antecedent basis.\r\nclaim 1, line 5, “the bottom” lacks antecedent basis.\r\nclaim 1, line “the piston’s stud” lacks antecedent basis.\r\nclaim 1, line 15, “the open bottom” lacks antecedent basis.\r\nclaim 1, line 16, “it’s” is not definite.\r\nclaim 2, line 1, “the fact’ lacks antecedent basis.\r\nclaim 4, line 1, “the fact” lacks antecedent basis.\r\nclaim 5, line 1, “the fact’ lacks antecedent basis.\r\nclaim 6, line 1, “the fact” lacks antecedent basis.\r\nclaim 7, line 1. “the fact’ lacks antecedent basis.\r\nclaim 8, line 1, “the fact” lacks antecedent basis.\r\nclaim 8, line 3, “(evoh)” is not clear.\r\nclaim 9, line 2, “the height” lacks antecedent basis.\r\nclaim 9, line 3, “the upper edge” lacks antecedent basis.\r\nclaim 9, “the injection” lacks antecedent basis.\r\nclaim 9, “the plastic” lacks antecedent basis.\r\nclaim 10, line 1, “the fact’ lacks antecedent basis.\r\nclaim 11, line 1, “the fact’ lacks antecedent basis.\r\nclaim 12, line 1, “the fact” lacks antecedent basis.\r\nclaim 13, line 1, “the fact’ lacks antecedent basis.\r\nclaim 13, line 2, “the interior surface” lacks antecedent basis.\r\nclaim 14, line 1, “the fact” lacks antecedent basis.\r\nclaim 14, line 2, “the bracket” lacks antecedent basis.\r\nclaim 14, line 3, “the membrane seal” lacks antecedent basis.\r\nclaim 14, line 3, “the bottom” lacks antecedent basis.\r\nclaim 14, line 3, “the branches’ lacks antecedent basis.\r\nclaim 14, line 3, “the cross brace” lacks antecedent basis.\r\nclaim 15, 4, “the large base” lacks antecedent basis.\r\nclaim 15, line 5, “the flat summit” lacks antecedent basis.\r\nclaim 15, line 8, “the cavity” lacks antecedent basis.\r\nclaim 15, line 10, “the opening” lacks antecedent basis.\r\nclaim 15, lacks antecedent basis. 13, “the mold cavity” lacks antecedent basis.\r\nclaim 15, line 14, “the frustoconical side wall” lacks antecedent basis.\r\nclaim 15, line 14, “the core” lacks antecedent basis.\r\nclaim 16, line 2, “the fact” lacks antecedent basis.\r\nclaim 16, line 2, “the membrane filter” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "JDLUKJQ2RXEAPX0",
+      "officialDate": "2018-02-13T11:13:41.000-0500"
+    },
+    {
+      "documentIdentifier": "JNZFXYCSPXXIFW2",
+      "officialDate": "2018-02-13T11:13:41.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "JDLUKJQ2RXEAPX0",
+      "officialDate": "2018-02-13T11:13:41.000-0500",
+      "sha256": "d46cbcfd3e05d3080f603c8b9b8124e9d26da1ce67afc9521d5aa597cdb73086",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        16
+      ],
+      "sourceClaimCount": 16
+    },
+    {
+      "documentIdentifier": "JNZFXYCSPXXIFW2",
+      "officialDate": "2018-02-13T11:13:41.000-0500",
+      "sha256": "95851bad9ef9b25a3ad0f91340a50cecefab1e0f1fdb1b0f1a6fd248ea9f3cc4",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        16
+      ],
+      "sourceClaimCount": 16
+    }
+  ],
+  "documentInventoryCount": 63,
+  "documentInventoryRows": 63,
+  "primaryCpc": "B29C  45/14418",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/15752303",
+    "https://api.uspto.gov/api/v1/patent/applications/15752303/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

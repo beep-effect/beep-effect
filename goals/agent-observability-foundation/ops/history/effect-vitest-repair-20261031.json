@@ -1,0 +1,83 @@
+{
+  "kind": "effect-vitest-owned-policy-repair",
+  "previousCommit": "a3762356e3e0a01b152380d3250f44035fb28cbc",
+  "hostedFailure": {
+    "run": 41216406307,
+    "job": 124582638296,
+    "introducedCandidates": 7,
+    "schemaMissing": 0,
+    "schemaStale": 0
+  },
+  "repairs": [
+    "Scheduled barrier polling retains child-liveness checks on unsuccessful polls and runs crash operation/post-barrier assertions once; no failed assertion or operation retry.",
+    "Extract actual scoped HttpClient from built Context and use its get/execute directly; no Context provision candidates remain."
+  ],
+  "nativeDispositions": [
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts:4:@effect/platform-node@0#1",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "ruleId": "EV010",
+      "reason": "These it.layer native integration cases exercise real Unix sockets, native filesystem Socket metadata/inodes and HTTP through the actual Node adapter; memory filesystem substitution changes that subject. Owner: agent-observability-foundation / @beep/repo-cli. Exit: remove when these native cases leave the file and platform import is unnecessary; re-adjudicate transport/filesystem provenance/layer ownership changes. Later pure cases do not inherit this exception. Independent Astra source review 2026-10-31."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts:302:scoped@9#1",
+      "occurrence": "v2:907bbef7229c80e04acce77cf08ee674ae1cadc156df81f99e1c710b5068b97e",
+      "ruleId": "EV004",
+      "reason": "Each serve invocation must finish server cleanup before the outer test checks socket absence and rebinds the same path; whole-test scope would change the subject. Owner: agent-observability-foundation / @beep/repo-cli. Exit: remove or re-adjudicate when cleanup/rebinding is no longer tested within one test or a replacement preserves the same shorter lifetime. Re-review server-finalizer/helper-scope changes. Independent Astra source review 2026-10-31."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts:322:scoped@14#1",
+      "occurrence": "v2:ec66e5f250874a2c7544521ceb6589bd3152eebfca2258ff01e7596b0a9e7944",
+      "ruleId": "EV004",
+      "reason": "The failed second Unix-socket acquisition must finalize before original inode/listener assertions; the first listener remains in the outer scope. Owner: agent-observability-foundation / @beep/repo-cli. Exit: remove or re-adjudicate if separate duplicate-acquisition cleanup is unnecessary or equivalent cleanup-before-assertion is explicit elsewhere. Re-review bind-error/reload/unlink changes. Independent Astra source review 2026-10-31."
+    }
+  ],
+  "removedPollingFinding": "EV013:packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts:58:retry-loop@8#1",
+  "priorStatusesAndReasonsPreserved": true,
+  "otherCanonicalChanges": "Only finding location metadata is re-anchored; no detector/rule/floor changes.",
+  "sourceReview": "Existing named independent Astra foundation panel accepts two rewrites and exactly these three semantic exceptions, not blanket allowance.",
+  "reviewedAndTestedSourceSha256": {
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts": "047c87658dc5db40c7df9e0e728bcf563d52e733112c023232098a6fac29c510",
+    "packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts": "2e614b4b51d94db211b67e3690f30cc6608017b71da3c47bd45455de7e143801"
+  },
+  "currentFormattedSourceSha256": {
+    "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts": "93e5d931a8daed5e6ee7a8b8363ad4d40566c31a27e0906960c7f7605f272227",
+    "packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts": "2e614b4b51d94db211b67e3690f30cc6608017b71da3c47bd45455de7e143801"
+  },
+  "formatterOnlyImportOrderingVerified": true,
+  "tests": {
+    "node": "22.23.4",
+    "bun": "1.4.4",
+    "nodeShimPassed": 9,
+    "bunShimPassed": 2,
+    "bunShimNodeOnlySkipped": 7,
+    "nodeCrashPassed": 5,
+    "bunCrashPassed": 5
+  },
+  "canonicalWriter": {
+    "files": 3091,
+    "findings": 587,
+    "completed": true,
+    "scope": "Syntax-only canonical inventory writer; subsequent three exact reviewed statuses/reasons applied. A later standalone check declined before launch on host headroom and is not reported as passed."
+  },
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-effect-vitest-fix3-20261031.service",
+    "profile": "catalog",
+    "memoryStopBytes": 17179869184,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 58088976384,
+    "peakObservedBytes": 4641574912,
+    "minimumAvailableBytes": 31413420032,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 93,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "canaryScope": "Both changed test files are outside the accepted 88/87 runtime source sets; previous one-line documentation binding remains unchanged. No fresh canary relabeling.",
+  "publication": "Immediate coherent push per verified operator rule; no broad local verify/publish/final-check gate. Fresh hosted policy required.",
+  "recoveryHold": "Intact; no real enrollment/deployment/archive reingestion/service change."
+}

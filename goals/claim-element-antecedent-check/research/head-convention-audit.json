@@ -1,0 +1,379 @@
+{
+  "date": "2026-10-28",
+  "convention": "lexical-head/v1",
+  "purpose": "literal property inventory of manually annotated terms, not a decomposer or accepted corrections",
+  "items": [
+    {
+      "familyId": "16052309-root-1",
+      "claimNumber": 2,
+      "path": "2.a",
+      "anchor": {
+        "startChar": 132,
+        "endChar": 140,
+        "quote": "two tabs"
+      },
+      "head": "tabs",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "16052309-root-1",
+      "claimNumber": 2,
+      "path": "2.a",
+      "anchor": {
+        "startChar": 212,
+        "endChar": 226,
+        "quote": "two main slots"
+      },
+      "head": "main slots",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "18734099-root-1",
+      "claimNumber": 1,
+      "path": "1.h",
+      "anchor": {
+        "startChar": 431,
+        "endChar": 439,
+        "quote": "two ends"
+      },
+      "head": "ends",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "18734099-root-1",
+      "claimNumber": 6,
+      "path": "6.c",
+      "anchor": {
+        "startChar": 345,
+        "endChar": 352,
+        "quote": "one end"
+      },
+      "head": "end",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "16628033-root-1",
+      "claimNumber": 1,
+      "path": "1.b",
+      "anchor": {
+        "startChar": 182,
+        "endChar": 190,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "16628033-root-1",
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 106,
+        "endChar": 113,
+        "quote": "one end"
+      },
+      "head": "end",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "11670278-root-61",
+      "claimNumber": 65,
+      "path": "65.a",
+      "anchor": {
+        "startChar": 95,
+        "endChar": 113,
+        "quote": "at least two pairs"
+      },
+      "head": "pairs",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "claimNumber": 1,
+      "path": "1",
+      "anchor": {
+        "startChar": 87,
+        "endChar": 111,
+        "quote": "one metal interface part"
+      },
+      "head": "metal interface part",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "claimNumber": 1,
+      "path": "1",
+      "anchor": {
+        "startChar": 116,
+        "endChar": 140,
+        "quote": "one metal structure part"
+      },
+      "head": "metal structure part",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "claimNumber": 4,
+      "path": "4.a",
+      "anchor": {
+        "startChar": 137,
+        "endChar": 156,
+        "quote": "at least two series"
+      },
+      "head": "series",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "claimNumber": 6,
+      "path": "6.a",
+      "anchor": {
+        "startChar": 148,
+        "endChar": 172,
+        "quote": "one metal interface part"
+      },
+      "head": "metal interface part",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "claimNumber": 6,
+      "path": "6.a",
+      "anchor": {
+        "startChar": 177,
+        "endChar": 201,
+        "quote": "one metal structure part"
+      },
+      "head": "metal structure part",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 140,
+        "endChar": 159,
+        "quote": "at least two series"
+      },
+      "head": "series",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "15927789-root-6",
+      "claimNumber": 9,
+      "path": "9.a",
+      "anchor": {
+        "startChar": 138,
+        "endChar": 146,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "12536794-root-19",
+      "claimNumber": 19,
+      "path": "19.h",
+      "anchor": {
+        "startChar": 1179,
+        "endChar": 1191,
+        "quote": "at least one"
+      },
+      "head": "one",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "15752303-root-1",
+      "claimNumber": 1,
+      "path": "1.a.iii",
+      "anchor": {
+        "startChar": 484,
+        "endChar": 492,
+        "quote": "one edge"
+      },
+      "head": "edge",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "12268372-root-10",
+      "claimNumber": 11,
+      "path": "11.c",
+      "anchor": {
+        "startChar": 382,
+        "endChar": 394,
+        "quote": "at least one"
+      },
+      "head": "one",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 1,
+      "path": "1.a",
+      "anchor": {
+        "startChar": 216,
+        "endChar": 244,
+        "quote": "its oppositely disposed side"
+      },
+      "head": "its oppositely disposed side",
+      "reason": "outer-pronominal-determiner-retained; independently check grammatical role"
+    },
+    {
+      "familyId": "14813790-root-1",
+      "claimNumber": 6,
+      "path": "6.a",
+      "anchor": {
+        "startChar": 269,
+        "endChar": 281,
+        "quote": "its rear end"
+      },
+      "head": "its rear end",
+      "reason": "outer-pronominal-determiner-retained; independently check grammatical role"
+    },
+    {
+      "familyId": "11341804-root-1",
+      "claimNumber": 1,
+      "path": "1.c",
+      "anchor": {
+        "startChar": 374,
+        "endChar": 423,
+        "quote": "its desired, predetermined expansion and/or shape"
+      },
+      "head": "its desired, predetermined expansion and/or shape",
+      "reason": "outer-pronominal-determiner-retained; independently check grammatical role"
+    },
+    {
+      "familyId": "14657939-root-1",
+      "claimNumber": 1,
+      "path": "1.a",
+      "anchor": {
+        "startChar": 159,
+        "endChar": 196,
+        "quote": "two to four original chamfered bevels"
+      },
+      "head": "original chamfered bevels",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "14657939-root-1",
+      "claimNumber": 1,
+      "path": "1.d",
+      "anchor": {
+        "startChar": 910,
+        "endChar": 934,
+        "quote": "two larger obtuse angles"
+      },
+      "head": "larger obtuse angles",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "14657939-root-1",
+      "claimNumber": 2,
+      "path": "2.a",
+      "anchor": {
+        "startChar": 273,
+        "endChar": 293,
+        "quote": "two chamfered bevels"
+      },
+      "head": "chamfered bevels",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "18409554-root-16",
+      "claimNumber": 16,
+      "path": "16.d",
+      "anchor": {
+        "startChar": 489,
+        "endChar": 512,
+        "quote": "at least two electrodes"
+      },
+      "head": "electrodes",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.b.iv",
+      "anchor": {
+        "startChar": 622,
+        "endChar": 629,
+        "quote": "one end"
+      },
+      "head": "end",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.c",
+      "anchor": {
+        "startChar": 762,
+        "endChar": 770,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a",
+      "anchor": {
+        "startChar": 145,
+        "endChar": 153,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a.i",
+      "anchor": {
+        "startChar": 374,
+        "endChar": 382,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 3,
+      "path": "3.b.iv",
+      "anchor": {
+        "startChar": 505,
+        "endChar": 512,
+        "quote": "one end"
+      },
+      "head": "end",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 7,
+      "path": "7.b",
+      "anchor": {
+        "startChar": 357,
+        "endChar": 378,
+        "quote": "two segmented rollers"
+      },
+      "head": "segmented rollers",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required"
+    },
+    {
+      "familyId": "14970678-root-17",
+      "claimNumber": 20,
+      "path": "20.a",
+      "anchor": {
+        "startChar": 105,
+        "endChar": 126,
+        "quote": "its longitudinal axis"
+      },
+      "head": "its longitudinal axis",
+      "reason": "outer-pronominal-determiner-retained; independently check grammatical role"
+    }
+  ]
+}

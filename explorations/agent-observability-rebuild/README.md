@@ -15,7 +15,7 @@ The Phoenix seven-day view shows 6,674 traces and 285 sessions. Audit collection
 
 ## Next Open Question
 
-None — exploration graduated. Three implementation packets are authored but not started. On an implementation launch, begin with `goals/agent-observability-foundation` and refresh live evidence.
+None — exploration graduated. The foundation packet `goals/agent-observability-foundation` is active and is the only authored packet. Harness enrollment and outcome experiments are planned follow-up work (see [MAP.md](./MAP.md)), not packet directories yet.
 
 ## Deliverables
 
@@ -26,8 +26,8 @@ None — exploration graduated. Three implementation packets are authored but no
 - [Thirty scored ideas and three focused designs](./research/ADHD.md)
 - [Independent factual review](./research/REVIEW.md) and [design review](./research/DESIGN-REVIEW.md)
 - [Foundation packet](../../goals/agent-observability-foundation/README.md)
-- [Harness enrollment packet](../../goals/harness-telemetry-enrollment/README.md)
-- [Outcome/experiment packet](../../goals/agent-outcome-experiments/README.md)
+- Harness enrollment (`harness-telemetry-enrollment`): planned, not yet a packet
+- Outcome experiments (`agent-outcome-experiments`): planned, not yet a packet
 
 ## Read This First
 
@@ -45,3 +45,4 @@ None — exploration graduated. Three implementation packets are authored but no
 
 
 - 2026-10-27: Packet opened for comprehensive read-only audit and first-principles redesign research.
+- 2026-10-31: Corrected the status above: only the foundation packet exists; enrollment and experiments remain planned (see MAP.md).

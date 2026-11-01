@@ -25,6 +25,7 @@ import {
   Receipt,
   RouterError,
 } from "./AgentMessage.models.ts";
+import { agentMessageObservationCommand } from "./AgentMessage.observation.command.ts";
 import { agentMessagePeerCommand } from "./AgentMessage.peer.command.ts";
 import { agentMessageServeCommand } from "./AgentMessage.runtime.ts";
 import { AgentMessageStore } from "./AgentMessage.store.ts";
@@ -270,6 +271,7 @@ export const agentMessageCommand = Command.make("agent-message").pipe(
     watch,
     tools,
     agentMessageServeCommand,
+    agentMessageObservationCommand,
     agentMessagePeerCommand,
     agentMessageAttachT3Command,
   ])

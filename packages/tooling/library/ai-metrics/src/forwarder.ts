@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { DuckDb, DuckDbError } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
@@ -446,11 +447,11 @@ export class AiMetricsForwarderError extends S.TaggedError<AiMetricsForwarderErr
  *
  * ```ts
  * import { AiMetricsForwarderInput } from "@beep/repo-ai-metrics"
- * import * as Option from "effect/Option";
+ * import * as O from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const input = AiMetricsForwarderInput.make({
- *   dataRoot: Option.some("/home/dev/.local/state/beep/ai-metrics"),
- *   hashSalt: Option.some("salt"),
+ *   dataRoot: O.some("/var/lib/beep/ai-metrics"),
+ *   hashSalt: O.some("salt"),
  *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   repoRoot: "/repo"
@@ -944,11 +945,6 @@ type ForwarderSourceFiles = {
   readonly sizeExcludedFileCount: number;
 };
 
-type ForwarderSourceSelection = {
-  readonly coverage: AiMetricsForwarderSourceCoverage;
-  readonly files: ReadonlyArray<ForwarderSourceFile>;
-};
-
 const forwarderFailure = (message: string, cause: unknown): AiMetricsForwarderError =>
   AiMetricsForwarderError.make({ cause, message });
 
@@ -1295,25 +1291,93 @@ const byModifiedDescending: Order.Order<ForwarderSourceFile> = Order.mapInput(
   (file) => -file.modifiedAtMillis
 );
 
-const selectSourceFiles = (
+class DiscoveryCursorRow extends S.Opaque<DiscoveryCursorRow, { readonly brand: unique symbol }>()(
+  S.Struct({ cursorHash: Sha256Hex }).pipe(
+    $I.annoteSchema("DiscoveryCursorRow", {
+      description: "Last scheduled source-path hash, not an ingestion or delivery receipt.",
+    })
+  )
+) {}
+const decodeDiscoveryCursorRowRows = S.decodeUnknownEffect(S.Array(DiscoveryCursorRow));
+
+const selectSourceFiles = Effect.fn("AiMetrics.forwarder.selectSourceFiles")(function* (
+  input: AiMetricsForwarderInput,
   sourceKind: AiMetricsTranscriptSource,
-  sourceFiles: ForwarderSourceFiles,
-  maxFiles: number
-): ForwarderSourceSelection => {
-  const sortedFiles = pipe(sourceFiles.files, A.sort(byModifiedDescending));
-  const includedFiles = A.take(sortedFiles, maxFiles);
+  sourceRoot: string,
+  sourceFiles: ForwarderSourceFiles
+) {
+  const database = yield* DuckDb;
+  const scopeId = yield* hashPrivateIdentifier(`discovery-v1:${sourceKind}:${sourceRoot}`, input.hashSalt).pipe(
+    Effect.mapError((cause) => forwarderFailure("Failed to hash discovery scope.", cause))
+  );
+  const candidates = yield* Effect.forEach(
+    sourceFiles.files,
+    (file) => sourcePathHashForDiagnostics(input, file).pipe(Effect.map((pathHash) => ({ file, pathHash }))),
+    { concurrency: 4 }
+  );
+  const sorted = A.sort(
+    candidates,
+    Order.mapInput(Order.String, (entry: (typeof candidates)[number]) => entry.pathHash)
+  );
+  // Cursor changes are transactional and bounded to one row per declared scan
+  // root. Advance before content reads so an unreadable file cannot monopolize
+  // every run. A crash can defer a file for one round; it does not acknowledge it.
+  const includedFiles = yield* database
+    .withTransaction(
+      Effect.fnUntraced(function* (transaction) {
+        yield* transaction.run(`CREATE TABLE IF NOT EXISTS ai_metrics_discovery_cursors (
+      scope_id VARCHAR PRIMARY KEY,
+      cursor_hash VARCHAR NOT NULL
+    )`);
+        const rows = yield* transaction.query(
+          'SELECT cursor_hash AS "cursorHash" FROM ai_metrics_discovery_cursors WHERE scope_id = $scopeId',
+          { scopeId }
+        );
+        const decoded = yield* decodeDiscoveryCursorRowRows(rows).pipe(
+          Effect.mapError((cause) =>
+            DuckDbError.make({
+              cause: O.some(cause),
+              message: "Failed to decode discovery cursor.",
+              operation: "query",
+            })
+          )
+        );
+        const cursor = pipe(
+          A.head(decoded),
+          O.map((row) => row.cursorHash),
+          O.getOrElse(() => "")
+        );
+        const next = A.take(
+          [
+            ...A.filter(sorted, (entry) => entry.pathHash > cursor),
+            ...A.filter(sorted, (entry) => entry.pathHash <= cursor),
+          ],
+          input.maxFiles
+        );
+        const last = A.last(next);
+        if (O.isSome(last)) {
+          yield* transaction.run(
+            `INSERT INTO ai_metrics_discovery_cursors (scope_id, cursor_hash) VALUES ($scopeId, $cursorHash)
+         ON CONFLICT (scope_id) DO UPDATE SET cursor_hash = EXCLUDED.cursor_hash`,
+            { scopeId, cursorHash: last.value.pathHash }
+          );
+        }
+        return A.map(next, (entry) => entry.file);
+      })
+    )
+    .pipe(Effect.mapError((cause) => forwarderFailure("Failed to advance bounded discovery cursor.", cause)));
 
   return {
     coverage: AiMetricsForwarderSourceCoverage.make({
-      candidateFileCount: A.length(sortedFiles),
+      candidateFileCount: A.length(sorted),
       includedFileCount: A.length(includedFiles),
-      limitedByMaxFiles: A.length(sortedFiles) > A.length(includedFiles),
+      limitedByMaxFiles: A.length(sorted) > A.length(includedFiles),
       sizeExcludedFileCount: sourceFiles.sizeExcludedFileCount,
       sourceKind,
     }),
     files: includedFiles,
   };
-};
+});
 
 const discoverForwarderSourceFiles = Effect.fn("AiMetrics.forwarder.discoverSourceFiles")(function* (
   input: AiMetricsForwarderInput
@@ -1329,9 +1393,9 @@ const discoverForwarderSourceFiles = Effect.fn("AiMetrics.forwarder.discoverSour
     { concurrency: 3 }
   );
   const selections = [
-    selectSourceFiles(AiMetricsTranscriptSource.Enum.codex, codexFiles, input.maxFiles),
-    selectSourceFiles(AiMetricsTranscriptSource.Enum.claude, claudeFiles, input.maxFiles),
-    selectSourceFiles(AiMetricsTranscriptSource.Enum.openclaw, openClawFiles, input.maxFiles),
+    yield* selectSourceFiles(input, AiMetricsTranscriptSource.Enum.codex, codexRoot, codexFiles),
+    yield* selectSourceFiles(input, AiMetricsTranscriptSource.Enum.claude, claudeRoot, claudeFiles),
+    yield* selectSourceFiles(input, AiMetricsTranscriptSource.Enum.openclaw, input.homeDir, openClawFiles),
   ] as const;
 
   return {
@@ -1438,12 +1502,12 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  * } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
- * import * as Option from "effect/Option";
+ * import * as O from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
  *
  * const input = AiMetricsForwarderInput.make({
- *   dataRoot: Option.some(dataRoot),
+ *   dataRoot: O.some(dataRoot),
  *   homeDir: "/home/dev",
  *   rawArchiveKey: Redacted.make("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="),
  *   repoRoot: "/work/repo"
@@ -1513,6 +1577,10 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     const repoRootHash = yield* hashPrivateIdentifier(pathApi.resolve(input.repoRoot), input.hashSalt).pipe(
       Effect.mapError((cause) => forwarderFailure("Failed to hash AI metrics repo root.", cause))
     );
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs
+      .makeDirectory(pathApi.dirname(installSpec.storage.duckDbPath), { recursive: true })
+      .pipe(Effect.mapError((cause) => forwarderFailure("Failed to prepare discovery state directory.", cause)));
     const sourceSelection = yield* discoverForwarderSourceFiles(input);
     const hookSalt = yield* hookPulseHashSalt.pipe(
       Effect.mapError((cause) => forwarderFailure("Cannot resolve hook hash namespace.", cause))
@@ -1524,7 +1592,6 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
     );
     // Session-time stamps stay separate from the ingest-time snapshot. Unknown
     // or mixed stamps remain absent; backfill never receives today's regime.
-    const fs = yield* FileSystem.FileSystem;
     const stampGaps = yield* readStampGaps(evidenceRoot).pipe(Effect.option);
     const hookDir = hookPulseLedgerDir(evidenceRoot);
     const shardListing = yield* fs.readDirectory(hookDir).pipe(Effect.option);

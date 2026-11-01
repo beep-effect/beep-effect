@@ -11,10 +11,7 @@ import { A, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import * as Equivalence from "effect/Equivalence";
-import * as FileSystem from "effect/FileSystem";
 import { dual, flow } from "effect/Function";
-import { analyzeDocgenQuality, resolveDocgenQualityTargets } from "./Quality.ts";
-import { decodeDocgenQualityReportForWorkerEval, qualityWorkerEvalSourcePacketLimit } from "./QualityWorkerEval.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
@@ -308,72 +305,3 @@ export const targetHasCurrentDocgenProofManifest: {
       (verification) => verification.packagePath === target.absolutePath && verification.status === "current"
     )
 );
-
-/**
- * Resolve the quality report source for worker evaluation commands.
- *
- * **Example** (Resolve all-source quality report)
- *
- * ```ts
- * import { resolveQualityWorkerEvalSource } from "@beep/repo-cli/commands/Docgen/internal/Targets"
- * import * as Effect from "effect/Effect";
- * import * as O from "effect/Option"
- *
- * const program = resolveQualityWorkerEvalSource({
- *   all: true,
- *   input: O.none(),
- *   packageSelector: O.none(),
- *   packetLimit: 1
- * })
- * console.log(Effect.isEffect(program))
- * ```
- *
- * @param options - Mutually exclusive input, package, or all-source options.
- * @returns A decoded or freshly generated quality report plus source metadata.
- * @category validation
- * @since 0.0.0
- */
-export const resolveQualityWorkerEvalSource = Effect.fn("Docgen.resolveQualityWorkerEvalSource")(function* ({
-  all,
-  input,
-  packageSelector,
-  packetLimit,
-}: {
-  readonly all: boolean;
-  readonly input: O.Option<string>;
-  readonly packageSelector: O.Option<string>;
-  readonly packetLimit: number;
-}) {
-  const fs = yield* FileSystem.FileSystem;
-
-  if (O.isSome(input)) {
-    return {
-      report: yield* fs.readFileString(input.value).pipe(Effect.flatMap(decodeDocgenQualityReportForWorkerEval)),
-      scope: "input" as const,
-      sourceQualityReport: input.value,
-    };
-  }
-
-  const { scope, targets } = yield* resolveDocgenQualityTargets({
-    all,
-    changedFiles: false,
-    packageSelector,
-  });
-
-  if (targets.length === 0) {
-    return yield* DomainError.make({
-      message: "No packages selected for docgen quality worker eval.",
-    });
-  }
-
-  return {
-    report: yield* analyzeDocgenQuality({
-      packetLimit: qualityWorkerEvalSourcePacketLimit(packetLimit),
-      scope,
-      scoreMode: "codex",
-      targets,
-    }),
-    scope: scope === "all" ? ("all" as const) : ("package" as const),
-    sourceQualityReport: `generated:${scope}`,
-  };
-});

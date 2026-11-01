@@ -145,8 +145,7 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
   groupRoute(
     {
       name: "goals",
-      description:
-        "Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption, convention migration)",
+      description: "Goal-packet lifecycle tooling (doctor, index, capability graph, transitions, bootstrap, adoption)",
     },
     []
   )(() => import("../../commands/Goals/index.ts").then((module) => module.goalsCommand)),
@@ -157,6 +156,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     },
     []
   )(() => import("../../commands/HarnessLedger/index.ts").then((module) => module.harnessLedgerCommand)),
+  groupRoute(
+    { name: "holds", description: "Temporary repo decisions as probe-backed holds" },
+    []
+  )(() => import("../../commands/Holds/index.ts").then((module) => module.holdsCommand)),
   groupRoute(
     { name: "refs", description: "Manage the manifest-defined reference workspace" },
     []

@@ -1,0 +1,68 @@
+{
+  "applicationNumber": "16135952",
+  "publicationNumber": "US20200088758A1",
+  "publicationDate": "2020-03-19",
+  "nativeXmlSha256": "197c40aa3a93af7a9753067011dd0e489548e6953b7d3ccf949dacd1c427c276",
+  "claimsXmlSha256": "8a90a2eb3b68a640ce6272b2e69ab1541f278cfa075d0efd7b627663e5e03dcf",
+  "officeActionDocumentIdentifiers": [
+    "K9CWMD05RXEAPX1"
+  ],
+  "officeActionMailDate": "2020-04-27",
+  "officeActionSection112Text": [
+    "claims 2-3, 8-11, 16-19, 25 and 27 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nin claim 8, line 2, the phrase “the disk orienting mechanisms” lacks antecedent basis.\r\nin claim 9, line 1, the phrase “the disk rotation mechanisms” lacks antecedent basis. in line 7, the phrase “the drive shafts” lacks antecedent basis.\r\nin claim 11, line 4, the phrase “the motors” lacks antecedent basis. in line 4, the phrase “the drive shafts” lacks antecedent basis. in line 5, the phrase “the motors” lacks antecedent basis. in line 5, the phrase “the locations of the raised portions” lacks antecedent basis. in line 5, the phrase “the contact disks” lacks antecedent basis. in line 6, the phrase “the drive shafts” lacks antecedent basis.\r\nin claim 16, line 5, the phrase “the processor” lacks antecedent basis.\r\nin claim 17, line 2, the phrase “the stabilizing movements” lacks antecedent basis. in line 4, the phrase “the stabilizing movements” lacks antecedent basis.\r\nin claim 18, lines 5-6, the phrase “the processor” lacks antecedent basis.\r\nin claim 19, lines 1-2, the phrase “the stabilizing movements” lacks antecedent basis. in line 14, the phrase “the stabilizing movements” lacks antecedent basis.\r\nin claim 25, line 12, the phrase “the stabilizing movements” lacks antecedent basis. in line 14, the phrase “the stabilizing movements” lacks antecedent basis.\r\nin claim 27, line 1, the phrase “the disk orienting mechanisms” lacks antecedent basis. in lines 3-4, the phrase “the disk rotation mechanisms” lacks antecedent basis. in line 7, the phrase “the active tiles” lacks antecedent basis (note: maybe this claim should be depended upon claim 26). in line 8, the phrase “the swashplates” lacks antecedent basis. in line 8, the phrase “the drive assemblies” lacks antecedent basis. in line 8, the phrase “the active tile” lacks antecedent (note: maybe this claim should be depended upon claim 26). in line 9, the phrase “drive shafts” lacks antecedent basis. in lines 9-10, the phrase “the drive assemblies” lacks"
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "JM9OM21YRXEAPX1",
+      "officialDate": "2018-09-19T17:51:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "JM9OM21YRXEAPX1",
+      "officialDate": "2018-09-19T17:51:00.000-0400",
+      "sha256": "cae3c499f4519ebaa003af1ae2de0ae692452bf6433b392988cd765dbae89a37",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "sourceClaimCount": 27
+    }
+  ],
+  "documentInventoryCount": 41,
+  "documentInventoryRows": 41,
+  "primaryCpc": "G01P  15/08",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/16135952",
+    "https://api.uspto.gov/api/v1/patent/applications/16135952/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

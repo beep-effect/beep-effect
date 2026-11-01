@@ -23,6 +23,7 @@
     {"name":"CandorRecord.recordDisposition","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"CandorRecord.recordEvent","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"CandorRecord.recordSubmissionFact","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"ClaimSelfCheckLocal.publicClaimsUnavailable","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"ContactCardSource.cards","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"DocketAgents.critique","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"DocketAgents.enter","owner":"@beep/law-practice-server","family":"slice","conforms":true},
@@ -137,6 +138,7 @@
     {"name":"PracticeKgSelfCheck.readStoreCounts","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"PracticeKgSelfCheck.requireStore","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"PracticeKgSelfCheck.run","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"PracticeKgTools.claim_self_check","owner":"@beep/law-practice-server","family":"slice","conforms":false},
     {"name":"PracticeKgTools.corpus_get_document","owner":"@beep/law-practice-server","family":"slice","conforms":false},
     {"name":"PracticeKgTools.corpus_search_text","owner":"@beep/law-practice-server","family":"slice","conforms":false},
     {"name":"PracticeKgTools.email_search","owner":"@beep/law-practice-server","family":"slice","conforms":false},
@@ -160,6 +162,7 @@
     {"name":"UsptoClaims.applicationClaims","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"UsptoClaims.claims","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"UsptoClaims.claimsFromXml","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"UsptoClaims.publicationClaims","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"law-practice.candor_promotion_gate.evaluate","owner":"@beep/law-practice-server","family":"slice","conforms":false},
     {"name":"law-practice.candor_promotion_gate.make","owner":"@beep/law-practice-server","family":"slice","conforms":false}
   ]

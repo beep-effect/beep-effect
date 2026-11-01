@@ -1,0 +1,57 @@
+{
+  "familyId": "12117564-root-7",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the detected signal",
+      "nativeQuote": "the detected signal",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the differential-amplified signal",
+      "nativeQuote": "the differential-amplified signal",
+      "literalMatch": true,
+      "explanation": "Numbered native phrase exact ignoring case; does not itself establish statutory ground."
+    }
+  ],
+  "concerns": [
+    "Actual second-paragraph rejection expressly includes1–10 and specifically7. Native7 matches repeated phrases;8 depends7. No cached original comparison; detailed numbered quotation supports association subject critic."
+  ],
+  "rationale": "Read retained action and selected natural dependencies; actual ground presence distinguished from mere antecedent commentary. Original/version evidence investigated where needed. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "12117564",
+    "nativePublicationNumber": "US20080282800A1",
+    "nativePublicationDate": "20081120",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "6ec90ae4e07f664e22fc027ca2a79451d649494b17f97843e5377cfe335fb55e",
+    "sourceClaimsXmlSha256": "85faad34d875631fd0800e319e660540ec53620e2cdeb7db1073be500e298908"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 42,
+    "retainedInventoryCount": 42,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "FFZWGXUPPPOPPY4",
+        "officialDate": "2008-05-08T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2011-01-26",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [],
+  "nativeContextClaimCount": 10,
+  "selectedClaimNumbers": [7, 8],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": []
+}

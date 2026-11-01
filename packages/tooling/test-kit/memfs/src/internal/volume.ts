@@ -16,6 +16,8 @@
 //   recursion from the target being a directory: a non-recursive directory
 //   watch reports the path itself and its DIRECT children (node `fs.watch`
 //   semantics); `recursive: true` reports all descendants.
+// - `watch` calls `WatchOptions.onReady` after its subscription can buffer
+//   events, matching core's acquisition contract without scheduler guesses.
 // - Recursion surfaces are bounded. Upstream recursed unbounded over directory
 //   trees (`containsDirectory`, `collectInodePaths`, `collectDirectoryEntries`
 //   are now iterative worklists) and over Effect-returning tree walks
@@ -3928,6 +3930,7 @@ const watch = (volume: Volume) => (path: string, options?: FileSystem.WatchOptio
               Queue.offerUnsafe(queue, event);
             }
             subscription.pending.length = 0;
+            options?.onReady?.();
           })
         )
     )

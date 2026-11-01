@@ -1,0 +1,219 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "13062032-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "13062032",
+    "publicationNumber": "US20110247417A1",
+    "publicationDate": "20111013"
+  },
+  "digestEvidence": [
+    {
+      "file": "13062032.publication.xml",
+      "sha256": "0bc4374ebc4d3f4036fc2291f5bae715afd8cabcc0a9f87257ce57c38d75c913",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "2b33a6aabcd2936ff0644c943981d6dc7f04b9a7062d5979ee16ed9c3d8efdcb",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13062032.GPFBVMRRPPOPPY1.original.xml",
+      "sha256": "80e47452f351fb6867ae65b41e485fa3d6047488061e92faa4bc3dd580939614",
+      "matchesProvenance": true
+    },
+    {
+      "file": "13062032.GPFAIYRMPPOPPY1.original.xml",
+      "sha256": "eb24862ad7c04b64ebb16cc438534812945b9ebd4c371e9b5b44157a4549b15a",
+      "matchesProvenance": true
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the reflected ultrasound",
+      "nativeQuote": "the reflected ultrasound",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the associated signals",
+      "nativeQuote": "the associated signals",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the ultrasound",
+      "nativeQuote": "the ultrasound",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said spaced transducers",
+      "nativeQuote": "said spaced transducers",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the latter is uncoupled",
+      "nativeQuote": "the latter is uncoupled",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the leading body’s coupling surface",
+      "nativeQuote": "the leading body's coupling surface",
+      "literalMatchIgnoringCase": false,
+      "explanation": "Examiner curly apostrophe versus native straight apostrophe; otherwise exactsame entitywording. PDF confirms wording."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the signals",
+      "nativeQuote": "the signals",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the outermost transducers",
+      "nativeQuote": "the outermost transducers",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the received pulse echo",
+      "nativeQuote": "the received pulse echo",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the reflected ultrasound",
+      "nativeQuote": "the reflected ultrasound",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the associated signals",
+      "nativeQuote": "the associated signals",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the ultrasound",
+      "nativeQuote": "the ultrasound",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "said spaced transducers",
+      "nativeQuote": "said spaced transducers",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "groundEvidence": {
+    "documentIdentifier": "HGF9NI6ZPXXIFW4",
+    "actualNumberedGroundScope": "Actual112(b)/pre-AIAsecondparagraph rejects1–13. Selected1,6,7,10,11,12,13 individually discussed;2,3,4,5,8,9 are blanket-scope/familycontext, with no individualized quotedgrounds invented."
+  },
+  "inventoryEvidence": {
+    "sha256": "cd8e6f0dabf86530d51dfdd28237d0c537ac9cec95af9ea988fd118f15737c16",
+    "declaredCount": 81,
+    "actualRows": 81,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "GPFBVMRRPPOPPY1",
+        "documentCode": "CLM",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "GP8H0I9RPPOPPY2",
+        "documentCode": "A.PE",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "GPFAIYRMPPOPPY1",
+        "documentCode": "CLM",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "GPFAIYX3PPOPPY1",
+        "documentCode": "REM",
+        "officialDate": "2011-06-22T00:00:00.000-0400"
+      }
+    ]
+  },
+  "originalPdfEvidence": [
+    {
+      "documentIdentifier": "GPFAIYRMPPOPPY1",
+      "sha256": "6cecb7b6e1026b32a511ba715b4d32ee14c84539d0d3b09a73f1347adf377128",
+      "pdfPages": [
+        1,
+        2,
+        3
+      ],
+      "printedPages": [
+        3,
+        4,
+        5
+      ],
+      "corroborationOnly": true
+    }
+  ],
+  "versionEvidence": [
+    {
+      "claimNumbers": [
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "oldDependencyQuote": "any one of the preceding claims",
+      "markedRendering": "Old alternative text visibly struck; replacement claim1 underlined.",
+      "nativeDependency": "claim1"
+    },
+    {
+      "claimNumber": 7,
+      "oldDependencyQuote": "any one of the preceding claims",
+      "markedRendering": "Old alternative text visibly struck; replacement claim2 underlined.",
+      "nativeDependency": "claim2"
+    },
+    {
+      "claimNumber": 5,
+      "markedRendering": "consists of replaced by comprises; preferred cross-linked polystyrene copolymer clause visibly deleted.",
+      "nativeQuote": "the leading body comprises a thermoplastic synthetic material."
+    }
+  ],
+  "concerns": [
+    "Full marked PDF1–3 independently visually inspected after XML flagged garbled strike text. Cover says AMENDMENT TO THE CLAIMS / Replace the claims with the following rewritten listing. All selected1–13 body/reference wording matches surviving visible text; original count0 is legacy-format parsergap.",
+    "Reference numerals and characterized-in-that language visibly deleted; whereins inserted. Claim1 the before soundvelocity and claim7 the before traveltime visibly deleted, matching native. Clean original differing alternatives are explicitly reconciled by authoritative renderedamendment, not inferred from OCR.",
+    "Natural1independent,2–6/8–12→1,7→2,device13 explicitly carries outmethod1; allselected formroot1family. No competing laterCLM or non-entry in fullpre-actioninventory; chronology only supports directversionevidence."
+  ],
+  "pdfNeeds": [],
+  "rationale": "Eligible for independent sourcecritic. Real numberedground, source/operativeversion, familymembership and immutableidentity/digests verified; no active source/slot changed and no semantic annotation acceptance implied.",
+  "independence": "Freshsourceextractor; no expected/production/rules/predictions/network/secrets/git/delegation. Onlycandidate source-auditwritten."
+}
