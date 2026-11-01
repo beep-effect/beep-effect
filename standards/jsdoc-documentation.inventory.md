@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-01T00:50:23.516Z
+Generated: 2026-11-01T01:01:51.378Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 166 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 16 |
-| publicModules | 3631 |
-| publicExports | 25661 |
+| publicModules | 3638 |
+| publicExports | 25750 |
 | openModules | 165 |
 | openExports | 97 |
 | missingExportExamples | 3 |
@@ -190,7 +190,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 132 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 133 | `@beep/graph-3d` | `packages/drivers/graph-3d` | clean | 7 | 17 | 0 | 0 |
 | 134 | `@beep/ontology` | `packages/foundation/modeling/ontology` | clean | 15 | 157 | 0 | 0 |
-| 135 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 488 | 4519 | 46 | 35 |
+| 135 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 495 | 4608 | 46 | 35 |
 | 136 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 137 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 138 | `@beep/github-references` | `packages/foundation/modeling/github-references` | clean | 4 | 28 | 0 | 0 |

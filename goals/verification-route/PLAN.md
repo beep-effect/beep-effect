@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending`. Graduated 2026-10-28 from `explorations/verification-route`
+Status: `in-progress` (P0 slice 1 complete 2026-10-31: census and replay in `research/census-2026-10-31.md`; P1 next). Graduated 2026-10-28 from `explorations/verification-route`
 (16 rulings). Each slice is one PR through Yeet; phase ids match
 `ops/manifest.json`.
 
@@ -10,7 +10,7 @@ Status: `pending`. Graduated 2026-10-28 from `explorations/verification-route`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Slice 1: schemas, route, census | pending | `ChangeAtom`/`CheckFootprint`/`Propagation` schemas, the total record at `unknown`, `classify`, `route`, the corpus fetch, `beep ci route plan|census|replay`. | Slice-1 acceptance rows in `SPEC.md` green; the census printed with the `unknown` share; PR merged. |
+| P0 Slice 1: schemas, route, census | complete | `ChangeAtom`/`CheckFootprint`/`Propagation` schemas, the total record at `unknown`, `classify`, `route`, the corpus fetch, `beep ci route plan|census|replay`. | Slice-1 acceptance rows in `SPEC.md` green; the census printed with the `unknown` share; PR merged. |
 | P1 Slice 2: refinements, both layers, final-check | pending | Refine in census rank with fixtures and recall; compile file/field-grain footprints to turbo inputs and root `package.json` projections; sweep package-local `turbo.json`; final-check shadow then enforced; sentinel row. | At least one refinement enforced; layer-1 fixture green under pinned turbo; receipts carry the route section; PR merged. |
 | P2 Slice 3: hosted per lane | pending | Extend `HeavyAdmission` to per-lane `skip-satisfied` with the receipt in the job summary. | A real PR shows a routed-out lane completing `skip-satisfied`; required contexts unchanged; PR merged. |
 | P3 Yeet: PR to mergeable | pending | Each slice PR through `yeet publish`, `final-check`, `ready`, `monitor --until-ready`. | `merge-ready: yes`; zero unresolved review threads. |
@@ -27,20 +27,38 @@ work.
 
 ## P0 — Slice 1
 
-- [ ] Schemas in `commands/Ci/`: `ChangeAtomKind` (LiteralKit), `ChangeAtom`,
-      `Propagation`, `CheckFootprint`, the total record; totality test.
-- [ ] `classify`: semantic atoms for `package.json` (field families: scripts,
+- [x] Schemas in `commands/Ci/`: `ChangeAtomKind` (LiteralKit), `ChangeAtom`,
+      `Propagation`, `CheckFootprint`, the total record; totality test — done 2026-10-31
+      (`Route.schemas.ts`, `RouteFootprints.ts`, `test/ci-route-footprints.test.ts`; the record is
+      `satisfies Record<CiLaneId, CheckFootprint>` and a `@ts-expect-error` test proves a missing row fails).
+- [x] `classify`: semantic atoms for `package.json` (field families: scripts,
       catalog, dependencies, devDependencies, patchedDependencies,
       trustedDependencies, workspaces, engines, other), `bun.lock` (one
       `lockfile` kind, package-grain), `turbo.json`, `tsconfig*`, `biome.jsonc`,
-      workflow YAML; path atoms with owning package elsewhere; `unknown`.
-- [ ] `route`: `Required(Δ)` over turbo's package graph (`--dry-run=json`
-      dependencies) then `WaveOrder.order`.
-- [ ] Corpus fetch: hosted PR Check runs since 2026-09-01 by head sha
-      (`capture_hosted` recipe ported), `refs/pull/N/head`, main push runs for
-      base-green, digest-pinned receipts, resume by head.
-- [ ] `beep ci route plan|census|replay` (`--json`), A1 cost source per lane.
-- [ ] Friction receipts in the exploration's `research/OPPORTUNITIES.md`.
+      workflow YAML; path atoms with owning package elsewhere; `unknown` — done 2026-10-31
+      (`RouteClassify.ts`: a pure `classifyChangedPaths` core over `git diff --name-status` entries
+      and a `readAt` reader, a git-backed `ChangeClassifierLive`; the owner is the deepest folder
+      matching the root `workspaces` globs at that commit; a totality property and fixtures for a
+      catalog bump, a script edit, docs vs packet markdown, and an unparseable manifest).
+- [x] `route`: `Required(Δ)` then `WaveOrder.order` — done 2026-10-31 (`RouteCensus.ts`
+      `VerificationRouteLive`; affected packages come from `@beep/repo-workspaces`
+      `ChangeDetector.affectedPackages`, not a re-derived turbo graph; at all-`unknown` the plan
+      selects every lane in wave order and skips none).
+- [x] Corpus fetch: hosted Check and Heavy runs since 2026-09-01 by head sha
+      (`capture_hosted` recipe ported), main push runs for base-green, digest-pinned receipts,
+      resume by run id — done 2026-10-31 (`RouteCorpus.ts`; the 2,219 `refs/pull/*/head` refs are
+      fetched once by `RouteGit.ensureHeads`). The first real capture hit GitHub's shared 5,000/h
+      core limit after 14 minutes with an end-only write; per-day checkpointing was added the same
+      day (receipt in the exploration's `research/OPPORTUNITIES.md`).
+- [x] `beep ci route plan|capture|census|replay` (`--json`), A1 cost source per lane — done
+      2026-10-31 (`Route.command.ts`; cost basis `gate-order-seed` for lanes with a `quality:<id>`
+      seed row, `hosted-median` from the corpus otherwise, `none` when neither exists).
+- [x] Friction receipts in the exploration's `research/OPPORTUNITIES.md` (16 receipts by 2026-10-31).
+- [x] Census and replay over the pinned corpus — done 2026-10-31
+      (`research/census-2026-10-31.md`: 6,328 runs, 5,083 PR heads, 11,710 h of hosted machine time;
+      replay recall 100% at the all-`unknown` record after modelling `commits` and `external`; the
+      first attempt's 97.92% found both facts; `unknown` is 33.55% of atoms, mostly packet data
+      files, scratchpad sources and standards baselines; refinements ranked for P1).
 
 ## P1 — Slice 2
 
